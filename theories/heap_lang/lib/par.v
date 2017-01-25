@@ -14,7 +14,7 @@ Definition par : val :=
 Notation "e1 ||| e2" := (par (Pair (λ: <>, e1) (λ: <>, e2)))%E : expr_scope.
 
 Section proof.
-Set Default Proof Using "Type*".
+Local Set Default Proof Using "Type*".
 Context `{!heapG Σ, !spawnG Σ}.
 
 (* Notice that this allows us to strip a later *after* the two Ψ have been

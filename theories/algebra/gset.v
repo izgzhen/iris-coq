@@ -155,7 +155,7 @@ Section gset_disj.
   Proof. eauto using gset_disj_alloc_empty_updateP_strong. Qed.
 
   Section fresh_updates.
-    Set Default Proof Using "Type*".
+    Local Set Default Proof Using "Type*".
     Context `{Fresh K (gset K), !FreshSpec K (gset K)}.
 
     Lemma gset_disj_alloc_updateP (Q : gset_disj K → Prop) X :

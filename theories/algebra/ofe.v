@@ -166,7 +166,7 @@ Instance const_contractive {A B : ofeT} (x : A) : Contractive (@const A B x).
 Proof. by intros n y1 y2. Qed.
 
 Section contractive.
-  Set Default Proof Using "Type*".
+  Local Set Default Proof Using "Type*".
   Context {A B : ofeT} (f : A → B) `{!Contractive f}.
   Implicit Types x y : A.
 
@@ -260,6 +260,45 @@ Section fixpoint.
     induction n as [|n IH]; simpl; eauto using contractive_0, contractive_S.
   Qed.
 End fixpoint.
+
+(** Fixpoint of f when f^2 is contractive. **)
+(* TODO: Generalize 2 to m. *)
+Definition fixpoint2 `{Cofe A, Inhabited A} (f : A → A)
+  `{!Contractive (Nat.iter 2 f)} := fixpoint (Nat.iter 2 f).
+
+Section fixpoint2.
+  Local Set Default Proof Using "Type*".
+  Context `{Cofe A, Inhabited A} (f : A → A) `{!Contractive (Nat.iter 2 f)}.
+  (* TODO: Can we get rid of this assumption, derive it from contractivity? *)
+  Context `{!∀ n, Proper (dist n ==> dist n) f}.
+
+  Lemma fixpoint2_unfold : fixpoint2 f ≡ f (fixpoint2 f).
+  Proof.
+    apply equiv_dist=>n.
+    rewrite /fixpoint2 fixpoint_eq /fixpoint_def (conv_compl n (fixpoint_chain _)) //.
+    induction n as [|n IH]; simpl.
+    - eapply contractive_0 with (f0 := Nat.iter 2 f). done.
+    - eapply contractive_S with (f0 := Nat.iter 2 f); first done. eauto.
+  Qed.
+
+  Lemma fixpoint2_unique (x : A) : x ≡ f x → x ≡ fixpoint2 f.
+  Proof.
+    intros Hf. apply fixpoint_unique, equiv_dist=>n. eapply equiv_dist in Hf.
+    rewrite 2!{1}Hf. done.
+  Qed.
+
+  Section fixpoint2_ne.
+    Context (g : A → A) `{!Contractive (Nat.iter 2 g), !∀ n, Proper (dist n ==> dist n) g}.
+
+    Lemma fixpoint2_ne n : (∀ z, f z ≡{n}≡ g z) → fixpoint2 f ≡{n}≡ fixpoint2 g.
+    Proof.
+      rewrite /fixpoint2=>Hne /=. apply fixpoint_ne=>? /=. rewrite !Hne. done.
+    Qed.
+
+    Lemma fixpoint2_proper : (∀ z, f z ≡ g z) → fixpoint2 f ≡ fixpoint2 g.
+    Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint2_ne. Qed.
+  End fixpoint2_ne.
+End fixpoint2.
 
 (** Mutual fixpoints *)
 Section fixpointAB.
@@ -744,7 +783,7 @@ Section discrete_cofe.
 
   Instance discrete_dist : Dist A := λ n x y, x ≡ y.
   Definition discrete_ofe_mixin : OfeMixin A.
-  Proof.
+  Proof using Type*.
     split.
     - intros x y; split; [done|intros Hn; apply (Hn 0)].
     - done.

@@ -47,7 +47,7 @@ Qed.
 Section list_theory.
   Context `(R: relation A) `{Equivalence A R}.
   Collection Hyps := Type H.
-  Set Default Proof Using "Hyps".
+  Local Set Default Proof Using "Hyps".
 
   Global Instance: PreOrder (list_setincl R).
   Proof.
@@ -192,7 +192,7 @@ Section list_theory.
   Section fmap.
     Context `(R' : relation B) (f : A → B) {Hf: Proper (R ==> R') f}.
     Collection Hyps := Type Hf.
-    Set Default Proof Using "Hyps".
+    Local Set Default Proof Using "Hyps".
     
     Global Instance list_setincl_fmap :
       Proper (list_setincl R ==> list_setincl R') (fmap f).
@@ -219,7 +219,7 @@ Section list_theory.
 End list_theory.
 
 Section agree.
-Set Default Proof Using "Type".
+Local Set Default Proof Using "Type".
 Context {A : ofeT}.
 
 Definition agree_list (x : agree A) := agree_car x :: agree_with x.

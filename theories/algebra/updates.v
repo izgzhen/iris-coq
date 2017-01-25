@@ -86,7 +86,7 @@ Qed.
 
 (** ** Frame preserving updates for total CMRAs *)
 Section total_updates.
-  Set Default Proof Using "Type*".
+  Local Set Default Proof Using "Type*".
   Context `{CMRATotal A}.
 
   Lemma cmra_total_updateP x (P : A → Prop) :

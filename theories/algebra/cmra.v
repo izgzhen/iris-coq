@@ -430,7 +430,7 @@ Qed.
 
 (** ** Total core *)
 Section total_core.
-  Set Default Proof Using "Type*".
+  Local Set Default Proof Using "Type*".
   Context `{CMRATotal A}.
 
   Lemma cmra_core_l x : core x ⋅ x ≡ x.
@@ -555,6 +555,7 @@ Hint Immediate cmra_unit_total.
 
 (** * Properties about CMRAs with Leibniz equality *)
 Section cmra_leibniz.
+  Local Set Default Proof Using "Type*".
   Context {A : cmraT} `{!LeibnizEquiv A}.
   Implicit Types x y : A.
 
@@ -601,6 +602,7 @@ Section cmra_leibniz.
 End cmra_leibniz.
 
 Section ucmra_leibniz.
+  Local Set Default Proof Using "Type*".
   Context {A : ucmraT} `{!LeibnizEquiv A}.
   Implicit Types x y z : A.
 
@@ -629,7 +631,7 @@ Section cmra_total.
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
     ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2).
   Lemma cmra_total_mixin : CMRAMixin A.
-  Proof.
+  Proof using Type*.
     split; auto.
     - intros n x y ? Hcx%core_ne Hx; move: Hcx. rewrite /core /= Hx /=.
       case (total y)=> [cy ->]; eauto.
@@ -654,6 +656,7 @@ Proof.
 Qed.
 
 Section cmra_monotone.
+  Local Set Default Proof Using "Type*".
   Context {A B : cmraT} (f : A → B) `{!CMRAMonotone f}.
   Global Instance cmra_monotone_proper : Proper ((≡) ==> (≡)) f := ne_proper _.
   Lemma cmra_monotoneN n x y : x ≼{n} y → f x ≼{n} f y.
@@ -796,6 +799,7 @@ Record RAMixin A `{Equiv A, PCore A, Op A, Valid A} := {
 }.
 
 Section discrete.
+  Local Set Default Proof Using "Type*".
   Context `{Equiv A, PCore A, Op A, Valid A, @Equivalence A (≡)}.
   Context (ra_mix : RAMixin A).
   Existing Instances discrete_dist.
@@ -819,6 +823,7 @@ Global Instance discrete_cmra_discrete `{Equiv A, PCore A, Op A, Valid A,
 Proof. split. apply _. done. Qed.
 
 Section ra_total.
+  Local Set Default Proof Using "Type*".
   Context A `{Equiv A, PCore A, Op A, Valid A}.
   Context (total : ∀ x, is_Some (pcore x)).
   Context (op_proper : ∀ (x : A), Proper ((≡) ==> (≡)) (op x)).

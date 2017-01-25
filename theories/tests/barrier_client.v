@@ -14,7 +14,7 @@ Definition client : expr :=
     (worker 12 "b" "y" ||| worker 17 "b" "y").
 
 Section client.
-  Set Default Proof Using "Type*".
+  Local Set Default Proof Using "Type*".
   Context `{!heapG Σ, !barrierG Σ, !spawnG Σ}.
 
   Definition N := nroot .@ "barrier".

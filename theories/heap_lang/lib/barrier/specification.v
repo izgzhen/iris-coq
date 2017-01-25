@@ -6,7 +6,7 @@ Set Default Proof Using "Type".
 Import uPred.
 
 Section spec.
-Set Default Proof Using "Type*".
+Local Set Default Proof Using "Type*".
 Context `{!heapG Σ, !barrierG Σ}.
 
 Lemma barrier_spec (N : namespace) :

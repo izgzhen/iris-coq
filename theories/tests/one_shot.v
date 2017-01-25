@@ -30,7 +30,7 @@ Instance subG_one_shotΣ {Σ} : subG one_shotΣ Σ → one_shotG Σ.
 Proof. solve_inG. Qed.
 
 Section proof.
-Set Default Proof Using "Type*".
+Local Set Default Proof Using "Type*".
 Context `{!heapG Σ, !one_shotG Σ}.
 
 Definition one_shot_inv (γ : gname) (l : loc) : iProp Σ :=

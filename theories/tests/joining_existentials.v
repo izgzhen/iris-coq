@@ -24,7 +24,7 @@ Definition client eM eW1 eW2 : expr :=
   (eM ;; signal "b") ||| ((wait "b" ;; eW1) ||| (wait "b" ;; eW2)).
 
 Section proof.
-Set Default Proof Using "Type*".
+Local Set Default Proof Using "Type*".
 Context `{!heapG Σ, !barrierG Σ, !spawnG Σ, !oneShotG Σ F}.
 Context (N : namespace).
 Local Notation X := (F (iProp Σ)).
