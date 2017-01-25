@@ -66,9 +66,9 @@ Context `{inG Σ A}.
 Implicit Types a : A.
 
 (** ** Properties of [iRes_singleton] *)
-Global Instance iRes_singleton_ne γ n :
-  Proper (dist n ==> dist n) (@iRes_singleton Σ A _ γ).
-Proof. by intros a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
+Global Instance iRes_singleton_ne γ :
+  NonExpansive (@iRes_singleton Σ A _ γ).
+Proof. by intros n a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
 Lemma iRes_singleton_op γ a1 a2 :
   iRes_singleton γ (a1 ⋅ a2) ≡ iRes_singleton γ a1 ⋅ iRes_singleton γ a2.
 Proof.
@@ -76,7 +76,7 @@ Proof.
 Qed.
 
 (** ** Properties of [own] *)
-Global Instance own_ne γ n : Proper (dist n ==> dist n) (@own Σ A _ γ).
+Global Instance own_ne γ : NonExpansive (@own Σ A _ γ).
 Proof. rewrite !own_eq. solve_proper. Qed.
 Global Instance own_proper γ :
   Proper ((≡) ==> (⊣⊢)) (@own Σ A _ γ) := ne_proper _.

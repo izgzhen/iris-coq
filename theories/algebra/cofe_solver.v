@@ -98,7 +98,7 @@ Qed.
 Lemma gg_tower k i (X : tower) : gg i (X (i + k)) ≡ X k.
 Proof. by induction i as [|i IH]; simpl; [done|rewrite g_tower IH]. Qed.
 
-Instance tower_car_ne n k : Proper (dist n ==> dist n) (λ X, tower_car X k).
+Instance tower_car_ne k : NonExpansive (λ X, tower_car X k).
 Proof. by intros X Y HX. Qed.
 Definition project (k : nat) : T -n> A k := CofeMor (λ X : T, tower_car X k).
 
@@ -152,8 +152,8 @@ Program Definition embed (k : nat) (x : A k) : T :=
   {| tower_car n := embed_coerce n x |}.
 Next Obligation. intros k x i. apply g_embed_coerce. Qed.
 Instance: Params (@embed) 1.
-Instance embed_ne k n : Proper (dist n ==> dist n) (embed k).
-Proof. by intros x y Hxy i; rewrite /= Hxy. Qed.
+Instance embed_ne k : NonExpansive (embed k).
+Proof. by intros n x y Hxy i; rewrite /= Hxy. Qed.
 Definition embed' (k : nat) : A k -n> T := CofeMor (embed k).
 Lemma embed_f k (x : A k) : embed (S k) (f k x) ≡ embed k x.
 Proof.
@@ -188,7 +188,7 @@ Next Obligation.
   by apply (contractive_ne map); split=> Y /=; rewrite ?g_tower ?embed_f.
 Qed.
 Definition unfold (X : T) : F T := compl (unfold_chain X).
-Instance unfold_ne : Proper (dist n ==> dist n) unfold.
+Instance unfold_ne : NonExpansive unfold.
 Proof.
   intros n X Y HXY. by rewrite /unfold (conv_compl n (unfold_chain X))
     (conv_compl n (unfold_chain Y)) /= (HXY (S n)).
@@ -201,7 +201,7 @@ Next Obligation.
   rewrite g_S -cFunctor_compose.
   apply (contractive_proper map); split=> Y; [apply embed_f|apply g_tower].
 Qed.
-Instance fold_ne : Proper (dist n ==> dist n) fold.
+Instance fold_ne : NonExpansive fold.
 Proof. by intros n X Y HXY k; rewrite /fold /= HXY. Qed.
 
 Theorem result : solution F.

@@ -271,12 +271,12 @@ Proof.
   split; rewrite Hxy; done.
 Qed.
 
-Instance: ∀ x : agree A, Proper (dist n ==> dist n) (op x).
+Instance: ∀ x : agree A, NonExpansive (op x).
 Proof.
-  intros n x y1 y2. rewrite /dist /agree_dist /agree_list /=. 
+  intros x n y1 y2. rewrite /dist /agree_dist /agree_list /=. 
   rewrite !app_comm_cons. apply: list_setequiv_app.
 Qed.
-Instance: Proper (dist n ==> dist n ==> dist n) (@op (agree A) _).
+Instance: NonExpansive2 (@op (agree A) _).
 Proof. by intros n x1 x2 Hx y1 y2 Hy; rewrite Hy !(comm _ _ y2) Hx. Qed.
 Instance: Proper ((≡) ==> (≡) ==> (≡)) op := ne_proper_2 _.
 Instance: Assoc (≡) (@op (agree A) _).
@@ -347,7 +347,7 @@ Qed.
 Definition to_agree (x : A) : agree A :=
   {| agree_car := x; agree_with := [] |}.
 
-Global Instance to_agree_ne n : Proper (dist n ==> dist n) to_agree.
+Global Instance to_agree_ne : NonExpansive to_agree.
 Proof.
   intros x1 x2 Hx; rewrite /= /dist /agree_dist /=.
   exact: list_setequiv_singleton.
@@ -420,11 +420,11 @@ Lemma agree_map_compose {A B C} (f : A → B) (g : B → C) (x : agree A) :
 Proof. rewrite /agree_map /= list_fmap_compose. done. Qed.
 
 Section agree_map.
-  Context {A B : ofeT} (f : A → B) `{Hf: ∀ n, Proper (dist n ==> dist n) f}.
+  Context {A B : ofeT} (f : A → B) `{Hf: NonExpansive f}.
   Collection Hyps := Type Hf.
-  Instance agree_map_ne n : Proper (dist n ==> dist n) (agree_map f).
+  Instance agree_map_ne : NonExpansive (agree_map f).
   Proof using Hyps.
-    intros x y Hxy.
+    intros n x y Hxy.
     change (list_setequiv (dist n)(f <$> (agree_list x))(f <$> (agree_list y))).
     eapply list_setequiv_fmap; last exact Hxy. apply _. 
   Qed.
@@ -452,9 +452,9 @@ End agree_map.
 
 Definition agreeC_map {A B} (f : A -n> B) : agreeC A -n> agreeC B :=
   CofeMor (agree_map f : agreeC A → agreeC B).
-Instance agreeC_map_ne A B n : Proper (dist n ==> dist n) (@agreeC_map A B).
+Instance agreeC_map_ne A B : NonExpansive (@agreeC_map A B).
 Proof.
-  intros f g Hfg x. apply: list_setequiv_ext.
+  intros n f g Hfg x. apply: list_setequiv_ext.
   change (f <$> (agree_list x) ≡{n}≡ g <$> (agree_list x)).
   apply list_fmap_ext_ne. done.
 Qed.

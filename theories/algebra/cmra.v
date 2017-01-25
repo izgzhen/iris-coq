@@ -37,7 +37,7 @@ Hint Extern 0 (_ ≼{_} _) => reflexivity.
 
 Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A} := {
   (* setoids *)
-  mixin_cmra_op_ne n (x : A) : Proper (dist n ==> dist n) (op x);
+  mixin_cmra_op_ne (x : A) : NonExpansive (op x);
   mixin_cmra_pcore_ne n x y cx :
     x ≡{n}≡ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≡{n}≡ cy;
   mixin_cmra_validN_ne n : Proper (dist n ==> impl) (validN n);
@@ -93,7 +93,7 @@ Canonical Structure cmra_ofeC.
 Section cmra_mixin.
   Context {A : cmraT}.
   Implicit Types x y : A.
-  Global Instance cmra_op_ne n (x : A) : Proper (dist n ==> dist n) (op x).
+  Global Instance cmra_op_ne (x : A) : NonExpansive (op x).
   Proof. apply (mixin_cmra_op_ne _ (cmra_mixin A)). Qed.
   Lemma cmra_pcore_ne n x y cx :
     x ≡{n}≡ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≡{n}≡ cy.
@@ -211,7 +211,7 @@ Class CMRADiscrete (A : cmraT) := {
 
 (** * Morphisms *)
 Class CMRAMonotone {A B : cmraT} (f : A → B) := {
-  cmra_monotone_ne n :> Proper (dist n ==> dist n) f;
+  cmra_monotone_ne :> NonExpansive f;
   cmra_monotone_validN n x : ✓{n} x → ✓{n} f x;
   cmra_monotone x y : x ≼ y → f x ≼ f y
 }.
@@ -221,7 +221,7 @@ Arguments cmra_monotone {_ _} _ {_} _ _ _.
 (* Not all intended homomorphisms preserve validity, in particular it does not
 hold for the [ownM] and [own] connectives. *)
 Class CMRAHomomorphism {A B : cmraT} (f : A → B) := {
-  cmra_homomorphism_ne n :> Proper (dist n ==> dist n) f;
+  cmra_homomorphism_ne :> NonExpansive f;
   cmra_homomorphism x y : f (x ⋅ y) ≡ f x ⋅ f y
 }.
 Arguments cmra_homomorphism {_ _} _ _ _ _.
@@ -239,9 +239,9 @@ Implicit Types x y z : A.
 Implicit Types xs ys zs : list A.
 
 (** ** Setoids *)
-Global Instance cmra_pcore_ne' n : Proper (dist n ==> dist n) (@pcore A _).
+Global Instance cmra_pcore_ne' : NonExpansive (@pcore A _).
 Proof.
-  intros x y Hxy. destruct (pcore x) as [cx|] eqn:?.
+  intros n x y Hxy. destruct (pcore x) as [cx|] eqn:?.
   { destruct (cmra_pcore_ne n x y cx) as (cy&->&->); auto. }
   destruct (pcore y) as [cy|] eqn:?; auto.
   destruct (cmra_pcore_ne n y x cy) as (cx&?&->); simplify_eq/=; auto.
@@ -255,8 +255,8 @@ Proof.
 Qed.
 Global Instance cmra_pcore_proper' : Proper ((≡) ==> (≡)) (@pcore A _).
 Proof. apply (ne_proper _). Qed.
-Global Instance cmra_op_ne' n : Proper (dist n ==> dist n ==> dist n) (@op A _).
-Proof. intros x1 x2 Hx y1 y2 Hy. by rewrite Hy (comm _ x1) Hx (comm _ y2). Qed.
+Global Instance cmra_op_ne' : NonExpansive2 (@op A _).
+Proof. intros n x1 x2 Hx y1 y2 Hy. by rewrite Hy (comm _ x1) Hx (comm _ y2). Qed.
 Global Instance cmra_op_proper' : Proper ((≡) ==> (≡) ==> (≡)) (@op A _).
 Proof. apply (ne_proper_2 _). Qed.
 Global Instance cmra_validN_ne' : Proper (dist n ==> iff) (@validN A _ n) | 1.
@@ -287,7 +287,7 @@ Proof.
   intros x x' Hx y y' Hy.
   by split; intros [z ?]; exists z; [rewrite -Hx -Hy|rewrite Hx Hy].
 Qed.
-Global Instance cmra_opM_ne n : Proper (dist n ==> dist n ==> dist n) (@opM A).
+Global Instance cmra_opM_ne : NonExpansive2 (@opM A).
 Proof. destruct 2; by cofe_subst. Qed.
 Global Instance cmra_opM_proper : Proper ((≡) ==> (≡) ==> (≡)) (@opM A).
 Proof. destruct 2; by setoid_subst. Qed.
@@ -448,9 +448,9 @@ Section total_core.
     by rewrite /core /= Hcx Hcy.
   Qed.
 
-  Global Instance cmra_core_ne n : Proper (dist n ==> dist n) (@core A _).
+  Global Instance cmra_core_ne : NonExpansive (@core A _).
   Proof.
-    intros x y Hxy. destruct (cmra_total x) as [cx Hcx].
+    intros n x y Hxy. destruct (cmra_total x) as [cx Hcx].
     by rewrite /core /= -Hxy Hcx.
   Qed.
   Global Instance cmra_core_proper : Proper ((≡) ==> (≡)) (@core A _).
@@ -616,8 +616,8 @@ End ucmra_leibniz.
 Section cmra_total.
   Context A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A}.
   Context (total : ∀ x, is_Some (pcore x)).
-  Context (op_ne : ∀ n (x : A), Proper (dist n ==> dist n) (op x)).
-  Context (core_ne : ∀ n, Proper (dist n ==> dist n) (@core A _)).
+  Context (op_ne : ∀ (x : A), NonExpansive (op x)).
+  Context (core_ne : NonExpansive (@core A _)).
   Context (validN_ne : ∀ n, Proper (dist n ==> impl) (@validN A _ n)).
   Context (valid_validN : ∀ (x : A), ✓ x ↔ ∀ n, ✓{n} x).
   Context (validN_S : ∀ n (x : A), ✓{S n} x → ✓{n} x).
@@ -693,8 +693,8 @@ Structure rFunctor := RFunctor {
   rFunctor_car : ofeT → ofeT → cmraT;
   rFunctor_map {A1 A2 B1 B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → rFunctor_car A1 B1 -n> rFunctor_car A2 B2;
-  rFunctor_ne A1 A2 B1 B2 n :
-    Proper (dist n ==> dist n) (@rFunctor_map A1 A2 B1 B2);
+  rFunctor_ne A1 A2 B1 B2 :
+    NonExpansive (@rFunctor_map A1 A2 B1 B2);
   rFunctor_id {A B} (x : rFunctor_car A B) : rFunctor_map (cid,cid) x ≡ x;
   rFunctor_compose {A1 A2 A3 B1 B2 B3}
       (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
@@ -726,8 +726,8 @@ Structure urFunctor := URFunctor {
   urFunctor_car : ofeT → ofeT → ucmraT;
   urFunctor_map {A1 A2 B1 B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → urFunctor_car A1 B1 -n> urFunctor_car A2 B2;
-  urFunctor_ne A1 A2 B1 B2 n :
-    Proper (dist n ==> dist n) (@urFunctor_map A1 A2 B1 B2);
+  urFunctor_ne A1 A2 B1 B2 :
+    NonExpansive (@urFunctor_map A1 A2 B1 B2);
   urFunctor_id {A B} (x : urFunctor_car A B) : urFunctor_map (cid,cid) x ≡ x;
   urFunctor_compose {A1 A2 A3 B1 B2 B3}
       (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
@@ -762,7 +762,7 @@ Definition cmra_transport {A B : cmraT} (H : A = B) (x : A) : B :=
 Section cmra_transport.
   Context {A B : cmraT} (H : A = B).
   Notation T := (cmra_transport H).
-  Global Instance cmra_transport_ne n : Proper (dist n ==> dist n) T.
+  Global Instance cmra_transport_ne : NonExpansive T.
   Proof. by intros ???; destruct H. Qed.
   Global Instance cmra_transport_proper : Proper ((≡) ==> (≡)) T.
   Proof. by intros ???; destruct H. Qed.
@@ -1178,7 +1178,7 @@ Section option.
   Proof.
     apply cmra_total_mixin.
     - eauto.
-    - by intros n [x|]; destruct 1; constructor; cofe_subst.
+    - by intros [x|] n; destruct 1; constructor; cofe_subst.
     - destruct 1; by cofe_subst.
     - by destruct 1; rewrite /validN /option_validN //=; cofe_subst.
     - intros [x|]; [apply cmra_valid_validN|done].

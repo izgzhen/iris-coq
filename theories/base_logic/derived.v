@@ -321,7 +321,7 @@ Proof.
   apply or_elim. by rewrite -(exist_intro true). by rewrite -(exist_intro false).
 Qed.
 
-Global Instance iff_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_iff M).
+Global Instance iff_ne : NonExpansive2 (@uPred_iff M).
 Proof. unfold uPred_iff; solve_proper. Qed.
 Global Instance iff_proper :
   Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_iff M) := ne_proper_2 _.
@@ -579,7 +579,7 @@ Proof. by rewrite /uPred_iff later_and !later_impl. Qed.
 
 
 (* Iterated later modality *)
-Global Instance laterN_ne n m : Proper (dist n ==> dist n) (@uPred_laterN M m).
+Global Instance laterN_ne m : NonExpansive (@uPred_laterN M m).
 Proof. induction m; simpl. by intros ???. solve_proper. Qed.
 Global Instance laterN_proper m :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_laterN M m) := ne_proper _.
@@ -631,7 +631,7 @@ Lemma laterN_iff n P Q : ▷^n (P ↔ Q) ⊢ ▷^n P ↔ ▷^n Q.
 Proof. by rewrite /uPred_iff laterN_and !laterN_impl. Qed.
 
 (* Conditional always *)
-Global Instance always_if_ne n p : Proper (dist n ==> dist n) (@uPred_always_if M p).
+Global Instance always_if_ne p : NonExpansive (@uPred_always_if M p).
 Proof. solve_proper. Qed.
 Global Instance always_if_proper p : Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_always_if M p).
 Proof. solve_proper. Qed.
@@ -658,7 +658,7 @@ Proof. destruct p; simpl; auto using always_later. Qed.
 
 
 (* True now *)
-Global Instance except_0_ne n : Proper (dist n ==> dist n) (@uPred_except_0 M).
+Global Instance except_0_ne : NonExpansive (@uPred_except_0 M).
 Proof. solve_proper. Qed.
 Global Instance except_0_proper : Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_except_0 M).
 Proof. solve_proper. Qed.

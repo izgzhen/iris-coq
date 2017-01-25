@@ -26,7 +26,7 @@ Context `{invG Σ}.
 Implicit Types P Q R : iProp Σ.
 Implicit Types N : namespace.
 
-Global Instance vs_ne E1 E2 n: Proper (dist n ==> dist n ==> dist n) (vs E1 E2).
+Global Instance vs_ne E1 E2 : NonExpansive2 (vs E1 E2).
 Proof. solve_proper. Qed.
 
 Global Instance vs_proper E1 E2 : Proper ((≡) ==> (≡) ==> (≡)) (vs E1 E2).

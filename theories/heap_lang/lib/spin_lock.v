@@ -34,9 +34,9 @@ Section proof.
   Lemma locked_exclusive (γ : gname) : locked γ -∗ locked γ -∗ False.
   Proof. iIntros "H1 H2". by iDestruct (own_valid_2 with "H1 H2") as %?. Qed.
 
-  Global Instance lock_inv_ne n γ l : Proper (dist n ==> dist n) (lock_inv γ l).
+  Global Instance lock_inv_ne γ l : NonExpansive (lock_inv γ l).
   Proof. solve_proper. Qed.
-  Global Instance is_lock_ne n l : Proper (dist n ==> dist n) (is_lock γ l).
+  Global Instance is_lock_ne l : NonExpansive (is_lock γ l).
   Proof. solve_proper. Qed.
 
   (** The main proofs. *)

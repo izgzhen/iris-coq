@@ -23,15 +23,15 @@ Instance auth_equiv : Equiv (auth A) := λ x y,
 Instance auth_dist : Dist (auth A) := λ n x y,
   authoritative x ≡{n}≡ authoritative y ∧ auth_own x ≡{n}≡ auth_own y.
 
-Global Instance Auth_ne : Proper (dist n ==> dist n ==> dist n) (@Auth A).
+Global Instance Auth_ne : NonExpansive2 (@Auth A).
 Proof. by split. Qed.
 Global Instance Auth_proper : Proper ((≡) ==> (≡) ==> (≡)) (@Auth A).
 Proof. by split. Qed.
-Global Instance authoritative_ne: Proper (dist n ==> dist n) (@authoritative A).
+Global Instance authoritative_ne: NonExpansive (@authoritative A).
 Proof. by destruct 1. Qed.
 Global Instance authoritative_proper : Proper ((≡) ==> (≡)) (@authoritative A).
 Proof. by destruct 1. Qed.
-Global Instance own_ne : Proper (dist n ==> dist n) (@auth_own A).
+Global Instance own_ne : NonExpansive (@auth_own A).
 Proof. by destruct 1. Qed.
 Global Instance own_proper : Proper ((≡) ==> (≡)) (@auth_own A).
 Proof. by destruct 1. Qed.
@@ -295,8 +295,8 @@ Proof.
 Qed.
 Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
   CofeMor (auth_map f).
-Lemma authC_map_ne A B n : Proper (dist n ==> dist n) (@authC_map A B).
-Proof. intros f f' Hf [[[a|]|] b]; repeat constructor; apply Hf. Qed.
+Lemma authC_map_ne A B : NonExpansive (@authC_map A B).
+Proof. intros n f f' Hf [[[a|]|] b]; repeat constructor; apply Hf. Qed.
 
 Program Definition authRF (F : urFunctor) : rFunctor := {|
   rFunctor_car A B := authR (urFunctor_car F A B);

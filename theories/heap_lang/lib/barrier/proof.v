@@ -55,17 +55,17 @@ Proof. apply _. Qed.
 (** Setoids *)
 Global Instance ress_ne n : Proper (dist n ==> (=) ==> dist n) ress.
 Proof. solve_proper. Qed.
-Global Instance state_to_prop_ne n s :
-  Proper (dist n ==> dist n) (state_to_prop s).
+Global Instance state_to_prop_ne s :
+  NonExpansive (state_to_prop s).
 Proof. solve_proper. Qed.
 Global Instance barrier_inv_ne n l :
   Proper (dist n ==> eq ==> dist n) (barrier_inv l).
 Proof. solve_proper. Qed.
-Global Instance barrier_ctx_ne n γ l : Proper (dist n ==> dist n) (barrier_ctx γ l).
+Global Instance barrier_ctx_ne γ l : NonExpansive (barrier_ctx γ l).
 Proof. solve_proper. Qed. 
-Global Instance send_ne n l : Proper (dist n ==> dist n) (send l).
+Global Instance send_ne l : NonExpansive (send l).
 Proof. solve_proper. Qed.
-Global Instance recv_ne n l : Proper (dist n ==> dist n) (recv l).
+Global Instance recv_ne l : NonExpansive (recv l).
 Proof. solve_proper. Qed.
 
 (** Helper lemmas *)

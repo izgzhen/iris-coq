@@ -12,36 +12,36 @@ Instance list_dist : Dist (list A) := λ n, Forall2 (dist n).
 Lemma list_dist_lookup n l1 l2 : l1 ≡{n}≡ l2 ↔ ∀ i, l1 !! i ≡{n}≡ l2 !! i.
 Proof. setoid_rewrite dist_option_Forall2. apply Forall2_lookup. Qed.
 
-Global Instance cons_ne n : Proper (dist n ==> dist n ==> dist n) (@cons A) := _.
-Global Instance app_ne n : Proper (dist n ==> dist n ==> dist n) (@app A) := _.
+Global Instance cons_ne : NonExpansive2 (@cons A) := _.
+Global Instance app_ne : NonExpansive2 (@app A) := _.
 Global Instance length_ne n : Proper (dist n ==> (=)) (@length A) := _.
-Global Instance tail_ne n : Proper (dist n ==> dist n) (@tail A) := _.
-Global Instance take_ne n : Proper (dist n ==> dist n) (@take A n) := _.
-Global Instance drop_ne n : Proper (dist n ==> dist n) (@drop A n) := _.
-Global Instance list_lookup_ne n i :
-  Proper (dist n ==> dist n) (lookup (M:=list A) i).
-Proof. intros ???. by apply dist_option_Forall2, Forall2_lookup. Qed.
+Global Instance tail_ne : NonExpansive (@tail A) := _.
+Global Instance take_ne : NonExpansive (@take A n) := _.
+Global Instance drop_ne : NonExpansive (@drop A n) := _.
+Global Instance list_lookup_ne i :
+  NonExpansive (lookup (M:=list A) i).
+Proof. intros ????. by apply dist_option_Forall2, Forall2_lookup. Qed.
 Global Instance list_alter_ne n f i :
   Proper (dist n ==> dist n) f →
   Proper (dist n ==> dist n) (alter (M:=list A) f i) := _.
-Global Instance list_insert_ne n i :
-  Proper (dist n ==> dist n ==> dist n) (insert (M:=list A) i) := _.
-Global Instance list_inserts_ne n i :
-  Proper (dist n ==> dist n ==> dist n) (@list_inserts A i) := _.
-Global Instance list_delete_ne n i :
-  Proper (dist n ==> dist n) (delete (M:=list A) i) := _.
-Global Instance option_list_ne n : Proper (dist n ==> dist n) (@option_list A).
-Proof. intros ???; by apply Forall2_option_list, dist_option_Forall2. Qed.
+Global Instance list_insert_ne i :
+  NonExpansive2 (insert (M:=list A) i) := _.
+Global Instance list_inserts_ne i :
+  NonExpansive2 (@list_inserts A i) := _.
+Global Instance list_delete_ne i :
+  NonExpansive (delete (M:=list A) i) := _.
+Global Instance option_list_ne : NonExpansive (@option_list A).
+Proof. intros ????; by apply Forall2_option_list, dist_option_Forall2. Qed.
 Global Instance list_filter_ne n P `{∀ x, Decision (P x)} :
   Proper (dist n ==> iff) P →
   Proper (dist n ==> dist n) (filter (B:=list A) P) := _.
-Global Instance replicate_ne n :
-  Proper (dist n ==> dist n) (@replicate A n) := _.
-Global Instance reverse_ne n : Proper (dist n ==> dist n) (@reverse A) := _.
-Global Instance last_ne n : Proper (dist n ==> dist n) (@last A).
-Proof. intros ???; by apply dist_option_Forall2, Forall2_last. Qed.
+Global Instance replicate_ne :
+  NonExpansive (@replicate A n) := _.
+Global Instance reverse_ne : NonExpansive (@reverse A) := _.
+Global Instance last_ne : NonExpansive (@last A).
+Proof. intros ????; by apply dist_option_Forall2, Forall2_last. Qed.
 Global Instance resize_ne n :
-  Proper (dist n ==> dist n ==> dist n) (@resize A n) := _.
+  NonExpansive2 (@resize A n) := _.
 
 Definition list_ofe_mixin : OfeMixin (list A).
 Proof.
@@ -97,8 +97,8 @@ Instance list_fmap_ne {A B : ofeT} (f : A → B) n:
 Proof. intros Hf l k ?; by eapply Forall2_fmap, Forall2_impl; eauto. Qed.
 Definition listC_map {A B} (f : A -n> B) : listC A -n> listC B :=
   CofeMor (fmap f : listC A → listC B).
-Instance listC_map_ne A B n : Proper (dist n ==> dist n) (@listC_map A B).
-Proof. intros f g ? l. by apply list_fmap_ext_ne. Qed.
+Instance listC_map_ne A B : NonExpansive (@listC_map A B).
+Proof. intros n f g ? l. by apply list_fmap_ext_ne. Qed.
 
 Program Definition listCF (F : cFunctor) : cFunctor := {|
   cFunctor_car A B := listC (cFunctor_car F A B);
@@ -293,9 +293,9 @@ Section properties.
 
   Lemma replicate_valid n (x : A) : ✓ x → ✓ replicate n x.
   Proof. apply Forall_replicate. Qed.
-  Global Instance list_singletonM_ne n i :
-    Proper (dist n ==> dist n) (@list_singletonM A i).
-  Proof. intros l1 l2 ?. apply Forall2_app; by repeat constructor. Qed.
+  Global Instance list_singletonM_ne i :
+    NonExpansive (@list_singletonM A i).
+  Proof. intros n l1 l2 ?. apply Forall2_app; by repeat constructor. Qed.
   Global Instance list_singletonM_proper i :
     Proper ((≡) ==> (≡)) (list_singletonM i) := ne_proper _.
 

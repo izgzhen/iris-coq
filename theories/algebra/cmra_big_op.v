@@ -76,8 +76,8 @@ Lemma big_op_Forall2 R :
   Proper (Forall2 R ==> R) (@big_op M).
 Proof. rewrite /Proper /respectful. induction 3; eauto. Qed.
 
-Global Instance big_op_ne n : Proper (dist n ==> dist n) (@big_op M).
-Proof. apply big_op_Forall2; apply _. Qed.
+Global Instance big_op_ne : NonExpansive (@big_op M).
+Proof. intros ?. apply big_op_Forall2; apply _. Qed.
 Global Instance big_op_proper : Proper ((≡) ==> (≡)) (@big_op M) := ne_proper _.
 
 Lemma big_op_nil : [⋅] (@nil M) = ∅.

@@ -30,7 +30,7 @@ Implicit Types v : val Λ.
 Import uPred.
 
 Global Instance ht_ne E n :
-  Proper (dist n ==> eq==>pointwise_relation _ (dist n) ==> dist n) (ht E).
+  Proper (dist n ==> eq ==> pointwise_relation _ (dist n) ==> dist n) (ht E).
 Proof. solve_proper. Qed.
 Global Instance ht_proper E :
   Proper ((≡) ==> eq ==> pointwise_relation _ (≡) ==> (≡)) (ht E).

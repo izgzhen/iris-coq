@@ -43,10 +43,10 @@ Section iprod_cofe.
   Qed.
 
   (** Properties of iprod_insert. *)
-  Global Instance iprod_insert_ne n x :
-    Proper (dist n ==> dist n ==> dist n) (iprod_insert x).
+  Global Instance iprod_insert_ne x :
+    NonExpansive2 (iprod_insert x).
   Proof.
-    intros y1 y2 ? f1 f2 ? x'; rewrite /iprod_insert.
+    intros n y1 y2 ? f1 f2 ? x'; rewrite /iprod_insert.
     by destruct (decide _) as [[]|].
   Qed.
   Global Instance iprod_insert_proper x :
@@ -188,9 +188,9 @@ Section iprod_singleton.
   Context `{Finite A} {B : A → ucmraT}.
   Implicit Types x : A.
 
-  Global Instance iprod_singleton_ne n x :
-    Proper (dist n ==> dist n) (iprod_singleton x : B x → _).
-  Proof. intros y1 y2 ?; apply iprod_insert_ne. done. by apply equiv_dist. Qed.
+  Global Instance iprod_singleton_ne x :
+    NonExpansive (iprod_singleton x : B x → _).
+  Proof. intros n y1 y2 ?; apply iprod_insert_ne. done. by apply equiv_dist. Qed.
   Global Instance iprod_singleton_proper x :
     Proper ((≡) ==> (≡)) (iprod_singleton x) := ne_proper _.
 
@@ -297,9 +297,9 @@ Qed.
 Definition iprodC_map `{Finite A} {B1 B2 : A → ofeT}
     (f : iprod (λ x, B1 x -n> B2 x)) :
   iprodC B1 -n> iprodC B2 := CofeMor (iprod_map f).
-Instance iprodC_map_ne `{Finite A} {B1 B2 : A → ofeT} n :
-  Proper (dist n ==> dist n) (@iprodC_map A _ _ B1 B2).
-Proof. intros f1 f2 Hf g x; apply Hf. Qed.
+Instance iprodC_map_ne `{Finite A} {B1 B2 : A → ofeT} :
+  NonExpansive (@iprodC_map A _ _ B1 B2).
+Proof. intros n f1 f2 Hf g x; apply Hf. Qed.
 
 Program Definition iprodCF `{Finite C} (F : C → cFunctor) : cFunctor := {|
   cFunctor_car A B := iprodC (λ c, cFunctor_car (F c) A B);

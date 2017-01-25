@@ -51,15 +51,15 @@ Section box.
 Context `{invG Σ, boxG Σ} (N : namespace).
 Implicit Types P Q : iProp Σ.
 
-Global Instance box_own_prop_ne n γ : Proper (dist n ==> dist n) (box_own_prop γ).
+Global Instance box_own_prop_ne γ : NonExpansive (box_own_prop γ).
 Proof. solve_proper. Qed.
 Global Instance box_own_prop_contractive γ : Contractive (box_own_prop γ).
 Proof. solve_contractive. Qed.
 
-Global Instance box_inv_ne n γ : Proper (dist n ==> dist n) (slice_inv γ).
+Global Instance box_inv_ne γ : NonExpansive (slice_inv γ).
 Proof. solve_proper. Qed.
 
-Global Instance slice_ne n γ : Proper (dist n ==> dist n) (slice N γ).
+Global Instance slice_ne γ : NonExpansive (slice N γ).
 Proof. solve_proper. Qed.
 Global Instance slice_contractive γ : Contractive (slice N γ).
 Proof. solve_contractive. Qed.
@@ -69,7 +69,7 @@ Proof. apply _. Qed.
 
 Global Instance box_contractive f : Contractive (box N f).
 Proof. solve_contractive. Qed.
-Global Instance box_ne n f : Proper (dist n ==> dist n) (box N f).
+Global Instance box_ne f : NonExpansive (box N f).
 Proof. apply (contractive_ne _). Qed.
 
 Lemma box_own_auth_agree γ b1 b2 :

@@ -39,7 +39,7 @@ Section fupd.
 Context `{invG Σ}.
 Implicit Types P Q : iProp Σ.
 
-Global Instance fupd_ne E1 E2 n : Proper (dist n ==> dist n) (@fupd Σ _ E1 E2).
+Global Instance fupd_ne E1 E2 : NonExpansive (@fupd Σ _ E1 E2).
 Proof. rewrite fupd_eq. solve_proper. Qed.
 Global Instance fupd_proper E1 E2 : Proper ((≡) ==> (≡)) (@fupd Σ _ E1 E2).
 Proof. apply ne_proper, _. Qed.

@@ -43,8 +43,8 @@ Proof. intros ? m m' ? i. by apply (timeless _). Qed.
 Global Instance gmapC_leibniz: LeibnizEquiv A → LeibnizEquiv gmapC.
 Proof. intros; change (LeibnizEquiv (gmap K A)); apply _. Qed.
 
-Global Instance lookup_ne n k :
-  Proper (dist n ==> dist n) (lookup k : gmap K A → option A).
+Global Instance lookup_ne k :
+  NonExpansive (lookup k : gmap K A → option A).
 Proof. by intros m1 m2. Qed.
 Global Instance lookup_proper k :
   Proper ((≡) ==> (≡)) (lookup k : gmap K A → option A) := _.
@@ -54,19 +54,19 @@ Proof.
   intros ? m m' Hm k'.
   by destruct (decide (k = k')); simplify_map_eq; rewrite (Hm k').
 Qed.
-Global Instance insert_ne i n :
-  Proper (dist n ==> dist n ==> dist n) (insert (M:=gmap K A) i).
+Global Instance insert_ne i :
+  NonExpansive2 (insert (M:=gmap K A) i).
 Proof.
-  intros x y ? m m' ? j; destruct (decide (i = j)); simplify_map_eq;
+  intros n x y ? m m' ? j; destruct (decide (i = j)); simplify_map_eq;
     [by constructor|by apply lookup_ne].
 Qed.
-Global Instance singleton_ne i n :
-  Proper (dist n ==> dist n) (singletonM i : A → gmap K A).
-Proof. by intros ???; apply insert_ne. Qed.
-Global Instance delete_ne i n :
-  Proper (dist n ==> dist n) (delete (M:=gmap K A) i).
+Global Instance singleton_ne i :
+  NonExpansive (singletonM i : A → gmap K A).
+Proof. by intros ????; apply insert_ne. Qed.
+Global Instance delete_ne i :
+  NonExpansive (delete (M:=gmap K A) i).
 Proof.
-  intros m m' ? j; destruct (decide (i = j)); simplify_map_eq;
+  intros n m m' ? j; destruct (decide (i = j)); simplify_map_eq;
     [by constructor|by apply lookup_ne].
 Qed.
 
@@ -460,10 +460,10 @@ Proof.
 Qed.
 Definition gmapC_map `{Countable K} {A B} (f: A -n> B) :
   gmapC K A -n> gmapC K B := CofeMor (fmap f : gmapC K A → gmapC K B).
-Instance gmapC_map_ne `{Countable K} {A B} n :
-  Proper (dist n ==> dist n) (@gmapC_map K _ _ A B).
+Instance gmapC_map_ne `{Countable K} {A B} :
+  NonExpansive (@gmapC_map K _ _ A B).
 Proof.
-  intros f g Hf m k; rewrite /= !lookup_fmap.
+  intros n f g Hf m k; rewrite /= !lookup_fmap.
   destruct (_ !! k) eqn:?; simpl; constructor; apply Hf.
 Qed.
 

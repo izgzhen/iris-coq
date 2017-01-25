@@ -217,8 +217,8 @@ Qed.
 Instance nnupd_k_mono' k: Proper ((⊢) ==> (⊢)) (@uPred_nnupd_k M k).
 Proof. by intros P P' HP; apply nnupd_k_mono. Qed.
 
-Instance nnupd_k_ne k n : Proper (dist n ==> dist n) (@uPred_nnupd_k M k).
-Proof. induction k; rewrite //= ?right_id=>P P' HP; by rewrite HP. Qed.
+Instance nnupd_k_ne k : NonExpansive (@uPred_nnupd_k M k).
+Proof. intros n. induction k; rewrite //= ?right_id=>P P' HP; by rewrite HP. Qed.
 Lemma nnupd_k_proper k P Q: (P ⊣⊢ Q) → (|=n=>_k P) ⊣⊢ (|=n=>_k Q).
 Proof. intros HP; apply (anti_symm (⊢)); eapply nnupd_k_mono; by rewrite HP. Qed.
 Instance nnupd_k_proper' k: Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_nnupd_k M k).

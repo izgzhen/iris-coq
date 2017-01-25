@@ -57,8 +57,8 @@ Section proper.
     intros v v' ? x x' ->. apply equiv_dist=> n. f_equiv. by apply equiv_dist.
   Qed.
 
-  Global Instance vec_to_list_ne n m :
-    Proper (dist n ==> dist n) (@vec_to_list A m).
+  Global Instance vec_to_list_ne m :
+    NonExpansive (@vec_to_list A m).
   Proof. by intros v v'. Qed.
   Global Instance vec_to_list_proper m :
     Proper (equiv ==> equiv) (@vec_to_list A m).
@@ -99,9 +99,9 @@ Proof.
 Qed.
 Definition vecC_map {A B : ofeT} m (f : A -n> B) : vecC A m -n> vecC B m :=
   CofeMor (vec_map m f).
-Instance vecC_map_ne {A A'} m n :
-  Proper (dist n ==> dist n) (@vecC_map A A' m).
-Proof. intros f g ? v. by apply vec_map_ext_ne. Qed.
+Instance vecC_map_ne {A A'} m :
+  NonExpansive (@vecC_map A A' m).
+Proof. intros n f g ? v. by apply vec_map_ext_ne. Qed.
 
 Program Definition vecCF (F : cFunctor) m : cFunctor := {|
   cFunctor_car A B := vecC (cFunctor_car F A B) m;
