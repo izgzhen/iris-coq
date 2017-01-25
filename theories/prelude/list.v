@@ -3210,8 +3210,8 @@ Definition foldr_app := @fold_right_app.
 Lemma foldl_app {A B} (f : A → B → A) (l k : list B) (a : A) :
   foldl f a (l ++ k) = foldl f (foldl f a l) k.
 Proof. revert a. induction l; simpl; auto. Qed.
-Lemma foldr_permutation {A B} (R : relation B) `{!Equivalence R}
-    (f : A → B → B) (b : B) `{!Proper ((=) ==> R ==> R) f}
+Lemma foldr_permutation {A B} (R : relation B) `{!PreOrder R}
+    (f : A → B → B) (b : B) `{!∀ x, Proper (R ==> R) (f x)}
     (Hf : ∀ a1 a2 b, R (f a1 (f a2 b)) (f a2 (f a1 b))) :
   Proper ((≡ₚ) ==> R) (foldr f b).
 Proof. induction 1; simpl; [done|by f_equiv|apply Hf|etrans; eauto]. Qed.

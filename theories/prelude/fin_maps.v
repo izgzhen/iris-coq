@@ -112,6 +112,11 @@ Definition map_imap `{∀ A, Insert K A (M A), ∀ A, Empty (M A),
     ∀ A, FinMapToList K A (M A)} {A B} (f : K → A → option B) (m : M A) : M B :=
   map_of_list (omap (λ ix, (fst ix,) <$> curry f ix) (map_to_list m)).
 
+(* Folds a function [f] over a map. The order in which the function is called
+is unspecified. *)
+Definition map_fold `{FinMapToList K A M} {B}
+  (f : K → A → B → B) (b : B) : M → B := foldr (curry f) b ∘ map_to_list.
+
 (** * Theorems *)
 Section theorems.
 Context `{FinMap K M}.
@@ -812,6 +817,47 @@ Proof.
   apply (wf_projected (<) (length ∘ map_to_list)).
   - by apply map_to_list_length.
   - by apply lt_wf.
+Qed.
+
+(** ** The fold operation *)
+Lemma map_fold_empty {A B} (f : K → A → B → B) (b : B) :
+  map_fold f b ∅ = b.
+Proof. unfold map_fold; simpl. by rewrite map_to_list_empty. Qed.
+
+Lemma map_fold_insert {A B} (R : relation B) `{!PreOrder R}
+    (f : K → A → B → B) (b : B) (i : K) (x : A) (m : M A) :
+  (∀ j z, Proper (R ==> R) (f j z)) →
+  (∀ j1 j2 z1 z2 y, R (f j1 z1 (f j2 z2 y)) (f j2 z2 (f j1 z1 y))) →
+  m !! i = None →
+  R (map_fold f b (<[i:=x]> m)) (f i x (map_fold f b m)).
+Proof.
+  intros. unfold map_fold; simpl.
+  assert (∀ kz, Proper (R ==> R) (curry f kz)) by (intros []; apply _).
+  trans (foldr (curry f) b ((i, x) :: map_to_list m)); [|done].
+  eapply (foldr_permutation R (curry f) b), map_to_list_insert; auto.
+  intros [] []; simpl; eauto.
+Qed.
+
+Lemma map_fold_ind {A B} (P : B → M A → Prop) (f : K → A → B → B) (b : B) :
+  P b ∅ →
+  (∀ i x m r, m !! i = None → P r m → P (f i x r) (<[i:=x]> m)) →
+  ∀ m, P (map_fold f b m) m.
+Proof.
+  intros Hemp Hinsert.
+  cut (∀ l, NoDup l →
+    ∀ m, (∀ i x, m !! i = Some x ↔ (i,x) ∈ l) → P (foldr (curry f) b l) m).
+  { intros help ?. apply help; [apply NoDup_map_to_list|].
+    intros i x. by rewrite elem_of_map_to_list. }
+  induction 1 as [|[i x] l ?? IH]; simpl.
+  { intros m Hm. cut (m = ∅); [by intros ->|]. apply map_empty; intros i.
+    apply eq_None_not_Some; intros [x []%Hm%elem_of_nil]. }
+  intros m Hm. assert (m !! i = Some x) by (apply Hm; by left).
+  rewrite <-(insert_id m i x), <-insert_delete by done.
+  apply Hinsert; auto using lookup_delete.
+  apply IH. intros j y. rewrite lookup_delete_Some, Hm. split.
+  - by intros [? [[= ??]|?]%elem_of_cons].
+  - intros ?; split; [intros ->|by right].
+    assert (m !! j = Some y) by (apply Hm; by right). naive_solver.
 Qed.
 
 (** ** Properties of the [map_Forall] predicate *)
