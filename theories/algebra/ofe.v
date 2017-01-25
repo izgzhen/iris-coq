@@ -267,34 +267,35 @@ Definition fixpointK `{Cofe A, Inhabited A} k (f : A → A)
 
 Section fixpointK.
   Local Set Default Proof Using "Type*".
-  Context `{Cofe A, Inhabited A} (f : A → A) k `{!Contractive (Nat.iter k f)}.
+  Context `{Cofe A, Inhabited A} (f : A → A) (k : nat).
+  Context `{f_contractive : !Contractive (Nat.iter k f)}.
   (* TODO: Can we get rid of this assumption, derive it from contractivity? *)
-  Context `{!∀ n, Proper (dist n ==> dist n) f}.
+  Context `{f_ne : !∀ n, Proper (dist n ==> dist n) f}.
+
+  Let f_proper : Proper ((≡) ==> (≡)) f := ne_proper f.
+  Existing Instance f_proper.
 
   Lemma fixpointK_unfold : fixpointK k f ≡ f (fixpointK k f).
   Proof.
-    apply equiv_dist=>n.
-    rewrite /fixpointK fixpoint_eq /fixpoint_def (conv_compl n (fixpoint_chain _)) //.
-    induction n as [|n IH]; simpl.
-    - rewrite -Nat_iter_S Nat_iter_S_r. eapply contractive_0; first done.
-    - rewrite -[f _]Nat_iter_S Nat_iter_S_r. eapply contractive_S; first done. eauto.
+    symmetry. rewrite /fixpointK. apply fixpoint_unique.
+    by rewrite -Nat_iter_S_r Nat_iter_S -fixpoint_unfold.
   Qed.
 
   Lemma fixpointK_unique (x : A) : x ≡ f x → x ≡ fixpointK k f.
   Proof.
-    intros Hf. apply fixpoint_unique, equiv_dist=>n.
-    (* Forward reasoning is so annoying... *)
-    assert (x ≡{n}≡ f x) by by apply equiv_dist.
-    clear Contractive0. induction k; first done. by rewrite {1}Hf {1}IHn0.
+    intros Hf. apply fixpoint_unique. clear f_contractive.
+    induction k as [|k' IH]=> //=. by rewrite -IH.
   Qed.
 
   Section fixpointK_ne.
-    Context (g : A → A) `{!Contractive (Nat.iter k g), !∀ n, Proper (dist n ==> dist n) g}.
+    Context (g : A → A) `{g_contractive : !Contractive (Nat.iter k g)}.
+    Context {g_ne : ∀ n, Proper (dist n ==> dist n) g}.
 
     Lemma fixpointK_ne n : (∀ z, f z ≡{n}≡ g z) → fixpointK k f ≡{n}≡ fixpointK k g.
     Proof.
-      rewrite /fixpointK=>Hne /=. apply fixpoint_ne=>? /=. clear Contractive0 Contractive1.
-      induction k; first by auto. simpl. rewrite IHn0. apply Hne.
+      rewrite /fixpointK=> Hfg /=. apply fixpoint_ne=> z.
+      clear f_contractive g_contractive.
+      induction k as [|k' IH]=> //=. by rewrite IH Hfg.
     Qed.
 
     Lemma fixpointK_proper : (∀ z, f z ≡ g z) → fixpointK k f ≡ fixpointK k g.
