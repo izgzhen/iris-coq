@@ -261,44 +261,46 @@ Section fixpoint.
   Qed.
 End fixpoint.
 
-(** Fixpoint of f when f^2 is contractive. **)
-(* TODO: Generalize 2 to m. *)
-Definition fixpoint2 `{Cofe A, Inhabited A} (f : A → A)
-  `{!Contractive (Nat.iter 2 f)} := fixpoint (Nat.iter 2 f).
+(** Fixpoint of f when f^k is contractive. **)
+Definition fixpointK `{Cofe A, Inhabited A} k (f : A → A)
+  `{!Contractive (Nat.iter k f)} := fixpoint (Nat.iter k f).
 
-Section fixpoint2.
+Section fixpointK.
   Local Set Default Proof Using "Type*".
-  Context `{Cofe A, Inhabited A} (f : A → A) `{!Contractive (Nat.iter 2 f)}.
+  Context `{Cofe A, Inhabited A} (f : A → A) k `{!Contractive (Nat.iter k f)}.
   (* TODO: Can we get rid of this assumption, derive it from contractivity? *)
   Context `{!∀ n, Proper (dist n ==> dist n) f}.
 
-  Lemma fixpoint2_unfold : fixpoint2 f ≡ f (fixpoint2 f).
+  Lemma fixpointK_unfold : fixpointK k f ≡ f (fixpointK k f).
   Proof.
     apply equiv_dist=>n.
-    rewrite /fixpoint2 fixpoint_eq /fixpoint_def (conv_compl n (fixpoint_chain _)) //.
+    rewrite /fixpointK fixpoint_eq /fixpoint_def (conv_compl n (fixpoint_chain _)) //.
     induction n as [|n IH]; simpl.
-    - eapply contractive_0 with (f0 := Nat.iter 2 f). done.
-    - eapply contractive_S with (f0 := Nat.iter 2 f); first done. eauto.
+    - rewrite -Nat_iter_S Nat_iter_S_r. eapply contractive_0; first done.
+    - rewrite -[f _]Nat_iter_S Nat_iter_S_r. eapply contractive_S; first done. eauto.
   Qed.
 
-  Lemma fixpoint2_unique (x : A) : x ≡ f x → x ≡ fixpoint2 f.
+  Lemma fixpointK_unique (x : A) : x ≡ f x → x ≡ fixpointK k f.
   Proof.
-    intros Hf. apply fixpoint_unique, equiv_dist=>n. eapply equiv_dist in Hf.
-    rewrite 2!{1}Hf. done.
+    intros Hf. apply fixpoint_unique, equiv_dist=>n.
+    (* Forward reasoning is so annoying... *)
+    assert (x ≡{n}≡ f x) by by apply equiv_dist.
+    clear Contractive0. induction k; first done. by rewrite {1}Hf {1}IHn0.
   Qed.
 
-  Section fixpoint2_ne.
-    Context (g : A → A) `{!Contractive (Nat.iter 2 g), !∀ n, Proper (dist n ==> dist n) g}.
+  Section fixpointK_ne.
+    Context (g : A → A) `{!Contractive (Nat.iter k g), !∀ n, Proper (dist n ==> dist n) g}.
 
-    Lemma fixpoint2_ne n : (∀ z, f z ≡{n}≡ g z) → fixpoint2 f ≡{n}≡ fixpoint2 g.
+    Lemma fixpointK_ne n : (∀ z, f z ≡{n}≡ g z) → fixpointK k f ≡{n}≡ fixpointK k g.
     Proof.
-      rewrite /fixpoint2=>Hne /=. apply fixpoint_ne=>? /=. rewrite !Hne. done.
+      rewrite /fixpointK=>Hne /=. apply fixpoint_ne=>? /=. clear Contractive0 Contractive1.
+      induction k; first by auto. simpl. rewrite IHn0. apply Hne.
     Qed.
 
-    Lemma fixpoint2_proper : (∀ z, f z ≡ g z) → fixpoint2 f ≡ fixpoint2 g.
-    Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint2_ne. Qed.
-  End fixpoint2_ne.
-End fixpoint2.
+    Lemma fixpointK_proper : (∀ z, f z ≡ g z) → fixpointK k f ≡ fixpointK k g.
+    Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpointK_ne. Qed.
+  End fixpointK_ne.
+End fixpointK.
 
 (** Mutual fixpoints *)
 Section fixpointAB.
