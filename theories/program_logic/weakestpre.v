@@ -155,10 +155,10 @@ Proof.
   { by iDestruct "H" as ">>> $". }
   iIntros (σ1) "Hσ". iMod "H". iMod ("H" $! σ1 with "Hσ") as "[$ H]".
   iModIntro. iNext. iIntros (e2 σ2 efs Hstep).
-  iMod ("H" with "* []") as "(Hphy & H & $)"; first done.
+  iMod ("H" with "[]") as "(Hphy & H & $)"; first done.
   rewrite !wp_unfold /wp_pre. destruct (to_val e2) as [v2|] eqn:He2.
   - iDestruct "H" as ">> $". iFrame. eauto.
-  - iMod ("H" with "* Hphy") as "[H _]".
+  - iMod ("H" with "Hphy") as "[H _]".
     iDestruct "H" as %(? & ? & ? & ?). by edestruct (Hatomic _ _ _ _ Hstep).
 Qed.
 

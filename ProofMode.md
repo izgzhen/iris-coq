@@ -251,7 +251,6 @@ _specification patterns_ to express splitting of hypotheses:
   `P`, as well the remaining goal.
 - `[%]` : This pattern can be used when eliminating `P -★ Q` when `P` is pure.
   It will generate a Coq goal for `P` and does not consume any hypotheses.
-- `*` : instantiate all top-level universal quantifiers with meta variables.
 
 For example, given:
 

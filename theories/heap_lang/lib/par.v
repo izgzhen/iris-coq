@@ -33,7 +33,7 @@ Proof.
   iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).
   iApply (wp_wand with "Hf2"); iIntros (v) "H2". wp_let.
   wp_apply (join_spec with "[$Hl]"). iIntros (w) "H1".
-  iSpecialize ("HΦ" with "* [-]"); first by iSplitL "H1". by wp_let.
+  iSpecialize ("HΦ" with "[-]"); first by iSplitL "H1". by wp_let.
 Qed.
 
 Lemma wp_par (Ψ1 Ψ2 : val → iProp Σ)

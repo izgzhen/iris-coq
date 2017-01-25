@@ -1030,28 +1030,25 @@ End limit_preserving.
 
 Section sigma.
   Context {A : ofeT} {P : A → Prop}.
+  Implicit Types x : sig P.
 
   (* TODO: Find a better place for this Equiv instance. It also
      should not depend on A being an OFE. *)
-  Instance sig_equiv : Equiv (sig P) :=
-    λ x1 x2, (proj1_sig x1) ≡ (proj1_sig x2).
-  Instance sig_dist : Dist (sig P) :=
-    λ n x1 x2, (proj1_sig x1) ≡{n}≡ (proj1_sig x2).
-  Lemma exist_ne :
-    ∀ n x1 x2, x1 ≡{n}≡ x2 →
-      ∀ (H1 : P x1) (H2 : P x2), (exist P x1 H1) ≡{n}≡ (exist P x2 H2).
-  Proof. intros n ?? Hx ??. exact Hx. Qed.
+  Instance sig_equiv : Equiv (sig P) := λ x1 x2, `x1 ≡ `x2.
+  Instance sig_dist : Dist (sig P) := λ n x1 x2, `x1 ≡{n}≡ `x2.
+  Lemma exist_ne n a1 a2 (H1 : P a1) (H2 : P a2) :
+    a1 ≡{n}≡ a2 → a1 ↾ H1 ≡{n}≡ a2 ↾ H2.
+  Proof. done. Qed.
   Global Instance proj1_sig_ne : Proper (dist n ==> dist n) (@proj1_sig _ P).
-  Proof. intros n [] [] ?. done. Qed.
+  Proof. by intros n [a Ha] [b Hb] ?. Qed.
   Definition sig_ofe_mixin : OfeMixin (sig P).
   Proof.
     split.
-    - intros x y. unfold dist, sig_dist, equiv, sig_equiv.
-      destruct x, y. apply equiv_dist.
-    - unfold dist, sig_dist. intros n.
-      split; [intros [] | intros [] [] | intros [] [] []]; simpl; try done.
-      intros. by etrans.
-    - intros n [??] [??]. unfold dist, sig_dist. simpl. apply dist_S.
+    - intros [a ?] [b ?]. rewrite /dist /sig_dist /equiv /sig_equiv /=.
+      apply equiv_dist.
+    - intros n. rewrite /dist /sig_dist.
+      split; [intros []| intros [] []| intros [] [] []]=> //= -> //.
+    - intros n [a ?] [b ?]. rewrite /dist /sig_dist /=. apply dist_S.
   Qed.
   Canonical Structure sigC : ofeT := OfeT (sig P) sig_ofe_mixin.
 
@@ -1059,13 +1056,11 @@ Section sigma.
      suddenly becomes explicit...? *)
   Program Definition sig_compl `{LimitPreserving _ P} : Compl sigC :=
     λ c, exist P (compl (chain_map proj1_sig c)) _.
-  Next Obligation.
-    intros ? Hlim c. apply Hlim. move=>n /=. destruct (c n). done.
-  Qed.
-  Program Definition sig_cofe `{LimitPreserving _ P} : Cofe sigC :=
+  Next Obligation. intros ? Hlim c. apply Hlim=> n /=. by destruct (c n). Qed.
+  Program Definition sig_cofe `{Cofe A, !LimitPreserving P} : Cofe sigC :=
     {| compl := sig_compl |}.
   Next Obligation.
-    intros ? Hlim n c. apply (conv_compl n (chain_map proj1_sig c)).
+    intros ?? n c. apply (conv_compl n (chain_map proj1_sig c)).
   Qed.
 
   Global Instance sig_timeless (x : sig P) :

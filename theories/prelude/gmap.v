@@ -1,4 +1,4 @@
-(* Copyright (c) 2012-2015, Robbert Krebbers. *)
+(* Copyright (c) 2012-2017, Robbert Krebbers. *)
 (* This file is distributed under the terms of the BSD license. *)
 (** This file implements finite maps and finite sets with keys of any countable
 type. The implementation is based on [Pmap]s, radix-2 search trees. *)

@@ -21,6 +21,9 @@ Proof. rewrite /FromAssumption=><-. by rewrite always_always. Qed.
 Global Instance from_assumption_bupd p P Q :
   FromAssumption p P Q → FromAssumption p P (|==> Q)%I.
 Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
+Global Instance from_assumption_forall {A} p (Φ : A → uPred M) Q x :
+  FromAssumption p (Φ x) Q → FromAssumption p (∀ x, Φ x) Q.
+Proof. rewrite /FromAssumption=> <-. by rewrite forall_elim. Qed.
 
 (* IntoPure *)
 Global Instance into_pure_pure φ : @IntoPure M ⌜φ⌝ φ.
@@ -217,6 +220,9 @@ Proof. by apply and_elim_l', impl_wand. Qed.
 Global Instance into_wand_iff_r P Q : IntoWand (P ↔ Q) Q P.
 Proof. apply and_elim_r', impl_wand. Qed.
 
+Global Instance into_wand_forall {A} (Φ : A → uPred M) P Q x :
+  IntoWand (Φ x) P Q → IntoWand (∀ x, Φ x) P Q.
+Proof. rewrite /IntoWand=> <-. apply forall_elim. Qed.
 Global Instance into_wand_always R P Q : IntoWand R P Q → IntoWand (□ R) P Q.
 Proof. rewrite /IntoWand=> ->. apply always_elim. Qed.
 
