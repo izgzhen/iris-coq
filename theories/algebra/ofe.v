@@ -262,7 +262,7 @@ Section fixpoint.
 End fixpoint.
 
 (** Mutual fixpoints *)
-Section fixpoint2.
+Section fixpointAB.
   Local Unset Default Proof Using.
 
   Context `{Cofe A, Cofe B, !Inhabited A, !Inhabited B}.
@@ -306,9 +306,9 @@ Section fixpoint2.
   Qed.
   Lemma fixpoint_B_unique p q : fA p q ≡ p → fB p q ≡ q → q ≡ fixpoint_B.
   Proof. intros. apply fixpoint_unique. by rewrite -fixpoint_A_unique. Qed.
-End fixpoint2.
+End fixpointAB.
 
-Section fixpoint2_ne.
+Section fixpointAB_ne.
   Context `{Cofe A, Cofe B, !Inhabited A, !Inhabited B}.
   Context (fA fA' : A → B → A).
   Context (fB fB' : A → B → B).
@@ -340,7 +340,7 @@ Section fixpoint2_ne.
     (∀ x y, fA x y ≡ fA' x y) → (∀ x y, fB x y ≡ fB' x y) →
     fixpoint_B fA fB ≡ fixpoint_B fA' fB'.
   Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpoint_B_ne. Qed.
-End fixpoint2_ne.
+End fixpointAB_ne.
 
 (** Function space *)
 (* We make [ofe_fun] a definition so that we can register it as a canonical
