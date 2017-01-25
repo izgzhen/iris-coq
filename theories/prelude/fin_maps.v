@@ -5,7 +5,7 @@ finite maps and collects some theory on it. Most importantly, it proves useful
 induction principles for finite maps and implements the tactic
 [simplify_map_eq] to simplify goals involving finite maps. *)
 From Coq Require Import Permutation.
-From iris.prelude Require Export relations orders vector.
+From iris.prelude Require Export relations orders vector fin_collections.
 (* FIXME: This file needs a 'Proof Using' hint, but the default we use
    everywhere makes for lots of extra ssumptions. *)
 
@@ -61,9 +61,13 @@ Instance map_singleton `{PartialAlter K A M, Empty M} :
 
 Definition map_of_list `{Insert K A M, Empty M} : list (K * A) → M :=
   fold_right (λ p, <[p.1:=p.2]>) ∅.
-Definition map_of_collection `{Elements K C, Insert K A M, Empty M}
-    (f : K → option A) (X : C) : M :=
-  map_of_list (omap (λ i, (i,) <$> f i) (elements X)).
+
+Definition map_to_collection `{FinMapToList K A M,
+    Singleton B C, Empty C, Union C} (f : K → A → B) (m : M) : C :=
+  of_list (curry f <$> map_to_list m).
+Definition map_of_collection `{Elements B C, Insert K A M, Empty M}
+    (f : B → K * A) (X : C) : M :=
+  map_of_list (f <$> elements X).
 
 Instance map_union_with `{Merge M} {A} : UnionWith A (M A) :=
   λ f, merge (union_with f).
@@ -587,25 +591,28 @@ Proof.
 Qed.
 
 (** ** Properties of conversion to lists *)
+Lemma elem_of_map_to_list' {A} (m : M A) ix :
+  ix ∈ map_to_list m ↔ m !! ix.1 = Some (ix.2).
+Proof. destruct ix as [i x]. apply elem_of_map_to_list. Qed.
 Lemma map_to_list_unique {A} (m : M A) i x y :
   (i,x) ∈ map_to_list m → (i,y) ∈ map_to_list m → x = y.
 Proof. rewrite !elem_of_map_to_list. congruence. Qed.
 Lemma NoDup_fst_map_to_list {A} (m : M A) : NoDup ((map_to_list m).*1).
 Proof. eauto using NoDup_fmap_fst, map_to_list_unique, NoDup_map_to_list. Qed.
-Lemma elem_of_map_of_list_1_help {A} (l : list (K * A)) i x :
-  (i,x) ∈ l → (∀ y, (i,y) ∈ l → y = x) → map_of_list l !! i = Some x.
+Lemma elem_of_map_of_list_1' {A} (l : list (K * A)) i x :
+  (∀ y, (i,y) ∈ l → x = y) → (i,x) ∈ l → map_of_list l !! i = Some x.
 Proof.
   induction l as [|[j y] l IH]; csimpl; [by rewrite elem_of_nil|].
   setoid_rewrite elem_of_cons.
-  intros [?|?] Hdup; simplify_eq; [by rewrite lookup_insert|].
+  intros Hdup [?|?]; simplify_eq; [by rewrite lookup_insert|].
   destruct (decide (i = j)) as [->|].
-  - rewrite lookup_insert; f_equal; eauto.
+  - rewrite lookup_insert; f_equal; eauto using eq_sym.
   - rewrite lookup_insert_ne by done; eauto.
 Qed.
 Lemma elem_of_map_of_list_1 {A} (l : list (K * A)) i x :
   NoDup (l.*1) → (i,x) ∈ l → map_of_list l !! i = Some x.
 Proof.
-  intros ? Hx; apply elem_of_map_of_list_1_help; eauto using NoDup_fmap_fst.
+  intros ? Hx; apply elem_of_map_of_list_1'; eauto using NoDup_fmap_fst.
   intros y; revert Hx. rewrite !elem_of_list_lookup; intros [i' Hi'] [j' Hj'].
   cut (i' = j'); [naive_solver|]. apply NoDup_lookup with (l.*1) i;
     by rewrite ?list_lookup_fmap, ?Hi', ?Hj'.
@@ -617,9 +624,14 @@ Proof.
   rewrite elem_of_cons. destruct (decide (i = j)) as [->|];
     rewrite ?lookup_insert, ?lookup_insert_ne; intuition congruence.
 Qed.
+Lemma elem_of_map_of_list' {A} (l : list (K * A)) i x :
+  (∀ x', (i,x) ∈ l → (i,x') ∈ l → x = x') →
+  (i,x) ∈ l ↔ map_of_list l !! i = Some x.
+Proof. split; auto using elem_of_map_of_list_1', elem_of_map_of_list_2. Qed.
 Lemma elem_of_map_of_list {A} (l : list (K * A)) i x :
   NoDup (l.*1) → (i,x) ∈ l ↔ map_of_list l !! i = Some x.
 Proof. split; auto using elem_of_map_of_list_1, elem_of_map_of_list_2. Qed.
+
 Lemma not_elem_of_map_of_list_1 {A} (l : list (K * A)) i :
   i ∉ l.*1 → map_of_list l !! i = None.
 Proof.
@@ -759,11 +771,11 @@ Lemma lookup_imap {A B} (f : K → A → option B) m i :
 Proof.
   unfold map_imap; destruct (m !! i ≫= f i) as [y|] eqn:Hi; simpl.
   - destruct (m !! i) as [x|] eqn:?; simplify_eq/=.
-    apply elem_of_map_of_list_1_help.
-    { apply elem_of_list_omap; exists (i,x); split;
-        [by apply elem_of_map_to_list|by simplify_option_eq]. }
-    intros y'; rewrite elem_of_list_omap; intros ([i' x']&Hi'&?).
-    by rewrite elem_of_map_to_list in Hi'; simplify_option_eq.
+    apply elem_of_map_of_list_1'.
+    { intros y'; rewrite elem_of_list_omap; intros ([i' x']&Hi'&?).
+      by rewrite elem_of_map_to_list in Hi'; simplify_option_eq. }
+    apply elem_of_list_omap; exists (i,x); split;
+      [by apply elem_of_map_to_list|by simplify_option_eq].
   - apply not_elem_of_map_of_list; rewrite elem_of_list_fmap.
     intros ([i' x]&->&Hi'); simplify_eq/=.
     rewrite elem_of_list_omap in Hi'; destruct Hi' as ([j y]&Hj&?).
@@ -771,20 +783,55 @@ Proof.
 Qed.
 
 (** ** Properties of conversion from collections *)
-Lemma lookup_map_of_collection {A} `{FinCollection K C}
-    (f : K → option A) X i x :
-  map_of_collection f X !! i = Some x ↔ i ∈ X ∧ f i = Some x.
+Section map_of_to_collection.
+  Context {A : Type} `{FinCollection B C}.
+
+  Lemma lookup_map_of_collection (f : B → K * A) Y i x :
+    (∀ y y', y ∈ Y → y' ∈ Y → (f y).1 = (f y').1 → y = y') →
+    map_of_collection f Y !! i = Some x ↔ ∃ y, y ∈ Y ∧ f y = (i,x).
+  Proof.
+    intros Hinj. assert (∀ x',
+      (i, x) ∈ f <$> elements Y → (i, x') ∈ f <$> elements Y → x = x').
+    { intros x'. intros (y&Hx&?%elem_of_elements)%elem_of_list_fmap.
+      intros (y'&Hx'&?%elem_of_elements)%elem_of_list_fmap.
+      cut (y = y'); [congruence|]. apply Hinj; auto. by rewrite <-Hx, <-Hx'. }
+    unfold map_of_collection; rewrite <-elem_of_map_of_list' by done.
+    rewrite elem_of_list_fmap. setoid_rewrite elem_of_elements; naive_solver.
+  Qed.
+
+  Lemma elem_of_map_to_collection (f : K → A → B) (m : M A) (y : B) :
+    y ∈ map_to_collection f m ↔ ∃ i x, m !! i = Some x ∧ f i x = y.
+  Proof.
+    unfold map_to_collection; simpl.
+    rewrite elem_of_of_list, elem_of_list_fmap. split.
+    - intros ([i x] & ? & ?%elem_of_map_to_list); eauto.
+    - intros (i&x&?&?). exists (i,x). by rewrite elem_of_map_to_list.
+  Qed.
+  Lemma map_to_collection_empty (f : K → A → B) : map_to_collection f ∅ = ∅.
+  Proof. unfold map_to_collection; simpl. by rewrite map_to_list_empty. Qed.
+  Lemma map_to_collection_insert (f : K → A → B)(m : M A) i x :
+    m !! i = None →
+    map_to_collection (C:=C) f (<[i:=x]>m) ≡ {[f i x]} ∪ map_to_collection f m.
+  Proof.
+    intros. unfold map_to_collection; simpl. by rewrite map_to_list_insert.
+  Qed.
+  Lemma map_to_collection_insert_L `{!LeibnizEquiv C} (f : K → A → B) m i x :
+    m !! i = None →
+    map_to_collection (C:=C) f (<[i:=x]>m) = {[f i x]} ∪ map_to_collection f m.
+  Proof. unfold_leibniz. apply map_to_collection_insert. Qed.
+End map_of_to_collection.
+
+Lemma lookup_map_of_collection_id `{FinCollection (K * A) C} (X : C) i x :
+  (∀ i y y', (i,y) ∈ X → (i,y') ∈ X → y = y') →
+  map_of_collection id X !! i = Some x ↔ (i,x) ∈ X.
 Proof.
-  assert (NoDup (fst <$> omap (λ i, (i,) <$> f i) (elements X))).
-  { induction (NoDup_elements X) as [|i' l]; csimpl; [constructor|].
-    destruct (f i') as [x'|]; csimpl; auto; constructor; auto.
-    rewrite elem_of_list_fmap. setoid_rewrite elem_of_list_omap.
-    by intros (?&?&?&?&?); simplify_option_eq. }
-  unfold map_of_collection; rewrite <-elem_of_map_of_list by done.
-  rewrite elem_of_list_omap. setoid_rewrite elem_of_elements; split.
-  - intros (?&?&?); simplify_option_eq; eauto.
-  - intros [??]; exists i; simplify_option_eq; eauto.
+  intros. etrans; [apply lookup_map_of_collection|naive_solver].
+  intros [] [] ???; simplify_eq/=; eauto with f_equal.
 Qed.
+
+Lemma elem_of_map_to_collection_pair `{FinCollection (K * A) C} (m : M A) i x :
+  (i,x) ∈ map_to_collection pair m ↔ m !! i = Some x.
+Proof. rewrite elem_of_map_to_collection. naive_solver. Qed.
 
 (** ** Induction principles *)
 Lemma map_ind {A} (P : M A → Prop) :

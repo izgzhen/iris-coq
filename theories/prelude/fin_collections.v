@@ -3,8 +3,7 @@
 (** This file collects definitions and theorems on finite collections. Most
 importantly, it implements a fold and size function and some useful induction
 principles on finite collections . *)
-From Coq Require Import Permutation.
-From iris.prelude Require Import relations listset.
+From iris.prelude Require Import relations.
 From iris.prelude Require Export numbers collections.
 Set Default Proof Using "Type*".
 
