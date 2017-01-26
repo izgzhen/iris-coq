@@ -18,6 +18,12 @@ Proof. rewrite /FromAssumption=><-. by rewrite always_elim. Qed.
 Global Instance from_assumption_always_r P Q :
   FromAssumption true P Q → FromAssumption true P (□ Q).
 Proof. rewrite /FromAssumption=><-. by rewrite always_always. Qed.
+Global Instance from_assumption_later p P Q :
+  FromAssumption p P Q → FromAssumption p P (▷ Q)%I.
+Proof. rewrite /FromAssumption=>->. apply later_intro. Qed.
+Global Instance from_assumption_laterN n p P Q :
+  FromAssumption p P Q → FromAssumption p P (▷^n Q)%I.
+Proof. rewrite /FromAssumption=>->. apply laterN_intro. Qed.
 Global Instance from_assumption_bupd p P Q :
   FromAssumption p P Q → FromAssumption p P (|==> Q)%I.
 Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
@@ -209,16 +215,38 @@ Global Instance from_later_sep n P1 P2 Q1 Q2 :
 Proof. intros ??; red. by rewrite laterN_sep; apply sep_mono. Qed.
 
 (* IntoWand *)
-Global Instance into_wand_wand P Q Q' :
-  FromAssumption false Q Q' → IntoWand (P -∗ Q) P Q'.
-Proof. by rewrite /FromAssumption /IntoWand /= => ->. Qed.
-Global Instance into_wand_impl P Q Q' :
-  FromAssumption false Q Q' → IntoWand (P → Q) P Q'.
-Proof. rewrite /FromAssumption /IntoWand /= => ->. by rewrite impl_wand. Qed.
-Global Instance into_wand_iff_l P Q : IntoWand (P ↔ Q) P Q.
-Proof. by apply and_elim_l', impl_wand. Qed.
-Global Instance into_wand_iff_r P Q : IntoWand (P ↔ Q) Q P.
-Proof. apply and_elim_r', impl_wand. Qed.
+Global Instance wand_weaken_exact P Q : WandWeaken P Q P Q.
+Proof. done. Qed.
+Global Instance wand_weaken_later P Q P' Q' :
+  WandWeaken P Q P' Q' → WandWeaken' P Q (▷ P') (▷ Q').
+Proof.
+  rewrite /WandWeaken' /WandWeaken=> ->. by rewrite -later_wand -later_intro.
+Qed.
+Global Instance wand_weaken_laterN n P Q P' Q' :
+  WandWeaken P Q P' Q' → WandWeaken' P Q (▷^n P') (▷^n Q').
+Proof.
+  rewrite /WandWeaken' /WandWeaken=> ->. by rewrite -laterN_wand -laterN_intro.
+Qed.
+Global Instance bupd_weaken_laterN P Q P' Q' :
+  WandWeaken P Q P' Q' → WandWeaken' P Q (|==> P') (|==> Q').
+Proof.
+  rewrite /WandWeaken' /WandWeaken=> ->.
+  apply wand_intro_l. by rewrite bupd_wand_r.
+Qed.
+
+Global Instance into_wand_wand P P' Q Q' :
+  WandWeaken P Q P' Q' → IntoWand (P -∗ Q) P' Q'.
+Proof. done. Qed.
+Global Instance into_wand_impl P P' Q Q' :
+  WandWeaken P Q P' Q' → IntoWand (P → Q) P' Q'.
+Proof. rewrite /WandWeaken /IntoWand /= => <-. apply impl_wand. Qed.
+
+Global Instance into_wand_iff_l P P' Q Q' :
+  WandWeaken P Q P' Q' → IntoWand (P ↔ Q) P' Q'.
+Proof. rewrite /WandWeaken /IntoWand=> <-. apply and_elim_l', impl_wand. Qed.
+Global Instance into_wand_iff_r P P' Q Q' :
+  WandWeaken Q P Q' P' → IntoWand (P ↔ Q) Q' P'.
+Proof. rewrite /WandWeaken /IntoWand=> <-. apply and_elim_r', impl_wand. Qed.
 
 Global Instance into_wand_forall {A} (Φ : A → uPred M) P Q x :
   IntoWand (Φ x) P Q → IntoWand (∀ x, Φ x) P Q.
@@ -226,20 +254,16 @@ Proof. rewrite /IntoWand=> <-. apply forall_elim. Qed.
 Global Instance into_wand_always R P Q : IntoWand R P Q → IntoWand (□ R) P Q.
 Proof. rewrite /IntoWand=> ->. apply always_elim. Qed.
 
-Global Instance into_wand_later (R1 R2 P Q : uPred M) :
-  IntoLaterN 1 R1 R2 → IntoWand R2 P Q → IntoWand' R1 (▷ P) (▷ Q) | 99.
-Proof.
-  rewrite /IntoLaterN /IntoWand' /IntoWand=> -> ->. by rewrite -later_wand.
-Qed.
-Global Instance into_wand_laterN n (R1 R2 P Q : uPred M) :
-  IntoLaterN n R1 R2 → IntoWand R2 P Q → IntoWand' R1 (▷^n P) (▷^n Q) | 100.
-Proof.
-  rewrite /IntoLaterN /IntoWand' /IntoWand=> -> ->. by rewrite -laterN_wand.
-Qed.
+Global Instance into_wand_later R P Q :
+  IntoWand R P Q → IntoWand (▷ R) (▷ P) (▷ Q).
+Proof. rewrite /IntoWand=> ->. by rewrite -later_wand. Qed.
+Global Instance into_wand_laterN n R P Q :
+  IntoWand R P Q → IntoWand (▷^n R) (▷^n P) (▷^n Q).
+Proof. rewrite /IntoWand=> ->. by rewrite -laterN_wand. Qed.
 Global Instance into_wand_bupd R P Q :
-  IntoWand R P Q → IntoWand' R (|==> P) (|==> Q) | 98.
+  IntoWand R P Q → IntoWand (|==> R) (|==> P) (|==> Q).
 Proof.
-  rewrite /IntoWand' /IntoWand=> ->. apply wand_intro_l. by rewrite bupd_wand_r.
+  rewrite /IntoWand=> ->. apply wand_intro_l. by rewrite bupd_sep wand_elim_r.
 Qed.
 
 (* FromAnd *)

@@ -27,14 +27,17 @@ Class FromLaterN {M} (n : nat) (P Q : uPred M) := from_laterN : ▷^n Q ⊢ P.
 Arguments from_laterN {_} _ _ _ {_}.
 Hint Mode FromLaterN + - ! - : typeclass_instances.
 
+Class WandWeaken {M} (P Q P' Q' : uPred M) := wand_weaken : (P -∗ Q) ⊢ (P' -∗ Q').
+Hint Mode WandWeaken + - - - - : typeclass_instances.
+
+Class WandWeaken' {M} (P Q P' Q' : uPred M) :=
+  wand_weaken' :> WandWeaken P Q P' Q'.
+Hint Mode WandWeaken' + - - ! - : typeclass_instances.
+Hint Mode WandWeaken' + - - - ! : typeclass_instances.
+
 Class IntoWand {M} (R P Q : uPred M) := into_wand : R ⊢ P -∗ Q.
 Arguments into_wand {_} _ _ _ {_}.
 Hint Mode IntoWand + ! - - : typeclass_instances.
-
-Class IntoWand' {M} (R P Q : uPred M) := into_wand' :> IntoWand R P Q.
-Arguments into_wand' {_} _ _ _ {_}.
-Hint Mode IntoWand' + ! ! - : typeclass_instances.
-Hint Mode IntoWand' + ! - ! : typeclass_instances.
 
 Class FromAnd {M} (P Q1 Q2 : uPred M) := from_and : Q1 ∧ Q2 ⊢ P.
 Arguments from_and {_} _ _ _ {_}.

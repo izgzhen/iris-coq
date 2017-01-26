@@ -154,10 +154,10 @@ Section proofmode_classes.
     FromAssumption p P (|==> Q) → FromAssumption p P (|={E}=> Q)%I.
   Proof. rewrite /FromAssumption=>->. apply bupd_fupd. Qed.
 
-  Global Instance into_wand_fupd E1 E2 R P Q :
-    IntoWand R P Q → IntoWand' R (|={E1,E2}=> P) (|={E1,E2}=> Q) | 100.
+  Global Instance wand_weaken_fupd E1 E2 P Q P' Q' :
+    WandWeaken P Q P' Q' → WandWeaken' P Q (|={E1,E2}=> P') (|={E1,E2}=> Q').
   Proof.
-    rewrite /IntoWand' /IntoWand=>->. apply wand_intro_l. by rewrite fupd_wand_r.
+    rewrite /WandWeaken' /WandWeaken=>->. apply wand_intro_l. by rewrite fupd_wand_r.
   Qed.
 
   Global Instance from_sep_fupd E P Q1 Q2 :
