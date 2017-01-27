@@ -45,6 +45,13 @@ Section updates.
     by rewrite cmra_opM_assoc.
   Qed.
 
+  Lemma cancel_local_update x y z `{!Cancelable x} :
+    (x ⋅ y, x ⋅ z) ~l~> (y, z).
+  Proof.
+    intros ? f ? Heq. split; first by eapply cmra_validN_op_r.
+    apply (cancelableN x); first done. by rewrite -cmra_opM_assoc.
+  Qed.
+
   Lemma local_update_discrete `{!CMRADiscrete A} (x y x' y' : A) :
     (x,y) ~l~> (x',y') ↔ ∀ mz, ✓ x → x ≡ y ⋅? mz → ✓ x' ∧ x' ≡ y' ⋅? mz.
   Proof.
@@ -108,6 +115,12 @@ Section updates_unital.
     - intros Hup z. apply (Hup (Some z)).
     - intros Hup [z|]; simpl; [by auto|].
       rewrite -(right_id ∅ op y) -(right_id ∅ op y'). auto.
+  Qed.
+
+  Lemma cancel_local_update_empty x y `{!Cancelable x} :
+    (x ⋅ y, x) ~l~> (y, ∅).
+  Proof.
+    rewrite -{2}(right_id ∅ op x). by apply cancel_local_update.
   Qed.
 End updates_unital.
 

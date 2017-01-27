@@ -271,7 +271,7 @@ Qed.
 
 Instance: ∀ x : agree A, NonExpansive (op x).
 Proof.
-  intros x n y1 y2. rewrite /dist /agree_dist /agree_list /=. 
+  intros x n y1 y2. rewrite /dist /agree_dist /agree_list /=.
   rewrite !app_comm_cons. apply: list_setequiv_app.
 Qed.
 Instance: NonExpansive2 (@op (agree A) _).
@@ -353,7 +353,7 @@ Qed.
 Global Instance to_agree_proper : Proper ((≡) ==> (≡)) to_agree := ne_proper _.
 
 Global Instance to_agree_injN n : Inj (dist n) (dist n) (to_agree).
-Proof. intros a b [Hxy%list_setincl_singleton_rev _]. done. Qed. 
+Proof. intros a b [Hxy%list_setincl_singleton_rev _]. done. Qed.
 Global Instance to_agree_inj : Inj (≡) (≡) (to_agree).
 Proof.
   intros a b ?. apply equiv_dist=>n. apply to_agree_injN. by apply equiv_dist.
@@ -387,12 +387,33 @@ Proof.
   - intros Hab. rewrite Hab. eexists. symmetry. eapply agree_idemp.
 Qed.
 
-Lemma to_agree_comp_valid (a b : A) : ✓ (to_agree a ⋅ to_agree b) ↔ a ≡ b.
+Lemma to_agree_comp_validN n (a b : A) :
+  ✓{n} (to_agree a ⋅ to_agree b) ↔ a ≡{n}≡ b.
 Proof.
   split.
-  - (* TODO: can this be derived from other stuff?  Otherwise, should probably become sth. generic about list_agrees. *)
+  - (* TODO: can this be derived from other stuff?  Otherwise, should probably
+       become sth. generic about list_agrees. *)
     intros Hv. apply Hv; simpl; set_solver.
   - intros ->. rewrite agree_idemp. done.
+Qed.
+
+Lemma to_agree_comp_valid (a b : A) : ✓ (to_agree a ⋅ to_agree b) ↔ a ≡ b.
+Proof.
+  rewrite cmra_valid_validN equiv_dist. by setoid_rewrite to_agree_comp_validN.
+Qed.
+
+Global Instance agree_cancelable (x : agree A) : Cancelable x.
+Proof.
+  intros n y z Hv Heq.
+  destruct (to_agree_uninjN n x) as [x' EQx]; first by eapply cmra_validN_op_l.
+  destruct (to_agree_uninjN n y) as [y' EQy]; first by eapply cmra_validN_op_r.
+  destruct (to_agree_uninjN n z) as [z' EQz].
+  { eapply (cmra_validN_op_r n x z). by rewrite -Heq. }
+  assert (Hx'y' : x' ≡{n}≡ y').
+  { apply to_agree_comp_validN. by rewrite EQx EQy. }
+  assert (Hx'z' : x' ≡{n}≡ z').
+  { apply to_agree_comp_validN. by rewrite EQx EQz -Heq. }
+  by rewrite -EQy -EQz -Hx'y' -Hx'z'.
 Qed.
 
 (** Internalized properties *)
@@ -425,7 +446,7 @@ Section agree_map.
   Proof using Hyps.
     intros n x y Hxy.
     change (list_setequiv (dist n)(f <$> (agree_list x))(f <$> (agree_list y))).
-    eapply list_setequiv_fmap; last exact Hxy. apply _. 
+    eapply list_setequiv_fmap; last exact Hxy. apply _.
   Qed.
   Instance agree_map_proper : Proper ((≡) ==> (≡)) (agree_map f) := ne_proper _.
 

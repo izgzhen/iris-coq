@@ -31,10 +31,18 @@ Qed.
 Canonical Structure fracR := discreteR frac frac_ra_mixin.
 End frac.
 
-(** Exclusive *)
 Global Instance frac_full_exclusive : Exclusive 1%Qp.
 Proof.
   move=> y /Qcle_not_lt [] /=. by rewrite -{1}(Qcplus_0_r 1) -Qcplus_lt_mono_l.
+Qed.
+
+Global Instance frac_cancelable (q : frac) : Cancelable q.
+Proof. intros ?????. by apply Qp_eq, (inj (Qcplus q)), (Qp_eq (q+y) (q+z))%Qp. Qed.
+
+Global Instance frac_id_free (q : frac) : IdFree q.
+Proof.
+  intros [q0 Hq0] ? EQ%Qp_eq. rewrite -{1}(Qcplus_0_r q) in EQ.
+  eapply Qclt_not_eq; first done. by apply (inj (Qcplus q)).
 Qed.
 
 Lemma frac_op': ∀ (p q: Qp), (p ⋅ q) = (p + q)%Qp.

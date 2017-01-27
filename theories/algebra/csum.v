@@ -181,9 +181,21 @@ Lemma csum_included x y :
                       ∨ (∃ b b', x = Cinr b ∧ y = Cinr b' ∧ b ≼ b').
 Proof.
   split.
-  - intros [z Hy]; destruct x as [a|b|], z as [a'|b'|]; inversion_clear Hy; auto.
-    + right; left; eexists _, _; split_and!; eauto. eexists; eauto.
-    + right; right; eexists _, _; split_and!; eauto. eexists; eauto.
+  - unfold included. intros [[a'|b'|] Hy]; destruct x as [a|b|];
+      inversion_clear Hy; eauto 10.
+  - intros [->|[(a&a'&->&->&c&?)|(b&b'&->&->&c&?)]].
+    + destruct x; exists CsumBot; constructor.
+    + exists (Cinl c); by constructor.
+    + exists (Cinr c); by constructor.
+Qed.
+
+Lemma csum_includedN n x y :
+  x ≼{n} y ↔ y = CsumBot ∨ (∃ a a', x = Cinl a ∧ y = Cinl a' ∧ a ≼{n} a')
+                         ∨ (∃ b b', x = Cinr b ∧ y = Cinr b' ∧ b ≼{n} b').
+Proof.
+  split.
+  - unfold includedN. intros [[a'|b'|] Hy]; destruct x as [a|b|];
+      inversion_clear Hy; eauto 10.
   - intros [->|[(a&a'&->&->&c&?)|(b&b'&->&->&c&?)]].
     + destruct x; exists CsumBot; constructor.
     + exists (Cinl c); by constructor.
@@ -253,6 +265,22 @@ Global Instance Cinl_exclusive a : Exclusive a → Exclusive (Cinl a).
 Proof. by move=> H[]? =>[/H||]. Qed.
 Global Instance Cinr_exclusive b : Exclusive b → Exclusive (Cinr b).
 Proof. by move=> H[]? =>[|/H|]. Qed.
+
+Global Instance Cinl_cancelable a : Cancelable a → Cancelable (Cinl a).
+Proof.
+  move=> ?? [y|y|] [z|z|] ? EQ //; inversion_clear EQ.
+  constructor. by eapply (cancelableN a).
+Qed.
+Global Instance Cinr_cancelable b : Cancelable b → Cancelable (Cinr b).
+Proof.
+  move=> ?? [y|y|] [z|z|] ? EQ //; inversion_clear EQ.
+  constructor. by eapply (cancelableN b).
+Qed.
+
+Global Instance Cinl_id_free a : IdFree a → IdFree (Cinl a).
+Proof. intros ? [] ? EQ; inversion_clear EQ. by eapply id_free0_r. Qed.
+Global Instance Cinr_id_free b : IdFree b → IdFree (Cinr b).
+Proof. intros ? [] ? EQ; inversion_clear EQ. by eapply id_free0_r. Qed.
 
 Global Instance Cinl_cmra_homomorphism : CMRAHomomorphism Cinl.
 Proof. split. apply _. done. Qed.

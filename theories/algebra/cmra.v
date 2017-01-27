@@ -137,6 +137,18 @@ Class Exclusive {A : cmraT} (x : A) := exclusive0_l y : ✓{0} (x ⋅ y) → Fal
 Arguments exclusive0_l {_} _ {_} _ _.
 Hint Mode Exclusive + ! : typeclass_instances.
 
+(** * Cancelable elements. *)
+Class Cancelable {A : cmraT} (x : A) :=
+  cancelableN n y z : ✓{n}(x ⋅ y) → x ⋅ y ≡{n}≡ x ⋅ z → y ≡{n}≡ z.
+Arguments cancelableN {_} _ {_} _ _ _ _.
+Hint Mode Cancelable + ! : typeclass_instances.
+
+(** * Identity-free elements. *)
+Class IdFree {A : cmraT} (x : A) :=
+  id_free0_r y : ✓{0}x → x ⋅ y ≡{0}≡ x → False.
+Arguments id_free0_r {_} _ {_} _ _.
+Hint Mode IdFree + ! : typeclass_instances.
+
 (** * CMRAs whose core is total *)
 (** The function [core] may return a dummy when used on CMRAs without total
 core. *)
@@ -310,11 +322,11 @@ Proof. rewrite !cmra_valid_validN; eauto using cmra_validN_op_r. Qed.
 Lemma cmra_pcore_l' x cx : pcore x ≡ Some cx → cx ⋅ x ≡ x.
 Proof. intros (cx'&?&->)%equiv_Some_inv_r'. by apply cmra_pcore_l. Qed.
 Lemma cmra_pcore_r x cx : pcore x = Some cx → x ⋅ cx ≡ x.
-Proof. intros. rewrite comm. by apply cmra_pcore_l. Qed. 
+Proof. intros. rewrite comm. by apply cmra_pcore_l. Qed.
 Lemma cmra_pcore_r' x cx : pcore x ≡ Some cx → x ⋅ cx ≡ x.
-Proof. intros (cx'&?&->)%equiv_Some_inv_r'. by apply cmra_pcore_r. Qed. 
+Proof. intros (cx'&?&->)%equiv_Some_inv_r'. by apply cmra_pcore_r. Qed.
 Lemma cmra_pcore_idemp' x cx : pcore x ≡ Some cx → pcore cx ≡ Some cx.
-Proof. intros (cx'&?&->)%equiv_Some_inv_r'. eauto using cmra_pcore_idemp. Qed. 
+Proof. intros (cx'&?&->)%equiv_Some_inv_r'. eauto using cmra_pcore_idemp. Qed.
 Lemma cmra_pcore_dup x cx : pcore x = Some cx → cx ≡ cx ⋅ cx.
 Proof. intros; symmetry; eauto using cmra_pcore_r', cmra_pcore_idemp. Qed.
 Lemma cmra_pcore_dup' x cx : pcore x ≡ Some cx → cx ≡ cx ⋅ cx.
@@ -526,6 +538,60 @@ Proof.
   split; first by apply cmra_included_includedN.
   intros [z ->%(timeless_iff _ _)]; eauto using cmra_included_l.
 Qed.
+
+(** Cancelable elements  *)
+Global Instance cancelable_proper : Proper (equiv ==> iff) (@Cancelable A).
+Proof. unfold Cancelable. intros ?? EQ. by setoid_rewrite EQ. Qed.
+Lemma cancelable x `{!Cancelable x} y z :
+  ✓(x ⋅ y) → x ⋅ y ≡ x ⋅ z → y ≡ z.
+Proof. rewrite !equiv_dist cmra_valid_validN. intros. by apply (cancelableN x). Qed.
+Lemma discrete_cancelable x `{CMRADiscrete A}:
+  (∀ y z, ✓(x ⋅ y) → x ⋅ y ≡ x ⋅ z → y ≡ z) → Cancelable x.
+Proof. intros ????. rewrite -!timeless_iff -cmra_discrete_valid_iff. auto. Qed.
+Global Instance cancelable_op x y :
+  Cancelable x → Cancelable y → Cancelable (x ⋅ y).
+Proof.
+  intros ???????. apply (cancelableN y), (cancelableN x).
+  - eapply cmra_validN_op_r. by rewrite assoc.
+  - by rewrite assoc.
+  - by rewrite !assoc.
+Qed.
+Global Instance exclusive_cancelable (x : A) : Exclusive x → Cancelable x.
+Proof. intros ???? []%(exclusiveN_l _ x). Qed.
+
+(** Id-free elements  *)
+Global Instance id_free_ne : Proper (dist n ==> iff) (@IdFree A).
+Proof.
+  unfold IdFree. intros ??? EQ%(dist_le _ 0); last lia.
+  split; intros ??; (rewrite -EQ || rewrite EQ); eauto.
+Qed.
+Global Instance id_free_proper : Proper (equiv ==> iff) (@IdFree A).
+Proof.
+  unfold IdFree. intros ?? EQ.
+  split; intros ??; (rewrite -EQ || rewrite EQ); eauto.
+Qed.
+Lemma id_freeN_r n n' x `{!IdFree x} y : ✓{n}x → x ⋅ y ≡{n'}≡ x → False.
+Proof. eauto using cmra_validN_le, dist_le with lia. Qed.
+Lemma id_freeN_l n n' x `{!IdFree x} y : ✓{n}x → y ⋅ x ≡{n'}≡ x → False.
+Proof. rewrite comm. eauto using id_freeN_r. Qed.
+Lemma id_free_r x `{!IdFree x} y : ✓x → x ⋅ y ≡ x → False.
+Proof. move=> /cmra_valid_validN ? /equiv_dist. eauto. Qed.
+Lemma id_free_l x `{!IdFree x} y : ✓x → y ⋅ x ≡ x → False.
+Proof. rewrite comm. eauto using id_free_r. Qed.
+Lemma discrete_id_free x `{CMRADiscrete A}:
+  (∀ y, ✓x → x ⋅ y ≡ x → False) → IdFree x.
+Proof. repeat intro. eauto using cmra_discrete_valid, cmra_discrete, timeless. Qed.
+Global Instance id_free_op_r x y :
+  IdFree y → Cancelable x → IdFree (x ⋅ y).
+Proof.
+  intros ???? Hid%symmetry. revert Hid. rewrite -assoc=>/(cancelableN x) ?.
+  eapply (id_free0_r _); [by eapply cmra_validN_op_r |symmetry; eauto].
+Qed.
+Global Instance id_free_op_l x y :
+  IdFree x → Cancelable y → IdFree (x ⋅ y).
+Proof. intros. rewrite comm. apply _. Qed.
+Global Instance exclusive_id_free x : Exclusive x → IdFree x.
+Proof. intros ? z ? Hid. apply (exclusiveN_l 0 x z). by rewrite Hid. Qed.
 End cmra.
 
 (** * Properties about CMRAs with a unit element **)
@@ -549,6 +615,8 @@ Section ucmra.
     intros x. destruct (cmra_pcore_mono' ∅ x ∅) as (cx&->&?);
       eauto using ucmra_unit_least, (persistent (∅:A)).
   Qed.
+  Global Instance empty_cancelable : Cancelable (∅:A).
+  Proof. intros ???. by rewrite !left_id. Qed.
 End ucmra.
 Hint Immediate cmra_unit_total.
 
@@ -650,7 +718,7 @@ Instance cmra_monotone_compose {A B C : cmraT} (f : A → B) (g : B → C) :
   CMRAMonotone f → CMRAMonotone g → CMRAMonotone (g ∘ f).
 Proof.
   split.
-  - apply _. 
+  - apply _.
   - move=> n x Hx /=. by apply cmra_monotone_validN, cmra_monotone_validN.
   - move=> x y Hxy /=. by apply cmra_monotone, cmra_monotone.
 Qed.
@@ -674,7 +742,7 @@ Instance cmra_homomorphism_compose {A B C : cmraT} (f : A → B) (g : B → C) :
   CMRAHomomorphism f → CMRAHomomorphism g → CMRAHomomorphism (g ∘ f).
 Proof.
   split.
-  - apply _. 
+  - apply _.
   - move=> x y /=. rewrite -(cmra_homomorphism g).
     by apply (ne_proper _), cmra_homomorphism.
 Qed.
@@ -700,7 +768,7 @@ Structure rFunctor := RFunctor {
       (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
     rFunctor_map (f◎g, g'◎f') x ≡ rFunctor_map (g,g') (rFunctor_map (f,f') x);
   rFunctor_mono {A1 A2 B1 B2} (fg : (A2 -n> A1) * (B1 -n> B2)) :
-    CMRAMonotone (rFunctor_map fg) 
+    CMRAMonotone (rFunctor_map fg)
 }.
 Existing Instances rFunctor_ne rFunctor_mono.
 Instance: Params (@rFunctor_map) 5.
@@ -868,6 +936,8 @@ Section unit.
   Proof. done. Qed.
   Global Instance unit_persistent (x : ()) : Persistent x.
   Proof. by constructor. Qed.
+  Global Instance unit_cancelable (x : ()) : Cancelable x.
+  Proof. by constructor. Qed.
 End unit.
 
 (** ** Natural numbers *)
@@ -901,6 +971,9 @@ Section nat.
 
   Global Instance nat_cmra_discrete : CMRADiscrete natR.
   Proof. constructor; apply _ || done. Qed.
+
+  Global Instance nat_cancelable (x : nat) : Cancelable x.
+  Proof. by intros ???? ?%Nat.add_cancel_l. Qed.
 End nat.
 
 Definition mnat := nat.
@@ -964,6 +1037,13 @@ Section positive.
 
   Global Instance pos_cmra_discrete : CMRADiscrete positiveR.
   Proof. constructor; apply _ || done. Qed.
+  Global Instance pos_cancelable (x : positive) : Cancelable x.
+  Proof. intros ?????. by eapply Pos.add_reg_l, leibniz_equiv. Qed.
+  Global Instance pos_id_free (x : positive) : IdFree x.
+  Proof.
+    intros ???. edestruct Pos.add_no_neutral. rewrite Pos.add_comm.
+    by apply leibniz_equiv.
+  Qed.
 End positive.
 
 (** ** Product *)
@@ -1055,6 +1135,15 @@ Section prod.
   Proof. by intros ?[][?%exclusive0_l]. Qed.
   Global Instance pair_exclusive_r x y : Exclusive y → Exclusive (x,y).
   Proof. by intros ?[][??%exclusive0_l]. Qed.
+
+  Global Instance pair_cancelable x y :
+    Cancelable x → Cancelable y → Cancelable (x,y).
+  Proof. intros ???[][][][]. constructor; simpl in *; by eapply cancelableN. Qed.
+
+  Global Instance pair_id_free_l x y : IdFree x → IdFree (x,y).
+  Proof. move=>? [??] [? _] [/=? _]. eauto. Qed.
+  Global Instance pair_id_free_r x y : IdFree y → IdFree (x,y).
+  Proof. move=>? [??] [_ ?] [_ /=?]. eauto. Qed.
 End prod.
 
 Arguments prodR : clear implicits.
@@ -1259,6 +1348,20 @@ Section option.
 
   Lemma is_Some_included mx my : mx ≼ my → is_Some mx → is_Some my.
   Proof. rewrite -!not_eq_None_Some option_included. naive_solver. Qed.
+
+  Global Instance cancelable_Some x :
+    IdFree x → Cancelable x → Cancelable (Some x).
+  Proof.
+    intros Hirr ?? [y|] [z|] ? EQ; inversion_clear EQ.
+    - constructor. by apply (cancelableN x).
+    - edestruct Hirr.
+      + eapply (cmra_validN_op_l 0 x y), (cmra_validN_le n). done. lia.
+      + eapply dist_le. done. lia.
+    - edestruct Hirr.
+      + eapply (cmra_validN_le n). done. lia.
+      + eapply dist_le. done. lia.
+    - done.
+  Qed.
 End option.
 
 Arguments optionR : clear implicits.
