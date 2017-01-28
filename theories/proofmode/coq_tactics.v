@@ -655,7 +655,7 @@ Lemma tac_rewrite Δ i p Pxy (lr : bool) Q :
   ∀ {A : ofeT} (x y : A) (Φ : A → uPred M),
     (Pxy ⊢ x ≡ y) →
     (Q ⊣⊢ Φ (if lr then y else x)) →
-    (∀ n, Proper (dist n ==> dist n) Φ) →
+    (NonExpansive Φ) →
     (Δ ⊢ Φ (if lr then x else y)) → Δ ⊢ Q.
 Proof.
   intros ? A x y ? HPxy -> ?; apply internal_eq_rewrite; auto.
@@ -669,7 +669,7 @@ Lemma tac_rewrite_in Δ i p Pxy j q P (lr : bool) Q :
   ∀ {A : ofeT} Δ' x y (Φ : A → uPred M),
     (Pxy ⊢ x ≡ y) →
     (P ⊣⊢ Φ (if lr then y else x)) →
-    (∀ n, Proper (dist n ==> dist n) Φ) →
+    (NonExpansive Φ) →
     envs_simple_replace j q (Esnoc Enil j (Φ (if lr then x else y))) Δ = Some Δ' →
     (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.

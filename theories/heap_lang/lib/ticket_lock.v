@@ -56,10 +56,10 @@ Section proof.
 
   Definition locked (γ : gname) : iProp Σ := (∃ o, own γ (◯ (Excl' o, ∅)))%I.
 
-  Global Instance lock_inv_ne n γ lo ln :
-    Proper (dist n ==> dist n) (lock_inv γ lo ln).
+  Global Instance lock_inv_ne γ lo ln :
+    NonExpansive (lock_inv γ lo ln).
   Proof. solve_proper. Qed.
-  Global Instance is_lock_ne γ n lk : Proper (dist n ==> dist n) (is_lock γ lk).
+  Global Instance is_lock_ne γ lk : NonExpansive (is_lock γ lk).
   Proof. solve_proper. Qed.
   Global Instance is_lock_persistent γ lk R : PersistentP (is_lock γ lk R).
   Proof. apply _. Qed.

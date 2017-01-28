@@ -17,6 +17,8 @@ Notation "x ≡{ n }≡ y" := (dist n x y)
   (at level 70, n at next level, format "x  ≡{ n }≡  y").
 Hint Extern 0 (_ ≡{_}≡ _) => reflexivity.
 Hint Extern 0 (_ ≡{_}≡ _) => symmetry; assumption.
+Notation NonExpansive f := (∀ n, Proper (dist n ==> dist n) f).
+Notation NonExpansive2 f := (∀ n, Proper (dist n ==> dist n ==> dist n) f).
 
 Tactic Notation "cofe_subst" ident(x) :=
   repeat match goal with
@@ -87,7 +89,7 @@ Arguments chain_car {_} _ _.
 Arguments chain_cauchy {_} _ _ _ _.
 
 Program Definition chain_map {A B : ofeT} (f : A → B)
-    `{!∀ n, Proper (dist n ==> dist n) f} (c : chain A) : chain B :=
+    `{!NonExpansive f} (c : chain A) : chain B :=
   {| chain_car n := f (c n) |}.
 Next Obligation. by intros A B f Hf c n i ?; apply Hf, chain_cauchy. Qed.
 
@@ -99,7 +101,7 @@ Class Cofe (A : ofeT) := {
 Arguments compl : simpl never.
 
 Lemma compl_chain_map `{Cofe A, Cofe B} (f : A → B) c
-      `(∀ n : nat, Proper (dist n ==> dist n) f) :
+      `(NonExpansive f) :
   compl (chain_map f c) ≡ f (compl c).
 Proof. apply equiv_dist=>n. by rewrite !conv_compl. Qed.
 
@@ -131,10 +133,10 @@ Section cofe.
   Lemma dist_le' n n' x y : n' ≤ n → x ≡{n}≡ y → x ≡{n'}≡ y.
   Proof. intros; eauto using dist_le. Qed.
   Instance ne_proper {B : ofeT} (f : A → B)
-    `{!∀ n, Proper (dist n ==> dist n) f} : Proper ((≡) ==> (≡)) f | 100.
+    `{!NonExpansive f} : Proper ((≡) ==> (≡)) f | 100.
   Proof. by intros x1 x2; rewrite !equiv_dist; intros Hx n; rewrite (Hx n). Qed.
   Instance ne_proper_2 {B C : ofeT} (f : A → B → C)
-    `{!∀ n, Proper (dist n ==> dist n ==> dist n) f} :
+    `{!NonExpansive2 f} :
     Proper ((≡) ==> (≡) ==> (≡)) f | 100.
   Proof.
      unfold Proper, respectful; setoid_rewrite equiv_dist.
@@ -175,8 +177,8 @@ Section contractive.
   Lemma contractive_S n x y : x ≡{n}≡ y → f x ≡{S n}≡ f y.
   Proof. intros. by apply (_ : Contractive f). Qed.
 
-  Global Instance contractive_ne n : Proper (dist n ==> dist n) f | 100.
-  Proof. by intros x y ?; apply dist_S, contractive_S. Qed.
+  Global Instance contractive_ne : NonExpansive f | 100.
+  Proof. by intros n x y ?; apply dist_S, contractive_S. Qed.
   Global Instance contractive_proper : Proper ((≡) ==> (≡)) f | 100.
   Proof. apply (ne_proper _). Qed.
 End contractive.
@@ -270,7 +272,7 @@ Section fixpointK.
   Context `{Cofe A, Inhabited A} (f : A → A) (k : nat).
   Context `{f_contractive : !Contractive (Nat.iter k f)}.
   (* TODO: Can we get rid of this assumption, derive it from contractivity? *)
-  Context `{f_ne : !∀ n, Proper (dist n ==> dist n) f}.
+  Context {f_ne : NonExpansive f}.
 
   Let f_proper : Proper ((≡) ==> (≡)) f := ne_proper f.
   Existing Instance f_proper.
@@ -289,7 +291,7 @@ Section fixpointK.
 
   Section fixpointK_ne.
     Context (g : A → A) `{g_contractive : !Contractive (Nat.iter k g)}.
-    Context {g_ne : ∀ n, Proper (dist n ==> dist n) g}.
+    Context {g_ne : NonExpansive g}.
 
     Lemma fixpointK_ne n : (∀ z, f z ≡{n}≡ g z) → fixpointK k f ≡{n}≡ fixpointK k g.
     Proof.
@@ -423,7 +425,7 @@ Instance ofe_fun_inhabited {A} {B : ofeT} `{Inhabited B} :
 (** Non-expansive function space *)
 Record ofe_mor (A B : ofeT) : Type := CofeMor {
   ofe_mor_car :> A → B;
-  ofe_mor_ne n : Proper (dist n ==> dist n) ofe_mor_car
+  ofe_mor_ne : NonExpansive ofe_mor_car
 }.
 Arguments CofeMor {_ _} _ {_}.
 Add Printing Constructor ofe_mor.
@@ -468,9 +470,9 @@ Section ofe_mor.
     by rewrite (conv_compl n (ofe_mor_chain c x)) /=.
   Qed.
 
-  Global Instance ofe_mor_car_ne n :
-    Proper (dist n ==> dist n ==> dist n) (@ofe_mor_car A B).
-  Proof. intros f g Hfg x y Hx; rewrite Hx; apply Hfg. Qed.
+  Global Instance ofe_mor_car_ne :
+    NonExpansive2 (@ofe_mor_car A B).
+  Proof. intros n f g Hfg x y Hx; rewrite Hx; apply Hfg. Qed.
   Global Instance ofe_mor_car_proper :
     Proper ((≡) ==> (≡) ==> (≡)) (@ofe_mor_car A B) := ne_proper_2 _.
   Lemma ofe_mor_ext (f g : ofe_mor A B) : f ≡ g ↔ ∀ x, f x ≡ g x.
@@ -506,10 +508,10 @@ Proof. intros ??? ??? ???. by repeat apply ccompose_ne. Qed.
 
 Definition ofe_morC_map {A A' B B'} (f : A' -n> A) (g : B -n> B') :
   (A -n> B) -n> (A' -n>  B') := CofeMor (ofe_mor_map f g).
-Instance ofe_morC_map_ne {A A' B B'} n :
-  Proper (dist n ==> dist n ==> dist n) (@ofe_morC_map A A' B B').
+Instance ofe_morC_map_ne {A A' B B'} :
+  NonExpansive2 (@ofe_morC_map A A' B B').
 Proof.
-  intros f f' Hf g g' Hg ?. rewrite /= /ofe_mor_map.
+  intros n f f' Hf g g' Hg ?. rewrite /= /ofe_mor_map.
   by repeat apply ccompose_ne.
 Qed.
 
@@ -533,9 +535,9 @@ Section product.
 
   Instance prod_dist : Dist (A * B) := λ n, prod_relation (dist n) (dist n).
   Global Instance pair_ne :
-    Proper (dist n ==> dist n ==> dist n) (@pair A B) := _.
-  Global Instance fst_ne : Proper (dist n ==> dist n) (@fst A B) := _.
-  Global Instance snd_ne : Proper (dist n ==> dist n) (@snd A B) := _.
+    NonExpansive2 (@pair A B) := _.
+  Global Instance fst_ne : NonExpansive (@fst A B) := _.
+  Global Instance snd_ne : NonExpansive (@snd A B) := _.
   Definition prod_ofe_mixin : OfeMixin (A * B).
   Proof.
     split.
@@ -569,17 +571,17 @@ Instance prod_map_ne {A A' B B' : ofeT} n :
 Proof. by intros f f' Hf g g' Hg ?? [??]; split; [apply Hf|apply Hg]. Qed.
 Definition prodC_map {A A' B B'} (f : A -n> A') (g : B -n> B') :
   prodC A B -n> prodC A' B' := CofeMor (prod_map f g).
-Instance prodC_map_ne {A A' B B'} n :
-  Proper (dist n ==> dist n ==> dist n) (@prodC_map A A' B B').
-Proof. intros f f' Hf g g' Hg [??]; split; [apply Hf|apply Hg]. Qed.
+Instance prodC_map_ne {A A' B B'} :
+  NonExpansive2 (@prodC_map A A' B B').
+Proof. intros n f f' Hf g g' Hg [??]; split; [apply Hf|apply Hg]. Qed.
 
 (** Functors *)
 Structure cFunctor := CFunctor {
   cFunctor_car : ofeT → ofeT → ofeT;
   cFunctor_map {A1 A2 B1 B2} :
     ((A2 -n> A1) * (B1 -n> B2)) → cFunctor_car A1 B1 -n> cFunctor_car A2 B2;
-  cFunctor_ne {A1 A2 B1 B2} n :
-    Proper (dist n ==> dist n) (@cFunctor_map A1 A2 B1 B2);
+  cFunctor_ne {A1 A2 B1 B2} :
+    NonExpansive (@cFunctor_map A1 A2 B1 B2);
   cFunctor_id {A B : ofeT} (x : cFunctor_car A B) :
     cFunctor_map (cid,cid) x ≡ x;
   cFunctor_compose {A1 A2 A3 B1 B2 B3}
@@ -634,15 +636,15 @@ Proof.
     by apply prodC_map_ne; apply cFunctor_contractive.
 Qed.
 
-Instance compose_ne {A} {B B' : ofeT} (f : B -n> B') n :
-  Proper (dist n ==> dist n) (compose f : (A -c> B) → A -c> B').
-Proof. intros g g' Hf x; simpl. by rewrite (Hf x). Qed.
+Instance compose_ne {A} {B B' : ofeT} (f : B -n> B') :
+  NonExpansive (compose f : (A -c> B) → A -c> B').
+Proof. intros n g g' Hf x; simpl. by rewrite (Hf x). Qed.
 
 Definition ofe_funC_map {A B B'} (f : B -n> B') : (A -c> B) -n> (A -c> B') :=
   @CofeMor (_ -c> _) (_ -c> _) (compose f) _.
-Instance ofe_funC_map_ne {A B B'} n :
-  Proper (dist n ==> dist n) (@ofe_funC_map A B B').
-Proof. intros f f' Hf g x. apply Hf. Qed.
+Instance ofe_funC_map_ne {A B B'} :
+  NonExpansive (@ofe_funC_map A B B').
+Proof. intros n f f' Hf g x. apply Hf. Qed.
 
 Program Definition ofe_funCF (T : Type) (F : cFunctor) : cFunctor := {|
   cFunctor_car A B := ofe_funC T (cFunctor_car F A B);
@@ -697,8 +699,8 @@ Section sum.
   Context {A B : ofeT}.
 
   Instance sum_dist : Dist (A + B) := λ n, sum_relation (dist n) (dist n).
-  Global Instance inl_ne : Proper (dist n ==> dist n) (@inl A B) := _.
-  Global Instance inr_ne : Proper (dist n ==> dist n) (@inr A B) := _.
+  Global Instance inl_ne : NonExpansive (@inl A B) := _.
+  Global Instance inr_ne : NonExpansive (@inr A B) := _.
   Global Instance inl_ne_inj : Inj (dist n) (dist n) (@inl A B) := _.
   Global Instance inr_ne_inj : Inj (dist n) (dist n) (@inr A B) := _.
 
@@ -753,9 +755,9 @@ Proof.
 Qed.
 Definition sumC_map {A A' B B'} (f : A -n> A') (g : B -n> B') :
   sumC A B -n> sumC A' B' := CofeMor (sum_map f g).
-Instance sumC_map_ne {A A' B B'} n :
-  Proper (dist n ==> dist n ==> dist n) (@sumC_map A A' B B').
-Proof. intros f f' Hf g g' Hg [?|?]; constructor; [apply Hf|apply Hg]. Qed.
+Instance sumC_map_ne {A A' B B'} :
+  NonExpansive2 (@sumC_map A A' B B').
+Proof. intros n f f' Hf g g' Hg [?|?]; constructor; [apply Hf|apply Hg]. Qed.
 
 Program Definition sumCF (F1 F2 : cFunctor) : cFunctor := {|
   cFunctor_car A B := sumC (cFunctor_car F1 A B) (cFunctor_car F2 A B);
@@ -852,7 +854,7 @@ Section option.
   Global Instance option_discrete : Discrete A → Discrete optionC.
   Proof. destruct 2; constructor; by apply (timeless _). Qed.
 
-  Global Instance Some_ne : Proper (dist n ==> dist n) (@Some A).
+  Global Instance Some_ne : NonExpansive (@Some A).
   Proof. by constructor. Qed.
   Global Instance is_Some_ne n : Proper (dist n ==> iff) (@is_Some A).
   Proof. destruct 1; split; eauto. Qed.
@@ -889,8 +891,8 @@ Instance option_fmap_ne {A B : ofeT} n:
 Proof. intros f f' Hf ?? []; constructor; auto. Qed.
 Definition optionC_map {A B} (f : A -n> B) : optionC A -n> optionC B :=
   CofeMor (fmap f : optionC A → optionC B).
-Instance optionC_map_ne A B n : Proper (dist n ==> dist n) (@optionC_map A B).
-Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
+Instance optionC_map_ne A B : NonExpansive (@optionC_map A B).
+Proof. by intros n f f' Hf []; constructor; apply Hf. Qed.
 
 Program Definition optionCF (F : cFunctor) : cFunctor := {|
   cFunctor_car A B := optionC (cFunctor_car F A B);
@@ -959,7 +961,7 @@ Section later.
   (* f is contractive iff it can factor into `Next` and a non-expansive function. *)
   Lemma contractive_alt {B : ofeT} (f : A → B) :
     Contractive f ↔ ∃ g : later A → B,
-      (∀ n, Proper (dist n ==> dist n) g) ∧ (∀ x, f x ≡ g (Next x)).
+      (NonExpansive g) ∧ (∀ x, f x ≡ g (Next x)).
   Proof.
     split.
     - intros Hf. exists (f ∘ later_car); split=> // n x y ?. by f_equiv.
@@ -1042,7 +1044,7 @@ Section sigma.
   Lemma exist_ne n a1 a2 (H1 : P a1) (H2 : P a2) :
     a1 ≡{n}≡ a2 → a1 ↾ H1 ≡{n}≡ a2 ↾ H2.
   Proof. done. Qed.
-  Global Instance proj1_sig_ne : Proper (dist n ==> dist n) (@proj1_sig _ P).
+  Global Instance proj1_sig_ne : NonExpansive (@proj1_sig _ P).
   Proof. by intros n [a Ha] [b Hb] ?. Qed.
   Definition sig_ofe_mixin : OfeMixin (sig P).
   Proof.

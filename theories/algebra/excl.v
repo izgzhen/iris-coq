@@ -32,7 +32,7 @@ Inductive excl_dist : Dist (excl A) :=
   | ExclBot_dist n : ExclBot ≡{n}≡ ExclBot.
 Existing Instance excl_dist.
 
-Global Instance Excl_ne n : Proper (dist n ==> dist n) (@Excl A).
+Global Instance Excl_ne : NonExpansive (@Excl A).
 Proof. by constructor. Qed.
 Global Instance Excl_proper : Proper ((≡) ==> (≡)) (@Excl A).
 Proof. by constructor. Qed.
@@ -152,7 +152,7 @@ Instance excl_map_ne {A B : ofeT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@excl_map A B).
 Proof. by intros f f' Hf; destruct 1; constructor; apply Hf. Qed.
 Instance excl_map_cmra_monotone {A B : ofeT} (f : A → B) :
-  (∀ n, Proper (dist n ==> dist n) f) → CMRAMonotone (excl_map f).
+  NonExpansive f → CMRAMonotone (excl_map f).
 Proof.
   split; try apply _.
   - by intros n [a|].
@@ -161,8 +161,8 @@ Proof.
 Qed.
 Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
   CofeMor (excl_map f).
-Instance exclC_map_ne A B n : Proper (dist n ==> dist n) (@exclC_map A B).
-Proof. by intros f f' Hf []; constructor; apply Hf. Qed.
+Instance exclC_map_ne A B : NonExpansive (@exclC_map A B).
+Proof. by intros n f f' Hf []; constructor; apply Hf. Qed.
 
 Program Definition exclRF (F : cFunctor) : rFunctor := {|
   rFunctor_car A B := (exclR (cFunctor_car F A B));

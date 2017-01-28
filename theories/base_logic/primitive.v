@@ -213,49 +213,49 @@ Hint Immediate uPred_in_entails.
 (** Non-expansiveness and setoid morphisms *)
 Global Instance pure_proper : Proper (iff ==> (⊣⊢)) (@uPred_pure M).
 Proof. intros φ1 φ2 Hφ. by unseal; split=> -[|n] ?; try apply Hφ. Qed.
-Global Instance and_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_and M).
+Global Instance and_ne : NonExpansive2 (@uPred_and M).
 Proof.
-  intros P P' HP Q Q' HQ; unseal; split=> x n' ??.
+  intros n P P' HP Q Q' HQ; unseal; split=> x n' ??.
   split; (intros [??]; split; [by apply HP|by apply HQ]).
 Qed.
 Global Instance and_proper :
   Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_and M) := ne_proper_2 _.
-Global Instance or_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_or M).
+Global Instance or_ne : NonExpansive2 (@uPred_or M).
 Proof.
-  intros P P' HP Q Q' HQ; split=> x n' ??.
+  intros n P P' HP Q Q' HQ; split=> x n' ??.
   unseal; split; (intros [?|?]; [left; by apply HP|right; by apply HQ]).
 Qed.
 Global Instance or_proper :
   Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_or M) := ne_proper_2 _.
-Global Instance impl_ne n :
-  Proper (dist n ==> dist n ==> dist n) (@uPred_impl M).
+Global Instance impl_ne :
+  NonExpansive2 (@uPred_impl M).
 Proof.
-  intros P P' HP Q Q' HQ; split=> x n' ??.
+  intros n P P' HP Q Q' HQ; split=> x n' ??.
   unseal; split; intros HPQ x' n'' ????; apply HQ, HPQ, HP; auto.
 Qed.
 Global Instance impl_proper :
   Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_impl M) := ne_proper_2 _.
-Global Instance sep_ne n : Proper (dist n ==> dist n ==> dist n) (@uPred_sep M).
+Global Instance sep_ne : NonExpansive2 (@uPred_sep M).
 Proof.
-  intros P P' HP Q Q' HQ; split=> n' x ??.
+  intros n P P' HP Q Q' HQ; split=> n' x ??.
   unseal; split; intros (x1&x2&?&?&?); cofe_subst x;
     exists x1, x2; split_and!; try (apply HP || apply HQ);
     eauto using cmra_validN_op_l, cmra_validN_op_r.
 Qed.
 Global Instance sep_proper :
   Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_sep M) := ne_proper_2 _.
-Global Instance wand_ne n :
-  Proper (dist n ==> dist n ==> dist n) (@uPred_wand M).
+Global Instance wand_ne :
+  NonExpansive2 (@uPred_wand M).
 Proof.
-  intros P P' HP Q Q' HQ; split=> n' x ??; unseal; split; intros HPQ x' n'' ???;
+  intros n P P' HP Q Q' HQ; split=> n' x ??; unseal; split; intros HPQ x' n'' ???;
     apply HQ, HPQ, HP; eauto using cmra_validN_op_r.
 Qed.
 Global Instance wand_proper :
   Proper ((⊣⊢) ==> (⊣⊢) ==> (⊣⊢)) (@uPred_wand M) := ne_proper_2 _.
-Global Instance internal_eq_ne (A : ofeT) n :
-  Proper (dist n ==> dist n ==> dist n) (@uPred_internal_eq M A).
+Global Instance internal_eq_ne (A : ofeT) :
+  NonExpansive2 (@uPred_internal_eq M A).
 Proof.
-  intros x x' Hx y y' Hy; split=> n' z; unseal; split; intros; simpl in *.
+  intros n x x' Hx y y' Hy; split=> n' z; unseal; split; intros; simpl in *.
   - by rewrite -(dist_le _ _ _ _ Hx) -?(dist_le _ _ _ _ Hy); auto.
   - by rewrite (dist_le _ _ _ _ Hx) ?(dist_le _ _ _ _ Hy); auto.
 Qed.
@@ -290,30 +290,30 @@ Proof.
 Qed.
 Global Instance later_proper' :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_later M) := ne_proper _.
-Global Instance always_ne n : Proper (dist n ==> dist n) (@uPred_always M).
+Global Instance always_ne : NonExpansive (@uPred_always M).
 Proof.
-  intros P1 P2 HP.
+  intros n P1 P2 HP.
   unseal; split=> n' x; split; apply HP; eauto using @cmra_core_validN.
 Qed.
 Global Instance always_proper :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_always M) := ne_proper _.
-Global Instance ownM_ne n : Proper (dist n ==> dist n) (@uPred_ownM M).
+Global Instance ownM_ne : NonExpansive (@uPred_ownM M).
 Proof.
-  intros a b Ha.
+  intros n a b Ha.
   unseal; split=> n' x ? /=. by rewrite (dist_le _ _ _ _ Ha); last lia.
 Qed.
 Global Instance ownM_proper: Proper ((≡) ==> (⊣⊢)) (@uPred_ownM M) := ne_proper _.
-Global Instance cmra_valid_ne {A : cmraT} n :
-Proper (dist n ==> dist n) (@uPred_cmra_valid M A).
+Global Instance cmra_valid_ne {A : cmraT} :
+  NonExpansive (@uPred_cmra_valid M A).
 Proof.
-  intros a b Ha; unseal; split=> n' x ? /=.
+  intros n a b Ha; unseal; split=> n' x ? /=.
   by rewrite (dist_le _ _ _ _ Ha); last lia.
 Qed.
 Global Instance cmra_valid_proper {A : cmraT} :
   Proper ((≡) ==> (⊣⊢)) (@uPred_cmra_valid M A) := ne_proper _.
-Global Instance bupd_ne n : Proper (dist n ==> dist n) (@uPred_bupd M).
+Global Instance bupd_ne : NonExpansive (@uPred_bupd M).
 Proof.
-  intros P Q HPQ.
+  intros n P Q HPQ.
   unseal; split=> n' x; split; intros HP k yf ??;
     destruct (HP k yf) as (x'&?&?); auto;
     exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
@@ -370,7 +370,7 @@ Proof. unseal; intros HΦΨ; split=> n x ? [a ?]; by apply HΦΨ with a. Qed.
 Lemma internal_eq_refl {A : ofeT} (a : A) : uPred_valid (M:=M) (a ≡ a).
 Proof. unseal; by split=> n x ??; simpl. Qed.
 Lemma internal_eq_rewrite {A : ofeT} a b (Ψ : A → uPred M) P
-  {HΨ : ∀ n, Proper (dist n ==> dist n) Ψ} : (P ⊢ a ≡ b) → (P ⊢ Ψ a) → P ⊢ Ψ b.
+  {HΨ : NonExpansive Ψ} : (P ⊢ a ≡ b) → (P ⊢ Ψ a) → P ⊢ Ψ b.
 Proof.
   unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
   - by symmetry; apply Hab with x.

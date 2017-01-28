@@ -26,7 +26,7 @@ Section definitions.
   Definition auth_ctx (N : namespace) (f : T → A) (φ : T → iProp Σ) : iProp Σ :=
     inv N (auth_inv f φ).
 
-  Global Instance auth_own_ne n : Proper (dist n ==> dist n) auth_own.
+  Global Instance auth_own_ne : NonExpansive auth_own.
   Proof. solve_proper. Qed.
   Global Instance auth_own_proper : Proper ((≡) ==> (⊣⊢)) auth_own.
   Proof. solve_proper. Qed.

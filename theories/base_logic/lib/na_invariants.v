@@ -35,7 +35,7 @@ Section proofs.
   Global Instance na_own_timeless p E : TimelessP (na_own p E).
   Proof. rewrite /na_own; apply _. Qed.
 
-  Global Instance na_inv_ne p N n : Proper (dist n ==> dist n) (na_inv p N).
+  Global Instance na_inv_ne p N : NonExpansive (na_inv p N).
   Proof. rewrite /na_inv. solve_proper. Qed.
   Global Instance na_inv_proper p N : Proper ((≡) ==> (≡)) (na_inv p N).
   Proof. apply (ne_proper _). Qed.

@@ -24,7 +24,7 @@ Section proofs.
   Global Instance cinv_own_timeless γ p : TimelessP (cinv_own γ p).
   Proof. rewrite /cinv_own; apply _. Qed.
 
-  Global Instance cinv_ne N γ n : Proper (dist n ==> dist n) (cinv N γ).
+  Global Instance cinv_ne N γ : NonExpansive (cinv N γ).
   Proof. solve_proper. Qed.
   Global Instance cinv_proper N γ : Proper ((≡) ==> (≡)) (cinv N γ).
   Proof. apply (ne_proper _). Qed.

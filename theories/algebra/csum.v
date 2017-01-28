@@ -39,7 +39,7 @@ Inductive csum_dist : Dist (csum A B) :=
   | CsumBot_dist n : CsumBot ≡{n}≡ CsumBot.
 Existing Instance csum_dist.
 
-Global Instance Cinl_ne n : Proper (dist n ==> dist n) (@Cinl A B).
+Global Instance Cinl_ne : NonExpansive (@Cinl A B).
 Proof. by constructor. Qed.
 Global Instance Cinl_proper : Proper ((≡) ==> (≡)) (@Cinl A B).
 Proof. by constructor. Qed.
@@ -47,7 +47,7 @@ Global Instance Cinl_inj : Inj (≡) (≡) (@Cinl A B).
 Proof. by inversion_clear 1. Qed.
 Global Instance Cinl_inj_dist n : Inj (dist n) (dist n) (@Cinl A B).
 Proof. by inversion_clear 1. Qed.
-Global Instance Cinr_ne n : Proper (dist n ==> dist n) (@Cinr A B).
+Global Instance Cinr_ne : NonExpansive (@Cinr A B).
 Proof. by constructor. Qed.
 Global Instance Cinr_proper : Proper ((≡) ==> (≡)) (@Cinr A B).
 Proof. by constructor. Qed.
@@ -132,9 +132,9 @@ Proof. intros f f' Hf g g' Hg []; destruct 1; constructor; by apply Hf || apply 
 Definition csumC_map {A A' B B'} (f : A -n> A') (g : B -n> B') :
   csumC A B -n> csumC A' B' :=
   CofeMor (csum_map f g).
-Instance csumC_map_ne A A' B B' n :
-  Proper (dist n ==> dist n ==> dist n) (@csumC_map A A' B B').
-Proof. by intros f f' Hf g g' Hg []; constructor. Qed.
+Instance csumC_map_ne A A' B B' :
+  NonExpansive2 (@csumC_map A A' B B').
+Proof. by intros n f f' Hf g g' Hg []; constructor. Qed.
 
 Section cmra.
 Context {A B : cmraT}.
@@ -189,7 +189,7 @@ Qed.
 Lemma csum_cmra_mixin : CMRAMixin (csum A B).
 Proof.
   split.
-  - intros n []; destruct 1; constructor; by cofe_subst.
+  - intros [] n; destruct 1; constructor; by cofe_subst.
   - intros ???? [n a a' Ha|n b b' Hb|n] [=]; subst; eauto.
     + destruct (pcore a) as [ca|] eqn:?; simplify_option_eq.
       destruct (cmra_pcore_ne n a a' ca) as (ca'&->&?); auto.
