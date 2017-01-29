@@ -16,7 +16,8 @@ Inductive intro_pat :=
   | ISimpl : intro_pat
   | IForall : intro_pat
   | IAll : intro_pat
-  | IClear : list (bool * string) → intro_pat. (* true = frame, false = clear *)
+  | IClear : string → intro_pat
+  | IClearFrame : string → intro_pat.
 
 Module intro_pat.
 Inductive token :=
@@ -140,15 +141,14 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TSimpl :: ts => parse_go ts (SPat ISimpl :: k)
   | TAll :: ts => parse_go ts (SPat IAll :: k)
   | TForall :: ts => parse_go ts (SPat IForall :: k)
-  | TClearL :: ts => parse_clear ts [] k
+  | TClearL :: ts => parse_clear ts k
   | _ => None
   end
-with parse_clear (ts : list token)
-    (ss : list (bool * string)) (k : stack) : option stack :=
+with parse_clear (ts : list token) (k : stack) : option stack :=
   match ts with
-  | TFrame :: TName s :: ts => parse_clear ts ((true,s) :: ss) k
-  | TName s :: ts => parse_clear ts ((false,s) :: ss) k
-  | TClearR :: ts => parse_go ts (SPat (IClear (reverse ss)) :: k)
+  | TFrame :: TName s :: ts => parse_clear ts (SPat (IClearFrame s) :: k)
+  | TName s :: ts => parse_clear ts (SPat (IClear s) :: k)
+  | TClearR :: ts => parse_go ts k
   | _ => None
   end.
 
