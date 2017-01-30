@@ -565,10 +565,10 @@ Local Tactic Notation "iAndDestruct" constr(H) "as" constr(H1) constr(H2) :=
 
 Local Tactic Notation "iAndDestructChoice" constr(H) "as" constr(lr) constr(H') :=
   eapply tac_and_destruct_choice with _ H _ lr H' _ _ _;
-    [env_cbv; reflexivity || fail "iAndDestruct:" H "not found"
+    [env_cbv; reflexivity || fail "iAndDestructChoice:" H "not found"
     |let P := match goal with |- IntoAnd _ ?P _ _ => P end in
-     apply _ || fail "iAndDestruct: cannot destruct" P
-    |env_cbv; reflexivity || fail "iAndDestruct:" H' " not fresh"|].
+     apply _ || fail "iAndDestructChoice: cannot destruct" P
+    |env_cbv; reflexivity || fail "iAndDestructChoice:" H' " not fresh"|].
 
 Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
   eapply tac_combine with _ _ _ H1 _ _ H2 _ _ H _;
