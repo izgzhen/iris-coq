@@ -152,15 +152,23 @@ with parse_clear (ts : list token) (k : stack) : option stack :=
   | _ => None
   end.
 
-Definition parse (s : string) : option (list intro_pat) :=
-  match k ← parse_go (tokenize s) [SList]; close_list k [] [] with
-  | Some [SPat (IList [ps])] => Some ps
+Fixpoint close (k : stack) (ps : list intro_pat) : option (list intro_pat) :=
+  match k with
+  | [] => Some ps
+  | SPat pat :: k => close k (pat :: ps)
+  | SAlwaysElim :: k => '(p,ps) ← maybe2 (::) ps; close k (IAlwaysElim p :: ps)
+  | SModalElim :: k => '(p,ps) ← maybe2 (::) ps; close k (IModalElim p :: ps)
   | _ => None
   end.
+
+
+Definition parse (s : string) : option (list intro_pat) :=
+  k ← parse_go (tokenize s) []; close k [].
 
 Ltac parse s :=
   lazymatch type of s with
   | list intro_pat => s
+  | intro_pat => constr:([s])
   | list string =>
      lazymatch eval vm_compute in (mjoin <$> mapM parse s) with
      | Some ?pats => pats | _ => fail "invalid list intro_pat" s
@@ -169,6 +177,7 @@ Ltac parse s :=
      lazymatch eval vm_compute in (parse s) with
      | Some ?pats => pats | _ => fail "invalid list intro_pat" s
      end
+  | ?X => fail "intro_pat.parse:" s "has unexpected type" X
   end.
 Ltac parse_one s :=
   lazymatch type of s with
@@ -177,6 +186,7 @@ Ltac parse_one s :=
      lazymatch eval vm_compute in (parse s) with
      | Some [?pat] => pat | _ => fail "invalid intro_pat" s
      end
+  | ?X => fail "intro_pat.parse_one:" s "has unexpected type" X
   end.
 End intro_pat.
 
@@ -191,8 +201,10 @@ Fixpoint intro_pat_persistent (p : intro_pat) :=
 Ltac intro_pat_persistent p :=
   lazymatch type of p with
   | intro_pat => eval cbv in (intro_pat_persistent p)
+  | list intro_pat => eval cbv in (forallb intro_pat_persistent p)
   | string =>
-     let pat := intro_pat.parse_one p in
-     eval cbv in (intro_pat_persistent pat)
-  | _ => p
+     let pat := intro_pat.parse p in
+     eval cbv in (forallb intro_pat_persistent pat)
+  | bool => p
+  | ?X => fail "intro_pat_persistent:" p "has unexpected type" X
   end.
