@@ -769,19 +769,21 @@ Tactic Notation "iIntros" constr(pat) :=
   let rec go pats :=
     lazymatch pats with
     | [] => idtac
+    (* Optimizations to avoid generating fresh names *)
     | IPureElim :: ?pats => iIntro (?); go pats
-    | IAlwaysElim IAnom :: ?pats => let H := iFresh in iIntro #H; go pats
-    | IAnom :: ?pats => let H := iFresh in iIntro H; go pats
     | IAlwaysElim (IName ?H) :: ?pats => iIntro #H; go pats
     | IName ?H :: ?pats => iIntro H; go pats
+    (* Introduction patterns that can only occur at the top-level *)
     | IPureIntro :: ?pats => iPureIntro; go pats
     | IAlwaysIntro :: ?pats => iAlways; go pats
     | IModalIntro :: ?pats => iModIntro; go pats
-    | ISimpl :: ?pats => simpl; go pats
     | IForall :: ?pats => repeat iIntroForall; go pats
     | IAll :: ?pats => repeat (iIntroForall || iIntro); go pats
+    (* Clearing and simplifying introduction patterns *)
+    | ISimpl :: ?pats => simpl; go pats
     | IClear ?H :: ?pats => iClear H; go pats
     | IClearFrame ?H :: ?pats => iFrame H; go pats
+    (* Introduction + destruct *)
     | IAlwaysElim ?pat :: ?pats =>
        let H := iFresh in iIntro #H; iDestructHyp H as pat; go pats
     | ?pat :: ?pats =>
