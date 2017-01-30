@@ -960,9 +960,9 @@ Section positive.
     - intros ???. apply Pos.add_assoc.
     - intros ??. apply Pos.add_comm.
   Qed.
-  Canonical Structure posR : cmraT := discreteR positive pos_ra_mixin.
+  Canonical Structure positiveR : cmraT := discreteR positive pos_ra_mixin.
 
-  Global Instance pos_cmra_discrete : CMRADiscrete posR.
+  Global Instance pos_cmra_discrete : CMRADiscrete positiveR.
   Proof. constructor; apply _ || done. Qed.
 End positive.
 
