@@ -10,6 +10,9 @@ Inductive excl (A : Type) :=
 Arguments Excl {_} _.
 Arguments ExclBot {_}.
 
+Instance: Params (@Excl) 1.
+Instance: Params (@ExclBot) 1.
+
 Notation excl' A := (option (excl A)).
 Notation Excl' x := (Some (Excl x)).
 Notation ExclBot' := (Some ExclBot).

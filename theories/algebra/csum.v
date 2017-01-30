@@ -10,12 +10,16 @@ Local Arguments cmra_validN _ _ !_ /.
 Local Arguments cmra_valid _  !_ /.
 
 Inductive csum (A B : Type) :=
-| Cinl : A → csum A B
-| Cinr : B → csum A B
-| CsumBot : csum A B.
+  | Cinl : A → csum A B
+  | Cinr : B → csum A B
+  | CsumBot : csum A B.
 Arguments Cinl {_ _} _.
 Arguments Cinr {_ _} _.
 Arguments CsumBot {_ _}.
+
+Instance: Params (@Cinl) 2.
+Instance: Params (@Cinr) 2.
+Instance: Params (@CsumBot) 2.
 
 Instance maybe_Cinl {A B} : Maybe (@Cinl A B) := λ x,
   match x with Cinl a => Some a | _ => None end.

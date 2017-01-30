@@ -422,6 +422,8 @@ Notation "p .1" := (fst p) (at level 10, format "p .1").
 Notation "p .2" := (snd p) (at level 10, format "p .2").
 
 Instance: Params (@pair) 2.
+Instance: Params (@fst) 2.
+Instance: Params (@snd) 2.
 
 Notation curry := prod_curry.
 Notation uncurry := prod_uncurry.

@@ -193,7 +193,7 @@ Section list_theory.
     Context `(R' : relation B) (f : A → B) {Hf: Proper (R ==> R') f}.
     Collection Hyps := Type Hf.
     Local Set Default Proof Using "Hyps".
-    
+
     Global Instance list_setincl_fmap :
       Proper (list_setincl R ==> list_setincl R') (fmap f).
     Proof using Hf.
@@ -201,7 +201,7 @@ Section list_theory.
       destruct (Hab _ Ha) as (b & Hb & HR). exists (f b).
       split; first eapply elem_of_list_fmap; eauto.
     Qed.
-    
+
     Global Instance list_setequiv_fmap :
       Proper (list_setequiv R ==> list_setequiv R') (fmap f).
     Proof using Hf. intros ?? [??]. split; apply list_setincl_fmap; done. Qed.
@@ -213,9 +213,7 @@ Section list_theory.
       intros (a & -> & Ha)%elem_of_list_fmap (b & -> & Hb)%elem_of_list_fmap.
       apply Hf. exact: Hl.
     Qed.
-      
   End fmap.
-
 End list_theory.
 
 Section agree.
@@ -408,6 +406,7 @@ Lemma agree_validI {M} x y : ✓ (x ⋅ y) ⊢ (x ≡ y : uPred M).
 Proof. uPred.unseal; split=> r n _ ?; by apply: agree_op_invN. Qed.
 End agree.
 
+Instance: Params (@to_agree) 1.
 Arguments agreeC : clear implicits.
 Arguments agreeR : clear implicits.
 
