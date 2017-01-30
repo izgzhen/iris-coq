@@ -672,8 +672,26 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     | IAlwaysElim ?pat => iPersistent Hz; go Hz pat
     | IModalElim ?pat => iModCore Hz; go Hz pat
     | _ => fail "iDestruct:" pat "invalid"
-    end
-  in let pat := intro_pat.parse_one pat in go H pat.
+    end in
+  let rec find_pat found pats :=
+    lazymatch pats with
+    | [] =>
+      match found with
+      | true => idtac
+      | false => fail "iDestruct:" pat "should contain exactly one proper introduction pattern"
+      end
+    | ISimpl :: ?pats => simpl; find_pat found pats
+    | IClear ?H :: ?pats => iClear H; find_pat found pats
+    | IClearFrame ?H :: ?pats => iFrame H; find_pat found pats
+    | ?pat :: ?pats =>
+       match found with
+       | false => go H pat; find_pat true pats
+       | true => fail "iDestruct:" pat "should contain exactly one proper introduction pattern"
+       end
+    | _ => fail "hallo" pats
+    end in
+  let pats := intro_pat.parse pat in
+  find_pat false pats.
 
 Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
