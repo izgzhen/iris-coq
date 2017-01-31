@@ -59,6 +59,7 @@ Section gset.
   Proof. by apply persistent_total; rewrite gset_core_self. Qed.
 End gset.
 
+Arguments gsetC _ {_ _}.
 Arguments gsetR _ {_ _}.
 Arguments gsetUR _ {_ _}.
 
@@ -220,5 +221,6 @@ Section gset_disj.
   Qed.
 End gset_disj.
 
+Arguments gset_disjC _ {_ _}.
 Arguments gset_disjR _ {_ _}.
 Arguments gset_disjUR _ {_ _}.
