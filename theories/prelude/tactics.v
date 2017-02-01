@@ -281,24 +281,23 @@ Ltac f_equiv :=
   | H : ?R ?x ?y |- ?R2 (match ?x with _ => _ end) (match ?y with _ => _ end) =>
      destruct H
   (* First assume that the arguments need the same relation as the result *)
-  | |- ?R (?f ?x) (?f _) => apply (_ : Proper (R ==> R) f)
+  | |- ?R (?f ?x) _ => apply (_ : Proper (R ==> R) f)
   (* For the case in which R is polymorphic, or an operational type class,
   like equiv. *)
-  | |- (?R _) (?f ?x) (?f _) => apply (_ : Proper (R _ ==> _) f)
-  | |- (?R _ _) (?f ?x) (?f _) => apply (_ : Proper (R _ _ ==> _) f)
-  | |- (?R _ _ _) (?f ?x) (?f _) => apply (_ : Proper (R _ _ _ ==> _) f)
-  | |- (?R _) (?f ?x ?y) (?f _ _) => apply (_ : Proper (R _ ==> R _ ==> _) f)
-  | |- (?R _ _) (?f ?x ?y) (?f _ _) => apply (_ : Proper (R _ _ ==> R _ _ ==> _) f)
-  | |- (?R _ _ _) (?f ?x ?y) (?f _ _) => apply (_ : Proper (R _ _ _ ==> R _ _ _ ==> _) f)
-  | |- (?R _ _ _ _) (?f ?x ?y) (?f _ _) => apply (_ : Proper (R _ _ _ _ ==> R _ _ _ _ ==> _) f)
+  | |- (?R _) (?f ?x) _ => apply (_ : Proper (R _ ==> _) f)
+  | |- (?R _ _) (?f ?x) _ => apply (_ : Proper (R _ _ ==> _) f)
+  | |- (?R _ _ _) (?f ?x) _ => apply (_ : Proper (R _ _ _ ==> _) f)
+  | |- (?R _) (?f ?x ?y) _ => apply (_ : Proper (R _ ==> R _ ==> _) f)
+  | |- (?R _ _) (?f ?x ?y) _ => apply (_ : Proper (R _ _ ==> R _ _ ==> _) f)
+  | |- (?R _ _ _) (?f ?x ?y) _ => apply (_ : Proper (R _ _ _ ==> R _ _ _ ==> _) f)
   (* Next, try to infer the relation. Unfortunately, there is an instance
      of Proper for (eq ==> _), which will always be matched. *)
   (* TODO: Can we exclude that instance? *)
   (* TODO: If some of the arguments are the same, we could also
      query for "pointwise_relation"'s. But that leads to a combinatorial
      explosion about which arguments are and which are not the same. *)
-  | |- ?R (?f ?x) (?f _) => apply (_ : Proper (_ ==> R) f)
-  | |- ?R (?f ?x ?y) (?f _ _) => apply (_ : Proper (_ ==> _ ==> R) f)
+  | |- ?R (?f ?x) _ => apply (_ : Proper (_ ==> R) f)
+  | |- ?R (?f ?x ?y) _ => apply (_ : Proper (_ ==> _ ==> R) f)
    (* In case the function symbol differs, but the arguments are the same,
       maybe we have a pointwise_relation in our context. *)
   | H : pointwise_relation _ ?R ?f ?g |- ?R (?f ?x) (?g ?x) => apply H
