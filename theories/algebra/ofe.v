@@ -57,6 +57,31 @@ Arguments ofe_equiv : simpl never.
 Arguments ofe_dist : simpl never.
 Arguments ofe_mixin : simpl never.
 
+(** When declaring instances of subclasses of OFE (like CMRAs and unital CMRAs)
+we need Coq to *infer* the canonical OFE instance of a given type and take the
+mixin out of it. This makes sure we do not use two different OFE instances in
+different places (see for example the constructors [CMRAT] and [UCMRAT] in the
+file [cmra.v].)
+
+In order to infer the OFE instance, we use the definition [ofe_mixin_of'] which
+is inspired by the [clone] trick in ssreflect. It works as follows, when type
+checking [@ofe_mixin_of' A ?Ac id] Coq faces a unification problem:
+
+  ofe_car ?Ac  ~  A
+
+which will resolve [?Ac] to the canonical OFE instance corresponding to [A]. The
+definition [@ofe_mixin_of' A ?Ac id] will then provide the corresponding mixin.
+Note that type checking of [ofe_mixin_of' A id] will fail when [A] does not have
+a canonical OFE instance.
+
+The notation [ofe_mixin_of A] that we define on top of [ofe_mixin_of' A id]
+hides the [id] and normalizes the mixin to head normal form. The latter is to
+ensure that we do not end up with redundant canonical projections to the mixin,
+i.e. them all being of the shape [ofe_mixin_of' A id]. *)
+Definition ofe_mixin_of' A {Ac : ofeT} (f : Ac → A) : OfeMixin Ac := ofe_mixin Ac.
+Notation ofe_mixin_of A :=
+  ltac:(let H := eval hnf in (ofe_mixin_of' A id) in exact H) (only parsing).
+
 (** Lifting properties from the mixin *)
 Section ofe_mixin.
   Context {A : ofeT}.
@@ -100,8 +125,7 @@ Class Cofe (A : ofeT) := {
 }.
 Arguments compl : simpl never.
 
-Lemma compl_chain_map `{Cofe A, Cofe B} (f : A → B) c
-      `(NonExpansive f) :
+Lemma compl_chain_map `{Cofe A, Cofe B} (f : A → B) c `(NonExpansive f) :
   compl (chain_map f c) ≡ f (compl c).
 Proof. apply equiv_dist=>n. by rewrite !conv_compl. Qed.
 
@@ -109,7 +133,7 @@ Proof. apply equiv_dist=>n. by rewrite !conv_compl. Qed.
 Section cofe.
   Context {A : ofeT}.
   Implicit Types x y : A.
-  Global Instance cofe_equivalence : Equivalence ((≡) : relation A).
+  Global Instance ofe_equivalence : Equivalence ((≡) : relation A).
   Proof.
     split.
     - by intros x; rewrite equiv_dist.
@@ -784,7 +808,7 @@ Qed.
 
 (** Discrete cofe *)
 Section discrete_cofe.
-  Context `{Equiv A, @Equivalence A (≡)}.
+  Context `{Equiv A} (Heq : @Equivalence A (≡)).
 
   Instance discrete_dist : Dist A := λ n x y, x ≡ y.
   Definition discrete_ofe_mixin : OfeMixin A.
@@ -795,6 +819,9 @@ Section discrete_cofe.
     - done.
   Qed.
 
+  Global Instance discrete_discrete_ofe : Discrete (OfeT A discrete_ofe_mixin).
+  Proof. by intros x y. Qed.
+
   Global Program Instance discrete_cofe : Cofe (OfeT A discrete_ofe_mixin) :=
     { compl c := c 0 }.
   Next Obligation.
@@ -803,12 +830,22 @@ Section discrete_cofe.
   Qed.
 End discrete_cofe.
 
-Notation discreteC A := (OfeT A discrete_ofe_mixin).
+Notation discreteC A := (OfeT A (discrete_ofe_mixin _)).
 Notation leibnizC A := (OfeT A (@discrete_ofe_mixin _ equivL _)).
 
-Instance discrete_discrete_cofe `{Equiv A, @Equivalence A (≡)} :
-  Discrete (discreteC A).
-Proof. by intros x y. Qed.
+(** In order to define a discrete CMRA with carrier [A] (in the file [cmra.v])
+we need to determine the [Equivalence A] proof that was used to construct the
+OFE instance of [A] (note that this proof is not the same as the one we obtain
+via [ofe_equivalence]).
+
+We obtain the proof of [Equivalence A] by inferring the canonical OFE mixin
+using [ofe_mixin_of A], and then check whether it is indeed a discrete OFE. This
+will fail if no OFE, or an OFE other than the discrete OFE, was registered. *)
+Notation discrete_ofe_equivalence_of A := ltac:(
+  match constr:(ofe_mixin_of A) with
+  | discrete_ofe_mixin ?H => exact H
+  end) (only parsing).
+
 Instance leibnizC_leibniz A : LeibnizEquiv (leibnizC A).
 Proof. by intros x y. Qed.
 

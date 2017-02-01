@@ -126,8 +126,7 @@ Section iprod_cmra.
         exists (y1,y2); eauto. }
       exists (λ x, gg x.1), (λ x, gg x.2). split_and!=> -?; naive_solver.
   Qed.
-  Canonical Structure iprodR :=
-    CMRAT (iprod B) iprod_ofe_mixin iprod_cmra_mixin.
+  Canonical Structure iprodR := CMRAT (iprod B) iprod_cmra_mixin.
 
   Instance iprod_empty : Empty (iprod B) := λ x, ∅.
   Definition iprod_lookup_empty x : ∅ x = ∅ := eq_refl.
@@ -139,8 +138,7 @@ Section iprod_cmra.
     - by intros f x; rewrite iprod_lookup_op left_id.
     - constructor=> x. apply persistent_core, _.
   Qed.
-  Canonical Structure iprodUR :=
-    UCMRAT (iprod B) iprod_ofe_mixin iprod_cmra_mixin iprod_ucmra_mixin.
+  Canonical Structure iprodUR := UCMRAT (iprod B) iprod_ucmra_mixin.
 
   Global Instance iprod_empty_timeless :
     (∀ i, Timeless (∅ : B i)) → Timeless (∅ : iprod B).

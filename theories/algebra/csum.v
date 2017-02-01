@@ -246,8 +246,7 @@ Proof.
       exists (Cinr z1), (Cinr z2). by repeat constructor.
     + by exists CsumBot, CsumBot; destruct y1, y2; inversion_clear Hx'.
 Qed.
-Canonical Structure csumR :=
-  CMRAT (csum A B) csum_ofe_mixin csum_cmra_mixin.
+Canonical Structure csumR := CMRAT (csum A B) csum_cmra_mixin.
 
 Global Instance csum_cmra_discrete :
   CMRADiscrete A → CMRADiscrete B → CMRADiscrete csumR.

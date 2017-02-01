@@ -29,6 +29,9 @@ Proof.
   rewrite -{1}(Qcplus_0_r x) -Qcplus_le_mono_l; auto using Qclt_le_weak.
 Qed.
 Canonical Structure fracR := discreteR frac frac_ra_mixin.
+
+Global Instance frac_cmra_discrete : CMRADiscrete fracR.
+Proof. apply discrete_cmra_discrete. Qed.
 End frac.
 
 Global Instance frac_full_exclusive : Exclusive 1%Qp.

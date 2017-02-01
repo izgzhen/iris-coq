@@ -175,7 +175,7 @@ Proof.
       as (b1&b2&?&?&?); auto using auth_own_validN.
     by exists (Auth ea1 b1), (Auth ea2 b2).
 Qed.
-Canonical Structure authR := CMRAT (auth A) auth_ofe_mixin auth_cmra_mixin.
+Canonical Structure authR := CMRAT (auth A) auth_cmra_mixin.
 
 Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authR.
 Proof.
@@ -194,8 +194,7 @@ Proof.
   - by intros x; constructor; rewrite /= left_id.
   - do 2 constructor; simpl; apply (persistent_core _).
 Qed.
-Canonical Structure authUR :=
-  UCMRAT (auth A) auth_ofe_mixin auth_cmra_mixin auth_ucmra_mixin.
+Canonical Structure authUR := UCMRAT (auth A) auth_ucmra_mixin.
 
 Global Instance auth_frag_persistent a : Persistent a → Persistent (◯ a).
 Proof. do 2 constructor; simpl; auto. by apply persistent_core. Qed.

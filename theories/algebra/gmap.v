@@ -170,8 +170,7 @@ Proof.
       * by rewrite lookup_partial_alter.
       * by rewrite lookup_partial_alter_ne // Hm2' lookup_delete_ne.
 Qed.
-Canonical Structure gmapR :=
-  CMRAT (gmap K A) gmap_ofe_mixin gmap_cmra_mixin.
+Canonical Structure gmapR := CMRAT (gmap K A) gmap_cmra_mixin.
 
 Global Instance gmap_cmra_discrete : CMRADiscrete A → CMRADiscrete gmapR.
 Proof. split; [apply _|]. intros m ? i. by apply: cmra_discrete_valid. Qed.
@@ -183,8 +182,7 @@ Proof.
   - by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
   - constructor=> i. by rewrite lookup_omap lookup_empty.
 Qed.
-Canonical Structure gmapUR :=
-  UCMRAT (gmap K A) gmap_ofe_mixin gmap_cmra_mixin gmap_ucmra_mixin.
+Canonical Structure gmapUR := UCMRAT (gmap K A) gmap_ucmra_mixin.
 
 (** Internalized properties *)
 Lemma gmap_equivI {M} m1 m2 : m1 ≡ m2 ⊣⊢ (∀ i, m1 !! i ≡ m2 !! i : uPred M).

@@ -71,7 +71,11 @@ Structure cmraT := CMRAT' {
   _ : Type
 }.
 Arguments CMRAT' _ {_ _ _ _ _ _} _ _ _.
-Notation CMRAT A m m' := (CMRAT' A m m' A).
+(* Given [m : CMRAMixin A], the notation [CMRAT A m] provides a smart
+constructor, which uses [ofe_mixin_of A] to infer the canonical OFE mixin of
+the type [A], so that it does not have to be given manually. *)
+Notation CMRAT A m := (CMRAT' A (ofe_mixin_of A%type) m A) (only parsing).
+
 Arguments cmra_car : simpl never.
 Arguments cmra_equiv : simpl never.
 Arguments cmra_dist : simpl never.
@@ -88,6 +92,10 @@ Hint Extern 0 (Valid _) => eapply (@cmra_valid _) : typeclass_instances.
 Hint Extern 0 (ValidN _) => eapply (@cmra_validN _) : typeclass_instances.
 Coercion cmra_ofeC (A : cmraT) : ofeT := OfeT A (cmra_ofe_mixin A).
 Canonical Structure cmra_ofeC.
+
+Definition cmra_mixin_of' A {Ac : cmraT} (f : Ac → A) : CMRAMixin Ac := cmra_mixin Ac.
+Notation cmra_mixin_of A :=
+  ltac:(let H := eval hnf in (cmra_mixin_of' A id) in exact H) (only parsing).
 
 (** Lifting properties from the mixin *)
 Section cmra_mixin.
@@ -184,7 +192,8 @@ Structure ucmraT := UCMRAT' {
   _ : Type;
 }.
 Arguments UCMRAT' _ {_ _ _ _ _ _ _} _ _ _ _.
-Notation UCMRAT A m m' m'' := (UCMRAT' A m m' m'' A).
+Notation UCMRAT A m :=
+  (UCMRAT' A (ofe_mixin_of A%type) (cmra_mixin_of A%type) m A) (only parsing).
 Arguments ucmra_car : simpl never.
 Arguments ucmra_equiv : simpl never.
 Arguments ucmra_dist : simpl never.
@@ -200,7 +209,7 @@ Hint Extern 0 (Empty _) => eapply (@ucmra_empty _) : typeclass_instances.
 Coercion ucmra_ofeC (A : ucmraT) : ofeT := OfeT A (ucmra_ofe_mixin A).
 Canonical Structure ucmra_ofeC.
 Coercion ucmra_cmraR (A : ucmraT) : cmraT :=
-  CMRAT A (ucmra_ofe_mixin A) (ucmra_cmra_mixin A).
+  CMRAT' A (ucmra_ofe_mixin A) (ucmra_cmra_mixin A) A.
 Canonical Structure ucmra_cmraR.
 
 (** Lifting properties from the mixin *)
@@ -862,7 +871,7 @@ Record RAMixin A `{Equiv A, PCore A, Op A, Valid A} := {
 
 Section discrete.
   Local Set Default Proof Using "Type*".
-  Context `{Equiv A, PCore A, Op A, Valid A, @Equivalence A (≡)}.
+  Context `{Equiv A, PCore A, Op A, Valid A} (Heq : @Equivalence A (≡)).
   Context (ra_mix : RAMixin A).
   Existing Instances discrete_dist.
 
@@ -873,16 +882,18 @@ Section discrete.
     - intros x; split; first done. by move=> /(_ 0).
     - intros n x y1 y2 ??; by exists y1, y2.
   Qed.
+
+  Instance discrete_cmra_discrete :
+    CMRADiscrete (CMRAT' A (discrete_ofe_mixin Heq) discrete_cmra_mixin A).
+  Proof. split. apply _. done. Qed.
 End discrete.
 
+(** A smart constructor for the discrete RA over a carrier [A]. It uses
+[discrete_ofe_equivalence_of A] to make sure the same [Equivalence] proof is
+used as when constructing the OFE. *)
 Notation discreteR A ra_mix :=
-  (CMRAT A discrete_ofe_mixin (discrete_cmra_mixin ra_mix)).
-Notation discreteUR A ra_mix ucmra_mix :=
-  (UCMRAT A discrete_ofe_mixin (discrete_cmra_mixin ra_mix) ucmra_mix).
-
-Global Instance discrete_cmra_discrete `{Equiv A, PCore A, Op A, Valid A,
-  @Equivalence A (≡)} (ra_mix : RAMixin A) : CMRADiscrete (discreteR A ra_mix).
-Proof. split. apply _. done. Qed.
+  (CMRAT A (discrete_cmra_mixin (discrete_ofe_equivalence_of A%type) ra_mix))
+  (only parsing).
 
 Section ra_total.
   Local Set Default Proof Using "Type*".
@@ -918,13 +929,12 @@ Section unit.
   Instance unit_op : Op () := λ x y, ().
   Lemma unit_cmra_mixin : CMRAMixin ().
   Proof. apply discrete_cmra_mixin, ra_total_mixin; by eauto. Qed.
-  Canonical Structure unitR : cmraT := CMRAT () unit_ofe_mixin unit_cmra_mixin.
+  Canonical Structure unitR : cmraT := CMRAT unit unit_cmra_mixin.
 
   Instance unit_empty : Empty () := ().
   Lemma unit_ucmra_mixin : UCMRAMixin ().
   Proof. done. Qed.
-  Canonical Structure unitUR : ucmraT :=
-    UCMRAT () unit_ofe_mixin unit_cmra_mixin unit_ucmra_mixin.
+  Canonical Structure unitUR : ucmraT := UCMRAT unit unit_ucmra_mixin.
 
   Global Instance unit_cmra_discrete : CMRADiscrete unitR.
   Proof. done. Qed.
@@ -957,14 +967,13 @@ Section nat.
   Qed.
   Canonical Structure natR : cmraT := discreteR nat nat_ra_mixin.
 
+  Global Instance nat_cmra_discrete : CMRADiscrete natR.
+  Proof. apply discrete_cmra_discrete. Qed.
+
   Instance nat_empty : Empty nat := 0.
   Lemma nat_ucmra_mixin : UCMRAMixin nat.
   Proof. split; apply _ || done. Qed.
-  Canonical Structure natUR : ucmraT :=
-    discreteUR nat nat_ra_mixin nat_ucmra_mixin.
-
-  Global Instance nat_cmra_discrete : CMRADiscrete natR.
-  Proof. constructor; apply _ || done. Qed.
+  Canonical Structure natUR : ucmraT := UCMRAT nat nat_ucmra_mixin.
 
   Global Instance nat_cancelable (x : nat) : Cancelable x.
   Proof. by intros ???? ?%Nat.add_cancel_l. Qed.
@@ -995,14 +1004,14 @@ Section mnat.
   Qed.
   Canonical Structure mnatR : cmraT := discreteR mnat mnat_ra_mixin.
 
+  Global Instance mnat_cmra_discrete : CMRADiscrete mnatR.
+  Proof. apply discrete_cmra_discrete. Qed.
+
   Instance mnat_empty : Empty mnat := 0.
   Lemma mnat_ucmra_mixin : UCMRAMixin mnat.
   Proof. split; apply _ || done. Qed.
-  Canonical Structure mnatUR : ucmraT :=
-    discreteUR mnat mnat_ra_mixin mnat_ucmra_mixin.
+  Canonical Structure mnatUR : ucmraT := UCMRAT mnat mnat_ucmra_mixin.
 
-  Global Instance mnat_cmra_discrete : CMRADiscrete mnatR.
-  Proof. constructor; apply _ || done. Qed.
   Global Instance mnat_persistent (x : mnat) : Persistent x.
   Proof. by constructor. Qed.
 End mnat.
@@ -1030,7 +1039,8 @@ Section positive.
   Canonical Structure positiveR : cmraT := discreteR positive pos_ra_mixin.
 
   Global Instance pos_cmra_discrete : CMRADiscrete positiveR.
-  Proof. constructor; apply _ || done. Qed.
+  Proof. apply discrete_cmra_discrete. Qed.
+
   Global Instance pos_cancelable (x : positive) : Cancelable x.
   Proof. intros n y z ??. by eapply Pos.add_reg_l, leibniz_equiv. Qed.
   Global Instance pos_id_free (x : positive) : IdFree x.
@@ -1105,8 +1115,7 @@ Section prod.
       destruct (cmra_extend n (x.2) (y1.2) (y2.2)) as (z21&z22&?&?&?); auto.
       by exists (z11,z21), (z12,z22).
   Qed.
-  Canonical Structure prodR :=
-    CMRAT (A * B) prod_ofe_mixin prod_cmra_mixin.
+  Canonical Structure prodR := CMRAT (prod A B) prod_cmra_mixin.
 
   Lemma pair_op (a a' : A) (b b' : B) : (a, b) ⋅ (a', b') = (a ⋅ a', b ⋅ b').
   Proof. done. Qed.
@@ -1153,8 +1162,7 @@ Section prod_unit.
     - by split; rewrite /=left_id.
     - rewrite prod_pcore_Some'; split; apply (persistent _).
   Qed.
-  Canonical Structure prodUR :=
-    UCMRAT (A * B) prod_ofe_mixin prod_cmra_mixin prod_ucmra_mixin.
+  Canonical Structure prodUR := UCMRAT (prod A B) prod_ucmra_mixin.
 
   Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ∅) ⋅ (∅, y).
   Proof. by rewrite pair_op left_id right_id. Qed.
@@ -1289,8 +1297,7 @@ Section option.
       + by exists None, (Some x); repeat constructor.
       + exists None, None; repeat constructor.
   Qed.
-  Canonical Structure optionR :=
-    CMRAT (option A) option_ofe_mixin option_cmra_mixin.
+  Canonical Structure optionR := CMRAT (option A) option_cmra_mixin.
 
   Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionR.
   Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
@@ -1298,8 +1305,7 @@ Section option.
   Instance option_empty : Empty (option A) := None.
   Lemma option_ucmra_mixin : UCMRAMixin optionR.
   Proof. split. done. by intros []. done. Qed.
-  Canonical Structure optionUR :=
-    UCMRAT (option A) option_ofe_mixin option_cmra_mixin option_ucmra_mixin.
+  Canonical Structure optionUR := UCMRAT (option A) option_ucmra_mixin.
 
   (** Misc *)
   Global Instance Some_cmra_monotone : CMRAMonotone Some.

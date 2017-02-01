@@ -318,8 +318,7 @@ Proof.
     + by rewrite agree_idemp.
     + by move: Hval; rewrite Hx; move=> /agree_op_invN->; rewrite agree_idemp.
 Qed.
-Canonical Structure agreeR : cmraT :=
-  CMRAT (agree A) agree_ofe_mixin agree_cmra_mixin.
+Canonical Structure agreeR : cmraT := CMRAT (agree A) agree_cmra_mixin.
 
 Global Instance agree_total : CMRATotal agreeR.
 Proof. rewrite /CMRATotal; eauto. Qed.

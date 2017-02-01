@@ -219,7 +219,7 @@ Section cmra.
           (cmra_extend n x y1 y2) as (y1'&y2'&?&?&?); simplify_eq/=; auto.
         exists (y1' :: l1'), (y2' :: l2'); repeat constructor; auto.
   Qed.
-  Canonical Structure listR := CMRAT (list A) list_ofe_mixin list_cmra_mixin.
+  Canonical Structure listR := CMRAT (list A) list_cmra_mixin.
 
   Global Instance empty_list : Empty (list A) := [].
   Definition list_ucmra_mixin : UCMRAMixin (list A).
@@ -229,8 +229,7 @@ Section cmra.
     - by intros l.
     - by constructor.
   Qed.
-  Canonical Structure listUR :=
-    UCMRAT (list A) list_ofe_mixin list_cmra_mixin list_ucmra_mixin.
+  Canonical Structure listUR := UCMRAT (list A) list_ucmra_mixin.
 
   Global Instance list_cmra_discrete : CMRADiscrete A → CMRADiscrete listR.
   Proof.

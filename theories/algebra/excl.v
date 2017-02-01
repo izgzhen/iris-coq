@@ -101,8 +101,7 @@ Proof.
   - by intros n [?|] [?|].
   - intros n x [?|] [?|] ?; inversion_clear 1; eauto.
 Qed.
-Canonical Structure exclR :=
-  CMRAT (excl A) excl_ofe_mixin excl_cmra_mixin.
+Canonical Structure exclR := CMRAT (excl A) excl_cmra_mixin.
 
 Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclR.
 Proof. split. apply _. by intros []. Qed.

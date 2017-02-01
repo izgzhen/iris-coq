@@ -177,6 +177,8 @@ Qed.
 Canonical Structure validityR : cmraT :=
   discreteR (validity A) validity_ra_mixin.
 
+Global Instance validity_cmra_disrete : CMRADiscrete validityR.
+Proof. apply discrete_cmra_discrete. Qed.
 Global Instance validity_cmra_total : CMRATotal validityR.
 Proof. rewrite /CMRATotal; eauto. Qed.
 

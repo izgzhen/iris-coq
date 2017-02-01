@@ -151,12 +151,16 @@ Section M.
     - intros [n1|i1|] [n2|i2|]; simpl; by try case_decide.
   Qed.
   Canonical Structure M_R : cmraT := discreteR M M_ra_mixin.
+
+  Global Instance M_cmra_discrete : CMRADiscrete M_R.
+  Proof. apply discrete_cmra_discrete. Qed.
+
   Definition M_ucmra_mixin : UCMRAMixin M.
   Proof.
     split; try (done || apply _).
     intros [?|?|]; simpl; try case_decide; f_equal/=; lia.
   Qed.
-  Canonical Structure M_UR : ucmraT := discreteUR M M_ra_mixin M_ucmra_mixin.
+  Canonical Structure M_UR : ucmraT := UCMRAT M M_ucmra_mixin.
 
   Global Instance frag_persistent n : Persistent (Frag n).
   Proof. by constructor. Qed.
