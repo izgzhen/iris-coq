@@ -291,12 +291,10 @@ Qed.
 Global Instance singleton_cancelable i x :
   Cancelable (Some x) → Cancelable {[ i := x ]}.
 Proof.
-  intros ???? Hv EQ j. specialize (EQ j). specialize (Hv j).
-  rewrite !lookup_op in EQ, Hv. destruct (decide (i = j)).
-  - subst. rewrite lookup_singleton in EQ, Hv.
-    by eapply cancelableN.
-  - rewrite lookup_singleton_ne // in EQ, Hv.
-    by rewrite ->!(left_id None _) in EQ.
+  intros ? n m1 m2 Hv EQ j. move: (Hv j) (EQ j). rewrite !lookup_op.
+  destruct (decide (i = j)) as [->|].
+  - rewrite lookup_singleton. by apply cancelableN.
+  - by rewrite lookup_singleton_ne // !(left_id None _).
 Qed.
 
 Lemma insert_updateP (P : A → Prop) (Q : gmap K A → Prop) m i x :
@@ -460,15 +458,12 @@ Lemma delete_local_update_cancelable m1 m2 i mx `{!Cancelable mx} :
   m1 !! i ≡ mx → m2 !! i ≡ mx →
   (m1, m2) ~l~> (delete i m1, delete i m2).
 Proof.
-  intros EQ1 EQ2.
-  destruct mx as [x|], (m1 !! i) as [m1i|] eqn:?, (m2 !! i) as [m2i|] eqn:?;
-    inversion_clear EQ1; inversion_clear EQ2.
-  - rewrite -{1}(insert_id m1 i m1i) // -{1}(insert_id m2 i m2i) //
-            -(insert_delete m1) -(insert_delete m2) !insert_singleton_op;
-    try by apply lookup_delete.
-    assert (m1i ≡ x) as -> by done. assert (m2i ≡ x) as -> by done.
-    apply cancel_local_update, _.
-  - rewrite !delete_notin //.
+  intros Hm1i Hm2i. apply local_update_unital=> n mf Hmv Hm; simpl in *.
+  split; [eauto using delete_validN|].
+  intros j. destruct (decide (i = j)) as [->|].
+  - move: (Hm j). rewrite !lookup_op Hm1i Hm2i !lookup_delete. intros Hmx.
+    rewrite (cancelableN mx n (mf !! j) None) ?right_id // -Hmx -Hm1i. apply Hmv.
+  - by rewrite lookup_op !lookup_delete_ne // Hm lookup_op.
 Qed.
 
 Lemma delete_singleton_local_update_cancelable m i x `{!Cancelable (Some x)} :

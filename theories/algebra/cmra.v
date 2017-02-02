@@ -541,9 +541,8 @@ Qed.
 
 (** Cancelable elements  *)
 Global Instance cancelable_proper : Proper (equiv ==> iff) (@Cancelable A).
-Proof. unfold Cancelable. intros ?? EQ. by setoid_rewrite EQ. Qed.
-Lemma cancelable x `{!Cancelable x} y z :
-  ✓(x ⋅ y) → x ⋅ y ≡ x ⋅ z → y ≡ z.
+Proof. unfold Cancelable. intros x x' EQ. by setoid_rewrite EQ. Qed.
+Lemma cancelable x `{!Cancelable x} y z : ✓(x ⋅ y) → x ⋅ y ≡ x ⋅ z → y ≡ z.
 Proof. rewrite !equiv_dist cmra_valid_validN. intros. by apply (cancelableN x). Qed.
 Lemma discrete_cancelable x `{CMRADiscrete A}:
   (∀ y z, ✓(x ⋅ y) → x ⋅ y ≡ x ⋅ z → y ≡ z) → Cancelable x.
@@ -551,25 +550,22 @@ Proof. intros ????. rewrite -!timeless_iff -cmra_discrete_valid_iff. auto. Qed.
 Global Instance cancelable_op x y :
   Cancelable x → Cancelable y → Cancelable (x ⋅ y).
 Proof.
-  intros ???????. apply (cancelableN y), (cancelableN x).
+  intros ?? n z z' ??. apply (cancelableN y), (cancelableN x).
   - eapply cmra_validN_op_r. by rewrite assoc.
   - by rewrite assoc.
   - by rewrite !assoc.
 Qed.
 Global Instance exclusive_cancelable (x : A) : Exclusive x → Cancelable x.
-Proof. intros ???? []%(exclusiveN_l _ x). Qed.
+Proof. intros ? n z z' []%(exclusiveN_l _ x). Qed.
 
 (** Id-free elements  *)
-Global Instance id_free_ne : Proper (dist n ==> iff) (@IdFree A).
+Global Instance id_free_ne n : Proper (dist n ==> iff) (@IdFree A).
 Proof.
-  unfold IdFree. intros ??? EQ%(dist_le _ 0); last lia.
-  split; intros ??; (rewrite -EQ || rewrite EQ); eauto.
+  intros x x' EQ%(dist_le _ 0); last lia. rewrite /IdFree.
+  split=> y ?; (rewrite -EQ || rewrite EQ); eauto.
 Qed.
 Global Instance id_free_proper : Proper (equiv ==> iff) (@IdFree A).
-Proof.
-  unfold IdFree. intros ?? EQ.
-  split; intros ??; (rewrite -EQ || rewrite EQ); eauto.
-Qed.
+Proof. by move=> P Q /equiv_dist /(_ 0)=> ->. Qed.
 Lemma id_freeN_r n n' x `{!IdFree x} y : ✓{n}x → x ⋅ y ≡{n'}≡ x → False.
 Proof. eauto using cmra_validN_le, dist_le with lia. Qed.
 Lemma id_freeN_l n n' x `{!IdFree x} y : ✓{n}x → y ⋅ x ≡{n'}≡ x → False.
@@ -579,16 +575,14 @@ Proof. move=> /cmra_valid_validN ? /equiv_dist. eauto. Qed.
 Lemma id_free_l x `{!IdFree x} y : ✓x → y ⋅ x ≡ x → False.
 Proof. rewrite comm. eauto using id_free_r. Qed.
 Lemma discrete_id_free x `{CMRADiscrete A}:
-  (∀ y, ✓x → x ⋅ y ≡ x → False) → IdFree x.
+  (∀ y, ✓ x → x ⋅ y ≡ x → False) → IdFree x.
 Proof. repeat intro. eauto using cmra_discrete_valid, cmra_discrete, timeless. Qed.
-Global Instance id_free_op_r x y :
-  IdFree y → Cancelable x → IdFree (x ⋅ y).
+Global Instance id_free_op_r x y : IdFree y → Cancelable x → IdFree (x ⋅ y).
 Proof.
-  intros ???? Hid%symmetry. revert Hid. rewrite -assoc=>/(cancelableN x) ?.
+  intros ?? z ? Hid%symmetry. revert Hid. rewrite -assoc=>/(cancelableN x) ?.
   eapply (id_free0_r _); [by eapply cmra_validN_op_r |symmetry; eauto].
 Qed.
-Global Instance id_free_op_l x y :
-  IdFree x → Cancelable y → IdFree (x ⋅ y).
+Global Instance id_free_op_l x y : IdFree x → Cancelable y → IdFree (x ⋅ y).
 Proof. intros. rewrite comm. apply _. Qed.
 Global Instance exclusive_id_free x : Exclusive x → IdFree x.
 Proof. intros ? z ? Hid. apply (exclusiveN_l 0 x z). by rewrite Hid. Qed.
@@ -1038,10 +1032,10 @@ Section positive.
   Global Instance pos_cmra_discrete : CMRADiscrete positiveR.
   Proof. constructor; apply _ || done. Qed.
   Global Instance pos_cancelable (x : positive) : Cancelable x.
-  Proof. intros ?????. by eapply Pos.add_reg_l, leibniz_equiv. Qed.
+  Proof. intros n y z ??. by eapply Pos.add_reg_l, leibniz_equiv. Qed.
   Global Instance pos_id_free (x : positive) : IdFree x.
   Proof.
-    intros ???. edestruct Pos.add_no_neutral. rewrite Pos.add_comm.
+    intros y ??. apply (Pos.add_no_neutral x y). rewrite Pos.add_comm.
     by apply leibniz_equiv.
   Qed.
 End positive.
@@ -1354,12 +1348,10 @@ Section option.
   Proof.
     intros Hirr ?? [y|] [z|] ? EQ; inversion_clear EQ.
     - constructor. by apply (cancelableN x).
-    - edestruct Hirr.
-      + eapply (cmra_validN_op_l 0 x y), (cmra_validN_le n). done. lia.
-      + eapply dist_le. done. lia.
-    - edestruct Hirr.
-      + eapply (cmra_validN_le n). done. lia.
-      + eapply dist_le. done. lia.
+    - destruct (Hirr y); [|eauto using dist_le with lia].
+      by eapply (cmra_validN_op_l 0 x y), (cmra_validN_le n); last lia.
+    - destruct (Hirr z); [|symmetry; eauto using dist_le with lia].
+      by eapply (cmra_validN_le n); last lia.
     - done.
   Qed.
 End option.
