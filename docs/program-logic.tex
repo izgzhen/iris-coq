@@ -118,7 +118,6 @@ We assume to have the following four CMRAs available:
   \textmon{Dis} \eqdef{}& \finpset{\InvName}
 \end{align*}
 The last two are the tokens used for managing invariants, $\textmon{Inv}$ is the monoid used to manage the invariants themselves.
-Finally, $\textmon{State}$ is used to provide the program with a view of the physical state of the machine.
 
 We assume that at the beginning of the verification, instances named $\gname_{\textmon{State}}$, $\gname_{\textmon{Inv}}$, $\gname_{\textmon{En}}$ and $\gname_{\textmon{Dis}}$ of these CMRAs have been created, such that these names are globally known.
 
@@ -190,14 +189,15 @@ Fancy updates satisfy the following basic proof rules:
 We can further define the notions of \emph{view shifts} and \emph{linear view shifts}:
 \begin{align*}
   \prop \vsW[\mask_1][\mask_2] \propB \eqdef{}& \prop \wand \pvs[\mask_1][\mask_2] \propB \\
-  \prop \vs[\mask_1][\mask_2] \propB \eqdef{}& \always(\prop \wand \pvs[\mask_1][\mask_2] \propB)
+  \prop \vs[\mask_1][\mask_2] \propB \eqdef{}& \always(\prop \wand \pvs[\mask_1][\mask_2] \propB) \\
+  \prop \vs[\mask] \propB \eqdef{}& \prop \vs[\mask][\mask] \propB
 \end{align*}
 These two are useful when writing down specifications and for comparing with previous versions of Iris, but for reasoning, it is typically easier to just work directly with fancy updates.
 Still, just to give an idea of what view shifts ``are'', here are some proof rules for them:
 \begin{mathparpagebreakable}
 \inferH{vs-update}
   {\melt \mupd \meltsB}
-  {\ownGhost\gname{\melt} \vs \exists \meltB \in \meltsB.\; \ownGhost\gname{\meltB}}
+  {\ownGhost\gname{\melt} \vs[\emptyset] \exists \meltB \in \meltsB.\; \ownGhost\gname{\meltB}}
 \and
 \inferH{vs-trans}
   {\prop \vs[\mask_1][\mask_2] \propB \and \propB \vs[\mask_2][\mask_3] \propC}
@@ -217,7 +217,7 @@ Still, just to give an idea of what view shifts ``are'', here are some proof rul
 \and
 \inferH{vs-timeless}
   {\timeless{\prop}}
-  {\later \prop \vs \prop}
+  {\later \prop \vs[\emptyset] \prop}
 
 % \inferH{vs-allocI}
 %   {\infinite(\mask)}
@@ -252,15 +252,15 @@ Finally, we can define the core piece of the program logic, the assertion that r
 
 \paragraph{Defining weakest precondition.}
 We assume that everything making up the definition of the language, \ie values, expressions, states, the conversion functions, reduction relation and all their properties, are suitably reflected into the logic (\ie they are part of the signature $\Sig$).
-We further assume (as a parameter) a predicate $S : \State \to \iProp$ that interprets the physical state as an Iris assertion.
+We further assume (as a parameter) a predicate $I : \State \to \iProp$ that interprets the physical state as an Iris assertion.
 This can be instantiated, for example, with ownership of an authoritative RA to tie the physical state to fragments that are used for user-level proofs.
 
 \begin{align*}
   \textdom{wp} \eqdef{}& \MU \textdom{wp}. \Lam \mask, \expr, \pred. \\
         & (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \prop) \lor {}\\
-        & \Bigl(\toval(\expr) = \bot \land \All \state. S(\state) \vsW[\mask][\emptyset] {}\\
+        & \Bigl(\toval(\expr) = \bot \land \All \state. I(\state) \vsW[\mask][\emptyset] {}\\
         &\qquad \red(\expr, \state) * \later\All \expr', \state', \vec\expr. (\expr, \state \step \expr', \state', \vec\expr) \vsW[\emptyset][\mask] {}\\
-        &\qquad\qquad S(\state') * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \vec\expr} \textdom{wp}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
+        &\qquad\qquad I(\state') * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \vec\expr} \textdom{wp}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
 %  (* value case *)
   \wpre\expr[\mask]{\Ret\val. \prop} \eqdef{}& \textdom{wp}(\mask, \expr, \Lam\val.\prop)
 \end{align*}
@@ -304,7 +304,7 @@ We will also want a rule that connect weakest preconditions to the operational s
   \infer[wp-lift-step]
   {\toval(\expr_1) = \bot}
   { {\begin{inbox} % for some crazy reason, LaTeX is actually sensitive to the space between the "{ {" here and the "} }" below...
-        ~~\All \state_1. S(\state_1) \vsW[\mask][\emptyset] \red(\expr_1,\state_1) * {}\\\qquad~~ \later\All \expr_2, \state_2, \vec\expr.  (\expr_1, \state_1 \step \expr_2, \state_2, \vec\expr)  \vsW[\emptyset][\mask] \Bigl(S(\state_2) * \wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}
+        ~~\All \state_1. I(\state_1) \vsW[\mask][\emptyset] \red(\expr_1,\state_1) * {}\\\qquad~~ \later\All \expr_2, \state_2, \vec\expr.  (\expr_1, \state_1 \step \expr_2, \state_2, \vec\expr)  \vsW[\emptyset][\mask] \Bigl(I(\state_2) * \wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}
       \end{inbox}} }
 \end{mathpar}
 
@@ -348,7 +348,7 @@ Second, a proof of a weakest precondition with any postcondition should imply th
   \[ \All\expr'\in\tpool'. \toval(\expr') \neq \bot \lor \red(\expr', \state') \]
   Notice that this is stronger than saying that the thread pool can reduce; we actually assert that \emph{every} non-finished thread can take a step.
 \item Legal return value: If $\tpool'_1$ (the main thread) is a value $\val'$, then $\val' \in V$:
-  \[ \All \val',\tpool''. \tpool' = [\val'] \dplus \tpool' \Ra \val' \in V \]
+  \[ \All \val',\tpool''. \tpool' = [\val'] \dplus \tpool'' \Ra \val' \in V \]
 \end{enumerate}
 \end{defn}
 
@@ -363,7 +363,7 @@ The signature can of course state arbitrary additional properties of $\pred$, as
 The adequacy statement now reads as follows:
 \begin{align*}
  &\All \mask, \expr, \val, \state.
- \\&( \TRUE \proves {\upd}_\mask \Exists S. S(\state) * \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
+ \\&( \TRUE \proves {\upd}_\mask \Exists I. I(\state) * \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
  \\&\expr, \state \vDash V
 \end{align*}
 Notice that the state invariant $S$ used by the weakest precondition is chosen \emph{after} doing a fancy update, which allows it to depend on the names of ghost variables that are picked in that initial fancy update.
@@ -501,7 +501,20 @@ Additionally, opening the accessor provides us with $\All\varB. \propB' \vsW[\ma
 This linear view shift tells us that in order to \emph{close} the accessor again and go back to mask $\mask_1$, we have to pick some $\varB$ and establish the corresponding $\propB'$.
 After closing, we will obtain $\propC$.
 
-Using \ruleref{vs-trans} and \ruleref{Ht-atomic} (or the corresponding proof rules for fancy updates and weakest preconditions), we can show that it is possible to open an accessor around any view shift and any \emph{atomic} expression.
+Using \ruleref{vs-trans} and \ruleref{Ht-atomic} (or the corresponding proof rules for fancy updates and weakest preconditions), we can show that it is possible to open an accessor around any view shift and any \emph{atomic} expression:
+\begin{mathpar}
+  \inferH{Acc-vs}
+  {\prop \vs[\mask_1][\mask_2] \Exists\var. \propB * (\All\varB. \propB' \vsW[\mask_2][\mask_1] \propC) \and
+   \All\var. \propB * \prop_F \vs[\mask_2] \Exists\varB. \propB' * \prop_F}
+  {\prop * \prop_F \vs[\mask_1] \propC * \prop_F}
+
+  \inferH{Acc-Ht}
+  {\prop \vs[\mask_1][\mask_2] \Exists\var. \propB * (\All\varB. \propB' \vsW[\mask_2][\mask_1] \propC) \and
+   \All\var. \hoare{\propB * \prop_F}\expr{\Exists\varB. \propB' * \prop_F}[\mask_2] \and
+   \physatomic\expr}
+  {\hoare{\prop * \prop_F}\expr{\propC * \prop_F}[\mask_1]}
+\end{mathpar}
+
 Furthermore, in the special case that $\mask_1 = \mask_2$, the accessor can be opened around \emph{any} expression.
 For this reason, we also call such accessors \emph{non-atomic}.
 
