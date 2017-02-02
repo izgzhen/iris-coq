@@ -5,7 +5,14 @@ Import uPred.
 
 (** The "core" of an assertion is its maximal persistent part.
     It can be defined entirely within the logic... at least
-    in the shallow embedding. *)
+    in the shallow embedding.
+    WARNING: The function "coreP" is NOT NON-EXPANSIVE.
+    This is because the turnstile is not non-expansive as a function
+    from iProp to (discreteC Prop).
+    To obtain a core that's non-expansive, we would have to add another
+    modality to the logic: a box that removes access to *all* resources,
+    not just restricts access to the core.
+*)
 
 Definition coreP {M : ucmraT} (P : uPred M) : uPred M :=
   (∀ `(!PersistentP Q), ⌜P ⊢ Q⌝ → Q)%I.
