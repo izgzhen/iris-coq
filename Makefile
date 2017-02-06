@@ -32,9 +32,9 @@ Makefile.coq: _CoqProject Makefile awk.Makefile
 build-dep:
 	build/opam-pins.sh < opam.pins
 	opam upgrade $(YFLAG) # it is not nice that we upgrade *all* packages here, but I found no nice way to upgrade only those that we pinned
-	opam pin add coq-iris "$$(pwd)#HEAD" -k git -n -y
-	opam install coq-iris --deps-only $(YFLAG)
-	opam pin remove coq-iris
+	opam pin add opam-builddep-temp "$$(pwd)#HEAD" -k git -n -y
+	opam install opam-builddep-temp --deps-only $(YFLAG)
+	opam pin remove opam-builddep-temp
 
 # Some files that do *not* need to be forwarded to Makefile.coq
 Makefile: ;

@@ -1,4 +1,4 @@
-From iris.prelude Require Export vector.
+From stdpp Require Export vector.
 From iris.algebra Require Export ofe.
 From iris.algebra Require Import list.
 Set Default Proof Using "Type".

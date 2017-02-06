@@ -1,4 +1,4 @@
-From iris.prelude Require Import gmap gmultiset.
+From stdpp Require Import gmap gmultiset.
 From iris.base_logic Require Export derived.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import classes class_instances.

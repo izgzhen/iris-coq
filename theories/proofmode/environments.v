@@ -1,7 +1,7 @@
-From iris.prelude Require Export strings.
+From stdpp Require Export strings.
 From iris.proofmode Require Import strings.
 From iris.algebra Require Export base.
-From iris.prelude Require Import stringmap.
+From stdpp Require Import stringmap.
 Set Default Proof Using "Type".
 
 Inductive env (A : Type) : Type :=

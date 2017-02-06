@@ -1,5 +1,5 @@
 From iris.proofmode Require Import coq_tactics environments.
-From iris.prelude Require Export strings.
+From stdpp Require Export strings.
 Set Default Proof Using "Type".
 
 Delimit Scope proof_scope with env.

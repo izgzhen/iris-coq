@@ -1,4 +1,4 @@
-From iris.prelude Require Import strings.
+From stdpp Require Import strings.
 From iris.algebra Require Import base.
 From Coq Require Import Ascii.
 Set Default Proof Using "Type".

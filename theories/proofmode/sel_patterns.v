@@ -1,4 +1,4 @@
-From iris.prelude Require Export strings.
+From stdpp Require Export strings.
 Set Default Proof Using "Type".
 
 Inductive sel_pat :=

@@ -1,4 +1,4 @@
-From iris.prelude Require Export hlist.
+From stdpp Require Export hlist.
 From iris.base_logic Require Export base_logic.
 Set Default Proof Using "Type".
 Import uPred.

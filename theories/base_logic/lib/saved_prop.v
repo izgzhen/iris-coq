@@ -1,6 +1,6 @@
 From iris.base_logic Require Export own.
 From iris.algebra Require Import agree.
-From iris.prelude Require Import gmap.
+From stdpp Require Import gmap.
 Set Default Proof Using "Type".
 Import uPred.
 
