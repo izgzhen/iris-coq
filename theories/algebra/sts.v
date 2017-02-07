@@ -1,4 +1,4 @@
-From iris.prelude Require Export set.
+From stdpp Require Export set.
 From iris.algebra Require Export cmra.
 From iris.algebra Require Import dra.
 Set Default Proof Using "Type".

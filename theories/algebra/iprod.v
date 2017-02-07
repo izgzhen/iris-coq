@@ -1,6 +1,6 @@
 From iris.algebra Require Export cmra.
 From iris.base_logic Require Import base_logic.
-From iris.prelude Require Import finite.
+From stdpp Require Import finite.
 Set Default Proof Using "Type".
 
 (** * Indexed product *)

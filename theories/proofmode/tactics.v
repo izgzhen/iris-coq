@@ -3,7 +3,7 @@ From iris.proofmode Require Import intro_patterns spec_patterns sel_patterns.
 From iris.base_logic Require Export base_logic.
 From iris.proofmode Require Export classes notation.
 From iris.proofmode Require Import class_instances.
-From iris.prelude Require Import stringmap hlist.
+From stdpp Require Import stringmap hlist.
 From iris.proofmode Require Import strings.
 Set Default Proof Using "Type".
 

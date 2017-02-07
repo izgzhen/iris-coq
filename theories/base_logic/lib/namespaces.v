@@ -1,4 +1,4 @@
-From iris.prelude Require Export countable coPset.
+From stdpp Require Export countable coPset.
 From iris.algebra Require Export base.
 Set Default Proof Using "Type".
 

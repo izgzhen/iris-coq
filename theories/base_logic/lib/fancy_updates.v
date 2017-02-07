@@ -1,5 +1,5 @@
 From iris.base_logic.lib Require Export own.
-From iris.prelude Require Export coPset.
+From stdpp Require Export coPset.
 From iris.base_logic.lib Require Import wsat.
 From iris.algebra Require Import gmap.
 From iris.base_logic Require Import big_op.

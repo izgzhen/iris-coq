@@ -1,6 +1,6 @@
 From iris.algebra Require Export cmra.
 From iris.algebra Require Import updates local_updates.
-From iris.prelude Require Export collections gmap mapset.
+From stdpp Require Export collections gmap mapset.
 Set Default Proof Using "Type".
 
 (* The union CMRA *)

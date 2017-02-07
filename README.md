@@ -8,10 +8,11 @@ This version is known to compile with:
 
  - Coq 8.6
  - Ssreflect 1.6.1
+ - A development version of [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
 
-The easiest way to install the correct versions of the dependencies is
-through opam. Coq packages are available on the coq-released repository,
-set up by the command:
+The easiest way to install the correct versions of the dependencies is through
+opam.  Coq packages are available on the coq-released repository, set up by the
+command:
 
     opam repo add coq-released https://coq.inria.fr/opam/released
 
@@ -28,8 +29,6 @@ Run `make` to build the full development.
 
 ## Structure
 
-* The folder [prelude](theories/prelude) contains an extended "Standard Library"
-  by [Robbert Krebbers](http://robbertkrebbers.nl/thesis.html).
 * The folder [algebra](theories/algebra) contains the COFE and CMRA
   constructions as well as the solver for recursive domain equations.
 * The folder [base_logic](theories/base_logic) defines the Iris base logic and

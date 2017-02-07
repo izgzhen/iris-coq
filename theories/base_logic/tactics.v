@@ -1,4 +1,4 @@
-From iris.prelude Require Import gmap.
+From stdpp Require Import gmap.
 From iris.base_logic Require Export base_logic big_op.
 Set Default Proof Using "Type".
 Import uPred.
