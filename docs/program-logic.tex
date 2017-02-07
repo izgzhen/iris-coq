@@ -12,7 +12,7 @@ The base logic described in \Sref{sec:base-logic} works over an arbitrary CMRA $
 It turns out that we can generalize this further and permit picking CMRAs ``$\iFunc(\Prop)$'' that depend on the structure of assertions themselves.
 Of course, $\Prop$ is just the syntactic type of assertions; for this to make sense we have to look at the semantics.
 
-Furthermore, there is a composeability problem with the given logic: if we have one proof performed with CMRA $\monoid_1$, and another proof carried out with a \emph{different} CMRA $\monoid_2$, then the two proofs are actually carried out in two \emph{entirely separate logics} and hence cannot be combined.
+Furthermore, there is a composability problem with the given logic: if we have one proof performed with CMRA $\monoid_1$, and another proof carried out with a \emph{different} CMRA $\monoid_2$, then the two proofs are actually carried out in two \emph{entirely separate logics} and hence cannot be combined.
 
 Finally, in many cases just having a single ``instance'' of a CMRA available for reasoning is not enough.
 For example, when reasoning about a dynamically allocated data structure, every time a new instance of that data structure is created, we will want a fresh resource governing the state of this particular instance.
@@ -53,7 +53,7 @@ Effectively, we just defined a way to instantiate the base logic with $\Res$ as 
 
 We thus obtain all the rules of \Sref{sec:base-logic}, and furthermore, we can use the maps $\wIso$ and $\wIso^{-1}$ \emph{in the logic} to convert between logical assertions $\Sem\Prop$ and the domain $\iPreProp$ which is used in the construction of $\Res$ -- so from elements of $\iPreProp$, we can construct elements of $\Sem{\textlog M}$, which are the elements that can be owned in our logic.
 
-\paragraph{Proof composeability.}
+\paragraph{Proof composability.}
 To make our proofs composeable, we \emph{generalize} our proofs over the family of functors.
 This is possible because we made $\Res$ a \emph{product} of all the CMRAs picked by the user, and because we can actually work with that product ``pointwise''.
 So instead of picking a \emph{concrete} family, proofs will assume to be given an \emph{arbitrary} family of functors, plus a proof that this family \emph{contains the functors they need}.
