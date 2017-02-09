@@ -15,6 +15,9 @@ Inductive spec_pat :=
   | SName : string → spec_pat
   | SForall : spec_pat.
 
+Definition spec_pat_modal (p : spec_pat) : bool :=
+  match p with SGoal g => spec_goal_modal g | _ => false end.
+
 Module spec_pat.
 Inductive token :=
   | TName : string → token

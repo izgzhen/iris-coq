@@ -332,16 +332,21 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
 persistent. If so, one can use all spatial hypotheses for both proving the
 premises and the remaning goal. The argument [p] can either be a Boolean or an
 introduction pattern, which will be coerced into [true] when it solely contains
-`#` or `%` patterns at the top-level. *)
+`#` or `%` patterns at the top-level.
+
+In case the specialization pattern in [t] states that the modality of the goal
+should be kept for one of the premises (i.e. [>[H1 .. Hn]] is used) then [p]
+defaults to [false] (i.e. spatial hypotheses are not preserved). *)
 Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
   let p := intro_pat_persistent p in
   let t :=
     match type of t with string => constr:(ITrm t hnil "") | _ => t end in
   lazymatch t with
   | ITrm ?H ?xs ?pat =>
+    let pat := spec_pat.parse pat in
     lazymatch type of H with
     | string =>
-      lazymatch p with
+      lazymatch eval compute in (p && negb (existsb spec_pat_modal pat)) with
       | true =>
          eapply tac_specialize_persistent_helper with _ H _ _ _;
            [env_cbv; reflexivity || fail "iSpecialize:" H "not found"
