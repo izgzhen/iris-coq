@@ -553,6 +553,26 @@ Section unit.
   Proof. done. Qed.
 End unit.
 
+Lemma iso_ofe_mixin {A : ofeT} `{Equiv B, Dist B} (g : B → A)
+  (g_equiv : ∀ y1 y2, y1 ≡ y2 ↔ g y1 ≡ g y2)
+  (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2) : OfeMixin B.
+Proof.
+  split.
+  - intros y1 y2. rewrite g_equiv. setoid_rewrite g_dist. apply equiv_dist.
+  - split.
+    + intros y. by apply g_dist.
+    + intros y1 y2. by rewrite !g_dist.
+    + intros y1 y2 y3. rewrite !g_dist. intros ??; etrans; eauto.
+  - intros n y1 y2. rewrite !g_dist. apply dist_S.
+Qed.
+
+Program Definition iso_cofe {A B : ofeT} `{Cofe A} (f : A → B) (g : B → A)
+    `(!NonExpansive g, !NonExpansive f) (fg : ∀ y, f (g y) ≡ y) : Cofe B :=
+  {| compl c := f (compl (chain_map g c)) |}.
+Next Obligation.
+  intros A B ? f g ?? fg n c. by rewrite /= conv_compl /= fg.
+Qed.
+
 (** Product *)
 Section product.
   Context {A B : ofeT}.
@@ -1084,14 +1104,7 @@ Section sigma.
   Global Instance proj1_sig_ne : NonExpansive (@proj1_sig _ P).
   Proof. by intros n [a Ha] [b Hb] ?. Qed.
   Definition sig_ofe_mixin : OfeMixin (sig P).
-  Proof.
-    split.
-    - intros [a ?] [b ?]. rewrite /dist /sig_dist /equiv /sig_equiv /=.
-      apply equiv_dist.
-    - intros n. rewrite /dist /sig_dist.
-      split; [intros []| intros [] []| intros [] [] []]=> //= -> //.
-    - intros n [a ?] [b ?]. rewrite /dist /sig_dist /=. apply dist_S.
-  Qed.
+  Proof. by apply (iso_ofe_mixin proj1_sig). Qed.
   Canonical Structure sigC : ofeT := OfeT (sig P) sig_ofe_mixin.
 
   (* FIXME: WTF, it seems that within these braces {...} the ofe argument of LimitPreserving

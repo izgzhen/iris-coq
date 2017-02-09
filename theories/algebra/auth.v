@@ -37,25 +37,13 @@ Global Instance own_proper : Proper ((≡) ==> (≡)) (@auth_own A).
 Proof. by destruct 1. Qed.
 
 Definition auth_ofe_mixin : OfeMixin (auth A).
-Proof.
-  split.
-  - intros x y; unfold dist, auth_dist, equiv, auth_equiv.
-    rewrite !equiv_dist; naive_solver.
-  - intros n; split.
-    + by intros ?; split.
-    + by intros ?? [??]; split; symmetry.
-    + intros ??? [??] [??]; split; etrans; eauto.
-  - by intros ? [??] [??] [??]; split; apply dist_S.
-Qed.
+Proof. by apply (iso_ofe_mixin (λ x, (authoritative x, auth_own x))). Qed.
 Canonical Structure authC := OfeT (auth A) auth_ofe_mixin.
 
-Definition auth_compl `{Cofe A} : Compl authC := λ c,
-  Auth (compl (chain_map authoritative c)) (compl (chain_map auth_own c)).
-Global Program Instance auth_cofe `{Cofe A} : Cofe authC :=
-  {| compl := auth_compl |}.
-Next Obligation.
-  intros ? n c; split. apply (conv_compl n (chain_map authoritative c)).
-  apply (conv_compl n (chain_map auth_own c)).
+Global Instance auth_cofe `{Cofe A} : Cofe authC.
+Proof.
+  apply (iso_cofe (λ y : _ * _, Auth (y.1) (y.2))
+    (λ x, (authoritative x, auth_own x))); by repeat intro.
 Qed.
 
 Global Instance Auth_timeless a b :

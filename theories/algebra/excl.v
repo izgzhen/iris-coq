@@ -46,29 +46,16 @@ Proof. by inversion_clear 1. Qed.
 
 Definition excl_ofe_mixin : OfeMixin (excl A).
 Proof.
-  split.
-  - intros x y; split; [by destruct 1; constructor; apply equiv_dist|].
-    intros Hxy; feed inversion (Hxy 1); subst; constructor; apply equiv_dist.
-    by intros n; feed inversion (Hxy n).
-  - intros n; split.
-    + by intros []; constructor.
-    + by destruct 1; constructor.
-    + destruct 1; inversion_clear 1; constructor; etrans; eauto.
-  - by inversion_clear 1; constructor; apply dist_S.
+  apply (iso_ofe_mixin (maybe Excl)).
+  - by intros [a|] [b|]; split; inversion_clear 1; constructor.
+  - by intros n [a|] [b|]; split; inversion_clear 1; constructor.
 Qed.
 Canonical Structure exclC : ofeT := OfeT (excl A) excl_ofe_mixin.
 
-Program Definition excl_chain (c : chain exclC) (a : A) : chain A :=
-  {| chain_car n := match c n return _ with Excl y => y | _ => a end |}.
-Next Obligation. intros c a n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
-Definition excl_compl `{Cofe A} : Compl exclC := λ c,
-  match c 0 with Excl a => Excl (compl (excl_chain c a)) | x => x end.
-Global Program Instance excl_cofe `{Cofe A} : Cofe exclC :=
-  {| compl := excl_compl |}.
-Next Obligation.
-  intros ? n c; rewrite /compl /excl_compl.
-  feed inversion (chain_cauchy c 0 n); auto with omega.
-  rewrite (conv_compl n (excl_chain c _)) /=. destruct (c n); naive_solver.
+Global Instance excl_cofe `{Cofe A} : Cofe exclC.
+Proof.
+  apply (iso_cofe (from_option Excl ExclBot) (maybe Excl));
+    [by destruct 1; constructor..|by intros []; constructor].
 Qed.
 
 Global Instance excl_discrete : Discrete A → Discrete exclC.
