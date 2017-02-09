@@ -309,7 +309,7 @@ Proof.
   by split; intros [z ?]; exists z; [rewrite -Hx -Hy|rewrite Hx Hy].
 Qed.
 Global Instance cmra_opM_ne : NonExpansive2 (@opM A).
-Proof. destruct 2; by cofe_subst. Qed.
+Proof. destruct 2; by ofe_subst. Qed.
 Global Instance cmra_opM_proper : Proper ((≡) ==> (≡) ==> (≡)) (@opM A).
 Proof. destruct 2; by setoid_subst. Qed.
 
@@ -383,7 +383,7 @@ Qed.
 Lemma cmra_valid_included x y : ✓ y → x ≼ y → ✓ x.
 Proof. intros Hyv [z ?]; setoid_subst; eauto using cmra_valid_op_l. Qed.
 Lemma cmra_validN_includedN n x y : ✓{n} y → x ≼{n} y → ✓{n} x.
-Proof. intros Hyv [z ?]; cofe_subst y; eauto using cmra_validN_op_l. Qed.
+Proof. intros Hyv [z ?]; ofe_subst y; eauto using cmra_validN_op_l. Qed.
 Lemma cmra_validN_included n x y : ✓{n} y → x ≼ y → ✓{n} x.
 Proof. intros Hyv [z ?]; setoid_subst; eauto using cmra_validN_op_l. Qed.
 
@@ -1269,9 +1269,9 @@ Section option.
   Proof.
     apply cmra_total_mixin.
     - eauto.
-    - by intros [x|] n; destruct 1; constructor; cofe_subst.
-    - destruct 1; by cofe_subst.
-    - by destruct 1; rewrite /validN /option_validN //=; cofe_subst.
+    - by intros [x|] n; destruct 1; constructor; ofe_subst.
+    - destruct 1; by ofe_subst.
+    - by destruct 1; rewrite /validN /option_validN //=; ofe_subst.
     - intros [x|]; [apply cmra_valid_validN|done].
     - intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
     - intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto.

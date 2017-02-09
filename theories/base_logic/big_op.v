@@ -37,7 +37,7 @@ Section cmra.
   Definition uPred_cmra_mixin : CMRAMixin (uPred M).
   Proof.
     apply cmra_total_mixin; try apply _ || by eauto.
-    - intros n P Q ??. by cofe_subst.
+    - intros n P Q ??. by ofe_subst.
     - intros P; split.
       + intros HP n n' x ?. apply HP.
       + intros HP n x. by apply (HP n).

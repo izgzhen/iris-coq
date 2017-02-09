@@ -205,7 +205,7 @@ Qed.
 Lemma csum_cmra_mixin : CMRAMixin (csum A B).
 Proof.
   split.
-  - intros [] n; destruct 1; constructor; by cofe_subst.
+  - intros [] n; destruct 1; constructor; by ofe_subst.
   - intros ???? [n a a' Ha|n b b' Hb|n] [=]; subst; eauto.
     + destruct (pcore a) as [ca|] eqn:?; simplify_option_eq.
       destruct (cmra_pcore_ne n a a' ca) as (ca'&->&?); auto.
@@ -213,7 +213,7 @@ Proof.
     + destruct (pcore b) as [cb|] eqn:?; simplify_option_eq.
       destruct (cmra_pcore_ne n b b' cb) as (cb'&->&?); auto.
       exists (Cinr cb'); by repeat constructor.
-  - intros ? [a|b|] [a'|b'|] H; inversion_clear H; cofe_subst; done.
+  - intros ? [a|b|] [a'|b'|] H; inversion_clear H; ofe_subst; done.
   - intros [a|b|]; rewrite /= ?cmra_valid_validN; naive_solver eauto using O.
   - intros n [a|b|]; simpl; auto using cmra_validN_S.
   - intros [a1|b1|] [a2|b2|] [a3|b3|]; constructor; by rewrite ?assoc.

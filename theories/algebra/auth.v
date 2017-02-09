@@ -152,7 +152,7 @@ Proof.
   - by intros n x y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
   - by intros n y1 y2 [Hy Hy']; split; simpl; rewrite ?Hy ?Hy'.
   - intros n [x a] [y b] [Hx Ha]; simpl in *. rewrite !auth_validN_eq.
-    destruct Hx as [?? Hx|]; first destruct Hx; intros ?; cofe_subst; auto.
+    destruct Hx as [?? Hx|]; first destruct Hx; intros ?; ofe_subst; auto.
   - intros [[[?|]|] ?]; rewrite /= ?auth_valid_eq
       ?auth_validN_eq /= ?cmra_included_includedN ?cmra_valid_validN;
       naive_solver eauto using O.

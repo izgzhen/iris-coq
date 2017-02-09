@@ -79,7 +79,7 @@ Global Instance gmap_lookup_timeless m i : Timeless m → Timeless (m !! i).
 Proof.
   intros ? [x|] Hx; [|by symmetry; apply: timeless].
   assert (m ≡{0}≡ <[i:=x]> m)
-    by (by symmetry in Hx; inversion Hx; cofe_subst; rewrite insert_id).
+    by (by symmetry in Hx; inversion Hx; ofe_subst; rewrite insert_id).
   by rewrite (timeless m (<[i:=x]>m)) // lookup_insert.
 Qed.
 Global Instance gmap_insert_timeless m i x :

@@ -20,13 +20,13 @@ Hint Extern 0 (_ ≡{_}≡ _) => symmetry; assumption.
 Notation NonExpansive f := (∀ n, Proper (dist n ==> dist n) f).
 Notation NonExpansive2 f := (∀ n, Proper (dist n ==> dist n ==> dist n) f).
 
-Tactic Notation "cofe_subst" ident(x) :=
+Tactic Notation "ofe_subst" ident(x) :=
   repeat match goal with
   | _ => progress simplify_eq/=
   | H:@dist ?A ?d ?n x _ |- _ => setoid_subst_aux (@dist A d n) x
   | H:@dist ?A ?d ?n _ x |- _ => symmetry in H;setoid_subst_aux (@dist A d n) x
   end.
-Tactic Notation "cofe_subst" :=
+Tactic Notation "ofe_subst" :=
   repeat match goal with
   | _ => progress simplify_eq/=
   | H:@dist ?A ?d ?n ?x _ |- _ => setoid_subst_aux (@dist A d n) x
@@ -130,7 +130,7 @@ Lemma compl_chain_map `{Cofe A, Cofe B} (f : A → B) c `(NonExpansive f) :
 Proof. apply equiv_dist=>n. by rewrite !conv_compl. Qed.
 
 (** General properties *)
-Section cofe.
+Section ofe.
   Context {A : ofeT}.
   Implicit Types x y : A.
   Global Instance ofe_equivalence : Equivalence ((≡) : relation A).
@@ -176,7 +176,7 @@ Section cofe.
   Proof.
     split; intros; auto. apply (timeless _), dist_le with n; auto with lia.
   Qed.
-End cofe.
+End ofe.
 
 (** Contractive functions *)
 Definition dist_later {A : ofeT} (n : nat) (x y : A) : Prop :=
@@ -764,7 +764,7 @@ Section sum.
   Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
   Global Instance inr_timeless (y : B) : Timeless y → Timeless (inr y).
   Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
-  Global Instance sum_discrete_cofe : Discrete A → Discrete B → Discrete sumC.
+  Global Instance sum_discrete_ofe : Discrete A → Discrete B → Discrete sumC.
   Proof. intros ?? [?|?]; apply _. Qed.
 End sum.
 
@@ -806,8 +806,8 @@ Proof.
     by apply sumC_map_ne; apply cFunctor_contractive.
 Qed.
 
-(** Discrete cofe *)
-Section discrete_cofe.
+(** Discrete OFE *)
+Section discrete_ofe.
   Context `{Equiv A} (Heq : @Equivalence A (≡)).
 
   Instance discrete_dist : Dist A := λ n x y, x ≡ y.
@@ -828,7 +828,7 @@ Section discrete_cofe.
     intros n c. rewrite /compl /=;
     symmetry; apply (chain_cauchy c 0 n). omega.
   Qed.
-End discrete_cofe.
+End discrete_ofe.
 
 Notation discreteC A := (OfeT A (discrete_ofe_mixin _)).
 Notation leibnizC A := (OfeT A (@discrete_ofe_mixin _ equivL _)).
@@ -1112,7 +1112,7 @@ Section sigma.
     rewrite /dist /ofe_dist /= /sig_dist /equiv /ofe_equiv /= /sig_equiv /=.
     apply (timeless _).
    Qed.
-  Global Instance sig_discrete_cofe : Discrete A → Discrete sigC.
+  Global Instance sig_discrete_ofe : Discrete A → Discrete sigC.
   Proof. intros ??. apply _. Qed.
 End sigma.
 

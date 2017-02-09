@@ -76,7 +76,7 @@ Next Obligation.
 Qed.
 Next Obligation.
   intros M P Q n1 n2 x (x1&x2&Hx&?&?) ?; rewrite {1}(dist_le _ _ _ _ Hx) // =>?.
-  exists x1, x2; cofe_subst; split_and!;
+  exists x1, x2; ofe_subst; split_and!;
     eauto using dist_le, uPred_closed, cmra_validN_op_l, cmra_validN_op_r.
 Qed.
 Definition uPred_sep_aux : seal (@uPred_sep_def). by eexists. Qed.
@@ -238,7 +238,7 @@ Global Instance impl_proper :
 Global Instance sep_ne : NonExpansive2 (@uPred_sep M).
 Proof.
   intros n P P' HP Q Q' HQ; split=> n' x ??.
-  unseal; split; intros (x1&x2&?&?&?); cofe_subst x;
+  unseal; split; intros (x1&x2&?&?&?); ofe_subst x;
     exists x1, x2; split_and!; try (apply HP || apply HQ);
     eauto using cmra_validN_op_l, cmra_validN_op_r.
 Qed.
@@ -381,7 +381,7 @@ Qed.
 Lemma sep_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ∗ P' ⊢ Q ∗ Q'.
 Proof.
   intros HQ HQ'; unseal.
-  split; intros n' x ? (x1&x2&?&?&?); exists x1,x2; cofe_subst x;
+  split; intros n' x ? (x1&x2&?&?&?); exists x1,x2; ofe_subst x;
     eauto 7 using cmra_validN_op_l, cmra_validN_op_r, uPred_in_entails.
 Qed.
 Lemma True_sep_1 P : P ⊢ True ∗ P.
@@ -390,7 +390,7 @@ Proof.
 Qed.
 Lemma True_sep_2 P : True ∗ P ⊢ P.
 Proof.
-  unseal; split; intros n x ? (x1&x2&?&_&?); cofe_subst;
+  unseal; split; intros n x ? (x1&x2&?&_&?); ofe_subst;
     eauto using uPred_mono, cmra_includedN_r.
 Qed.
 Lemma sep_comm' P Q : P ∗ Q ⊢ Q ∗ P.
@@ -412,7 +412,7 @@ Proof.
 Qed.
 Lemma wand_elim_l' P Q R : (P ⊢ Q -∗ R) → P ∗ Q ⊢ R.
 Proof.
-  unseal =>HPQR. split; intros n x ? (?&?&?&?&?). cofe_subst.
+  unseal =>HPQR. split; intros n x ? (?&?&?&?&?). ofe_subst.
   eapply HPQR; eauto using cmra_validN_op_l.
 Qed.
 
@@ -508,7 +508,7 @@ Qed.
 (* Valid *)
 Lemma ownM_valid (a : M) : uPred_ownM a ⊢ ✓ a.
 Proof.
-  unseal; split=> n x Hv [a' ?]; cofe_subst; eauto using cmra_validN_op_l.
+  unseal; split=> n x Hv [a' ?]; ofe_subst; eauto using cmra_validN_op_l.
 Qed.
 Lemma cmra_valid_intro {A : cmraT} (a : A) : ✓ a → uPred_valid (M:=M) (✓ a).
 Proof. unseal=> ?; split=> n x ? _ /=; by apply cmra_valid_validN. Qed.
