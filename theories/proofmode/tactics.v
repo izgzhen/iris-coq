@@ -676,7 +676,7 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let rec find_pat found pats :=
     lazymatch pats with
     | [] =>
-      match found with
+      lazymatch found with
       | true => idtac
       | false => fail "iDestruct:" pat "should contain exactly one proper introduction pattern"
       end
@@ -684,7 +684,7 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     | IClear ?H :: ?pats => iClear H; find_pat found pats
     | IClearFrame ?H :: ?pats => iFrame H; find_pat found pats
     | ?pat :: ?pats =>
-       match found with
+       lazymatch found with
        | false => go H pat; find_pat true pats
        | true => fail "iDestruct:" pat "should contain exactly one proper introduction pattern"
        end
