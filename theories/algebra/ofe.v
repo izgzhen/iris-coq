@@ -1081,6 +1081,13 @@ Section limit_preserving.
   (* These are not instances as they will never fire automatically...
      but they can still be helpful in proving things to be limit preserving. *)
 
+  Global Instance limit_preserving_const (P : Prop) : LimitPreserving (λ _, P).
+  Proof. intros c HP. apply (HP 0). Qed.
+
+  Lemma limit_preserving_timeless (P : A → Prop) :
+    Proper (dist 0 ==> impl) P → LimitPreserving P.
+  Proof. intros PH c Hc. by rewrite (conv_compl 0). Qed.
+
   Lemma limit_preserving_and (P1 P2 : A → Prop) :
     LimitPreserving P1 → LimitPreserving P2 →
     LimitPreserving (λ x, P1 x ∧ P2 x).
