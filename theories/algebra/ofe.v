@@ -1106,9 +1106,14 @@ Section sigma.
      should not depend on A being an OFE. *)
   Instance sig_equiv : Equiv (sig P) := λ x1 x2, `x1 ≡ `x2.
   Instance sig_dist : Dist (sig P) := λ n x1 x2, `x1 ≡{n}≡ `x2.
+
+  Definition sig_equiv_alt x y : x ≡ y ↔ `x ≡ `y := reflexivity _.
+  Definition sig_dist_alt n x y : x ≡{n}≡ y ↔ `x ≡{n}≡ `y := reflexivity _.
+
   Lemma exist_ne n a1 a2 (H1 : P a1) (H2 : P a2) :
     a1 ≡{n}≡ a2 → a1 ↾ H1 ≡{n}≡ a2 ↾ H2.
   Proof. done. Qed.
+
   Global Instance proj1_sig_ne : NonExpansive (@proj1_sig _ P).
   Proof. by intros n [a Ha] [b Hb] ?. Qed.
   Definition sig_ofe_mixin : OfeMixin (sig P).
@@ -1126,13 +1131,8 @@ Section sigma.
     intros ?? n c. apply (conv_compl n (chain_map proj1_sig c)).
   Qed.
 
-  Global Instance sig_timeless (x : sig P) :
-    Timeless (proj1_sig x) → Timeless x.
-  Proof.
-    intros ? [b ?]; destruct x as [a ?].
-    rewrite /dist /ofe_dist /= /sig_dist /equiv /ofe_equiv /= /sig_equiv /=.
-    apply (timeless _).
-   Qed.
+  Global Instance sig_timeless (x : sig P) :  Timeless (`x) → Timeless x.
+  Proof. intros ? y. rewrite sig_dist_alt sig_equiv_alt. apply (timeless _). Qed.
   Global Instance sig_discrete_ofe : Discrete A → Discrete sigC.
   Proof. intros ??. apply _. Qed.
 End sigma.
