@@ -10,14 +10,18 @@ Section ofe.
   Instance vec_dist m : Dist (vec A m) := dist (A:=list A).
 
   Definition vec_ofe_mixin m : OfeMixin (vec A m).
-  Proof.
-    split.
-    - intros v w. apply (equiv_dist (A:=listC A)).
-    - unfold dist, vec_dist. split.
-        by intros ?. by intros ??. by intros ?????; etrans.
-    - intros n v w. by apply (dist_S (A:=listC A)).
-  Qed.
+  Proof. by apply (iso_ofe_mixin vec_to_list). Qed.
   Canonical Structure vecC m : ofeT := OfeT (vec A m) (vec_ofe_mixin m).
+
+  Global Instance list_cofe `{Cofe A} m : Cofe (vecC m).
+  Proof.
+    assert (LimitPreserving (λ l, length l = m)).
+    { apply limit_preserving_timeless=> l k -> //. }
+    apply (iso_cofe_subtype (λ l : list A, length l = m)
+      (λ l, eq_rect _ (vec A) (list_to_vec l) m) vec_to_list)=> //.
+    - intros v. by rewrite vec_to_list_length.
+    - intros v []. by rewrite /= vec_to_list_of_list.
+  Qed.
 
   Global Instance vnil_timeless : Timeless (@vnil A).
   Proof. intros v _. by inv_vec v. Qed.
@@ -57,29 +61,11 @@ Section proper.
     intros v v' ? x x' ->. apply equiv_dist=> n. f_equiv. by apply equiv_dist.
   Qed.
 
-  Global Instance vec_to_list_ne m :
-    NonExpansive (@vec_to_list A m).
+  Global Instance vec_to_list_ne m : NonExpansive (@vec_to_list A m).
   Proof. by intros v v'. Qed.
-  Global Instance vec_to_list_proper m :
-    Proper (equiv ==> equiv) (@vec_to_list A m).
+  Global Instance vec_to_list_proper m : Proper ((≡) ==> (≡)) (@vec_to_list A m).
   Proof. by intros v v'. Qed.
 End proper.
-
-Section cofe.
-  Context `{Cofe A}.
-
-  Global Program Instance list_cofe m : Cofe (vecC A m) :=
-    {| compl c :=
-         eq_rect _ (vec A) (list_to_vec (compl (chain_map vec_to_list c))) _ _ |}.
-  Next Obligation.
-    intros. by rewrite (conv_compl 0) vec_to_list_length.
-  Qed.
-  Next Obligation.
-    simpl. intros m n c. unfold dist, ofe_dist, vecC, vec_dist.
-    destruct (list_cofe_obligation_1 m c).
-    by rewrite /= vec_to_list_of_list conv_compl.
-  Qed.
-End cofe.
 
 (** Functor *)
 Definition vec_map {A B : ofeT} m (f : A → B) : vecC A m → vecC B m :=
