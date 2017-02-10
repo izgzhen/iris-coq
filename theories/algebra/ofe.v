@@ -1073,7 +1073,8 @@ Qed.
 
 (** Sigma *)
 Class LimitPreserving `{!Cofe A} (P : A → Prop) : Prop :=
-  limit_preserving : ∀ c : chain A, (∀ n, P (c n)) → P (compl c).
+  limit_preserving (c : chain A) : (∀ n, P (c n)) → P (compl c).
+Hint Mode LimitPreserving + + ! : typeclass_instances.
 
 Section limit_preserving.
   Context {A : ofeT} `{!Cofe A}.
