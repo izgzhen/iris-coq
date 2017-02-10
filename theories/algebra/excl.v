@@ -54,8 +54,9 @@ Canonical Structure exclC : ofeT := OfeT (excl A) excl_ofe_mixin.
 
 Global Instance excl_cofe `{Cofe A} : Cofe exclC.
 Proof.
-  apply (iso_cofe (from_option Excl ExclBot) (maybe Excl));
-    [by destruct 1; constructor..|by intros []; constructor].
+  apply (iso_cofe (from_option Excl ExclBot) (maybe Excl)).
+  - by intros n [a|] [b|]; split; inversion_clear 1; constructor.
+  - by intros []; constructor.
 Qed.
 
 Global Instance excl_discrete : Discrete A → Discrete exclC.

@@ -553,26 +553,6 @@ Section unit.
   Proof. done. Qed.
 End unit.
 
-Lemma iso_ofe_mixin {A : ofeT} `{Equiv B, Dist B} (g : B → A)
-  (g_equiv : ∀ y1 y2, y1 ≡ y2 ↔ g y1 ≡ g y2)
-  (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2) : OfeMixin B.
-Proof.
-  split.
-  - intros y1 y2. rewrite g_equiv. setoid_rewrite g_dist. apply equiv_dist.
-  - split.
-    + intros y. by apply g_dist.
-    + intros y1 y2. by rewrite !g_dist.
-    + intros y1 y2 y3. rewrite !g_dist. intros ??; etrans; eauto.
-  - intros n y1 y2. rewrite !g_dist. apply dist_S.
-Qed.
-
-Program Definition iso_cofe {A B : ofeT} `{Cofe A} (f : A → B) (g : B → A)
-    `(!NonExpansive g, !NonExpansive f) (fg : ∀ y, f (g y) ≡ y) : Cofe B :=
-  {| compl c := f (compl (chain_map g c)) |}.
-Next Obligation.
-  intros A B ? f g ?? fg n c. by rewrite /= conv_compl /= fg.
-Qed.
-
 (** Product *)
 Section product.
   Context {A B : ofeT}.
@@ -1071,7 +1051,7 @@ Proof.
   destruct n as [|n]; simpl in *; first done. apply cFunctor_ne, Hfg.
 Qed.
 
-(** Sigma *)
+(** Limit preserving predicates *)
 Class LimitPreserving `{!Cofe A} (P : A → Prop) : Prop :=
   limit_preserving (c : chain A) : (∀ n, P (c n)) → P (compl c).
 Hint Mode LimitPreserving + + ! : typeclass_instances.
@@ -1098,6 +1078,43 @@ Section limit_preserving.
   Qed.
 End limit_preserving.
 
+(** Constructing isomorphic OFEs *)
+Lemma iso_ofe_mixin {A : ofeT} `{Equiv B, Dist B} (g : B → A)
+  (g_equiv : ∀ y1 y2, y1 ≡ y2 ↔ g y1 ≡ g y2)
+  (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2) : OfeMixin B.
+Proof.
+  split.
+  - intros y1 y2. rewrite g_equiv. setoid_rewrite g_dist. apply equiv_dist.
+  - split.
+    + intros y. by apply g_dist.
+    + intros y1 y2. by rewrite !g_dist.
+    + intros y1 y2 y3. rewrite !g_dist. intros ??; etrans; eauto.
+  - intros n y1 y2. rewrite !g_dist. apply dist_S.
+Qed.
+
+Program Definition iso_cofe_subtype {A B : ofeT} `{Cofe A}
+    (P : A → Prop) `{!LimitPreserving P}
+    (f : ∀ x, P x → B) (g : B → A)
+    (Pg : ∀ y, P (g y))
+    (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2)
+    (gf : ∀ x Hx, g (f x Hx) ≡ x) : Cofe B :=
+  let _ : NonExpansive g := _ in
+  {| compl c := f (compl (chain_map g c)) _ |}.
+Next Obligation. intros A B ? P _ f g _ g_dist _ n y1 y2. apply g_dist. Qed.
+Next Obligation.
+  intros A B ? P ? f g ? g_dist gf ? c. apply limit_preserving=> n. apply Pg.
+Qed.
+Next Obligation.
+  intros A B ? P ? f g ? g_dist gf ? n c; simpl.
+  apply g_dist. by rewrite gf conv_compl.
+Qed.
+
+Definition iso_cofe {A B : ofeT} `{Cofe A} (f : A → B) (g : B → A)
+  (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2)
+  (gf : ∀ x, g (f x) ≡ x) : Cofe B.
+Proof. by apply (iso_cofe_subtype (λ _, True) (λ x _, f x) g). Qed.
+
+(** Sigma *)
 Section sigma.
   Context {A : ofeT} {P : A → Prop}.
   Implicit Types x : sig P.
@@ -1120,16 +1137,8 @@ Section sigma.
   Proof. by apply (iso_ofe_mixin proj1_sig). Qed.
   Canonical Structure sigC : ofeT := OfeT (sig P) sig_ofe_mixin.
 
-  (* FIXME: WTF, it seems that within these braces {...} the ofe argument of LimitPreserving
-     suddenly becomes explicit...? *)
-  Program Definition sig_compl `{LimitPreserving _ P} : Compl sigC :=
-    λ c, exist P (compl (chain_map proj1_sig c)) _.
-  Next Obligation. intros ? Hlim c. apply Hlim=> n /=. by destruct (c n). Qed.
-  Program Definition sig_cofe `{Cofe A, !LimitPreserving P} : Cofe sigC :=
-    {| compl := sig_compl |}.
-  Next Obligation.
-    intros ?? n c. apply (conv_compl n (chain_map proj1_sig c)).
-  Qed.
+  Global Instance sig_cofe `{Cofe A, !LimitPreserving P} : Cofe sigC.
+  Proof. by apply (iso_cofe_subtype P (exist P) proj1_sig proj2_sig). Qed.
 
   Global Instance sig_timeless (x : sig P) :  Timeless (`x) → Timeless x.
   Proof. intros ? y. rewrite sig_dist_alt sig_equiv_alt. apply (timeless _). Qed.
