@@ -32,11 +32,12 @@ Typeclasses Opaque uPred_except_0.
 Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊢ ◇ P.
 Arguments timelessP {_} _ {_}.
 Hint Mode TimelessP + ! : typeclass_instances.
+Instance: Params (@TimelessP) 1.
 
 Class PersistentP {M} (P : uPred M) := persistentP : P ⊢ □ P.
-Hint Mode PersistentP - ! : typeclass_instances.
 Arguments persistentP {_} _ {_}.
 Hint Mode PersistentP + ! : typeclass_instances.
+Instance: Params (@PersistentP) 1.
 
 Module uPred.
 Section derived.
@@ -746,6 +747,8 @@ Proof.
 Qed.
 
 (* Timeless instances *)
+Global Instance TimelessP_proper : Proper ((≡) ==> iff) (@TimelessP M).
+Proof. solve_proper. Qed.
 Global Instance pure_timeless φ : TimelessP (⌜φ⌝ : uPred M)%I.
 Proof.
   rewrite /TimelessP pure_alt later_exist_false. by setoid_rewrite later_True.
@@ -811,6 +814,9 @@ Global Instance from_option_timeless {A} P (Ψ : A → uPred M) (mx : option A) 
 Proof. destruct mx; apply _. Qed.
 
 (* Derived lemmas for persistence *)
+Global Instance PersistentP_proper : Proper ((≡) ==> iff) (@PersistentP M).
+Proof. solve_proper. Qed.
+
 Lemma always_always P `{!PersistentP P} : □ P ⊣⊢ P.
 Proof. apply (anti_symm (⊢)); auto using always_elim. Qed.
 Lemma always_if_always p P `{!PersistentP P} : □?p P ⊣⊢ P.

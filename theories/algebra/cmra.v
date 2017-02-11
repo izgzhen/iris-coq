@@ -139,23 +139,27 @@ Infix "⋅?" := opM (at level 50, left associativity) : C_scope.
 Class Persistent {A : cmraT} (x : A) := persistent : pcore x ≡ Some x.
 Arguments persistent {_} _ {_}.
 Hint Mode Persistent + ! : typeclass_instances.
+Instance: Params (@Persistent) 1.
 
 (** * Exclusive elements (i.e., elements that cannot have a frame). *)
 Class Exclusive {A : cmraT} (x : A) := exclusive0_l y : ✓{0} (x ⋅ y) → False.
 Arguments exclusive0_l {_} _ {_} _ _.
 Hint Mode Exclusive + ! : typeclass_instances.
+Instance: Params (@Exclusive) 1.
 
 (** * Cancelable elements. *)
 Class Cancelable {A : cmraT} (x : A) :=
   cancelableN n y z : ✓{n}(x ⋅ y) → x ⋅ y ≡{n}≡ x ⋅ z → y ≡{n}≡ z.
 Arguments cancelableN {_} _ {_} _ _ _ _.
 Hint Mode Cancelable + ! : typeclass_instances.
+Instance: Params (@Cancelable) 1.
 
 (** * Identity-free elements. *)
 Class IdFree {A : cmraT} (x : A) :=
   id_free0_r y : ✓{0}x → x ⋅ y ≡{0}≡ x → False.
 Arguments id_free0_r {_} _ {_} _ _.
 Hint Mode IdFree + ! : typeclass_instances.
+Instance: Params (@IdFree) 1.
 
 (** * CMRAs whose core is total *)
 (** The function [core] may return a dummy when used on CMRAs without total
@@ -312,6 +316,15 @@ Global Instance cmra_opM_ne : NonExpansive2 (@opM A).
 Proof. destruct 2; by ofe_subst. Qed.
 Global Instance cmra_opM_proper : Proper ((≡) ==> (≡) ==> (≡)) (@opM A).
 Proof. destruct 2; by setoid_subst. Qed.
+
+Global Instance Persistent_proper : Proper ((≡) ==> iff) (@Persistent A).
+Proof. solve_proper. Qed.
+Global Instance Exclusive_proper : Proper ((≡) ==> iff) (@Exclusive A).
+Proof. intros x y Hxy. rewrite /Exclusive. by setoid_rewrite Hxy. Qed.
+Global Instance Cancelable_proper : Proper ((≡) ==> iff) (@Cancelable A).
+Proof. intros x y Hxy. rewrite /Cancelable. by setoid_rewrite Hxy. Qed.
+Global Instance IdFree_proper : Proper ((≡) ==> iff) (@IdFree A).
+Proof. intros x y Hxy. rewrite /IdFree. by setoid_rewrite Hxy. Qed.
 
 (** ** Op *)
 Lemma cmra_opM_assoc x y mz : (x ⋅ y) ⋅? mz ≡ x ⋅ (y ⋅? mz).

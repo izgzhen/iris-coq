@@ -102,6 +102,7 @@ Hint Extern 1 (_ ≡{_}≡ _) => apply equiv_dist; assumption.
 Class Timeless {A : ofeT} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
 Arguments timeless {_} _ {_} _ _.
 Hint Mode Timeless + ! : typeclass_instances.
+Instance: Params (@Timeless) 1.
 
 Class Discrete (A : ofeT) := discrete_timeless (x : A) :> Timeless x.
 
@@ -152,15 +153,17 @@ Section ofe.
   Qed.
   Global Instance dist_proper_2 n x : Proper ((≡) ==> iff) (dist n x).
   Proof. by apply dist_proper. Qed.
+  Global Instance Timeless_proper : Proper ((≡) ==> iff) (@Timeless A).
+  Proof. intros x y Hxy. rewrite /Timeless. by setoid_rewrite Hxy. Qed.
+
   Lemma dist_le n n' x y : x ≡{n}≡ y → n' ≤ n → x ≡{n'}≡ y.
   Proof. induction 2; eauto using dist_S. Qed.
   Lemma dist_le' n n' x y : n' ≤ n → x ≡{n}≡ y → x ≡{n'}≡ y.
   Proof. intros; eauto using dist_le. Qed.
-  Instance ne_proper {B : ofeT} (f : A → B)
-    `{!NonExpansive f} : Proper ((≡) ==> (≡)) f | 100.
+  Instance ne_proper {B : ofeT} (f : A → B) `{!NonExpansive f} :
+    Proper ((≡) ==> (≡)) f | 100.
   Proof. by intros x1 x2; rewrite !equiv_dist; intros Hx n; rewrite (Hx n). Qed.
-  Instance ne_proper_2 {B C : ofeT} (f : A → B → C)
-    `{!NonExpansive2 f} :
+  Instance ne_proper_2 {B C : ofeT} (f : A → B → C) `{!NonExpansive2 f} :
     Proper ((≡) ==> (≡) ==> (≡)) f | 100.
   Proof.
      unfold Proper, respectful; setoid_rewrite equiv_dist.
