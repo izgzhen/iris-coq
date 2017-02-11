@@ -601,6 +601,13 @@ Global Instance into_exist_laterN {A} n P (Φ : A → uPred M) :
   IntoExist P Φ → Inhabited A → IntoExist (▷^n P) (λ a, ▷^n (Φ a))%I.
 Proof. rewrite /IntoExist=> HP ?. by rewrite HP laterN_exist. Qed.
 
+(* IntoForall *)
+Global Instance into_forall_forall {A} (Φ : A → uPred M) : IntoForall (∀ a, Φ a) Φ.
+Proof. done. Qed.
+Global Instance into_forall_always {A} P (Φ : A → uPred M) :
+  IntoForall P Φ → IntoForall (□ P) (λ a, □ (Φ a))%I.
+Proof. rewrite /IntoForall=> HP. by rewrite HP always_forall. Qed.
+
 (* FromModal *)
 Global Instance from_modal_later P : FromModal (▷ P) P.
 Proof. apply later_intro. Qed.

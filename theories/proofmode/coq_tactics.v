@@ -791,27 +791,13 @@ Lemma tac_pure_forall_intro {A} Δ (φ : A → Prop) :
   (∀ a, Δ ⊢ ⌜φ a⌝) → Δ ⊢ ⌜∀ a, φ a⌝.
 Proof. intros. rewrite pure_forall. by apply forall_intro. Qed.
 
-Class ForallSpecialize {As} (xs : hlist As)
-  (P : uPred M) (Φ : himpl As (uPred M)) := forall_specialize : P ⊢ Φ xs.
-Arguments forall_specialize {_} _ _ _ {_}.
-
-Global Instance forall_specialize_nil P : ForallSpecialize hnil P P | 100.
-Proof. done. Qed.
-Global Instance forall_specialize_cons A As x xs Φ (Ψ : A → himpl As (uPred M)) :
-  (∀ x, ForallSpecialize xs (Φ x) (Ψ x)) →
-  ForallSpecialize (hcons x xs) (∀ x : A, Φ x) Ψ.
-Proof. rewrite /ForallSpecialize /= => <-. by rewrite (forall_elim x). Qed.
-Global Instance forall_specialize_always As xs P (Ψ : himpl As (uPred M)) :
-  ForallSpecialize xs P Ψ → ForallSpecialize xs (□ P) Ψ | 101.
-Proof. rewrite /ForallSpecialize=> ->. by rewrite always_elim. Qed.
-
-Lemma tac_forall_specialize {As} Δ Δ' i p P (Φ : himpl As (uPred M)) Q xs :
-  envs_lookup i Δ = Some (p, P) → ForallSpecialize xs P Φ →
-  envs_simple_replace i p (Esnoc Enil i (Φ xs)) Δ = Some Δ' →
+Lemma tac_forall_specialize {A} Δ Δ' i p P (Φ : A → uPred M) Q x :
+  envs_lookup i Δ = Some (p, P) → IntoForall P Φ →
+  envs_simple_replace i p (Esnoc Enil i (Φ x)) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros. rewrite envs_simple_replace_sound //; simpl.
-  by rewrite right_id (forall_specialize _ P) wand_elim_r.
+  by rewrite right_id (into_forall P) (forall_elim x) wand_elim_r.
 Qed.
 
 Lemma tac_forall_revert {A} Δ (Φ : A → uPred M) :
@@ -849,5 +835,3 @@ Proof.
   rewrite right_id HΔ always_if_elim. by apply elim_modal.
 Qed.
 End tactics.
-
-Hint Mode ForallSpecialize + - - ! - : typeclass_instances.

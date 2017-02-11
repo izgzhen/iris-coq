@@ -88,6 +88,11 @@ Class IntoExist {M A} (P : uPred M) (Φ : A → uPred M) :=
 Arguments into_exist {_ _} _ _ {_}.
 Hint Mode IntoExist + - ! - : typeclass_instances.
 
+Class IntoForall {M A} (P : uPred M) (Φ : A → uPred M) :=
+  into_forall : P ⊢ ∀ x, Φ x.
+Arguments into_forall {_ _} _ _ {_}.
+Hint Mode IntoForall + - ! - : typeclass_instances.
+
 Class FromModal {M} (P Q : uPred M) := from_modal : Q ⊢ P.
 Arguments from_modal {_} _ _ {_}.
 Hint Mode FromModal + ! - : typeclass_instances.

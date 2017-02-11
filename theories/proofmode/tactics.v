@@ -268,15 +268,17 @@ Notation "( H $! x1 .. xn 'with' pat )" :=
 Notation "( H 'with' pat )" := (ITrm H hnil pat) (at level 0).
 
 Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
-  match xs with
-  | hnil => idtac
-  | _ =>
-    eapply tac_forall_specialize with _ H _ _ _ xs; (* (i:=H) (a:=x) *)
-      [env_cbv; reflexivity || fail 1 "iSpecialize:" H "not found"
-      |let P := match goal with |- ForallSpecialize _ ?P _ => P end in
-       apply _ || fail 1 "iSpecialize:" P "not a forall of the right arity or type"
-      |cbn [himpl hcurry]; reflexivity|]
-  end.
+  let rec go xs :=
+    match xs with
+    | hnil => idtac
+    | hcons ?x ?xs =>
+       eapply tac_forall_specialize with _ H _ _ _ x; (* (i:=H) (a:=x) *)
+         [env_cbv; reflexivity || fail 1 "iSpecialize:" H "not found"
+         |let P := match goal with |- IntoForall ?P _ => P end in
+          apply _ || fail 1 "iSpecialize:" P "not a forall or not a forall of the right type"
+         |env_cbv; reflexivity|go xs]
+    end in
+  go xs.
 
 Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
   let solve_to_wand H1 :=
