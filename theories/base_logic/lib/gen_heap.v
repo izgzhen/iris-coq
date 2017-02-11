@@ -90,32 +90,33 @@ Section gen_heap.
     AsFractional (l ↦{q} v) (λ q, l ↦{q} v)%I q.
   Proof. split. done. apply _. Qed.
 
-  Lemma mapsto_agree l q1 q2 v1 v2 : l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ ⌜v1 = v2⌝.
+  Lemma mapsto_agree l q1 q2 v1 v2 : l ↦{q1} v1 -∗ l ↦{q2} v2 -∗ ⌜v1 = v2⌝.
   Proof.
+    apply wand_intro_r.
     rewrite mapsto_eq -own_op -auth_frag_op own_valid discrete_valid.
     f_equiv=> /auth_own_valid /=. rewrite op_singleton singleton_valid pair_op.
     by intros [_ ?%agree_op_inv%(inj to_agree)%leibniz_equiv].
   Qed.
 
-  Global Instance heap_ex_mapsto_fractional l : Fractional (λ q, l ↦{q} -)%I.
+  Global Instance ex_mapsto_fractional l : Fractional (λ q, l ↦{q} -)%I.
   Proof.
     intros p q. iSplit.
     - iDestruct 1 as (v) "[H1 H2]". iSplitL "H1"; eauto.
     - iIntros "[H1 H2]". iDestruct "H1" as (v1) "H1". iDestruct "H2" as (v2) "H2".
-      iDestruct (mapsto_agree with "[$H1 $H2]") as %->. iExists v2. by iFrame.
+      iDestruct (mapsto_agree with "H1 H2") as %->. iExists v2. by iFrame.
   Qed.
-  Global Instance heap_ex_mapsto_as_fractional l q :
+  Global Instance ex_mapsto_as_fractional l q :
     AsFractional (l ↦{q} -) (λ q, l ↦{q} -)%I q.
   Proof. split. done. apply _. Qed.
 
-  Lemma mapsto_valid l q v : l ↦{q} v ⊢ ✓ q.
+  Lemma mapsto_valid l q v : l ↦{q} v -∗ ✓ q.
   Proof.
     rewrite mapsto_eq /mapsto_def own_valid !discrete_valid.
     by apply pure_mono=> /auth_own_valid /singleton_valid [??].
   Qed.
-  Lemma mapsto_valid_2 l q1 q2 v1 v2 : l ↦{q1} v1 ∗ l ↦{q2} v2 ⊢ ✓ (q1 + q2)%Qp.
+  Lemma mapsto_valid_2 l q1 q2 v1 v2 : l ↦{q1} v1 -∗ l ↦{q2} v2 -∗ ✓ (q1 + q2)%Qp.
   Proof.
-    iIntros "[H1 H2]". iDestruct (mapsto_agree with "[$H1 $H2]") as %->.
+    iIntros "H1 H2". iDestruct (mapsto_agree with "H1 H2") as %->.
     iApply (mapsto_valid l _ v2). by iFrame.
   Qed.
 
