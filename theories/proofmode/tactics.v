@@ -275,7 +275,7 @@ Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
        eapply tac_forall_specialize with _ H _ _ _ x; (* (i:=H) (a:=x) *)
          [env_cbv; reflexivity || fail 1 "iSpecialize:" H "not found"
          |let P := match goal with |- IntoForall ?P _ => P end in
-          apply _ || fail 1 "iSpecialize:" P "not a forall or not a forall of the right type"
+          apply _ || fail 1 "iSpecialize: cannot instantiate" P "with" x
          |env_cbv; reflexivity|go xs]
     end in
   go xs.
