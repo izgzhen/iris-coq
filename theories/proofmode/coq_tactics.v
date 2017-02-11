@@ -483,6 +483,8 @@ Lemma tac_impl_intro_pure Δ P φ Q : IntoPure P φ → (φ → Δ ⊢ Q) → Δ
 Proof.
   intros. by apply impl_intro_l; rewrite (into_pure P); apply pure_elim_l.
 Qed.
+Lemma tac_impl_intro_drop Δ P Q : (Δ ⊢ Q) → Δ ⊢ P → Q.
+Proof. intros. apply impl_intro_l. by rewrite and_elim_r. Qed.
 
 Lemma tac_wand_intro Δ Δ' i P Q :
   envs_app false (Esnoc Enil i P) Δ = Some Δ' → (Δ' ⊢ Q) → Δ ⊢ P -∗ Q.
@@ -501,6 +503,8 @@ Lemma tac_wand_intro_pure Δ P φ Q : IntoPure P φ → (φ → Δ ⊢ Q) → Δ
 Proof.
   intros. by apply wand_intro_l; rewrite (into_pure P); apply pure_elim_sep_l.
 Qed.
+Lemma tac_wand_intro_drop Δ P Q : (Δ ⊢ Q) → Δ ⊢ P -∗ Q.
+Proof. intros. apply wand_intro_l. by rewrite sep_elim_r. Qed.
 
 (* This is pretty much [tac_specialize_assert] with [js:=[j]] and [tac_exact],
 but it is doing some work to keep the order of hypotheses preserved. *)

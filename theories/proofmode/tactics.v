@@ -773,6 +773,14 @@ Local Tactic Notation "iIntro" "#" constr(H) :=
       |env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
   | fail 1 "iIntro: nothing to introduce" ].
 
+Local Tactic Notation "iIntro" "_" :=
+  try iStartProof;
+  first
+  [ (* (?Q → _) *) apply tac_impl_intro_drop
+  | (* (_ -∗ _) *) apply tac_wand_intro_drop
+  | (* (∀ _, _) *) iIntro (_)
+  | fail 1 "iIntro: nothing to introduce" ].
+
 Local Tactic Notation "iIntroForall" :=
   try iStartProof;
   lazymatch goal with
@@ -795,6 +803,7 @@ Tactic Notation "iIntros" constr(pat) :=
     (* Optimizations to avoid generating fresh names *)
     | IPureElim :: ?pats => iIntro (?); go pats
     | IAlwaysElim (IName ?H) :: ?pats => iIntro #H; go pats
+    | IDrop :: ?pats => iIntro _; go pats
     | IName ?H :: ?pats => iIntro H; go pats
     (* Introduction patterns that can only occur at the top-level *)
     | IPureIntro :: ?pats => iPureIntro; go pats
