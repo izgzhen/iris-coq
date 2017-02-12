@@ -791,12 +791,14 @@ Lemma tac_pure_forall_intro {A} Δ (φ : A → Prop) :
   (∀ a, Δ ⊢ ⌜φ a⌝) → Δ ⊢ ⌜∀ a, φ a⌝.
 Proof. intros. rewrite pure_forall. by apply forall_intro. Qed.
 
-Lemma tac_forall_specialize {A} Δ Δ' i p P (Φ : A → uPred M) Q x :
+Lemma tac_forall_specialize {A} Δ Δ' i p P (Φ : A → uPred M) Q :
   envs_lookup i Δ = Some (p, P) → IntoForall P Φ →
-  envs_simple_replace i p (Esnoc Enil i (Φ x)) Δ = Some Δ' →
-  (Δ' ⊢ Q) → Δ ⊢ Q.
+  (∃ x : A,
+    envs_simple_replace i p (Esnoc Enil i (Φ x)) Δ = Some Δ' ∧
+    (Δ' ⊢ Q)) →
+  Δ ⊢ Q.
 Proof.
-  intros. rewrite envs_simple_replace_sound //; simpl.
+  intros ?? (x&?&?). rewrite envs_simple_replace_sound //; simpl.
   by rewrite right_id (into_forall P) (forall_elim x) wand_elim_r.
 Qed.
 

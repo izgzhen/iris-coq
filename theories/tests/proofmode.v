@@ -120,3 +120,7 @@ Qed.
 Lemma demo_11 (M : ucmraT) (P Q R : uPred M) :
   (P -∗ True -∗ True -∗ Q -∗ R) -∗ P -∗ Q -∗ R.
 Proof. iIntros "H HP HQ". by iApply ("H" with "[HP]"). Qed.
+
+(* Check coercions *)
+Lemma demo_12 (M : ucmraT) (P : Z → uPred M) : (∀ x, P x) -∗ ∃ x, P x.
+Proof. iIntros "HP". iExists (0:nat). iApply ("HP" $! (0:nat)). Qed.
