@@ -1247,7 +1247,7 @@ Tactic Notation "iAssertCore" open_constr(Q)
        |tac H]
   | [SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs)] =>
      let Hs' := eval cbv in (if lr then Hs else Hs_frame ++ Hs) in
-     match p with
+     match eval cbv in (p && negb m) with
      | false =>
        eapply tac_assert with _ _ _ lr Hs' H Q _;
          [match m with
