@@ -127,3 +127,6 @@ Proof. iIntros "HP". iExists (0:nat). iApply ("HP" $! (0:nat)). Qed.
 
 Lemma demo_13 (M : ucmraT) (P : uPred M) : (|==> False) -∗ |==> P.
 Proof. iIntros. iAssert False%I with ">[-]" as "[]". done. Qed.
+
+Lemma demo_14 (M : ucmraT) (P : uPred M) : False -∗ P.
+Proof. iIntros "H". done. Qed.
