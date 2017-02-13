@@ -130,3 +130,11 @@ Proof. iIntros. iAssert False%I with ">[-]" as "[]". done. Qed.
 
 Lemma demo_14 (M : ucmraT) (P : uPred M) : False -∗ P.
 Proof. iIntros "H". done. Qed.
+
+(* Check instantiation and dependent types *)
+Lemma demo_15 (M : ucmraT) (P : ∀ n, vec nat n → uPred M) :
+  (∀ n v, P n v) -∗ ∃ n v, P n v.
+Proof.
+  iIntros "H". iExists _, [#10].
+  iSpecialize ("H" $! _ [#10]). done.
+Qed.
