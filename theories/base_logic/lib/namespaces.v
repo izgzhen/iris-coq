@@ -95,4 +95,8 @@ Hint Extern 1 (_ ⊆ _) => apply nclose_subseteq' : ndisj.
 Hint Resolve namespace_subseteq_difference_l | 100 : ndisj.
 Hint Resolve ndisj_difference_l : ndisj.
 
-Ltac solve_ndisj := solve [eauto with ndisj].
+Ltac solve_ndisj :=
+  repeat match goal with
+  | H : _ ∪ _ ⊆ _ |- _ => apply union_subseteq in H as [??]
+  end;
+  solve [eauto with ndisj].
