@@ -55,6 +55,15 @@ Global Instance into_pure_forall {X : Type} (Φ : X → uPred M) φ :
 Proof.
   rewrite /IntoPure=>Hx. rewrite -pure_forall_2. by setoid_rewrite Hx.
 Qed.
+Global Instance into_pure_pure_conj (φ1 φ2 : uPred M) P1 P2 :
+  IntoPure φ1 P1 -> IntoPure φ2 P2 -> IntoPure (φ1 ∧ φ2) (P1 ∧ P2).
+Proof. rewrite /IntoPure pure_and. by intros -> ->. Qed.
+Global Instance into_pure_pure_sep (φ1 φ2 : uPred M) P1 P2 :
+  IntoPure φ1 P1 -> IntoPure φ2 P2 -> IntoPure (φ1 ∗ φ2) (P1 ∧ P2).
+Proof. rewrite /IntoPure sep_and pure_and. by intros -> ->. Qed.
+Global Instance into_pure_pure_disj (φ1 φ2 : uPred M) P1 P2 :
+  IntoPure φ1 P1 -> IntoPure φ2 P2 -> IntoPure (φ1 ∨ φ2) (P1 ∨ P2).
+Proof. rewrite /IntoPure pure_or. by intros -> ->. Qed.
 
 (* FromPure *)
 Global Instance from_pure_pure φ : @FromPure M ⌜φ⌝ φ.
