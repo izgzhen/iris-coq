@@ -43,13 +43,13 @@ Global Instance into_pure_cmra_valid `{CMRADiscrete A} (a : A) :
   @IntoPure M (✓ a) (✓ a).
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 
-Global Instance into_pure_pure_conj (φ1 φ2 : Prop) P1 P2 :
+Global Instance into_pure_pure_and (φ1 φ2 : Prop) P1 P2 :
   IntoPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 ∧ P2) (φ1 ∧ φ2).
 Proof. rewrite /IntoPure pure_and. by intros -> ->. Qed.
 Global Instance into_pure_pure_sep (φ1 φ2 : Prop) P1 P2 :
   IntoPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 ∗ P2) (φ1 ∧ φ2).
 Proof. rewrite /IntoPure sep_and pure_and. by intros -> ->. Qed.
-Global Instance into_pure_pure_disj (φ1 φ2 : Prop) P1 P2 :
+Global Instance into_pure_pure_or (φ1 φ2 : Prop) P1 P2 :
   IntoPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 ∨ P2) (φ1 ∨ φ2).
 Proof. rewrite /IntoPure pure_or. by intros -> ->. Qed.
 Global Instance into_pure_pure_impl (φ1 φ2 : Prop) P1 P2 :
@@ -91,13 +91,13 @@ Qed.
 Global Instance from_pure_bupd P φ : FromPure P φ → FromPure (|==> P) φ.
 Proof. rewrite /FromPure=> ->. apply bupd_intro. Qed.
 
-Global Instance from_pure_pure_conj (φ1 φ2 : Prop) P1 P2 :
+Global Instance from_pure_pure_and (φ1 φ2 : Prop) P1 P2 :
   FromPure P1 φ1 -> FromPure P2 φ2 -> FromPure (P1 ∧ P2) (φ1 ∧ φ2).
 Proof. rewrite /FromPure pure_and. by intros -> ->. Qed.
 Global Instance from_pure_pure_sep (φ1 φ2 : Prop) P1 P2 :
   FromPure P1 φ1 -> FromPure P2 φ2 -> FromPure (P1 ∗ P2) (φ1 ∧ φ2).
 Proof. rewrite /FromPure pure_and always_and_sep_l. by intros -> ->. Qed.
-Global Instance from_pure_pure_disj (φ1 φ2 : Prop) P1 P2 :
+Global Instance from_pure_pure_or (φ1 φ2 : Prop) P1 P2 :
   FromPure P1 φ1 -> FromPure P2 φ2 -> FromPure (P1 ∨ P2) (φ1 ∨ φ2).
 Proof. rewrite /FromPure pure_or. by intros -> ->. Qed.
 Global Instance from_pure_pure_impl (φ1 φ2 : Prop) P1 P2 :
