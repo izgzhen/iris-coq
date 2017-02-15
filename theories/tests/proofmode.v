@@ -138,3 +138,7 @@ Proof.
   iIntros "H". iExists _, [#10].
   iSpecialize ("H" $! _ [#10]). done.
 Qed.
+
+Lemma demo_16 (M : ucmraT) (P Q R : uPred M) `{!PersistentP R} :
+  P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.
+Proof. eauto with iFrame. Qed.
