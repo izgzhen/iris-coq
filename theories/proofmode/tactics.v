@@ -1407,8 +1407,11 @@ Tactic Notation "iMod" open_constr(lem) "as" "%" simple_intropattern(pat) :=
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
 Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
-Hint Extern 0 (of_envs _ ⊢ _) => progress iIntros.
 Hint Resolve uPred.internal_eq_refl'. (* Maybe make an [iReflexivity] tactic *)
+
+(* For iIntros we do not check whether we are in proof mode because we actually
+want it to enter proof mode when we are not already in it. *)
+Hint Extern 0 (_ ⊢ _) => progress iIntros.
 
 Hint Extern 1 (of_envs _ ⊢ _ ∧ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ _ ∗ _) => iSplit.
@@ -1420,4 +1423,4 @@ Hint Extern 1 (of_envs _ ⊢ ◇ _) => iModIntro.
 Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iLeft.
 Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iRight.
 
-Hint Extern 2 (coq_tactics.of_envs _ ⊢ _ ∗ _) => progress iFrame : iFrame.
+Hint Extern 2 (of_envs _ ⊢ _ ∗ _) => progress iFrame : iFrame.
