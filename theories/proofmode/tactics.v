@@ -158,6 +158,7 @@ Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
     |intros pat].
 
 Tactic Notation "iPureIntro" :=
+  iStartProof;
   eapply tac_pure_intro;
     [let P := match goal with |- FromPure ?P _ => P end in
      apply _ || fail "iPureIntro:" P "not pure"|].
