@@ -44,19 +44,19 @@ Global Instance into_pure_cmra_valid `{CMRADiscrete A} (a : A) :
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 
 Global Instance into_pure_pure_and (φ1 φ2 : Prop) P1 P2 :
-  IntoPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 ∧ P2) (φ1 ∧ φ2).
+  IntoPure P1 φ1 → IntoPure P2 φ2 → IntoPure (P1 ∧ P2) (φ1 ∧ φ2).
 Proof. rewrite /IntoPure pure_and. by intros -> ->. Qed.
 Global Instance into_pure_pure_sep (φ1 φ2 : Prop) P1 P2 :
-  IntoPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 ∗ P2) (φ1 ∧ φ2).
+  IntoPure P1 φ1 → IntoPure P2 φ2 → IntoPure (P1 ∗ P2) (φ1 ∧ φ2).
 Proof. rewrite /IntoPure sep_and pure_and. by intros -> ->. Qed.
 Global Instance into_pure_pure_or (φ1 φ2 : Prop) P1 P2 :
-  IntoPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 ∨ P2) (φ1 ∨ φ2).
+  IntoPure P1 φ1 → IntoPure P2 φ2 → IntoPure (P1 ∨ P2) (φ1 ∨ φ2).
 Proof. rewrite /IntoPure pure_or. by intros -> ->. Qed.
 Global Instance into_pure_pure_impl (φ1 φ2 : Prop) P1 P2 :
-  FromPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 → P2) (φ1 → φ2).
+  FromPure P1 φ1 → IntoPure P2 φ2 → IntoPure (P1 → P2) (φ1 → φ2).
 Proof. rewrite /FromPure /IntoPure pure_impl. by intros -> ->. Qed.
 Global Instance into_pure_pure_wand (φ1 φ2 : Prop) P1 P2 :
-  FromPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 -∗ P2) (φ1 → φ2).
+  FromPure P1 φ1 → IntoPure P2 φ2 → IntoPure (P1 -∗ P2) (φ1 → φ2).
 Proof.
   rewrite /FromPure /IntoPure pure_impl always_impl_wand. by intros -> ->.
 Qed.
