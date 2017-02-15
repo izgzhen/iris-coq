@@ -43,32 +43,32 @@ Global Instance into_pure_cmra_valid `{CMRADiscrete A} (a : A) :
   @IntoPure M (✓ a) (✓ a).
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 
-Global Instance into_pure_pure_conj (φ1 φ2 : uPred M) P1 P2 :
-  IntoPure φ1 P1 -> IntoPure φ2 P2 -> IntoPure (φ1 ∧ φ2) (P1 ∧ P2).
+Global Instance into_pure_pure_conj (φ1 φ2 : Prop) P1 P2 :
+  IntoPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 ∧ P2) (φ1 ∧ φ2).
 Proof. rewrite /IntoPure pure_and. by intros -> ->. Qed.
-Global Instance into_pure_pure_sep (φ1 φ2 : uPred M) P1 P2 :
-  IntoPure φ1 P1 -> IntoPure φ2 P2 -> IntoPure (φ1 ∗ φ2) (P1 ∧ P2).
+Global Instance into_pure_pure_sep (φ1 φ2 : Prop) P1 P2 :
+  IntoPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 ∗ P2) (φ1 ∧ φ2).
 Proof. rewrite /IntoPure sep_and pure_and. by intros -> ->. Qed.
-Global Instance into_pure_pure_disj (φ1 φ2 : uPred M) P1 P2 :
-  IntoPure φ1 P1 -> IntoPure φ2 P2 -> IntoPure (φ1 ∨ φ2) (P1 ∨ P2).
+Global Instance into_pure_pure_disj (φ1 φ2 : Prop) P1 P2 :
+  IntoPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 ∨ P2) (φ1 ∨ φ2).
 Proof. rewrite /IntoPure pure_or. by intros -> ->. Qed.
-Global Instance into_pure_pure_impl (φ1 φ2 : uPred M) P1 P2 :
-  FromPure φ1 P1 -> IntoPure φ2 P2 -> IntoPure (φ1 → φ2) (P1 → P2).
+Global Instance into_pure_pure_impl (φ1 φ2 : Prop) P1 P2 :
+  FromPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 → P2) (φ1 → φ2).
 Proof. rewrite /FromPure /IntoPure pure_impl. by intros -> ->. Qed.
-Global Instance into_pure_pure_wand (φ1 φ2 : uPred M) P1 P2 :
-  FromPure φ1 P1 -> IntoPure φ2 P2 -> IntoPure (φ1 -∗ φ2) (P1 → P2).
+Global Instance into_pure_pure_wand (φ1 φ2 : Prop) P1 P2 :
+  FromPure P1 φ1 -> IntoPure P2 φ2 -> IntoPure (P1 -∗ P2) (φ1 → φ2).
 Proof.
   rewrite /FromPure /IntoPure pure_impl always_impl_wand. by intros -> ->.
 Qed.
 
-Global Instance into_pure_exist {X : Type} (Φ : X → uPred M) φ :
+Global Instance into_pure_exist {X : Type} (Φ : X → uPred M) (φ : X → Prop) :
   (∀ x, @IntoPure M (Φ x) (φ x)) → @IntoPure M (∃ x, Φ x) (∃ x, φ x).
 Proof.
   rewrite /IntoPure=>Hx. apply exist_elim=>x. rewrite Hx.
   apply pure_elim'=>Hφ. apply pure_intro. eauto.
 Qed.
 
-Global Instance into_pure_forall {X : Type} (Φ : X → uPred M) φ :
+Global Instance into_pure_forall {X : Type} (Φ : X → uPred M) (φ : X → Prop) :
   (∀ x, @IntoPure M (Φ x) (φ x)) → @IntoPure M (∀ x, Φ x) (∀ x, φ x).
 Proof.
   rewrite /IntoPure=>Hx. rewrite -pure_forall_2. by setoid_rewrite Hx.
@@ -91,32 +91,31 @@ Qed.
 Global Instance from_pure_bupd P φ : FromPure P φ → FromPure (|==> P) φ.
 Proof. rewrite /FromPure=> ->. apply bupd_intro. Qed.
 
-
-Global Instance from_pure_pure_conj (φ1 φ2 : uPred M) P1 P2 :
-  FromPure φ1 P1 -> FromPure φ2 P2 -> FromPure (φ1 ∧ φ2) (P1 ∧ P2).
+Global Instance from_pure_pure_conj (φ1 φ2 : Prop) P1 P2 :
+  FromPure P1 φ1 -> FromPure P2 φ2 -> FromPure (P1 ∧ P2) (φ1 ∧ φ2).
 Proof. rewrite /FromPure pure_and. by intros -> ->. Qed.
-Global Instance from_pure_pure_sep (φ1 φ2 : uPred M) P1 P2 :
-  FromPure φ1 P1 -> FromPure φ2 P2 -> FromPure (φ1 ∗ φ2) (P1 ∧ P2).
+Global Instance from_pure_pure_sep (φ1 φ2 : Prop) P1 P2 :
+  FromPure P1 φ1 -> FromPure P2 φ2 -> FromPure (P1 ∗ P2) (φ1 ∧ φ2).
 Proof. rewrite /FromPure pure_and always_and_sep_l. by intros -> ->. Qed.
-Global Instance from_pure_pure_disj (φ1 φ2 : uPred M) P1 P2 :
-  FromPure φ1 P1 -> FromPure φ2 P2 -> FromPure (φ1 ∨ φ2) (P1 ∨ P2).
+Global Instance from_pure_pure_disj (φ1 φ2 : Prop) P1 P2 :
+  FromPure P1 φ1 -> FromPure P2 φ2 -> FromPure (P1 ∨ P2) (φ1 ∨ φ2).
 Proof. rewrite /FromPure pure_or. by intros -> ->. Qed.
-Global Instance from_pure_pure_impl (φ1 φ2 : uPred M) P1 P2 :
-  IntoPure φ1 P1 -> FromPure φ2 P2 -> FromPure (φ1 → φ2) (P1 → P2).
+Global Instance from_pure_pure_impl (φ1 φ2 : Prop) P1 P2 :
+  IntoPure P1 φ1 -> FromPure P2 φ2 -> FromPure (P1 → P2) (φ1 → φ2).
 Proof. rewrite /FromPure /IntoPure pure_impl. by intros -> ->. Qed.
-Global Instance from_pure_pure_wand (φ1 φ2 : uPred M) P1 P2 :
-  IntoPure φ1 P1 -> FromPure φ2 P2 -> FromPure (φ1 -∗ φ2) (P1 → P2).
+Global Instance from_pure_pure_wand (φ1 φ2 : Prop) P1 P2 :
+  IntoPure P1 φ1 -> FromPure P2 φ2 -> FromPure (P1 -∗ P2) (φ1 → φ2).
 Proof.
   rewrite /FromPure /IntoPure pure_impl always_impl_wand. by intros -> ->.
 Qed.
 
-Global Instance from_pure_exist {X : Type} (Φ : X → uPred M) φ :
+Global Instance from_pure_exist {X : Type} (Φ : X → uPred M) (φ : X → Prop) :
   (∀ x, @FromPure M (Φ x) (φ x)) → @FromPure M (∃ x, Φ x) (∃ x, φ x).
 Proof.
   rewrite /FromPure=>Hx. apply pure_elim'=>-[x ?]. rewrite -(exist_intro x).
   rewrite -Hx. apply pure_intro. done.
 Qed.
-Global Instance from_pure_forall {X : Type} (Φ : X → uPred M) φ :
+Global Instance from_pure_forall {X : Type} (Φ : X → uPred M) (φ : X → Prop) :
   (∀ x, @FromPure M (Φ x) (φ x)) → @FromPure M (∀ x, Φ x) (∀ x, φ x).
 Proof.
   rewrite /FromPure=>Hx. apply forall_intro=>x. apply pure_elim'=>Hφ.
