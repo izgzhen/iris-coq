@@ -100,3 +100,4 @@ Ltac solve_ndisj :=
   | H : _ ∪ _ ⊆ _ |- _ => apply union_subseteq in H as [??]
   end;
   solve [eauto with ndisj].
+Hint Extern 1000 => solve_ndisj : solve_ndisj.
