@@ -15,12 +15,10 @@ Section ofe.
 
   Global Instance list_cofe `{Cofe A} m : Cofe (vecC m).
   Proof.
-    assert (LimitPreserving (λ l, length l = m)).
-    { apply limit_preserving_timeless=> l k -> //. }
-    apply (iso_cofe_subtype (λ l : list A, length l = m)
+    apply: (iso_cofe_subtype (λ l : list A, length l = m)
       (λ l, eq_rect _ (vec A) (list_to_vec l) m) vec_to_list)=> //.
-    - intros v. by rewrite vec_to_list_length.
     - intros v []. by rewrite /= vec_to_list_of_list.
+    - intros c. by rewrite (conv_compl 0 (chain_map _ c)) /= vec_to_list_length.
   Qed.
 
   Global Instance vnil_timeless : Timeless (@vnil A).

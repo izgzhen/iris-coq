@@ -1095,22 +1095,22 @@ Proof.
   - intros n y1 y2. rewrite !g_dist. apply dist_S.
 Qed.
 
-Program Definition iso_cofe_subtype {A B : ofeT} `{Cofe A}
-    (P : A → Prop) `{!LimitPreserving P}
-    (f : ∀ x, P x → B) (g : B → A)
-    (Pg : ∀ y, P (g y))
-    (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2)
-    (gf : ∀ x Hx, g (f x Hx) ≡ x) : Cofe B :=
-  let _ : NonExpansive g := _ in
-  {| compl c := f (compl (chain_map g c)) _ |}.
-Next Obligation. intros A B ? P _ f g _ g_dist _ n y1 y2. apply g_dist. Qed.
-Next Obligation.
-  intros A B ? P ? f g ? g_dist gf ? c. apply limit_preserving=> n. apply Pg.
-Qed.
-Next Obligation.
-  intros A B ? P ? f g ? g_dist gf ? n c; simpl.
-  apply g_dist. by rewrite gf conv_compl.
-Qed.
+Section iso_cofe_subtype.
+  Context {A B : ofeT} `{Cofe A} (P : A → Prop) (f : ∀ x, P x → B) (g : B → A).
+  Context (Pg : ∀ y, P (g y)).
+  Context (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2).
+  Let Hgne : NonExpansive g.
+  Proof. intros n y1 y2. apply g_dist. Qed.
+  Existing Instance Hgne.
+  Context (gf : ∀ x Hx, g (f x Hx) ≡ x).
+  Context (Hlimit : ∀ c : chain B, P (compl (chain_map g c))).
+  Program Definition iso_cofe_subtype : Cofe B :=
+    {| compl c := f (compl (chain_map g c)) _ |}.
+  Next Obligation. apply Hlimit. Qed.
+  Next Obligation.
+    intros n c; simpl. apply g_dist. by rewrite gf conv_compl.
+  Qed.
+End iso_cofe_subtype.
 
 Definition iso_cofe {A B : ofeT} `{Cofe A} (f : A → B) (g : B → A)
   (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2)
@@ -1141,7 +1141,11 @@ Section sigma.
   Canonical Structure sigC : ofeT := OfeT (sig P) sig_ofe_mixin.
 
   Global Instance sig_cofe `{Cofe A, !LimitPreserving P} : Cofe sigC.
-  Proof. by apply (iso_cofe_subtype P (exist P) proj1_sig proj2_sig). Qed.
+  Proof.
+    apply: (iso_cofe_subtype P (exist P) proj1_sig).
+    - done.
+    - intros c. apply limit_preserving=> n. apply proj2_sig.
+   Qed.
 
   Global Instance sig_timeless (x : sig P) :  Timeless (`x) → Timeless x.
   Proof. intros ? y. rewrite sig_dist_alt sig_equiv_alt. apply (timeless _). Qed.
