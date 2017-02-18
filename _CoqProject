@@ -84,6 +84,7 @@ theories/tests/list_reverse.v
 theories/tests/tree_sum.v
 theories/tests/ipm_paper.v
 theories/proofmode/strings.v
+theories/proofmode/tokens.v
 theories/proofmode/coq_tactics.v
 theories/proofmode/environments.v
 theories/proofmode/intro_patterns.v

@@ -1,4 +1,5 @@
 From stdpp Require Export strings.
+From iris.proofmode Require Import tokens.
 Set Default Proof Using "Type".
 
 Record spec_goal := SpecGoal {
@@ -19,46 +20,15 @@ Definition spec_pat_modal (p : spec_pat) : bool :=
   match p with SGoal g => spec_goal_modal g | _ => false end.
 
 Module spec_pat.
-Inductive token :=
-  | TName : string → token
-  | TMinus : token
-  | TBracketL : token
-  | TBracketR : token
-  | TPersistent : token
-  | TPure : token
-  | TForall : token
-  | TModal : token
-  | TFrame : token.
-
-Fixpoint cons_name (kn : string) (k : list token) : list token :=
-  match kn with "" => k | _ => TName (string_rev kn) :: k end.
-Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
-  match s with
-  | "" => rev (cons_name kn k)
-  | String "-" s => tokenize_go s (TMinus :: cons_name kn k) ""
-  | String "[" s => tokenize_go s (TBracketL :: cons_name kn k) ""
-  | String "]" s => tokenize_go s (TBracketR :: cons_name kn k) ""
-  | String "#" s => tokenize_go s (TPersistent :: cons_name kn k) ""
-  | String "%" s => tokenize_go s (TPure :: cons_name kn k) ""
-  | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
-  | String ">" s => tokenize_go s (TModal :: cons_name kn k) ""
-  | String "$" s => tokenize_go s (TFrame :: cons_name kn k) ""
-  | String a s =>
-     if is_space a then tokenize_go s (cons_name kn k) ""
-     else tokenize_go s k (String a kn)
-  (* TODO: Complain about invalid characters, to future-proof this against making more characters special. *)
-  end.
-Definition tokenize (s : string) : list token := tokenize_go s [] "".
-
 Inductive state :=
   | StTop : state
   | StAssert : spec_goal → state.
 
 Fixpoint parse_go (ts : list token) (k : list spec_pat) : option (list spec_pat) :=
   match ts with
-  | [] => Some (rev k)
+  | [] => Some (reverse k)
   | TName s :: ts => parse_go ts (SName s :: k)
-  | TBracketL :: TPersistent :: TBracketR :: ts => parse_go ts (SGoalPersistent :: k)
+  | TBracketL :: TAlways :: TBracketR :: ts => parse_go ts (SGoalPersistent :: k)
   | TBracketL :: TPure :: TBracketR :: ts => parse_go ts (SGoalPure :: k)
   | TBracketL :: ts => parse_goal ts (SpecGoal false false [] []) k
   | TModal :: TBracketL :: ts => parse_goal ts (SpecGoal true false [] []) k

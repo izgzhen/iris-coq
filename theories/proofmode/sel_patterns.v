@@ -1,4 +1,5 @@
 From stdpp Require Export strings.
+From iris.proofmode Require Import tokens.
 Set Default Proof Using "Type".
 
 Inductive sel_pat :=
@@ -15,28 +16,25 @@ Fixpoint sel_pat_pure (ps : list sel_pat) : bool :=
   end.
 
 Module sel_pat.
-Fixpoint cons_name (kn : string) (k : list sel_pat) : list sel_pat :=
-  match kn with "" => k | _ => SelName (string_rev kn) :: k end.
-
-Fixpoint parse_go (s : string) (k : list sel_pat) (kn : string) : list sel_pat :=
-  match s with
-  | "" => rev (cons_name kn k)
-  | String "%" s => parse_go s (SelPure :: cons_name kn k) ""
-  | String "#" s => parse_go s (SelPersistent :: cons_name kn k) ""
-  | String (Ascii.Ascii false true false false false true true true) (* unicode ∗ *)
-      (String (Ascii.Ascii false false false true false false false true)
-      (String (Ascii.Ascii true true true false true false false true) s)) =>
-     parse_go s (SelSpatial :: cons_name kn k) ""
-  | String a s =>
-     if is_space a then parse_go s (cons_name kn k) ""
-     else parse_go s k (String a kn)
+Fixpoint parse_go (ts : list token) (k : list sel_pat) : option (list sel_pat) :=
+  match ts with
+  | [] => Some (reverse k)
+  | TName s :: ts => parse_go ts (SelName s :: k)
+  | TPure :: ts => parse_go ts (SelPure :: k)
+  | TAlways :: ts => parse_go ts (SelPersistent :: k)
+  | TSep :: ts => parse_go ts (SelSpatial :: k)
+  | _ => None
   end.
-Definition parse (s : string) : list sel_pat := parse_go s [] "".
+Definition parse (s : string) : option (list sel_pat) :=
+  parse_go (tokenize s) [].
 
 Ltac parse s :=
   lazymatch type of s with
   | list sel_pat => s
   | list string => eval vm_compute in (SelName <$> s)
-  | string => eval vm_compute in (parse s)
+  | string =>
+     lazymatch eval vm_compute in (parse s) with
+     | Some ?pats => pats | _ => fail "invalid sel_pat" s
+     end
   end.
 End sel_pat.

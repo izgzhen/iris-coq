@@ -1,4 +1,5 @@
 From stdpp Require Export strings.
+From iris.proofmode Require Import tokens.
 Set Default Proof Using "Type".
 
 Inductive intro_pat :=
@@ -20,59 +21,6 @@ Inductive intro_pat :=
   | IClearFrame : string → intro_pat.
 
 Module intro_pat.
-Inductive token :=
-  | TName : string → token
-  | TAnom : token
-  | TFrame : token
-  | TBar : token
-  | TBracketL : token
-  | TBracketR : token
-  | TAmp : token
-  | TParenL : token
-  | TParenR : token
-  | TPureElim : token
-  | TAlwaysElim : token
-  | TModalElim : token
-  | TPureIntro : token
-  | TAlwaysIntro : token
-  | TModalIntro : token
-  | TSimpl : token
-  | TForall : token
-  | TAll : token
-  | TClearL : token
-  | TClearR : token.
-
-Fixpoint cons_name (kn : string) (k : list token) : list token :=
-  match kn with "" => k | _ => TName (string_rev kn) :: k end.
-Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
-  match s with
-  | "" => rev (cons_name kn k)
-  | String "?" s => tokenize_go s (TAnom :: cons_name kn k) ""
-  | String "$" s => tokenize_go s (TFrame :: cons_name kn k) ""
-  | String "[" s => tokenize_go s (TBracketL :: cons_name kn k) ""
-  | String "]" s => tokenize_go s (TBracketR :: cons_name kn k) ""
-  | String "|" s => tokenize_go s (TBar :: cons_name kn k) ""
-  | String "(" s => tokenize_go s (TParenL :: cons_name kn k) ""
-  | String ")" s => tokenize_go s (TParenR :: cons_name kn k) ""
-  | String "&" s => tokenize_go s (TAmp :: cons_name kn k) ""
-  | String "%" s => tokenize_go s (TPureElim :: cons_name kn k) ""
-  | String "#" s => tokenize_go s (TAlwaysElim :: cons_name kn k) ""
-  | String ">" s => tokenize_go s (TModalElim :: cons_name kn k) ""
-  | String "!" (String "%" s) => tokenize_go s (TPureIntro :: cons_name kn k) ""
-  | String "!" (String "#" s) => tokenize_go s (TAlwaysIntro :: cons_name kn k) ""
-  | String "!" (String ">" s) => tokenize_go s (TModalIntro :: cons_name kn k) ""
-  | String "{" s => tokenize_go s (TClearL :: cons_name kn k) ""
-  | String "}" s => tokenize_go s (TClearR :: cons_name kn k) ""
-  | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_name kn k) ""
-  | String "*" (String "*" s) => tokenize_go s (TAll :: cons_name kn k) ""
-  | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
-  | String a s =>
-     if is_space a then tokenize_go s (cons_name kn k) ""
-     else tokenize_go s k (String a kn)
-  (* TODO: Complain about invalid characters, to future-proof this against making more characters special. *)
-  end.
-Definition tokenize (s : string) : list token := tokenize_go s [] "".
-
 Inductive stack_item :=
   | SPat : intro_pat → stack_item
   | SList : stack_item
@@ -132,23 +80,23 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TParenL :: ts => parse_go ts (SConjList :: k)
   | TAmp :: ts => parse_go ts (SAmp :: k)
   | TParenR :: ts => close_conj_list k None [] ≫= parse_go ts
-  | TPureElim :: ts => parse_go ts (SPat IPureElim :: k)
-  | TAlwaysElim :: ts => parse_go ts (SAlwaysElim :: k)
-  | TModalElim :: ts => parse_go ts (SModalElim :: k)
+  | TPure :: ts => parse_go ts (SPat IPureElim :: k)
+  | TAlways :: ts => parse_go ts (SAlwaysElim :: k)
+  | TModal :: ts => parse_go ts (SModalElim :: k)
   | TPureIntro :: ts => parse_go ts (SPat IPureIntro :: k)
   | TAlwaysIntro :: ts => parse_go ts (SPat IAlwaysIntro :: k)
   | TModalIntro :: ts => parse_go ts (SPat IModalIntro :: k)
   | TSimpl :: ts => parse_go ts (SPat ISimpl :: k)
   | TAll :: ts => parse_go ts (SPat IAll :: k)
   | TForall :: ts => parse_go ts (SPat IForall :: k)
-  | TClearL :: ts => parse_clear ts k
+  | TBraceL :: ts => parse_clear ts k
   | _ => None
   end
 with parse_clear (ts : list token) (k : stack) : option stack :=
   match ts with
   | TFrame :: TName s :: ts => parse_clear ts (SPat (IClearFrame s) :: k)
   | TName s :: ts => parse_clear ts (SPat (IClear s) :: k)
-  | TClearR :: ts => parse_go ts k
+  | TBraceR :: ts => parse_go ts k
   | _ => None
   end.
 
@@ -160,7 +108,6 @@ Fixpoint close (k : stack) (ps : list intro_pat) : option (list intro_pat) :=
   | SModalElim :: k => '(p,ps) ← maybe2 (::) ps; close k (IModalElim p :: ps)
   | _ => None
   end.
-
 
 Definition parse (s : string) : option (list intro_pat) :=
   k ← parse_go (tokenize s) []; close k [].
