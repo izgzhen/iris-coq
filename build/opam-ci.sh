@@ -10,9 +10,11 @@ export OPAM_EDITOR="$(which false)"
 # Make sure we got a good OPAM
 test -d "$OPAMROOT" || (mkdir "$OPAMROOT" && opam init --no-setup -y)
 eval `opam conf env`
-if test $(find "$OPAMROOT/repo/package-index" -mtime 1); then
+if test $(find "$OPAMROOT/repo/package-index" -mtime +0); then
     # last update was more than a day ago
     opam update
+else
+    echo "[opam-ci] Not updating opam."
 fi
 test -d "$OPAMROOT/repo/coq-extra-dev" || opam repo add coq-extra-dev https://coq.inria.fr/opam/extra-dev -p 5
 test -d "$OPAMROOT/repo/coq-core-dev" || opam repo add coq-core-dev https://coq.inria.fr/opam/core-dev -p 5
