@@ -142,3 +142,7 @@ Qed.
 Lemma demo_16 (M : ucmraT) (P Q R : uPred M) `{!PersistentP R} :
   P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.
 Proof. eauto with iFrame. Qed.
+
+Lemma demo_17 (M : ucmraT) (P Q R : uPred M) `{!PersistentP R} :
+  P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.
+Proof. iIntros "HP HQ #HR". iCombine "HR HQ HP HR" as "H". auto. Qed.

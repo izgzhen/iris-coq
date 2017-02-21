@@ -6,6 +6,8 @@ Set Default Proof Using "Type".
 Import uPred.
 Import env_notations.
 
+Local Notation "b1 && b2" := (if b1 then b2 else false) : bool_scope.
+
 Record envs (M : ucmraT) :=
   Envs { env_persistent : env (uPred M); env_spatial : env (uPred M) }.
 Add Printing Constructor envs.
@@ -49,6 +51,17 @@ Definition envs_lookup_delete {M} (i : string)
   match env_lookup_delete i Γp with
   | Some (P,Γp') => Some (true, P, Envs Γp' Γs)
   | None => '(P,Γs') ← env_lookup_delete i Γs; Some (false, P, Envs Γp Γs')
+  end.
+
+Fixpoint envs_lookup_delete_list {M} (js : list string) (remove_persistent : bool)
+    (Δ : envs M) : option (bool * list (uPred M) * envs M) :=
+  match js with
+  | [] => Some (true, [], Δ)
+  | j :: js =>
+     '(p,P,Δ') ← envs_lookup_delete j Δ;
+     let Δ' := if p then (if remove_persistent then Δ' else Δ) else Δ' in
+     '(q,Hs,Δ'') ← envs_lookup_delete_list js remove_persistent Δ';
+     Some (p && q, P :: Hs, Δ'')
   end.
 
 Definition envs_snoc {M} (Δ : envs M)
@@ -101,7 +114,6 @@ Definition envs_split {M} (lr : bool)
     (js : list string) (Δ : envs M) : option (envs M * envs M) :=
   '(Δ1,Δ2) ← envs_split_go js Δ (envs_clear_spatial Δ);
   if lr then Some (Δ1,Δ2) else Some (Δ2,Δ1).
-
 
 (* Coq versions of the tactics *)
 Section tactics.
@@ -166,6 +178,21 @@ Proof. intros [? ->]%envs_lookup_delete_Some. by apply envs_lookup_sound. Qed.
 Lemma envs_lookup_delete_sound' Δ Δ' i p P :
   envs_lookup_delete i Δ = Some (p,P,Δ') → Δ ⊢ P ∗ Δ'.
 Proof. intros [? ->]%envs_lookup_delete_Some. by apply envs_lookup_sound'. Qed.
+
+Lemma envs_lookup_delete_list_sound Δ Δ' js rp p Ps :
+  envs_lookup_delete_list js rp Δ = Some (p, Ps,Δ') → Δ ⊢ □?p [∗] Ps ∗ Δ'.
+Proof.
+  revert Δ Δ' p Ps. induction js as [|j js IH]=> Δ Δ'' p Ps ?; simplify_eq/=.
+  { by rewrite always_pure left_id. }
+  destruct (envs_lookup_delete j Δ) as [[[q1 P] Δ']|] eqn:Hj; simplify_eq/=.
+  apply envs_lookup_delete_Some in Hj as [Hj ->].
+  destruct (envs_lookup_delete_list js rp _) as [[[q2 Ps'] ?]|] eqn:?; simplify_eq/=.
+  rewrite always_if_sep -assoc. destruct q1; simpl.
+  - destruct rp.
+    + rewrite envs_lookup_sound //; simpl. by rewrite IH // (always_elim_if q2).
+    + rewrite envs_lookup_persistent_sound //. by rewrite IH // (always_elim_if q2).
+  - rewrite envs_lookup_sound // IH //; simpl. by rewrite always_if_elim.
+Qed.
 
 Lemma envs_lookup_snoc Δ i p P :
   envs_lookup i Δ = None → envs_lookup i (envs_snoc Δ p i P) = Some (p, P).
@@ -703,26 +730,27 @@ Proof.
 Qed.
 
 (** * Combining *)
-Lemma tac_combine Δ1 Δ2 Δ3 Δ4 i1 p P1 i2 q P2 j P Q :
-  envs_lookup_delete i1 Δ1 = Some (p,P1,Δ2) →
-  envs_lookup_delete i2 (if p then Δ1 else Δ2) = Some (q,P2,Δ3) →
-  FromSep P P1 P2 →
-  envs_app (p && q) (Esnoc Enil j P)
-    (if q then (if p then Δ1 else Δ2) else Δ3) = Some Δ4 →
-  (Δ4 ⊢ Q) → Δ1 ⊢ Q.
+Class FromSeps {M} (P : uPred M) (Qs : list (uPred M)) :=
+  from_seps : [∗] Qs ⊢ P.
+Arguments from_seps {_} _ _ {_}.
+
+Global Instance from_seps_nil : @FromSeps M True [].
+Proof. done. Qed.
+Global Instance from_seps_singleton P : FromSeps P [P] | 1.
+Proof. by rewrite /FromSeps /= right_id. Qed.
+Global Instance from_seps_cons P P' Q Qs :
+  FromSeps P' Qs → FromSep P Q P' → FromSeps P (Q :: Qs) | 2.
+Proof. by rewrite /FromSeps /FromSep /= => ->. Qed.
+
+Lemma tac_combine Δ1 Δ2 Δ3 js p Ps j P Q :
+  envs_lookup_delete_list js false Δ1 = Some (p, Ps, Δ2) →
+  FromSeps P Ps →
+  envs_app p (Esnoc Enil j P) Δ2 = Some Δ3 →
+  (Δ3 ⊢ Q) → Δ1 ⊢ Q.
 Proof.
-  intros [? ->]%envs_lookup_delete_Some [? ->]%envs_lookup_delete_Some ?? <-.
-  destruct p.
-  - rewrite envs_lookup_persistent_sound //. destruct q.
-    + rewrite envs_lookup_persistent_sound // envs_app_sound //; simpl.
-      by rewrite right_id assoc -always_sep (from_sep P) wand_elim_r.
-    + rewrite envs_lookup_sound // envs_app_sound //; simpl.
-      by rewrite right_id assoc always_elim (from_sep P) wand_elim_r.
-  - rewrite envs_lookup_sound //; simpl. destruct q.
-    + rewrite envs_lookup_persistent_sound // envs_app_sound //; simpl.
-      by rewrite right_id assoc always_elim (from_sep P) wand_elim_r.
-    + rewrite envs_lookup_sound // envs_app_sound //; simpl.
-      by rewrite right_id assoc (from_sep P) wand_elim_r.
+  intros ??? <-. rewrite envs_lookup_delete_list_sound //.
+  rewrite from_seps. rewrite envs_app_sound //; simpl.
+  by rewrite right_id wand_elim_r.
 Qed.
 
 (** * Conjunction/separating conjunction elimination *)

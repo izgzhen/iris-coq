@@ -578,14 +578,16 @@ Local Tactic Notation "iAndDestructChoice" constr(H) "as" constr(lr) constr(H') 
      apply _ || fail "iAndDestructChoice: cannot destruct" P
     |env_cbv; reflexivity || fail "iAndDestructChoice:" H' " not fresh"|].
 
-Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
-  eapply tac_combine with _ _ _ H1 _ _ H2 _ _ H _;
-    [env_cbv; reflexivity || fail "iCombine:" H1 "not found"
-    |env_cbv; reflexivity || fail "iCombine:" H2 "not found"
-    |let P1 := match goal with |- FromSep _ ?P1 _ => P1 end in
-     let P2 := match goal with |- FromSep _ _ ?P2 => P2 end in
-     apply _ || fail "iCombine: cannot combine" P1 "and" P2
+(** * Combinining hypotheses *)
+Tactic Notation "iCombine" constr(Hs) "as" constr(H) :=
+  let Hs := words Hs in
+  eapply tac_combine with _ _ Hs _ _ H _;
+    [env_cbv; reflexivity || fail "iCombine:" Hs "not found"
+    |apply _
     |env_cbv; reflexivity || fail "iCombine:" H "not fresh"|].
+
+Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
+  iCombine [H1;H2] as H.
 
 (** * Existential *)
 Tactic Notation "iExists" uconstr(x1) :=
