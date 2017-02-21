@@ -330,6 +330,16 @@ Section fixpointK.
     Lemma fixpointK_proper : (∀ z, f z ≡ g z) → fixpointK k f ≡ fixpointK k g.
     Proof. setoid_rewrite equiv_dist; naive_solver eauto using fixpointK_ne. Qed.
   End fixpointK_ne.
+
+  Lemma fixpointK_ind (P : A → Prop) :
+    Proper ((≡) ==> impl) P →
+    (∃ x, P x) → (∀ x, P x → P (f x)) →
+    (∀ (c : chain A), (∀ n, P (c n)) → P (compl c)) →
+    P (fixpointK k f).
+  Proof.
+    intros ? Hst Hincr Hlim. rewrite /fixpointK. eapply fixpoint_ind; [done..| |done].
+    clear- Hincr. intros. induction k; first done. simpl. auto.
+  Qed.
 End fixpointK.
 
 (** Mutual fixpoints *)
