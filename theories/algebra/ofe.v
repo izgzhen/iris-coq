@@ -222,9 +222,7 @@ Ltac f_contractive :=
   end;
   try reflexivity.
 
-Ltac solve_contractive :=
-  preprocess_solve_proper;
-  solve [repeat (first [f_contractive|f_equiv]; try eassumption)].
+Ltac solve_contractive := solve_proper_core ltac:(fun _ => first [f_contractive | f_equiv]).
 
 (** Fixpoint *)
 Program Definition fixpoint_chain {A : ofeT} `{Inhabited A} (f : A → A)
