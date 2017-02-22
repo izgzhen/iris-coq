@@ -189,6 +189,9 @@ Arguments dist_later _ !_ _ _ /.
 Global Instance dist_later_equivalence A n : Equivalence (@dist_later A n).
 Proof. destruct n as [|n]. by split. apply dist_equivalence. Qed.
 
+Lemma dist_dist_later {A : ofeT} n (x y : A) : dist n x y → dist_later n x y.
+Proof. intros Heq. destruct n; first done. exact: dist_S. Qed.
+
 Notation Contractive f := (∀ n, Proper (dist_later n ==> dist n) f).
 
 Instance const_contractive {A B : ofeT} (x : A) : Contractive (@const A B x).
