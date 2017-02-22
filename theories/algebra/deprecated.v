@@ -50,6 +50,8 @@ Qed.
 Canonical Structure dec_agreeR : cmraT :=
   discreteR (dec_agree A) dec_agree_ra_mixin.
 
+Global Instance dec_agree_cmra_discrete : CMRADiscrete dec_agreeR.
+Proof. apply discrete_cmra_discrete. Qed.
 Global Instance dec_agree_total : CMRATotal dec_agreeR.
 Proof. intros x. by exists x. Qed.
 

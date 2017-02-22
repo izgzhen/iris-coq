@@ -10,16 +10,18 @@ Context {M : ucmraT}.
 Implicit Types P Q R : uPred M.
 
 (* FromAssumption *)
-Global Instance from_assumption_False p P : FromAssumption p False P.
-Proof. destruct p; rewrite /FromAssumption /= ?always_pure; apply False_elim. Qed.
-Global Instance from_assumption_exact p P : FromAssumption p P P.
+Global Instance from_assumption_exact p P : FromAssumption p P P | 0.
 Proof. destruct p; by rewrite /FromAssumption /= ?always_elim. Qed.
-Global Instance from_assumption_always_l p P Q :
-  FromAssumption p P Q → FromAssumption p (□ P) Q.
-Proof. rewrite /FromAssumption=><-. by rewrite always_elim. Qed.
+Global Instance from_assumption_False p P : FromAssumption p False P | 1.
+Proof. destruct p; rewrite /FromAssumption /= ?always_pure; apply False_elim. Qed.
+
 Global Instance from_assumption_always_r P Q :
   FromAssumption true P Q → FromAssumption true P (□ Q).
 Proof. rewrite /FromAssumption=><-. by rewrite always_always. Qed.
+
+Global Instance from_assumption_always_l p P Q :
+  FromAssumption p P Q → FromAssumption p (□ P) Q.
+Proof. rewrite /FromAssumption=><-. by rewrite always_elim. Qed.
 Global Instance from_assumption_later p P Q :
   FromAssumption p P Q → FromAssumption p P (▷ Q)%I.
 Proof. rewrite /FromAssumption=>->. apply later_intro. Qed.

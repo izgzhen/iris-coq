@@ -5,7 +5,9 @@ Import uPred.
 Class FromAssumption {M} (p : bool) (P Q : uPred M) :=
   from_assumption : □?p P ⊢ Q.
 Arguments from_assumption {_} _ _ _ {_}.
-Hint Mode FromAssumption + + ! - : typeclass_instances.
+(* No need to restrict Hint Mode, we have a default instance that will always
+be used in case of evars *)
+Hint Mode FromAssumption + + - - : typeclass_instances.
 
 Class IntoPure {M} (P : uPred M) (φ : Prop) := into_pure : P ⊢ ⌜φ⌝.
 Arguments into_pure {_} _ _ {_}.
