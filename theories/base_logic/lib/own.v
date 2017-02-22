@@ -48,8 +48,12 @@ Ltac solve_inG :=
   split; (assumption || by apply _).
 
 (** * Definition of the connective [own] *)
+Definition iRes_singleton `{i : inG Σ A} (γ : gname) (a : A) : iResUR Σ :=
+  iprod_singleton (inG_id i) {[ γ := cmra_transport inG_prf a ]}.
+Instance: Params (@iRes_singleton) 4.
+
 Definition own_def `{inG Σ A} (γ : gname) (a : A) : iProp Σ :=
-  uPred_ownM (iRes_singleton (inG_id _) γ (cmra_transport inG_prf a)).
+  uPred_ownM (iRes_singleton γ a).
 Definition own_aux : seal (@own_def). by eexists. Qed.
 Definition own {Σ A i} := unseal own_aux Σ A i.
 Definition own_eq : @own = @own_def := seal_eq own_aux.
@@ -61,6 +65,16 @@ Section global.
 Context `{inG Σ A}.
 Implicit Types a : A.
 
+(** ** Properties of [iRes_singleton] *)
+Global Instance iRes_singleton_ne γ :
+  NonExpansive (@iRes_singleton Σ A _ γ).
+Proof. by intros n a a' Ha; apply iprod_singleton_ne; rewrite Ha. Qed.
+Lemma iRes_singleton_op γ a1 a2 :
+  iRes_singleton γ (a1 ⋅ a2) ≡ iRes_singleton γ a1 ⋅ iRes_singleton γ a2.
+Proof.
+  by rewrite /iRes_singleton iprod_op_singleton op_singleton cmra_transport_op.
+Qed.
+
 (** ** Properties of [own] *)
 Global Instance own_ne γ : NonExpansive (@own Σ A _ γ).
 Proof. rewrite !own_eq. solve_proper. Qed.
@@ -68,7 +82,7 @@ Global Instance own_proper γ :
   Proper ((≡) ==> (⊣⊢)) (@own Σ A _ γ) := ne_proper _.
 
 Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ⊣⊢ own γ a1 ∗ own γ a2.
-Proof. by rewrite !own_eq /own_def -ownM_op cmra_transport_op iRes_op. Qed.
+Proof. by rewrite !own_eq /own_def -ownM_op iRes_singleton_op. Qed.
 Lemma own_mono γ a1 a2 : a2 ≼ a1 → own γ a1 ⊢ own γ a2.
 Proof. move=> [c ->]. rewrite own_op. eauto with I. Qed.
 
@@ -78,7 +92,13 @@ Global Instance own_mono' γ : Proper (flip (≼) ==> (⊢)) (@own Σ A _ γ).
 Proof. intros a1 a2. apply own_mono. Qed.
 
 Lemma own_valid γ a : own γ a ⊢ ✓ a.
-Proof. rewrite !own_eq /own_def ownM_valid iRes_valid. by destruct inG_prf. Qed.
+Proof.
+  rewrite !own_eq /own_def ownM_valid /iRes_singleton.
+  rewrite iprod_validI (forall_elim (inG_id _)) iprod_lookup_singleton.
+  rewrite gmap_validI (forall_elim γ) lookup_singleton option_validI.
+  (* implicit arguments differ a bit *)
+  by trans (✓ cmra_transport inG_prf a : iProp Σ)%I; last destruct inG_prf.
+Qed.
 Lemma own_valid_2 γ a1 a2 : own γ a1 -∗ own γ a2 -∗ ✓ (a1 ⋅ a2).
 Proof. apply wand_intro_r. by rewrite -own_op own_valid. Qed.
 Lemma own_valid_3 γ a1 a2 a3 : own γ a1 -∗ own γ a2 -∗ own γ a3 -∗ ✓ (a1 ⋅ a2 ⋅ a3).
@@ -100,11 +120,11 @@ Lemma own_alloc_strong a (G : gset gname) :
   ✓ a → (|==> ∃ γ, ⌜γ ∉ G⌝ ∧ own γ a)%I.
 Proof.
   intros Ha.
-  rewrite -(bupd_mono (∃ m, ⌜∃ γ, γ ∉ G ∧
-    m = iRes_singleton (inG_id _) γ (cmra_transport inG_prf a)⌝ ∧ uPred_ownM m))%I.
+  rewrite -(bupd_mono (∃ m, ⌜∃ γ, γ ∉ G ∧ m = iRes_singleton γ a⌝ ∧ uPred_ownM m)%I).
   - rewrite /uPred_valid ownM_empty.
-    eapply bupd_ownM_updateP, iRes_alloc_strong;
-      [eapply cmra_transport_valid, Ha|naive_solver].
+    eapply bupd_ownM_updateP, (iprod_singleton_updateP_empty (inG_id _));
+      first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
+      naive_solver.
   - apply exist_elim=>m; apply pure_elim_l=>-[γ [Hfresh ->]].
     by rewrite !own_eq /own_def -(exist_intro γ) pure_True // left_id.
 Qed.
@@ -118,10 +138,9 @@ Qed.
 Lemma own_updateP P γ a : a ~~>: P → own γ a ==∗ ∃ a', ⌜P a'⌝ ∧ own γ a'.
 Proof.
   intros Ha. rewrite !own_eq.
-  rewrite -(bupd_mono (∃ m, ⌜∃ a',
-    m = iRes_singleton (inG_id _) γ (cmra_transport inG_prf a') ∧
-    P a'⌝ ∧ uPred_ownM m)%I).
-  - eapply bupd_ownM_updateP, iRes_updateP; [by apply cmra_transport_updateP'|].
+  rewrite -(bupd_mono (∃ m, ⌜∃ a', m = iRes_singleton γ a' ∧ P a'⌝ ∧ uPred_ownM m)%I).
+  - eapply bupd_ownM_updateP, iprod_singleton_updateP;
+      first by (eapply singleton_updateP', cmra_transport_updateP', Ha).
     naive_solver.
   - apply exist_elim=>m; apply pure_elim_l=>-[a' [-> HP]].
     rewrite -(exist_intro a'). by apply and_intro; [apply pure_intro|].
@@ -153,7 +172,8 @@ Arguments own_update_3 {_ _} [_] _ _ _ _ _ _.
 Lemma own_empty A `{inG Σ (A:ucmraT)} γ : (|==> own γ ∅)%I.
 Proof.
   rewrite /uPred_valid ownM_empty !own_eq /own_def.
-  apply bupd_ownM_update, iRes_alloc_unit_singleton.
+  apply bupd_ownM_update, iprod_singleton_update_empty.
+  apply (alloc_unit_singleton_update (cmra_transport inG_prf ∅)); last done.
   - apply cmra_transport_valid, ucmra_unit_valid.
   - intros x; destruct inG_prf. by rewrite left_id.
 Qed.
