@@ -186,5 +186,21 @@ Proof.
   eapply uPred_holds_ne, Hlim, HP; eauto using conv_compl.
 Qed.
 
+Lemma entails_lim' {T : ofeT} `{Cofe T} (P Q : T → uPredC M)
+      `{!NonExpansive P} `{!NonExpansive Q} (c : chain T) :
+  (∀ n, P (c n) ⊢ Q (c n)) → P (compl c) ⊢ Q (compl c).
+Proof.
+  set (cP := chain_map P c). set (cQ := chain_map Q c).
+  rewrite -!compl_chain_map=>HPQ. exact: entails_lim.
+Qed.
+
 End entails.
+
+Ltac entails_lim c :=
+  pattern (compl c);
+  match goal with
+  | |- (λ o, ?P ⊢ ?Q) ?x => change (((λ o, P) x) ⊢ (λ o, Q) x)
+  end;
+  apply entails_lim'.
+
 End uPred.
