@@ -130,6 +130,14 @@ Lemma compl_chain_map `{Cofe A, Cofe B} (f : A → B) c `(NonExpansive f) :
   compl (chain_map f c) ≡ f (compl c).
 Proof. apply equiv_dist=>n. by rewrite !conv_compl. Qed.
 
+Program Definition chain_const {A : ofeT} (a : A) : chain A :=
+  {| chain_car n := a |}.
+Next Obligation. by intros A a n i _. Qed.
+
+Lemma compl_chain_const {A : ofeT} `{!Cofe A} (a : A) :
+  compl (chain_const a) ≡ a.
+Proof. apply equiv_dist=>n. by rewrite conv_compl. Qed.
+
 (** General properties *)
 Section ofe.
   Context {A : ofeT}.
@@ -192,6 +200,17 @@ Proof. destruct n as [|n]. by split. apply dist_equivalence. Qed.
 Lemma dist_dist_later {A : ofeT} n (x y : A) : dist n x y → dist_later n x y.
 Proof. intros Heq. destruct n; first done. exact: dist_S. Qed.
 
+Lemma dist_later_dist {A : ofeT} n (x y : A) : dist_later (S n) x y → dist n x y.
+Proof. done. Qed.
+
+(* We don't actually need this lemma (as our tactics deal with this through
+   other means), but technically speaking, this is the reason why
+   pre-composing a non-expansive function to a contractive function
+   preserves contractivity. *)
+Lemma ne_dist_later {A B : ofeT} (f : A → B) :
+  NonExpansive f → ∀ n, Proper (dist_later n ==> dist_later n) f.
+Proof. intros Hf [|n]; last exact: Hf. hnf. by intros. Qed.
+
 Notation Contractive f := (∀ n, Proper (dist_later n ==> dist n) f).
 
 Instance const_contractive {A B : ofeT} (x : A) : Contractive (@const A B x).
@@ -221,7 +240,7 @@ Ltac f_contractive :=
   end;
   try match goal with
   | |- @dist_later ?A ?n ?x ?y =>
-         destruct n as [|n]; [done|change (@dist A _ n x y)]
+         destruct n as [|n]; [exact I|change (@dist A _ n x y)]
   end;
   try reflexivity.
 
