@@ -122,6 +122,10 @@ Tactic Notation "iAssumptionCore" :=
      first [is_evar i; fail 1 | env_cbv; reflexivity]
   | |- envs_lookup ?i (Envs ?Γp ?Γs) = Some (_, ?P) =>
      is_evar i; first [find Γp i P | find Γs i P]; env_cbv; reflexivity
+  | |- envs_lookup_delete ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
+     first [is_evar i; fail 1 | env_cbv; reflexivity]
+  | |- envs_lookup_delete ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
+     is_evar i; first [find Γp i P | find Γs i P]; env_cbv; reflexivity
   end.
 
 Tactic Notation "iAssumption" :=
