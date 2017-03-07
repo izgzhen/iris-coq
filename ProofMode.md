@@ -237,29 +237,43 @@ _specification patterns_ to express splitting of hypotheses:
 
 - `H` : use the hypothesis `H` (it should match the premise exactly). If `H` is
   spatial, it will be consumed.
-- `[H1 ... Hn]` : generate a goal with the (spatial) hypotheses `H1 ... Hn` and
-  all persistent hypotheses. The spatial hypotheses among `H1 ... Hn` will be
-  consumed. Hypotheses may be prefixed with a `$`, which results in them being
-  framed in the generated goal for the premise.
-- `[-H1 ... Hn]` : negated form of the above pattern.
-- `[> H1 ... Hn]` : same as the above pattern, but can only be used if the goal
-  is a modality, in which case the modality will be kept in the generated goal
-  for the premise will be wrapped into the modality.
-- `[> -H1 ... Hn]`  : negated form of the above pattern.
-- `[#]` : This pattern can be used when eliminating `P -∗ Q` with `P` being
-  persistent. Using this pattern, all hypotheses are available in the goal for
-  `P`, as well the remaining goal. The pattern can optionally contain 
-  hypotheses prefixed with a `$`, which results in them being framed in the
-  generated goal for the premise.
-- `[%]` : This pattern can be used when eliminating `P -∗ Q` when `P` is pure.
-  It will generate a Coq goal for `P` and does not consume any hypotheses.
-- `[$]` :
-- `[# $]` :
-- `>[$]` :
 
-The specialization patterns `[H1 .. H2]`, `[-H1 ... Hn]`, `>[H1 ... Hn]`,
-`>[H1 ... Hn]`, `[#]` and `[%]` can optionally be ended with a `//`. This causes
-the `done` tactic being called to close the goal (after framing).
+- `[H1 .. Hn]` and `[H1 .. Hn //]` : generate a goal for the premise with the
+  (spatial) hypotheses `H1 ... Hn` and all persistent hypotheses. The spatial
+  hypotheses among `H1 ... Hn` will be consumed, and will not be available for
+  subsequent goals. Hypotheses prefixed with a `$` will be framed in the
+  goal for the premise. The pattern can be terminated with a `//`, which causes
+  `done` to be called to close the goal (after framing).
+- `[-H1 ... Hn]` and `[-H1 ... Hn //]` : the negated forms of the above
+  patterns, where the goal for the premise will have all spatial premises except
+  `H1 .. Hn`.
+
+- `[> H1 ... Hn]` and `[> H1 ... Hn //]` : like the above patterns, but these
+  patterns can only be used if the goal is a modality `M`, in which case
+  the goal for the premise will be wrapped in the modality `M`.
+- `[> -H1 ... Hn]` and `[> -H1 ... Hn //]` : the negated forms of the above
+  patterns.
+
+- `[# $H1 .. $Hn]` and `[# $H1 .. $Hn //]` : generate a goal for a persistent
+  premise in which all hypotheses are available. This pattern does not consume
+  any hypotheses; all hypotheses are available in the goal for the premise, as
+  well in the subsequent goal. The hypotheses `$H1 ... $Hn` will be framed in
+  the goal for the premise. These patterns can be terminated with a `//`, which
+  causes `done` to be called to close the goal (after framing).
+- `[%]` and `[% //]` : generate a Coq goal for a pure premise. This pattern
+  does not consume any hypotheses. The pattern can be terminated with a `//`,
+  which causes `done` to be called to close the goal.
+
+- `[$]` : solve the premise by framing. It will first repeatedly frame the
+  spatial hypotheses, and then repeatedly frame the persistent hypotheses.
+  Spatial hypothesis that are not framed are carried over to the subsequent
+  goal.
+- `[> $]` : like the above pattern, but this pattern can only be used if the
+  goal is a modality `M`, in which case the goal for the premise will be wrapped
+  in the modality `M` before framing.
+- `[# $]` : solve the persistent premise by framing. It will first repeatedly
+  frame the spatial hypotheses, and then repeatedly frame the persistent
+  hypotheses. This pattern does not consume any hypotheses.
 
 For example, given:
 
