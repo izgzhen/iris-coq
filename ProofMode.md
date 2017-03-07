@@ -99,7 +99,7 @@ Separating logic specific tactics
 
   + `%` : repeatedly frame hypotheses from the Coq context.
   + `#` : repeatedly frame hypotheses from the persistent context.
-  + `★` : frame as much of the spatial context as possible.
+  + `∗` : frame as much of the spatial context as possible.
 
   Notice that framing spatial hypotheses makes them disappear, but framing Coq
   or persistent hypotheses does not make them disappear.
@@ -107,7 +107,7 @@ Separating logic specific tactics
   This tactic finishes the goal in case everything in the conclusion has been
   framed.
 - `iCombine "H1" "H2" as "H"` : turns `H1 : P1` and `H2 : P2` into
-  `H : P1 ★ P2`.
+  `H : P1 ∗ P2`.
 
 Modalities
 ----------
@@ -173,7 +173,7 @@ following _selection patterns_:
 - `H` : select the hypothesis named `H`.
 - `%` : select the entire pure/Coq context.
 - `#` : select the entire persistent context.
-- `★` : select the entire spatial context.
+- `∗` : select the entire spatial context.
 
 Introduction patterns
 =====================
@@ -208,7 +208,7 @@ appear at the top level:
 
 For example, given:
 
-        ∀ x, x = 0 ⊢ □ (P → False ∨ □ (Q ∧ ▷ R) -★ P ★ ▷ (R ★ Q ∧ x = pred 2)).
+        ∀ x, x = 0 ⊢ □ (P → False ∨ □ (Q ∧ ▷ R) -∗ P ∗ ▷ (R ∗ Q ∧ x = pred 2)).
 
 You can write
 
@@ -222,14 +222,14 @@ which results in:
         "HQ" : Q
         "HR" : R
         --------------------------------------□
-        R ★ Q ∧ x = 1
+        R ∗ Q ∧ x = 1
 
 
 Specialization patterns
 =======================
 
 Since we are reasoning in a spatial logic, when eliminating a lemma or
-hypothesis of type ``P_0 -★ ... -★ P_n -★ R``, one has to specify how the
+hypothesis of type ``P_0 -∗ ... -∗ P_n -∗ R``, one has to specify how the
 hypotheses are split between the premises. The proof mode supports the following
 _specification patterns_ to express splitting of hypotheses:
 
@@ -239,22 +239,22 @@ _specification patterns_ to express splitting of hypotheses:
   all persistent hypotheses. The spatial hypotheses among `H1 ... Hn` will be
   consumed. Hypotheses may be prefixed with a `$`, which results in them being
   framed in the generated goal.
-- `[-H1 ... Hn]`  : negated form of the above pattern.
+- `[-H1 ... Hn]` : negated form of the above pattern.
 - `>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
   is a modality, in which case the modality will be kept in the generated goal
   for the premise will be wrapped into the modality.
 - `>[-H1 ... Hn]`  : negated form of the above pattern.
 - `>` : shorthand for `>[-]` (typically used for the last premise of an applied
   lemma).
-- `[#]` : This pattern can be used when eliminating `P -★ Q` with `P`
+- `[#]` : This pattern can be used when eliminating `P -∗ Q` with `P`
   persistent. Using this pattern, all hypotheses are available in the goal for
   `P`, as well the remaining goal.
-- `[%]` : This pattern can be used when eliminating `P -★ Q` when `P` is pure.
+- `[%]` : This pattern can be used when eliminating `P -∗ Q` when `P` is pure.
   It will generate a Coq goal for `P` and does not consume any hypotheses.
 
 For example, given:
 
-        H : □ P -★ P 2 -★ x = 0 -★ Q1 ∗ Q2
+        H : □ P -∗ P 2 -∗ x = 0 -∗ Q1 ∗ Q2
 
 You can write:
 
