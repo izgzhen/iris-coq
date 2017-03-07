@@ -41,14 +41,13 @@ Fixpoint parse_go (ts : list token) (k : list spec_pat) : option (list spec_pat)
      parse_go ts (SAutoFrame GPersistent :: k)
   | TBracketL :: TFrame :: TBracketR :: ts =>
      parse_go ts (SAutoFrame GSpatial :: k)
-  | TModal :: TBracketL :: TFrame :: TBracketR :: ts =>
+  | TBracketL :: TModal :: TFrame :: TBracketR :: ts =>
      parse_go ts (SAutoFrame GModal :: k)
   | TBracketL :: TPure :: TBracketR :: ts => parse_go ts (SPureGoal false :: k)
   | TBracketL :: TPure :: TDone :: TBracketR :: ts => parse_go ts (SPureGoal true :: k)
   | TBracketL :: TAlways :: ts => parse_goal ts GPersistent false [] [] k
+  | TBracketL :: TModal :: ts => parse_goal ts GModal false [] [] k
   | TBracketL :: ts => parse_goal ts GSpatial false [] [] k
-  | TModal :: TBracketL :: ts => parse_goal ts GModal false [] [] k
-  | TModal :: ts => parse_go ts (SGoal (SpecGoal GModal true [] [] false) :: k)
   | TForall :: ts => parse_go ts (SForall :: k)
   | _ => None
   end

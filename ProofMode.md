@@ -242,12 +242,10 @@ _specification patterns_ to express splitting of hypotheses:
   consumed. Hypotheses may be prefixed with a `$`, which results in them being
   framed in the generated goal for the premise.
 - `[-H1 ... Hn]` : negated form of the above pattern.
-- `>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
+- `[> H1 ... Hn]` : same as the above pattern, but can only be used if the goal
   is a modality, in which case the modality will be kept in the generated goal
   for the premise will be wrapped into the modality.
-- `>[-H1 ... Hn]`  : negated form of the above pattern.
-- `>` : shorthand for `>[-]` (typically used for the last premise of an applied
-  lemma).
+- `[> -H1 ... Hn]`  : negated form of the above pattern.
 - `[#]` : This pattern can be used when eliminating `P -∗ Q` with `P` being
   persistent. Using this pattern, all hypotheses are available in the goal for
   `P`, as well the remaining goal. The pattern can optionally contain 

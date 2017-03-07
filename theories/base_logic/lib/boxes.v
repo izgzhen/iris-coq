@@ -225,7 +225,7 @@ Lemma box_empty E f P :
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
   iAssert ([∗ map] γ↦b ∈ f, ▷ Φ γ ∗ box_own_auth γ (◯ Excl' false) ∗
-    box_own_prop γ (Φ γ) ∗ inv N (slice_inv γ (Φ γ)))%I with ">[Hf]" as "[HΦ ?]".
+    box_own_prop γ (Φ γ) ∗ inv N (slice_inv γ (Φ γ)))%I with "[> Hf]" as "[HΦ ?]".
   { iApply (fupd_big_sepM _ _ f); iApply (big_sepM_impl _ _ f); iFrame "Hf".
     iAlways; iIntros (γ b ?) "(Hγ' & #HγΦ & #Hinv)".
     assert (true = b) as <- by eauto.

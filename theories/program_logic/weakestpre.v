@@ -129,7 +129,7 @@ Lemma wp_strong_mono E1 E2 e Φ Ψ :
 Proof.
   iIntros (?) "[HΦ H]". iLöb as "IH" forall (e). rewrite !wp_unfold /wp_pre.
   destruct (to_val e) as [v|] eqn:?.
-  { iApply ("HΦ" with ">[-]"). by iApply (fupd_mask_mono E1 _). }
+  { iApply ("HΦ" with "[> -]"). by iApply (fupd_mask_mono E1 _). }
   iIntros (σ1) "Hσ". iMod (fupd_intro_mask' E2 E1) as "Hclose"; first done.
   iMod ("H" with "[$]") as "[$ H]".
   iModIntro. iNext. iIntros (e2 σ2 efs Hstep).

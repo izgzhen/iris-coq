@@ -93,7 +93,7 @@ Lemma newbarrier_spec (P : iProp Σ) :
 Proof.
   iIntros (Φ) "HΦ".
   rewrite -wp_fupd /newbarrier /=. wp_seq. wp_alloc l as "Hl".
-  iApply ("HΦ" with ">[-]").
+  iApply ("HΦ" with "[> -]").
   iMod (saved_prop_alloc (F:=idCF) P) as (γ) "#?".
   iMod (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
     as (γ') "[#? Hγ']"; eauto.
@@ -102,7 +102,7 @@ Proof.
   iAssert (barrier_ctx γ' l P)%I as "#?".
   { done. }
   iAssert (sts_ownS γ' (i_states γ) {[Change γ]}
-    ∗ sts_ownS γ' low_states {[Send]})%I with ">[-]" as "[Hr Hs]".
+    ∗ sts_ownS γ' low_states {[Send]})%I with "[> -]" as "[Hr Hs]".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
     - set_solver.
     - iApply (sts_own_weaken with "Hγ'");
@@ -140,7 +140,7 @@ Proof.
   wp_load. destruct p.
   - iMod ("Hclose" $! (State Low I) {[ Change i ]} with "[Hl Hr]") as "Hγ".
     { iSplit; first done. rewrite /barrier_inv /=. by iFrame. }
-    iAssert (sts_ownS γ (i_states i) {[Change i]})%I with ">[Hγ]" as "Hγ".
+    iAssert (sts_ownS γ (i_states i) {[Change i]})%I with "[> Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
     iModIntro. wp_if.
     iApply ("IH" with "Hγ [HQR] [HΦ]"); auto.
@@ -175,7 +175,7 @@ Proof.
     rewrite /barrier_inv /=. iNext. iFrame "Hl".
     by iApply (ress_split with "HQ Hi1 Hi2 HQR"). }
   iAssert (sts_ownS γ (i_states i1) {[Change i1]}
-    ∗ sts_ownS γ (i_states i2) {[Change i2]})%I with ">[-]" as "[Hγ1 Hγ2]".
+    ∗ sts_ownS γ (i_states i2) {[Change i2]})%I with "[> -]" as "[Hγ1 Hγ2]".
   { iApply sts_ownS_op; eauto using i_states_closed, low_states_closed.
     - abstract set_solver.
     - iApply (sts_own_weaken with "Hγ");

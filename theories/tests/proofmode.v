@@ -96,7 +96,7 @@ Section iris.
     (True -∗ P -∗ inv N Q -∗ True -∗ R) -∗ P -∗ ▷ Q ={E}=∗ R.
   Proof.
     iIntros (?) "H HP HQ".
-    iApply ("H" with "[% //] HP >[HQ] >[//]").
+    iApply ("H" with "[% //] [$] [> HQ] [> //]").
     by iApply inv_alloc.
   Qed.
 End iris.
@@ -124,7 +124,7 @@ Lemma demo_12 (M : ucmraT) (P : Z → uPred M) : (∀ x, P x) -∗ ∃ x, P x.
 Proof. iIntros "HP". iExists (0:nat). iApply ("HP" $! (0:nat)). Qed.
 
 Lemma demo_13 (M : ucmraT) (P : uPred M) : (|==> False) -∗ |==> P.
-Proof. iIntros. iAssert False%I with ">[-]" as "[]". done. Qed.
+Proof. iIntros. iAssert False%I with "[> - //]" as %[]. Qed.
 
 Lemma demo_14 (M : ucmraT) (P : uPred M) : False -∗ P.
 Proof. iIntros "H". done. Qed.
