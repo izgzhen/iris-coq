@@ -32,7 +32,7 @@ Proof.
   iIntros "{$Hac $Ha}".
   iExists (S j + z1), z2.
   iNext.
-  iApply ("H3" $! _ 0 with "H1 []").
+  iApply ("H3" $! _ 0 with "[$]").
   - iSplit. done. iApply "H2". iLeft. iApply "H2". by iRight.
   - done.
 Qed.
@@ -63,14 +63,14 @@ Definition foo {M} (P : uPred M) := (P → P)%I.
 Definition bar {M} : uPred M := (∀ P, foo P)%I.
 
 Lemma demo_4 (M : ucmraT) : True -∗ @bar M.
-Proof. iIntros. iIntros (P) "HP". done. Qed.
+Proof. iIntros. iIntros (P) "HP //". Qed.
 
 Lemma demo_5 (M : ucmraT) (x y : M) (P : uPred M) :
   (∀ z, P → z ≡ y) -∗ (P -∗ (x,x) ≡ (y,x)).
 Proof.
   iIntros "H1 H2".
-  iRewrite (uPred.internal_eq_sym x x with "[#]"); first done.
-  iRewrite -("H1" $! _ with "[-]"); first done.
+  iRewrite (uPred.internal_eq_sym x x with "[# //]").
+  iRewrite -("H1" $! _ with "[- //]").
   done.
 Qed.
 
@@ -80,7 +80,7 @@ Lemma demo_6 (M : ucmraT) (P Q : uPred M) :
 Proof.
   iIntros (a) "*".
   iIntros "#Hfoo **".
-  by iIntros "# _".
+  iIntros "# _ //".
 Qed.
 
 Lemma demo_7 (M : ucmraT) (P Q1 Q2 : uPred M) : P ∗ (Q1 ∧ Q2) -∗ P ∗ Q1.
@@ -96,10 +96,8 @@ Section iris.
     (True -∗ P -∗ inv N Q -∗ True -∗ R) -∗ P -∗ ▷ Q ={E}=∗ R.
   Proof.
     iIntros (?) "H HP HQ".
-    iApply ("H" with "[#] HP >[HQ] >").
-    - done.
-    - by iApply inv_alloc.
-    - done.
+    iApply ("H" with "[% //] HP >[HQ] >[//]").
+    by iApply inv_alloc.
   Qed.
 End iris.
 
@@ -119,7 +117,7 @@ Qed.
 
 Lemma demo_11 (M : ucmraT) (P Q R : uPred M) :
   (P -∗ True -∗ True -∗ Q -∗ R) -∗ P -∗ Q -∗ R.
-Proof. iIntros "H HP HQ". by iApply ("H" with "[HP]"). Qed.
+Proof. iIntros "H HP HQ". by iApply ("H" with "[$]"). Qed.
 
 (* Check coercions *)
 Lemma demo_12 (M : ucmraT) (P : Z → uPred M) : (∀ x, P x) -∗ ∃ x, P x.

@@ -104,7 +104,7 @@ Qed.
 Lemma ownI_open i P : wsat ∗ ownI i P ∗ ownE {[i]} ⊢ wsat ∗ ▷ P ∗ ownD {[i]}.
 Proof.
   rewrite /ownI. iIntros "(Hw & Hi & HiE)". iDestruct "Hw" as (I) "[? HI]".
-  iDestruct (invariant_lookup I i P with "[$Hw $Hi]") as (Q) "[% #HPQ]".
+  iDestruct (invariant_lookup I i P with "[$]") as (Q) "[% #HPQ]".
   iDestruct (big_sepM_delete _ _ i with "HI") as "[[[HQ $]|HiE'] HI]"; eauto.
   - iSplitR "HQ"; last by iNext; iRewrite -"HPQ".
     iExists I. iFrame "Hw". iApply (big_sepM_delete _ _ i); eauto.
@@ -114,9 +114,9 @@ Qed.
 Lemma ownI_close i P : wsat ∗ ownI i P ∗ ▷ P ∗ ownD {[i]} ⊢ wsat ∗ ownE {[i]}.
 Proof.
   rewrite /ownI. iIntros "(Hw & Hi & HP & HiD)". iDestruct "Hw" as (I) "[? HI]".
-  iDestruct (invariant_lookup with "[$Hw $Hi]") as (Q) "[% #HPQ]".
+  iDestruct (invariant_lookup with "[$]") as (Q) "[% #HPQ]".
   iDestruct (big_sepM_delete _ _ i with "HI") as "[[[HQ ?]|$] HI]"; eauto.
-  - iDestruct (ownD_singleton_twice with "[-]") as %[]. by iFrame.
+  - iDestruct (ownD_singleton_twice with "[$]") as %[].
   - iExists I. iFrame "Hw". iApply (big_sepM_delete _ _ i); eauto.
     iFrame "HI". iLeft. iFrame "HiD". by iNext; iRewrite "HPQ".
 Qed.
@@ -127,7 +127,7 @@ Lemma ownI_alloc φ P :
 Proof.
   iIntros (Hfresh) "[Hw HP]". iDestruct "Hw" as (I) "[? HI]".
   iMod (own_empty (gset_disjUR positive) disabled_name) as "HE".
-  iMod (own_updateP with "HE") as "HE".
+  iMod (own_updateP with "[$]") as "HE".
   { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).
     intros E. destruct (Hfresh (E ∪ dom _ I))
       as (i & [? HIi%not_elem_of_dom]%not_elem_of_union & ?); eauto. }
@@ -149,7 +149,7 @@ Lemma ownI_alloc_open φ P :
 Proof.
   iIntros (Hfresh) "Hw". iDestruct "Hw" as (I) "[? HI]".
   iMod (own_empty (gset_disjUR positive) disabled_name) as "HD".
-  iMod (own_updateP with "HD") as "HD".
+  iMod (own_updateP with "[$]") as "HD".
   { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).
     intros E. destruct (Hfresh (E ∪ dom _ I))
       as (i & [? HIi%not_elem_of_dom]%not_elem_of_union & ?); eauto. }

@@ -573,6 +573,24 @@ Proof.
   by rewrite always_if_elim assoc !wand_elim_r.
 Qed.
 
+Lemma tac_unlock P Q : (P ⊢ Q) → P ⊢ locked Q.
+Proof. by unlock. Qed.
+
+Lemma tac_specialize_frame Δ Δ' j q R P1 P2 P1' Q Q' :
+  envs_lookup_delete j Δ = Some (q, R, Δ') →
+  IntoWand R P1 P2 →
+  ElimModal P1' P1 Q Q →
+  (Δ' ⊢ P1' ∗ locked Q') →
+  Q' = (P2 -∗ Q)%I →
+  Δ ⊢ Q.
+Proof.
+  intros [? ->]%envs_lookup_delete_Some ?? HPQ ->.
+  rewrite envs_lookup_sound //. rewrite HPQ -lock.
+  rewrite (into_wand R) assoc -(comm _ P1') -assoc always_if_elim.
+  rewrite -{2}(elim_modal P1' P1 Q Q). apply sep_mono_r, wand_intro_l.
+  by rewrite assoc !wand_elim_r.
+Qed.
+
 Lemma tac_specialize_assert_pure Δ Δ' j q R P1 P2 φ Q :
   envs_lookup j Δ = Some (q, R) →
   IntoWand R P1 P2 → FromPure P1 φ →
@@ -643,12 +661,21 @@ Qed.
 Lemma tac_assert_persistent Δ Δ1 Δ2 Δ' lr js j P Q :
   envs_split lr js Δ = Some (Δ1,Δ2) →
   envs_app false (Esnoc Enil j P) Δ = Some Δ' →
-  (Δ1 ⊢ P) → PersistentP P →
-  (Δ' ⊢ Q) → Δ ⊢ Q.
+  PersistentP P →
+  (Δ1 ⊢ P) → (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
-  intros ?? HP ? <-. rewrite -(idemp uPred_and Δ) {1}envs_split_sound //.
+  intros ??? HP <-. rewrite -(idemp uPred_and Δ) {1}envs_split_sound //.
   rewrite HP sep_elim_l (always_and_sep_l P) envs_app_sound //; simpl.
   by rewrite right_id wand_elim_r.
+Qed.
+
+Lemma tac_assert_pure Δ Δ' j P φ Q :
+  envs_app false (Esnoc Enil j P) Δ = Some Δ' →
+  FromPure P φ →
+  φ → (Δ' ⊢ Q) → Δ ⊢ Q.
+Proof.
+  intros ??? <-. rewrite envs_app_sound //; simpl.
+  by rewrite right_id -(from_pure P) pure_True // -always_impl_wand True_impl.
 Qed.
 
 Lemma tac_pose_proof Δ Δ' j P Q :

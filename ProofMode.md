@@ -203,6 +203,8 @@ appear at the top level:
 - `!#` : introduce an always modality (given that the spatial context is empty).
 - `!>` : introduce a modality.
 - `/=` : perform `simpl`.
+- `//` : perform `try done` on all goals.
+- `//=` : syntactic sugar for `/= //`
 - `*` : introduce all universal quantifiers.
 - `**` : introduce all universal quantifiers, as well as all arrows and wands.
 
@@ -238,7 +240,7 @@ _specification patterns_ to express splitting of hypotheses:
 - `[H1 ... Hn]` : generate a goal with the (spatial) hypotheses `H1 ... Hn` and
   all persistent hypotheses. The spatial hypotheses among `H1 ... Hn` will be
   consumed. Hypotheses may be prefixed with a `$`, which results in them being
-  framed in the generated goal.
+  framed in the generated goal for the premise.
 - `[-H1 ... Hn]` : negated form of the above pattern.
 - `>[H1 ... Hn]` : same as the above pattern, but can only be used if the goal
   is a modality, in which case the modality will be kept in the generated goal
@@ -246,19 +248,29 @@ _specification patterns_ to express splitting of hypotheses:
 - `>[-H1 ... Hn]`  : negated form of the above pattern.
 - `>` : shorthand for `>[-]` (typically used for the last premise of an applied
   lemma).
-- `[#]` : This pattern can be used when eliminating `P -∗ Q` with `P`
+- `[#]` : This pattern can be used when eliminating `P -∗ Q` with `P` being
   persistent. Using this pattern, all hypotheses are available in the goal for
-  `P`, as well the remaining goal.
+  `P`, as well the remaining goal. The pattern can optionally contain 
+  hypotheses prefixed with a `$`, which results in them being framed in the
+  generated goal for the premise.
 - `[%]` : This pattern can be used when eliminating `P -∗ Q` when `P` is pure.
   It will generate a Coq goal for `P` and does not consume any hypotheses.
+- `[$]` :
+- `[# $]` :
+- `>[$]` :
+
+The specialization patterns `[H1 .. H2]`, `[-H1 ... Hn]`, `>[H1 ... Hn]`,
+`>[H1 ... Hn]`, `[#]` and `[%]` can optionally be ended with a `//`. This causes
+the `done` tactic being called to close the goal (after framing).
 
 For example, given:
 
-        H : □ P -∗ P 2 -∗ x = 0 -∗ Q1 ∗ Q2
+        H : □ P -∗ P 2 -∗ R -∗ x = 0 -∗ Q1 ∗ Q2
 
-You can write:
+One can write:
 
-        iDestruct ("H" with "[#] [H1 H2] [%]") as "[H4 H5]".
+        iDestruct ("H" with "[#] [H1 $H2] [$] [% //]") as "[H4 H5]".
+
 
 Proof mode terms
 ================

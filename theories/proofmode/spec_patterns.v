@@ -2,22 +2,31 @@ From stdpp Require Export strings.
 From iris.proofmode Require Import tokens.
 Set Default Proof Using "Type".
 
+Inductive goal_kind := GSpatial | GModal | GPersistent.
+
 Record spec_goal := SpecGoal {
-  spec_goal_modal : bool;
+  spec_goal_kind : goal_kind;
   spec_goal_negate : bool;
   spec_goal_frame : list string;
-  spec_goal_hyps : list string
+  spec_goal_hyps : list string;
+  spec_goal_done : bool
 }.
 
 Inductive spec_pat :=
-  | SGoal : spec_goal → spec_pat
-  | SGoalPersistent : spec_pat
-  | SGoalPure : spec_pat
+  | SForall : spec_pat
   | SName : string → spec_pat
-  | SForall : spec_pat.
+  | SPureGoal : bool → spec_pat
+  | SGoal : spec_goal → spec_pat
+  | SAutoFrame : goal_kind → spec_pat.
 
+Definition goal_kind_modal (k : goal_kind) : bool :=
+  match k with GModal => true | _ => false end.
 Definition spec_pat_modal (p : spec_pat) : bool :=
-  match p with SGoal g => spec_goal_modal g | _ => false end.
+  match p with
+  | SGoal g => goal_kind_modal (spec_goal_kind g)
+  | SAutoFrame k => goal_kind_modal k
+  | _ => false
+  end.
 
 Module spec_pat.
 Inductive state :=
@@ -28,30 +37,34 @@ Fixpoint parse_go (ts : list token) (k : list spec_pat) : option (list spec_pat)
   match ts with
   | [] => Some (reverse k)
   | TName s :: ts => parse_go ts (SName s :: k)
-  | TBracketL :: TAlways :: TBracketR :: ts => parse_go ts (SGoalPersistent :: k)
-  | TBracketL :: TPure :: TBracketR :: ts => parse_go ts (SGoalPure :: k)
-  | TBracketL :: ts => parse_goal ts (SpecGoal false false [] []) k
-  | TModal :: TBracketL :: ts => parse_goal ts (SpecGoal true false [] []) k
-  | TModal :: ts => parse_go ts (SGoal (SpecGoal true true [] []) :: k)
+  | TBracketL :: TAlways :: TFrame :: TBracketR :: ts =>
+     parse_go ts (SAutoFrame GPersistent :: k)
+  | TBracketL :: TFrame :: TBracketR :: ts =>
+     parse_go ts (SAutoFrame GSpatial :: k)
+  | TModal :: TBracketL :: TFrame :: TBracketR :: ts =>
+     parse_go ts (SAutoFrame GModal :: k)
+  | TBracketL :: TPure :: TBracketR :: ts => parse_go ts (SPureGoal false :: k)
+  | TBracketL :: TPure :: TDone :: TBracketR :: ts => parse_go ts (SPureGoal true :: k)
+  | TBracketL :: TAlways :: ts => parse_goal ts GPersistent false [] [] k
+  | TBracketL :: ts => parse_goal ts GSpatial false [] [] k
+  | TModal :: TBracketL :: ts => parse_goal ts GModal false [] [] k
+  | TModal :: ts => parse_go ts (SGoal (SpecGoal GModal true [] [] false) :: k)
   | TForall :: ts => parse_go ts (SForall :: k)
   | _ => None
   end
-with parse_goal (ts : list token) (g : spec_goal)
+with parse_goal (ts : list token)
+    (ki : goal_kind) (neg : bool) (frame hyps : list string)
     (k : list spec_pat) : option (list spec_pat) :=
   match ts with
   | TMinus :: ts =>
-     guard (¬spec_goal_negate g ∧ spec_goal_frame g = [] ∧ spec_goal_hyps g = []);
-     parse_goal ts (SpecGoal (spec_goal_modal g) true
-       (spec_goal_frame g) (spec_goal_hyps g)) k
-  | TName s :: ts =>
-     parse_goal ts (SpecGoal (spec_goal_modal g) (spec_goal_negate g)
-       (spec_goal_frame g) (s :: spec_goal_hyps g)) k
-  | TFrame :: TName s :: ts =>
-     parse_goal ts (SpecGoal (spec_goal_modal g) (spec_goal_negate g)
-       (s :: spec_goal_frame g) (spec_goal_hyps g)) k
+     guard (¬neg ∧ frame = [] ∧ hyps = []);
+     parse_goal ts ki true frame hyps k
+  | TName s :: ts => parse_goal ts ki neg frame (s :: hyps) k
+  | TFrame :: TName s :: ts => parse_goal ts ki neg (s :: frame) hyps k
+  | TDone :: TBracketR :: ts =>
+     parse_go ts (SGoal (SpecGoal ki neg (reverse frame) (reverse hyps) true) :: k)
   | TBracketR :: ts =>
-     parse_go ts (SGoal (SpecGoal (spec_goal_modal g) (spec_goal_negate g)
-       (reverse (spec_goal_frame g)) (reverse (spec_goal_hyps g))) :: k)
+     parse_go ts (SGoal (SpecGoal ki neg (reverse frame) (reverse hyps) false) :: k)
   | _ => None
   end.
 Definition parse (s : string) : option (list spec_pat) :=
