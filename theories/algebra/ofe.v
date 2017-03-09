@@ -246,6 +246,46 @@ Ltac f_contractive :=
 
 Ltac solve_contractive := solve_proper_core ltac:(fun _ => first [f_contractive | f_equiv]).
 
+(** Limit preserving predicates *)
+Class LimitPreserving `{!Cofe A} (P : A → Prop) : Prop :=
+  limit_preserving (c : chain A) : (∀ n, P (c n)) → P (compl c).
+Hint Mode LimitPreserving + + ! : typeclass_instances.
+
+Section limit_preserving.
+  Context `{Cofe A}.
+  (* These are not instances as they will never fire automatically...
+     but they can still be helpful in proving things to be limit preserving. *)
+
+  Lemma limit_preserving_ext (P Q : A → Prop) :
+    (∀ x, P x ↔ Q x) → LimitPreserving P → LimitPreserving Q.
+  Proof. intros HP Hlimit c ?. apply HP, Hlimit=> n; by apply HP. Qed.
+
+  Global Instance limit_preserving_const (P : Prop) : LimitPreserving (λ _, P).
+  Proof. intros c HP. apply (HP 0). Qed.
+
+  Lemma limit_preserving_timeless (P : A → Prop) :
+    Proper (dist 0 ==> impl) P → LimitPreserving P.
+  Proof. intros PH c Hc. by rewrite (conv_compl 0). Qed.
+
+  Lemma limit_preserving_and (P1 P2 : A → Prop) :
+    LimitPreserving P1 → LimitPreserving P2 →
+    LimitPreserving (λ x, P1 x ∧ P2 x).
+  Proof. intros Hlim1 Hlim2 c Hc. split. apply Hlim1, Hc. apply Hlim2, Hc. Qed.
+
+  Lemma limit_preserving_impl (P1 P2 : A → Prop) :
+    Proper (dist 0 ==> impl) P1 → LimitPreserving P2 →
+    LimitPreserving (λ x, P1 x → P2 x).
+  Proof.
+    intros Hlim1 Hlim2 c Hc HP1. apply Hlim2=> n; apply Hc.
+    eapply Hlim1, HP1. apply dist_le with n; last lia. apply (conv_compl n).
+  Qed.
+
+  Lemma limit_preserving_forall {B} (P : B → A → Prop) :
+    (∀ y, LimitPreserving (P y)) →
+    LimitPreserving (λ x, ∀ y, P y x).
+  Proof. intros Hlim c Hc y. by apply Hlim. Qed.
+End limit_preserving.
+
 (** Fixpoint *)
 Program Definition fixpoint_chain {A : ofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : chain A := {| chain_car i := Nat.iter (S i) f inhabitant |}.
@@ -294,21 +334,22 @@ Section fixpoint.
   Lemma fixpoint_ind (P : A → Prop) :
     Proper ((≡) ==> impl) P →
     (∃ x, P x) → (∀ x, P x → P (f x)) →
-    (∀ (c : chain A), (∀ n, P (c n)) → P (compl c)) →
+    LimitPreserving P →
     P (fixpoint f).
   Proof.
     intros ? [x Hx] Hincr Hlim. set (chcar i := Nat.iter (S i) f x).
     assert (Hcauch : ∀ n i : nat, n ≤ i → chcar i ≡{n}≡ chcar n).
-    { intros n. induction n as [|n IH]=> -[|i] //= ?; try omega.
-      - apply (contractive_0 f).
-      - apply (contractive_S f), IH; auto with omega. }
+    { intros n. rewrite /chcar. induction n as [|n IH]=> -[|i] //=;
+        eauto using contractive_0, contractive_S with omega. }
     set (fp2 := compl {| chain_cauchy := Hcauch |}).
-    rewrite -(fixpoint_unique fp2); first by apply Hlim; induction n; apply Hincr.
-    apply equiv_dist=>n.
-    rewrite /fp2 (conv_compl n) /= /chcar.
-    induction n as [|n IH]; simpl; eauto using contractive_0, contractive_S.
+    assert (f fp2 ≡ fp2).
+    { apply equiv_dist=>n. rewrite /fp2 (conv_compl n) /= /chcar.
+      induction n as [|n IH]; simpl; eauto using contractive_0, contractive_S. }
+    rewrite -(fixpoint_unique fp2) //.
+    apply Hlim=> n /=. by apply nat_iter_ind.
   Qed.
 End fixpoint.
+
 
 (** Fixpoint of f when f^k is contractive. **)
 Definition fixpointK `{Cofe A, Inhabited A} k (f : A → A)
@@ -374,11 +415,11 @@ Section fixpointK.
   Lemma fixpointK_ind (P : A → Prop) :
     Proper ((≡) ==> impl) P →
     (∃ x, P x) → (∀ x, P x → P (f x)) →
-    (∀ (c : chain A), (∀ n, P (c n)) → P (compl c)) →
+    LimitPreserving P →
     P (fixpointK k f).
   Proof.
-    intros ? Hst Hincr Hlim. rewrite /fixpointK. eapply fixpoint_ind; [done..| |done].
-    clear- Hincr. intros. induction k; first done. simpl. auto.
+    intros. rewrite /fixpointK. apply fixpoint_ind; eauto.
+    intros; apply nat_iter_ind; auto.
   Qed.
 End fixpointK.
 
@@ -1104,33 +1145,6 @@ Proof.
   destruct n as [|n]; simpl in *; first done. apply cFunctor_ne, Hfg.
 Qed.
 
-(** Limit preserving predicates *)
-Class LimitPreserving `{!Cofe A} (P : A → Prop) : Prop :=
-  limit_preserving (c : chain A) : (∀ n, P (c n)) → P (compl c).
-Hint Mode LimitPreserving + + ! : typeclass_instances.
-
-Section limit_preserving.
-  Context {A : ofeT} `{!Cofe A}.
-  (* These are not instances as they will never fire automatically...
-     but they can still be helpful in proving things to be limit preserving. *)
-
-  Global Instance limit_preserving_const (P : Prop) : LimitPreserving (λ _, P).
-  Proof. intros c HP. apply (HP 0). Qed.
-
-  Lemma limit_preserving_timeless (P : A → Prop) :
-    Proper (dist 0 ==> impl) P → LimitPreserving P.
-  Proof. intros PH c Hc. by rewrite (conv_compl 0). Qed.
-
-  Lemma limit_preserving_and (P1 P2 : A → Prop) :
-    LimitPreserving P1 → LimitPreserving P2 →
-    LimitPreserving (λ x, P1 x ∧ P2 x).
-  Proof.
-    intros Hlim1 Hlim2 c Hc. split.
-    - apply Hlim1, Hc.
-    - apply Hlim2, Hc.
-  Qed.
-End limit_preserving.
-
 (** Constructing isomorphic OFEs *)
 Lemma iso_ofe_mixin {A : ofeT} `{Equiv B, Dist B} (g : B → A)
   (g_equiv : ∀ y1 y2, y1 ≡ y2 ↔ g y1 ≡ g y2)
@@ -1161,6 +1175,14 @@ Section iso_cofe_subtype.
   Qed.
 End iso_cofe_subtype.
 
+Lemma iso_cofe_subtype' {A B : ofeT} `{Cofe A}
+  (P : A → Prop) (f : ∀ x, P x → B) (g : B → A)
+  (Pg : ∀ y, P (g y))
+  (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2)
+  (gf : ∀ x Hx, g (f x Hx) ≡ x)
+  (Hlimit : LimitPreserving P) : Cofe B.
+Proof. apply: (iso_cofe_subtype P f g)=> // c. apply Hlimit=> ?; apply Pg. Qed.
+
 Definition iso_cofe {A B : ofeT} `{Cofe A} (f : A → B) (g : B → A)
   (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2)
   (gf : ∀ x, g (f x) ≡ x) : Cofe B.
@@ -1190,11 +1212,7 @@ Section sigma.
   Canonical Structure sigC : ofeT := OfeT (sig P) sig_ofe_mixin.
 
   Global Instance sig_cofe `{Cofe A, !LimitPreserving P} : Cofe sigC.
-  Proof.
-    apply: (iso_cofe_subtype P (exist P) proj1_sig).
-    - done.
-    - intros c. apply limit_preserving=> n. apply proj2_sig.
-   Qed.
+  Proof. apply (iso_cofe_subtype' P (exist P) proj1_sig)=> //. by intros []. Qed.
 
   Global Instance sig_timeless (x : sig P) :  Timeless (`x) → Timeless x.
   Proof. intros ? y. rewrite sig_dist_alt sig_equiv_alt. apply (timeless _). Qed.

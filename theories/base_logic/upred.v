@@ -149,13 +149,13 @@ Section entails.
 Context {M : ucmraT}.
 Implicit Types P Q : uPred M.
 
-Global Instance: PreOrder (@uPred_entails M).
+Global Instance entails_po : PreOrder (@uPred_entails M).
 Proof.
   split.
   - by intros P; split=> x i.
   - by intros P Q Q' HP HQ; split=> x i ??; apply HQ, HP.
 Qed.
-Global Instance: AntiSymm (⊣⊢) (@uPred_entails M).
+Global Instance entails_anti_sym : AntiSymm (⊣⊢) (@uPred_entails M).
 Proof. intros P Q HPQ HQP; split=> x n; by split; [apply HPQ|apply HQP]. Qed.
 
 Lemma equiv_spec P Q : (P ⊣⊢ Q) ↔ (P ⊢ Q) ∧ (Q ⊢ P).
@@ -179,28 +179,15 @@ Proof. by intros ->. Qed.
 Lemma entails_equiv_r (P Q R : uPred M) : (P ⊢ Q) → (Q ⊣⊢ R) → (P ⊢ R).
 Proof. by intros ? <-. Qed.
 
-Lemma entails_lim (P Q : chain (uPredC M)) :
-  (∀ n, P n ⊢ Q n) → compl P ⊢ compl Q.
+Lemma entails_lim (cP cQ : chain (uPredC M)) :
+  (∀ n, cP n ⊢ cQ n) → compl cP ⊢ compl cQ.
 Proof.
-  intros Hlim. split. intros n m Hval HP.
+  intros Hlim; split=> n m ? HP.
   eapply uPred_holds_ne, Hlim, HP; eauto using conv_compl.
 Qed.
 
-Lemma entails_lim' {T : ofeT} `{Cofe T} (P Q : T → uPredC M)
-      `{!NonExpansive P} `{!NonExpansive Q} (c : chain T) :
-  (∀ n, P (c n) ⊢ Q (c n)) → P (compl c) ⊢ Q (compl c).
-Proof.
-  set (cP := chain_map P c). set (cQ := chain_map Q c).
-  rewrite -!compl_chain_map=>HPQ. exact: entails_lim.
-Qed.
-
+Lemma limit_preserving_entails `{Cofe A} (Φ Ψ : A → uPred M) :
+  NonExpansive Φ → NonExpansive Ψ → LimitPreserving (λ x, Φ x ⊢ Ψ x).
+Proof. intros HΦ HΨ c Hc. rewrite -!compl_chain_map /=. by apply entails_lim. Qed.
 End entails.
-
-Ltac entails_lim c :=
-  pattern (compl c);
-  match goal with
-  | |- (λ o, ?P ⊢ ?Q) ?x => change (((λ o, P) x) ⊢ (λ o, Q) x)
-  end;
-  apply entails_lim'.
-
 End uPred.

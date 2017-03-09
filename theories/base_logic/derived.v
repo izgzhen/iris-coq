@@ -816,6 +816,9 @@ Proof. destruct mx; apply _. Qed.
 (* Derived lemmas for persistence *)
 Global Instance PersistentP_proper : Proper ((≡) ==> iff) (@PersistentP M).
 Proof. solve_proper. Qed.
+Global Instance limit_preserving_PersistentP {A:ofeT} `{Cofe A} (Φ : A → uPred M) :
+  NonExpansive Φ → LimitPreserving (λ x, PersistentP (Φ x)).
+Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 
 Lemma always_always P `{!PersistentP P} : □ P ⊣⊢ P.
 Proof. apply (anti_symm (⊢)); auto using always_elim. Qed.
