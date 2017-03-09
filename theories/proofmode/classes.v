@@ -21,9 +21,41 @@ Class IntoPersistentP {M} (P Q : uPred M) := into_persistentP : P ⊢ □ Q.
 Arguments into_persistentP {_} _ _ {_}.
 Hint Mode IntoPersistentP + ! - : typeclass_instances.
 
+(* The class [IntoLaterN] has only two instances:
+
+- The default instance [IntoLaterN n P P], i.e. [▷^n P -∗ P]
+- The instance [IntoLaterN' n P Q → IntoLaterN n P Q], where [IntoLaterN']
+  is identical to [IntoLaterN], but computationally is supposed to make
+  progress, i.e. its instances should actually strip a later.
+
+The point of using the auxilary class [IntoLaterN'] is to ensure that the
+default instance is not applied deeply in the term, which may cause in too many
+definitions being unfolded (see issue #55).
+
+For binary connectives we have the following instances:
+
+<<
+ProgIntoLaterN n P P'       IntoLaterN n Q Q'
+---------------------------------------------
+ProgIntoLaterN n (P /\ Q) (P' /\ Q')
+
+
+   ProgIntoLaterN n Q Q'
+--------------------------------
+IntoLaterN n (P /\ Q) (P /\ Q')
+>>
+*)
 Class IntoLaterN {M} (n : nat) (P Q : uPred M) := into_laterN : P ⊢ ▷^n Q.
 Arguments into_laterN {_} _ _ _ {_}.
-Hint Mode IntoLaterN + - ! - : typeclass_instances.
+Hint Mode IntoLaterN + - - - : typeclass_instances.
+
+Class IntoLaterN' {M} (n : nat) (P Q : uPred M) :=
+  into_laterN' :> IntoLaterN n P Q.
+Arguments into_laterN' {_} _ _ _ {_}.
+Hint Mode IntoLaterN' + - ! - : typeclass_instances.
+
+Instance into_laterN_default {M} n (P : uPred M) : IntoLaterN n P P | 1000.
+Proof. apply laterN_intro. Qed.
 
 Class FromLaterN {M} (n : nat) (P Q : uPred M) := from_laterN : ▷^n Q ⊢ P.
 Arguments from_laterN {_} _ _ _ {_}.
@@ -36,6 +68,8 @@ Class WandWeaken' {M} (P Q P' Q' : uPred M) :=
   wand_weaken' :> WandWeaken P Q P' Q'.
 Hint Mode WandWeaken' + - - ! - : typeclass_instances.
 Hint Mode WandWeaken' + - - - ! : typeclass_instances.
+Instance wand_weaken_exact {M} (P Q : uPred M) : WandWeaken P Q P Q | 1000.
+Proof. done. Qed.
 
 Class IntoWand {M} (R P Q : uPred M) := into_wand : R ⊢ P -∗ Q.
 Arguments into_wand {_} _ _ _ {_}.
