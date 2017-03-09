@@ -1147,7 +1147,6 @@ Qed.
 
 Section iso_cofe_subtype.
   Context {A B : ofeT} `{Cofe A} (P : A → Prop) (f : ∀ x, P x → B) (g : B → A).
-  Context (Pg : ∀ y, P (g y)).
   Context (g_dist : ∀ n y1 y2, y1 ≡{n}≡ y2 ↔ g y1 ≡{n}≡ g y2).
   Let Hgne : NonExpansive g.
   Proof. intros n y1 y2. apply g_dist. Qed.
