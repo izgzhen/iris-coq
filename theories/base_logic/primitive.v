@@ -211,8 +211,11 @@ Arguments uPred_holds {_} !_ _ _ /.
 Hint Immediate uPred_in_entails.
 
 (** Non-expansiveness and setoid morphisms *)
-Global Instance pure_proper : Proper (iff ==> (⊣⊢)) (@uPred_pure M).
+Global Instance pure_proper : Proper (iff ==> (⊣⊢)) (@uPred_pure M) | 0.
 Proof. intros φ1 φ2 Hφ. by unseal; split=> -[|n] ?; try apply Hφ. Qed.
+Global Instance pure_ne n : Proper (iff ==> dist n) (@uPred_pure M) | 1.
+Proof. by intros φ1 φ2 ->. Qed.
+
 Global Instance and_ne : NonExpansive2 (@uPred_and M).
 Proof.
   intros n P P' HP Q Q' HQ; unseal; split=> x n' ??.
