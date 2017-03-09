@@ -219,7 +219,9 @@ Section ectx_lifting.
     (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
     ▷ (WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
     ⊢ WP e1 @ E {{ Φ }}.
-  Proof using Hinh. eauto using wp_lift_pure_det_step. Qed.
+  Proof using Hinh.
+    intros. rewrite -[(WP e1 @ _ {{ _ }})%I]wp_lift_pure_det_step; eauto.
+  Qed.
 
   Lemma ownP_lift_pure_det_head_step_no_fork {E Φ} e1 e2 :
     to_val e1 = None →

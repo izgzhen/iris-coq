@@ -48,5 +48,8 @@ Proof.
   eapply Qclt_not_eq; first done. by apply (inj (Qcplus q)).
 Qed.
 
-Lemma frac_op': ∀ (p q: Qp), (p ⋅ q) = (p + q)%Qp.
+Lemma frac_op' (q p : Qp) : (p ⋅ q) = (p + q)%Qp.
+Proof. done. Qed.
+
+Lemma frac_valid' (p : Qp) : ✓ p ↔ (p ≤ 1%Qp)%Qc.
 Proof. done. Qed.

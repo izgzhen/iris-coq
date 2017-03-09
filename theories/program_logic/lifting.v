@@ -21,21 +21,24 @@ Lemma wp_lift_step E Φ e1 :
 Proof. by rewrite wp_unfold /wp_pre=> ->. Qed.
 
 (** Derived lifting lemmas. *)
-Lemma wp_lift_pure_step `{Inhabited (state Λ)} E Φ e1 :
+Lemma wp_lift_pure_step `{Inhabited (state Λ)} E E' Φ e1 :
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2 σ2 efs, prim_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
-  (▷ ∀ e2 efs σ, ⌜prim_step e1 σ e2 σ efs⌝ →
+  (|={E,E'}▷=> ∀ e2 efs σ, ⌜prim_step e1 σ e2 σ efs⌝ →
     WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
   iIntros (Hsafe Hstep) "H". iApply wp_lift_step.
   { eapply reducible_not_val, (Hsafe inhabitant). }
-  iIntros (σ1) "Hσ". iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
-  iModIntro. iSplit; [done|]; iNext; iIntros (e2 σ2 efs ?).
+  iIntros (σ1) "Hσ". iMod "H" as "H".
+  iMod fupd_intro_mask' as "Hclose"; last iModIntro; first set_solver.
+  iSplit; [done|]; iNext; iIntros (e2 σ2 efs ?).
   destruct (Hstep σ1 e2 σ2 efs); auto; subst.
-  iMod "Hclose"; iModIntro. iFrame "Hσ". iApply "H"; auto.
+  iMod "Hclose" as "_". iFrame "Hσ". iMod "H" as "H". iApply "H"; auto.
 Qed.
 
+(* Atomic steps don't need any mask-changing business here, one can
+   use the generic lemmas here. *)
 Lemma wp_lift_atomic_step {E Φ} e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E}=∗
@@ -54,13 +57,16 @@ Proof.
   by iApply wp_value.
 Qed.
 
-Lemma wp_lift_pure_det_step `{Inhabited (state Λ)} {E Φ} e1 e2 efs :
+Lemma wp_lift_pure_det_step `{Inhabited (state Λ)} {E E' Φ} e1 e2 efs :
   (∀ σ1, reducible e1 σ1) →
   (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
-  ▷ (WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
+  (|={E,E'}▷=> WP e2 @ E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef {{ _, True }})
   ⊢ WP e1 @ E {{ Φ }}.
 Proof.
-  iIntros (? Hpuredet) "?". iApply (wp_lift_pure_step E); try done.
-  by intros; eapply Hpuredet. iNext. by iIntros (e' efs' σ (_&->&->)%Hpuredet).
+  iIntros (? Hpuredet) "H". iApply (wp_lift_pure_step E); try done.
+  { by intros; eapply Hpuredet. }
+  (* TODO: Can we make this nicer? iNext for fupd, for example, could help. *)
+  iMod "H" as "H". iModIntro. iNext. iMod "H" as "H". iModIntro.
+  by iIntros (e' efs' σ (_&->&->)%Hpuredet).
 Qed.
 End lifting.
