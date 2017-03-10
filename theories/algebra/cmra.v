@@ -1257,6 +1257,7 @@ Section option.
   Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 
   Definition Some_valid a : ✓ Some a ↔ ✓ a := reflexivity _.
+  Definition Some_validN a n : ✓{n} Some a ↔ ✓{n} a := reflexivity _.
   Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
   Lemma Some_core `{CMRATotal A} a : Some (core a) = core (Some a).
   Proof. rewrite /core /=. by destruct (cmra_total a) as [? ->]. Qed.

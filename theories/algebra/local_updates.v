@@ -145,14 +145,35 @@ Lemma prod_local_update_2 {A B : cmraT} (x1 y1 : A) (x2 y2 x2' y2' : B) :
 Proof. intros. by apply prod_local_update. Qed.
 
 (** * Option *)
+(* TODO: Investigate whether we can use these in proving the very similar local
+   updates on finmaps. *)
 Lemma option_local_update {A : cmraT} (x y x' y' : A) :
   (x, y) ~l~> (x',y') →
   (Some x, Some y) ~l~> (Some x', Some y').
 Proof.
-  intros Hup n mmz Hxv Hx; simpl in *.
-  destruct (Hup n (mjoin mmz)); first done.
-  { destruct mmz as [[?|]|]; inversion_clear Hx; auto. }
-  split; first done. destruct mmz as [[?|]|]; constructor; auto.
+  intros Hup. apply local_update_unital=>n mz Hxv Hx; simpl in *.
+  destruct (Hup n mz); first done.
+  { destruct mz as [?|]; inversion_clear Hx; auto. }
+  split; first done. destruct mz as [?|]; constructor; auto.
+Qed.
+
+Lemma alloc_option_local_update {A : cmraT} (x : A) y :
+  ✓ x →
+  (None, y) ~l~> (Some x, Some x).
+Proof.
+  move=>Hx. apply local_update_unital=> n z _ /= Heq. split.
+  { rewrite Some_validN. apply cmra_valid_validN. done. }
+  destruct z as [z|]; last done. destruct y; inversion Heq.
+Qed.
+
+Lemma delete_option_local_update {A : cmraT} (x y : A) :
+  Exclusive y →
+  (Some x, Some y) ~l~> (None, None).
+Proof.
+  move=>Hex. apply local_update_unital=>n z /= Hy Heq. split; first done.
+  destruct z as [z|]; last done. exfalso.
+  move: Hy. rewrite Heq /= -Some_op=>Hy. eapply Hex.
+  eapply cmra_validN_le. eapply Hy. omega.
 Qed.
 
 (** * Natural numbers  *)
