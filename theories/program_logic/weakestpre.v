@@ -162,7 +162,7 @@ Proof.
     iDestruct "H" as %(? & ? & ? & ?). by edestruct (Hatomic _ _ _ _ Hstep).
 Qed.
 
-Lemma wp_fupd_step E1 E2 e P Φ :
+Lemma wp_step_fupd E1 E2 e P Φ :
   to_val e = None → E2 ⊆ E1 →
   (|={E1,E2}▷=> P) -∗ WP e @ E2 {{ v, P ={E1}=∗ Φ v }} -∗ WP e @ E1 {{ Φ }}.
 Proof.
@@ -218,7 +218,7 @@ Lemma wp_frame_step_l E1 E2 e Φ R :
   to_val e = None → E2 ⊆ E1 →
   (|={E1,E2}▷=> R) ∗ WP e @ E2 {{ Φ }} ⊢ WP e @ E1 {{ v, R ∗ Φ v }}.
 Proof.
-  iIntros (??) "[Hu Hwp]". iApply (wp_fupd_step with "Hu"); try done.
+  iIntros (??) "[Hu Hwp]". iApply (wp_step_fupd with "Hu"); try done.
   iApply (wp_mono with "Hwp"). by iIntros (?) "$$".
 Qed.
 Lemma wp_frame_step_r E1 E2 e Φ R :
