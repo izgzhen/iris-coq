@@ -146,3 +146,10 @@ Proof. eauto with iFrame. Qed.
 Lemma demo_17 (M : ucmraT) (P Q R : uPred M) `{!PersistentP R} :
   P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.
 Proof. iIntros "HP HQ #HR". iCombine "HR HQ HP HR" as "H". auto. Qed.
+
+Lemma test_iNext_evar (M : ucmraT) (P : uPred M) :
+  P -∗ True.
+Proof.
+  iIntros "HP". iAssert (▷ _ -∗ ▷ P)%I as "?"; last done.
+  iIntros "?". iNext. iAssumption.
+Qed.
