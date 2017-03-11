@@ -346,7 +346,7 @@ Section fixpoint.
     { apply equiv_dist=>n. rewrite /fp2 (conv_compl n) /= /chcar.
       induction n as [|n IH]; simpl; eauto using contractive_0, contractive_S. }
     rewrite -(fixpoint_unique fp2) //.
-    apply Hlim=> n /=. by apply nat_iter_ind.
+    apply Hlim=> n /=. by apply Nat_iter_ind.
   Qed.
 End fixpoint.
 
@@ -419,7 +419,7 @@ Section fixpointK.
     P (fixpointK k f).
   Proof.
     intros. rewrite /fixpointK. apply fixpoint_ind; eauto.
-    intros; apply nat_iter_ind; auto.
+    intros; apply Nat_iter_ind; auto.
   Qed.
 End fixpointK.
 

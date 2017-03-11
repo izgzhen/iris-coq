@@ -965,11 +965,7 @@ Section nat.
   Instance nat_op : Op nat := plus.
   Definition nat_op_plus x y : x ⋅ y = x + y := eq_refl.
   Lemma nat_included (x y : nat) : x ≼ y ↔ x ≤ y.
-  Proof.
-    split.
-    - intros [z ->]; unfold op, nat_op; lia.
-    - exists (y - x). by apply le_plus_minus.
-  Qed.
+  Proof. by rewrite nat_le_sum. Qed.
   Lemma nat_ra_mixin : RAMixin nat.
   Proof.
     apply ra_total_mixin; try by eauto.
@@ -1037,11 +1033,7 @@ Section positive.
   Instance pos_op : Op positive := Pos.add.
   Definition pos_op_plus x y : x ⋅ y = (x + y)%positive := eq_refl.
   Lemma pos_included (x y : positive) : x ≼ y ↔ (x < y)%positive.
-  Proof.
-    split.
-    - intros [z ->]; unfold op, pos_op. lia.
-    - exists (y - x)%positive. symmetry. apply Pplus_minus. lia.
-  Qed.
+  Proof. by rewrite Plt_sum. Qed.
   Lemma pos_ra_mixin : RAMixin positive.
   Proof.
     split; try by eauto.
