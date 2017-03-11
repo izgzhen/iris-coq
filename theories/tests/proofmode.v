@@ -153,3 +153,11 @@ Proof.
   iIntros "HP". iAssert (▷ _ -∗ ▷ P)%I as "?"; last done.
   iIntros "?". iNext. iAssumption.
 Qed.
+
+Lemma test_iNext_sep (M : ucmraT) (P Q : uPred M)
+    (R1 := (P ∗ Q)%I) (R2 := (▷ P ∗ ▷ Q)%I) :
+  (▷ P ∗ ▷ Q) ∗ R1 ∗ R2 -∗ ▷ (P ∗ Q) ∗ ▷ R1 ∗ R2.
+Proof.
+  iIntros "H". iNext.
+  rewrite {1 2}(lock R1). (* check whether R1 has not been unfolded *) done.
+Qed.

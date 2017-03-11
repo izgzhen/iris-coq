@@ -135,12 +135,6 @@ Global Instance into_persistentP_persistent P :
 Proof. done. Qed.
 
 (* IntoLater *)
-Global Instance into_laterN_default n P : IntoLaterN n P P | 1000.
-Proof. apply laterN_intro. Qed.
-Global Instance into_laterN_progress P Q :
-  IntoLaterN' n P Q → IntoLaterN n P Q.
-Proof. done. Qed.
-
 Global Instance into_laterN_later n P Q :
   IntoLaterN n P Q → IntoLaterN' (S n) (▷ P) Q.
 Proof. by rewrite /IntoLaterN' /IntoLaterN =>->. Qed.
@@ -152,32 +146,32 @@ Proof. rewrite /IntoLaterN' /IntoLaterN=>->. by rewrite laterN_plus. Qed.
 
 Global Instance into_laterN_and_l n P1 P2 Q1 Q2 :
   IntoLaterN' n P1 Q1 → IntoLaterN n P2 Q2 →
-  IntoLaterN n (P1 ∧ P2) (Q1 ∧ Q2).
+  IntoLaterN' n (P1 ∧ P2) (Q1 ∧ Q2) | 10.
 Proof. rewrite /IntoLaterN' /IntoLaterN=> -> ->. by rewrite laterN_and. Qed.
 Global Instance into_laterN_and_r n P P2 Q2 :
-  IntoLaterN' n P2 Q2 → IntoLaterN' n (P ∧ P2) (P ∧ Q2).
+  IntoLaterN' n P2 Q2 → IntoLaterN' n (P ∧ P2) (P ∧ Q2) | 11.
 Proof.
   rewrite /IntoLaterN' /IntoLaterN=> ->. by rewrite laterN_and -(laterN_intro _ P).
-  Qed.
+Qed.
 
 Global Instance into_laterN_or_l n P1 P2 Q1 Q2 :
   IntoLaterN' n P1 Q1 → IntoLaterN n P2 Q2 →
-  IntoLaterN n (P1 ∨ P2) (Q1 ∨ Q2).
+  IntoLaterN' n (P1 ∨ P2) (Q1 ∨ Q2) | 10.
 Proof. rewrite /IntoLaterN' /IntoLaterN=> -> ->. by rewrite laterN_or. Qed.
 Global Instance into_laterN_or_r n P P2 Q2 :
   IntoLaterN' n P2 Q2 →
-  IntoLaterN' n (P ∨ P2) (P ∨ Q2).
+  IntoLaterN' n (P ∨ P2) (P ∨ Q2) | 11.
 Proof.
   rewrite /IntoLaterN' /IntoLaterN=> ->. by rewrite laterN_or -(laterN_intro _ P).
 Qed.
 
 Global Instance into_laterN_sep_l n P1 P2 Q1 Q2 :
   IntoLaterN' n P1 Q1 → IntoLaterN n P2 Q2 →
-  IntoLaterN n (P1 ∗ P2) (Q1 ∗ Q2).
-Proof. intros ??; red. by rewrite laterN_sep; apply sep_mono. Qed.
+  IntoLaterN' n (P1 ∗ P2) (Q1 ∗ Q2) | 10.
+Proof. rewrite /IntoLaterN' /IntoLaterN=> -> ->. by rewrite laterN_sep. Qed.
 Global Instance into_laterN_sep_r n P P2 Q2 :
   IntoLaterN' n P2 Q2 →
-  IntoLaterN' n (P ∗ P2) (P ∗ Q2).
+  IntoLaterN' n (P ∗ P2) (P ∗ Q2) | 11.
 Proof.
   rewrite /IntoLaterN' /IntoLaterN=> ->. by rewrite laterN_sep -(laterN_intro _ P).
 Qed.
