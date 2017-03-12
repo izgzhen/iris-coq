@@ -185,19 +185,15 @@ Definition atomic (e : expr) :=
   end.
 Lemma atomic_correct e : atomic e → language.atomic (to_expr e).
 Proof.
-  intros He. apply ectx_language_atomic.
-  - intros σ e' σ' ef.
-    intros H; apply language.val_irreducible; revert H.
-    destruct e; simpl; try done; repeat (case_match; try done);
-    inversion 1; rewrite ?to_of_val; eauto. subst.
-    unfold subst'; repeat (case_match || contradiction || simplify_eq/=); eauto.
-  - intros [|Ki K] e' Hfill Hnotval; [done|exfalso].
-    apply (fill_not_val K), eq_None_not_Some in Hnotval. apply Hnotval. simpl.
-    revert He. destruct e; simpl; try done; repeat (case_match; try done);
-    rewrite ?bool_decide_spec;
-    destruct Ki; inversion Hfill; subst; clear Hfill;
-    try naive_solver eauto using to_val_is_Some.
-    move=> _ /=; destruct decide as [|Nclosed]; [by eauto | by destruct Nclosed].
+  intros He. apply ectxi_language_atomic.
+  - intros σ e' σ' ef Hstep; simpl in *.
+    apply language.val_irreducible; revert Hstep.
+    destruct e=> //=; repeat (simplify_eq/=; case_match=>//);
+      inversion 1; simplify_eq/=; rewrite ?to_of_val; eauto.
+    unfold subst'; repeat (simplify_eq/=; case_match=>//); eauto.
+  - intros Ki e' Hfill []%eq_None_not_Some; simpl in *.
+    destruct e=> //; destruct Ki; repeat (simplify_eq/=; case_match=>//);
+      naive_solver eauto using to_val_is_Some.
 Qed.
 End W.
 
@@ -264,7 +260,7 @@ Ltac reshape_val e tac :=
 Ltac reshape_expr e tac :=
   let rec go K e :=
   match e with
-  | _ => tac (reverse K) e
+  | _ => tac K e
   | App ?e1 ?e2 => reshape_val e1 ltac:(fun v1 => go (AppRCtx v1 :: K) e2)
   | App ?e1 ?e2 => go (AppLCtx e2 :: K) e1
   | UnOp ?op ?e => go (UnOpCtx op :: K) e
