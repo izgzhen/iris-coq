@@ -320,25 +320,18 @@ Section list2.
   (* Some lemmas depend on the generalized versions of the above ones. *)
 
   Lemma big_sepL_zip_with {B C} Φ f (l1 : list B) (l2 : list C) :
-    ([∗ list] k↦x ∈ zip_with f l1 l2, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l1, ∀ y, ⌜l2 !! k = Some y⌝ → Φ k (f x y)).
+    ([∗ list] k↦x ∈ zip_with f l1 l2, Φ k x)
+    ⊣⊢ ([∗ list] k↦x ∈ l1, ∀ y, ⌜l2 !! k = Some y⌝ → Φ k (f x y)).
   Proof.
-    revert Φ l2; induction l1; intros Φ l2; first by rewrite /= big_sepL_nil.
-    destruct l2; simpl.
-    { rewrite big_sepL_nil. apply (anti_symm _); last exact: True_intro.
-      (* TODO: Can this be done simpler? *)
-      rewrite -(big_sepL_mono (λ _ _, True%I)).
-      - rewrite big_sepL_forall. apply forall_intro=>k. apply forall_intro=>b.
-        apply impl_intro_r. apply True_intro.
-      - intros k b _. apply forall_intro=>c. apply impl_intro_l. rewrite right_id.
-        apply pure_elim'. done.
-    }
-    rewrite !big_sepL_cons. apply sep_proper; last exact: IHl1.
-    apply (anti_symm _).
-    - apply forall_intro=>c'. simpl. apply impl_intro_r.
-      eapply pure_elim; first exact: and_elim_r. intros [=->].
-      apply and_elim_l.
-    - rewrite (forall_elim c). simpl. eapply impl_elim; first done.
-      apply pure_intro. done.
+    revert Φ l2; induction l1 as [|x l1 IH]=> Φ [|y l2]//=.
+    - rewrite big_sepL_nil. apply (anti_symm _), True_intro.
+      trans ([∗ list] _↦_ ∈ x :: l1, True : uPred M)%I.
+      + rewrite big_sepL_forall. auto using forall_intro, impl_intro_l, True_intro.
+      + apply big_sepL_mono=> k y _. apply forall_intro=> z.
+        by apply impl_intro_l, pure_elim_l.
+    - rewrite !big_sepL_cons IH. apply sep_proper=> //. apply (anti_symm _).
+      + apply forall_intro=>z /=. by apply impl_intro_r, pure_elim_r=>-[->].
+      + rewrite (forall_elim y) /=. by eapply impl_elim, pure_intro.
   Qed.
 End list2.
 
