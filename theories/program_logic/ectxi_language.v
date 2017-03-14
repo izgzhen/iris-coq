@@ -90,30 +90,14 @@ Section ectxi_language.
     fill_not_val, fill_app, step_by_val, foldl_app.
   Next Obligation. intros K1 K2 ?%app_eq_nil; tauto. Qed.
 
-  Lemma ectxi_language_atomic e :
-    (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
-    (∀ Ki e', e = fill_item Ki e' → to_val e' = None → False) →
-    atomic e.
+  Lemma ectxi_language_sub_values e :
+    (∀ Ki e', e = fill_item Ki e' → is_Some (to_val e')) → sub_values e.
   Proof.
-    intros Hastep Hafill. apply ectx_language_atomic=> //= {Hastep} K e'.
-    destruct K as [|Ki K IH] using @rev_ind=> //=.
-    rewrite fill_app /= => He Hnval.
-    destruct (Hafill Ki (fill K e')); auto using fill_not_val.
+    intros Hsub K e' ->. destruct K as [|Ki K _] using @rev_ind=> //=.
+    intros []%eq_None_not_Some. eapply fill_val, Hsub. by rewrite /= fill_app.
   Qed.
 
   Global Instance ectxi_lang_ctx_item Ki :
     LanguageCtx (ectx_lang expr) (fill_item Ki).
   Proof. change (LanguageCtx _ (fill [Ki])). apply _. Qed.
-
-  Lemma step_is_head K e σ :
-    to_val e = None →
-    (∀ Ki K e', e = fill (Ki :: K) e' → ¬head_reducible e' σ) →
-    reducible (fill K e) σ → head_reducible e σ.
-  Proof.
-    intros Hnonval Hnondecomp (e'&σ''&ef&Hstep).
-    change fill with ectx_language.fill in Hstep.
-    apply fill_step_inv in Hstep as (e2'&_&Hstep); last done.
-    clear K. destruct Hstep as [[|Ki K] e1' e2'' -> -> Hstep]; [red; eauto|].
-    destruct (Hnondecomp Ki K e1'); unfold head_reducible; eauto.
-  Qed.
 End ectxi_language.

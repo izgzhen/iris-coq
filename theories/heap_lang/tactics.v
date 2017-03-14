@@ -185,13 +185,13 @@ Definition atomic (e : expr) :=
   end.
 Lemma atomic_correct e : atomic e → language.atomic (to_expr e).
 Proof.
-  intros He. apply ectxi_language_atomic.
+  intros He. apply ectx_language_atomic.
   - intros σ e' σ' ef Hstep; simpl in *.
     apply language.val_irreducible; revert Hstep.
     destruct e=> //=; repeat (simplify_eq/=; case_match=>//);
       inversion 1; simplify_eq/=; rewrite ?to_of_val; eauto.
     unfold subst'; repeat (simplify_eq/=; case_match=>//); eauto.
-  - intros Ki e' Hfill []%eq_None_not_Some; simpl in *.
+  - apply ectxi_language_sub_values=> /= Ki e' Hfill.
     destruct e=> //; destruct Ki; repeat (simplify_eq/=; case_match=>//);
       naive_solver eauto using to_val_is_Some.
 Qed.

@@ -29,33 +29,6 @@ Canonical Structure exprC Λ := leibnizC (expr Λ).
 
 Definition cfg (Λ : language) := (list (expr Λ) * state Λ)%type.
 
-Section language.
-  Context {Λ : language}.
-  Implicit Types v : val Λ.
-
-  Definition reducible (e : expr Λ) (σ : state Λ) :=
-    ∃ e' σ' efs, prim_step e σ e' σ' efs.
-  Definition irreducible (e : expr Λ) (σ : state Λ) :=
-    ∀e' σ' efs, ¬prim_step e σ e' σ' efs. 
-  Definition atomic (e : expr Λ) : Prop :=
-    ∀ σ e' σ' efs, prim_step e σ e' σ' efs → irreducible e' σ'.
-  Inductive step (ρ1 ρ2 : cfg Λ) : Prop :=
-    | step_atomic e1 σ1 e2 σ2 efs t1 t2 :
-       ρ1 = (t1 ++ e1 :: t2, σ1) →
-       ρ2 = (t1 ++ e2 :: t2 ++ efs, σ2) →
-       prim_step e1 σ1 e2 σ2 efs →
-       step ρ1 ρ2.
-
-  Lemma of_to_val_flip v e : of_val v = e → to_val e = Some v.
-  Proof. intros <-. by rewrite to_of_val. Qed.
-  Lemma reducible_not_val e σ : reducible e σ → to_val e = None.
-  Proof. intros (?&?&?&?); eauto using val_stuck. Qed.
-  Lemma val_irreducible e σ : is_Some (to_val e) → irreducible e σ.
-  Proof. intros [??] ??? ?%val_stuck. by destruct (to_val e). Qed.
-  Global Instance of_val_inj : Inj (=) (=) (@of_val Λ).
-  Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
-End language.
-
 Class LanguageCtx (Λ : language) (K : expr Λ → expr Λ) := {
   fill_not_val e :
     to_val e = None → to_val (K e) = None;
@@ -66,3 +39,45 @@ Class LanguageCtx (Λ : language) (K : expr Λ → expr Λ) := {
     to_val e1' = None → prim_step (K e1') σ1 e2 σ2 efs →
     ∃ e2', e2 = K e2' ∧ prim_step e1' σ1 e2' σ2 efs
 }.
+
+Section language.
+  Context {Λ : language}.
+  Implicit Types v : val Λ.
+
+  Definition reducible (e : expr Λ) (σ : state Λ) :=
+    ∃ e' σ' efs, prim_step e σ e' σ' efs.
+  Definition irreducible (e : expr Λ) (σ : state Λ) :=
+    ∀ e' σ' efs, ¬prim_step e σ e' σ' efs.
+
+  Definition atomic (e : expr Λ) : Prop :=
+    ∀ σ e' σ' efs, prim_step e σ e' σ' efs → irreducible e' σ'.
+
+  Inductive step (ρ1 ρ2 : cfg Λ) : Prop :=
+    | step_atomic e1 σ1 e2 σ2 efs t1 t2 :
+       ρ1 = (t1 ++ e1 :: t2, σ1) →
+       ρ2 = (t1 ++ e2 :: t2 ++ efs, σ2) →
+       prim_step e1 σ1 e2 σ2 efs →
+       step ρ1 ρ2.
+
+  Lemma of_to_val_flip v e : of_val v = e → to_val e = Some v.
+  Proof. intros <-. by rewrite to_of_val. Qed.
+
+  Lemma not_reducible e σ : ¬reducible e σ ↔ irreducible e σ.
+  Proof. unfold reducible, irreducible. naive_solver. Qed.
+  Lemma reducible_not_val e σ : reducible e σ → to_val e = None.
+  Proof. intros (?&?&?&?); eauto using val_stuck. Qed.
+  Lemma val_irreducible e σ : is_Some (to_val e) → irreducible e σ.
+  Proof. intros [??] ??? ?%val_stuck. by destruct (to_val e). Qed.
+  Global Instance of_val_inj : Inj (=) (=) (@of_val Λ).
+  Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
+
+  Lemma reducible_fill `{LanguageCtx Λ K} e σ :
+    to_val e = None → reducible (K e) σ → reducible e σ.
+  Proof.
+    intros ? (e'&σ'&efs&Hstep); unfold reducible.
+    apply fill_step_inv in Hstep as (e2' & _ & Hstep); eauto.
+  Qed.
+  Lemma irreducible_fill `{LanguageCtx Λ K} e σ :
+    to_val e = None → irreducible e σ → irreducible (K e) σ.
+  Proof. rewrite -!not_reducible. naive_solver eauto using reducible_fill. Qed.
+End language.

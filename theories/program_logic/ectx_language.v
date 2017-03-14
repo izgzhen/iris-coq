@@ -59,6 +59,11 @@ Section ectx_language.
 
   Definition head_reducible (e : expr) (σ : state) :=
     ∃ e' σ' efs, head_step e σ e' σ' efs.
+  Definition head_irreducible (e : expr) (σ : state) :=
+    ∀ e' σ' efs, ¬head_step e σ e' σ' efs.
+
+  Definition sub_values (e : expr) :=
+    ∀ K e', e = fill K e' → to_val e' = None → K = empty_ectx.
 
   Inductive prim_step (e1 : expr) (σ1 : state)
       (e2 : expr) (σ2 : state) (efs : list expr) : Prop :=
@@ -87,12 +92,32 @@ Section ectx_language.
     head_step e1 σ1 e2 σ2 efs → prim_step e1 σ1 e2 σ2 efs.
   Proof. apply Ectx_step with empty_ectx; by rewrite ?fill_empty. Qed.
 
+  Lemma not_head_reducible e σ : ¬head_reducible e σ ↔ head_irreducible e σ.
+  Proof. unfold head_reducible, head_irreducible. naive_solver. Qed.
+
   Lemma head_prim_reducible e σ : head_reducible e σ → reducible e σ.
   Proof. intros (e'&σ'&efs&?). eexists e', σ', efs. by apply head_prim_step. Qed.
+  Lemma head_prim_irreducible e σ : irreducible e σ → head_irreducible e σ.
+  Proof.
+    rewrite -not_reducible -not_head_reducible. eauto using head_prim_reducible.
+  Qed.
+
+  Lemma prim_head_reducible e σ :
+    reducible e σ → sub_values e → head_reducible e σ.
+  Proof.
+    intros (e'&σ'&efs&[K e1' e2' -> -> Hstep]) ?.
+    assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
+    rewrite fill_empty /head_reducible; eauto.
+  Qed.
+  Lemma prim_head_irreducible e σ :
+    head_irreducible e σ → sub_values e → irreducible e σ.
+  Proof.
+    rewrite -not_reducible -not_head_reducible. eauto using prim_head_reducible.
+  Qed.
 
   Lemma ectx_language_atomic e :
     (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
-    (∀ K e', e = fill K e' → to_val e' = None → K = empty_ectx) →
+    sub_values e →
     atomic e.
   Proof.
     intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
@@ -101,7 +126,8 @@ Section ectx_language.
   Qed.
 
   Lemma head_reducible_prim_step e1 σ1 e2 σ2 efs :
-    head_reducible e1 σ1 → prim_step e1 σ1 e2 σ2 efs →
+    head_reducible e1 σ1 →
+    prim_step e1 σ1 e2 σ2 efs →
     head_step e1 σ1 e2 σ2 efs.
   Proof.
     intros (e2''&σ2''&efs''&?) [K e1' e2' -> -> Hstep].
