@@ -55,13 +55,13 @@ Hint Extern 50 (_ ⊆ _) => set_solver : sts.
 Hint Extern 50 (_ ⊥ _) => set_solver : sts.
 
 (** ** Setoids *)
-Instance framestep_mono : Proper (flip (⊆) ==> (=) ==> (=) ==> impl) frame_step.
+Instance frame_step_mono : Proper (flip (⊆) ==> (=) ==> (=) ==> impl) frame_step.
 Proof.
   intros ?? HT ?? <- ?? <-; destruct 1; econstructor;
     eauto with sts; set_solver.
 Qed.
-Global Instance framestep_proper : Proper ((≡) ==> (=) ==> (=) ==> iff) frame_step.
-Proof. move=> ?? /collection_equiv_spec [??]; split; by apply framestep_mono. Qed.
+Global Instance frame_step_proper : Proper ((≡) ==> (=) ==> (=) ==> iff) frame_step.
+Proof. move=> ?? /collection_equiv_spec [??]; split; by apply frame_step_mono. Qed.
 Instance closed_proper' : Proper ((≡) ==> (≡) ==> impl) closed.
 Proof. destruct 3; constructor; intros until 0; setoid_subst; eauto. Qed.
 Global Instance closed_proper : Proper ((≡) ==> (≡) ==> iff) closed.
@@ -156,6 +156,12 @@ Lemma up_subseteq s T S : closed S T → s ∈ S → sts.up s T ⊆ S.
 Proof. move=> ?? s' ?. eauto using closed_steps. Qed.
 Lemma up_set_subseteq S1 T S2 : closed S2 T → S1 ⊆ S2 → sts.up_set S1 T ⊆ S2.
 Proof. move=> ?? s [s' [? ?]]. eauto using closed_steps. Qed.
+Lemma up_op s T1 T2 : up s (T1 ∪ T2) ⊆ up s T1 ∩ up s T2.
+Proof. (* Notice that the other direction does not hold. *)
+  intros x Hx. split; eapply elem_of_mkSet, rtc_subrel; try exact Hx.
+  - intros; eapply frame_step_mono; last first; try done. set_solver+.
+  - intros; eapply frame_step_mono; last first; try done. set_solver+.
+Qed.
 End sts.
 
 Notation steps := (rtc step).
@@ -302,8 +308,12 @@ Lemma sts_auth_valid s T : ✓ sts_auth s T ↔ tok s ⊥ T.
 Proof. done. Qed.
 Lemma sts_frag_valid S T : ✓ sts_frag S T ↔ closed S T ∧ ∃ s, s ∈ S.
 Proof. done. Qed.
-Lemma sts_frag_up_valid s T : tok s ⊥ T → ✓ sts_frag_up s T.
-Proof. intros. apply sts_frag_valid; split. by apply closed_up. set_solver. Qed.
+Lemma sts_frag_up_valid s T : ✓ sts_frag_up s T ↔ tok s ⊥ T.
+Proof.
+  split.
+  - move=>/sts_frag_valid [H _]. apply H, elem_of_up. 
+  - intros. apply sts_frag_valid; split. by apply closed_up. set_solver.
+Qed.
 
 Lemma sts_auth_frag_valid_inv s S T1 T2 :
   ✓ (sts_auth s T1 ⋅ sts_frag S T2) → s ∈ S.
@@ -337,6 +347,13 @@ Proof.
   move=>/=[?[? ?]]. split_and!; [set_solver..|constructor; set_solver].
 Qed.
 
+(* Notice that the following does *not* hold -- the composition of the
+   two closures is weaker than the closure with the itnersected token
+   set.  Also see up_op.
+Lemma sts_op_frag_up s T1 T2 :
+  T1 ⊥ T2 → sts_frag_up s (T1 ∪ T2) ≡ sts_frag_up s T1 ⋅ sts_frag_up s T2.
+*)
+
 (** Frame preserving updates *)
 Lemma sts_update_auth s1 s2 T1 T2 :
   steps (s1,T1) (s2,T2) → sts_auth s1 T1 ~~> sts_auth s2 T2.
@@ -348,19 +365,21 @@ Proof.
 Qed.
 
 Lemma sts_update_frag S1 S2 T1 T2 :
-  closed S2 T2 → S1 ⊆ S2 → T2 ⊆ T1 → sts_frag S1 T1 ~~> sts_frag S2 T2.
+  (closed S1 T1 → closed S2 T2 ∧ S1 ⊆ S2 ∧ T2 ⊆ T1) → sts_frag S1 T1 ~~> sts_frag S2 T2.
 Proof.
-  rewrite /sts_frag=> ? HS HT. apply validity_update.
-  inversion 3 as [|? S ? Tf|]; simplify_eq/=.
+  rewrite /sts_frag=> HC HS HT. apply validity_update.
+  inversion 3 as [|? S ? Tf|]; simplify_eq/=;
+    (destruct HC as (? & ? & ?); first by destruct_and?).
   - split_and!. done. set_solver. constructor; set_solver.
   - split_and!. done. set_solver. constructor; set_solver.
 Qed.
 
 Lemma sts_update_frag_up s1 S2 T1 T2 :
-  closed S2 T2 → s1 ∈ S2 → T2 ⊆ T1 → sts_frag_up s1 T1 ~~> sts_frag S2 T2.
+  (tok s1 ⊥ T1 → closed S2 T2) → s1 ∈ S2 → T2 ⊆ T1 → sts_frag_up s1 T1 ~~> sts_frag S2 T2.
 Proof.
-  intros ? ? HT; apply sts_update_frag; [intros; eauto using closed_steps..].
-  rewrite <-HT. eapply up_subseteq; done.
+  intros HC ? HT; apply sts_update_frag. intros HC1; split; last split; eauto using closed_steps.
+  - eapply HC, HC1, elem_of_up.
+  - rewrite <-HT. eapply up_subseteq; last done. apply HC, HC1, elem_of_up.
 Qed.
 
 Lemma sts_up_set_intersection S1 Sf Tf :

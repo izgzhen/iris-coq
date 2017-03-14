@@ -51,7 +51,6 @@ Section definitions.
   Proof. apply _. Qed.
 End definitions.
 
-Typeclasses Opaque sts_own sts_ownS sts_inv sts_ctx.
 Instance: Params (@sts_inv) 4.
 Instance: Params (@sts_ownS) 4.
 Instance: Params (@sts_own) 5.
@@ -78,10 +77,43 @@ Section sts.
     sts_own γ s T1 ==∗ sts_ownS γ S T2.
   Proof. intros ???. by apply own_update, sts_update_frag_up. Qed.
 
+  Lemma sts_own_weaken_state γ s1 s2 T :
+    sts.frame_steps T s2 s1 → sts.tok s2 ⊥ T →
+    sts_own γ s1 T ==∗ sts_own γ s2 T.
+  Proof.
+    intros ??. apply own_update, sts_update_frag_up; [|done..].
+    intros Hdisj. apply sts.closed_up. done. 
+  Qed.
+
+  Lemma sts_own_weaken_tok γ s T1 T2 :
+    T2 ⊆ T1 → sts_own γ s T1 ==∗ sts_own γ s T2.
+  Proof.
+    intros ?. apply own_update, sts_update_frag_up; last done.
+    - intros. apply sts.closed_up. set_solver.
+    - apply sts.elem_of_up.
+  Qed.
+
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
     T1 ⊥ T2 → sts.closed S1 T1 → sts.closed S2 T2 →
     sts_ownS γ (S1 ∩ S2) (T1 ∪ T2) ⊣⊢ (sts_ownS γ S1 T1 ∗ sts_ownS γ S2 T2).
   Proof. intros. by rewrite /sts_ownS -own_op sts_op_frag. Qed.
+
+  Lemma sts_own_op γ s T1 T2 :
+    T1 ⊥ T2 → sts_own γ s (T1 ∪ T2) ==∗ sts_own γ s T1 ∗ sts_own γ s T2.
+    (* The other direction does not hold -- see sts.up_op. *)
+  Proof.
+    intros. rewrite /sts_own -own_op. iIntros "Hown".
+    iDestruct (own_valid with "Hown") as %Hval%sts_frag_up_valid.
+    rewrite -sts_op_frag.
+    - iApply (sts_own_weaken with "Hown"); first done.
+      + split; apply sts.elem_of_up.
+      + eapply sts.closed_op; apply sts.closed_up; set_solver.
+    - done.
+    - apply sts.closed_up; set_solver.
+    - apply sts.closed_up; set_solver.
+  Qed.
+
+  Typeclasses Opaque sts_own sts_ownS sts_inv sts_ctx.
 
   Lemma sts_alloc φ E N s :
     ▷ φ s ={E}=∗ ∃ γ, sts_ctx γ N φ ∧ sts_own γ s (⊤ ∖ sts.tok s).
@@ -143,3 +175,5 @@ Section sts.
       ⌜sts.steps (s, T) (s', T')⌝ ∗ ▷ φ s' ={E∖↑N,E}=∗ sts_own γ s' T'.
   Proof. by apply sts_openS. Qed.
 End sts.
+
+Typeclasses Opaque sts_own sts_ownS sts_inv sts_ctx.
