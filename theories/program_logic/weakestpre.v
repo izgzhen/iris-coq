@@ -129,11 +129,11 @@ Lemma wp_strong_mono E1 E2 e Φ Ψ :
 Proof.
   iIntros (?) "[HΦ H]". iLöb as "IH" forall (e). rewrite !wp_unfold /wp_pre.
   destruct (to_val e) as [v|] eqn:?.
-  { iApply ("HΦ" with ">[-]"). by iApply (fupd_mask_mono E1 _). }
+  { iApply ("HΦ" with "[> -]"). by iApply (fupd_mask_mono E1 _). }
   iIntros (σ1) "Hσ". iMod (fupd_intro_mask' E2 E1) as "Hclose"; first done.
-  iMod ("H" $! σ1 with "Hσ") as "[$ H]".
+  iMod ("H" with "[$]") as "[$ H]".
   iModIntro. iNext. iIntros (e2 σ2 efs Hstep).
-  iMod ("H" $! _ σ2 efs with "[#]") as "($ & H & $)"; auto.
+  iMod ("H" with "[//]") as "($ & H & $)"; auto.
   iMod "Hclose" as "_". by iApply ("IH" with "HΦ").
 Qed.
 
@@ -155,10 +155,10 @@ Proof.
   { by iDestruct "H" as ">>> $". }
   iIntros (σ1) "Hσ". iMod "H". iMod ("H" $! σ1 with "Hσ") as "[$ H]".
   iModIntro. iNext. iIntros (e2 σ2 efs Hstep).
-  iMod ("H" with "[]") as "(Hphy & H & $)"; first done.
+  iMod ("H" with "[//]") as "(Hphy & H & $)".
   rewrite !wp_unfold /wp_pre. destruct (to_val e2) as [v2|] eqn:He2.
-  - iDestruct "H" as ">> $". iFrame. eauto.
-  - iMod ("H" with "Hphy") as "[H _]".
+  - iDestruct "H" as ">> $". eauto with iFrame.
+  - iMod ("H" with "[$]") as "[H _]".
     iDestruct "H" as %(? & ? & ? & ?). by edestruct (Hatomic _ _ _ _ Hstep).
 Qed.
 
@@ -167,9 +167,9 @@ Lemma wp_step_fupd E1 E2 e P Φ :
   (|={E1,E2}▷=> P) -∗ WP e @ E2 {{ v, P ={E1}=∗ Φ v }} -∗ WP e @ E1 {{ Φ }}.
 Proof.
   rewrite !wp_unfold /wp_pre. iIntros (-> ?) "HR H".
-  iIntros (σ1) "Hσ". iMod "HR". iMod ("H" $! _ with "Hσ") as "[$ H]".
+  iIntros (σ1) "Hσ". iMod "HR". iMod ("H" with "[$]") as "[$ H]".
   iModIntro; iNext; iIntros (e2 σ2 efs Hstep).
-  iMod ("H" $! e2 σ2 efs with "[%]") as "($ & H & $)"; auto.
+  iMod ("H" $! e2 σ2 efs with "[% //]") as "($ & H & $)".
   iMod "HR". iModIntro. iApply (wp_strong_mono E2); first done.
   iSplitR "H"; last iExact "H". iIntros (v) "H". by iApply "H".
 Qed.
@@ -181,11 +181,11 @@ Proof.
   destruct (to_val e) as [v|] eqn:He.
   { apply of_to_val in He as <-. by iApply fupd_wp. }
   rewrite wp_unfold /wp_pre fill_not_val //.
-  iIntros (σ1) "Hσ". iMod ("H" $! _ with "Hσ") as "[% H]". iModIntro; iSplit.
+  iIntros (σ1) "Hσ". iMod ("H" with "[$]") as "[% H]". iModIntro; iSplit.
   { iPureIntro. unfold reducible in *. naive_solver eauto using fill_step. }
   iNext; iIntros (e2 σ2 efs Hstep).
   destruct (fill_step_inv e σ1 e2 σ2 efs) as (e2'&->&?); auto.
-  iMod ("H" $! e2' σ2 efs with "[%]") as "($ & H & $)"; auto.
+  iMod ("H" $! e2' σ2 efs with "[//]") as "($ & H & $)".
   by iApply "IH".
 Qed.
 

@@ -15,6 +15,7 @@ Inductive intro_pat :=
   | IAlwaysIntro : intro_pat
   | IModalIntro : intro_pat
   | ISimpl : intro_pat
+  | IDone : intro_pat
   | IForall : intro_pat
   | IAll : intro_pat
   | IClear : string → intro_pat
@@ -87,6 +88,7 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TAlwaysIntro :: ts => parse_go ts (SPat IAlwaysIntro :: k)
   | TModalIntro :: ts => parse_go ts (SPat IModalIntro :: k)
   | TSimpl :: ts => parse_go ts (SPat ISimpl :: k)
+  | TDone :: ts => parse_go ts (SPat IDone :: k)
   | TAll :: ts => parse_go ts (SPat IAll :: k)
   | TForall :: ts => parse_go ts (SPat IForall :: k)
   | TBraceL :: ts => parse_clear ts k

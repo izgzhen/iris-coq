@@ -20,6 +20,7 @@ Inductive token :=
   | TAlwaysIntro : token
   | TModalIntro : token
   | TSimpl : token
+  | TDone : token
   | TForall : token
   | TAll : token
   | TMinus : token
@@ -46,6 +47,9 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
   | String "!" (String "%" s) => tokenize_go s (TPureIntro :: cons_name kn k) ""
   | String "!" (String "#" s) => tokenize_go s (TAlwaysIntro :: cons_name kn k) ""
   | String "!" (String ">" s) => tokenize_go s (TModalIntro :: cons_name kn k) ""
+  | String "/" (String "/" (String "=" s)) =>
+     tokenize_go s (TSimpl :: TDone :: cons_name kn k) ""
+  | String "/" (String "/" s) => tokenize_go s (TDone :: cons_name kn k) ""
   | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_name kn k) ""
   | String "*" (String "*" s) => tokenize_go s (TAll :: cons_name kn k) ""
   | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""

@@ -261,6 +261,72 @@ Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
     constr(t5) constr(t6) constr(t7) constr(t8)")" constr(Hs) :=
   iFramePure t1; iFrame ( t2 t3 t4 t5 t6 t7 t8 ) Hs.
 
+(** * Basic introduction tactics *)
+Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
+  try iStartProof;
+  try first
+    [(* (∀ _, _) *) apply tac_forall_intro
+    |(* (?P → _) *) eapply tac_impl_intro_pure;
+      [let P := match goal with |- IntoPure ?P _ => P end in
+       apply _ || fail "iIntro:" P "not pure"|]
+    |(* (?P -∗ _) *) eapply tac_wand_intro_pure;
+      [let P := match goal with |- IntoPure ?P _ => P end in
+       apply _ || fail "iIntro:" P "not pure"|]
+    |(* ⌜∀ _, _⌝ *) apply tac_pure_forall_intro
+    |(* ⌜_ → _⌝ *) apply tac_pure_impl_intro];
+  intros x.
+
+Local Tactic Notation "iIntro" constr(H) :=
+  iStartProof;
+  first
+  [ (* (?Q → _) *)
+    eapply tac_impl_intro with _ H; (* (i:=H) *)
+      [reflexivity || fail 1 "iIntro: introducing" H
+                             "into non-empty spatial context"
+      |env_cbv; reflexivity || fail "iIntro:" H "not fresh"|]
+  | (* (_ -∗ _) *)
+    eapply tac_wand_intro with _ H; (* (i:=H) *)
+      [env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
+  | fail 1 "iIntro: nothing to introduce" ].
+
+Local Tactic Notation "iIntro" "#" constr(H) :=
+  iStartProof;
+  first
+  [ (* (?P → _) *)
+    eapply tac_impl_intro_persistent with _ H _; (* (i:=H) *)
+      [let P := match goal with |- IntoPersistentP ?P _ => P end in
+       apply _ || fail 1 "iIntro: " P " not persistent"
+      |env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
+  | (* (?P -∗ _) *)
+    eapply tac_wand_intro_persistent with _ H _; (* (i:=H) *)
+      [let P := match goal with |- IntoPersistentP ?P _ => P end in
+       apply _ || fail 1 "iIntro: " P " not persistent"
+      |env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
+  | fail 1 "iIntro: nothing to introduce" ].
+
+Local Tactic Notation "iIntro" "_" :=
+  try iStartProof;
+  first
+  [ (* (?Q → _) *) apply tac_impl_intro_drop
+  | (* (_ -∗ _) *) apply tac_wand_intro_drop
+  | (* (∀ _, _) *) iIntro (_)
+  | fail 1 "iIntro: nothing to introduce" ].
+
+Local Tactic Notation "iIntroForall" :=
+  try iStartProof;
+  lazymatch goal with
+  | |- ∀ _, ?P => fail
+  | |- ∀ _, _ => intro
+  | |- _ ⊢ (∀ x : _, _) => let x' := fresh x in iIntro (x')
+  end.
+Local Tactic Notation "iIntro" :=
+  try iStartProof;
+  lazymatch goal with
+  | |- _ → ?P => intro
+  | |- _ ⊢ (_ -∗ _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
+  | |- _ ⊢ (_ → _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
+  end.
+
 (** * Specialize *)
 Record iTrm {X As} :=
   ITrm { itrm : X ; itrm_vars : hlist As ; itrm_hyps : string }.
@@ -303,36 +369,58 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
           let Q := match goal with |- IntoWand ?P ?Q _ => Q end in
           apply _ || fail "iSpecialize: cannot instantiate" P "with" Q
          |env_cbv; reflexivity|go H1 pats]
-    | SGoalPersistent :: ?pats =>
-       eapply tac_specialize_assert_persistent with _ _ H1 _ _ _ _;
-         [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
-         |solve_to_wand H1
-         |let Q := match goal with |- PersistentP ?Q => Q end in
-          apply _ || fail "iSpecialize:" Q "not persistent"
-         |env_cbv; reflexivity
-         |(*goal*)
-         |go H1 pats]
-    | SGoalPure :: ?pats =>
+    | SPureGoal ?d :: ?pats =>
        eapply tac_specialize_assert_pure with _ H1 _ _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |let Q := match goal with |- FromPure ?Q _ => Q end in
           apply _ || fail "iSpecialize:" Q "not pure"
          |env_cbv; reflexivity
-         |(*goal*)
+         |done_if d (*goal*)
          |go H1 pats]
-    | SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs) :: ?pats =>
+    | SGoal (SpecGoal GPersistent false ?Hs_frame [] ?d) :: ?pats =>
+       eapply tac_specialize_assert_persistent with _ _ H1 _ _ _ _;
+         [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
+         |solve_to_wand H1
+         |let Q := match goal with |- PersistentP ?Q => Q end in
+          apply _ || fail "iSpecialize:" Q "not persistent"
+         |env_cbv; reflexivity
+         |iFrame Hs_frame; done_if d (*goal*)
+         |go H1 pats]
+    | SGoal (SpecGoal GPersistent _ _ _ _) :: ?pats =>
+       fail "iSpecialize: cannot select hypotheses for persistent premise"
+    | SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs ?d) :: ?pats =>
        let Hs' := eval cbv in (if lr then Hs else Hs_frame ++ Hs) in
        eapply tac_specialize_assert with _ _ _ H1 _ lr Hs' _ _ _ _;
          [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
-         |match m with
-          | false => apply elim_modal_dummy
-          | true => apply _ || fail "iSpecialize: goal not a modality"
+         |lazymatch m with
+          | GSpatial => apply elim_modal_dummy
+          | GModal => apply _ || fail "iSpecialize: goal not a modality"
           end
          |env_cbv; reflexivity || fail "iSpecialize:" Hs "not found"
-         |iFrame Hs_frame (*goal*)
+         |iFrame Hs_frame; done_if d (*goal*)
          |go H1 pats]
+    | SAutoFrame GPersistent :: ?pats =>
+       eapply tac_specialize_assert_persistent with _ _ H1 _ _ _ _;
+         [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
+         |solve_to_wand H1
+         |let Q := match goal with |- PersistentP ?Q => Q end in
+          apply _ || fail "iSpecialize:" Q "not persistent"
+         |env_cbv; reflexivity
+         |solve [iFrame "∗ #"]
+         |go H1 pats]
+    | SAutoFrame ?m :: ?pats =>
+       eapply tac_specialize_frame with _ H1 _ _ _ _ _ _;
+         [env_cbv; reflexivity || fail "iSpecialize:" H1 "not found"
+         |solve_to_wand H1
+         |lazymatch m with
+          | GSpatial => apply elim_modal_dummy
+          | GModal => apply _ || fail "iSpecialize: goal not a modality"
+          end
+         |iFrame "∗ #"; apply tac_unlock
+           || fail "iSpecialize: premise cannot be solved by framing"
+         |reflexivity]; iIntro H1; go H1 pats
     end in let pats := spec_pat.parse pat in go H pats.
 
 (* The argument [p] denotes whether the conclusion of the specialized term is
@@ -740,71 +828,6 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
   iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 x6 x7 x8 ) pat.
 
 (** * Introduction tactic *)
-Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
-  try iStartProof;
-  try first
-    [(* (∀ _, _) *) apply tac_forall_intro
-    |(* (?P → _) *) eapply tac_impl_intro_pure;
-      [let P := match goal with |- IntoPure ?P _ => P end in
-       apply _ || fail "iIntro:" P "not pure"|]
-    |(* (?P -∗ _) *) eapply tac_wand_intro_pure;
-      [let P := match goal with |- IntoPure ?P _ => P end in
-       apply _ || fail "iIntro:" P "not pure"|]
-    |(* ⌜∀ _, _⌝ *) apply tac_pure_forall_intro
-    |(* ⌜_ → _⌝ *) apply tac_pure_impl_intro];
-  intros x.
-
-Local Tactic Notation "iIntro" constr(H) :=
-  iStartProof;
-  first
-  [ (* (?Q → _) *)
-    eapply tac_impl_intro with _ H; (* (i:=H) *)
-      [reflexivity || fail 1 "iIntro: introducing" H
-                             "into non-empty spatial context"
-      |env_cbv; reflexivity || fail "iIntro:" H "not fresh"|]
-  | (* (_ -∗ _) *)
-    eapply tac_wand_intro with _ H; (* (i:=H) *)
-      [env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
-  | fail 1 "iIntro: nothing to introduce" ].
-
-Local Tactic Notation "iIntro" "#" constr(H) :=
-  iStartProof;
-  first
-  [ (* (?P → _) *)
-    eapply tac_impl_intro_persistent with _ H _; (* (i:=H) *)
-      [let P := match goal with |- IntoPersistentP ?P _ => P end in
-       apply _ || fail 1 "iIntro: " P " not persistent"
-      |env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
-  | (* (?P -∗ _) *)
-    eapply tac_wand_intro_persistent with _ H _; (* (i:=H) *)
-      [let P := match goal with |- IntoPersistentP ?P _ => P end in
-       apply _ || fail 1 "iIntro: " P " not persistent"
-      |env_cbv; reflexivity || fail 1 "iIntro:" H "not fresh"|]
-  | fail 1 "iIntro: nothing to introduce" ].
-
-Local Tactic Notation "iIntro" "_" :=
-  try iStartProof;
-  first
-  [ (* (?Q → _) *) apply tac_impl_intro_drop
-  | (* (_ -∗ _) *) apply tac_wand_intro_drop
-  | (* (∀ _, _) *) iIntro (_)
-  | fail 1 "iIntro: nothing to introduce" ].
-
-Local Tactic Notation "iIntroForall" :=
-  try iStartProof;
-  lazymatch goal with
-  | |- ∀ _, ?P => fail
-  | |- ∀ _, _ => intro
-  | |- _ ⊢ (∀ x : _, _) => let x' := fresh x in iIntro (x')
-  end.
-Local Tactic Notation "iIntro" :=
-  try iStartProof;
-  lazymatch goal with
-  | |- _ → ?P => intro
-  | |- _ ⊢ (_ -∗ _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
-  | |- _ ⊢ (_ → _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
-  end.
-
 Tactic Notation "iIntros" constr(pat) :=
   let rec go pats :=
     lazymatch pats with
@@ -824,6 +847,7 @@ Tactic Notation "iIntros" constr(pat) :=
     | ISimpl :: ?pats => simpl; go pats
     | IClear ?H :: ?pats => iClear H; go pats
     | IClearFrame ?H :: ?pats => iFrame H; go pats
+    | IDone :: ?pats => try done; go pats
     (* Introduction + destruct *)
     | IAlwaysElim ?pat :: ?pats =>
        let H := iFresh in iIntro #H; iDestructHyp H as pat; go pats
@@ -1245,40 +1269,50 @@ Tactic Notation "iAssertCore" open_constr(Q)
   let H := iFresh in
   let Hs := spec_pat.parse Hs in
   lazymatch Hs with
-  | [SGoalPersistent] =>
+  | [SPureGoal ?d] =>
+     eapply tac_assert_pure with _ H Q _;
+       [env_cbv; reflexivity
+       |apply _ || fail "iAssert:" Q "not pure"
+       |done_if d (*goal*)
+       |tac H]
+  | [SGoal (SpecGoal GPersistent _ ?Hs_frame [] ?d)] =>
      eapply tac_assert_persistent with _ _ _ true [] H Q;
        [env_cbv; reflexivity
        |env_cbv; reflexivity
-       |(*goal*)
        |apply _ || fail "iAssert:" Q "not persistent"
+       |iFrame Hs_frame; done_if d (*goal*)
        |tac H]
-  | [SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs)] =>
+  | [SGoal (SpecGoal GPersistent false ?Hs_frame _ ?d)] =>
+     fail "iAssert: cannot select hypotheses for persistent proposition"
+  | [SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs ?d)] =>
      let Hs' := eval cbv in (if lr then Hs else Hs_frame ++ Hs) in
-     match eval cbv in (p && negb m) with
+     let p' := eval cbv in (match m with GModal => false | _ => p end) in
+     match p' with
      | false =>
        eapply tac_assert with _ _ _ lr Hs' H Q _;
-         [match m with
-          | false => apply elim_modal_dummy
-          | true => apply _ || fail "iAssert: goal not a modality"
+         [lazymatch m with
+          | GSpatial => apply elim_modal_dummy
+          | GModal => apply _ || fail "iAssert: goal not a modality"
           end
          |env_cbv; reflexivity || fail "iAssert:" Hs "not found"
          |env_cbv; reflexivity
-         |iFrame Hs_frame (*goal*)
+         |iFrame Hs_frame; done_if d (*goal*)
          |tac H]
      | true =>
        eapply tac_assert_persistent with _ _ _ lr Hs' H Q;
          [env_cbv; reflexivity
          |env_cbv; reflexivity
-         |(*goal*)
          |apply _ || fail "iAssert:" Q "not persistent"
+         |done_if d (*goal*)
          |tac H]
      end
   | ?pat => fail "iAssert: invalid pattern" pat
   end.
+
 Tactic Notation "iAssertCore" open_constr(Q) "as" constr(p) tactic(tac) :=
   let p := intro_pat_persistent p in
   match p with
-  | true => iAssertCore Q with "[-]" as p tac
+  | true => iAssertCore Q with "[#]" as p tac
   | false => iAssertCore Q with "[]" as p tac
   end.
 
