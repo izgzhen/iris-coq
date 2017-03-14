@@ -21,8 +21,7 @@ iris-coq8.6:
     - opamroot/
   only:
   - master
-  - ci
-  - timing
+  - /^ci/
   artifacts:
     paths:
     - build-time.txt
