@@ -45,17 +45,18 @@ Section ectxi_language.
   Implicit Types (e : expr) (Ki : ectx_item).
   Notation ectx := (list ectx_item).
 
-  Definition fill (K : ectx) (e : expr) : expr := fold_right fill_item e K.
+  Definition fill (K : ectx) (e : expr) : expr := foldl (flip fill_item) e K.
 
-  Lemma fill_app (K1 K2 : ectx) e : fill (K1 ++ K2) e = fill K1 (fill K2 e).
-  Proof. apply fold_right_app. Qed.
+  Lemma fill_app (K1 K2 : ectx) e : fill (K1 ++ K2) e = fill K2 (fill K1 e).
+  Proof. apply foldl_app. Qed.
 
   Instance fill_inj K : Inj (=) (=) (fill K).
-  Proof. red; induction K as [|Ki K IH]; naive_solver. Qed.
+  Proof. induction K as [|Ki K IH]; rewrite /Inj; naive_solver. Qed.
 
   Lemma fill_val K e : is_Some (to_val (fill K e)) → is_Some (to_val e).
   Proof.
-    induction K; simpl; first done. intros ?%fill_item_val. eauto.
+    revert e.
+    induction K as [|Ki K IH]=> e //=. by intros ?%IH%fill_item_val.
   Qed.
 
   Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
@@ -66,23 +67,39 @@ Section ectxi_language.
   other words, [e] also contains the reducible expression *)
   Lemma step_by_val K K' e1 e1' σ1 e2 σ2 efs :
     fill K e1 = fill K' e1' → to_val e1 = None → head_step e1' σ1 e2 σ2 efs →
-    exists K'', K' = K ++ K''. (* K `prefix_of` K' *)
+    exists K'', K' = K'' ++ K. (* K `prefix_of` K' *)
   Proof.
-    intros Hfill Hred Hnval; revert K' Hfill.
-    induction K as [|Ki K IH]; simpl; intros K' Hfill; first by eauto.
-    destruct K' as [|Ki' K']; simplify_eq/=.
-    { exfalso; apply (eq_None_not_Some (to_val (fill K e1)));
-      eauto using fill_not_val, head_ctx_step_val. }
-    cut (Ki = Ki'); [naive_solver eauto using prefix_of_cons|].
-    eauto using fill_item_no_val_inj, val_stuck, fill_not_val.
+    intros Hfill Hred Hstep; revert K' Hfill.
+    induction K as [|Ki K IH] using rev_ind=> /= K' Hfill; eauto using app_nil_r.
+    destruct K' as [|Ki' K' _] using @rev_ind; simplify_eq/=.
+    { rewrite fill_app in Hstep.
+      exfalso; apply (eq_None_not_Some (to_val (fill K e1)));
+        eauto using fill_not_val, head_ctx_step_val. }
+    rewrite !fill_app /= in Hfill.
+    assert (Ki = Ki') as ->
+      by eauto using fill_item_no_val_inj, val_stuck, fill_not_val.
+    simplify_eq. destruct (IH K') as [K'' ->]; auto.
+    exists K''. by rewrite assoc.
   Qed.
 
-  Global Program Instance : EctxLanguage expr val ectx state :=
-    (* For some reason, Coq always rejects the record syntax claiming I
-       fixed fields of different records, even when I did not. *)
-    Build_EctxLanguage expr val ectx state of_val to_val [] (++) fill head_step _ _ _ _ _ _ _ _ _.
-  Solve Obligations with eauto using to_of_val, of_to_val, val_stuck,
-    fill_not_val, fill_app, step_by_val, fold_right_app, app_eq_nil.
+  Global Program Instance ectxi_lang_ectx : EctxLanguage expr val ectx state := {|
+    ectx_language.of_val := of_val; ectx_language.to_val := to_val;
+    empty_ectx := []; comp_ectx := flip (++); ectx_language.fill := fill;
+    ectx_language.head_step := head_step |}.
+  Solve Obligations with simpl; eauto using to_of_val, of_to_val, val_stuck,
+    fill_not_val, fill_app, step_by_val, foldl_app.
+  Next Obligation. intros K1 K2 ?%app_eq_nil; tauto. Qed.
+
+  Lemma ectxi_language_atomic e :
+    (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
+    (∀ Ki e', e = fill_item Ki e' → to_val e' = None → False) →
+    atomic e.
+  Proof.
+    intros Hastep Hafill. apply ectx_language_atomic=> //= {Hastep} K e'.
+    destruct K as [|Ki K IH] using @rev_ind=> //=.
+    rewrite fill_app /= => He Hnval.
+    destruct (Hafill Ki (fill K e')); auto using fill_not_val.
+  Qed.
 
   Global Instance ectxi_lang_ctx_item Ki :
     LanguageCtx (ectx_lang expr) (fill_item Ki).
