@@ -737,7 +737,8 @@ Tactic Notation "iNext" open_constr(n) :=
     |lazymatch goal with
      | |- IntoLaterNEnvs 0 _ _ => fail "iNext:" P "does not contain laters"
      | _ => apply _
-     end|].
+     end
+    |lazy beta (* remove beta redexes caused by removing laters under binders*)].
 
 Tactic Notation "iNext":= iNext _.
 

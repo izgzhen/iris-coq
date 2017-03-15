@@ -235,6 +235,18 @@ Global Instance from_later_sep n P1 P2 Q1 Q2 :
   FromLaterN n P1 Q1 → FromLaterN n P2 Q2 → FromLaterN n (P1 ∗ P2) (Q1 ∗ Q2).
 Proof. intros ??; red. by rewrite laterN_sep; apply sep_mono. Qed.
 
+Global Instance from_later_always n P Q :
+  FromLaterN n P Q → FromLaterN n (□ P) (□ Q).
+Proof. by rewrite /FromLaterN -always_laterN=> ->. Qed.
+
+Global Instance from_later_forall {A} n (Φ Ψ : A → uPred M) :
+  (∀ x, FromLaterN n (Φ x) (Ψ x)) → FromLaterN n (∀ x, Φ x) (∀ x, Ψ x).
+Proof. rewrite /FromLaterN laterN_forall=> ?. by apply forall_mono. Qed.
+Global Instance from_later_exist {A} n (Φ Ψ : A → uPred M) :
+  Inhabited A → (∀ x, FromLaterN n (Φ x) (Ψ x)) →
+  FromLaterN n (∃ x, Φ x) (∃ x, Ψ x).
+Proof. intros ?. rewrite /FromLaterN laterN_exist=> ?. by apply exist_mono. Qed.
+
 (* IntoWand *)
 Global Instance wand_weaken_exact P Q : WandWeaken P Q P Q.
 Proof. done. Qed.
@@ -315,6 +327,7 @@ Global Instance from_sep_ownM (a b1 b2 : M) :
   FromOp a b1 b2 →
   FromSep (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof. intros. by rewrite /FromSep -ownM_op from_op. Qed.
+
 Global Instance from_sep_pure φ ψ : @FromSep M ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /FromSep pure_and sep_and. Qed.
 Global Instance from_sep_always P Q1 Q2 :
