@@ -131,14 +131,12 @@ Section fractional.
        Ideally, it'd not even be possible to make the mistake that
        was originally made here, which is to give this instance for
        "false" only, thus breaking some intro patterns. *)
-    intros H1 H2 H3. apply mk_into_and_sep. rewrite [P]fractional_split //.
+    intros. apply mk_into_and_sep. rewrite [P]fractional_split //.
   Qed.
   Global Instance into_and_fractional_half b P Q Φ q :
     AsFractional P Φ q → AsFractional Q Φ (q/2) →
     IntoAnd b P Q Q | 100.
-  Proof.
-    intros H1 H2. apply mk_into_and_sep. rewrite [P]fractional_half //.
-  Qed.
+  Proof. intros. apply mk_into_and_sep. rewrite [P]fractional_half //. Qed.
 
   (* The instance [frame_fractional] can be tried at all the nodes of
      the proof search. The proof search then fails almost always on
