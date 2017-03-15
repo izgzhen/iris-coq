@@ -14,8 +14,7 @@ Class boxG Σ :=
 Definition boxΣ : gFunctors := #[ GFunctor (authR (optionUR (exclR boolC)) *
                                             optionRF (agreeRF (▶ ∙)) ) ].
 
-Instance subG_stsΣ Σ :
-  subG boxΣ Σ → boxG Σ.
+Instance subG_stsΣ Σ : subG boxΣ Σ → boxG Σ.
 Proof. solve_inG. Qed.
 
 Section box_defs.
@@ -210,8 +209,8 @@ Proof.
   rewrite internal_eq_iff later_iff big_sepM_later.
   iDestruct ("HeqP" with "HP") as "HP".
   iCombine "Hf" "HP" as "Hf".
-  rewrite big_sepM_fmap; iApply (fupd_big_sepM _ _ f).
-  iApply (big_sepM_impl _ _ f); iFrame "Hf".
+  rewrite -big_sepM_sepM big_sepM_fmap; iApply (fupd_big_sepM _ _ f).
+  iApply (@big_sepM_impl with "[$Hf]").
   iAlways; iIntros (γ b' ?) "[(Hγ' & #$ & #$) HΦ]".
   iInv N as (b) "[>Hγ _]" "Hclose".
   iMod (box_own_auth_update γ with "[Hγ Hγ']") as "[Hγ $]"; first by iFrame.
@@ -224,9 +223,10 @@ Lemma box_empty E f P :
   box N f P ={E}=∗ ▷ P ∗ box N (const false <$> f) P.
 Proof.
   iDestruct 1 as (Φ) "[#HeqP Hf]".
-  iAssert ([∗ map] γ↦b ∈ f, ▷ Φ γ ∗ box_own_auth γ (◯ Excl' false) ∗
-    box_own_prop γ (Φ γ) ∗ inv N (slice_inv γ (Φ γ)))%I with "[> Hf]" as "[HΦ ?]".
-  { iApply (fupd_big_sepM _ _ f); iApply (big_sepM_impl _ _ f); iFrame "Hf".
+  iAssert (([∗ map] γ↦b ∈ f, ▷ Φ γ) ∗
+    [∗ map] γ↦b ∈ f, box_own_auth γ (◯ Excl' false) ∗  box_own_prop γ (Φ γ) ∗
+      inv N (slice_inv γ (Φ γ)))%I with "[> Hf]" as "[HΦ ?]".
+  { rewrite -big_sepM_sepM -fupd_big_sepM. iApply (@big_sepM_impl with "[$Hf]").
     iAlways; iIntros (γ b ?) "(Hγ' & #HγΦ & #Hinv)".
     assert (true = b) as <- by eauto.
     iInv N as (b) "[>Hγ HΦ]" "Hclose".

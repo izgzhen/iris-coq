@@ -87,11 +87,10 @@ Proof.
   iIntros (Hstep) "(HW & He & Ht)".
   destruct Hstep as [e1' σ1' e2' σ2' efs [|? t1'] t2' ?? Hstep]; simplify_eq/=.
   - iExists e2', (t2' ++ efs); iSplitR; first eauto.
-    rewrite big_sepL_app. iFrame "Ht". iApply wp_step; try iFrame; eauto.
+    iFrame "Ht". iApply wp_step; eauto with iFrame.
   - iExists e, (t1' ++ e2' :: t2' ++ efs); iSplitR; first eauto.
-    rewrite !big_sepL_app !big_sepL_cons big_sepL_app.
-    iDestruct "Ht" as "($ & He' & $)"; iFrame "He".
-    iApply wp_step; try iFrame; eauto.
+    iDestruct "Ht" as "($ & He' & $)". iFrame "He".
+    iApply wp_step; eauto with iFrame.
 Qed.
 
 Lemma wptp_steps n e1 t1 t2 σ1 σ2 Φ :
@@ -177,14 +176,14 @@ Proof.
     rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iModIntro. iNext. iApply (@wptp_result _ _ (IrisG _ _ Hinv Istate)); eauto.
-    iFrame. by iApply big_sepL_nil.
+    by iFrame.
   - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
     eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
     rewrite Nat_iter_S. iMod wsat_alloc as (Hinv) "[Hw HE]".
     rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iModIntro. iNext. iApply (@wptp_safe _ _ (IrisG _ _ Hinv Istate)); eauto.
-    iFrame. by iApply big_sepL_nil.
+    by iFrame.
 Qed.
 
 Theorem wp_invariance Σ Λ `{invPreG Σ} e σ1 t2 σ2 φ :
@@ -201,5 +200,5 @@ Proof.
   rewrite {1}fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
   iDestruct "Hwp" as (Istate) "(HIstate & Hwp & Hclose)".
   iModIntro. iNext. iApply (@wptp_invariance _ _ (IrisG _ _ Hinv Istate)); eauto.
-  iFrame "Hw HE Hwp HIstate Hclose". by iApply big_sepL_nil.
+  by iFrame.
 Qed.

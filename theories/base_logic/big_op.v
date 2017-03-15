@@ -202,6 +202,8 @@ Section list.
 
   Lemma big_sepL_nil Φ : ([∗ list] k↦y ∈ nil, Φ k y) ⊣⊢ True.
   Proof. done. Qed.
+  Lemma big_sepL_nil' P Φ : P ⊢ [∗ list] k↦y ∈ nil, Φ k y.
+  Proof. apply True_intro. Qed.
   Lemma big_sepL_cons Φ x l :
     ([∗ list] k↦y ∈ x :: l, Φ k y) ⊣⊢ Φ 0 x ∗ [∗ list] k↦y ∈ l, Φ (S k) y.
   Proof. by rewrite big_opL_cons. Qed.
@@ -362,6 +364,8 @@ Section gmap.
 
   Lemma big_sepM_empty Φ : ([∗ map] k↦x ∈ ∅, Φ k x) ⊣⊢ True.
   Proof. by rewrite big_opM_empty. Qed.
+  Lemma big_sepM_empty' P Φ : P ⊢ [∗ map] k↦x ∈ ∅, Φ k x.
+  Proof. rewrite big_sepM_empty. apply True_intro. Qed.
 
   Lemma big_sepM_insert Φ m i x :
     m !! i = None →
@@ -525,6 +529,8 @@ Section gset.
 
   Lemma big_sepS_empty Φ : ([∗ set] x ∈ ∅, Φ x) ⊣⊢ True.
   Proof. by rewrite big_opS_empty. Qed.
+  Lemma big_sepS_empty' P Φ : P ⊢ [∗ set] x ∈ ∅, Φ x.
+  Proof. rewrite big_sepS_empty. apply True_intro. Qed.
 
   Lemma big_sepS_insert Φ X x :
     x ∉ X → ([∗ set] y ∈ {[ x ]} ∪ X, Φ y) ⊣⊢ (Φ x ∗ [∗ set] y ∈ X, Φ y).
@@ -674,6 +680,8 @@ Section gmultiset.
 
   Lemma big_sepMS_empty Φ : ([∗ mset] x ∈ ∅, Φ x) ⊣⊢ True.
   Proof. by rewrite big_opMS_empty. Qed.
+  Lemma big_sepMS_empty' P Φ : P ⊢ [∗ mset] x ∈ ∅, Φ x.
+  Proof. rewrite big_sepMS_empty. apply True_intro. Qed.
 
   Lemma big_sepMS_union Φ X Y :
     ([∗ mset] y ∈ X ∪ Y, Φ y) ⊣⊢ ([∗ mset] y ∈ X, Φ y) ∗ [∗ mset] y ∈ Y, Φ y.
@@ -730,3 +738,5 @@ Section gmultiset.
   Proof. rewrite /big_opMS. apply _. Qed.
 End gmultiset.
 End big_op.
+
+Hint Resolve big_sepL_nil' big_sepM_empty' big_sepS_empty' big_sepMS_empty' | 0.

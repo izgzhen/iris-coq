@@ -343,27 +343,13 @@ Global Instance from_sep_bupd P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (|==> P) (|==> Q1) (|==> Q2).
 Proof. rewrite /FromSep=><-. apply bupd_sep. Qed.
 
-Global Instance from_sep_big_sepL {A} (Φ Ψ1 Ψ2 : nat → A → uPred M) l :
-  (∀ k x, FromSep (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
-  FromSep ([∗ list] k ↦ x ∈ l, Φ k x)
-    ([∗ list] k ↦ x ∈ l, Ψ1 k x) ([∗ list] k ↦ x ∈ l, Ψ2 k x).
-Proof. rewrite /FromSep=>?. rewrite -big_sepL_sepL. by apply big_sepL_mono. Qed.
-Global Instance from_sep_big_sepM
-    `{Countable K} {A} (Φ Ψ1 Ψ2 : K → A → uPred M) m :
-  (∀ k x, FromSep (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
-  FromSep ([∗ map] k ↦ x ∈ m, Φ k x)
-    ([∗ map] k ↦ x ∈ m, Ψ1 k x) ([∗ map] k ↦ x ∈ m, Ψ2 k x).
-Proof. rewrite /FromSep=>?. rewrite -big_sepM_sepM. by apply big_sepM_mono. Qed.
-Global Instance from_sep_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) X :
-  (∀ x, FromSep (Φ x) (Ψ1 x) (Ψ2 x)) →
-  FromSep ([∗ set] x ∈ X, Φ x) ([∗ set] x ∈ X, Ψ1 x) ([∗ set] x ∈ X, Ψ2 x).
-Proof. rewrite /FromSep=>?. rewrite -big_sepS_sepS. by apply big_sepS_mono. Qed.
-Global Instance from_sep_big_sepMS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) X :
-  (∀ x, FromSep (Φ x) (Ψ1 x) (Ψ2 x)) →
-  FromSep ([∗ mset] x ∈ X, Φ x) ([∗ mset] x ∈ X, Ψ1 x) ([∗ mset] x ∈ X, Ψ2 x).
-Proof.
-  rewrite /FromSep=> ?. rewrite -big_sepMS_sepMS. by apply big_sepMS_mono.
-Qed.
+Global Instance from_sep_big_sepL_cons {A} (Φ : nat → A → uPred M) x l :
+  FromSep ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
+Proof. by rewrite /FromSep big_sepL_cons. Qed.
+Global Instance from_sep_big_sepL_app {A} (Φ : nat → A → uPred M) l1 l2 :
+  FromSep ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
+    ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
+Proof. by rewrite /FromSep big_sepL_app. Qed.
 
 (* FromOp *)
 Global Instance from_op_op {A : cmraT} (a b : A) : FromOp (a ⋅ b) a b.
@@ -424,41 +410,14 @@ Global Instance into_and_laterN n p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p (▷^n P) (▷^n Q1) (▷^n Q2).
 Proof. rewrite /IntoAnd=>->. destruct p; by rewrite ?laterN_and ?laterN_sep. Qed.
 
-Global Instance into_and_big_sepL {A} (Φ Ψ1 Ψ2 : nat → A → uPred M) p l :
-  (∀ k x, IntoAnd p (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
-  IntoAnd p ([∗ list] k ↦ x ∈ l, Φ k x)
-    ([∗ list] k ↦ x ∈ l, Ψ1 k x) ([∗ list] k ↦ x ∈ l, Ψ2 k x).
-Proof.
-  rewrite /IntoAnd=> HΦ. destruct p.
-  - rewrite -big_sepL_and. apply big_sepL_mono; auto.
-  - rewrite -big_sepL_sepL. apply big_sepL_mono; auto.
-Qed.
-Global Instance into_and_big_sepM
-    `{Countable K} {A} (Φ Ψ1 Ψ2 : K → A → uPred M) p m :
-  (∀ k x, IntoAnd p (Φ k x) (Ψ1 k x) (Ψ2 k x)) →
-  IntoAnd p ([∗ map] k ↦ x ∈ m, Φ k x)
-    ([∗ map] k ↦ x ∈ m, Ψ1 k x) ([∗ map] k ↦ x ∈ m, Ψ2 k x).
-Proof.
-  rewrite /IntoAnd=> HΦ. destruct p.
-  - rewrite -big_sepM_and. apply big_sepM_mono; auto.
-  - rewrite -big_sepM_sepM. apply big_sepM_mono; auto.
-Qed.
-Global Instance into_and_big_sepS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) p X :
-  (∀ x, IntoAnd p (Φ x) (Ψ1 x) (Ψ2 x)) →
-  IntoAnd p ([∗ set] x ∈ X, Φ x) ([∗ set] x ∈ X, Ψ1 x) ([∗ set] x ∈ X, Ψ2 x).
-Proof.
-  rewrite /IntoAnd=> HΦ. destruct p.
-  - rewrite -big_sepS_and. apply big_sepS_mono; auto.
-  - rewrite -big_sepS_sepS. apply big_sepS_mono; auto.
-Qed.
-Global Instance into_and_big_sepMS `{Countable A} (Φ Ψ1 Ψ2 : A → uPred M) p X :
-  (∀ x, IntoAnd p (Φ x) (Ψ1 x) (Ψ2 x)) →
-  IntoAnd p ([∗ mset] x ∈ X, Φ x) ([∗ mset] x ∈ X, Ψ1 x) ([∗ mset] x ∈ X, Ψ2 x).
-Proof.
-  rewrite /IntoAnd=> HΦ. destruct p.
-  - rewrite -big_sepMS_and. apply big_sepMS_mono; auto.
-  - rewrite -big_sepMS_sepMS. apply big_sepMS_mono; auto.
-Qed.
+Global Instance into_and_big_sepL_cons {A} p (Φ : nat → A → uPred M) x l :
+  IntoAnd p ([∗ list] k ↦ y ∈ x :: l, Φ k y)
+    (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
+Proof. apply mk_into_and_sep. by rewrite big_sepL_cons. Qed.
+Global Instance into_and_big_sepL_app {A} p (Φ : nat → A → uPred M) l1 l2 :
+  IntoAnd p ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
+    ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
+Proof. apply mk_into_and_sep. by rewrite big_sepL_app. Qed.
 
 (* Frame *)
 Global Instance frame_here R : Frame R R True.
@@ -479,6 +438,16 @@ Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc. Qed.
 Global Instance frame_sep_r R P1 P2 Q Q' :
   Frame R P2 Q → MakeSep P1 Q Q' → Frame R (P1 ∗ P2) Q' | 10.
 Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc (comm _ R) assoc. Qed.
+
+Global Instance frame_big_sepL_cons {A} (Φ : nat → A → uPred M) R Q x l :
+  Frame R (Φ 0 x ∗ [∗ list] k ↦ y ∈ l, Φ (S k) y) Q →
+  Frame R ([∗ list] k ↦ y ∈ x :: l, Φ k y) Q.
+Proof. by rewrite /Frame big_sepL_cons. Qed.
+Global Instance frame_big_sepL_app {A} (Φ : nat → A → uPred M) R Q l1 l2 :
+  Frame R (([∗ list] k ↦ y ∈ l1, Φ k y) ∗
+           [∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y) Q →
+  Frame R ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y) Q.
+Proof. by rewrite /Frame big_sepL_app. Qed.
 
 Class MakeAnd (P Q PQ : uPred M) := make_and : P ∧ Q ⊣⊢ PQ.
 Global Instance make_and_true_l P : MakeAnd True P P.
