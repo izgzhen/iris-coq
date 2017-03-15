@@ -155,3 +155,13 @@ Proof. by rewrite /ElimModal wand_elim_r. Qed.
 Class IsExcept0 {M} (Q : uPred M) := is_except_0 : ◇ Q ⊢ Q.
 Arguments is_except_0 {_} _ {_}.
 Hint Mode IsExcept0 + ! : typeclass_instances.
+
+Class IsCons {A} (l : list A) (x : A) (k : list A) := is_cons : l = x :: k.
+Class IsApp {A} (l k1 k2 : list A) := is_app : l = k1 ++ k2.
+Global Hint Mode IsCons + ! - - : typeclass_instances.
+Global Hint Mode IsApp + ! - - : typeclass_instances.
+
+Instance is_cons_cons {A} (x : A) (l : list A) : IsCons (x :: l) x l.
+Proof. done. Qed.
+Instance is_app_app {A} (l1 l2 : list A) : IsApp (l1 ++ l2) l1 l2.
+Proof. done. Qed.

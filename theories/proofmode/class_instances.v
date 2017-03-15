@@ -358,8 +358,7 @@ Global Instance from_op_persistent {A : cmraT} (a : A) :
   Persistent a → FromOp a a a.
 Proof. intros. by rewrite /FromOp -(persistent_dup a). Qed.
 Global Instance from_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
-  FromOp a b1 b2 → FromOp a' b1' b2' →
-  FromOp (a,a') (b1,b1') (b2,b2').
+  FromOp a b1 b2 → FromOp a' b1' b2' → FromOp (a,a') (b1,b1') (b2,b2').
 Proof. by constructor. Qed.
 Global Instance from_op_Some {A : cmraT} (a : A) b1 b2 :
   FromOp a b1 b2 → FromOp (Some a) (Some b1) (Some b2).
@@ -410,14 +409,19 @@ Global Instance into_and_laterN n p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p (▷^n P) (▷^n Q1) (▷^n Q2).
 Proof. rewrite /IntoAnd=>->. destruct p; by rewrite ?laterN_and ?laterN_sep. Qed.
 
-Global Instance into_and_big_sepL_cons {A} p (Φ : nat → A → uPred M) x l :
-  IntoAnd p ([∗ list] k ↦ y ∈ x :: l, Φ k y)
-    (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
-Proof. apply mk_into_and_sep. by rewrite big_sepL_cons. Qed.
-Global Instance into_and_big_sepL_app {A} p (Φ : nat → A → uPred M) l1 l2 :
-  IntoAnd p ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
+(* We use [IsCons] and [IsApp] to make sure that [frame_big_sepL_cons] and
+[frame_big_sepL_app] cannot be applied repeatedly often when having
+[ [∗ list] k ↦ x ∈ ?e, Φ k x] with [?e] an evar. *)
+Global Instance into_and_big_sepL_cons {A} p (Φ : nat → A → uPred M) l x l' :
+  IsCons l x l' →
+  IntoAnd p ([∗ list] k ↦ y ∈ l, Φ k y)
+    (Φ 0 x) ([∗ list] k ↦ y ∈ l', Φ (S k) y).
+Proof. rewrite /IsCons=>->. apply mk_into_and_sep. by rewrite big_sepL_cons. Qed.
+Global Instance into_and_big_sepL_app {A} p (Φ : nat → A → uPred M) l l1 l2 :
+  IsApp l l1 l2 →
+  IntoAnd p ([∗ list] k ↦ y ∈ l, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
-Proof. apply mk_into_and_sep. by rewrite big_sepL_app. Qed.
+Proof. rewrite /IsApp=>->. apply mk_into_and_sep. by rewrite big_sepL_app. Qed.
 
 (* Frame *)
 Global Instance frame_here p R : Frame p R R True.
@@ -447,15 +451,17 @@ Global Instance frame_sep_r p R P1 P2 Q Q' :
   Frame p R P2 Q → MakeSep P1 Q Q' → Frame p R (P1 ∗ P2) Q' | 10.
 Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc -(comm _ P1) assoc. Qed.
 
-Global Instance frame_big_sepL_cons {A} p (Φ : nat → A → uPred M) R Q x l :
-  Frame p R (Φ 0 x ∗ [∗ list] k ↦ y ∈ l, Φ (S k) y) Q →
-  Frame p R ([∗ list] k ↦ y ∈ x :: l, Φ k y) Q.
-Proof. by rewrite /Frame big_sepL_cons. Qed.
-Global Instance frame_big_sepL_app {A} p (Φ : nat → A → uPred M) R Q l1 l2 :
+Global Instance frame_big_sepL_cons {A} p (Φ : nat → A → uPred M) R Q l x l' :
+  IsCons l x l' →
+  Frame p R (Φ 0 x ∗ [∗ list] k ↦ y ∈ l', Φ (S k) y) Q →
+  Frame p R ([∗ list] k ↦ y ∈ l, Φ k y) Q.
+Proof. rewrite /IsCons=>->. by rewrite /Frame big_sepL_cons. Qed.
+Global Instance frame_big_sepL_app {A} p (Φ : nat → A → uPred M) R Q l l1 l2 :
+  IsApp l l1 l2 →
   Frame p R (([∗ list] k ↦ y ∈ l1, Φ k y) ∗
            [∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y) Q →
-  Frame p R ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y) Q.
-Proof. by rewrite /Frame big_sepL_app. Qed.
+  Frame p R ([∗ list] k ↦ y ∈ l, Φ k y) Q.
+Proof. rewrite /IsApp=>->. by rewrite /Frame big_sepL_app. Qed.
 
 Class MakeAnd (P Q PQ : uPred M) := make_and : P ∧ Q ⊣⊢ PQ.
 Global Instance make_and_true_l P : MakeAnd True P P.
