@@ -3,6 +3,7 @@ Set Default Proof Using "Type".
 
 Inductive token :=
   | TName : string → token
+  | TNat : nat → token
   | TAnom : token
   | TFrame : token
   | TBar : token
@@ -26,42 +27,64 @@ Inductive token :=
   | TMinus : token
   | TSep : token.
 
-Fixpoint cons_name (kn : string) (k : list token) : list token :=
-  match kn with "" => k | _ => TName (string_rev kn) :: k end.
-Fixpoint tokenize_go (s : string) (k : list token) (kn : string) : list token :=
+Inductive state :=
+  | SName : string → state
+  | SNat : nat → state
+  | SNone : state.
+
+Definition cons_state (kn : state) (k : list token) : list token :=
+  match kn with
+  | SNone => k
+  | SName s => TName (string_rev s) :: k
+  | SNat n => TNat n :: k
+  end.
+
+Fixpoint tokenize_go (s : string) (k : list token) (kn : state) : list token :=
   match s with
-  | "" => reverse (cons_name kn k)
-  | String "?" s => tokenize_go s (TAnom :: cons_name kn k) ""
-  | String "$" s => tokenize_go s (TFrame :: cons_name kn k) ""
-  | String "[" s => tokenize_go s (TBracketL :: cons_name kn k) ""
-  | String "]" s => tokenize_go s (TBracketR :: cons_name kn k) ""
-  | String "|" s => tokenize_go s (TBar :: cons_name kn k) ""
-  | String "(" s => tokenize_go s (TParenL :: cons_name kn k) ""
-  | String ")" s => tokenize_go s (TParenR :: cons_name kn k) ""
-  | String "&" s => tokenize_go s (TAmp :: cons_name kn k) ""
-  | String "{" s => tokenize_go s (TBraceL :: cons_name kn k) ""
-  | String "}" s => tokenize_go s (TBraceR :: cons_name kn k) ""
-  | String "%" s => tokenize_go s (TPure :: cons_name kn k) ""
-  | String "#" s => tokenize_go s (TAlways :: cons_name kn k) ""
-  | String ">" s => tokenize_go s (TModal :: cons_name kn k) ""
-  | String "!" (String "%" s) => tokenize_go s (TPureIntro :: cons_name kn k) ""
-  | String "!" (String "#" s) => tokenize_go s (TAlwaysIntro :: cons_name kn k) ""
-  | String "!" (String ">" s) => tokenize_go s (TModalIntro :: cons_name kn k) ""
+  | "" => reverse (cons_state kn k)
+  | String "?" s => tokenize_go s (TAnom :: cons_state kn k) SNone
+  | String "$" s => tokenize_go s (TFrame :: cons_state kn k) SNone
+  | String "[" s => tokenize_go s (TBracketL :: cons_state kn k) SNone
+  | String "]" s => tokenize_go s (TBracketR :: cons_state kn k) SNone
+  | String "|" s => tokenize_go s (TBar :: cons_state kn k) SNone
+  | String "(" s => tokenize_go s (TParenL :: cons_state kn k) SNone
+  | String ")" s => tokenize_go s (TParenR :: cons_state kn k) SNone
+  | String "&" s => tokenize_go s (TAmp :: cons_state kn k) SNone
+  | String "{" s => tokenize_go s (TBraceL :: cons_state kn k) SNone
+  | String "}" s => tokenize_go s (TBraceR :: cons_state kn k) SNone
+  | String "%" s => tokenize_go s (TPure :: cons_state kn k) SNone
+  | String "#" s => tokenize_go s (TAlways :: cons_state kn k) SNone
+  | String ">" s => tokenize_go s (TModal :: cons_state kn k) SNone
+  | String "!" (String "%" s) => tokenize_go s (TPureIntro :: cons_state kn k) SNone
+  | String "!" (String "#" s) => tokenize_go s (TAlwaysIntro :: cons_state kn k) SNone
+  | String "!" (String ">" s) => tokenize_go s (TModalIntro :: cons_state kn k) SNone
   | String "/" (String "/" (String "=" s)) =>
-     tokenize_go s (TSimpl :: TDone :: cons_name kn k) ""
-  | String "/" (String "/" s) => tokenize_go s (TDone :: cons_name kn k) ""
-  | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_name kn k) ""
-  | String "*" (String "*" s) => tokenize_go s (TAll :: cons_name kn k) ""
-  | String "*" s => tokenize_go s (TForall :: cons_name kn k) ""
-  | String "-" s => tokenize_go s (TMinus :: cons_name kn k) ""
+     tokenize_go s (TSimpl :: TDone :: cons_state kn k) SNone
+  | String "/" (String "/" s) => tokenize_go s (TDone :: cons_state kn k) SNone
+  | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_state kn k) SNone
+  | String "*" (String "*" s) => tokenize_go s (TAll :: cons_state kn k) SNone
+  | String "*" s => tokenize_go s (TForall :: cons_state kn k) SNone
+  | String "-" s => tokenize_go s (TMinus :: cons_state kn k) SNone
   | String (Ascii.Ascii false true false false false true true true) (* unicode ∗ *)
       (String (Ascii.Ascii false false false true false false false true)
       (String (Ascii.Ascii true true true false true false false true) s)) =>
-     tokenize_go s (TSep :: cons_name kn k) ""
+     tokenize_go s (TSep :: cons_state kn k) SNone
   | String a s =>
-     if is_space a then tokenize_go s (cons_name kn k) ""
-     else tokenize_go s k (String a kn)
-  (* TODO: Complain about invalid characters, to future-proof this
-  against making more characters special. *)
+     (* TODO: Complain about invalid characters, to future-proof this
+     against making more characters special. *)
+     if is_space a then tokenize_go s (cons_state kn k) SNone else
+     match kn with
+     | SNone =>
+        match is_nat a with
+        | Some n => tokenize_go s k (SNat n)
+        | None => tokenize_go s k (SName (String a ""))
+        end
+     | SName s' => tokenize_go s k (SName (String a s'))
+     | SNat n =>
+        match is_nat a with
+        | Some n' => tokenize_go s k (SNat (n' + 10 * n))
+        | None => tokenize_go s (TNat n :: k) (SName (String a ""))
+        end
+     end
   end.
-Definition tokenize (s : string) : list token := tokenize_go s [] "".
+Definition tokenize (s : string) : list token := tokenize_go s [] SNone.
