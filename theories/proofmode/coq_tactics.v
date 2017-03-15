@@ -806,15 +806,17 @@ Qed.
 
 (** * Framing *)
 Lemma tac_frame_pure Δ (φ : Prop) P Q :
-  φ → Frame ⌜φ⌝ P Q → (Δ ⊢ Q) → Δ ⊢ P.
-Proof. intros ?? ->. by rewrite -(frame ⌜φ⌝ P) pure_True // left_id. Qed.
+  φ → Frame true ⌜φ⌝ P Q → (Δ ⊢ Q) → Δ ⊢ P.
+Proof.
+  intros ?? ->. by rewrite -(frame ⌜φ⌝ P) /= always_pure pure_True // left_id.
+Qed.
 
 Lemma tac_frame Δ Δ' i p R P Q :
-  envs_lookup_delete i Δ = Some (p, R, Δ') → Frame R P Q →
+  envs_lookup_delete i Δ = Some (p, R, Δ') → Frame p R P Q →
   ((if p then Δ else Δ') ⊢ Q) → Δ ⊢ P.
 Proof.
   intros [? ->]%envs_lookup_delete_Some ? HQ. destruct p.
-  - by rewrite envs_lookup_persistent_sound // always_elim -(frame R P) HQ.
+  - by rewrite envs_lookup_persistent_sound // -(frame R P) HQ.
   - rewrite envs_lookup_sound //; simpl. by rewrite -(frame R P) HQ.
 Qed.
 

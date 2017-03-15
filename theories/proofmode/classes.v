@@ -102,9 +102,19 @@ Arguments into_op {_} _ _ _ {_}.
 (* No [Hint Mode] since we want to turn [?x] into [?x1 ⋅ ?x2], for example
 when having [H : own ?x]. *)
 
-Class Frame {M} (R P Q : uPred M) := frame : R ∗ Q ⊢ P.
-Arguments frame {_} _ _ _ {_}.
-Hint Mode Frame + ! ! - : typeclass_instances.
+Class Frame {M} (p : bool) (R P Q : uPred M) := frame : □?p R ∗ Q ⊢ P.
+Arguments frame {_ _} _ _ _ {_}.
+Hint Mode Frame + + ! ! - : typeclass_instances.
+
+Class MaybeFrame {M} (p : bool) (R P Q : uPred M) := maybe_frame : □?p R ∗ Q ⊢ P.
+Arguments maybe_frame {_} _ _ _ {_}.
+Hint Mode MaybeFrame + + ! ! - : typeclass_instances.
+
+Instance maybe_frame_frame {M} p (R P Q : uPred M) :
+  Frame p R P Q → MaybeFrame p R P Q.
+Proof. done. Qed.
+Instance maybe_frame_default {M} p (R P : uPred M) : MaybeFrame p R P P | 100.
+Proof. apply sep_elim_r. Qed.
 
 Class FromOr {M} (P Q1 Q2 : uPred M) := from_or : Q1 ∨ Q2 ⊢ P.
 Arguments from_or {_} _ _ _ {_}.

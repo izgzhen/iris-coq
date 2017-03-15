@@ -255,8 +255,8 @@ Section proofmode_classes.
   Implicit Types P Q : iProp Σ.
   Implicit Types Φ : val Λ → iProp Σ.
 
-  Global Instance frame_wp E e R Φ Ψ :
-    (∀ v, Frame R (Φ v) (Ψ v)) → Frame R (WP e @ E {{ Φ }}) (WP e @ E {{ Ψ }}).
+  Global Instance frame_wp p E e R Φ Ψ :
+    (∀ v, Frame p R (Φ v) (Ψ v)) → Frame p R (WP e @ E {{ Φ }}) (WP e @ E {{ Ψ }}).
   Proof. rewrite /Frame=> HR. rewrite wp_frame_l. apply wp_mono, HR. Qed.
 
   Global Instance is_except_0_wp E e Φ : IsExcept0 (WP e @ E {{ Φ }}).

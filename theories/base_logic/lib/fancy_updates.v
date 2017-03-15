@@ -174,8 +174,8 @@ Section proofmode_classes.
     rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
   Qed.
 
-  Global Instance frame_fupd E1 E2 R P Q :
-    Frame R P Q → Frame R (|={E1,E2}=> P) (|={E1,E2}=> Q).
+  Global Instance frame_fupd p E1 E2 R P Q :
+    Frame p R P Q → Frame p R (|={E1,E2}=> P) (|={E1,E2}=> Q).
   Proof. rewrite /Frame=><-. by rewrite fupd_frame_l. Qed.
 
   Global Instance is_except_0_fupd E1 E2 P : IsExcept0 (|={E1,E2}=> P).

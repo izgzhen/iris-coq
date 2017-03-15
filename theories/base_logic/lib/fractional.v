@@ -20,7 +20,7 @@ Section fractional.
   Context {M : ucmraT}.
   Implicit Types P Q : uPred M.
   Implicit Types Φ : Qp → uPred M.
-  Implicit Types p q : Qp.
+  Implicit Types q : Qp.
 
   Lemma fractional_split P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
@@ -145,27 +145,30 @@ Section fractional.
      [AsFractional R Φ r], but the slowdown is still noticeable.  For
      that reason, we factorize the three instances that could have been
      defined for that purpose into one. *)
-  Inductive FrameFractionalHyps R Φ RES : Qp → Qp → Prop :=
-  | frame_fractional_hyps_l Q p p' r:
-      Frame R (Φ p) Q → MakeSep Q (Φ p') RES →
-      FrameFractionalHyps R Φ RES r (p + p')
-  | frame_fractional_hyps_r Q p p' r:
-      Frame R (Φ p') Q → MakeSep Q (Φ p) RES →
-      FrameFractionalHyps R Φ RES r (p + p')
-  | frame_fractional_hyps_half p:
-      AsFractional RES Φ (p/2)%Qp → FrameFractionalHyps R Φ RES (p/2)%Qp p.
+  Inductive FrameFractionalHyps
+      (p : bool) (R : uPred M) (Φ : Qp → uPred M) (RES : uPred M) : Qp → Qp → Prop :=
+    | frame_fractional_hyps_l Q q q' r:
+       Frame p R (Φ q) Q → MakeSep Q (Φ q') RES →
+       FrameFractionalHyps p R Φ RES r (q + q')
+    | frame_fractional_hyps_r Q q q' r:
+       Frame p R (Φ q') Q → MakeSep Q (Φ q) RES →
+       FrameFractionalHyps p R Φ RES r (q + q')
+    | frame_fractional_hyps_half q :
+       AsFractional RES Φ (q/2) →
+       FrameFractionalHyps p R Φ RES (q/2) q.
   Existing Class FrameFractionalHyps.
   Global Existing Instances frame_fractional_hyps_l frame_fractional_hyps_r
-         frame_fractional_hyps_half.
-  Global Instance frame_fractional R r Φ P p RES:
-    AsFractional R Φ r → AsFractional P Φ p → FrameFractionalHyps R Φ RES r p →
-    Frame R P RES.
+    frame_fractional_hyps_half.
+  Global Instance frame_fractional p R r Φ P q RES:
+    AsFractional R Φ r → AsFractional P Φ q →
+    FrameFractionalHyps p R Φ RES r q →
+    Frame p R P RES.
   Proof.
     rewrite /Frame=>-[HR _][->?]H.
-    revert H HR=>-[Q p0 p0' r0|Q p0 p0' r0|p0].
+    revert H HR=>-[Q q0 q0' r0|Q q0 q0' r0|q0].
     - rewrite fractional=><-<-. by rewrite assoc.
     - rewrite fractional=><-<-=>_.
-      rewrite (comm _ Q (Φ p0)) !assoc. f_equiv. by rewrite comm.
-    - move=>-[-> _]->. by rewrite -fractional Qp_div_2.
+      by rewrite (comm _ Q (Φ q0)) !assoc (comm _ (Φ _)).
+    - move=>-[-> _]->. by rewrite uPred.always_if_elim -fractional Qp_div_2.
   Qed.
 End fractional.

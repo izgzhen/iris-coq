@@ -656,7 +656,8 @@ Lemma always_if_sep p P Q : □?p (P ∗ Q) ⊣⊢ □?p P ∗ □?p Q.
 Proof. destruct p; simpl; auto using always_sep. Qed.
 Lemma always_if_later p P : □?p ▷ P ⊣⊢ ▷ □?p P.
 Proof. destruct p; simpl; auto using always_later. Qed.
-
+Lemma always_if_laterN p n P : □?p ▷^n P ⊣⊢ ▷^n □?p P.
+Proof. destruct p; simpl; auto using always_laterN. Qed.
 
 (* True now *)
 Global Instance except_0_ne : NonExpansive (@uPred_except_0 M).

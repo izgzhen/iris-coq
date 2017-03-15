@@ -183,7 +183,7 @@ Local Ltac iFramePure t :=
 Local Ltac iFrameHyp H :=
   eapply tac_frame with _ H _ _ _;
     [env_cbv; reflexivity || fail "iFrame:" H "not found"
-    |let R := match goal with |- Frame ?R _ _ => R end in
+    |let R := match goal with |- Frame _ ?R _ _ => R end in
      apply _ || fail "iFrame: cannot frame" R
     |iFrameFinish].
 

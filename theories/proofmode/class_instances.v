@@ -1,7 +1,7 @@
 From iris.proofmode Require Export classes.
 From iris.algebra Require Import gmap.
 From stdpp Require Import gmultiset.
-From iris.base_logic Require Import big_op.
+From iris.base_logic Require Import big_op tactics.
 Set Default Proof Using "Type".
 Import uPred.
 
@@ -420,10 +420,10 @@ Global Instance into_and_big_sepL_app {A} p (Φ : nat → A → uPred M) l1 l2 :
 Proof. apply mk_into_and_sep. by rewrite big_sepL_app. Qed.
 
 (* Frame *)
-Global Instance frame_here R : Frame R R True.
-Proof. by rewrite /Frame right_id. Qed.
-Global Instance frame_here_pure φ Q : FromPure Q φ → Frame ⌜φ⌝ Q True.
-Proof. rewrite /FromPure /Frame=> ->. by rewrite right_id. Qed.
+Global Instance frame_here p R : Frame p R R True.
+Proof. by rewrite /Frame right_id always_if_elim. Qed.
+Global Instance frame_here_pure p φ Q : FromPure Q φ → Frame p ⌜φ⌝ Q True.
+Proof. rewrite /FromPure /Frame=> ->. by rewrite always_if_elim right_id. Qed.
 
 Class MakeSep (P Q PQ : uPred M) := make_sep : P ∗ Q ⊣⊢ PQ.
 Global Instance make_sep_true_l P : MakeSep True P P.
@@ -432,21 +432,29 @@ Global Instance make_sep_true_r P : MakeSep P True P.
 Proof. by rewrite /MakeSep right_id. Qed.
 Global Instance make_sep_default P Q : MakeSep P Q (P ∗ Q) | 100.
 Proof. done. Qed.
-Global Instance frame_sep_l R P1 P2 Q Q' :
-  Frame R P1 Q → MakeSep Q P2 Q' → Frame R (P1 ∗ P2) Q' | 9.
-Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc. Qed.
-Global Instance frame_sep_r R P1 P2 Q Q' :
-  Frame R P2 Q → MakeSep P1 Q Q' → Frame R (P1 ∗ P2) Q' | 10.
-Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc (comm _ R) assoc. Qed.
 
-Global Instance frame_big_sepL_cons {A} (Φ : nat → A → uPred M) R Q x l :
-  Frame R (Φ 0 x ∗ [∗ list] k ↦ y ∈ l, Φ (S k) y) Q →
-  Frame R ([∗ list] k ↦ y ∈ x :: l, Φ k y) Q.
+Global Instance frame_sep_persistent_l R P1 P2 Q1 Q2 Q' :
+  Frame true R P1 Q1 → MaybeFrame true R P2 Q2 → MakeSep Q1 Q2 Q' →
+  Frame true R (P1 ∗ P2) Q' | 9.
+Proof.
+  rewrite /Frame /MaybeFrame /MakeSep /= => <- <- <-.
+  rewrite {1}(always_sep_dup (□ R)). solve_sep_entails.
+Qed.
+Global Instance frame_sep_l R P1 P2 Q Q' :
+  Frame false R P1 Q → MakeSep Q P2 Q' → Frame false R (P1 ∗ P2) Q' | 9.
+Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc. Qed.
+Global Instance frame_sep_r p R P1 P2 Q Q' :
+  Frame p R P2 Q → MakeSep P1 Q Q' → Frame p R (P1 ∗ P2) Q' | 10.
+Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc -(comm _ P1) assoc. Qed.
+
+Global Instance frame_big_sepL_cons {A} p (Φ : nat → A → uPred M) R Q x l :
+  Frame p R (Φ 0 x ∗ [∗ list] k ↦ y ∈ l, Φ (S k) y) Q →
+  Frame p R ([∗ list] k ↦ y ∈ x :: l, Φ k y) Q.
 Proof. by rewrite /Frame big_sepL_cons. Qed.
-Global Instance frame_big_sepL_app {A} (Φ : nat → A → uPred M) R Q l1 l2 :
-  Frame R (([∗ list] k ↦ y ∈ l1, Φ k y) ∗
+Global Instance frame_big_sepL_app {A} p (Φ : nat → A → uPred M) R Q l1 l2 :
+  Frame p R (([∗ list] k ↦ y ∈ l1, Φ k y) ∗
            [∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y) Q →
-  Frame R ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y) Q.
+  Frame p R ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y) Q.
 Proof. by rewrite /Frame big_sepL_app. Qed.
 
 Class MakeAnd (P Q PQ : uPred M) := make_and : P ∧ Q ⊣⊢ PQ.
@@ -456,11 +464,11 @@ Global Instance make_and_true_r P : MakeAnd P True P.
 Proof. by rewrite /MakeAnd right_id. Qed.
 Global Instance make_and_default P Q : MakeAnd P Q (P ∧ Q) | 100.
 Proof. done. Qed.
-Global Instance frame_and_l R P1 P2 Q Q' :
-  Frame R P1 Q → MakeAnd Q P2 Q' → Frame R (P1 ∧ P2) Q' | 9.
+Global Instance frame_and_l p R P1 P2 Q Q' :
+  Frame p R P1 Q → MakeAnd Q P2 Q' → Frame p R (P1 ∧ P2) Q' | 9.
 Proof. rewrite /Frame /MakeAnd => <- <-; eauto 10 with I. Qed.
-Global Instance frame_and_r R P1 P2 Q Q' :
-  Frame R P2 Q → MakeAnd P1 Q Q' → Frame R (P1 ∧ P2) Q' | 10.
+Global Instance frame_and_r p R P1 P2 Q Q' :
+  Frame p R P2 Q → MakeAnd P1 Q Q' → Frame p R (P1 ∧ P2) Q' | 10.
 Proof. rewrite /Frame /MakeAnd => <- <-; eauto 10 with I. Qed.
 
 Class MakeOr (P Q PQ : uPred M) := make_or : P ∨ Q ⊣⊢ PQ.
@@ -470,12 +478,24 @@ Global Instance make_or_true_r P : MakeOr P True True.
 Proof. by rewrite /MakeOr right_absorb. Qed.
 Global Instance make_or_default P Q : MakeOr P Q (P ∨ Q) | 100.
 Proof. done. Qed.
+
+Global Instance frame_or_persistent_l R P1 P2 Q1 Q2 Q :
+  Frame true R P1 Q1 → MaybeFrame true R P2 Q2 → MakeOr Q1 Q2 Q →
+  Frame true R (P1 ∨ P2) Q | 9.
+Proof. rewrite /Frame /MakeOr => <- <- <-. by rewrite -sep_or_l. Qed.
+Global Instance frame_or_persistent_r R P1 P2 Q1 Q2 Q :
+  MaybeFrame true R P2 Q2 → MakeOr P1 Q2 Q →
+  Frame true R (P1 ∨ P2) Q | 10.
+Proof.
+  rewrite /Frame /MaybeFrame /MakeOr => <- <-. by rewrite sep_or_l sep_elim_r.
+Qed.
 Global Instance frame_or R P1 P2 Q1 Q2 Q :
-  Frame R P1 Q1 → Frame R P2 Q2 → MakeOr Q1 Q2 Q → Frame R (P1 ∨ P2) Q.
+  Frame false R P1 Q1 → Frame false R P2 Q2 → MakeOr Q1 Q2 Q →
+  Frame false R (P1 ∨ P2) Q.
 Proof. rewrite /Frame /MakeOr => <- <- <-. by rewrite -sep_or_l. Qed.
 
-Global Instance frame_wand R P1 P2 Q2 :
-  Frame R P2 Q2 → Frame R (P1 -∗ P2) (P1 -∗ Q2).
+Global Instance frame_wand p R P1 P2 Q2 :
+  Frame p R P2 Q2 → Frame p R (P1 -∗ P2) (P1 -∗ Q2).
 Proof.
   rewrite /Frame=> ?. apply wand_intro_l.
   by rewrite assoc (comm _ P1) -assoc wand_elim_r.
@@ -487,10 +507,11 @@ Proof. by rewrite /MakeLater later_True. Qed.
 Global Instance make_later_default P : MakeLater P (▷ P) | 100.
 Proof. done. Qed.
 
-Global Instance frame_later R R' P Q Q' :
-  IntoLaterN 1 R' R → Frame R P Q → MakeLater Q Q' → Frame R' (▷ P) Q'.
+Global Instance frame_later p R R' P Q Q' :
+  IntoLaterN 1 R' R → Frame p R P Q → MakeLater Q Q' → Frame p R' (▷ P) Q'.
 Proof.
-  rewrite /Frame /MakeLater /IntoLaterN=>-> <- <-. by rewrite later_sep.
+  rewrite /Frame /MakeLater /IntoLaterN=>-> <- <-.
+  by rewrite always_if_later later_sep.
 Qed.
 
 Class MakeLaterN (n : nat) (P lP : uPred M) := make_laterN : ▷^n P ⊣⊢ lP.
@@ -499,10 +520,24 @@ Proof. by rewrite /MakeLaterN laterN_True. Qed.
 Global Instance make_laterN_default P : MakeLaterN n P (▷^n P) | 100.
 Proof. done. Qed.
 
-Global Instance frame_laterN n R R' P Q Q' :
-  IntoLaterN n R' R → Frame R P Q → MakeLaterN n Q Q' → Frame R' (▷^n P) Q'.
+Global Instance frame_laterN p n R R' P Q Q' :
+  IntoLaterN n R' R → Frame p R P Q → MakeLaterN n Q Q' → Frame p R' (▷^n P) Q'.
 Proof.
-  rewrite /Frame /MakeLater /IntoLaterN=>-> <- <-. by rewrite laterN_sep.
+  rewrite /Frame /MakeLater /IntoLaterN=>-> <- <-.
+  by rewrite always_if_laterN laterN_sep.
+Qed.
+
+Class MakeAlways (P Q : uPred M) := make_always : □ P ⊣⊢ Q.
+Global Instance make_always_true : MakeAlways True True.
+Proof. by rewrite /MakeAlways always_pure. Qed.
+Global Instance make_always_default P : MakeAlways P (□ P) | 100.
+Proof. done. Qed.
+
+Global Instance frame_always R P Q Q' :
+  Frame true R P Q → MakeAlways Q Q' → Frame true R (□ P) Q'.
+Proof.
+  rewrite /Frame /MakeAlways=> <- <-.
+  by rewrite always_sep /= always_always.
 Qed.
 
 Class MakeExcept0 (P Q : uPred M) := make_except_0 : ◇ P ⊣⊢ Q.
@@ -511,21 +546,21 @@ Proof. by rewrite /MakeExcept0 except_0_True. Qed.
 Global Instance make_except_0_default P : MakeExcept0 P (◇ P) | 100.
 Proof. done. Qed.
 
-Global Instance frame_except_0 R P Q Q' :
-  Frame R P Q → MakeExcept0 Q Q' → Frame R (◇ P) Q'.
+Global Instance frame_except_0 p R P Q Q' :
+  Frame p R P Q → MakeExcept0 Q Q' → Frame p R (◇ P) Q'.
 Proof.
   rewrite /Frame /MakeExcept0=><- <-.
-  by rewrite except_0_sep -(except_0_intro R).
+  by rewrite except_0_sep -(except_0_intro (□?p R)).
 Qed.
 
-Global Instance frame_exist {A} R (Φ Ψ : A → uPred M) :
-  (∀ a, Frame R (Φ a) (Ψ a)) → Frame R (∃ x, Φ x) (∃ x, Ψ x).
+Global Instance frame_exist {A} p R (Φ Ψ : A → uPred M) :
+  (∀ a, Frame p R (Φ a) (Ψ a)) → Frame p R (∃ x, Φ x) (∃ x, Ψ x).
 Proof. rewrite /Frame=> ?. by rewrite sep_exist_l; apply exist_mono. Qed.
-Global Instance frame_forall {A} R (Φ Ψ : A → uPred M) :
-  (∀ a, Frame R (Φ a) (Ψ a)) → Frame R (∀ x, Φ x) (∀ x, Ψ x).
+Global Instance frame_forall {A} p R (Φ Ψ : A → uPred M) :
+  (∀ a, Frame p R (Φ a) (Ψ a)) → Frame p R (∀ x, Φ x) (∀ x, Ψ x).
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
 
-Global Instance frame_bupd R P Q : Frame R P Q → Frame R (|==> P) (|==> Q).
+Global Instance frame_bupd p R P Q : Frame p R P Q → Frame p R (|==> P) (|==> Q).
 Proof. rewrite /Frame=><-. by rewrite bupd_frame_l. Qed.
 
 (* FromOr *)

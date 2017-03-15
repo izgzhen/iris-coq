@@ -165,3 +165,7 @@ Lemma test_iNext_sep2 (M : ucmraT) (P Q : uPred M) :
 Proof.
   iIntros "H". iNext. iExact "H". (* Check that the laters are all gone. *)
 Qed.
+
+Lemma test_frame_persistent (M : ucmraT) (P Q : uPred M) :
+  □ P -∗ Q -∗ □ (P ∗ P) ∗ (P ∧ Q ∨ Q).
+Proof. iIntros "#HP". iFrame "HP". iIntros "$". Qed.
