@@ -38,7 +38,7 @@ Lemma wp_lift_pure_head_step {E E' Φ} e1 :
   ⊢ WP e1 @ E {{ Φ }}.
 Proof using Hinh.
   iIntros (??) "H". iApply wp_lift_pure_step; eauto.
-  iMod "H" as "H". iModIntro. iNext. iMod "H" as "H". iModIntro.
+  iMod "H". iModIntro. iNext. iMod "H". iModIntro.
   iIntros (????). iApply "H". eauto.
 Qed.
 

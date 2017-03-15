@@ -30,11 +30,11 @@ Lemma wp_lift_pure_step `{Inhabited (state Λ)} E E' Φ e1 :
 Proof.
   iIntros (Hsafe Hstep) "H". iApply wp_lift_step.
   { eapply reducible_not_val, (Hsafe inhabitant). }
-  iIntros (σ1) "Hσ". iMod "H" as "H".
+  iIntros (σ1) "Hσ". iMod "H".
   iMod fupd_intro_mask' as "Hclose"; last iModIntro; first set_solver.
   iSplit; [done|]; iNext; iIntros (e2 σ2 efs ?).
   destruct (Hstep σ1 e2 σ2 efs); auto; subst.
-  iMod "Hclose" as "_". iFrame "Hσ". iMod "H" as "H". iApply "H"; auto.
+  iMod "Hclose" as "_". iFrame "Hσ". iMod "H". iApply "H"; auto.
 Qed.
 
 (* Atomic steps don't need any mask-changing business here, one can
@@ -66,7 +66,7 @@ Proof.
   iIntros (? Hpuredet) "H". iApply (wp_lift_pure_step E); try done.
   { by intros; eapply Hpuredet. }
   (* TODO: Can we make this nicer? iNext for fupd, for example, could help. *)
-  iMod "H" as "H". iModIntro. iNext. iMod "H" as "H". iModIntro.
+  iMod "H". iModIntro. iNext. iMod "H". iModIntro.
   by iIntros (e' efs' σ (_&->&->)%Hpuredet).
 Qed.
 End lifting.
