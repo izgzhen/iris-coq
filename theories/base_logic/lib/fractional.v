@@ -22,21 +22,14 @@ Section fractional.
   Implicit Types Φ : Qp → uPred M.
   Implicit Types p q : Qp.
 
-  Lemma fractional_split `{!Fractional Φ} p q :
-    Φ (p + q)%Qp ⊢ Φ p ∗ Φ q.
-  Proof. by rewrite fractional. Qed.
-  Lemma fractional_combine `{!Fractional Φ} p q :
-    Φ p ∗ Φ q ⊢ Φ (p + q)%Qp.
-  Proof. by rewrite fractional. Qed.
-  Lemma fractional_half_equiv `{!Fractional Φ} p :
-    Φ p ⊣⊢ Φ (p/2)%Qp ∗ Φ (p/2)%Qp.
-  Proof. by rewrite -(fractional (p/2) (p/2)) Qp_div_2. Qed.
-  Lemma fractional_half `{!Fractional Φ} p :
-    Φ p ⊢ Φ (p/2)%Qp ∗ Φ (p/2)%Qp.
-  Proof. by rewrite fractional_half_equiv. Qed.
-  Lemma half_fractional `{!Fractional Φ} p q :
-    Φ (p/2)%Qp ∗ Φ (p/2)%Qp ⊢ Φ p.
-  Proof. by rewrite -fractional_half_equiv. Qed.
+  Lemma fractional_split P P1 P2 Φ q1 q2 :
+    AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
+    P ⊣⊢ P1 ∗ P2.
+  Proof. move=>-[-> ->] [-> _] [-> _]. done. Qed.
+  Lemma fractional_half P P12 Φ q :
+    AsFractional P Φ q → AsFractional P12 Φ (q/2) →
+    P ⊣⊢ P12 ∗ P12.
+  Proof. rewrite -{1}(Qp_div_2 q)=>-[->->][-> _]. done. Qed.
 
   (** Fractional and logical connectives *)
   Global Instance persistent_fractional P :
@@ -132,25 +125,25 @@ Section fractional.
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
     IntoAnd b P P1 P2.
   Proof.
-    (* TODO: We need a better way to handle this boolean here.
+    (* TODO: We need a better way to handle this boolean here; always
+       applying mk_into_and_sep (which only works after introducing all
+       assumptions) is rather annoying.
        Ideally, it'd not even be possible to make the mistake that
        was originally made here, which is to give this instance for
        "false" only, thus breaking some intro patterns. *)
-    intros H1 H2 H3. apply mk_into_and_sep. revert H1 H2 H3.
-    by rewrite /IntoAnd=>-[-> ->] [-> _] [-> _].
+    intros H1 H2 H3. apply mk_into_and_sep. rewrite [P]fractional_split //.
   Qed.
   Global Instance into_and_fractional_half b P Q Φ q :
     AsFractional P Φ q → AsFractional Q Φ (q/2) →
     IntoAnd b P Q Q | 100.
   Proof.
-    intros H1 H2. apply mk_into_and_sep. revert H1 H2.
-    by rewrite /IntoAnd -{1}(Qp_div_2 q)=>-[->->][-> _].
+    intros H1 H2. apply mk_into_and_sep. rewrite [P]fractional_half //.
   Qed.
 
   (* The instance [frame_fractional] can be tried at all the nodes of
      the proof search. The proof search then fails almost always on
      [AsFractional R Φ r], but the slowdown is still noticeable.  For
-     that reason, we factorize the three instances that could ave been
+     that reason, we factorize the three instances that could have been
      defined for that purpose into one. *)
   Inductive FrameFractionalHyps R Φ RES : Qp → Qp → Prop :=
   | frame_fractional_hyps_l Q p p' r:
