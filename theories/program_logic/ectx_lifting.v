@@ -67,7 +67,8 @@ Proof.
   iIntros (?) "H". iApply wp_lift_atomic_head_step; eauto.
   iIntros (σ1) "Hσ1". iMod ("H" $! σ1 with "Hσ1") as "[$ H]"; iModIntro.
   iNext; iIntros (v2 σ2 efs) "%".
-  iMod ("H" $! v2 σ2 efs with "[#]") as "(% & $ & $)"=>//; subst; auto.
+  iMod ("H" $! v2 σ2 efs with "[# //]") as "(% & $ & $)"; subst.
+  by iApply big_sepL_nil.
 Qed.
 
 Lemma wp_lift_pure_det_head_step {E E' Φ} e1 e2 efs :
