@@ -38,8 +38,8 @@ Lemma wp_lift_pure_head_step {E E' Φ} e1 :
   ⊢ WP e1 @ E {{ Φ }}.
 Proof using Hinh.
   iIntros (??) "H". iApply wp_lift_pure_step; eauto.
-  iMod "H". iModIntro. iNext. iMod "H". iModIntro.
-  iIntros (????). iApply "H". eauto.
+  iApply (step_fupd_wand with "H"); iIntros "H".
+  iIntros (????). iApply "H"; eauto.
 Qed.
 
 Lemma wp_lift_atomic_head_step {E Φ} e1 :
@@ -67,8 +67,7 @@ Proof.
   iIntros (?) "H". iApply wp_lift_atomic_head_step; eauto.
   iIntros (σ1) "Hσ1". iMod ("H" $! σ1 with "Hσ1") as "[$ H]"; iModIntro.
   iNext; iIntros (v2 σ2 efs) "%".
-  iMod ("H" $! v2 σ2 efs with "[#]") as "(% & $ & $)"=>//; subst.
-  by iApply big_sepL_nil.
+  iMod ("H" $! v2 σ2 efs with "[#]") as "(% & $ & $)"=>//; subst; auto.
 Qed.
 
 Lemma wp_lift_pure_det_head_step {E E' Φ} e1 e2 efs :

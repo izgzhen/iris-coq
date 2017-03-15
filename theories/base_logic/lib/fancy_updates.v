@@ -217,6 +217,9 @@ Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I
 Section step_fupd.
 Context `{invG Σ}.
 
+Lemma step_fupd_wand E1 E2 P Q : (|={E1,E2}▷=> P) -∗ (P -∗ Q) -∗ |={E1,E2}▷=> Q.
+Proof. iIntros "HP HPQ". by iApply "HPQ". Qed.
+
 Lemma step_fupd_mask_frame_r E1 E2 Ef P :
   E1 ⊥ Ef → E2 ⊥ Ef → (|={E1,E2}▷=> P) ⊢ |={E1 ∪ Ef,E2 ∪ Ef}▷=> P.
 Proof.

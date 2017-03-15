@@ -65,8 +65,7 @@ Lemma wp_lift_pure_det_step `{Inhabited (state Λ)} {E E' Φ} e1 e2 efs :
 Proof.
   iIntros (? Hpuredet) "H". iApply (wp_lift_pure_step E); try done.
   { by intros; eapply Hpuredet. }
-  (* TODO: Can we make this nicer? iNext for fupd, for example, could help. *)
-  iMod "H". iModIntro. iNext. iMod "H". iModIntro.
+  iApply (step_fupd_wand with "H"); iIntros "H".
   by iIntros (e' efs' σ (_&->&->)%Hpuredet).
 Qed.
 End lifting.
