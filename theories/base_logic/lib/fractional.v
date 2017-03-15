@@ -128,14 +128,24 @@ Section fractional.
     FromSep Q P P.
   Proof. rewrite /FromSep=>-[-> <-] [-> _]. by rewrite Qp_div_2. Qed.
 
-  Global Instance into_and_fractional P P1 P2 Φ q1 q2 :
+  Global Instance into_and_fractional b P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
-    IntoAnd false P P1 P2.
-  Proof. by rewrite /IntoAnd=>-[-> ->] [-> _] [-> _]. Qed.
-  Global Instance into_and_fractional_half P Q Φ q :
+    IntoAnd b P P1 P2.
+  Proof.
+    (* TODO: We need a better way to handle this boolean here.
+       Ideally, it'd not even be possible to make the mistake that
+       was originally made here, which is to give this instance for
+       "false" only, thus breaking some intro patterns. *)
+    intros H1 H2 H3. apply mk_into_and_sep. revert H1 H2 H3.
+    by rewrite /IntoAnd=>-[-> ->] [-> _] [-> _].
+  Qed.
+  Global Instance into_and_fractional_half b P Q Φ q :
     AsFractional P Φ q → AsFractional Q Φ (q/2) →
-    IntoAnd false P Q Q | 100.
-  Proof. by rewrite /IntoAnd -{1}(Qp_div_2 q)=>-[->->][-> _]. Qed.
+    IntoAnd b P Q Q | 100.
+  Proof.
+    intros H1 H2. apply mk_into_and_sep. revert H1 H2.
+    by rewrite /IntoAnd -{1}(Qp_div_2 q)=>-[->->][-> _].
+  Qed.
 
   (* The instance [frame_fractional] can be tried at all the nodes of
      the proof search. The proof search then fails almost always on
