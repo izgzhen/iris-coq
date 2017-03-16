@@ -200,7 +200,7 @@ appear at the top level:
 - `{$H1 ... $Hn}` : frame `H1 ... Hn` (this pattern can be mixed with the
   previous pattern, e.g., `{$H1 H2 $H3}`).
 - `!%` : introduce a pure goal (and leave the proof mode).
-- `!#` : introduce an always modality (given that the spatial context is empty).
+- `!#` : introduce an always modality and clear the spatial context.
 - `!>` : introduce a modality.
 - `/=` : perform `simpl`.
 - `//` : perform `try done` on all goals.

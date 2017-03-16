@@ -474,8 +474,12 @@ Proof.
 Qed.
 
 (** * Always *)
-Lemma tac_always_intro Δ Q : env_spatial_is_nil Δ = true → (Δ ⊢ Q) → Δ ⊢ □ Q.
-Proof. intros. by apply (always_intro _ _). Qed.
+Lemma tac_always_intro Δ Q :
+  (envs_clear_spatial Δ ⊢ Q) → Δ ⊢ □ Q.
+Proof.
+  intros <-. rewrite envs_clear_spatial_sound sep_elim_l.
+  by apply (always_intro _ _).
+Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :
   envs_lookup i Δ = Some (p, P) → IntoPersistentP P P' →

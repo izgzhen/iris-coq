@@ -779,8 +779,7 @@ Local Tactic Notation "iExistDestruct" constr(H)
 (** * Always *)
 Tactic Notation "iAlways":=
   iStartProof;
-  apply tac_always_intro;
-    [reflexivity || fail "iAlways: spatial context non-empty"|].
+  apply tac_always_intro; env_cbv.
 
 (** * Later *)
 Tactic Notation "iNext" open_constr(n) :=
@@ -1518,7 +1517,7 @@ Hint Extern 0 (_ ⊢ _) => progress iIntros.
 Hint Extern 1 (of_envs _ ⊢ _ ∧ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ _ ∗ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ ▷ _) => iNext.
-Hint Extern 1 (of_envs _ ⊢ □ _) => iClear "*"; iAlways.
+Hint Extern 1 (of_envs _ ⊢ □ _) => iAlways.
 Hint Extern 1 (of_envs _ ⊢ ∃ _, _) => iExists _.
 Hint Extern 1 (of_envs _ ⊢ |==> _) => iModIntro.
 Hint Extern 1 (of_envs _ ⊢ ◇ _) => iModIntro.
