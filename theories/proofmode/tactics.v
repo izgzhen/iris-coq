@@ -32,6 +32,15 @@ Ltac iFresh' H :=
   end.
 Ltac iFresh := iFresh' "~".
 
+Ltac iMissingHyps Hs :=
+  let Δ :=
+    lazymatch goal with
+    | |- of_envs ?Δ ⊢ _ => Δ
+    | |- context[ envs_split _ _ ?Δ ] => Δ
+    end in
+  let Hhyps := eval env_cbv in (envs_dom Δ) in
+  eval vm_compute in (list_difference Hs Hhyps).
+
 Tactic Notation "iTypeOf" constr(H) tactic(tac):=
   let Δ := match goal with |- of_envs ?Δ ⊢ _ => Δ end in
   lazymatch eval env_cbv in (envs_lookup H Δ) with
@@ -238,7 +247,7 @@ Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
 
 Tactic Notation "iFrame" constr(Hs) :=
   let rec go Hs :=
-    match Hs with
+    lazymatch Hs with
     | [] => idtac
     | SelPure :: ?Hs => iFrameAnyPure; go Hs
     | SelPersistent :: ?Hs => iFrameAnyPersistent; go Hs
@@ -357,7 +366,7 @@ Notation "( H 'with' pat )" := (ITrm H hnil pat) (at level 0).
 
 Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
   let rec go xs :=
-    match xs with
+    lazymatch xs with
     | hnil => idtac
     | hcons ?x ?xs =>
        eapply tac_forall_specialize with _ H _ _ _; (* (i:=H) (a:=x) *)
@@ -420,7 +429,9 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
           | GSpatial => apply elim_modal_dummy
           | GModal => apply _ || fail "iSpecialize: goal not a modality"
           end
-         |env_reflexivity || fail "iSpecialize:" Hs "not found"
+         |env_reflexivity ||
+          let Hs' := iMissingHyps Hs' in
+          fail "iSpecialize: hypotheses" Hs' "not found in the context"
          |iFrame Hs_frame; done_if d (*goal*)
          |go H1 pats]
     | SAutoFrame GPersistent :: ?pats =>
@@ -674,8 +685,11 @@ Tactic Notation "iSplitL" constr(Hs) :=
     [apply _ ||
      let P := match goal with |- FromSep ?P _ _ => P end in
      fail "iSplitL:" P "not a separating conjunction"
-    |env_reflexivity || fail "iSplitL: hypotheses" Hs
-                                  "not found in the context"| |].
+    |env_reflexivity ||
+     let Hs := iMissingHyps Hs in
+     fail "iSplitL: hypotheses" Hs "not found in the context"
+    | |].
+
 Tactic Notation "iSplitR" constr(Hs) :=
   iStartProof;
   let Hs := words Hs in
@@ -683,8 +697,10 @@ Tactic Notation "iSplitR" constr(Hs) :=
     [apply _ ||
      let P := match goal with |- FromSep ?P _ _ => P end in
      fail "iSplitR:" P "not a separating conjunction"
-    |env_reflexivity || fail "iSplitR: hypotheses" Hs
-                                  "not found in the context"| |].
+    |env_reflexivity ||
+     let Hs := iMissingHyps Hs in
+     fail "iSplitR: hypotheses" Hs "not found in the context"
+    | |].
 
 Tactic Notation "iSplitL" := iSplitR "".
 Tactic Notation "iSplitR" := iSplitL "".
@@ -709,7 +725,9 @@ Local Tactic Notation "iAndDestructChoice" constr(H) "as" constr(lr) constr(H') 
 Tactic Notation "iCombine" constr(Hs) "as" constr(H) :=
   let Hs := words Hs in
   eapply tac_combine with _ _ Hs _ _ H _;
-    [env_reflexivity || fail "iCombine:" Hs "not found"
+    [env_reflexivity ||
+     let Hs := iMissingHyps Hs in
+     fail "iCombine: hypotheses" Hs "not found in the context"
     |apply _
     |env_reflexivity || fail "iCombine:" H "not fresh"|].
 
@@ -1326,20 +1344,24 @@ Tactic Notation "iAssertCore" open_constr(Q)
   | [SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs ?d)] =>
      let Hs' := eval cbv in (if lr then Hs else Hs_frame ++ Hs) in
      let p' := eval cbv in (match m with GModal => false | _ => p end) in
-     match p' with
+     lazymatch p' with
      | false =>
        eapply tac_assert with _ _ _ lr Hs' H Q _;
          [lazymatch m with
           | GSpatial => apply elim_modal_dummy
           | GModal => apply _ || fail "iAssert: goal not a modality"
           end
-         |env_reflexivity || fail "iAssert:" Hs "not found"
+         |env_reflexivity ||
+          let Hs' := iMissingHyps Hs' in
+          fail "iAssert: hypotheses" Hs' "not found in the context"
          |env_reflexivity
          |iFrame Hs_frame; done_if d (*goal*)
          |tac H]
      | true =>
        eapply tac_assert_persistent with _ _ _ lr Hs' H Q;
-         [env_reflexivity
+         [env_reflexivity ||
+          let Hs' := iMissingHyps Hs' in
+          fail "iAssert: hypotheses" Hs' "not found in the context"
          |env_reflexivity
          |apply _ || fail "iAssert:" Q "not persistent"
          |done_if d (*goal*)
@@ -1350,7 +1372,7 @@ Tactic Notation "iAssertCore" open_constr(Q)
 
 Tactic Notation "iAssertCore" open_constr(Q) "as" constr(p) tactic(tac) :=
   let p := intro_pat_persistent p in
-  match p with
+  lazymatch p with
   | true => iAssertCore Q with "[#]" as p tac
   | false => iAssertCore Q with "[]" as p tac
   end.
