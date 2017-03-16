@@ -57,7 +57,7 @@ Introduction of logical connectives
 -----------------------------------
 
 - `iPureIntro` : turn a pure goal into a Coq goal. This tactic works for goals
-  of the shape `■ φ`, `a ≡ b` on discrete COFEs, and `✓ a` on discrete CMRAs.
+  of the shape `⌜φ⌝`, `a ≡ b` on discrete COFEs, and `✓ a` on discrete CMRAs.
 
 - `iLeft` : left introduction of disjunction.
 - `iRight` : right introduction of disjunction.
@@ -113,7 +113,7 @@ Modalities
 ----------
 
 - `iModIntro` : introduction of a modality that is an instance of the
-  `IntoModal` type class. Instances include: later, except 0, basic update and
+  `FromModal` type class. Instances include: later, except 0, basic update and
   fancy update.
 - `iMod pm_trm as (x1 ... xn) "ipat"` : eliminate a modality `pm_trm` that is
   an instance of the `ElimModal` type class. Instances include: later, except 0,
