@@ -113,7 +113,7 @@ Modalities
 ----------
 
 - `iModIntro` : introduction of a modality that is an instance of the
-  `IntoModal` type class. Instances include: later, except 0, basic update and
+  `FromModal` type class. Instances include: later, except 0, basic update and
   fancy update.
 - `iMod pm_trm as (x1 ... xn) "ipat"` : eliminate a modality `pm_trm` that is
   an instance of the `ElimModal` type class. Instances include: later, except 0,
