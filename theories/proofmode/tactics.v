@@ -830,7 +830,6 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
        | false => go H pat; find_pat true pats
        | true => fail "iDestruct:" pat "should contain exactly one proper introduction pattern"
        end
-    | _ => fail "hallo" pats
     end in
   let pats := intro_pat.parse pat in
   find_pat false pats.
