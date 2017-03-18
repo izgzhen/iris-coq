@@ -724,4 +724,4 @@ Section gmultiset.
 End gmultiset.
 End big_op.
 
-Hint Resolve big_sepL_nil' big_sepM_empty' big_sepS_empty' big_sepMS_empty' | 0.
+Hint Resolve big_sepM_empty' big_sepS_empty' big_sepMS_empty' | 0.
