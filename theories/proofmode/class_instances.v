@@ -354,7 +354,7 @@ Proof. intros. by rewrite /FromAnd big_opL_cons always_and_sep_l. Qed.
 Global Instance from_and_big_sepL_app {A} (Φ : nat → A → uPred M) l1 l2 :
   FromAnd false ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
-Proof. by rewrite /FromAnd big_sepL_app. Qed.
+Proof. by rewrite /FromAnd big_opL_app. Qed.
 Global Instance from_sep_big_sepL_app_persistent {A} (Φ : nat → A → uPred M) l1 l2 :
   (∀ k y, PersistentP (Φ k y)) →
   FromAnd true ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)

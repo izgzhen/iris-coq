@@ -85,27 +85,28 @@ Arguments uPredR : clear implicits.
 Arguments uPredUR : clear implicits.
 
 (* Notations *)
-Notation "'[∗]' Ps" := (big_op (M:=uPredUR _) Ps) (at level 20) : uPred_scope.
-
-Notation "'[∗' 'list' ] k ↦ x ∈ l , P" := (big_opL (M:=uPredUR _) l (λ k x, P))
+Notation "'[∗' 'list' ] k ↦ x ∈ l , P" := (big_opL (M:=uPredUR _) (λ k x, P) l)
   (at level 200, l at level 10, k, x at level 1, right associativity,
    format "[∗  list ]  k ↦ x  ∈  l ,  P") : uPred_scope.
-Notation "'[∗' 'list' ] x ∈ l , P" := (big_opL (M:=uPredUR _) l (λ _ x, P))
+Notation "'[∗' 'list' ] x ∈ l , P" := (big_opL (M:=uPredUR _) (λ _ x, P) l)
   (at level 200, l at level 10, x at level 1, right associativity,
    format "[∗  list ]  x  ∈  l ,  P") : uPred_scope.
 
-Notation "'[∗' 'map' ] k ↦ x ∈ m , P" := (big_opM (M:=uPredUR _) m (λ k x, P))
+Notation "'[∗]' Ps" :=
+  (big_opL (M:=uPredUR _) (λ _ x, x) Ps) (at level 20) : uPred_scope.
+
+Notation "'[∗' 'map' ] k ↦ x ∈ m , P" := (big_opM (M:=uPredUR _) (λ k x, P) m)
   (at level 200, m at level 10, k, x at level 1, right associativity,
    format "[∗  map ]  k ↦ x  ∈  m ,  P") : uPred_scope.
-Notation "'[∗' 'map' ] x ∈ m , P" := (big_opM (M:=uPredUR _) m (λ _ x, P))
+Notation "'[∗' 'map' ] x ∈ m , P" := (big_opM (M:=uPredUR _) (λ _ x, P) m)
   (at level 200, m at level 10, x at level 1, right associativity,
    format "[∗  map ]  x  ∈  m ,  P") : uPred_scope.
 
-Notation "'[∗' 'set' ] x ∈ X , P" := (big_opS (M:=uPredUR _) X (λ x, P))
+Notation "'[∗' 'set' ] x ∈ X , P" := (big_opS (M:=uPredUR _) (λ x, P) X)
   (at level 200, X at level 10, x at level 1, right associativity,
    format "[∗  set ]  x  ∈  X ,  P") : uPred_scope.
 
-Notation "'[∗' 'mset' ] x ∈ X , P" := (big_opMS (M:=uPredUR _) X (λ x, P))
+Notation "'[∗' 'mset' ] x ∈ X , P" := (big_opMS (M:=uPredUR _) (λ x, P) X)
   (at level 200, X at level 10, x at level 1, right associativity,
    format "[∗  mset ]  x  ∈  X ,  P") : uPred_scope.
 
@@ -126,24 +127,6 @@ Context {M : ucmraT}.
 Implicit Types Ps Qs : list (uPred M).
 Implicit Types A : Type.
 
-Global Instance big_sep_mono' :
-  Proper (Forall2 (⊢) ==> (⊢)) (big_op (M:=uPredUR M)).
-Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
-
-Lemma big_sep_app Ps Qs : [∗] (Ps ++ Qs) ⊣⊢ [∗] Ps ∗ [∗] Qs.
-Proof. by rewrite big_op_app. Qed.
-
-Lemma big_sep_submseteq Ps Qs : Qs ⊆+ Ps → [∗] Ps ⊢ [∗] Qs.
-Proof. intros. apply uPred_included. by apply: big_op_submseteq. Qed.
-Lemma big_sep_elem_of Ps P : P ∈ Ps → [∗] Ps ⊢ P.
-Proof. intros. apply uPred_included. by apply: big_sep_elem_of. Qed.
-Lemma big_sep_elem_of_acc Ps P : P ∈ Ps → [∗] Ps ⊢ P ∗ (P -∗ [∗] Ps).
-Proof. intros [k ->]%elem_of_Permutation. by apply sep_mono_r, wand_intro_l. Qed.
-
-(** ** Persistence *)
-Global Instance big_sep_persistent Ps : PersistentL Ps → PersistentP ([∗] Ps).
-Proof. induction 1; apply _. Qed.
-
 Global Instance nil_persistent : PersistentL (@nil (uPred M)).
 Proof. constructor. Qed.
 Global Instance cons_persistent P Ps :
@@ -163,9 +146,7 @@ Proof.
 Qed.
 Global Instance imap_persistent {A} (f : nat → A → uPred M) xs :
   (∀ i x, PersistentP (f i x)) → PersistentL (imap f xs).
-Proof.
-  rewrite /PersistentL /imap=> ?. generalize 0. induction xs; constructor; auto.
-Qed.
+Proof. revert f. induction xs; simpl; constructor; naive_solver. Qed.
 
 (** ** Timelessness *)
 Global Instance big_sep_timeless Ps : TimelessL Ps → TimelessP ([∗] Ps).
@@ -190,9 +171,7 @@ Proof.
 Qed.
 Global Instance imap_timeless {A} (f : nat → A → uPred M) xs :
   (∀ i x, TimelessP (f i x)) → TimelessL (imap f xs).
-Proof.
-  rewrite /TimelessL /imap=> ?. generalize 0. induction xs; constructor; auto.
-Qed.
+Proof. revert f. induction xs; simpl; constructor; naive_solver. Qed.
 
 (** ** Big ops over lists *)
 Section list.
@@ -226,17 +205,21 @@ Section list.
     l1 ⊆+ l2 → ([∗ list] y ∈ l2, Φ y) ⊢ [∗ list] y ∈ l1, Φ y.
   Proof. intros ?. apply uPred_included. by apply: big_opL_submseteq. Qed.
 
-  Global Instance big_sepL_mono' l :
-    Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (⊢))
-           (big_opL (M:=uPredUR M) l).
-  Proof. intros f g Hf. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_sepL_mono' :
+    Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (=) ==> (⊢))
+           (big_opL (M:=uPredUR M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_sep_mono' :
+    Proper (Forall2 (⊢) ==> (⊢)) (big_opL (M:=uPredUR M) (λ _ P, P)).
+  Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
   Lemma big_sepL_lookup_acc Φ l i x :
     l !! i = Some x →
     ([∗ list] k↦y ∈ l, Φ k y) ⊢ Φ i x ∗ (Φ i x -∗ ([∗ list] k↦y ∈ l, Φ k y)).
   Proof.
-    intros Hli. apply big_sep_elem_of_acc, (elem_of_list_lookup_2 _ i).
-    by rewrite list_lookup_imap Hli.
+    intros Hli. rewrite -(take_drop_middle l i x) // big_sepL_app /=.
+    rewrite Nat.add_0_r take_length_le; eauto using lookup_lt_Some, Nat.lt_le_incl.
+    rewrite assoc -!(comm _ (Φ _ _)) -assoc. by apply sep_mono_r, wand_intro_l.
   Qed.
 
   Lemma big_sepL_lookup Φ l i x :
@@ -303,16 +286,21 @@ Section list.
 
   Global Instance big_sepL_nil_persistent Φ :
     PersistentP ([∗ list] k↦x ∈ [], Φ k x).
-  Proof. rewrite /big_opL. apply _. Qed.
+  Proof. apply _. Qed.
   Global Instance big_sepL_persistent Φ l :
     (∀ k x, PersistentP (Φ k x)) → PersistentP ([∗ list] k↦x ∈ l, Φ k x).
-  Proof. rewrite /big_opL. apply _. Qed.
+  Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
+  Global Instance big_sepL_persistent_id Ps : PersistentL Ps → PersistentP ([∗] Ps).
+  Proof. induction 1; apply _. Qed.
+
   Global Instance big_sepL_nil_timeless Φ :
     TimelessP ([∗ list] k↦x ∈ [], Φ k x).
-  Proof. rewrite /big_opL. apply _. Qed.
+  Proof. apply _. Qed.
   Global Instance big_sepL_timeless Φ l :
     (∀ k x, TimelessP (Φ k x)) → TimelessP ([∗ list] k↦x ∈ l, Φ k x).
-  Proof. rewrite /big_opL. apply _. Qed.
+  Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
+  Global Instance big_sepL_timeless_id Ps : TimelessL Ps → TimelessP ([∗] Ps).
+  Proof. induction 1; apply _. Qed.
 End list.
 
 Section list2.
@@ -325,13 +313,13 @@ Section list2.
     ([∗ list] k↦x ∈ zip_with f l1 l2, Φ k x)
     ⊣⊢ ([∗ list] k↦x ∈ l1, ∀ y, ⌜l2 !! k = Some y⌝ → Φ k (f x y)).
   Proof.
-    revert Φ l2; induction l1 as [|x l1 IH]=> Φ [|y l2]//=.
-    - rewrite big_sepL_nil. apply (anti_symm _), True_intro.
+    revert Φ l2; induction l1 as [|x l1 IH]=> Φ [|y l2]//.
+    - apply (anti_symm _), True_intro.
       trans ([∗ list] _↦_ ∈ x :: l1, True : uPred M)%I.
       + rewrite big_sepL_forall. auto using forall_intro, impl_intro_l, True_intro.
       + apply big_sepL_mono=> k y _. apply forall_intro=> z.
         by apply impl_intro_l, pure_elim_l.
-    - rewrite !big_sepL_cons IH. apply sep_proper=> //. apply (anti_symm _).
+    - rewrite /= IH. apply sep_proper=> //. apply (anti_symm _).
       + apply forall_intro=>z /=. by apply impl_intro_r, pure_elim_r=>-[->].
       + rewrite (forall_elim y) /=. by eapply impl_elim, pure_intro.
   Qed.
@@ -348,8 +336,7 @@ Section gmap.
     ([∗ map] k ↦ x ∈ m1, Φ k x) ⊢ [∗ map] k ↦ x ∈ m2, Ψ k x.
   Proof.
     intros Hm HΦ. trans ([∗ map] k↦x ∈ m2, Φ k x)%I.
-    - apply uPred_included. apply: big_op_submseteq.
-      by apply fmap_submseteq, map_to_list_submseteq.
+    - rewrite /big_opM. by apply big_sepL_submseteq, map_to_list_submseteq.
     - apply big_opM_forall; apply _ || auto.
   Qed.
   Lemma big_sepM_proper Φ Ψ m :
@@ -357,10 +344,10 @@ Section gmap.
     ([∗ map] k ↦ x ∈ m, Φ k x) ⊣⊢ ([∗ map] k ↦ x ∈ m, Ψ k x).
   Proof. apply big_opM_proper. Qed.
 
-  Global Instance big_sepM_mono' m :
-    Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (⊢))
-           (big_opM (M:=uPredUR M) m).
-  Proof. intros f g Hf. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_sepM_mono' :
+    Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (=) ==> (⊢))
+           (big_opM (M:=uPredUR M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_sepM_empty Φ : ([∗ map] k↦x ∈ ∅, Φ k x) ⊣⊢ True.
   Proof. by rewrite big_opM_empty. Qed.
@@ -493,13 +480,13 @@ Section gmap.
   Proof. rewrite /big_opM map_to_list_empty. apply _. Qed.
   Global Instance big_sepM_persistent Φ m :
     (∀ k x, PersistentP (Φ k x)) → PersistentP ([∗ map] k↦x ∈ m, Φ k x).
-  Proof. intros. apply big_sep_persistent, fmap_persistent=>-[??] /=; auto. Qed.
+  Proof. intros. apply big_sepL_persistent=> _ [??]; apply _. Qed.
   Global Instance big_sepM_nil_timeless Φ :
     TimelessP ([∗ map] k↦x ∈ ∅, Φ k x).
   Proof. rewrite /big_opM map_to_list_empty. apply _. Qed.
   Global Instance big_sepM_timeless Φ m :
     (∀ k x, TimelessP (Φ k x)) → TimelessP ([∗ map] k↦x ∈ m, Φ k x).
-  Proof. intro. apply big_sep_timeless, fmap_timeless=> -[??] /=; auto. Qed.
+  Proof. intros. apply big_sepL_timeless=> _ [??]; apply _. Qed.
 End gmap.
 
 
@@ -514,8 +501,7 @@ Section gset.
     ([∗ set] x ∈ X, Φ x) ⊢ [∗ set] x ∈ Y, Ψ x.
   Proof.
     intros HX HΦ. trans ([∗ set] x ∈ Y, Φ x)%I.
-    - apply uPred_included. apply: big_op_submseteq.
-      by apply fmap_submseteq, elements_submseteq.
+    - rewrite /big_opM. by apply big_sepL_submseteq, elements_submseteq.
     - apply big_opS_forall; apply _ || auto.
   Qed.
   Lemma big_sepS_proper Φ Ψ X :
@@ -523,9 +509,9 @@ Section gset.
     ([∗ set] x ∈ X, Φ x) ⊣⊢ ([∗ set] x ∈ X, Ψ x).
   Proof. apply: big_opS_proper. Qed.
 
-  Global Instance big_sepS_mono' X :
-     Proper (pointwise_relation _ (⊢) ==> (⊢)) (big_opS (M:=uPredUR M) X).
-  Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_sepS_mono' :
+     Proper (pointwise_relation _ (⊢) ==> (=) ==> (⊢)) (big_opS (M:=uPredUR M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_sepS_empty Φ : ([∗ set] x ∈ ∅, Φ x) ⊣⊢ True.
   Proof. by rewrite big_opS_empty. Qed.
@@ -665,8 +651,7 @@ Section gmultiset.
     ([∗ mset] x ∈ X, Φ x) ⊢ [∗ mset] x ∈ Y, Ψ x.
   Proof.
     intros HX HΦ. trans ([∗ mset] x ∈ Y, Φ x)%I.
-    - apply uPred_included. apply: big_op_submseteq.
-      by apply fmap_submseteq, gmultiset_elements_submseteq.
+    - rewrite /big_opM. by apply big_sepL_submseteq, gmultiset_elements_submseteq.
     - apply big_opMS_forall; apply _ || auto.
   Qed.
   Lemma big_sepMS_proper Φ Ψ X :
@@ -674,9 +659,9 @@ Section gmultiset.
     ([∗ mset] x ∈ X, Φ x) ⊣⊢ ([∗ mset] x ∈ X, Ψ x).
   Proof. apply: big_opMS_proper. Qed.
 
-  Global Instance big_sepMS_mono' X :
-     Proper (pointwise_relation _ (⊢) ==> (⊢)) (big_opMS (M:=uPredUR M) X).
-  Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_sepMS_mono' :
+     Proper (pointwise_relation _ (⊢) ==> (=) ==> (⊢)) (big_opMS (M:=uPredUR M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_sepMS_empty Φ : ([∗ mset] x ∈ ∅, Φ x) ⊣⊢ True.
   Proof. by rewrite big_opMS_empty. Qed.

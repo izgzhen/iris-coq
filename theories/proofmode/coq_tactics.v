@@ -234,14 +234,14 @@ Proof.
       intros j. apply (env_app_disjoint _ _ _ j) in Happ.
       naive_solver eauto using env_app_fresh.
     + rewrite (env_app_perm _ _ Γp') //.
-      rewrite big_sep_app always_sep. solve_sep_entails.
+      rewrite big_sepL_app always_sep. solve_sep_entails.
   - destruct (env_app Γ Γp) eqn:Happ,
       (env_app Γ Γs) as [Γs'|] eqn:?; simplify_eq/=.
     apply wand_intro_l, sep_intro_True_l; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using env_app_wf.
       intros j. apply (env_app_disjoint _ _ _ j) in Happ.
       naive_solver eauto using env_app_fresh.
-    + rewrite (env_app_perm _ _ Γs') // big_sep_app. solve_sep_entails.
+    + rewrite (env_app_perm _ _ Γs') // big_sepL_app. solve_sep_entails.
 Qed.
 
 Lemma envs_simple_replace_sound' Δ Δ' i p Γ :
@@ -257,14 +257,14 @@ Proof.
       intros j. apply (env_app_disjoint _ _ _ j) in Happ.
       destruct (decide (i = j)); try naive_solver eauto using env_replace_fresh.
     + rewrite (env_replace_perm _ _ Γp') //.
-      rewrite big_sep_app always_sep. solve_sep_entails.
+      rewrite big_sepL_app always_sep. solve_sep_entails.
   - destruct (env_app Γ Γp) eqn:Happ,
       (env_replace i Γ Γs) as [Γs'|] eqn:?; simplify_eq/=.
     apply wand_intro_l, sep_intro_True_l; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using env_replace_wf.
       intros j. apply (env_app_disjoint _ _ _ j) in Happ.
       destruct (decide (i = j)); try naive_solver eauto using env_replace_fresh.
-    + rewrite (env_replace_perm _ _ Γs') // big_sep_app. solve_sep_entails.
+    + rewrite (env_replace_perm _ _ Γs') // big_sepL_app. solve_sep_entails.
 Qed.
 
 Lemma envs_simple_replace_sound Δ Δ' i p P Γ :

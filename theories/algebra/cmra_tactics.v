@@ -23,15 +23,15 @@ Module ra_reflection. Section ra_reflection.
     | EOp e1 e2 => flatten e1 ++ flatten e2
     end.
   Lemma eval_flatten Σ e :
-    eval Σ e ≡ big_op ((λ n, from_option id ∅ (Σ !! n)) <$> flatten e).
+    eval Σ e ≡ [⋅ list] n ∈ flatten e, from_option id ∅ (Σ !! n).
   Proof.
     induction e as [| |e1 IH1 e2 IH2]; rewrite /= ?right_id //.
-    by rewrite fmap_app IH1 IH2 big_op_app.
+    by rewrite IH1 IH2 big_opL_app.
   Qed.
   Lemma flatten_correct Σ e1 e2 :
     flatten e1 ⊆+ flatten e2 → eval Σ e1 ≼ eval Σ e2.
   Proof.
-    by intros He; rewrite !eval_flatten; apply big_op_submseteq; rewrite ->He.
+    by intros He; rewrite !eval_flatten; apply big_opL_submseteq; rewrite ->He.
   Qed.
 
   Class Quote (Σ1 Σ2 : list A) (l : A) (e : expr) := {}.

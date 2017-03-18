@@ -18,50 +18,46 @@ Since these big operators are like quantifiers, they have the same precedence as
 [∀] and [∃]. *)
 
 (** * Big ops over lists *)
-(* This is the basic building block for other big ops *)
-Fixpoint big_op {M : ucmraT} (xs : list M) : M :=
-  match xs with [] => ∅ | x :: xs => x ⋅ big_op xs end.
-Arguments big_op _ !_ /.
-Instance: Params (@big_op) 1.
-Notation "'[⋅]' xs" := (big_op xs) (at level 20) : C_scope.
-
-(** * Other big ops *)
-Definition big_opL {M : ucmraT} {A} (l : list A) (f : nat → A → M) : M :=
-  [⋅] (imap f l).
+Fixpoint big_opL {M : ucmraT} {A} (f : nat → A → M) (xs : list A) : M :=
+  match xs with
+  | [] => ∅
+  | x :: xs => f 0 x ⋅ big_opL (λ n, f (S n)) xs
+  end.
 Instance: Params (@big_opL) 2.
-Typeclasses Opaque big_opL.
-Notation "'[⋅' 'list' ] k ↦ x ∈ l , P" := (big_opL l (λ k x, P))
+Arguments big_opL _ _ _ !_ /.
+Notation "'[⋅' 'list' ] k ↦ x ∈ l , P" := (big_opL (λ k x, P) l)
   (at level 200, l at level 10, k, x at level 1, right associativity,
    format "[⋅  list ]  k ↦ x  ∈  l ,  P") : C_scope.
-Notation "'[⋅' 'list' ] x ∈ l , P" := (big_opL l (λ _ x, P))
+Notation "'[⋅' 'list' ] x ∈ l , P" := (big_opL (λ _ x, P) l)
   (at level 200, l at level 10, x at level 1, right associativity,
    format "[⋅  list ]  x  ∈  l ,  P") : C_scope.
 
-Definition big_opM {M : ucmraT} `{Countable K} {A}
-    (m : gmap K A) (f : K → A → M) : M :=
-  [⋅] (curry f <$> map_to_list m).
+Notation "'[⋅]' xs" := (big_opL (λ _ x, x) xs) (at level 20) : C_scope.
+
+Definition big_opM {M : ucmraT} `{Countable K} {A} (f : K → A → M)
+    (m : gmap K A) : M := big_opL (λ _, curry f) (map_to_list m).
 Instance: Params (@big_opM) 6.
 Typeclasses Opaque big_opM.
-Notation "'[⋅' 'map' ] k ↦ x ∈ m , P" := (big_opM m (λ k x, P))
+Notation "'[⋅' 'map' ] k ↦ x ∈ m , P" := (big_opM (λ k x, P) m)
   (at level 200, m at level 10, k, x at level 1, right associativity,
    format "[⋅  map ]  k ↦ x  ∈  m ,  P") : C_scope.
-Notation "'[⋅' 'map' ] x ∈ m , P" := (big_opM m (λ _ x, P))
+Notation "'[⋅' 'map' ] x ∈ m , P" := (big_opM (λ _ x, P) m)
   (at level 200, m at level 10, x at level 1, right associativity,
    format "[⋅  map ]  x  ∈  m ,  P") : C_scope.
 
-Definition big_opS {M : ucmraT} `{Countable A}
-  (X : gset A) (f : A → M) : M := [⋅] (f <$> elements X).
+Definition big_opS {M : ucmraT} `{Countable A} (f : A → M)
+  (X : gset A) : M := big_opL (λ _, f) (elements X).
 Instance: Params (@big_opS) 5.
 Typeclasses Opaque big_opS.
-Notation "'[⋅' 'set' ] x ∈ X , P" := (big_opS X (λ x, P))
+Notation "'[⋅' 'set' ] x ∈ X , P" := (big_opS (λ x, P) X)
   (at level 200, X at level 10, x at level 1, right associativity,
    format "[⋅  set ]  x  ∈  X ,  P") : C_scope.
 
-Definition big_opMS {M : ucmraT} `{Countable A}
-  (X : gmultiset A) (f : A → M) : M := [⋅] (f <$> elements X).
+Definition big_opMS {M : ucmraT} `{Countable A} (f : A → M)
+  (X : gmultiset A) : M := big_opL (λ _, f) (elements X).
 Instance: Params (@big_opMS) 5.
 Typeclasses Opaque big_opMS.
-Notation "'[⋅' 'mset' ] x ∈ X , P" := (big_opMS X (λ x, P))
+Notation "'[⋅' 'mset' ] x ∈ X , P" := (big_opMS (λ x, P) X)
   (at level 200, X at level 10, x at level 1, right associativity,
    format "[⋅  'mset' ]  x  ∈  X ,  P") : C_scope.
 
@@ -69,52 +65,6 @@ Notation "'[⋅' 'mset' ] x ∈ X , P" := (big_opMS X (λ x, P))
 Section big_op.
 Context {M : ucmraT}.
 Implicit Types xs : list M.
-
-(** * Big ops *)
-Lemma big_op_Forall2 R :
-  Reflexive R → Proper (R ==> R ==> R) (@op M _) →
-  Proper (Forall2 R ==> R) (@big_op M).
-Proof. rewrite /Proper /respectful. induction 3; eauto. Qed.
-
-Global Instance big_op_ne : NonExpansive (@big_op M).
-Proof. intros ?. apply big_op_Forall2; apply _. Qed.
-Global Instance big_op_proper : Proper ((≡) ==> (≡)) (@big_op M) := ne_proper _.
-
-Lemma big_op_nil : [⋅] (@nil M) = ∅.
-Proof. done. Qed.
-Lemma big_op_cons x xs : [⋅] (x :: xs) = x ⋅ [⋅] xs.
-Proof. done. Qed.
-Lemma big_op_app xs ys : [⋅] (xs ++ ys) ≡ [⋅] xs ⋅ [⋅] ys.
-Proof.
-  induction xs as [|x xs IH]; simpl; first by rewrite ?left_id.
-  by rewrite IH assoc.
-Qed.
-
-Lemma big_op_mono xs ys : Forall2 (≼) xs ys → [⋅] xs ≼ [⋅] ys.
-Proof. induction 1 as [|x y xs ys Hxy ? IH]; simpl; eauto using cmra_mono. Qed.
-
-Global Instance big_op_permutation : Proper ((≡ₚ) ==> (≡)) (@big_op M).
-Proof.
-  induction 1 as [|x xs1 xs2 ? IH|x y xs|xs1 xs2 xs3]; simpl; auto.
-  - by rewrite IH.
-  - by rewrite !assoc (comm _ x).
-  - by trans (big_op xs2).
-Qed.
-
-Lemma big_op_submseteq xs ys : xs ⊆+ ys → [⋅] xs ≼ [⋅] ys.
-Proof.
-  intros [xs' ->]%submseteq_Permutation.
-  rewrite big_op_app; apply cmra_included_l.
-Qed.
-
-Lemma big_op_delete xs i x : xs !! i = Some x → x ⋅ [⋅] delete i xs ≡ [⋅] xs.
-Proof. by intros; rewrite {2}(delete_Permutation xs i x). Qed.
-
-Lemma big_sep_elem_of xs x : x ∈ xs → x ≼ [⋅] xs.
-Proof.
-  intros [i ?]%elem_of_list_lookup. rewrite -big_op_delete //.
-  apply cmra_included_l.
-Qed.
 
 (** ** Big ops over lists *)
 Section list.
@@ -126,21 +76,24 @@ Section list.
   Proof. done. Qed.
   Lemma big_opL_cons f x l :
     ([⋅ list] k↦y ∈ x :: l, f k y) = f 0 x ⋅ [⋅ list] k↦y ∈ l, f (S k) y.
-  Proof. by rewrite /big_opL imap_cons. Qed.
+  Proof. done. Qed.
   Lemma big_opL_singleton f x : ([⋅ list] k↦y ∈ [x], f k y) ≡ f 0 x.
-  Proof. by rewrite big_opL_cons big_opL_nil right_id. Qed.
+  Proof. by rewrite /= right_id. Qed.
   Lemma big_opL_app f l1 l2 :
     ([⋅ list] k↦y ∈ l1 ++ l2, f k y)
     ≡ ([⋅ list] k↦y ∈ l1, f k y) ⋅ ([⋅ list] k↦y ∈ l2, f (length l1 + k) y).
-  Proof. by rewrite /big_opL imap_app big_op_app. Qed.
+  Proof.
+    revert f. induction l1 as [|x l1 IH]=> f /=; first by rewrite left_id.
+    by rewrite IH assoc.
+  Qed.
 
   Lemma big_opL_forall R f g l :
-    Reflexive R → Proper (R ==> R ==> R) (@op M _) →
+    Reflexive R →
+    Proper (R ==> R ==> R) (@op M _) →
     (∀ k y, l !! k = Some y → R (f k y) (g k y)) →
     R ([⋅ list] k ↦ y ∈ l, f k y) ([⋅ list] k ↦ y ∈ l, g k y).
   Proof.
-    intros ? Hop. revert f g. induction l as [|x l IH]=> f g Hf; [done|].
-    rewrite !big_opL_cons. apply Hop; eauto.
+    intros ??. revert f g. induction l as [|x l IH]=> f g ? //=; f_equiv; eauto.
   Qed.
 
   Lemma big_opL_mono f g l :
@@ -155,25 +108,38 @@ Section list.
     (∀ k y, l !! k = Some y → f k y ≡ g k y) →
     ([⋅ list] k ↦ y ∈ l, f k y) ≡ ([⋅ list] k ↦ y ∈ l, g k y).
   Proof. apply big_opL_forall; apply _. Qed.
+
   Lemma big_opL_permutation (f : A → M) l1 l2 :
     l1 ≡ₚ l2 → ([⋅ list] x ∈ l1, f x) ≡ ([⋅ list] x ∈ l2, f x).
-  Proof. intros Hl. by rewrite /big_opL !imap_const Hl. Qed.
+  Proof.
+    induction 1 as [|x xs1 xs2 ? IH|x y xs|xs1 xs2 xs3]; simpl; auto.
+    - by rewrite IH.
+    - by rewrite !assoc (comm _ (f x)).
+    - by etrans.
+  Qed.
+  Global Instance big_op_permutation (f : A → M) :
+    Proper ((≡ₚ) ==> (≡)) (big_opL (λ _, f)).
+  Proof. intros xs1 xs2. apply big_opL_permutation. Qed.
+
   Lemma big_opL_submseteq (f : A → M) l1 l2 :
     l1 ⊆+ l2 → ([⋅ list] x ∈ l1, f x) ≼ ([⋅ list] x ∈ l2, f x).
-  Proof. intros Hl. apply big_op_submseteq. rewrite !imap_const. by rewrite ->Hl. Qed.
+  Proof.
+    intros [xs' ->]%submseteq_Permutation.
+    rewrite big_opL_app; apply cmra_included_l.
+  Qed.
 
-  Global Instance big_opL_ne l n :
-    Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> (dist n))
-           (big_opL (M:=M) l).
-  Proof. intros f g Hf. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
-  Global Instance big_opL_proper' l :
-    Proper (pointwise_relation _ (pointwise_relation _ (≡)) ==> (≡))
-           (big_opL (M:=M) l).
-  Proof. intros f g Hf. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
-  Global Instance big_opL_mono' l :
-    Proper (pointwise_relation _ (pointwise_relation _ (≼)) ==> (≼))
-           (big_opL (M:=M) l).
-  Proof. intros f g Hf. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opL_ne n :
+    Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==>
+            eq ==> dist n) (big_opL (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opL_proper' :
+    Proper (pointwise_relation _ (pointwise_relation _ (≡)) ==> eq ==> (≡))
+           (big_opL (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opL_mono' :
+    Proper (pointwise_relation _ (pointwise_relation _ (≼)) ==> eq ==> (≼))
+           (big_opL (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_opL_consZ_l (f : Z → A → M) x l :
     ([⋅ list] k↦y ∈ x :: l, f k y) = f 0 x ⋅ [⋅ list] k↦y ∈ l, f (1 + k)%Z y.
@@ -197,16 +163,14 @@ Section list.
 
   Lemma big_opL_fmap {B} (h : A → B) (f : nat → B → M) l :
     ([⋅ list] k↦y ∈ h <$> l, f k y) ≡ ([⋅ list] k↦y ∈ l, f k (h y)).
-  Proof. by rewrite /big_opL imap_fmap. Qed.
+  Proof. revert f. induction l as [|x l IH]=> f; csimpl=> //. by rewrite IH. Qed.
 
   Lemma big_opL_opL f g l :
     ([⋅ list] k↦x ∈ l, f k x ⋅ g k x)
     ≡ ([⋅ list] k↦x ∈ l, f k x) ⋅ ([⋅ list] k↦x ∈ l, g k x).
   Proof.
-    revert f g; induction l as [|x l IH]=> f g.
-    { by rewrite !big_opL_nil left_id. }
-    rewrite !big_opL_cons IH.
-    by rewrite -!assoc (assoc _ (g _ _)) [(g _ _ ⋅ _)]comm -!assoc.
+    revert f g; induction l as [|x l IH]=> f g /=; first by rewrite left_id.
+    by rewrite IH -!assoc (assoc _ (g _ _)) [(g _ _ ⋅ _)]comm -!assoc.
   Qed.
 End list.
 
@@ -221,8 +185,8 @@ Section gmap.
     (∀ k x, m !! k = Some x → R (f k x) (g k x)) →
     R ([⋅ map] k ↦ x ∈ m, f k x) ([⋅ map] k ↦ x ∈ m, g k x).
   Proof.
-    intros ?? Hf. apply (big_op_Forall2 R _ _), Forall2_fmap, Forall_Forall2.
-    apply Forall_forall=> -[i x] ? /=. by apply Hf, elem_of_map_to_list.
+    intros ?? Hf. apply (big_opL_forall R); auto.
+    intros k [i x] ?%elem_of_list_lookup_2. by apply Hf, elem_of_map_to_list.
   Qed.
 
   Lemma big_opM_mono f g m1 m2 :
@@ -230,7 +194,7 @@ Section gmap.
     ([⋅ map] k ↦ x ∈ m1, f k x) ≼ [⋅ map] k ↦ x ∈ m2, g k x.
   Proof.
     intros Hm Hf. trans ([⋅ map] k↦x ∈ m2, f k x).
-    - by apply big_op_submseteq, fmap_submseteq, map_to_list_submseteq.
+    - by apply big_opL_submseteq, map_to_list_submseteq.
     - apply big_opM_forall; apply _ || auto.
   Qed.
   Lemma big_opM_ext f g m :
@@ -242,18 +206,18 @@ Section gmap.
     ([⋅ map] k ↦ x ∈ m, f k x) ≡ ([⋅ map] k ↦ x ∈ m, g k x).
   Proof. apply big_opM_forall; apply _. Qed.
 
-  Global Instance big_opM_ne m n :
-    Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> (dist n))
-           (big_opM (M:=M) m).
-  Proof. intros f g Hf. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
-  Global Instance big_opM_proper' m :
-    Proper (pointwise_relation _ (pointwise_relation _ (≡)) ==> (≡))
-           (big_opM (M:=M) m).
-  Proof. intros f g Hf. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
-  Global Instance big_opM_mono' m :
-    Proper (pointwise_relation _ (pointwise_relation _ (≼)) ==> (≼))
-           (big_opM (M:=M) m).
-  Proof. intros f g Hf. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opM_ne n :
+    Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> eq ==> dist n)
+           (big_opM (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opM_proper' :
+    Proper (pointwise_relation _ (pointwise_relation _ (≡)) ==> eq ==> (≡))
+           (big_opM (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opM_mono' :
+    Proper (pointwise_relation _ (pointwise_relation _ (≼)) ==> eq ==> (≼))
+           (big_opM (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_opM_empty f : ([⋅ map] k↦x ∈ ∅, f k x) = ∅.
   Proof. by rewrite /big_opM map_to_list_empty. Qed.
@@ -287,8 +251,8 @@ Section gmap.
   Lemma big_opM_fmap {B} (h : A → B) (f : K → B → M) m :
     ([⋅ map] k↦y ∈ h <$> m, f k y) ≡ ([⋅ map] k↦y ∈ m, f k (h y)).
   Proof.
-    rewrite /big_opM map_to_list_fmap -list_fmap_compose.
-    f_equiv; apply reflexive_eq, list_fmap_ext. by intros []. done.
+    rewrite /big_opM map_to_list_fmap big_opL_fmap.
+    by apply big_opL_proper=> ? [??].
   Qed.
 
   Lemma big_opM_insert_override (f : K → A → M) m i x x' :
@@ -316,12 +280,7 @@ Section gmap.
   Lemma big_opM_opM f g m :
     ([⋅ map] k↦x ∈ m, f k x ⋅ g k x)
     ≡ ([⋅ map] k↦x ∈ m, f k x) ⋅ ([⋅ map] k↦x ∈ m, g k x).
-  Proof.
-    induction m as [|i x ?? IH] using map_ind.
-    { by rewrite !big_opM_empty left_id. }
-    rewrite !big_opM_insert // IH.
-    by rewrite -!assoc (assoc _ (g _ _)) [(g _ _ ⋅ _)]comm -!assoc.
-  Qed.
+  Proof. rewrite /big_opM -big_opL_opL. by apply big_opL_proper=> ? [??]. Qed.
 End gmap.
 
 
@@ -336,8 +295,8 @@ Section gset.
     (∀ x, x ∈ X → R (f x) (g x)) →
     R ([⋅ set] x ∈ X, f x) ([⋅ set] x ∈ X, g x).
   Proof.
-    intros ?? Hf. apply (big_op_Forall2 R _ _), Forall2_fmap, Forall_Forall2.
-    apply Forall_forall=> x ? /=. by apply Hf, elem_of_elements.
+    intros ?? Hf. apply (big_opL_forall R); auto.
+    intros k x ?%elem_of_list_lookup_2. by apply Hf, elem_of_elements.
   Qed.
 
   Lemma big_opS_mono f g X Y :
@@ -345,7 +304,7 @@ Section gset.
     ([⋅ set] x ∈ X, f x) ≼ [⋅ set] x ∈ Y, g x.
   Proof.
     intros HX Hf. trans ([⋅ set] x ∈ Y, f x).
-    - by apply big_op_submseteq, fmap_submseteq, elements_submseteq.
+    - by apply big_opL_submseteq, elements_submseteq.
     - apply big_opS_forall; apply _ || auto.
   Qed.
   Lemma big_opS_ext f g X :
@@ -357,15 +316,15 @@ Section gset.
     ([⋅ set] x ∈ X, f x) ≡ ([⋅ set] x ∈ X, g x).
   Proof. apply big_opS_forall; apply _. Qed.
 
-  Global Instance big_opS_ne X n :
-    Proper (pointwise_relation _ (dist n) ==> dist n) (big_opS (M:=M) X).
-  Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
-  Global Instance big_opS_proper' X :
-    Proper (pointwise_relation _ (≡) ==> (≡)) (big_opS (M:=M) X).
-  Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
-  Global Instance big_opS_mono' X :
-    Proper (pointwise_relation _ (≼) ==> (≼)) (big_opS (M:=M) X).
-  Proof. intros f g Hf. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opS_ne n :
+    Proper (pointwise_relation _ (dist n) ==> eq ==> dist n) (big_opS (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opS_proper' :
+    Proper (pointwise_relation _ (≡) ==> eq ==> (≡)) (big_opS (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opS_mono' :
+    Proper (pointwise_relation _ (≼) ==> eq ==> (≼)) (big_opS (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_opS_empty f : ([⋅ set] x ∈ ∅, f x) = ∅.
   Proof. by rewrite /big_opS elements_empty. Qed.
@@ -411,12 +370,7 @@ Section gset.
 
   Lemma big_opS_opS f g X :
     ([⋅ set] y ∈ X, f y ⋅ g y) ≡ ([⋅ set] y ∈ X, f y) ⋅ ([⋅ set] y ∈ X, g y).
-  Proof.
-    induction X as [|x X ? IH] using collection_ind_L.
-    { by rewrite !big_opS_empty left_id. }
-    rewrite !big_opS_insert // IH.
-    by rewrite -!assoc (assoc _ (g _)) [(g _ ⋅ _)]comm -!assoc.
-  Qed.
+  Proof. by rewrite /big_opS -big_opL_opL. Qed.
 End gset.
 
 Lemma big_opM_dom `{Countable K} {A} (f : K → M) (m : gmap K A) :
@@ -437,8 +391,8 @@ Section gmultiset.
     (∀ x, x ∈ X → R (f x) (g x)) →
     R ([⋅ mset] x ∈ X, f x) ([⋅ mset] x ∈ X, g x).
   Proof.
-    intros ?? Hf. apply (big_op_Forall2 R _ _), Forall2_fmap, Forall_Forall2.
-    apply Forall_forall=> x ? /=. by apply Hf, gmultiset_elem_of_elements.
+    intros ?? Hf. apply (big_opL_forall R); auto.
+    intros k x ?%elem_of_list_lookup_2. by apply Hf, gmultiset_elem_of_elements.
   Qed.
 
   Lemma big_opMS_mono f g X Y :
@@ -446,7 +400,7 @@ Section gmultiset.
     ([⋅ mset] x ∈ X, f x) ≼ [⋅ mset] x ∈ Y, g x.
   Proof.
     intros HX Hf. trans ([⋅ mset] x ∈ Y, f x).
-    - by apply big_op_submseteq, fmap_submseteq, gmultiset_elements_submseteq.
+    - by apply big_opL_submseteq, gmultiset_elements_submseteq.
     - apply big_opMS_forall; apply _ || auto.
   Qed.
   Lemma big_opMS_ext f g X :
@@ -458,22 +412,22 @@ Section gmultiset.
     ([⋅ mset] x ∈ X, f x) ≡ ([⋅ mset] x ∈ X, g x).
   Proof. apply big_opMS_forall; apply _. Qed.
 
-  Global Instance big_opMS_ne X n :
-    Proper (pointwise_relation _ (dist n) ==> dist n) (big_opMS (M:=M) X).
-  Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
-  Global Instance big_opMS_proper' X :
-    Proper (pointwise_relation _ (≡) ==> (≡)) (big_opMS (M:=M) X).
-  Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
-  Global Instance big_opMS_mono' X :
-    Proper (pointwise_relation _ (≼) ==> (≼)) (big_opMS (M:=M) X).
-  Proof. intros f g Hf. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opMS_ne n :
+    Proper (pointwise_relation _ (dist n) ==> eq ==> dist n) (big_opMS (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opMS_proper' :
+    Proper (pointwise_relation _ (≡) ==> eq ==> (≡)) (big_opMS (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_opMS_mono' :
+    Proper (pointwise_relation _ (≼) ==> eq ==> (≼)) (big_opMS (M:=M) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_opMS_empty f : ([⋅ mset] x ∈ ∅, f x) = ∅.
   Proof. by rewrite /big_opMS gmultiset_elements_empty. Qed.
 
   Lemma big_opMS_union f X Y :
     ([⋅ mset] y ∈ X ∪ Y, f y) ≡ ([⋅ mset] y ∈ X, f y) ⋅ [⋅ mset] y ∈ Y, f y.
-  Proof. by rewrite /big_opMS gmultiset_elements_union fmap_app big_op_app. Qed.
+  Proof. by rewrite /big_opMS gmultiset_elements_union big_opL_app. Qed.
 
   Lemma big_opMS_singleton f x : ([⋅ mset] y ∈ {[ x ]}, f y) ≡ f x.
   Proof.
@@ -492,12 +446,7 @@ Section gmultiset.
 
   Lemma big_opMS_opMS f g X :
     ([⋅ mset] y ∈ X, f y ⋅ g y) ≡ ([⋅ mset] y ∈ X, f y) ⋅ ([⋅ mset] y ∈ X, g y).
-  Proof.
-    induction X as [|x X IH] using gmultiset_ind.
-    { by rewrite !big_opMS_empty left_id. }
-    rewrite !big_opMS_union !big_opMS_singleton IH.
-    by rewrite -!assoc (assoc _ (g _)) [(g _ ⋅ _)]comm -!assoc.
-  Qed.
+  Proof. by rewrite /big_opMS -big_opL_opL. Qed.
 End gmultiset.
 End big_op.
 
@@ -505,8 +454,7 @@ End big_op.
 Lemma big_opL_None {M : cmraT} {A} (f : nat → A → option M) l :
   ([⋅ list] k↦x ∈ l, f k x) = None ↔ ∀ k x, l !! k = Some x → f k x = None.
 Proof.
-  revert f. induction l as [|x l IH]=> f //=.
-  rewrite big_opL_cons op_None IH. split.
+  revert f. induction l as [|x l IH]=> f //=. rewrite op_None IH. split.
   - intros [??] [|k] y ?; naive_solver.
   - intros Hl. split. by apply (Hl 0). intros k. apply (Hl (S k)).
 Qed.
@@ -540,9 +488,9 @@ Lemma big_opL_commute {M1 M2 : ucmraT} {A} (h : M1 → M2)
     `{!UCMRAHomomorphism h} (f : nat → A → M1) l :
   h ([⋅ list] k↦x ∈ l, f k x) ≡ ([⋅ list] k↦x ∈ l, h (f k x)).
 Proof.
-  revert f. induction l as [|x l IH]=> f.
-  - by rewrite !big_opL_nil ucmra_homomorphism_unit.
-  - by rewrite !big_opL_cons cmra_homomorphism -IH.
+  revert f. induction l as [|x l IH]=> f /=.
+  - by rewrite ucmra_homomorphism_unit.
+  - by rewrite cmra_homomorphism -IH.
 Qed.
 Lemma big_opL_commute1 {M1 M2 : ucmraT} {A} (h : M1 → M2)
     `{!CMRAHomomorphism h} (f : nat → A → M1) l :
