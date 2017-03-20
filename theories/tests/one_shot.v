@@ -75,11 +75,10 @@ Proof.
     { by wp_match. }
     wp_match. wp_bind (! _)%E.
     iInv N as ">[[Hl Hγ]|H]" "Hclose"; last iDestruct "H" as (m') "[Hl Hγ]".
-    { iCombine "Hγ" "Hγ'" as "Hγ". by iDestruct (own_valid with "Hγ") as %?. }
+    { by iDestruct (own_valid_2 with "Hγ Hγ'") as %?. }
     wp_load.
-    iCombine "Hγ" "Hγ'" as "Hγ".
-    iDestruct (own_valid with "Hγ") as %?%agree_op_inv%to_agree_inj.
-    fold_leibniz. subst. iMod ("Hclose" with "[Hl]") as "_".
+    iDestruct (own_valid_2 with "Hγ Hγ'") as %?%agree_op_invL'; subst.
+    iMod ("Hclose" with "[Hl]") as "_".
     { iNext; iRight; by eauto. }
     iModIntro. wp_match. iApply wp_assert. wp_op=>?; simplify_eq/=; eauto.
 Qed.

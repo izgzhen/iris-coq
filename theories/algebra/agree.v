@@ -292,6 +292,7 @@ Proof.
   - simpl. destruct Ha as [->|Ha]; set_solver.
   - simpl. set_solver+.
 Qed.
+
 Lemma agree_op_invN n (x1 x2 : agree A) : ✓{n} (x1 ⋅ x2) → x1 ≡{n}≡ x2.
 Proof.
   intros Hxy. split; apply agree_op_inv_inclN; first done. by rewrite comm.
@@ -325,13 +326,7 @@ Proof. rewrite /CMRATotal; eauto. Qed.
 Global Instance agree_persistent (x : agree A) : Persistent x.
 Proof. by constructor. Qed.
 
-Lemma agree_op_inv (x1 x2 : agree A) : ✓ (x1 ⋅ x2) → x1 ≡ x2.
-Proof.
-  intros ?. apply equiv_dist=>n. by apply agree_op_invN, cmra_valid_validN.
-Qed.
-
-Global Instance agree_discrete :
-  Discrete A → CMRADiscrete agreeR.
+Global Instance agree_discrete : Discrete A → CMRADiscrete agreeR.
 Proof.
   intros HD. split.
   - intros x y Hxy n. eapply list_setequiv_subrel; last exact Hxy. clear -HD.
@@ -354,22 +349,18 @@ Global Instance to_agree_proper : Proper ((≡) ==> (≡)) to_agree := ne_proper
 Global Instance to_agree_injN n : Inj (dist n) (dist n) (to_agree).
 Proof. intros a b [Hxy%list_setincl_singleton_rev _]. done. Qed.
 Global Instance to_agree_inj : Inj (≡) (≡) (to_agree).
-Proof.
-  intros a b ?. apply equiv_dist=>n. apply to_agree_injN. by apply equiv_dist.
-Qed.
+Proof. intros a b ?. apply equiv_dist=>n. by apply to_agree_injN, equiv_dist. Qed.
 
 Lemma to_agree_uninjN n (x : agree A) : ✓{n} x → ∃ y : A, to_agree y ≡{n}≡ x.
 Proof.
-  intros Hl. exists (agree_car x). rewrite /dist /agree_dist /=.
-  split.
+  intros Hl. exists (agree_car x). rewrite /dist /agree_dist /=. split.
   - apply: list_setincl_singleton_in. set_solver+.
   - apply (list_agrees_iff_setincl _); first set_solver+. done.
 Qed.
 
 Lemma to_agree_uninj (x : agree A) : ✓ x → ∃ y : A, to_agree y ≡ x.
 Proof.
-  intros Hl. exists (agree_car x). rewrite /dist /agree_dist /=.
-  split.
+  intros Hl. exists (agree_car x). rewrite /dist /agree_dist /=. split.
   - apply: list_setincl_singleton_in. set_solver+.
   - apply (list_agrees_iff_setincl _); first set_solver+.
     eapply list_agrees_subrel; last exact: Hl; [apply _..|].
@@ -383,22 +374,7 @@ Proof.
     (* TODO: This could become a generic lemma about list_setincl. *)
     destruct (Hincl a) as (? & ->%elem_of_list_singleton & ?); first set_solver+.
     done.
-  - intros Hab. rewrite Hab. eexists. symmetry. eapply agree_idemp.
-Qed.
-
-Lemma to_agree_comp_validN n (a b : A) :
-  ✓{n} (to_agree a ⋅ to_agree b) ↔ a ≡{n}≡ b.
-Proof.
-  split.
-  - (* TODO: can this be derived from other stuff?  Otherwise, should probably
-       become sth. generic about list_agrees. *)
-    intros Hv. apply Hv; simpl; set_solver.
-  - intros ->. rewrite agree_idemp. done.
-Qed.
-
-Lemma to_agree_comp_valid (a b : A) : ✓ (to_agree a ⋅ to_agree b) ↔ a ≡ b.
-Proof.
-  rewrite cmra_valid_validN equiv_dist. by setoid_rewrite to_agree_comp_validN.
+  - by intros ->.
 Qed.
 
 Global Instance agree_cancelable (x : agree A) : Cancelable x.
@@ -409,11 +385,21 @@ Proof.
   destruct (to_agree_uninjN n z) as [z' EQz].
   { eapply (cmra_validN_op_r n x z). by rewrite -Heq. }
   assert (Hx'y' : x' ≡{n}≡ y').
-  { apply to_agree_comp_validN. by rewrite EQx EQy. }
+  { apply (inj to_agree), agree_op_invN. by rewrite EQx EQy. }
   assert (Hx'z' : x' ≡{n}≡ z').
-  { apply to_agree_comp_validN. by rewrite EQx EQz -Heq. }
+  { apply (inj to_agree), agree_op_invN. by rewrite EQx EQz -Heq. }
   by rewrite -EQy -EQz -Hx'y' -Hx'z'.
 Qed.
+
+Lemma agree_op_inv (x1 x2 : agree A) : ✓ (x1 ⋅ x2) → x1 ≡ x2.
+Proof.
+  intros ?. apply equiv_dist=>n. by apply agree_op_invN, cmra_valid_validN.
+Qed.
+Lemma agree_op_inv' (a1 a2 : A) : ✓ (to_agree a1 ⋅ to_agree a2) → a1 ≡ a2.
+Proof. by intros ?%agree_op_inv%(inj _). Qed.
+Lemma agree_op_invL' `{!LeibnizEquiv A} (a1 a2 : A) :
+  ✓ (to_agree a1 ⋅ to_agree a2) → a1 = a2.
+Proof. by intros ?%agree_op_inv'%leibniz_equiv. Qed.
 
 (** Internalized properties *)
 Lemma agree_equivI {M} a b : to_agree a ≡ to_agree b ⊣⊢ (a ≡ b : uPred M).

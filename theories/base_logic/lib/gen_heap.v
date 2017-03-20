@@ -95,7 +95,7 @@ Section gen_heap.
     apply wand_intro_r.
     rewrite mapsto_eq -own_op -auth_frag_op own_valid discrete_valid.
     f_equiv=> /auth_own_valid /=. rewrite op_singleton singleton_valid pair_op.
-    by intros [_ ?%agree_op_inv%(inj to_agree)%leibniz_equiv].
+    by intros [_ ?%agree_op_invL'].
   Qed.
 
   Global Instance ex_mapsto_fractional l : Fractional (λ q, l ↦{q} -)%I.
