@@ -94,9 +94,10 @@ Section auth.
   Proof. intros [? ->]. by rewrite auth_own_op sep_elim_l. Qed.
   Lemma auth_own_valid γ a : auth_own γ a ⊢ ✓ a.
   Proof. by rewrite /auth_own own_valid auth_validI. Qed.
-
-  Global Instance auth_own_cmra_homomorphism : CMRAHomomorphism (auth_own γ).
+  Global Instance auth_own_sep_homomorphism γ :
+    WeakMonoidHomomorphism op uPred_sep (auth_own γ).
   Proof. split. apply _. apply auth_own_op. Qed.
+
   Global Instance own_mono' γ : Proper (flip (≼) ==> (⊢)) (auth_own γ).
   Proof. intros a1 a2. apply auth_own_mono. Qed.
 

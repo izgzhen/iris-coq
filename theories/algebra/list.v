@@ -464,3 +464,63 @@ Instance listURF_contractive F :
 Proof.
   by intros ? A1 A2 B1 B2 n f g Hfg; apply listC_map_ne, urFunctor_contractive.
 Qed.
+
+(** * Persistence and timelessness of lists of uPreds *)
+Class PersistentL {M} (Ps : list (uPred M)) :=
+  persistentL : Forall PersistentP Ps.
+Arguments persistentL {_} _ {_}.
+Hint Mode PersistentL + ! : typeclass_instances.
+
+Class TimelessL {M} (Ps : list (uPred M)) :=
+  timelessL : Forall TimelessP Ps.
+Arguments timelessL {_} _ {_}.
+Hint Mode TimelessP + ! : typeclass_instances.
+
+Section persistent_timeless.
+  Context {M : ucmraT}.
+  Implicit Types Ps Qs : list (uPred M).
+  Implicit Types A : Type.
+
+  Global Instance nil_persistentL : PersistentL (@nil (uPred M)).
+  Proof. constructor. Qed.
+  Global Instance cons_persistentL P Ps :
+    PersistentP P → PersistentL Ps → PersistentL (P :: Ps).
+  Proof. by constructor. Qed.
+  Global Instance app_persistentL Ps Ps' :
+    PersistentL Ps → PersistentL Ps' → PersistentL (Ps ++ Ps').
+  Proof. apply Forall_app_2. Qed.
+
+  Global Instance fmap_persistentL {A} (f : A → uPred M) xs :
+    (∀ x, PersistentP (f x)) → PersistentL (f <$> xs).
+  Proof. intros. apply Forall_fmap, Forall_forall; auto. Qed.
+  Global Instance zip_with_persistentL {A B} (f : A → B → uPred M) xs ys :
+    (∀ x y, PersistentP (f x y)) → PersistentL (zip_with f xs ys).
+  Proof.
+    unfold PersistentL=> ?; revert ys; induction xs=> -[|??]; constructor; auto.
+  Qed.
+  Global Instance imap_persistentL {A} (f : nat → A → uPred M) xs :
+    (∀ i x, PersistentP (f i x)) → PersistentL (imap f xs).
+  Proof. revert f. induction xs; simpl; constructor; naive_solver. Qed.
+
+  (** ** Timelessness *)
+  Global Instance nil_timelessL : TimelessL (@nil (uPred M)).
+  Proof. constructor. Qed.
+  Global Instance cons_timelessL P Ps :
+    TimelessP P → TimelessL Ps → TimelessL (P :: Ps).
+  Proof. by constructor. Qed.
+  Global Instance app_timelessL Ps Ps' :
+    TimelessL Ps → TimelessL Ps' → TimelessL (Ps ++ Ps').
+  Proof. apply Forall_app_2. Qed.
+
+  Global Instance fmap_timelessL {A} (f : A → uPred M) xs :
+    (∀ x, TimelessP (f x)) → TimelessL (f <$> xs).
+  Proof. intros. apply Forall_fmap, Forall_forall; auto. Qed.
+  Global Instance zip_with_timelessL {A B} (f : A → B → uPred M) xs ys :
+    (∀ x y, TimelessP (f x y)) → TimelessL (zip_with f xs ys).
+  Proof.
+    unfold TimelessL=> ?; revert ys; induction xs=> -[|??]; constructor; auto.
+  Qed.
+  Global Instance imap_timelessL {A} (f : nat → A → uPred M) xs :
+    (∀ i x, TimelessP (f i x)) → TimelessL (imap f xs).
+  Proof. revert f. induction xs; simpl; constructor; naive_solver. Qed.
+End persistent_timeless.

@@ -1,177 +1,40 @@
-From iris.algebra Require Export list cmra_big_op.
+From iris.algebra Require Export list big_op.
 From iris.base_logic Require Export base_logic.
 From stdpp Require Import gmap fin_collections gmultiset functions.
 Set Default Proof Using "Type".
 Import uPred.
 
-(* We make use of the bigops on CMRAs, so we first define a (somewhat ad-hoc)
-CMRA structure on uPred. *)
-Section cmra.
-  Context {M : ucmraT}.
-
-  Instance uPred_valid_inst : Valid (uPred M) := λ P, ∀ n x, ✓{n} x → P n x.
-  Instance uPred_validN_inst : ValidN (uPred M) := λ n P,
-    ∀ n' x, n' ≤ n → ✓{n'} x → P n' x.
-  Instance uPred_op : Op (uPred M) := uPred_sep.
-  Instance uPred_pcore : PCore (uPred M) := λ _, Some True%I.
-
-  Instance uPred_validN_ne n : Proper (dist n ==> iff) (uPred_validN_inst n).
-  Proof. intros P Q HPQ; split=> H n' x ??; by apply HPQ, H. Qed.
-
-  Lemma uPred_validN_alt n (P : uPred M) : ✓{n} P → P ≡{n}≡ True%I.
-  Proof.
-    unseal=> HP; split=> n' x ??; split; [done|].
-    intros _. by apply HP.
-  Qed.
-
-  Lemma uPred_cmra_validN_op_l n P Q : ✓{n} (P ∗ Q)%I → ✓{n} P.
-  Proof.
-    unseal. intros HPQ n' x ??.
-    destruct (HPQ n' x) as (x1&x2&->&?&?); auto.
-    eapply uPred_mono with x1; eauto using cmra_includedN_l.
-  Qed.
-
-  Lemma uPred_included P Q : P ≼ Q → Q ⊢ P.
-  Proof. intros [P' ->]. apply sep_elim_l. Qed.
-
-  Definition uPred_cmra_mixin : CMRAMixin (uPred M).
-  Proof.
-    apply cmra_total_mixin; try apply _ || by eauto.
-    - intros n P Q ??. by ofe_subst.
-    - intros P; split.
-      + intros HP n n' x ?. apply HP.
-      + intros HP n x. by apply (HP n).
-    - intros n P HP n' x ?. apply HP; auto.
-    - intros P. by rewrite left_id.
-    - intros P Q _. exists True%I. by rewrite left_id.
-    - intros n P Q. apply uPred_cmra_validN_op_l.
-    - intros n P Q1 Q2 HP HPQ. exists True%I, P; split_and!.
-      + by rewrite left_id.
-      + move: HP; by rewrite HPQ=> /uPred_cmra_validN_op_l /uPred_validN_alt.
-      + move: HP; rewrite HPQ=> /uPred_cmra_validN_op_l /uPred_validN_alt=> ->.
-        by rewrite left_id.
-  Qed.
-
-  Canonical Structure uPredR := CMRAT (uPred M) uPred_cmra_mixin.
-
-  Instance uPred_empty : Empty (uPred M) := True%I.
-
-  Definition uPred_ucmra_mixin : UCMRAMixin (uPred M).
-  Proof.
-    split; last done.
-    - by rewrite /empty /uPred_empty uPred_pure_eq.
-    - intros P. by rewrite left_id.
-  Qed.
-
-  Canonical Structure uPredUR := UCMRAT (uPred M) uPred_ucmra_mixin.
-
-  Global Instance uPred_always_homomorphism : UCMRAHomomorphism uPred_always.
-  Proof. split; [split|]. apply _. apply always_sep. apply always_pure. Qed.
-  Global Instance uPred_always_if_homomorphism b :
-    UCMRAHomomorphism (uPred_always_if b).
-  Proof. split; [split|]. apply _. apply always_if_sep. apply always_if_pure. Qed.
-  Global Instance uPred_later_homomorphism : UCMRAHomomorphism uPred_later.
-  Proof. split; [split|]. apply _. apply later_sep. apply later_True. Qed.
-  Global Instance uPred_laterN_homomorphism n : UCMRAHomomorphism (uPred_laterN n).
-  Proof. split; [split|]. apply _. apply laterN_sep. apply laterN_True. Qed.
-  Global Instance uPred_except_0_homomorphism :
-    CMRAHomomorphism uPred_except_0.
-  Proof. split. apply _. apply except_0_sep. Qed.
-  Global Instance uPred_ownM_homomorphism : UCMRAHomomorphism uPred_ownM.
-  Proof. split; [split|]. apply _. apply ownM_op. apply ownM_empty'. Qed.
-End cmra.
-
-Arguments uPredR : clear implicits.
-Arguments uPredUR : clear implicits.
-
 (* Notations *)
-Notation "'[∗' 'list' ] k ↦ x ∈ l , P" := (big_opL (M:=uPredUR _) (λ k x, P) l)
+Notation "'[∗' 'list]' k ↦ x ∈ l , P" := (big_opL uPred_sep (λ k x, P) l)
   (at level 200, l at level 10, k, x at level 1, right associativity,
-   format "[∗  list ]  k ↦ x  ∈  l ,  P") : uPred_scope.
-Notation "'[∗' 'list' ] x ∈ l , P" := (big_opL (M:=uPredUR _) (λ _ x, P) l)
+   format "[∗  list]  k ↦ x  ∈  l ,  P") : uPred_scope.
+Notation "'[∗' 'list]' x ∈ l , P" := (big_opL uPred_sep (λ _ x, P) l)
   (at level 200, l at level 10, x at level 1, right associativity,
-   format "[∗  list ]  x  ∈  l ,  P") : uPred_scope.
+   format "[∗  list]  x  ∈  l ,  P") : uPred_scope.
 
 Notation "'[∗]' Ps" :=
-  (big_opL (M:=uPredUR _) (λ _ x, x) Ps) (at level 20) : uPred_scope.
+  (big_opL uPred_sep (λ _ x, x) Ps) (at level 20) : uPred_scope.
 
-Notation "'[∗' 'map' ] k ↦ x ∈ m , P" := (big_opM (M:=uPredUR _) (λ k x, P) m)
+Notation "'[∗' 'map]' k ↦ x ∈ m , P" := (big_opM uPred_sep (λ k x, P) m)
   (at level 200, m at level 10, k, x at level 1, right associativity,
-   format "[∗  map ]  k ↦ x  ∈  m ,  P") : uPred_scope.
-Notation "'[∗' 'map' ] x ∈ m , P" := (big_opM (M:=uPredUR _) (λ _ x, P) m)
+   format "[∗  map]  k ↦ x  ∈  m ,  P") : uPred_scope.
+Notation "'[∗' 'map]' x ∈ m , P" := (big_opM uPred_sep (λ _ x, P) m)
   (at level 200, m at level 10, x at level 1, right associativity,
-   format "[∗  map ]  x  ∈  m ,  P") : uPred_scope.
+   format "[∗  map]  x  ∈  m ,  P") : uPred_scope.
 
-Notation "'[∗' 'set' ] x ∈ X , P" := (big_opS (M:=uPredUR _) (λ x, P) X)
+Notation "'[∗' 'set]' x ∈ X , P" := (big_opS uPred_sep (λ x, P) X)
   (at level 200, X at level 10, x at level 1, right associativity,
-   format "[∗  set ]  x  ∈  X ,  P") : uPred_scope.
+   format "[∗  set]  x  ∈  X ,  P") : uPred_scope.
 
-Notation "'[∗' 'mset' ] x ∈ X , P" := (big_opMS (M:=uPredUR _) (λ x, P) X)
+Notation "'[∗' 'mset]' x ∈ X , P" := (big_opMS uPred_sep (λ x, P) X)
   (at level 200, X at level 10, x at level 1, right associativity,
-   format "[∗  mset ]  x  ∈  X ,  P") : uPred_scope.
-
-(** * Persistence and timelessness of lists of uPreds *)
-Class PersistentL {M} (Ps : list (uPred M)) :=
-  persistentL : Forall PersistentP Ps.
-Arguments persistentL {_} _ {_}.
-Hint Mode PersistentL + ! : typeclass_instances.
-
-Class TimelessL {M} (Ps : list (uPred M)) :=
-  timelessL : Forall TimelessP Ps.
-Arguments timelessL {_} _ {_}.
-Hint Mode TimelessP + ! : typeclass_instances.
+   format "[∗  mset]  x  ∈  X ,  P") : uPred_scope.
 
 (** * Properties *)
 Section big_op.
 Context {M : ucmraT}.
 Implicit Types Ps Qs : list (uPred M).
 Implicit Types A : Type.
-
-Global Instance nil_persistent : PersistentL (@nil (uPred M)).
-Proof. constructor. Qed.
-Global Instance cons_persistent P Ps :
-  PersistentP P → PersistentL Ps → PersistentL (P :: Ps).
-Proof. by constructor. Qed.
-Global Instance app_persistent Ps Ps' :
-  PersistentL Ps → PersistentL Ps' → PersistentL (Ps ++ Ps').
-Proof. apply Forall_app_2. Qed.
-
-Global Instance fmap_persistent {A} (f : A → uPred M) xs :
-  (∀ x, PersistentP (f x)) → PersistentL (f <$> xs).
-Proof. intros. apply Forall_fmap, Forall_forall; auto. Qed.
-Global Instance zip_with_persistent {A B} (f : A → B → uPred M) xs ys :
-  (∀ x y, PersistentP (f x y)) → PersistentL (zip_with f xs ys).
-Proof.
-  unfold PersistentL=> ?; revert ys; induction xs=> -[|??]; constructor; auto.
-Qed.
-Global Instance imap_persistent {A} (f : nat → A → uPred M) xs :
-  (∀ i x, PersistentP (f i x)) → PersistentL (imap f xs).
-Proof. revert f. induction xs; simpl; constructor; naive_solver. Qed.
-
-(** ** Timelessness *)
-Global Instance big_sep_timeless Ps : TimelessL Ps → TimelessP ([∗] Ps).
-Proof. induction 1; apply _. Qed.
-
-Global Instance nil_timeless : TimelessL (@nil (uPred M)).
-Proof. constructor. Qed.
-Global Instance cons_timeless P Ps :
-  TimelessP P → TimelessL Ps → TimelessL (P :: Ps).
-Proof. by constructor. Qed.
-Global Instance app_timeless Ps Ps' :
-  TimelessL Ps → TimelessL Ps' → TimelessL (Ps ++ Ps').
-Proof. apply Forall_app_2. Qed.
-
-Global Instance fmap_timeless {A} (f : A → uPred M) xs :
-  (∀ x, TimelessP (f x)) → TimelessL (f <$> xs).
-Proof. intros. apply Forall_fmap, Forall_forall; auto. Qed.
-Global Instance zip_with_timeless {A B} (f : A → B → uPred M) xs ys :
-  (∀ x y, TimelessP (f x y)) → TimelessL (zip_with f xs ys).
-Proof.
-  unfold TimelessL=> ?; revert ys; induction xs=> -[|??]; constructor; auto.
-Qed.
-Global Instance imap_timeless {A} (f : nat → A → uPred M) xs :
-  (∀ i x, TimelessP (f i x)) → TimelessL (imap f xs).
-Proof. revert f. induction xs; simpl; constructor; naive_solver. Qed.
 
 (** ** Big ops over lists *)
 Section list.
@@ -203,14 +66,14 @@ Section list.
   Proof. apply big_opL_proper. Qed.
   Lemma big_sepL_submseteq (Φ : A → uPred M) l1 l2 :
     l1 ⊆+ l2 → ([∗ list] y ∈ l2, Φ y) ⊢ [∗ list] y ∈ l1, Φ y.
-  Proof. intros ?. apply uPred_included. by apply: big_opL_submseteq. Qed.
+  Proof. intros [l ->]%submseteq_Permutation. by rewrite big_sepL_app sep_elim_l. Qed.
 
   Global Instance big_sepL_mono' :
     Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (=) ==> (⊢))
-           (big_opL (M:=uPredUR M) (A:=A)).
+           (big_opL (@uPred_sep M) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
   Global Instance big_sep_mono' :
-    Proper (Forall2 (⊢) ==> (⊢)) (big_opL (M:=uPredUR M) (λ _ P, P)).
+    Proper (Forall2 (⊢) ==> (⊢)) (big_opL (@uPred_sep M) (λ _ P, P)).
   Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
   Lemma big_sepL_lookup_acc Φ l i x :
@@ -224,11 +87,13 @@ Section list.
 
   Lemma big_sepL_lookup Φ l i x :
     l !! i = Some x → ([∗ list] k↦y ∈ l, Φ k y) ⊢ Φ i x.
-  Proof. intros. apply uPred_included. by apply: big_opL_lookup. Qed.
+  Proof. intros. by rewrite big_sepL_lookup_acc // sep_elim_l. Qed.
 
   Lemma big_sepL_elem_of (Φ : A → uPred M) l x :
     x ∈ l → ([∗ list] y ∈ l, Φ y) ⊢ Φ x.
-  Proof. intros. apply uPred_included. by apply: big_opL_elem_of. Qed.
+  Proof.
+    intros [i ?]%elem_of_list_lookup; eauto using (big_sepL_lookup (λ _, Φ)).
+  Qed.
 
   Lemma big_sepL_fmap {B} (f : A → B) (Φ : nat → B → uPred M) l :
     ([∗ list] k↦y ∈ f <$> l, Φ k y) ⊣⊢ ([∗ list] k↦y ∈ l, Φ k (f y)).
@@ -313,7 +178,7 @@ Section list2.
     ([∗ list] k↦x ∈ zip_with f l1 l2, Φ k x)
     ⊣⊢ ([∗ list] k↦x ∈ l1, ∀ y, ⌜l2 !! k = Some y⌝ → Φ k (f x y)).
   Proof.
-    revert Φ l2; induction l1 as [|x l1 IH]=> Φ [|y l2]//.
+    revert Φ l2; induction l1 as [|x l1 IH]=> Φ [|y l2] //.
     - apply (anti_symm _), True_intro.
       trans ([∗ list] _↦_ ∈ x :: l1, True : uPred M)%I.
       + rewrite big_sepL_forall. auto using forall_intro, impl_intro_l, True_intro.
@@ -346,7 +211,7 @@ Section gmap.
 
   Global Instance big_sepM_mono' :
     Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (=) ==> (⊢))
-           (big_opM (M:=uPredUR M) (A:=A)).
+           (big_opM (@uPred_sep M) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_sepM_empty Φ : ([∗ map] k↦x ∈ ∅, Φ k x) ⊣⊢ True.
@@ -357,12 +222,12 @@ Section gmap.
   Lemma big_sepM_insert Φ m i x :
     m !! i = None →
     ([∗ map] k↦y ∈ <[i:=x]> m, Φ k y) ⊣⊢ Φ i x ∗ [∗ map] k↦y ∈ m, Φ k y.
-  Proof. apply: big_opM_insert. Qed.
+  Proof. apply big_opM_insert. Qed.
 
   Lemma big_sepM_delete Φ m i x :
     m !! i = Some x →
     ([∗ map] k↦y ∈ m, Φ k y) ⊣⊢ Φ i x ∗ [∗ map] k↦y ∈ delete i m, Φ k y.
-  Proof. apply: big_opM_delete. Qed.
+  Proof. apply big_opM_delete. Qed.
 
   Lemma big_sepM_lookup_acc Φ m i x :
     m !! i = Some x →
@@ -373,7 +238,7 @@ Section gmap.
 
   Lemma big_sepM_lookup Φ m i x :
     m !! i = Some x → ([∗ map] k↦y ∈ m, Φ k y) ⊢ Φ i x.
-  Proof. intros. apply uPred_included. by apply: big_opM_lookup. Qed.
+  Proof. intros. by rewrite big_sepM_lookup_acc // sep_elim_l. Qed.
 
   Lemma big_sepM_lookup_dom (Φ : K → uPred M) m i :
     is_Some (m !! i) → ([∗ map] k↦_ ∈ m, Φ k) ⊢ Φ i.
@@ -389,7 +254,7 @@ Section gmap.
   Lemma big_sepM_insert_override Φ m i x x' :
     m !! i = Some x → (Φ i x ⊣⊢ Φ i x') →
     ([∗ map] k↦y ∈ <[i:=x']> m, Φ k y) ⊣⊢ ([∗ map] k↦y ∈ m, Φ k y).
-  Proof. apply: big_opM_insert_override. Qed.
+  Proof. apply big_opM_insert_override. Qed.
 
   Lemma big_sepM_insert_override_1 Φ m i x x' :
     m !! i = Some x →
@@ -415,17 +280,17 @@ Section gmap.
     m !! i = None →
        ([∗ map] k↦y ∈ <[i:=x]> m, Ψ k y (<[i:=b]> f k))
     ⊣⊢ (Ψ i x b ∗ [∗ map] k↦y ∈ m, Ψ k y (f k)).
-  Proof. apply: big_opM_fn_insert. Qed.
+  Proof. apply big_opM_fn_insert. Qed.
 
   Lemma big_sepM_fn_insert' (Φ : K → uPred M) m i x P :
     m !! i = None →
     ([∗ map] k↦y ∈ <[i:=x]> m, <[i:=P]> Φ k) ⊣⊢ (P ∗ [∗ map] k↦y ∈ m, Φ k).
-  Proof. apply: big_opM_fn_insert'. Qed.
+  Proof. apply big_opM_fn_insert'. Qed.
 
   Lemma big_sepM_sepM Φ Ψ m :
     ([∗ map] k↦x ∈ m, Φ k x ∗ Ψ k x)
     ⊣⊢ ([∗ map] k↦x ∈ m, Φ k x) ∗ ([∗ map] k↦x ∈ m, Ψ k x).
-  Proof. apply: big_opM_opM. Qed.
+  Proof. apply big_opM_opM. Qed.
 
   Lemma big_sepM_and Φ Ψ m :
     ([∗ map] k↦x ∈ m, Φ k x ∧ Ψ k x)
@@ -507,10 +372,10 @@ Section gset.
   Lemma big_sepS_proper Φ Ψ X :
     (∀ x, x ∈ X → Φ x ⊣⊢ Ψ x) →
     ([∗ set] x ∈ X, Φ x) ⊣⊢ ([∗ set] x ∈ X, Ψ x).
-  Proof. apply: big_opS_proper. Qed.
+  Proof. apply big_opS_proper. Qed.
 
   Global Instance big_sepS_mono' :
-     Proper (pointwise_relation _ (⊢) ==> (=) ==> (⊢)) (big_opS (M:=uPredUR M) (A:=A)).
+     Proper (pointwise_relation _ (⊢) ==> (=) ==> (⊢)) (big_opS (@uPred_sep M) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opS_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_sepS_empty Φ : ([∗ set] x ∈ ∅, Φ x) ⊣⊢ True.
@@ -520,29 +385,29 @@ Section gset.
 
   Lemma big_sepS_insert Φ X x :
     x ∉ X → ([∗ set] y ∈ {[ x ]} ∪ X, Φ y) ⊣⊢ (Φ x ∗ [∗ set] y ∈ X, Φ y).
-  Proof. apply: big_opS_insert. Qed.
+  Proof. apply big_opS_insert. Qed.
 
   Lemma big_sepS_fn_insert {B} (Ψ : A → B → uPred M) f X x b :
     x ∉ X →
        ([∗ set] y ∈ {[ x ]} ∪ X, Ψ y (<[x:=b]> f y))
     ⊣⊢ (Ψ x b ∗ [∗ set] y ∈ X, Ψ y (f y)).
-  Proof. apply: big_opS_fn_insert. Qed.
+  Proof. apply big_opS_fn_insert. Qed.
 
   Lemma big_sepS_fn_insert' Φ X x P :
     x ∉ X → ([∗ set] y ∈ {[ x ]} ∪ X, <[x:=P]> Φ y) ⊣⊢ (P ∗ [∗ set] y ∈ X, Φ y).
-  Proof. apply: big_opS_fn_insert'. Qed.
+  Proof. apply big_opS_fn_insert'. Qed.
 
   Lemma big_sepS_union Φ X Y :
     X ⊥ Y →
     ([∗ set] y ∈ X ∪ Y, Φ y) ⊣⊢ ([∗ set] y ∈ X, Φ y) ∗ ([∗ set] y ∈ Y, Φ y).
-  Proof. apply: big_opS_union. Qed.
+  Proof. apply big_opS_union. Qed.
 
   Lemma big_sepS_delete Φ X x :
     x ∈ X → ([∗ set] y ∈ X, Φ y) ⊣⊢ Φ x ∗ [∗ set] y ∈ X ∖ {[ x ]}, Φ y.
-  Proof. apply: big_opS_delete. Qed.
+  Proof. apply big_opS_delete. Qed.
 
   Lemma big_sepS_elem_of Φ X x : x ∈ X → ([∗ set] y ∈ X, Φ y) ⊢ Φ x.
-  Proof. intros. apply uPred_included. by apply: big_opS_elem_of. Qed.
+  Proof. intros. rewrite big_sepS_delete //. auto with I. Qed.
 
   Lemma big_sepS_elem_of_acc Φ X x :
     x ∈ X →
@@ -552,7 +417,7 @@ Section gset.
   Qed.
 
   Lemma big_sepS_singleton Φ x : ([∗ set] y ∈ {[ x ]}, Φ y) ⊣⊢ Φ x.
-  Proof. apply: big_opS_singleton. Qed.
+  Proof. apply big_opS_singleton. Qed.
 
   Lemma big_sepS_filter (P : A → Prop) `{∀ x, Decision (P x)} Φ X :
     ([∗ set] y ∈ filter P X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ⌜P y⌝ → Φ y).
@@ -580,7 +445,7 @@ Section gset.
 
   Lemma big_sepS_sepS Φ Ψ X :
     ([∗ set] y ∈ X, Φ y ∗ Ψ y) ⊣⊢ ([∗ set] y ∈ X, Φ y) ∗ ([∗ set] y ∈ X, Ψ y).
-  Proof. apply: big_opS_opS. Qed.
+  Proof. apply big_opS_opS. Qed.
 
   Lemma big_sepS_and Φ Ψ X :
     ([∗ set] y ∈ X, Φ y ∧ Ψ y) ⊢ ([∗ set] y ∈ X, Φ y) ∧ ([∗ set] y ∈ X, Ψ y).
@@ -637,7 +502,7 @@ End gset.
 
 Lemma big_sepM_dom `{Countable K} {A} (Φ : K → uPred M) (m : gmap K A) :
   ([∗ map] k↦_ ∈ m, Φ k) ⊣⊢ ([∗ set] k ∈ dom _ m, Φ k).
-Proof. apply: big_opM_dom. Qed.
+Proof. apply big_opM_dom. Qed.
 
 
 (** ** Big ops over finite multisets *)
@@ -657,10 +522,10 @@ Section gmultiset.
   Lemma big_sepMS_proper Φ Ψ X :
     (∀ x, x ∈ X → Φ x ⊣⊢ Ψ x) →
     ([∗ mset] x ∈ X, Φ x) ⊣⊢ ([∗ mset] x ∈ X, Ψ x).
-  Proof. apply: big_opMS_proper. Qed.
+  Proof. apply big_opMS_proper. Qed.
 
   Global Instance big_sepMS_mono' :
-     Proper (pointwise_relation _ (⊢) ==> (=) ==> (⊢)) (big_opMS (M:=uPredUR M) (A:=A)).
+     Proper (pointwise_relation _ (⊢) ==> (=) ==> (⊢)) (big_opMS (@uPred_sep M) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opMS_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_sepMS_empty Φ : ([∗ mset] x ∈ ∅, Φ x) ⊣⊢ True.
@@ -670,14 +535,14 @@ Section gmultiset.
 
   Lemma big_sepMS_union Φ X Y :
     ([∗ mset] y ∈ X ∪ Y, Φ y) ⊣⊢ ([∗ mset] y ∈ X, Φ y) ∗ [∗ mset] y ∈ Y, Φ y.
-  Proof. apply: big_opMS_union. Qed.
+  Proof. apply big_opMS_union. Qed.
 
   Lemma big_sepMS_delete Φ X x :
     x ∈ X → ([∗ mset] y ∈ X, Φ y) ⊣⊢ Φ x ∗ [∗ mset] y ∈ X ∖ {[ x ]}, Φ y.
-  Proof. apply: big_opMS_delete. Qed.
+  Proof. apply big_opMS_delete. Qed.
 
   Lemma big_sepMS_elem_of Φ X x : x ∈ X → ([∗ mset] y ∈ X, Φ y) ⊢ Φ x.
-  Proof. intros. apply uPred_included. by apply: big_opMS_elem_of. Qed. 
+  Proof. intros. by rewrite big_sepMS_delete // sep_elim_l. Qed.
 
   Lemma big_sepMS_elem_of_acc Φ X x :
     x ∈ X →
@@ -687,11 +552,11 @@ Section gmultiset.
   Qed.
 
   Lemma big_sepMS_singleton Φ x : ([∗ mset] y ∈ {[ x ]}, Φ y) ⊣⊢ Φ x.
-  Proof. apply: big_opMS_singleton. Qed.
+  Proof. apply big_opMS_singleton. Qed.
 
   Lemma big_sepMS_sepMS Φ Ψ X :
     ([∗ mset] y ∈ X, Φ y ∗ Ψ y) ⊣⊢ ([∗ mset] y ∈ X, Φ y) ∗ ([∗ mset] y ∈ X, Ψ y).
-  Proof. apply: big_opMS_opMS. Qed.
+  Proof. apply big_opMS_opMS. Qed.
 
   Lemma big_sepMS_and Φ Ψ X :
     ([∗ mset] y ∈ X, Φ y ∧ Ψ y) ⊢ ([∗ mset] y ∈ X, Φ y) ∧ ([∗ mset] y ∈ X, Ψ y).

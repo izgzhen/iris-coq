@@ -889,5 +889,64 @@ Proof. intros. by rewrite /PersistentP always_ownM. Qed.
 Global Instance from_option_persistent {A} P (Ψ : A → uPred M) (mx : option A) :
   (∀ x, PersistentP (Ψ x)) → PersistentP P → PersistentP (from_option Ψ P mx).
 Proof. destruct mx; apply _. Qed.
+
+(* For big ops *)
+Global Instance uPred_and_monoid : Monoid (@uPred_and M) :=
+  {| monoid_unit := True%I |}.
+Global Instance uPred_or_monoid : Monoid (@uPred_or M) :=
+  {| monoid_unit := False%I |}.
+Global Instance uPred_sep_monoid : Monoid (@uPred_sep M) :=
+  {| monoid_unit := True%I |}.
+
+Global Instance uPred_always_and_homomorphism :
+  MonoidHomomorphism uPred_and uPred_and (@uPred_always M).
+Proof. split; [split|]. apply _. apply always_and. apply always_pure. Qed.
+Global Instance uPred_always_if_and_homomorphism b :
+  MonoidHomomorphism uPred_and uPred_and (@uPred_always_if M b).
+Proof. split; [split|]. apply _. apply always_if_and. apply always_if_pure. Qed.
+Global Instance uPred_later_monoid_and_homomorphism :
+  MonoidHomomorphism uPred_and uPred_and (@uPred_later M).
+Proof. split; [split|]. apply _. apply later_and. apply later_True. Qed.
+Global Instance uPred_laterN_and_homomorphism n :
+  MonoidHomomorphism uPred_and uPred_and (@uPred_laterN M n).
+Proof. split; [split|]. apply _. apply laterN_and. apply laterN_True. Qed.
+Global Instance uPred_except_0_and_homomorphism :
+  MonoidHomomorphism uPred_and uPred_and (@uPred_except_0 M).
+Proof. split; [split|]. apply _. apply except_0_and. apply except_0_True. Qed.
+
+Global Instance uPred_always_or_homomorphism :
+  MonoidHomomorphism uPred_or uPred_or (@uPred_always M).
+Proof. split; [split|]. apply _. apply always_or. apply always_pure. Qed.
+Global Instance uPred_always_if_or_homomorphism b :
+  MonoidHomomorphism uPred_or uPred_or (@uPred_always_if M b).
+Proof. split; [split|]. apply _. apply always_if_or. apply always_if_pure. Qed.
+Global Instance uPred_later_monoid_or_homomorphism :
+  WeakMonoidHomomorphism uPred_or uPred_or (@uPred_later M).
+Proof. split. apply _. apply later_or. Qed.
+Global Instance uPred_laterN_or_homomorphism n :
+  WeakMonoidHomomorphism uPred_or uPred_or (@uPred_laterN M n).
+Proof. split. apply _. apply laterN_or. Qed.
+Global Instance uPred_except_0_or_homomorphism :
+  WeakMonoidHomomorphism uPred_or uPred_or (@uPred_except_0 M).
+Proof. split. apply _. apply except_0_or. Qed. 
+
+Global Instance uPred_always_sep_homomorphism :
+  MonoidHomomorphism uPred_sep uPred_sep (@uPred_always M).
+Proof. split; [split|]. apply _. apply always_sep. apply always_pure. Qed.
+Global Instance uPred_always_if_sep_homomorphism b :
+  MonoidHomomorphism uPred_sep uPred_sep (@uPred_always_if M b).
+Proof. split; [split|]. apply _. apply always_if_sep. apply always_if_pure. Qed.
+Global Instance uPred_later_monoid_sep_homomorphism :
+  MonoidHomomorphism uPred_sep uPred_sep (@uPred_later M).
+Proof. split; [split|]. apply _. apply later_sep. apply later_True. Qed.
+Global Instance uPred_laterN_sep_homomorphism n :
+  MonoidHomomorphism uPred_sep uPred_sep (@uPred_laterN M n).
+Proof. split; [split|]. apply _. apply laterN_sep. apply laterN_True. Qed.
+Global Instance uPred_except_0_sep_homomorphism :
+  MonoidHomomorphism uPred_sep uPred_sep (@uPred_except_0 M).
+Proof. split; [split|]. apply _. apply except_0_sep. apply except_0_True. Qed.
+Global Instance uPred_ownM_sep_homomorphism :
+  MonoidHomomorphism op uPred_sep (@uPred_ownM M).
+Proof. split; [split|]. apply _. apply ownM_op. apply ownM_empty'. Qed.
 End derived.
 End uPred.

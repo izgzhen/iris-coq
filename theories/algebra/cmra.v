@@ -1,4 +1,4 @@
-From iris.algebra Require Export ofe.
+From iris.algebra Require Export ofe monoid.
 Set Default Proof Using "Type".
 
 Class PCore (A : Type) := pcore : A → option A.
@@ -242,20 +242,6 @@ Class CMRAMonotone {A B : cmraT} (f : A → B) := {
 }.
 Arguments cmra_monotone_validN {_ _} _ {_} _ _ _.
 Arguments cmra_monotone {_ _} _ {_} _ _ _.
-
-(* Not all intended homomorphisms preserve validity, in particular it does not
-hold for the [ownM] and [own] connectives. *)
-Class CMRAHomomorphism {A B : cmraT} (f : A → B) := {
-  cmra_homomorphism_ne :> NonExpansive f;
-  cmra_homomorphism x y : f (x ⋅ y) ≡ f x ⋅ f y
-}.
-Arguments cmra_homomorphism {_ _} _ _ _ _.
-
-Class UCMRAHomomorphism {A B : ucmraT} (f : A → B) := {
-  ucmra_homomorphism :> CMRAHomomorphism f;
-  ucmra_homomorphism_unit : f ∅ ≡ ∅
-}.
-Arguments ucmra_homomorphism_unit {_ _} _ _.
 
 (** * Properties **)
 Section cmra.
@@ -633,9 +619,12 @@ Section ucmra.
   Qed.
   Global Instance empty_cancelable : Cancelable (∅:A).
   Proof. intros ???. by rewrite !left_id. Qed.
-End ucmra.
-Hint Immediate cmra_unit_total.
 
+  (* For big ops *)
+  Global Instance cmra_monoid : Monoid (@op A _) := {| monoid_unit := ∅ |}.
+End ucmra.
+
+Hint Immediate cmra_unit_total.
 
 (** * Properties about CMRAs with Leibniz equality *)
 Section cmra_leibniz.
@@ -751,26 +740,6 @@ Section cmra_monotone.
   Lemma cmra_monotone_valid x : ✓ x → ✓ f x.
   Proof. rewrite !cmra_valid_validN; eauto using cmra_monotone_validN. Qed.
 End cmra_monotone.
-
-Instance cmra_homomorphism_id {A : cmraT} : CMRAHomomorphism (@id A).
-Proof. repeat split; by try apply _. Qed.
-Instance cmra_homomorphism_compose {A B C : cmraT} (f : A → B) (g : B → C) :
-  CMRAHomomorphism f → CMRAHomomorphism g → CMRAHomomorphism (g ∘ f).
-Proof.
-  split.
-  - apply _.
-  - move=> x y /=. rewrite -(cmra_homomorphism g).
-    by apply (ne_proper _), cmra_homomorphism.
-Qed.
-
-Instance cmra_homomorphism_proper {A B : cmraT} (f : A → B) :
-  CMRAHomomorphism f → Proper ((≡) ==> (≡)) f := λ _, ne_proper _.
-
-Instance ucmra_homomorphism_id {A : ucmraT} : UCMRAHomomorphism (@id A).
-Proof. repeat split; by try apply _. Qed.
-Instance ucmra_homomorphism_compose {A B C : ucmraT} (f : A → B) (g : B → C) :
-  UCMRAHomomorphism f → UCMRAHomomorphism g → UCMRAHomomorphism (g ∘ f).
-Proof. split. apply _. by rewrite /= !ucmra_homomorphism_unit. Qed.
 
 (** Functors *)
 Structure rFunctor := RFunctor {
@@ -1316,8 +1285,6 @@ Section option.
   (** Misc *)
   Global Instance Some_cmra_monotone : CMRAMonotone Some.
   Proof. split; [apply _|done|intros x y [z ->]; by exists (Some z)]. Qed.
-  Global Instance Some_cmra_homomorphism : CMRAHomomorphism Some.
-  Proof. split. apply _. done. Qed.
 
   Lemma op_None mx my : mx ⋅ my = None ↔ mx = None ∧ my = None.
   Proof. destruct mx, my; naive_solver. Qed.

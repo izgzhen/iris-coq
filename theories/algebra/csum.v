@@ -281,11 +281,6 @@ Proof. intros ? [] ? EQ; inversion_clear EQ. by eapply id_free0_r. Qed.
 Global Instance Cinr_id_free b : IdFree b → IdFree (Cinr b).
 Proof. intros ? [] ? EQ; inversion_clear EQ. by eapply id_free0_r. Qed.
 
-Global Instance Cinl_cmra_homomorphism : CMRAHomomorphism Cinl.
-Proof. split. apply _. done. Qed.
-Global Instance Cinr_cmra_homomorphism : CMRAHomomorphism Cinr.
-Proof. split. apply _. done. Qed.
-
 (** Internalized properties *)
 Lemma csum_equivI {M} (x y : csum A B) :
   x ≡ y ⊣⊢ (match x, y with
