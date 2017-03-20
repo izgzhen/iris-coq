@@ -25,11 +25,28 @@ Section fractional.
   Lemma fractional_split P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
     P ⊣⊢ P1 ∗ P2.
-  Proof. move=>-[-> ->] [-> _] [-> _]. done. Qed.
+  Proof. by move=>-[-> ->] [-> _] [-> _]. Qed.
+  Lemma fractional_split_1 P P1 P2 Φ q1 q2 :
+    AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
+    P -∗ P1 ∗ P2.
+  Proof. intros. by rewrite -fractional_split. Qed.
+  Lemma fractional_split_2 P P1 P2 Φ q1 q2 :
+    AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
+    P1 -∗ P2 -∗ P.
+  Proof. intros. apply uPred.wand_intro_r. by rewrite -fractional_split. Qed.
+
   Lemma fractional_half P P12 Φ q :
     AsFractional P Φ q → AsFractional P12 Φ (q/2) →
     P ⊣⊢ P12 ∗ P12.
-  Proof. rewrite -{1}(Qp_div_2 q)=>-[->->][-> _]. done. Qed.
+  Proof. by rewrite -{1}(Qp_div_2 q)=>-[->->][-> _]. Qed.
+  Lemma fractional_half_1 P P12 Φ q :
+    AsFractional P Φ q → AsFractional P12 Φ (q/2) →
+    P -∗ P12 ∗ P12.
+  Proof. intros. by rewrite -fractional_half. Qed.
+  Lemma fractional_half_2 P P12 Φ q :
+    AsFractional P Φ q → AsFractional P12 Φ (q/2) →
+    P12 -∗ P12 -∗ P.
+  Proof. intros. apply uPred.wand_intro_r. by rewrite -fractional_half. Qed.
 
   (** Fractional and logical connectives *)
   Global Instance persistent_fractional P :
