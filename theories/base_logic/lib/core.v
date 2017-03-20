@@ -40,5 +40,14 @@ Section core.
 
   Lemma coreP_elim P : PersistentP P → coreP P -∗ P.
   Proof. rewrite /coreP. iIntros (?) "HCP". unshelve iApply ("HCP" $! P); auto. Qed.
-End core.
 
+  Lemma coreP_wand P Q :
+    (coreP P ⊢ Q) ↔ (P ⊢ □ Q).
+  Proof.
+    split.
+    - iIntros (HP) "HP". iDestruct (coreP_intro with "HP") as "#HcP".
+      iClear "∗". iAlways. by iApply HP.
+    - iIntros (HPQ) "HcP". iDestruct (coreP_mono _ _ HPQ with "HcP") as "HcQ".
+      iDestruct (coreP_elim with "HcQ") as "#HQ". done.
+  Qed.
+End core.
