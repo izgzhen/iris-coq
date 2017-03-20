@@ -76,15 +76,15 @@ Lemma ress_split i i1 i2 Q R1 R2 P I :
   ress P ({[i1;i2]} ∪ I ∖ {[i]}).
 Proof.
   iIntros (????) "#HQ #H1 #H2 HQR"; iDestruct 1 as (Ψ) "[HPΨ HΨ]".
-  iDestruct (big_sepS_delete _ _ i with "HΨ") as "[#HΨi HΨ]"; first done.
+  iDestruct (big_opS_delete _ _ i with "HΨ") as "[#HΨi HΨ]"; first done.
   iExists (<[i1:=R1]> (<[i2:=R2]> Ψ)). iSplitL "HQR HPΨ".
   - iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by iSplit.
     iNext. iRewrite "Heq" in "HQR". iIntros "HP". iSpecialize ("HPΨ" with "HP").
-    iDestruct (big_sepS_delete _ _ i with "HPΨ") as "[HΨ HPΨ]"; first done.
+    iDestruct (big_opS_delete _ _ i with "HPΨ") as "[HΨ HPΨ]"; first done.
     iDestruct ("HQR" with "HΨ") as "[HR1 HR2]".
-    rewrite -assoc_L !big_sepS_fn_insert'; [|abstract set_solver ..].
+    rewrite -assoc_L !big_opS_fn_insert'; [|abstract set_solver ..].
     by iFrame.
-  - rewrite -assoc_L !big_sepS_fn_insert; [|abstract set_solver ..]. eauto.
+  - rewrite -assoc_L !big_opS_fn_insert; [|abstract set_solver ..]. eauto.
 Qed.
 
 (** Actual proofs *)
@@ -98,7 +98,7 @@ Proof.
   iMod (sts_alloc (barrier_inv l P) _ N (State Low {[ γ ]}) with "[-]")
     as (γ') "[#? Hγ']"; eauto.
   { iNext. rewrite /barrier_inv /=. iFrame.
-    iExists (const P). rewrite !big_sepS_singleton /=. eauto. }
+    iExists (const P). rewrite !big_opS_singleton /=. eauto. }
   iAssert (barrier_ctx γ' l P)%I as "#?".
   { done. }
   iAssert (sts_ownS γ' (i_states γ) {[Change γ]}
@@ -147,9 +147,9 @@ Proof.
   - (* a High state: the comparison succeeds, and we perform a transition and
     return to the client *)
     iDestruct "Hr" as (Ψ) "[HΨ Hsp]".
-    iDestruct (big_sepS_delete _ _ i with "Hsp") as "[#HΨi Hsp]"; first done.
+    iDestruct (big_opS_delete _ _ i with "Hsp") as "[#HΨi Hsp]"; first done.
     iAssert (▷ Ψ i ∗ ▷ [∗ set] j ∈ I ∖ {[i]}, Ψ j)%I with "[HΨ]" as "[HΨ HΨ']".
-    { iNext. iApply (big_sepS_delete _ _ i); first done. by iApply "HΨ". }
+    { iNext. iApply (big_opS_delete _ _ i); first done. by iApply "HΨ". }
     iMod ("Hclose" $! (State High (I ∖ {[ i ]})) (∅ : set token) with "[HΨ' Hl Hsp]").
     { iSplit; [iPureIntro; by eauto using wait_step|].
       rewrite /barrier_inv /=. iNext. iFrame "Hl". iExists Ψ; iFrame. auto. }

@@ -181,7 +181,7 @@ Global Instance into_laterN_big_sepL n {A} (Φ Ψ : nat → A → uPred M) (l: l
   IntoLaterN' n ([∗ list] k ↦ x ∈ l, Φ k x) ([∗ list] k ↦ x ∈ l, Ψ k x).
 Proof.
   rewrite /IntoLaterN' /IntoLaterN=> ?.
-  rewrite big_sepL_laterN. by apply big_sepL_mono.
+  rewrite big_opL_commute. by apply big_sepL_mono.
 Qed.
 Global Instance into_laterN_big_sepM n `{Countable K} {A}
     (Φ Ψ : K → A → uPred M) (m : gmap K A) :
@@ -189,7 +189,7 @@ Global Instance into_laterN_big_sepM n `{Countable K} {A}
   IntoLaterN' n ([∗ map] k ↦ x ∈ m, Φ k x) ([∗ map] k ↦ x ∈ m, Ψ k x).
 Proof.
   rewrite /IntoLaterN' /IntoLaterN=> ?.
-  rewrite big_sepM_laterN; by apply big_sepM_mono.
+  rewrite big_opM_commute; by apply big_sepM_mono.
 Qed.
 Global Instance into_laterN_big_sepS n `{Countable A}
     (Φ Ψ : A → uPred M) (X : gset A) :
@@ -197,7 +197,7 @@ Global Instance into_laterN_big_sepS n `{Countable A}
   IntoLaterN' n ([∗ set] x ∈ X, Φ x) ([∗ set] x ∈ X, Ψ x).
 Proof.
   rewrite /IntoLaterN' /IntoLaterN=> ?.
-  rewrite big_sepS_laterN; by apply big_sepS_mono.
+  rewrite big_opS_commute; by apply big_sepS_mono.
 Qed.
 Global Instance into_laterN_big_sepMS n `{Countable A}
     (Φ Ψ : A → uPred M) (X : gmultiset A) :
@@ -205,7 +205,7 @@ Global Instance into_laterN_big_sepMS n `{Countable A}
   IntoLaterN' n ([∗ mset] x ∈ X, Φ x) ([∗ mset] x ∈ X, Ψ x).
 Proof.
   rewrite /IntoLaterN' /IntoLaterN=> ?.
-  rewrite big_sepMS_laterN; by apply big_sepMS_mono.
+  rewrite big_opMS_commute; by apply big_sepMS_mono.
 Qed.
 
 (* FromLater *)
@@ -464,7 +464,7 @@ Global Instance frame_big_sepL_app {A} p (Φ : nat → A → uPred M) R Q l l1 l
   Frame p R (([∗ list] k ↦ y ∈ l1, Φ k y) ∗
            [∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y) Q →
   Frame p R ([∗ list] k ↦ y ∈ l, Φ k y) Q.
-Proof. rewrite /IsApp=>->. by rewrite /Frame big_sepL_app. Qed.
+Proof. rewrite /IsApp=>->. by rewrite /Frame big_opL_app. Qed.
 
 Class MakeAnd (P Q PQ : uPred M) := make_and : P ∧ Q ⊣⊢ PQ.
 Global Instance make_and_true_l P : MakeAnd True P P.

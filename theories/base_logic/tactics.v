@@ -28,7 +28,7 @@ Module uPred_reflection. Section uPred_reflection.
   Lemma eval_flatten Σ e : eval Σ e ⊣⊢ eval_list Σ (flatten e).
   Proof.
     induction e as [| |e1 IH1 e2 IH2];
-      rewrite /= ?right_id ?big_sepL_app ?IH1 ?IH2 //.
+      rewrite /= ?right_id ?big_opL_app ?IH1 ?IH2 //.
   Qed.
   Lemma flatten_entails Σ e1 e2 :
     flatten e2 ⊆+ flatten e1 → eval Σ e1 ⊢ eval Σ e2.
@@ -89,7 +89,7 @@ Module uPred_reflection. Section uPred_reflection.
   Proof.
     intros ??. rewrite !eval_flatten.
     rewrite (flatten_cancel e1 e1' ns) // (flatten_cancel e2 e2' ns) //; csimpl.
-    rewrite !big_sepL_app. apply sep_mono_r.
+    rewrite !big_opL_app. apply sep_mono_r.
   Qed.
 
   Fixpoint to_expr (l : list nat) : expr :=
@@ -109,7 +109,7 @@ Module uPred_reflection. Section uPred_reflection.
     cancel ns e = Some e' → eval Σ e ⊣⊢ (eval Σ (to_expr ns) ∗ eval Σ e').
   Proof.
     intros He%flatten_cancel.
-    by rewrite eval_flatten He big_sepL_app eval_to_expr eval_flatten.
+    by rewrite eval_flatten He big_opL_app eval_to_expr eval_flatten.
   Qed.
   Lemma split_r Σ e ns e' :
     cancel ns e = Some e' → eval Σ e ⊣⊢ (eval Σ e' ∗ eval Σ (to_expr ns)).
