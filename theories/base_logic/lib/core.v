@@ -46,7 +46,7 @@ Section core.
   Proof.
     split.
     - iIntros (HP) "HP". iDestruct (coreP_intro with "HP") as "#HcP".
-      iClear "∗". iAlways. by iApply HP.
+      iAlways. by iApply HP.
     - iIntros (HPQ) "HcP". iDestruct (coreP_mono _ _ HPQ with "HcP") as "HcQ".
       iDestruct (coreP_elim with "HcQ") as "#HQ". done.
   Qed.
