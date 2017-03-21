@@ -354,12 +354,19 @@ Proof. by rewrite /FromSep big_sepL_app. Qed.
 (* FromOp *)
 Global Instance from_op_op {A : cmraT} (a b : A) : FromOp (a ⋅ b) a b.
 Proof. by rewrite /FromOp. Qed.
-Global Instance from_op_persistent {A : cmraT} (a : A) :
-  Persistent a → FromOp a a a.
-Proof. intros. by rewrite /FromOp -(persistent_dup a). Qed.
+
+(* TODO: Worst case there could be a lot of backtracking on these instances,
+try to refactor. *)
 Global Instance from_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
   FromOp a b1 b2 → FromOp a' b1' b2' → FromOp (a,a') (b1,b1') (b2,b2').
 Proof. by constructor. Qed.
+Global Instance from_op_pair_persistent_l {A B : cmraT} (a : A) (a' b1' b2' : B) :
+  Persistent a → FromOp a' b1' b2' → FromOp (a,a') (a,b1') (a,b2').
+Proof. constructor=> //=. by rewrite -persistent_dup. Qed.
+Global Instance from_op_pair_persistent_r {A B : cmraT} (a b1 b2 : A) (a' : B) :
+  Persistent a' → FromOp a b1 b2 → FromOp (a,a') (b1,a') (b2,a').
+Proof. constructor=> //=. by rewrite -persistent_dup. Qed.
+
 Global Instance from_op_Some {A : cmraT} (a : A) b1 b2 :
   FromOp a b1 b2 → FromOp (Some a) (Some b1) (Some b2).
 Proof. by constructor. Qed.
@@ -367,13 +374,18 @@ Proof. by constructor. Qed.
 (* IntoOp *)
 Global Instance into_op_op {A : cmraT} (a b : A) : IntoOp (a ⋅ b) a b.
 Proof. by rewrite /IntoOp. Qed.
-Global Instance into_op_persistent {A : cmraT} (a : A) :
-  Persistent a → IntoOp a a a.
-Proof. intros; apply (persistent_dup a). Qed.
+
 Global Instance into_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
   IntoOp a b1 b2 → IntoOp a' b1' b2' →
   IntoOp (a,a') (b1,b1') (b2,b2').
 Proof. by constructor. Qed.
+Global Instance into_op_pair_persistent_l {A B : cmraT} (a : A) (a' b1' b2' : B) :
+  Persistent a → IntoOp a' b1' b2' → IntoOp (a,a') (a,b1') (a,b2').
+Proof. constructor=> //=. by rewrite -persistent_dup. Qed.
+Global Instance into_op_pair_persistent_r {A B : cmraT} (a b1 b2 : A) (a' : B) :
+  Persistent a' → IntoOp a b1 b2 → IntoOp (a,a') (b1,a') (b2,a').
+Proof. constructor=> //=. by rewrite -persistent_dup. Qed.
+
 Global Instance into_op_Some {A : cmraT} (a : A) b1 b2 :
   IntoOp a b1 b2 → IntoOp (Some a) (Some b1) (Some b2).
 Proof. by constructor. Qed.
