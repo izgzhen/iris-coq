@@ -120,23 +120,23 @@ Section fractional.
   Qed.
 
   (** Proof mode instances *)
-  Global Instance from_sep_fractional_fwd P P1 P2 Φ q1 q2 :
+  Global Instance from_and_fractional_fwd P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
-    FromSep P P1 P2.
-  Proof. by rewrite /FromSep=>-[-> ->] [-> _] [-> _]. Qed.
+    FromAnd false P P1 P2.
+  Proof. by rewrite /FromAnd=>-[-> ->] [-> _] [-> _]. Qed.
   Global Instance from_sep_fractional_bwd P P1 P2 Φ q1 q2 :
     AsFractional P1 Φ q1 → AsFractional P2 Φ q2 → AsFractional P Φ (q1 + q2) →
-    FromSep P P1 P2 | 10.
-  Proof. by rewrite /FromSep=>-[-> _] [-> <-] [-> _]. Qed.
+    FromAnd false P P1 P2 | 10.
+  Proof. by rewrite /FromAnd=>-[-> _] [-> <-] [-> _]. Qed.
 
-  Global Instance from_sep_fractional_half_fwd P Q Φ q :
+  Global Instance from_and_fractional_half_fwd P Q Φ q :
     AsFractional P Φ q → AsFractional Q Φ (q/2) →
-    FromSep P Q Q | 10.
-  Proof. by rewrite /FromSep -{1}(Qp_div_2 q)=>-[-> ->] [-> _]. Qed.
-  Global Instance from_sep_fractional_half_bwd P Q Φ q :
+    FromAnd false P Q Q | 10.
+  Proof. by rewrite /FromAnd -{1}(Qp_div_2 q)=>-[-> ->] [-> _]. Qed.
+  Global Instance from_and_fractional_half_bwd P Q Φ q :
     AsFractional P Φ (q/2) → AsFractional Q Φ q →
-    FromSep Q P P.
-  Proof. rewrite /FromSep=>-[-> <-] [-> _]. by rewrite Qp_div_2. Qed.
+    FromAnd false Q P P.
+  Proof. rewrite /FromAnd=>-[-> <-] [-> _]. by rewrite Qp_div_2. Qed.
 
   Global Instance into_and_fractional b P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
@@ -163,10 +163,12 @@ Section fractional.
   Inductive FrameFractionalHyps
       (p : bool) (R : uPred M) (Φ : Qp → uPred M) (RES : uPred M) : Qp → Qp → Prop :=
     | frame_fractional_hyps_l Q q q' r:
-       Frame p R (Φ q) Q → MakeSep Q (Φ q') RES →
+       Frame p R (Φ q) Q →
+       MakeSep Q (Φ q') RES →
        FrameFractionalHyps p R Φ RES r (q + q')
     | frame_fractional_hyps_r Q q q' r:
-       Frame p R (Φ q') Q → MakeSep Q (Φ q) RES →
+       Frame p R (Φ q') Q →
+       MakeSep Q (Φ q) RES →
        FrameFractionalHyps p R Φ RES r (q + q')
     | frame_fractional_hyps_half q :
        AsFractional RES Φ (q/2) →
@@ -174,6 +176,7 @@ Section fractional.
   Existing Class FrameFractionalHyps.
   Global Existing Instances frame_fractional_hyps_l frame_fractional_hyps_r
     frame_fractional_hyps_half.
+
   Global Instance frame_fractional p R r Φ P q RES:
     AsFractional R Φ r → AsFractional P Φ q →
     FrameFractionalHyps p R Φ RES r q →

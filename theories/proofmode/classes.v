@@ -75,14 +75,14 @@ Class IntoWand {M} (R P Q : uPred M) := into_wand : R ⊢ P -∗ Q.
 Arguments into_wand {_} _ _ _ {_}.
 Hint Mode IntoWand + ! - - : typeclass_instances.
 
-Class FromAnd {M} (P Q1 Q2 : uPred M) := from_and : Q1 ∧ Q2 ⊢ P.
-Arguments from_and {_} _ _ _ {_}.
-Hint Mode FromAnd + ! - - : typeclass_instances.
-
-Class FromSep {M} (P Q1 Q2 : uPred M) := from_sep : Q1 ∗ Q2 ⊢ P.
-Arguments from_sep {_} _ _ _ {_}.
-Hint Mode FromSep + ! - - : typeclass_instances.
-Hint Mode FromSep + - ! ! : typeclass_instances. (* For iCombine *)
+Class FromAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=
+  from_and : (if p then Q1 ∧ Q2 else Q1 ∗ Q2) ⊢ P.
+Arguments from_and {_} _ _ _ _ {_}.
+Hint Mode FromAnd + + ! - - : typeclass_instances.
+Hint Mode FromAnd + + - ! ! : typeclass_instances. (* For iCombine *)
+Lemma mk_from_and_and {M} p (P Q1 Q2 : uPred M) :
+  (Q1 ∧ Q2 ⊢ P) → FromAnd p P Q1 Q2.
+Proof. rewrite /FromAnd=><-. destruct p; auto using sep_and. Qed.
 
 Class IntoAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=
   into_and : P ⊢ if p then Q1 ∧ Q2 else Q1 ∗ Q2.

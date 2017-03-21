@@ -748,16 +748,17 @@ Proof.
 Qed.
 
 (** * Conjunction splitting *)
-Lemma tac_and_split Δ P Q1 Q2 : FromAnd P Q1 Q2 → (Δ ⊢ Q1) → (Δ ⊢ Q2) → Δ ⊢ P.
-Proof. intros. rewrite -(from_and P). by apply and_intro. Qed.
+Lemma tac_and_split Δ P Q1 Q2 :
+  FromAnd true P Q1 Q2 → (Δ ⊢ Q1) → (Δ ⊢ Q2) → Δ ⊢ P.
+Proof. intros. rewrite -(from_and true P). by apply and_intro. Qed.
 
 (** * Separating conjunction splitting *)
 Lemma tac_sep_split Δ Δ1 Δ2 lr js P Q1 Q2 :
-  FromSep P Q1 Q2 →
+  FromAnd false P Q1 Q2 →
   envs_split lr js Δ = Some (Δ1,Δ2) →
   (Δ1 ⊢ Q1) → (Δ2 ⊢ Q2) → Δ ⊢ P.
 Proof.
-  intros. rewrite envs_split_sound // -(from_sep P). by apply sep_mono.
+  intros. rewrite envs_split_sound // -(from_and false P). by apply sep_mono.
 Qed.
 
 (** * Combining *)
@@ -770,8 +771,8 @@ Proof. done. Qed.
 Global Instance from_seps_singleton P : FromSeps P [P] | 1.
 Proof. by rewrite /FromSeps /= right_id. Qed.
 Global Instance from_seps_cons P P' Q Qs :
-  FromSeps P' Qs → FromSep P Q P' → FromSeps P (Q :: Qs) | 2.
-Proof. by rewrite /FromSeps /FromSep /= => ->. Qed.
+  FromSeps P' Qs → FromAnd false P Q P' → FromSeps P (Q :: Qs) | 2.
+Proof. by rewrite /FromSeps /FromAnd /= => ->. Qed.
 
 Lemma tac_combine Δ1 Δ2 Δ3 js p Ps j P Q :
   envs_lookup_delete_list js false Δ1 = Some (p, Ps, Δ2) →

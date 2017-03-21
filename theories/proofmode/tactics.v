@@ -674,7 +674,7 @@ Tactic Notation "iSplit" :=
   | |- _ ⊢ _ =>
     eapply tac_and_split;
       [apply _ ||
-       let P := match goal with |- FromAnd ?P _ _ => P end in
+       let P := match goal with |- FromAnd _ ?P _ _ => P end in
        fail "iSplit:" P "not a conjunction"| |]
   end.
 
@@ -683,7 +683,7 @@ Tactic Notation "iSplitL" constr(Hs) :=
   let Hs := words Hs in
   eapply tac_sep_split with _ _ false Hs _ _; (* (js:=Hs) *)
     [apply _ ||
-     let P := match goal with |- FromSep ?P _ _ => P end in
+     let P := match goal with |- FromAnd _ ?P _ _ => P end in
      fail "iSplitL:" P "not a separating conjunction"
     |env_reflexivity ||
      let Hs := iMissingHyps Hs in
@@ -695,7 +695,7 @@ Tactic Notation "iSplitR" constr(Hs) :=
   let Hs := words Hs in
   eapply tac_sep_split with _ _ true Hs _ _; (* (js:=Hs) *)
     [apply _ ||
-     let P := match goal with |- FromSep ?P _ _ => P end in
+     let P := match goal with |- FromAnd _ ?P _ _ => P end in
      fail "iSplitR:" P "not a separating conjunction"
     |env_reflexivity ||
      let Hs := iMissingHyps Hs in

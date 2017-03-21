@@ -186,7 +186,7 @@ Section proofmode_classes.
   Global Instance into_and_own p γ a b1 b2 :
     IntoOp a b1 b2 → IntoAnd p (own γ a) (own γ b1) (own γ b2).
   Proof. intros. apply mk_into_and_sep. by rewrite (into_op a) own_op. Qed.
-  Global Instance from_sep_own γ a b1 b2 :
-    FromOp a b1 b2 → FromSep (own γ a) (own γ b1) (own γ b2).
-  Proof. intros. by rewrite /FromSep -own_op from_op. Qed.
+  Global Instance from_and_own γ a b1 b2 :
+    FromOp a b1 b2 → FromAnd false (own γ a) (own γ b1) (own γ b2).
+  Proof. intros. by rewrite /FromAnd -own_op from_op. Qed.
 End proofmode_classes.

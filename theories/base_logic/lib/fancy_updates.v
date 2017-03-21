@@ -160,9 +160,9 @@ Section proofmode_classes.
     rewrite /WandWeaken' /WandWeaken=>->. apply wand_intro_l. by rewrite fupd_wand_r.
   Qed.
 
-  Global Instance from_sep_fupd E P Q1 Q2 :
-    FromSep P Q1 Q2 → FromSep (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
-  Proof. rewrite /FromSep=><-. apply fupd_sep. Qed.
+  Global Instance from_and_fupd E P Q1 Q2 :
+    FromAnd false P Q1 Q2 → FromAnd false (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
+  Proof. rewrite /FromAnd=><-. apply fupd_sep. Qed.
 
   Global Instance or_split_fupd E1 E2 P Q1 Q2 :
     FromOr P Q1 Q2 → FromOr (|={E1,E2}=> P) (|={E1,E2}=> Q1) (|={E1,E2}=> Q2).

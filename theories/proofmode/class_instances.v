@@ -300,56 +300,49 @@ Proof.
 Qed.
 
 (* FromAnd *)
-Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2.
+Global Instance from_and_and p P1 P2 : FromAnd p (P1 ∧ P2) P1 P2 | 100.
+Proof. by apply mk_from_and_and. Qed.
+
+Global Instance from_and_sep P1 P2 : FromAnd false (P1 ∗ P2) P1 P2 | 100.
 Proof. done. Qed.
 Global Instance from_and_sep_persistent_l P1 P2 :
-  PersistentP P1 → FromAnd (P1 ∗ P2) P1 P2 | 9.
+  PersistentP P1 → FromAnd true (P1 ∗ P2) P1 P2 | 9.
 Proof. intros. by rewrite /FromAnd always_and_sep_l. Qed.
 Global Instance from_and_sep_persistent_r P1 P2 :
-  PersistentP P2 → FromAnd (P1 ∗ P2) P1 P2 | 10.
+  PersistentP P2 → FromAnd true (P1 ∗ P2) P1 P2 | 10.
 Proof. intros. by rewrite /FromAnd always_and_sep_r. Qed.
-Global Instance from_and_pure φ ψ : @FromAnd M ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
-Proof. by rewrite /FromAnd pure_and. Qed.
-Global Instance from_and_always P Q1 Q2 :
-  FromAnd P Q1 Q2 → FromAnd (□ P) (□ Q1) (□ Q2).
-Proof. rewrite /FromAnd=> <-. by rewrite always_and. Qed.
-Global Instance from_and_later P Q1 Q2 :
-  FromAnd P Q1 Q2 → FromAnd (▷ P) (▷ Q1) (▷ Q2).
-Proof. rewrite /FromAnd=> <-. by rewrite later_and. Qed.
-Global Instance from_and_laterN n P Q1 Q2 :
-  FromAnd P Q1 Q2 → FromAnd (▷^n P) (▷^n Q1) (▷^n Q2).
-Proof. rewrite /FromAnd=> <-. by rewrite laterN_and. Qed.
 
-(* FromSep *)
-Global Instance from_sep_sep P1 P2 : FromSep (P1 ∗ P2) P1 P2 | 100.
-Proof. done. Qed.
+Global Instance from_and_pure p φ ψ : @FromAnd M p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
+Proof. apply mk_from_and_and. by rewrite pure_and. Qed.
+Global Instance from_and_always p P Q1 Q2 :
+  FromAnd false P Q1 Q2 → FromAnd p (□ P) (□ Q1) (□ Q2).
+Proof.
+  intros. apply mk_from_and_and.
+  by rewrite always_and_sep_l' -always_sep -(from_and _ P).
+Qed.
+Global Instance from_and_later p P Q1 Q2 :
+  FromAnd p P Q1 Q2 → FromAnd p (▷ P) (▷ Q1) (▷ Q2).
+Proof. rewrite /FromAnd=> <-. destruct p; by rewrite ?later_and ?later_sep. Qed.
+Global Instance from_and_laterN p n P Q1 Q2 :
+  FromAnd p P Q1 Q2 → FromAnd p (▷^n P) (▷^n Q1) (▷^n Q2).
+Proof. rewrite /FromAnd=> <-. destruct p; by rewrite ?laterN_and ?laterN_sep. Qed.
+
 Global Instance from_sep_ownM (a b1 b2 : M) :
   FromOp a b1 b2 →
-  FromSep (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
-Proof. intros. by rewrite /FromSep -ownM_op from_op. Qed.
+  FromAnd false (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
+Proof. intros. by rewrite /FromAnd -ownM_op from_op. Qed.
 
-Global Instance from_sep_pure φ ψ : @FromSep M ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
-Proof. by rewrite /FromSep pure_and sep_and. Qed.
-Global Instance from_sep_always P Q1 Q2 :
-  FromSep P Q1 Q2 → FromSep (□ P) (□ Q1) (□ Q2).
-Proof. rewrite /FromSep=> <-. by rewrite always_sep. Qed.
-Global Instance from_sep_later P Q1 Q2 :
-  FromSep P Q1 Q2 → FromSep (▷ P) (▷ Q1) (▷ Q2).
-Proof. rewrite /FromSep=> <-. by rewrite later_sep. Qed.
-Global Instance from_sep_laterN n P Q1 Q2 :
-  FromSep P Q1 Q2 → FromSep (▷^n P) (▷^n Q1) (▷^n Q2).
-Proof. rewrite /FromSep=> <-. by rewrite laterN_sep. Qed.
 Global Instance from_sep_bupd P Q1 Q2 :
-  FromSep P Q1 Q2 → FromSep (|==> P) (|==> Q1) (|==> Q2).
-Proof. rewrite /FromSep=><-. apply bupd_sep. Qed.
+  FromAnd false P Q1 Q2 → FromAnd false (|==> P) (|==> Q1) (|==> Q2).
+Proof. rewrite /FromAnd=><-. apply bupd_sep. Qed.
 
-Global Instance from_sep_big_sepL_cons {A} (Φ : nat → A → uPred M) x l :
-  FromSep ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
-Proof. by rewrite /FromSep big_sepL_cons. Qed.
-Global Instance from_sep_big_sepL_app {A} (Φ : nat → A → uPred M) l1 l2 :
-  FromSep ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
+Global Instance from_and_big_sepL_cons {A} (Φ : nat → A → uPred M) x l :
+  FromAnd false ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
+Proof. by rewrite /FromAnd big_sepL_cons. Qed.
+Global Instance from_and_big_sepL_app {A} (Φ : nat → A → uPred M) l1 l2 :
+  FromAnd false ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
-Proof. by rewrite /FromSep big_sepL_app. Qed.
+Proof. by rewrite /FromAnd big_sepL_app. Qed.
 
 (* FromOp *)
 Global Instance from_op_op {A : cmraT} (a b : A) : FromOp (a ⋅ b) a b.

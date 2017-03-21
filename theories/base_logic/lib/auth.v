@@ -75,8 +75,8 @@ Section auth.
 
   Global Instance from_sep_auth_own γ a b1 b2 :
     FromOp a b1 b2 →
-    FromSep (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
-  Proof. rewrite /FromOp /FromSep=> <-. by rewrite auth_own_op. Qed.
+    FromAnd false (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
+  Proof. rewrite /FromOp /FromAnd=> <-. by rewrite auth_own_op. Qed.
   Global Instance into_and_auth_own p γ a b1 b2 :
     IntoOp a b1 b2 →
     IntoAnd p (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.

@@ -169,3 +169,7 @@ Qed.
 Lemma test_frame_persistent (M : ucmraT) (P Q : uPred M) :
   □ P -∗ Q -∗ □ (P ∗ P) ∗ (P ∧ Q ∨ Q).
 Proof. iIntros "#HP". iFrame "HP". iIntros "$". Qed.
+
+Lemma test_split_box (M : ucmraT) (P Q : uPred M) :
+  □ P -∗ □ (P ∗ P).
+Proof. iIntros "#?". by iSplit. Qed.
