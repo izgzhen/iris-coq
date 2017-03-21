@@ -138,9 +138,9 @@ Section fractional.
     FromAnd false Q P P.
   Proof. rewrite /FromAnd=>-[-> <-] [-> _]. by rewrite Qp_div_2. Qed.
 
-  Global Instance into_and_fractional b P P1 P2 Φ q1 q2 :
+  Global Instance into_and_fractional p P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
-    IntoAnd b P P1 P2.
+    IntoAnd p P P1 P2.
   Proof.
     (* TODO: We need a better way to handle this boolean here; always
        applying mk_into_and_sep (which only works after introducing all
@@ -150,9 +150,9 @@ Section fractional.
        "false" only, thus breaking some intro patterns. *)
     intros. apply mk_into_and_sep. rewrite [P]fractional_split //.
   Qed.
-  Global Instance into_and_fractional_half b P Q Φ q :
+  Global Instance into_and_fractional_half p P Q Φ q :
     AsFractional P Φ q → AsFractional Q Φ (q/2) →
-    IntoAnd b P Q Q | 100.
+    IntoAnd p P Q Q | 100.
   Proof. intros. apply mk_into_and_sep. rewrite [P]fractional_half //. Qed.
 
   (* The instance [frame_fractional] can be tried at all the nodes of

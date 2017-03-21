@@ -2,6 +2,16 @@ From iris.base_logic Require Export base_logic.
 Set Default Proof Using "Type".
 Import uPred.
 
+(* The Or class is useful for efficiency: instead of having two instances
+[P → Q1 → R] and [P → Q2 → R] we could have one instance [P → Or Q1 Q2 → R],
+which avoids the need to derive [P] twice. *)
+Inductive Or (P1 P2 : Type) :=
+  | Or_l : P1 → Or P1 P2
+  | Or_r : P2 → Or P1 P2.
+Existing Class Or.
+Existing Instance Or_l | 9.
+Existing Instance Or_r | 10.
+
 Class FromAssumption {M} (p : bool) (P Q : uPred M) :=
   from_assumption : □?p P ⊢ Q.
 Arguments from_assumption {_} _ _ _ {_}.
@@ -83,6 +93,13 @@ Hint Mode FromAnd + + - ! ! : typeclass_instances. (* For iCombine *)
 Lemma mk_from_and_and {M} p (P Q1 Q2 : uPred M) :
   (Q1 ∧ Q2 ⊢ P) → FromAnd p P Q1 Q2.
 Proof. rewrite /FromAnd=><-. destruct p; auto using sep_and. Qed.
+Lemma mk_from_and_persistent {M} (P Q1 Q2 : uPred M) :
+  Or (PersistentP Q1) (PersistentP Q2) → (Q1 ∗ Q2 ⊢ P) → FromAnd true P Q1 Q2.
+Proof.
+  intros [?|?] ?; rewrite /FromAnd.
+  - by rewrite always_and_sep_l.
+  - by rewrite always_and_sep_r.
+Qed.
 
 Class IntoAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=
   into_and : P ⊢ if p then Q1 ∧ Q2 else Q1 ∗ Q2.

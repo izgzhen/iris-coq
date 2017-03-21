@@ -73,10 +73,18 @@ Section auth.
   Lemma auth_own_op γ a b : auth_own γ (a ⋅ b) ⊣⊢ auth_own γ a ∗ auth_own γ b.
   Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
 
-  Global Instance from_sep_auth_own γ a b1 b2 :
+  Global Instance from_and_auth_own γ a b1 b2 :
     FromOp a b1 b2 →
     FromAnd false (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
   Proof. rewrite /FromOp /FromAnd=> <-. by rewrite auth_own_op. Qed.
+  Global Instance from_and_auth_own_persistent γ a b1 b2 :
+    FromOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
+    FromAnd true (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 91.
+  Proof.
+    intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].
+    by rewrite -auth_own_op from_op.
+  Qed.
+
   Global Instance into_and_auth_own p γ a b1 b2 :
     IntoOp a b1 b2 →
     IntoAnd p (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.

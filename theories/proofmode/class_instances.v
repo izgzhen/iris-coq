@@ -331,6 +331,13 @@ Global Instance from_sep_ownM (a b1 b2 : M) :
   FromOp a b1 b2 →
   FromAnd false (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof. intros. by rewrite /FromAnd -ownM_op from_op. Qed.
+Global Instance from_sep_ownM_persistent (a b1 b2 : M) :
+  FromOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
+  FromAnd true (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
+Proof.
+  intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].
+  by rewrite -ownM_op from_op.
+Qed.
 
 Global Instance from_sep_bupd P Q1 Q2 :
   FromAnd false P Q1 Q2 → FromAnd false (|==> P) (|==> Q1) (|==> Q2).
@@ -339,10 +346,20 @@ Proof. rewrite /FromAnd=><-. apply bupd_sep. Qed.
 Global Instance from_and_big_sepL_cons {A} (Φ : nat → A → uPred M) x l :
   FromAnd false ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
 Proof. by rewrite /FromAnd big_sepL_cons. Qed.
+Global Instance from_and_big_sepL_cons_persistent {A} (Φ : nat → A → uPred M) x l :
+  PersistentP (Φ 0 x) →
+  FromAnd true ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
+Proof. intros. by rewrite /FromAnd big_opL_cons always_and_sep_l. Qed.
+
 Global Instance from_and_big_sepL_app {A} (Φ : nat → A → uPred M) l1 l2 :
   FromAnd false ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
 Proof. by rewrite /FromAnd big_sepL_app. Qed.
+Global Instance from_sep_big_sepL_app_persistent {A} (Φ : nat → A → uPred M) l1 l2 :
+  (∀ k y, PersistentP (Φ k y)) →
+  FromAnd true ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
+    ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
+Proof. intros. by rewrite /FromAnd big_opL_app always_and_sep_l. Qed.
 
 (* FromOp *)
 Global Instance from_op_op {A : cmraT} (a b : A) : FromOp (a ⋅ b) a b.
