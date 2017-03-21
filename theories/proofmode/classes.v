@@ -35,13 +35,13 @@ definitions being unfolded (see issue #55).
 For binary connectives we have the following instances:
 
 <<
-ProgIntoLaterN n P P'       IntoLaterN n Q Q'
----------------------------------------------
-ProgIntoLaterN n (P /\ Q) (P' /\ Q')
+IntoLaterN' n P P'       IntoLaterN n Q Q'
+------------------------------------------
+     IntoLaterN' n (P /\ Q) (P' /\ Q')
 
 
-   ProgIntoLaterN n Q Q'
---------------------------------
+      IntoLaterN' n Q Q'
+-------------------------------
 IntoLaterN n (P /\ Q) (P /\ Q')
 >>
 *)
