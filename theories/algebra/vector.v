@@ -40,10 +40,10 @@ Section proper.
   Context {A : ofeT}.
 
   Global Instance vcons_ne n :
-    Proper (dist n ==> forall_relation (λ _, dist n ==> dist n)) (@vcons A).
+    Proper (dist n ==> forall_relation (λ x, dist n ==> dist n)) (@vcons A).
   Proof. by constructor. Qed.
   Global Instance vcons_proper :
-    Proper (equiv ==> forall_relation (λ _, equiv ==> equiv)) (@vcons A).
+    Proper (equiv ==> forall_relation (λ x, equiv ==> equiv)) (@vcons A).
   Proof. by constructor. Qed.
 
   Global Instance vlookup_ne n m :
