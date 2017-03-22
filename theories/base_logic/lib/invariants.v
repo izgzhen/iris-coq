@@ -25,6 +25,12 @@ Proof.
   rewrite inv_eq=> n ???. apply exist_ne=>i. by apply and_ne, ownI_contractive.
 Qed.
 
+Global Instance inv_ne N : NonExpansive (inv N).
+Proof. apply contractive_ne, _. Qed.
+
+Global Instance inv_Proper N : Proper ((⊣⊢) ==> (⊣⊢)) (inv N).
+Proof. apply ne_proper, _. Qed.
+
 Global Instance inv_persistent N P : PersistentP (inv N P).
 Proof. rewrite inv_eq /inv; apply _. Qed.
 
