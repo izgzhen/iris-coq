@@ -213,7 +213,7 @@ Ltac solve_to_val :=
   match goal with
   | |- to_val ?e = Some ?v =>
      let e' := W.of_expr e in change (to_val (W.to_expr e') = Some v);
-     apply W.to_val_Some; simpl; unfold W.to_expr; reflexivity
+     apply W.to_val_Some; simpl; unfold W.to_expr; unlock; reflexivity
   | |- is_Some (to_val ?e) =>
      let e' := W.of_expr e in change (is_Some (to_val (W.to_expr e')));
      apply W.to_val_is_Some, (bool_decide_unpack _); vm_compute; exact I
