@@ -41,11 +41,9 @@ Ltac iMissingHyps Hs :=
   let Hhyps := eval env_cbv in (envs_dom Δ) in
   eval vm_compute in (list_difference Hs Hhyps).
 
-Tactic Notation "iTypeOf" constr(H) tactic(tac):=
+Ltac iTypeOf H :=
   let Δ := match goal with |- of_envs ?Δ ⊢ _ => Δ end in
-  lazymatch eval env_cbv in (envs_lookup H Δ) with
-  | Some (?p,?P) => tac p P
-  end.
+  eval env_cbv in (envs_lookup H Δ).
 
 Tactic Notation "iMatchHyp" tactic1(tac) :=
   match goal with
@@ -431,7 +429,7 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
           end
          |env_reflexivity ||
           let Hs' := iMissingHyps Hs' in
-          fail "iSpecialize: hypotheses" Hs' "not found in the context"
+          fail "iSpecialize: hypotheses" Hs' "not found"
          |iFrame Hs_frame; done_if d (*goal*)
          |go H1 pats]
     | SAutoFrame GPersistent :: ?pats =>
@@ -567,8 +565,10 @@ Tactic Notation "iApply" open_constr(lem) :=
       |apply _
       |lazy beta (* reduce betas created by instantiation *)]
     |iSpecializePat H "[]"; last go H] in
-  iPoseProofCore lem as false true (fun H =>
-    first [iExact H|go H|iTypeOf H (fun _ Q => fail "iApply: cannot apply" Q)]).
+  iPoseProofCore lem as false true (fun H => first
+    [iExact H
+    |go H
+    |lazymatch iTypeOf H with Some (_,?Q) => fail "iApply: cannot apply" Q end]).
 
 (** * Revert *)
 Local Tactic Notation "iForallRevert" ident(x) :=
@@ -687,7 +687,7 @@ Tactic Notation "iSplitL" constr(Hs) :=
      fail "iSplitL:" P "not a separating conjunction"
     |env_reflexivity ||
      let Hs := iMissingHyps Hs in
-     fail "iSplitL: hypotheses" Hs "not found in the context"
+     fail "iSplitL: hypotheses" Hs "not found"
     | |].
 
 Tactic Notation "iSplitR" constr(Hs) :=
@@ -699,7 +699,7 @@ Tactic Notation "iSplitR" constr(Hs) :=
      fail "iSplitR:" P "not a separating conjunction"
     |env_reflexivity ||
      let Hs := iMissingHyps Hs in
-     fail "iSplitR: hypotheses" Hs "not found in the context"
+     fail "iSplitR: hypotheses" Hs "not found"
     | |].
 
 Tactic Notation "iSplitL" := iSplitR "".
@@ -727,7 +727,7 @@ Tactic Notation "iCombine" constr(Hs) "as" constr(H) :=
   eapply tac_combine with _ _ Hs _ _ H _;
     [env_reflexivity ||
      let Hs := iMissingHyps Hs in
-     fail "iCombine: hypotheses" Hs "not found in the context"
+     fail "iCombine: hypotheses" Hs "not found"
     |apply _
     |env_reflexivity || fail "iCombine:" H "not fresh"|].
 
@@ -1120,17 +1120,18 @@ Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
      (which cannot be kept). *)
      lazymatch hyp_name with
      | None => iPoseProofCore lem as p false tac
-     | Some ?H => iTypeOf H (fun q P =>
-        lazymatch q with
-        | true =>
+     | Some ?H =>
+        lazymatch iTypeOf H with
+        | None => fail "iDestruct:" H "not found"
+        | Some (true, ?P) =>
            (* persistent hypothesis, check for a CopyDestruct instance *)
            tryif (let dummy := constr:(_ : CopyDestruct P) in idtac)
            then (iPoseProofCore lem as p false tac)
            else (iSpecializeCore lem as p; last (tac H))
-        | false =>
+        | Some (false, ?P) =>
            (* spatial hypothesis, cannot copy *)
            iSpecializeCore lem as p; last (tac H)
-        end)
+        end
      end
   end.
 
@@ -1352,7 +1353,7 @@ Tactic Notation "iAssertCore" open_constr(Q)
           end
          |env_reflexivity ||
           let Hs' := iMissingHyps Hs' in
-          fail "iAssert: hypotheses" Hs' "not found in the context"
+          fail "iAssert: hypotheses" Hs' "not found"
          |env_reflexivity
          |iFrame Hs_frame; done_if d (*goal*)
          |tac H]
@@ -1360,7 +1361,7 @@ Tactic Notation "iAssertCore" open_constr(Q)
        eapply tac_assert_persistent with _ _ _ lr Hs' H Q;
          [env_reflexivity ||
           let Hs' := iMissingHyps Hs' in
-          fail "iAssert: hypotheses" Hs' "not found in the context"
+          fail "iAssert: hypotheses" Hs' "not found"
          |env_reflexivity
          |apply _ || fail "iAssert:" Q "not persistent"
          |done_if d (*goal*)
