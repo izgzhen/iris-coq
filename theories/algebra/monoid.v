@@ -23,10 +23,11 @@ Class Monoid {M : ofeT} (o : M → M → M) := {
   monoid_assoc : Assoc (≡) o;
   monoid_comm : Comm (≡) o;
   monoid_left_id : LeftId (≡) monoid_unit o;
-  monoid_right_id : RightId (≡) monoid_unit o;
 }.
 Lemma monoid_proper `{Monoid M o} : Proper ((≡) ==> (≡) ==> (≡)) o.
 Proof. apply ne_proper_2, monoid_ne. Qed.
+Lemma monoid_right_id `{Monoid M o} : RightId (≡) monoid_unit o.
+Proof. intros x. etrans; [apply monoid_comm|apply monoid_left_id]. Qed.
 
 (** The [Homomorphism] classes give rise to generic lemmas about big operators
 commuting with each other. *)
