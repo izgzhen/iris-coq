@@ -86,8 +86,6 @@ Proof. by rewrite !own_eq /own_def -ownM_op iRes_singleton_op. Qed.
 Lemma own_mono γ a1 a2 : a2 ≼ a1 → own γ a1 ⊢ own γ a2.
 Proof. move=> [c ->]. rewrite own_op. eauto with I. Qed.
 
-Global Instance own_cmra_homomorphism : CMRAHomomorphism (own γ).
-Proof. split. apply _. apply own_op. Qed.
 Global Instance own_mono' γ : Proper (flip (≼) ==> (⊢)) (@own Σ A _ γ).
 Proof. intros a1 a2. apply own_mono. Qed.
 
@@ -177,6 +175,11 @@ Proof.
   - apply cmra_transport_valid, ucmra_unit_valid.
   - intros x; destruct inG_prf. by rewrite left_id.
 Qed.
+
+(** Big op class instances *)
+Instance own_cmra_sep_homomorphism `{inG Σ (A:ucmraT)} :
+  WeakMonoidHomomorphism op uPred_sep (own γ).
+Proof. split. apply _. apply own_op. Qed.
 
 (** Proofmode class instances *)
 Section proofmode_classes.

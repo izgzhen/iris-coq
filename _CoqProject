@@ -1,8 +1,9 @@
 -Q theories iris
 -arg -w -arg -notation-overridden,-redundant-canonical-projection,-several-object-files
+theories/algebra/monoid.v
 theories/algebra/cmra.v
+theories/algebra/big_op.v
 theories/algebra/cmra_big_op.v
-theories/algebra/cmra_tactics.v
 theories/algebra/sts.v
 theories/algebra/auth.v
 theories/algebra/gmap.v

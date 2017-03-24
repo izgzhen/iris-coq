@@ -211,7 +211,7 @@ Section ectx_lifting.
     {{{ ▷ ownP σ1 }}} e1 @ E {{{ RET v2; ownP σ2 }}}.
   Proof.
     intros. rewrite -(ownP_lift_atomic_det_head_step σ1 v2 σ2 []); [|done..].
-    rewrite big_sepL_nil right_id. by apply uPred.wand_intro_r.
+    rewrite /= right_id. by apply uPred.wand_intro_r.
   Qed.
 
   Lemma ownP_lift_pure_det_head_step {E Φ} e1 e2 efs :
@@ -229,6 +229,6 @@ Section ectx_lifting.
     (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
     ▷ WP e2 @ E {{ Φ }} ⊢ WP e1 @ E {{ Φ }}.
   Proof using Hinh.
-    intros. rewrite -(wp_lift_pure_det_step e1 e2 []) ?big_sepL_nil ?right_id; eauto.
+    intros. rewrite -(wp_lift_pure_det_step e1 e2 []) /= ?right_id; eauto.
   Qed.
 End ectx_lifting.

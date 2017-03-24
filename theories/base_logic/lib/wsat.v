@@ -105,9 +105,9 @@ Lemma ownI_open i P : wsat ∗ ownI i P ∗ ownE {[i]} ⊢ wsat ∗ ▷ P ∗ ow
 Proof.
   rewrite /ownI. iIntros "(Hw & Hi & HiE)". iDestruct "Hw" as (I) "[? HI]".
   iDestruct (invariant_lookup I i P with "[$]") as (Q) "[% #HPQ]".
-  iDestruct (big_sepM_delete _ _ i with "HI") as "[[[HQ $]|HiE'] HI]"; eauto.
+  iDestruct (big_opM_delete _ _ i with "HI") as "[[[HQ $]|HiE'] HI]"; eauto.
   - iSplitR "HQ"; last by iNext; iRewrite -"HPQ".
-    iExists I. iFrame "Hw". iApply (big_sepM_delete _ _ i); eauto.
+    iExists I. iFrame "Hw". iApply (big_opM_delete _ _ i); eauto.
     iFrame "HI"; eauto.
   - iDestruct (ownE_singleton_twice with "[$HiE $HiE']") as %[].
 Qed.
@@ -115,9 +115,9 @@ Lemma ownI_close i P : wsat ∗ ownI i P ∗ ▷ P ∗ ownD {[i]} ⊢ wsat ∗ o
 Proof.
   rewrite /ownI. iIntros "(Hw & Hi & HP & HiD)". iDestruct "Hw" as (I) "[? HI]".
   iDestruct (invariant_lookup with "[$]") as (Q) "[% #HPQ]".
-  iDestruct (big_sepM_delete _ _ i with "HI") as "[[[HQ ?]|$] HI]"; eauto.
+  iDestruct (big_opM_delete _ _ i with "HI") as "[[[HQ ?]|$] HI]"; eauto.
   - iDestruct (ownD_singleton_twice with "[$]") as %[].
-  - iExists I. iFrame "Hw". iApply (big_sepM_delete _ _ i); eauto.
+  - iExists I. iFrame "Hw". iApply (big_opM_delete _ _ i); eauto.
     iFrame "HI". iLeft. iFrame "HiD". by iNext; iRewrite "HPQ".
 Qed.
 
@@ -139,7 +139,7 @@ Proof.
   iModIntro; iExists i;  iSplit; [done|]. rewrite /ownI; iFrame "HiP".
   iExists (<[i:=P]>I); iSplitL "Hw".
   { by rewrite fmap_insert insert_singleton_op ?lookup_fmap ?HIi. }
-  iApply (big_sepM_insert _ I); first done.
+  iApply (big_opM_insert _ I); first done.
   iFrame "HI". iLeft. by rewrite /ownD; iFrame.
 Qed.
 
@@ -162,7 +162,7 @@ Proof.
   rewrite -/(ownD _). iFrame "HD".
   iIntros "HE". iExists (<[i:=P]>I); iSplitL "Hw".
   { by rewrite fmap_insert insert_singleton_op ?lookup_fmap ?HIi. }
-  iApply (big_sepM_insert _ I); first done.
+  iApply (big_opM_insert _ I); first done.
   iFrame "HI". by iRight.
 Qed.
 End wsat.

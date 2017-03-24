@@ -67,8 +67,7 @@ Proof.
   iIntros (?) "H". iApply wp_lift_atomic_head_step; eauto.
   iIntros (σ1) "Hσ1". iMod ("H" $! σ1 with "Hσ1") as "[$ H]"; iModIntro.
   iNext; iIntros (v2 σ2 efs) "%".
-  iMod ("H" $! v2 σ2 efs with "[# //]") as "(% & $ & $)"; subst.
-  by iApply big_sepL_nil.
+  iMod ("H" $! v2 σ2 efs with "[# //]") as "(% & $ & $)"; subst; auto.
 Qed.
 
 Lemma wp_lift_pure_det_head_step {E E' Φ} e1 e2 efs :
@@ -86,7 +85,7 @@ Lemma wp_lift_pure_det_head_step_no_fork {E E' Φ} e1 e2 :
     head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
   (|={E,E'}▷=> WP e2 @ E {{ Φ }}) ⊢ WP e1 @ E {{ Φ }}.
 Proof using Hinh.
-  intros. rewrite -(wp_lift_pure_det_step e1 e2 []) ?big_sepL_nil ?right_id; eauto.
+  intros. rewrite -(wp_lift_pure_det_step e1 e2 []) /= ?right_id; eauto.
 Qed.
 
 Lemma wp_lift_pure_det_head_step_no_fork' {E Φ} e1 e2 :

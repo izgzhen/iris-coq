@@ -30,7 +30,7 @@ Proof.
   iMod (own_alloc (GSet ∅)) as (γD) "HD"; first done.
   iModIntro; iExists (WsatG _ _ _ _ γI γE γD).
   rewrite /wsat /ownE; iFrame.
-  iExists ∅. rewrite fmap_empty big_sepM_empty. by iFrame.
+  iExists ∅. rewrite fmap_empty big_opM_empty. by iFrame.
 Qed.
 
 (* Program logic adequacy *)

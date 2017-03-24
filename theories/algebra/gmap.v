@@ -200,9 +200,9 @@ Implicit Types m : gmap K A.
 Implicit Types i : K.
 Implicit Types x y : A.
 
-Global Instance lookup_cmra_homomorphism :
-  UCMRAHomomorphism (lookup i : gmap K A → option A).
-Proof. split. split. apply _. intros m1 m2; by rewrite lookup_op. done. Qed.
+Global Instance lookup_op_homomorphism :
+  MonoidHomomorphism op op (lookup i : gmap K A → option A).
+Proof. split; [split|]. apply _. intros m1 m2; by rewrite lookup_op. done. Qed.
 
 Lemma lookup_opM m1 mm2 i : (m1 ⋅? mm2) !! i = m1 !! i ⋅ (mm2 ≫= (!! i)).
 Proof. destruct mm2; by rewrite /= ?lookup_op ?right_id_L. Qed.
@@ -247,9 +247,6 @@ Qed.
 Lemma op_singleton (i : K) (x y : A) :
   {[ i := x ]} ⋅ {[ i := y ]} = ({[ i := x ⋅ y ]} : gmap K A).
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
-Global Instance singleton_cmra_homomorphism :
-  CMRAHomomorphism (singletonM i : A → gmap K A).
-Proof. split. apply _. intros. by rewrite op_singleton. Qed.
 
 Global Instance gmap_persistent m : (∀ x : A, Persistent x) → Persistent m.
 Proof.
