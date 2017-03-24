@@ -25,6 +25,7 @@ Fixpoint big_opL `{Monoid M o} {A} (f : nat → A → M) (xs : list A) : M :=
   end.
 Instance: Params (@big_opL) 4.
 Arguments big_opL {M} o {_ A} _ !_ /.
+Typeclasses Opaque big_opL.
 Notation "'[^' o 'list]' k ↦ x ∈ l , P" := (big_opL o (λ k x, P) l)
   (at level 200, o at level 1, l at level 10, k, x at level 1, right associativity,
    format "[^ o  list]  k ↦ x  ∈  l ,  P") : C_scope.

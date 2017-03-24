@@ -151,21 +151,21 @@ Section list.
 
   Global Instance big_sepL_nil_persistent Φ :
     PersistentP ([∗ list] k↦x ∈ [], Φ k x).
-  Proof. apply _. Qed.
+  Proof. simpl; apply _. Qed.
   Global Instance big_sepL_persistent Φ l :
     (∀ k x, PersistentP (Φ k x)) → PersistentP ([∗ list] k↦x ∈ l, Φ k x).
   Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
   Global Instance big_sepL_persistent_id Ps : PersistentL Ps → PersistentP ([∗] Ps).
-  Proof. induction 1; apply _. Qed.
+  Proof. induction 1; simpl; apply _. Qed.
 
   Global Instance big_sepL_nil_timeless Φ :
     TimelessP ([∗ list] k↦x ∈ [], Φ k x).
-  Proof. apply _. Qed.
+  Proof. simpl; apply _. Qed.
   Global Instance big_sepL_timeless Φ l :
     (∀ k x, TimelessP (Φ k x)) → TimelessP ([∗ list] k↦x ∈ l, Φ k x).
   Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
   Global Instance big_sepL_timeless_id Ps : TimelessL Ps → TimelessP ([∗] Ps).
-  Proof. induction 1; apply _. Qed.
+  Proof. induction 1; simpl; apply _. Qed.
 End list.
 
 Section list2.
@@ -589,4 +589,4 @@ Section gmultiset.
 End gmultiset.
 End big_op.
 
-Hint Resolve big_sepM_empty' big_sepS_empty' big_sepMS_empty' | 0.
+Hint Resolve big_sepL_nil' big_sepM_empty' big_sepS_empty' big_sepMS_empty' | 0.
