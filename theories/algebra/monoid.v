@@ -30,7 +30,9 @@ Lemma monoid_right_id `{Monoid M o} : RightId (≡) monoid_unit o.
 Proof. intros x. etrans; [apply monoid_comm|apply monoid_left_id]. Qed.
 
 (** The [Homomorphism] classes give rise to generic lemmas about big operators
-commuting with each other. *)
+commuting with each other. We also consider a [WeakMonoidHomomorphism] which
+does not necesarrily commute with unit; an example is the [own] connective: we
+only have `True ==∗ own γ ∅`, not `True ↔ own γ ∅`. *)
 Class WeakMonoidHomomorphism {M1 M2 : ofeT} (o1 : M1 → M1 → M1) (o2 : M2 → M2 → M2)
     `{Monoid M1 o1, Monoid M2 o2} (f : M1 → M2) := {
   monoid_homomorphism_ne : NonExpansive f;
