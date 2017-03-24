@@ -49,10 +49,8 @@ Section proof.
     (∃ lo ln : loc,
        ⌜lk = (#lo, #ln)%V⌝ ∗ inv N (lock_inv γ lo ln R))%I.
 
-  Definition issued (γ : gname) (lk : val) (x : nat) (R : iProp Σ) : iProp Σ :=
-    (∃ lo ln: loc,
-       ⌜lk = (#lo, #ln)%V⌝ ∗ inv N (lock_inv γ lo ln R) ∗
-       own γ (◯ (∅, GSet {[ x ]})))%I.
+  Definition issued (γ : gname) (x : nat) : iProp Σ :=
+    own γ (◯ (∅, GSet {[ x ]}))%I.
 
   Definition locked (γ : gname) : iProp Σ := (∃ o, own γ (◯ (Excl' o, ∅)))%I.
 
@@ -86,9 +84,9 @@ Section proof.
   Qed.
 
   Lemma wait_loop_spec γ lk x R :
-    {{{ issued γ lk x R }}} wait_loop #x lk {{{ RET #(); locked γ ∗ R }}}.
+    {{{ is_lock γ lk R ∗ issued γ x }}} wait_loop #x lk {{{ RET #(); locked γ ∗ R }}}.
   Proof.
-    iIntros (Φ) "Hl HΦ". iDestruct "Hl" as (lo ln) "(% & #? & Ht)".
+    iIntros (Φ) "[Hl Ht] HΦ". iDestruct "Hl" as (lo ln) "(% & #?)".
     iLöb as "IH". wp_rec. subst. wp_let. wp_proj. wp_bind (! _)%E.
     iInv N as (o n) "(Hlo & Hln & Ha)" "Hclose".
     wp_load. destruct (decide (x = o)) as [->|Hneq].
@@ -129,7 +127,7 @@ Section proof.
         rewrite Nat2Z.inj_succ -Z.add_1_r. by iFrame. }
       iModIntro. wp_if.
       iApply (wait_loop_spec γ (#lo, #ln) with "[-HΦ]").
-      + rewrite /issued; eauto 10.
+      + iFrame. rewrite /is_lock; eauto 10.
       + by iNext. 
     - wp_cas_fail.
       iMod ("Hclose" with "[Hlo' Hln' Hauth Haown]") as "_".
