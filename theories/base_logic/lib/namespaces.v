@@ -90,10 +90,11 @@ of the forms:
 Create HintDb ndisj.
 Hint Resolve ndisj_subseteq_difference : ndisj.
 Hint Extern 0 (_ ⊥ _) => apply ndot_ne_disjoint; congruence : ndisj.
-Hint Resolve ndot_preserve_disjoint_l ndot_preserve_disjoint_r
-     nclose_subseteq' ndisj_difference_l : ndisj.
+Hint Resolve ndot_preserve_disjoint_l ndot_preserve_disjoint_r : ndisj.
+Hint Resolve nclose_subseteq' ndisj_difference_l : ndisj.
 Hint Resolve namespace_subseteq_difference_l | 100 : ndisj.
 Hint Resolve (empty_subseteq (A:=positive) (C:=coPset)) : ndisj.
+Hint Resolve (union_least (A:=positive) (C:=coPset)) : ndisj.
 
 Ltac solve_ndisj :=
   repeat match goal with
