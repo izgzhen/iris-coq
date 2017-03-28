@@ -144,6 +144,9 @@ Fixpoint intro_pat_persistent (p : intro_pat) :=
   | IPureElim => true
   | IAlwaysElim _ => true
   | IList pps => forallb (forallb intro_pat_persistent) pps
+  | ISimpl => true
+  | IClear _ => true
+  | IClearFrame _ => true
   | _ => false
   end.
 
