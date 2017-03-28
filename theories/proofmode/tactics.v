@@ -554,9 +554,6 @@ Tactic Notation "iPoseProofCore" open_constr(lem)
   | false => go spec_tac; last (tac Htmp)
   end.
 
-Tactic Notation "iPoseProof" open_constr(lem) "as" constr(H) :=
-  iPoseProofCore lem as false false (fun Htmp => iRename Htmp into H).
-
 (** * Apply *)
 Tactic Notation "iApply" open_constr(lem) :=
   let rec go H := first
@@ -1171,6 +1168,40 @@ Tactic Notation "iDestruct" open_constr(lem) "as" "(" simple_intropattern(x1)
 
 Tactic Notation "iDestruct" open_constr(lem) "as" "%" simple_intropattern(pat) :=
   iDestructCore lem as true (fun H => iPure H as pat).
+
+Tactic Notation "iPoseProof" open_constr(lem) "as" constr(pat) :=
+  iPoseProofCore lem as pat false (fun H => iDestructHyp H as pat).
+Tactic Notation "iPoseProof" open_constr(lem) "as" "(" simple_intropattern(x1) ")"
+    constr(pat) :=
+  iPoseProofCore lem as pat false (fun H => iDestructHyp H as ( x1 ) pat).
+Tactic Notation "iPoseProof" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) ")" constr(pat) :=
+  iPoseProofCore lem as pat false (fun H => iDestructHyp H as ( x1 x2 ) pat).
+Tactic Notation "iPoseProof" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
+  iPoseProofCore lem as pat false (fun H => iDestructHyp H as ( x1 x2 x3 ) pat).
+Tactic Notation "iPoseProof" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
+    constr(pat) :=
+  iPoseProofCore lem as pat false (fun H => iDestructHyp H as ( x1 x2 x3 x4 ) pat).
+Tactic Notation "iPoseProof" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) ")" constr(pat) :=
+  iPoseProofCore lem as pat false (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 ) pat).
+Tactic Notation "iPoseProof" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) ")" constr(pat) :=
+  iPoseProofCore lem as pat false (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 ) pat).
+Tactic Notation "iPoseProof" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")"
+    constr(pat) :=
+  iPoseProofCore lem as pat false (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 ) pat).
+Tactic Notation "iPoseProof" open_constr(lem) "as" "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) ")" constr(pat) :=
+  iPoseProofCore lem as pat false (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
 
 (** * Induction *)
 Tactic Notation "iInductionCore" constr(x)

@@ -39,8 +39,10 @@ Context management
   implications/wands of a hypothesis whose conclusion is persistent. In this
   case, all hypotheses can be used for proving the premises, as well as for
   the resulting goal.
-- `iPoseProof pm_trm as "H"` : put `pm_trm` into the context as a new hypothesis
-  `H`.
+- `iPoseProof pm_trm as (x1 ... xn) "ipat"` : put `pm_trm` into the context and
+  eliminates it. This tactic is essentially the same as `iDestruct` with the
+  difference that when `pm_trm` is a non-univerisally quantified spatial
+  hypothesis, it will not throw the hypothesis away.
 - `iAssert P with "spat" as "ipat"` : generates a new subgoal `P` and adds the
   hypothesis `P` to the current goal. The specialization pattern `spat`
   specifies which hypotheses will be consumed by proving `P`. The introduction
