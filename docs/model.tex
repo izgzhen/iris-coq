@@ -56,8 +56,8 @@ We are thus going to define the assertions as mapping CMRA elements to sets of s
             & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt\mtimes\meltB)\end{aligned}} \\
 	\Sem{\vctx \proves \always{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \Sem{\vctx \proves \prop : \Prop}_\gamma(\mcore\melt) \\
 	\Sem{\vctx \proves \later{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{n = 0 \lor n-1 \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt)}\\
-        \Sem{\vctx \proves \ownM{\melt} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\Sem{\vctx \proves \melt : \textlog{M}}_\gamma \mincl[n] \meltB}  \\
-        \Sem{\vctx \proves \mval(\melt) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\Sem{\vctx \proves \melt : \type}_\gamma \in \mval_n} \\
+        \Sem{\vctx \proves \ownM{\term} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\Sem{\vctx \proves \term : \textlog{M}}_\gamma \mincl[n] \meltB}  \\
+        \Sem{\vctx \proves \mval(\term) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\Sem{\vctx \proves \term : \textlog{M}}_\gamma \in \mval_n} \\
         \Sem{\vctx \proves \upd\prop : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{\begin{aligned}
             \All m, \melt'. & m \leq n \land (\melt \mtimes \melt') \in \mval_m \Ra {}\\& \Exists \meltB. (\meltB \mtimes \melt') \in \mval_m \land m \in \Sem{\vctx \proves \prop :\Prop}_\gamma(\meltB)
           \end{aligned}
@@ -73,7 +73,7 @@ For every definition, we have to show all the side-conditions: The maps have to 
 	\Sem{\vctx \proves x : \type}_\gamma &\eqdef \gamma(x) \\
 	\Sem{\vctx \proves \sigfn(\term_1, \dots, \term_n) : \type_{n+1}}_\gamma &\eqdef \Sem{\sigfn}(\Sem{\vctx \proves \term_1 : \type_1}_\gamma, \dots, \Sem{\vctx \proves \term_n : \type_n}_\gamma) \\
 	\Sem{\vctx \proves \Lam \var:\type. \term : \type \to \type'}_\gamma &\eqdef
-	\Lam \termB : \Sem{\type}. \Sem{\vctx, \var : \type \proves \term : \type}_{\mapinsert \var \termB \gamma]} \\
+	\Lam \termB : \Sem{\type}. \Sem{\vctx, \var : \type \proves \term : \type}_{\mapinsert \var \termB \gamma} \\
 	\Sem{\vctx \proves \term(\termB) : \type'}_\gamma &\eqdef
 	\Sem{\vctx \proves \term : \type \to \type'}_\gamma(\Sem{\vctx \proves \termB : \type}_\gamma) \\
 	\Sem{\vctx \proves \MU \var:\type. \term : \type}_\gamma &\eqdef
@@ -83,9 +83,10 @@ For every definition, we have to show all the side-conditions: The maps have to 
 	\Sem{\vctx \proves (\term_1, \term_2) : \type_1 \times \type_2}_\gamma &\eqdef (\Sem{\vctx \proves \term_1 : \type_1}_\gamma, \Sem{\vctx \proves \term_2 : \type_2}_\gamma) \\
 	\Sem{\vctx \proves \pi_i(\term) : \type_i}_\gamma &\eqdef \pi_i(\Sem{\vctx \proves \term : \type_1 \times \type_2}_\gamma) \\
   ~\\
-	\Sem{\vctx \proves \mcore\melt : \textlog{M}}_\gamma &\eqdef \mcore{\Sem{\vctx \proves \melt : \textlog{M}}_\gamma} \\
-	\Sem{\vctx \proves \melt \mtimes \meltB : \textlog{M}}_\gamma &\eqdef
-	\Sem{\vctx \proves \melt : \textlog{M}}_\gamma \mtimes \Sem{\vctx \proves \meltB : \textlog{M}}_\gamma
+        \Sem{ \melt : \textlog{M} }_\gamma &\eqdef \melt \\
+	\Sem{\vctx \proves \mcore\term : \textlog{M}}_\gamma &\eqdef \mcore{\Sem{\vctx \proves \term : \textlog{M}}_\gamma} \\
+	\Sem{\vctx \proves \term \mtimes \termB : \textlog{M}}_\gamma &\eqdef
+	\Sem{\vctx \proves \term : \textlog{M}}_\gamma \mtimes \Sem{\vctx \proves \termB : \textlog{M}}_\gamma
 \end{align*}
 %
 
