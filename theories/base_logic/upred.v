@@ -18,16 +18,17 @@ Record uPred (M : ucmraT) : Type := IProp {
      otherwise this condition is no longer limit preserving, and uPred
      does no longer form a COFE (i.e., [uPred_compl] breaks). This is
      because the distance and equivalence on this cofe ignores the
-     truth valid on invalid elements. This, in turns, is required by
+     truth value on invalid elements. This, in turn, is required by
      the fact that entailment has to ignore invalid elements, which is
      itself essential for proving [ownM_valid].
 
-     We could, actually, make the following condition true even for
-     invalid elements: we have proved that uPred is isomorphic to a
-     sub-COFE of the COFE of predicates that are monotonous both with
-     respect to the step index and with respect to x. However, that
-     would essentially require changing (by making more complicated)
-     the model of many connectives of the logic, which we don't want. *)
+     We could, actually, remove this restriction and make this
+     condition apply even to invalid elements: we have proved that
+     uPred is isomorphic to a sub-COFE of the COFE of predicates that
+     are monotonous both with respect to the step index and with
+     respect to x. However, that would essentially require changing
+     (by making it more complicated) the model of many connectives of
+     the logic, which we don't want. *)
   uPred_closed n1 n2 x : uPred_holds n1 x → n2 ≤ n1 → ✓{n2} x → uPred_holds n2 x
 }.
 Arguments uPred_holds {_} _ _ _ : simpl never.
