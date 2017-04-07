@@ -5,6 +5,10 @@ Set Default Proof Using "Type".
 Import uPred.
 
 Class cinvG Σ := cinv_inG :> inG Σ fracR.
+Definition cinvΣ : gFunctors := #[GFunctor fracR].
+
+Instance subG_cinvΣ {Σ} : subG cinvΣ Σ → cinvG Σ.
+Proof. solve_inG. Qed.
 
 Section defs.
   Context `{invG Σ, cinvG Σ}.
