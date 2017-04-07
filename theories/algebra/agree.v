@@ -443,15 +443,15 @@ Section agree_map.
     apply list_fmap_ext_ne=>y. by apply equiv_dist.
   Qed.
 
-  Global Instance agree_map_monotone : CMRAMonotone (agree_map f).
+  Global Instance agree_map_morphism : CMRAMorphism (agree_map f).
   Proof using Hyps.
     split; first apply _.
     - intros n x. rewrite /cmra_validN /validN /= /agree_validN /= => ?.
       change (list_agrees (dist n) (f <$> agree_list x)).
       eapply (list_agrees_fmap _ _ _); done.
-    - intros x y; rewrite !agree_included=> ->.
-      rewrite /equiv /agree_equiv /agree_map /agree_op /agree_list /=.
-      rewrite !fmap_app=>n. apply: list_setequiv_equiv. set_solver+.
+    - done.
+    - intros x y n. apply: list_setequiv_equiv=>b.
+      rewrite /agree_list /= !fmap_app. set_solver+.
   Qed.
 End agree_map.
 

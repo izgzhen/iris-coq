@@ -235,13 +235,15 @@ Class CMRADiscrete (A : cmraT) := {
 }.
 
 (** * Morphisms *)
-Class CMRAMonotone {A B : cmraT} (f : A → B) := {
-  cmra_monotone_ne :> NonExpansive f;
-  cmra_monotone_validN n x : ✓{n} x → ✓{n} f x;
-  cmra_monotone x y : x ≼ y → f x ≼ f y
+Class CMRAMorphism {A B : cmraT} (f : A → B) := {
+  cmra_morphism_ne :> NonExpansive f;
+  cmra_morphism_validN n x : ✓{n} x → ✓{n} f x;
+  cmra_morphism_pcore x : pcore (f x) ≡ f <$> pcore x;
+  cmra_morphism_op x y : f x ⋅ f y ≡ f (x ⋅ y)
 }.
-Arguments cmra_monotone_validN {_ _} _ {_} _ _ _.
-Arguments cmra_monotone {_ _} _ {_} _ _ _.
+Arguments cmra_morphism_validN {_ _} _ {_} _ _ _.
+Arguments cmra_morphism_pcore {_ _} _ {_} _.
+Arguments cmra_morphism_op {_ _} _ {_} _ _.
 
 (** * Properties **)
 Section cmra.
@@ -716,30 +718,33 @@ Section cmra_total.
   Qed.
 End cmra_total.
 
-(** * Properties about monotone functions *)
-Instance cmra_monotone_id {A : cmraT} : CMRAMonotone (@id A).
-Proof. repeat split; by try apply _. Qed.
-Instance cmra_monotone_compose {A B C : cmraT} (f : A → B) (g : B → C) :
-  CMRAMonotone f → CMRAMonotone g → CMRAMonotone (g ∘ f).
+(** * Properties about morphisms *)
+Instance cmra_morphism_id {A : cmraT} : CMRAMorphism (@id A).
+Proof. split=>//=. apply _. intros. by rewrite option_fmap_id. Qed.
+Instance cmra_morphism_proper {A B : cmraT} (f : A → B) `{!CMRAMorphism f} :
+  Proper ((≡) ==> (≡)) f := ne_proper _.
+Instance cmra_morphism_compose {A B C : cmraT} (f : A → B) (g : B → C) :
+  CMRAMorphism f → CMRAMorphism g → CMRAMorphism (g ∘ f).
 Proof.
   split.
   - apply _.
-  - move=> n x Hx /=. by apply cmra_monotone_validN, cmra_monotone_validN.
-  - move=> x y Hxy /=. by apply cmra_monotone, cmra_monotone.
+  - move=> n x Hx /=. by apply cmra_morphism_validN, cmra_morphism_validN.
+  - move=> x /=. by rewrite 2!cmra_morphism_pcore option_fmap_compose.
+  - move=> x y /=. by rewrite !cmra_morphism_op.
 Qed.
 
-Section cmra_monotone.
+Section cmra_morphism.
   Local Set Default Proof Using "Type*".
-  Context {A B : cmraT} (f : A → B) `{!CMRAMonotone f}.
-  Global Instance cmra_monotone_proper : Proper ((≡) ==> (≡)) f := ne_proper _.
-  Lemma cmra_monotoneN n x y : x ≼{n} y → f x ≼{n} f y.
-  Proof.
-    intros [z ->].
-    apply cmra_included_includedN, (cmra_monotone f), cmra_included_l.
-  Qed.
+  Context {A B : cmraT} (f : A → B) `{!CMRAMorphism f}.
+  Lemma cmra_morphism_core x : core (f x) ≡ f (core x).
+  Proof. unfold core, core'. rewrite cmra_morphism_pcore. by destruct (pcore x). Qed.
+  Lemma cmra_morphism_monotone x y : x ≼ y → f x ≼ f y.
+  Proof. intros [z ->]. exists (f z). by rewrite cmra_morphism_op. Qed.
+  Lemma cmra_morphism_monotoneN n x y : x ≼{n} y → f x ≼{n} f y.
+  Proof. intros [z ->]. exists (f z). by rewrite cmra_morphism_op. Qed.
   Lemma cmra_monotone_valid x : ✓ x → ✓ f x.
-  Proof. rewrite !cmra_valid_validN; eauto using cmra_monotone_validN. Qed.
-End cmra_monotone.
+  Proof. rewrite !cmra_valid_validN; eauto using cmra_morphism_validN. Qed.
+End cmra_morphism.
 
 (** Functors *)
 Structure rFunctor := RFunctor {
@@ -752,10 +757,10 @@ Structure rFunctor := RFunctor {
   rFunctor_compose {A1 A2 A3 B1 B2 B3}
       (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
     rFunctor_map (f◎g, g'◎f') x ≡ rFunctor_map (g,g') (rFunctor_map (f,f') x);
-  rFunctor_mono {A1 A2 B1 B2} (fg : (A2 -n> A1) * (B1 -n> B2)) :
-    CMRAMonotone (rFunctor_map fg)
+  rFunctor_mor {A1 A2 B1 B2} (fg : (A2 -n> A1) * (B1 -n> B2)) :
+    CMRAMorphism (rFunctor_map fg)
 }.
-Existing Instances rFunctor_ne rFunctor_mono.
+Existing Instances rFunctor_ne rFunctor_mor.
 Instance: Params (@rFunctor_map) 5.
 
 Delimit Scope rFunctor_scope with RF.
@@ -785,10 +790,10 @@ Structure urFunctor := URFunctor {
   urFunctor_compose {A1 A2 A3 B1 B2 B3}
       (f : A2 -n> A1) (g : A3 -n> A2) (f' : B1 -n> B2) (g' : B2 -n> B3) x :
     urFunctor_map (f◎g, g'◎f') x ≡ urFunctor_map (g,g') (urFunctor_map (f,f') x);
-  urFunctor_mono {A1 A2 B1 B2} (fg : (A2 -n> A1) * (B1 -n> B2)) :
-    CMRAMonotone (urFunctor_map fg) 
+  urFunctor_mor {A1 A2 B1 B2} (fg : (A2 -n> A1) * (B1 -n> B2)) :
+    CMRAMorphism (urFunctor_map fg)
 }.
-Existing Instances urFunctor_ne urFunctor_mono.
+Existing Instances urFunctor_ne urFunctor_mor.
 Instance: Params (@urFunctor_map) 5.
 
 Delimit Scope urFunctor_scope with URF.
@@ -1148,13 +1153,19 @@ End prod_unit.
 
 Arguments prodUR : clear implicits.
 
-Instance prod_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B') :
-  CMRAMonotone f → CMRAMonotone g → CMRAMonotone (prod_map f g).
+Instance prod_map_cmra_morphism {A A' B B' : cmraT} (f : A → A') (g : B → B') :
+  CMRAMorphism f → CMRAMorphism g → CMRAMorphism (prod_map f g).
 Proof.
   split; first apply _.
-  - by intros n x [??]; split; simpl; apply cmra_monotone_validN.
-  - intros x y; rewrite !prod_included=> -[??] /=.
-    by split; apply cmra_monotone.
+  - by intros n x [??]; split; simpl; apply cmra_morphism_validN.
+  - intros x. etrans. apply (reflexivity (mbind _ _)).
+    etrans; last apply (reflexivity (_ <$> mbind _ _)). simpl.
+    assert (Hf := cmra_morphism_pcore f (x.1)).
+    destruct (pcore (f (x.1))), (pcore (x.1)); inversion_clear Hf=>//=.
+    assert (Hg := cmra_morphism_pcore g (x.2)).
+    destruct (pcore (g (x.2))), (pcore (x.2)); inversion_clear Hg=>//=.
+    by setoid_subst.
+  - intros. by rewrite /prod_map /= -!cmra_morphism_op.
 Qed.
 
 Program Definition prodRF (F1 F2 : rFunctor) : rFunctor := {|
@@ -1283,9 +1294,6 @@ Section option.
   Canonical Structure optionUR := UCMRAT (option A) option_ucmra_mixin.
 
   (** Misc *)
-  Global Instance Some_cmra_monotone : CMRAMonotone Some.
-  Proof. split; [apply _|done|intros x y [z ->]; by exists (Some z)]. Qed.
-
   Lemma op_None mx my : mx ⋅ my = None ↔ mx = None ∧ my = None.
   Proof. destruct mx, my; naive_solver. Qed.
   Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
@@ -1351,14 +1359,13 @@ Section option_prod.
   Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total y1). Qed.
 End option_prod.
 
-Instance option_fmap_cmra_monotone {A B : cmraT} (f: A → B) `{!CMRAMonotone f} :
-  CMRAMonotone (fmap f : option A → option B).
+Instance option_fmap_cmra_morphism {A B : cmraT} (f: A → B) `{!CMRAMorphism f} :
+  CMRAMorphism (fmap f : option A → option B).
 Proof.
   split; first apply _.
-  - intros n [x|] ?; rewrite /cmra_validN //=. by apply (cmra_monotone_validN f).
-  - intros mx my; rewrite !option_included.
-    intros [->|(x&y&->&->&[Hxy|?])]; simpl; eauto 10 using @cmra_monotone.
-    right; exists (f x), (f y). by rewrite {3}Hxy; eauto.
+  - intros n [x|] ?; rewrite /cmra_validN //=. by apply (cmra_morphism_validN f).
+  - move=> [x|] //. by apply Some_proper, cmra_morphism_pcore.
+  - move=> [x|] [y|] //=. by rewrite -(cmra_morphism_op f).
 Qed.
 
 Program Definition optionRF (F : rFunctor) : rFunctor := {|

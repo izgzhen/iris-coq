@@ -141,14 +141,9 @@ Proof. by destruct x; constructor. Qed.
 Instance excl_map_ne {A B : ofeT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@excl_map A B).
 Proof. by intros f f' Hf; destruct 1; constructor; apply Hf. Qed.
-Instance excl_map_cmra_monotone {A B : ofeT} (f : A → B) :
-  NonExpansive f → CMRAMonotone (excl_map f).
-Proof.
-  split; try apply _.
-  - by intros n [a|].
-  - intros x y [z Hy]; exists (excl_map f z); apply equiv_dist=> n.
-    move: Hy=> /equiv_dist /(_ n) ->; by destruct x, z.
-Qed.
+Instance excl_map_cmra_morphism {A B : ofeT} (f : A → B) :
+  NonExpansive f → CMRAMorphism (excl_map f).
+Proof. split; try done; try apply _. by intros n [a|]. Qed.
 Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
   CofeMor (excl_map f).
 Instance exclC_map_ne A B : NonExpansive (@exclC_map A B).

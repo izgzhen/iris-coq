@@ -433,14 +433,16 @@ Section properties.
 End properties.
 
 (** Functor *)
-Instance list_fmap_cmra_monotone {A B : ucmraT} (f : A → B)
-  `{!CMRAMonotone f} : CMRAMonotone (fmap f : list A → list B).
+Instance list_fmap_cmra_morphism {A B : ucmraT} (f : A → B)
+  `{!CMRAMorphism f} : CMRAMorphism (fmap f : list A → list B).
 Proof.
   split; try apply _.
   - intros n l. rewrite !list_lookup_validN=> Hl i. rewrite list_lookup_fmap.
-    by apply (cmra_monotone_validN (fmap f : option A → option B)).
-  - intros l1 l2. rewrite !list_lookup_included=> Hl i. rewrite !list_lookup_fmap.
-    by apply (cmra_monotone (fmap f : option A → option B)).
+    by apply (cmra_morphism_validN (fmap f : option A → option B)).
+  - intros l. apply Some_proper. rewrite -!list_fmap_compose.
+    apply list_fmap_equiv_ext, cmra_morphism_core, _.
+  - intros l1 l2. apply list_equiv_lookup=>i.
+    by rewrite list_lookup_op !list_lookup_fmap list_lookup_op cmra_morphism_op.
 Qed.
 
 Program Definition listURF (F : urFunctor) : urFunctor := {|
