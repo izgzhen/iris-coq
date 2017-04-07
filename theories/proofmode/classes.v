@@ -78,8 +78,6 @@ Class WandWeaken' {M} (P Q P' Q' : uPred M) :=
   wand_weaken' :> WandWeaken P Q P' Q'.
 Hint Mode WandWeaken' + - - ! - : typeclass_instances.
 Hint Mode WandWeaken' + - - - ! : typeclass_instances.
-Instance wand_weaken_exact {M} (P Q : uPred M) : WandWeaken P Q P Q | 1000.
-Proof. done. Qed.
 
 Class IntoWand {M} (R P Q : uPred M) := into_wand : R ⊢ P -∗ Q.
 Arguments into_wand {_} _ _ _ {_}.

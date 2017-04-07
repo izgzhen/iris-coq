@@ -248,8 +248,9 @@ Global Instance from_later_exist {A} n (Φ Ψ : A → uPred M) :
 Proof. intros ?. rewrite /FromLaterN laterN_exist=> ?. by apply exist_mono. Qed.
 
 (* IntoWand *)
-Global Instance wand_weaken_exact P Q : WandWeaken P Q P Q.
-Proof. done. Qed.
+Global Instance wand_weaken_assumption P1 P2 Q :
+  FromAssumption false P2 P1 → WandWeaken P1 Q P2 Q | 0.
+Proof. by rewrite /WandWeaken /FromAssumption /= =>->. Qed.
 Global Instance wand_weaken_later P Q P' Q' :
   WandWeaken P Q P' Q' → WandWeaken' P Q (▷ P') (▷ Q').
 Proof.
