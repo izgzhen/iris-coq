@@ -16,11 +16,10 @@ Section defs.
   Definition cinv_own (γ : gname) (p : frac) : iProp Σ := own γ p.
 
   Definition cinv (N : namespace) (γ : gname) (P : iProp Σ) : iProp Σ :=
-    inv N (P ∨ cinv_own γ 1%Qp)%I.
+    (∃ P', □ ▷ (P ↔ P') ∗ inv N (P' ∨ cinv_own γ 1%Qp))%I.
 End defs.
 
 Instance: Params (@cinv) 5.
-Typeclasses Opaque cinv_own cinv.
 
 Section proofs.
   Context `{invG Σ, cinvG Σ}.
@@ -53,27 +52,43 @@ Section proofs.
     iDestruct (cinv_own_valid with "H1 H2") as %[]%(exclusive_l 1%Qp).
   Qed.
 
+  Lemma cinv_iff N γ P P' :
+    ▷ □ (P ↔ P') -∗ cinv N γ P -∗ cinv N γ P'.
+  Proof.
+    iIntros "#HP' Hinv". iDestruct "Hinv" as (P'') "[#HP'' Hinv]".
+    iExists _. iFrame "Hinv". iNext. iAlways. iSplit.
+    - iIntros "?". iApply "HP''". iApply "HP'". done.
+    - iIntros "?". iApply "HP'". iApply "HP''". done.
+  Qed.
+
   Lemma cinv_alloc E N P : ▷ P ={E}=∗ ∃ γ, cinv N γ P ∗ cinv_own γ 1.
   Proof.
-    rewrite /cinv /cinv_own. iIntros "HP".
+    iIntros "HP".
     iMod (own_alloc 1%Qp) as (γ) "H1"; first done.
-    iMod (inv_alloc N _ (P ∨ own γ 1%Qp)%I with "[HP]"); eauto.
+    iMod (inv_alloc N _ (P ∨ own γ 1%Qp)%I with "[HP]"); first by eauto.
+    iExists _. iFrame. iExists _. iFrame. iIntros "!> !# !>". iSplit; by iIntros "?".
   Qed.
 
   Lemma cinv_cancel E N γ P : ↑N ⊆ E → cinv N γ P -∗ cinv_own γ 1 ={E}=∗ ▷ P.
   Proof.
-    rewrite /cinv. iIntros (?) "#Hinv Hγ".
-    iInv N as "[$|>Hγ']" "Hclose"; first iApply "Hclose"; eauto.
-    iDestruct (cinv_own_1_l with "Hγ Hγ'") as %[].
+    iIntros (?) "#Hinv Hγ". iDestruct "Hinv" as (P') "[#HP' Hinv]".
+    iInv N as "[HP|>Hγ']" "Hclose".
+    - iMod ("Hclose" with "[Hγ]") as "_"; first by eauto. iModIntro. iNext.
+      iApply "HP'". done.
+    - iDestruct (cinv_own_1_l with "Hγ Hγ'") as %[].
   Qed.
 
   Lemma cinv_open E N γ p P :
     ↑N ⊆ E →
     cinv N γ P -∗ cinv_own γ p ={E,E∖↑N}=∗ ▷ P ∗ cinv_own γ p ∗ (▷ P ={E∖↑N,E}=∗ True).
   Proof.
-    rewrite /cinv. iIntros (?) "#Hinv Hγ".
-    iInv N as "[$ | >Hγ']" "Hclose".
-    - iIntros "!> {$Hγ} HP". iApply "Hclose"; eauto.
+    iIntros (?) "#Hinv Hγ". iDestruct "Hinv" as (P') "[#HP' Hinv]".
+    iInv N as "[HP | >Hγ']" "Hclose".
+    - iIntros "!> {$Hγ}". iSplitL "HP".
+      + iNext. iApply "HP'". done.
+      + iIntros "HP". iApply "Hclose". iLeft. iNext. by iApply "HP'".
     - iDestruct (cinv_own_1_l with "Hγ' Hγ") as %[].
   Qed.
 End proofs.
+
+Typeclasses Opaque cinv_own cinv.
