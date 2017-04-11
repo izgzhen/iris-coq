@@ -474,13 +474,14 @@ End properties.
 Instance gmap_fmap_ne `{Countable K} {A B : ofeT} (f : A → B) n :
   Proper (dist n ==> dist n) f → Proper (dist n ==>dist n) (fmap (M:=gmap K) f).
 Proof. by intros ? m m' Hm k; rewrite !lookup_fmap; apply option_fmap_ne. Qed.
-Instance gmap_fmap_cmra_monotone `{Countable K} {A B : cmraT} (f : A → B)
-  `{!CMRAMonotone f} : CMRAMonotone (fmap f : gmap K A → gmap K B).
+Instance gmap_fmap_cmra_morphism `{Countable K} {A B : cmraT} (f : A → B)
+  `{!CMRAMorphism f} : CMRAMorphism (fmap f : gmap K A → gmap K B).
 Proof.
   split; try apply _.
-  - by intros n m ? i; rewrite lookup_fmap; apply (cmra_monotone_validN _).
-  - intros m1 m2; rewrite !lookup_included=> Hm i.
-    by rewrite !lookup_fmap; apply: cmra_monotone.
+  - by intros n m ? i; rewrite lookup_fmap; apply (cmra_morphism_validN _).
+  - intros m. apply Some_proper=>i. rewrite lookup_fmap !lookup_omap lookup_fmap.
+    case: (m!!i)=>//= ?. apply cmra_morphism_pcore, _.
+  - intros m1 m2 i. by rewrite lookup_op !lookup_fmap lookup_op cmra_morphism_op.
 Qed.
 Definition gmapC_map `{Countable K} {A B} (f: A -n> B) :
   gmapC K A -n> gmapC K B := CofeMor (fmap f : gmapC K A → gmapC K B).

@@ -93,31 +93,31 @@ Qed.
 
 (** functor *)
 Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
-  `{!CMRAMonotone f} (P : uPred M1) :
+  `{!CMRAMorphism f} (P : uPred M1) :
   uPred M2 := {| uPred_holds n x := P n (f x) |}.
-Next Obligation. naive_solver eauto using uPred_mono, cmra_monotoneN. Qed.
-Next Obligation. naive_solver eauto using uPred_closed, cmra_monotone_validN. Qed.
+Next Obligation. naive_solver eauto using uPred_mono, cmra_morphism_monotoneN. Qed.
+Next Obligation. naive_solver eauto using uPred_closed, cmra_morphism_validN. Qed.
 
 Instance uPred_map_ne {M1 M2 : ucmraT} (f : M2 -n> M1)
-  `{!CMRAMonotone f} n : Proper (dist n ==> dist n) (uPred_map f).
+  `{!CMRAMorphism f} n : Proper (dist n ==> dist n) (uPred_map f).
 Proof.
   intros x1 x2 Hx; split=> n' y ??.
-  split; apply Hx; auto using cmra_monotone_validN.
+  split; apply Hx; auto using cmra_morphism_validN.
 Qed.
 Lemma uPred_map_id {M : ucmraT} (P : uPred M): uPred_map cid P ≡ P.
 Proof. by split=> n x ?. Qed.
 Lemma uPred_map_compose {M1 M2 M3 : ucmraT} (f : M1 -n> M2) (g : M2 -n> M3)
-    `{!CMRAMonotone f, !CMRAMonotone g} (P : uPred M3):
+    `{!CMRAMorphism f, !CMRAMorphism g} (P : uPred M3):
   uPred_map (g ◎ f) P ≡ uPred_map f (uPred_map g P).
 Proof. by split=> n x Hx. Qed.
 Lemma uPred_map_ext {M1 M2 : ucmraT} (f g : M1 -n> M2)
-      `{!CMRAMonotone f} `{!CMRAMonotone g}:
+      `{!CMRAMorphism f} `{!CMRAMorphism g}:
   (∀ x, f x ≡ g x) → ∀ x, uPred_map f x ≡ uPred_map g x.
 Proof. intros Hf P; split=> n x Hx /=; by rewrite /uPred_holds /= Hf. Qed.
-Definition uPredC_map {M1 M2 : ucmraT} (f : M2 -n> M1) `{!CMRAMonotone f} :
+Definition uPredC_map {M1 M2 : ucmraT} (f : M2 -n> M1) `{!CMRAMorphism f} :
   uPredC M1 -n> uPredC M2 := CofeMor (uPred_map f : uPredC M1 → uPredC M2).
 Lemma uPredC_map_ne {M1 M2 : ucmraT} (f g : M2 -n> M1)
-    `{!CMRAMonotone f, !CMRAMonotone g} n :
+    `{!CMRAMorphism f, !CMRAMorphism g} n :
   f ≡{n}≡ g → uPredC_map f ≡{n}≡ uPredC_map g.
 Proof.
   by intros Hfg P; split=> n' y ??;

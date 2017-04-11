@@ -282,14 +282,14 @@ Instance iprod_map_ne `{Finite A} {B1 B2 : A → ofeT} (f : ∀ x, B1 x → B2 x
   (∀ x, Proper (dist n ==> dist n) (f x)) →
   Proper (dist n ==> dist n) (iprod_map f).
 Proof. by intros ? y1 y2 Hy x; rewrite /iprod_map (Hy x). Qed.
-Instance iprod_map_cmra_monotone
+Instance iprod_map_cmra_morphism
     `{Finite A} {B1 B2 : A → ucmraT} (f : ∀ x, B1 x → B2 x) :
-  (∀ x, CMRAMonotone (f x)) → CMRAMonotone (iprod_map f).
+  (∀ x, CMRAMorphism (f x)) → CMRAMorphism (iprod_map f).
 Proof.
   split; first apply _.
-  - intros n g Hg x; rewrite /iprod_map; apply (cmra_monotone_validN (f _)), Hg.
-  - intros g1 g2; rewrite !iprod_included_spec=> Hf x.
-    rewrite /iprod_map; apply (cmra_monotone _), Hf.
+  - intros n g Hg x; rewrite /iprod_map; apply (cmra_morphism_validN (f _)), Hg.
+  - intros. apply Some_proper=>i. apply (cmra_morphism_core (f i)).
+  - intros g1 g2 i. by rewrite /iprod_map iprod_lookup_op cmra_morphism_op.
 Qed.
 
 Definition iprodC_map `{Finite A} {B1 B2 : A → ofeT}
