@@ -3,6 +3,10 @@ way the logic is used on paper.  We also mention some significant changes in the
 Coq development, but not every API-breaking change is listed.  Changes marked
 `[#]` still need to be ported to the Iris Documentation LaTeX file(s).
 
+## Iris 3.x.y
+
+* [#] CMRA morphisms now have to be homomorphisms, not just monotone functions.
+
 ## Iris 3.0.0 (released 2017-01-11)
 
 * There now is a deprecation process.  The modules `*.deprecated` contain
