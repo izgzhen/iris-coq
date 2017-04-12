@@ -272,14 +272,14 @@ Proof.
   intros f g Hf [??] [??] [??]; split; simpl in *; [|by apply Hf].
   apply option_fmap_ne; [|done]=> x y ?; by apply excl_map_ne.
 Qed.
-Instance auth_map_cmra_monotone {A B : ucmraT} (f : A → B) :
-  CMRAMonotone f → CMRAMonotone (auth_map f).
+Instance auth_map_cmra_morphism {A B : ucmraT} (f : A → B) :
+  CMRAMorphism f → CMRAMorphism (auth_map f).
 Proof.
   split; try apply _.
   - intros n [[[a|]|] b]; rewrite !auth_validN_eq; try
-      naive_solver eauto using cmra_monotoneN, cmra_monotone_validN.
-  - by intros [x a] [y b]; rewrite !auth_included /=;
-      intros [??]; split; simpl; apply: cmra_monotone.
+      naive_solver eauto using cmra_morphism_monotoneN, cmra_morphism_validN.
+  - intros [??]. apply Some_proper. by f_equiv; rewrite /= cmra_morphism_core.
+  - intros [[?|]?] [[?|]?]; try apply Auth_proper=>//=; by rewrite cmra_morphism_op.
 Qed.
 Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
   CofeMor (auth_map f).

@@ -356,14 +356,13 @@ End cmra.
 Arguments csumR : clear implicits.
 
 (* Functor *)
-Instance csum_map_cmra_monotone {A A' B B' : cmraT} (f : A → A') (g : B → B') :
-  CMRAMonotone f → CMRAMonotone g → CMRAMonotone (csum_map f g).
+Instance csum_map_cmra_morphism {A A' B B' : cmraT} (f : A → A') (g : B → B') :
+  CMRAMorphism f → CMRAMorphism g → CMRAMorphism (csum_map f g).
 Proof.
   split; try apply _.
-  - intros n [a|b|]; simpl; auto using cmra_monotone_validN.
-  - intros x y; rewrite !csum_included.
-    intros [->|[(a&a'&->&->&?)|(b&b'&->&->&?)]]; simpl;
-    eauto 10 using cmra_monotone.
+  - intros n [a|b|]; simpl; auto using cmra_morphism_validN.
+  - move=> [a|b|]=>//=; rewrite cmra_morphism_pcore; by destruct pcore.
+  - intros [xa|ya|] [xb|yb|]=>//=; by rewrite -cmra_morphism_op.
 Qed.
 
 Program Definition csumRF (Fa Fb : rFunctor) : rFunctor := {|
