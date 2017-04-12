@@ -6,6 +6,27 @@ Local Arguments valid _ _  !_ /.
 Local Arguments op _ _ _ !_ /.
 Local Arguments pcore _ _ !_ /.
 
+(** Define an agreement construction such that Agree A is discrete when A is discrete.
+    Notice that this construction is NOT complete.  The fullowing is due to Aleš:
+
+
+Proposition: Ag(T) is not necessarily complete.
+Proof.
+  Let T be the set of binary streams (infinite sequences) with the usual
+  ultrametric, measuring how far they agree.
+
+  Let Aₙ be the set of all binary strings of length n. Thus for Aₙ to be a
+  subset of T we have them continue as a stream of zeroes.
+
+  Now Aₙ is a finite non-empty subset of T. Moreover {Aₙ} is a Cauchy sequence
+  in the defined (Hausdorff) metric.
+
+  However the limit (if it were to exist as an element of Ag(T)) would have to
+  be the set of all binary streams, which is not exactly finite.
+
+  Thus Ag(T) is not necessarily complete.
+*)
+
 Record agree (A : Type) : Type := Agree {
   agree_car : A;
   agree_with : list A;
