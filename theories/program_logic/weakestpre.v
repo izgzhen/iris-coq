@@ -189,6 +189,20 @@ Proof.
   by iApply "IH".
 Qed.
 
+Lemma wp_bind_inv K `{!LanguageCtx Λ K} E e Φ :
+  WP K e @ E {{ Φ }} ⊢ WP e @ E {{ v, WP K (of_val v) @ E {{ Φ }} }}.
+Proof.
+  iIntros "H". iLöb as "IH" forall (E e Φ). rewrite !wp_unfold /wp_pre.
+  destruct (to_val e) as [v|] eqn:He.
+  { apply of_to_val in He as <-. by rewrite !wp_unfold /wp_pre. }
+  rewrite fill_not_val //.
+  iIntros (σ1) "Hσ". iMod ("H" with "[$]") as "[% H]". iModIntro; iSplit.
+  { eauto using reducible_fill. }
+  iNext; iIntros (e2 σ2 efs Hstep).
+  iMod ("H" $! (K e2) σ2 efs with "[]") as "($ & H & $)"; eauto using fill_step.
+  by iApply "IH".
+Qed.
+
 (** * Derived rules *)
 Lemma wp_mono E e Φ Ψ : (∀ v, Φ v ⊢ Ψ v) → WP e @ E {{ Φ }} ⊢ WP e @ E {{ Ψ }}.
 Proof.
