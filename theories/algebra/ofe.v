@@ -183,9 +183,14 @@ Section ofe.
     transitivity (c n); first by apply conv_compl. symmetry.
     apply chain_cauchy. omega.
   Qed.
+
   Lemma timeless_iff n (x : A) `{!Timeless x} y : x ≡ y ↔ x ≡{n}≡ y.
   Proof.
     split; intros; auto. apply (timeless _), dist_le with n; auto with lia.
+  Qed.
+  Lemma timeless_iff_0 n (x : A) `{!Timeless x} y : x ≡{0}≡ y ↔ x ≡{n}≡ y.
+  Proof.
+    split=> ?. by apply equiv_dist, (timeless _). eauto using dist_le with lia.
   Qed.
 End ofe.
 
