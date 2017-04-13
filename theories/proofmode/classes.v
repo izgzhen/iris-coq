@@ -71,17 +71,18 @@ Class FromLaterN {M} (n : nat) (P Q : uPred M) := from_laterN : ▷^n Q ⊢ P.
 Arguments from_laterN {_} _ _ _ {_}.
 Hint Mode FromLaterN + - ! - : typeclass_instances.
 
-Class WandWeaken {M} (P Q P' Q' : uPred M) := wand_weaken : (P -∗ Q) ⊢ (P' -∗ Q').
-Hint Mode WandWeaken + - - - - : typeclass_instances.
+Class WandWeaken {M} (p : bool) (P Q P' Q' : uPred M) :=
+  wand_weaken : (P -∗ Q) ⊢ (□?p P' -∗ Q').
+Hint Mode WandWeaken + + - - - - : typeclass_instances.
 
-Class WandWeaken' {M} (P Q P' Q' : uPred M) :=
-  wand_weaken' :> WandWeaken P Q P' Q'.
-Hint Mode WandWeaken' + - - ! - : typeclass_instances.
-Hint Mode WandWeaken' + - - - ! : typeclass_instances.
+Class WandWeaken' {M} (p : bool) (P Q P' Q' : uPred M) :=
+  wand_weaken' :> WandWeaken p P Q P' Q'.
+Hint Mode WandWeaken' + + - - ! - : typeclass_instances.
+Hint Mode WandWeaken' + + - - - ! : typeclass_instances.
 
-Class IntoWand {M} (R P Q : uPred M) := into_wand : R ⊢ P -∗ Q.
-Arguments into_wand {_} _ _ _ {_}.
-Hint Mode IntoWand + ! - - : typeclass_instances.
+Class IntoWand {M} (p : bool) (R P Q : uPred M) := into_wand : R ⊢ □?p P -∗ Q.
+Arguments into_wand {_} _ _ _ _ {_}.
+Hint Mode IntoWand + + ! - - : typeclass_instances.
 
 Class FromAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=
   from_and : (if p then Q1 ∧ Q2 else Q1 ∗ Q2) ⊢ P.

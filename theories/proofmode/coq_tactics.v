@@ -542,7 +542,7 @@ but it is doing some work to keep the order of hypotheses preserved. *)
 Lemma tac_specialize Δ Δ' Δ'' i p j q P1 P2 R Q :
   envs_lookup_delete i Δ = Some (p, P1, Δ') →
   envs_lookup j (if p then Δ else Δ') = Some (q, R) →
-  IntoWand R P1 P2 →
+  IntoWand p R P1 P2 →
   match p with
   | true  => envs_simple_replace j q (Esnoc Enil j P2) Δ
   | false => envs_replace j q false (Esnoc Enil j P2) Δ'
@@ -552,16 +552,17 @@ Lemma tac_specialize Δ Δ' Δ'' i p j q P1 P2 R Q :
 Proof.
   intros [? ->]%envs_lookup_delete_Some ??? <-. destruct p.
   - rewrite envs_lookup_persistent_sound // envs_simple_replace_sound //; simpl.
-    rewrite assoc (into_wand R) (always_elim_if q) -always_if_sep wand_elim_r.
-    by rewrite right_id wand_elim_r.
+    rewrite right_id assoc (into_wand _ R) /=. destruct q; simpl.
+    + by rewrite always_wand always_always !wand_elim_r.
+    + by rewrite !wand_elim_r.
   - rewrite envs_lookup_sound //; simpl.
     rewrite envs_lookup_sound // (envs_replace_sound' _ Δ'') //; simpl.
-    by rewrite right_id assoc (into_wand R) always_if_elim wand_elim_r wand_elim_r.
+    by rewrite right_id assoc (into_wand _ R) always_if_elim wand_elim_r wand_elim_r.
 Qed.
 
 Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  IntoWand R P1 P2 → ElimModal P1' P1 Q Q →
+  IntoWand false R P1 P2 → ElimModal P1' P1 Q Q →
   ('(Δ1,Δ2) ← envs_split lr js Δ';
     Δ2' ← envs_app false (Esnoc Enil j P2) Δ2;
     Some (Δ1,Δ2')) = Some (Δ1,Δ2') → (* does not preserve position of [j] *)
@@ -572,7 +573,7 @@ Proof.
     destruct (envs_app _ _ _) eqn:?; simplify_eq/=.
   rewrite envs_lookup_sound // envs_split_sound //.
   rewrite (envs_app_sound Δ2) //; simpl.
-  rewrite right_id (into_wand R) HP1 assoc -(comm _ P1') -assoc.
+  rewrite right_id (into_wand _ R) HP1 assoc -(comm _ P1') -assoc.
   rewrite -(elim_modal P1' P1 Q Q). apply sep_mono_r, wand_intro_l.
   by rewrite always_if_elim assoc !wand_elim_r.
 Qed.
@@ -582,7 +583,7 @@ Proof. by unlock. Qed.
 
 Lemma tac_specialize_frame Δ Δ' j q R P1 P2 P1' Q Q' :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  IntoWand R P1 P2 →
+  IntoWand false R P1 P2 →
   ElimModal P1' P1 Q Q →
   (Δ' ⊢ P1' ∗ locked Q') →
   Q' = (P2 -∗ Q)%I →
@@ -590,25 +591,25 @@ Lemma tac_specialize_frame Δ Δ' j q R P1 P2 P1' Q Q' :
 Proof.
   intros [? ->]%envs_lookup_delete_Some ?? HPQ ->.
   rewrite envs_lookup_sound //. rewrite HPQ -lock.
-  rewrite (into_wand R) assoc -(comm _ P1') -assoc always_if_elim.
+  rewrite (into_wand _ R) assoc -(comm _ P1') -assoc always_if_elim.
   rewrite -{2}(elim_modal P1' P1 Q Q). apply sep_mono_r, wand_intro_l.
   by rewrite assoc !wand_elim_r.
 Qed.
 
 Lemma tac_specialize_assert_pure Δ Δ' j q R P1 P2 φ Q :
   envs_lookup j Δ = Some (q, R) →
-  IntoWand R P1 P2 → FromPure P1 φ →
+  IntoWand false R P1 P2 → FromPure P1 φ →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ' →
   φ → (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros. rewrite envs_simple_replace_sound //; simpl.
-  rewrite right_id (into_wand R) -(from_pure P1) pure_True //.
+  rewrite right_id (into_wand _ R) -(from_pure P1) pure_True //.
   by rewrite wand_True wand_elim_r.
 Qed.
 
 Lemma tac_specialize_assert_persistent Δ Δ' Δ'' j q P1 P2 R Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  IntoWand R P1 P2 → PersistentP P1 →
+  IntoWand false R P1 P2 → PersistentP P1 →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ'' →
   (Δ' ⊢ P1) → (Δ'' ⊢ Q) → Δ ⊢ Q.
 Proof.
@@ -617,7 +618,7 @@ Proof.
   rewrite -(idemp uPred_and (envs_delete _ _ _)).
   rewrite {1}HP1 (persistentP P1) always_and_sep_l assoc.
   rewrite envs_simple_replace_sound' //; simpl.
-  rewrite right_id (into_wand R) (always_elim_if q) -always_if_sep wand_elim_l.
+  rewrite right_id (into_wand _ R) (always_elim_if q) -always_if_sep wand_elim_l.
   by rewrite wand_elim_r.
 Qed.
 
@@ -704,11 +705,11 @@ Proof.
 Qed.
 
 Lemma tac_apply Δ Δ' i p R P1 P2 :
-  envs_lookup_delete i Δ = Some (p, R, Δ') → IntoWand R P1 P2 →
+  envs_lookup_delete i Δ = Some (p, R, Δ') → IntoWand false R P1 P2 →
   (Δ' ⊢ P1) → Δ ⊢ P2.
 Proof.
   intros ?? HP1. rewrite envs_lookup_delete_sound' //.
-  by rewrite (into_wand R) HP1 wand_elim_l.
+  by rewrite (into_wand _ R) HP1 wand_elim_l.
 Qed.
 
 (** * Rewriting *)

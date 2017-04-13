@@ -176,4 +176,7 @@ Lemma test_split_box (P Q : uPred M) :
   □ P -∗ □ (P ∗ P).
 Proof. iIntros "#?". by iSplit. Qed.
 
+Lemma test_specialize_persistent (P Q : uPred M) :
+  □ P -∗ (□ P -∗ Q) -∗ Q.
+Proof. iIntros "#HP HPQ". by iSpecialize ("HPQ" with "HP"). Qed.
 End tests.

@@ -155,7 +155,8 @@ Section proofmode_classes.
   Proof. rewrite /FromAssumption=>->. apply bupd_fupd. Qed.
 
   Global Instance wand_weaken_fupd E1 E2 P Q P' Q' :
-    WandWeaken P Q P' Q' → WandWeaken' P Q (|={E1,E2}=> P') (|={E1,E2}=> Q').
+    WandWeaken false P Q P' Q' →
+    WandWeaken' false P Q (|={E1,E2}=> P') (|={E1,E2}=> Q').
   Proof.
     rewrite /WandWeaken' /WandWeaken=>->. apply wand_intro_l. by rewrite fupd_wand_r.
   Qed.
