@@ -4,8 +4,9 @@ Set Default Proof Using "Type".
 
 Section tests.
 Context {M : ucmraT}.
-Lemma demo_0 (P Q : uPred M) :
-  □ (P ∨ Q) -∗ (∀ x, ⌜x = 0⌝ ∨ ⌜x = 1⌝) → (Q ∨ P).
+Implicit Types P Q R : uPred M.
+
+Lemma demo_0 P Q : □ (P ∨ Q) -∗ (∀ x, ⌜x = 0⌝ ∨ ⌜x = 1⌝) → (Q ∨ P).
 Proof.
   iIntros "#H #H2".
   (* should remove the disjunction "H" *)
@@ -39,7 +40,7 @@ Proof.
   - done.
 Qed.
 
-Lemma demo_2 (P1 P2 P3 P4 Q : uPred M) (P5 : nat → uPredC M):
+Lemma demo_2 P1 P2 P3 P4 Q (P5 : nat → uPredC M):
   P2 ∗ (P3 ∗ Q) ∗ True ∗ P1 ∗ P2 ∗ (P4 ∗ (∃ x:nat, P5 x ∨ P3)) ∗ True -∗
     P1 -∗ (True ∗ True) -∗
   (((P2 ∧ False ∨ P2 ∧ ⌜0 = 0⌝) ∗ P3) ∗ Q ∗ P1 ∗ True) ∧
@@ -57,17 +58,17 @@ Proof.
   * iSplitL "HQ". iAssumption. by iSplitL "H1".
 Qed.
 
-Lemma demo_3 (P1 P2 P3 : uPred M) :
+Lemma demo_3 P1 P2 P3 :
   P1 ∗ P2 ∗ P3 -∗ ▷ P1 ∗ ▷ (P2 ∗ ∃ x, (P3 ∧ ⌜x = 0⌝) ∨ P3).
 Proof. iIntros "($ & $ & H)". iFrame "H". iNext. by iExists 0. Qed.
 
 Definition foo (P : uPred M) := (P → P)%I.
 Definition bar : uPred M := (∀ P, foo P)%I.
 
-Lemma demo_4 : True -∗ bar.
+Lemma test_unfold_constants : True -∗ bar.
 Proof. iIntros. iIntros (P) "HP //". Qed.
 
-Lemma demo_5 (x y : M) (P : uPred M) :
+Lemma test_iRewrite (x y : M) P :
   (∀ z, P → z ≡ y) -∗ (P -∗ (x,x) ≡ (y,x)).
 Proof.
   iIntros "H1 H2".
@@ -76,7 +77,7 @@ Proof.
   done.
 Qed.
 
-Lemma demo_6 (P Q : uPred M) :
+Lemma test_fast_iIntros P Q :
   (∀ x y z : nat,
     ⌜x = plus 0 x⌝ → ⌜y = 0⌝ → ⌜z = 0⌝ → P → □ Q → foo (x ≡ x))%I.
 Proof.
@@ -85,29 +86,14 @@ Proof.
   iIntros "# _ //".
 Qed.
 
-Lemma demo_7 (P Q1 Q2 : uPred M) : P ∗ (Q1 ∧ Q2) -∗ P ∗ Q1.
+Lemma test_iDestruct_spatial_and P Q1 Q2 : P ∗ (Q1 ∧ Q2) -∗ P ∗ Q1.
 Proof. iIntros "[H1 [H2 _]]". by iFrame. Qed.
 
-Section iris.
-  Context `{invG Σ}.
-  Implicit Types E : coPset.
-  Implicit Types P Q : iProp Σ.
-
-  Lemma demo_8 N E P Q R :
-    ↑N ⊆ E →
-    (True -∗ P -∗ inv N Q -∗ True -∗ R) -∗ P -∗ ▷ Q ={E}=∗ R.
-  Proof.
-    iIntros (?) "H HP HQ".
-    iApply ("H" with "[% //] [$] [> HQ] [> //]").
-    by iApply inv_alloc.
-  Qed.
-End iris.
-
-Lemma demo_9 (x y z : M) :
+Lemma test_iFrame_pure (x y z : M) :
   ✓ x → ⌜y ≡ z⌝ -∗ (✓ x ∧ ✓ x ∧ y ≡ z : uPred M).
 Proof. iIntros (Hv) "Hxy". by iFrame (Hv Hv) "Hxy". Qed.
 
-Lemma demo_10 (P Q : uPred M) : P -∗ Q -∗ True.
+Lemma test_iAssert_persistent P Q : P -∗ Q -∗ True.
 Proof.
   iIntros "HP HQ".
   iAssert True%I as "#_". { by iClear "HP HQ". }
@@ -117,44 +103,43 @@ Proof.
   done.
 Qed.
 
-Lemma demo_11 (P Q R : uPred M) :
+Lemma test_iSpecialize_auto_frame P Q R :
   (P -∗ True -∗ True -∗ Q -∗ R) -∗ P -∗ Q -∗ R.
 Proof. iIntros "H HP HQ". by iApply ("H" with "[$]"). Qed.
 
 (* Check coercions *)
-Lemma demo_12 (P : Z → uPred M) : (∀ x, P x) -∗ ∃ x, P x.
+Lemma test_iExist_coercion (P : Z → uPred M) : (∀ x, P x) -∗ ∃ x, P x.
 Proof. iIntros "HP". iExists (0:nat). iApply ("HP" $! (0:nat)). Qed.
 
-Lemma demo_13 (P : uPred M) : (|==> False) -∗ |==> P.
+Lemma test_iAssert_modality P : (|==> False) -∗ |==> P.
 Proof. iIntros. iAssert False%I with "[> - //]" as %[]. Qed.
 
-Lemma demo_14 (P : uPred M) : False -∗ P.
+Lemma test_iAssumption_False P : False -∗ P.
 Proof. iIntros "H". done. Qed.
 
 (* Check instantiation and dependent types *)
-Lemma demo_15 (P : ∀ n, vec nat n → uPred M) :
+Lemma test_iSpecialize_dependent_type (P : ∀ n, vec nat n → uPred M) :
   (∀ n v, P n v) -∗ ∃ n v, P n v.
 Proof.
   iIntros "H". iExists _, [#10].
   iSpecialize ("H" $! _ [#10]). done.
 Qed.
 
-Lemma demo_16 (P Q R : uPred M) `{!PersistentP R} :
+Lemma test_eauto_iFramE P Q R `{!PersistentP R} :
   P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.
 Proof. eauto with iFrame. Qed.
 
-Lemma demo_17 (P Q R : uPred M) `{!PersistentP R} :
+Lemma test_iCombine_persistent P Q R `{!PersistentP R} :
   P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.
 Proof. iIntros "HP HQ #HR". iCombine "HR HQ HP HR" as "H". auto. Qed.
 
-Lemma test_iNext_evar (P : uPred M) :
-  P -∗ True.
+Lemma test_iNext_evar P : P -∗ True.
 Proof.
   iIntros "HP". iAssert (▷ _ -∗ ▷ P)%I as "?"; last done.
   iIntros "?". iNext. iAssumption.
 Qed.
 
-Lemma test_iNext_sep1 (P Q : uPred M)
+Lemma test_iNext_sep1 P Q
     (R1 := (P ∗ Q)%I) (R2 := (▷ P ∗ ▷ Q)%I) :
   (▷ P ∗ ▷ Q) ∗ R1 ∗ R2 -∗ ▷ (P ∗ Q) ∗ ▷ R1 ∗ R2.
 Proof.
@@ -162,21 +147,33 @@ Proof.
   rewrite {1 2}(lock R1). (* check whether R1 has not been unfolded *) done.
 Qed.
 
-Lemma test_iNext_sep2 (P Q : uPred M) :
-  ▷ P ∗ ▷ Q -∗ ▷ (P ∗ Q).
+Lemma test_iNext_sep2 P Q : ▷ P ∗ ▷ Q -∗ ▷ (P ∗ Q).
 Proof.
   iIntros "H". iNext. iExact "H". (* Check that the laters are all gone. *)
 Qed.
 
-Lemma test_frame_persistent (P Q : uPred M) :
+Lemma test_iFrame_persistent (P Q : uPred M) :
   □ P -∗ Q -∗ □ (P ∗ P) ∗ (P ∧ Q ∨ Q).
 Proof. iIntros "#HP". iFrame "HP". iIntros "$". Qed.
 
-Lemma test_split_box (P Q : uPred M) :
-  □ P -∗ □ (P ∗ P).
+Lemma test_iSplit_always P Q : □ P -∗ □ (P ∗ P).
 Proof. iIntros "#?". by iSplit. Qed.
 
-Lemma test_specialize_persistent (P Q : uPred M) :
+Lemma test_iSpecialize_persistent P Q :
   □ P -∗ (□ P -∗ Q) -∗ Q.
 Proof. iIntros "#HP HPQ". by iSpecialize ("HPQ" with "HP"). Qed.
 End tests.
+
+Section more_tests.
+  Context `{invG Σ}.
+  Implicit Types P Q R : iProp Σ.
+
+  Lemma test_masks  N E P Q R :
+    ↑N ⊆ E →
+    (True -∗ P -∗ inv N Q -∗ True -∗ R) -∗ P -∗ ▷ Q ={E}=∗ R.
+  Proof.
+    iIntros (?) "H HP HQ".
+    iApply ("H" with "[% //] [$] [> HQ] [> //]").
+    by iApply inv_alloc.
+  Qed.
+End more_tests.
