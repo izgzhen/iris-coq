@@ -565,7 +565,9 @@ Tactic Notation "iApply" open_constr(lem) :=
   iPoseProofCore lem as false true (fun H => first
     [iExact H
     |go H
-    |lazymatch iTypeOf H with Some (_,?Q) => fail "iApply: cannot apply" Q end]).
+    |lazymatch iTypeOf H with
+     | Some (_,?Q) => fail 1 "iApply: cannot apply" Q
+     end]).
 
 (** * Revert *)
 Local Tactic Notation "iForallRevert" ident(x) :=
