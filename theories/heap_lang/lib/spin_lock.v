@@ -29,7 +29,7 @@ Section proof.
   Definition is_lock (γ : gname) (lk : val) (R : iProp Σ) : iProp Σ :=
     (∃ l: loc, ⌜lk = #l⌝ ∧ inv N (lock_inv γ l R))%I.
 
-  Definition locked (γ : gname): iProp Σ := own γ (Excl ()).
+  Definition locked (γ : gname) : iProp Σ := own γ (Excl ()).
 
   Lemma locked_exclusive (γ : gname) : locked γ -∗ locked γ -∗ False.
   Proof. iIntros "H1 H2". by iDestruct (own_valid_2 with "H1 H2") as %?. Qed.
