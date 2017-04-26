@@ -24,5 +24,5 @@ Notation "Γ '--------------------------------------' □ Q" :=
   (of_envs (Envs Γ Enil) ⊢ Q%I)
   (at level 1, Q at level 200, left associativity,
   format "Γ '--------------------------------------' □ '//' Q '//'", only printing)  : C_scope.
-Notation "⊢ Q" := (of_envs (Envs Enil Enil) ⊢ Q%I)
-  (at level 1, Q at level 200, format "⊢  Q", only printing) : C_scope.
+Notation "'--------------------------------------' ∗ Q" := (of_envs (Envs Enil Enil) ⊢ Q%I)
+  (at level 1, Q at level 200, format "'--------------------------------------' ∗ '//' Q '//'", only printing) : C_scope.
