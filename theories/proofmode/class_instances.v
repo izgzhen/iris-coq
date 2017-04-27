@@ -124,6 +124,9 @@ Proof.
   rewrite -Hx. apply pure_intro. done.
 Qed.
 
+Global Instance from_pure_later P φ : FromPure P φ → FromPure (▷ P)%I φ.
+Proof. rewrite /FromPure=> ->. apply later_intro. Qed.
+
 (* IntoPersistentP *)
 Global Instance into_persistentP_always_trans P Q :
   IntoPersistentP P Q → IntoPersistentP (□ P) Q | 0.
