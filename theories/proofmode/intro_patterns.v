@@ -1,5 +1,5 @@
 From stdpp Require Export strings.
-From iris.proofmode Require Import tokens.
+From iris.proofmode Require Import tokens sel_patterns.
 Set Default Proof Using "Type".
 
 Inductive intro_pat :=
@@ -18,8 +18,8 @@ Inductive intro_pat :=
   | IDone : intro_pat
   | IForall : intro_pat
   | IAll : intro_pat
-  | IClear : string → intro_pat
-  | IClearFrame : string → intro_pat.
+  | IClear : sel_pat → intro_pat
+  | IClearFrame : sel_pat → intro_pat.
 
 Module intro_pat.
 Inductive stack_item :=
@@ -96,8 +96,14 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   end
 with parse_clear (ts : list token) (k : stack) : option stack :=
   match ts with
-  | TFrame :: TName s :: ts => parse_clear ts (SPat (IClearFrame s) :: k)
-  | TName s :: ts => parse_clear ts (SPat (IClear s) :: k)
+  | TFrame :: TName s :: ts => parse_clear ts (SPat (IClearFrame (SelName s)) :: k)
+  | TFrame :: TPure :: ts => parse_clear ts (SPat (IClearFrame SelPure) :: k)
+  | TFrame :: TAlways :: ts => parse_clear ts (SPat (IClearFrame SelPersistent) :: k)
+  | TFrame :: TSep :: ts => parse_clear ts (SPat (IClearFrame SelSpatial) :: k)
+  | TName s :: ts => parse_clear ts (SPat (IClear (SelName s)) :: k)
+  | TPure :: ts => parse_clear ts (SPat (IClear SelPure) :: k)
+  | TAlways :: ts => parse_clear ts (SPat (IClear SelPersistent) :: k)
+  | TSep :: ts => parse_clear ts (SPat (IClear SelSpatial) :: k)
   | TBraceR :: ts => parse_go ts k
   | _ => None
   end.

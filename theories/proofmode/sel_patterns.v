@@ -30,6 +30,7 @@ Definition parse (s : string) : option (list sel_pat) :=
 
 Ltac parse s :=
   lazymatch type of s with
+  | sel_pat => constr:([s])
   | list sel_pat => s
   | list string => eval vm_compute in (SelName <$> s)
   | string =>

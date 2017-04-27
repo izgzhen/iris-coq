@@ -198,9 +198,9 @@ _introduction patterns_:
 Apart from this, there are the following introduction patterns that can only
 appear at the top level:
 
-- `{H1 ... Hn}` : clear `H1 ... Hn`.
-- `{$H1 ... $Hn}` : frame `H1 ... Hn` (this pattern can be mixed with the
-  previous pattern, e.g., `{$H1 H2 $H3}`).
+- `{selpat}` : clear the hypotheses given by the selection pattern `selpat`.
+  Items of the selection pattern can be prefixed with `$`, which cause them to
+  be framed instead of cleared.
 - `!%` : introduce a pure goal (and leave the proof mode).
 - `!#` : introduce an always modality and clear the spatial context.
 - `!>` : introduce a modality.
