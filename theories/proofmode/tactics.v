@@ -75,10 +75,10 @@ Local Inductive esel_pat :=
   | ESelPure
   | ESelName : bool → string → esel_pat.
 
-Ltac iElaborateSelPat pat tac :=
+Ltac iElaborateSelPat pat :=
   let rec go pat Δ Hs :=
     lazymatch pat with
-    | [] => let Hs' := eval cbv in Hs in tac Hs'
+    | [] => eval cbv in Hs
     | SelPure :: ?pat => go pat Δ (ESelPure :: Hs)
     | SelPersistent :: ?pat =>
        let Hs' := eval env_cbv in (env_dom (env_persistent Δ)) in
@@ -108,7 +108,7 @@ Tactic Notation "iClear" constr(Hs) :=
        eapply tac_clear with _ H _ _; (* (i:=H) *)
          [env_reflexivity || fail "iClear:" H "not found"|go Hs]
     end in
-  iElaborateSelPat Hs go.
+  let Hs := iElaborateSelPat Hs in go Hs.
 
 Tactic Notation "iClear" "(" ident_list(xs) ")" constr(Hs) :=
   iClear Hs; clear xs.
@@ -595,7 +595,7 @@ Tactic Notation "iRevert" constr(Hs) :=
          [env_reflexivity || fail "iRevert:" H "not found"
          |env_cbv; go Hs]
     end in
-  iElaborateSelPat Hs go.
+  let Hs := iElaborateSelPat Hs in go Hs.
 
 Tactic Notation "iRevert" "(" ident(x1) ")" :=
   iForallRevert x1.
@@ -1023,7 +1023,7 @@ Tactic Notation "iRevertIntros" constr(Hs) "with" tactic(tac) :=
          match p with true => constr:([IAlwaysElim (IName H)]) | false => H end in
        iIntros H'
     end in
-  try iStartProof; iElaborateSelPat Hs go.
+  try iStartProof; let Hs := iElaborateSelPat Hs in go Hs.
 
 Tactic Notation "iRevertIntros" "(" ident(x1) ")" constr(Hs) "with" tactic(tac):=
   iRevertIntros Hs with (iRevert (x1); tac; iIntros (x1)).
