@@ -11,7 +11,7 @@ iris-coq8.6:
   - . build/opam-ci.sh coq 8.6 coq-mathcomp-ssreflect 1.6.1
   - env | egrep '^(CI_BUILD_REF|CI_RUNNER)' > build-env.txt
   # build
-  - 'time make -j$CPU_CORES TIMED=y 2>&1 | tee build-log.txt'
+  - 'time make -k -j$CPU_CORES TIMED=y 2>&1 | tee build-log.txt'
   - 'if fgrep Axiom build-log.txt >/dev/null; then exit 1; fi'
   - 'cat build-log.txt | egrep "[a-zA-Z0-9_/-]+ \(user: [0-9]" | tee build-time.txt'
   - 'if (( RANDOM % 10 == 0 )); then make validate; fi'
