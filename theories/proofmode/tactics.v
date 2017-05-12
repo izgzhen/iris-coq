@@ -1250,6 +1250,7 @@ Ltac iHypsContaining x :=
 Tactic Notation "iInductionRevert" constr(x) constr(Hs) "with" tactic(tac) :=
   iRevertIntros Hs with (
     iRevertIntros "∗" with (
+      idtac;
       let Hsx := iHypsContaining x in
       iRevertIntros Hsx with tac
     )
