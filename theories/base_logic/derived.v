@@ -692,8 +692,15 @@ Proof.
 Qed.
 Lemma except_0_forall {A} (Φ : A → uPred M) : ◇ (∀ a, Φ a) ⊢ ∀ a, ◇ Φ a.
 Proof. apply forall_intro=> a. by rewrite (forall_elim a). Qed.
-Lemma except_0_exist {A} (Φ : A → uPred M) : (∃ a, ◇ Φ a) ⊢ ◇ ∃ a, Φ a.
+Lemma except_0_exist_2 {A} (Φ : A → uPred M) : (∃ a, ◇ Φ a) ⊢ ◇ ∃ a, Φ a.
 Proof. apply exist_elim=> a. by rewrite (exist_intro a). Qed.
+Lemma except_0_exist `{Inhabited A} (Φ : A → uPred M) :
+  ◇ (∃ a, Φ a) ⊣⊢ (∃ a, ◇ Φ a).
+Proof.
+  apply (anti_symm _); [|by apply except_0_exist_2]. apply or_elim.
+  - rewrite -(exist_intro inhabitant). by apply or_intro_l.
+  - apply exist_mono=> a. apply except_0_intro.
+Qed.
 Lemma except_0_later P : ◇ ▷ P ⊢ ▷ P.
 Proof. by rewrite /uPred_except_0 -later_or False_or. Qed.
 Lemma except_0_always P : ◇ □ P ⊣⊢ □ ◇ P.
