@@ -1206,8 +1206,21 @@ Tactic Notation "iPoseProof" open_constr(lem) "as" "(" simple_intropattern(x1)
   iPoseProofCore lem as pat false (fun H => iDestructHyp H as ( x1 x2 x3 x4 x5 x6 x7 x8 ) pat).
 
 (** * Induction *)
-Tactic Notation "iInductionCore" constr(x)
-    "as" simple_intropattern(pat) constr(IH) :=
+(* An invocation of [iInduction (x) as pat IH forall (x1...xn) Hs] will
+result in the following actions:
+
+- Revert the proofmode hypotheses [Hs]
+- Revert all remaining spatial hypotheses and the remaining persistent
+  hypotheses containing the induction variable [x]
+- Revert the pure hypotheses [x1..xn]
+
+- Actuall perform induction
+
+- Introduce thee pure hypotheses [x1..xn]
+- Introduce the spatial hypotheses and persistent hypotheses involving [x]
+- Introduce the proofmode hypotheses [Hs]
+*)
+Tactic Notation "iInductionCore" constr(x) "as" simple_intropattern(pat) constr(IH) :=
   let rec fix_ihs :=
     lazymatch goal with
     | H : coq_tactics.of_envs _ ⊢ _ |- _ =>
@@ -1220,75 +1233,88 @@ Tactic Notation "iInductionCore" constr(x)
     end in
   induction x as pat; fix_ihs.
 
+Ltac iHypsContaining x :=
+  let rec go Γ x Hs :=
+    lazymatch Γ with
+    | Enil => constr:(Hs)
+    | Esnoc ?Γ ?H ?Q =>
+       match Q with
+       | context [x] => go Γ x (H :: Hs)
+       | _ => go Γ x Hs
+       end
+     end in
+  let Γp := lazymatch goal with |- of_envs (Envs ?Γp _) ⊢ _ => Γp end in
+  let Γs := lazymatch goal with |- of_envs (Envs _ ?Γs) ⊢ _ => Γs end in
+  let Hs := go Γp x (@nil string) in go Γs x Hs.
+
+Tactic Notation "iInductionRevert" constr(x) constr(Hs) "with" tactic(tac) :=
+  iRevertIntros Hs with (
+    iRevertIntros "∗" with (
+      let Hsx := iHypsContaining x in
+      iRevertIntros Hsx with tac
+    )
+  ).
+
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH) :=
-  iRevertIntros "∗" with (iInductionCore x as pat IH).
+  iInductionRevert x "" with (iInductionCore x as pat IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ")" :=
-  iRevertIntros(x1) "∗" with (iInductionCore x as pat IH).
+  iInductionRevert x "" with (iRevertIntros(x1) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ")" :=
-  iRevertIntros(x1 x2) "∗" with (iInductionCore x as pat IH).
+  iInductionRevert x "" with (iRevertIntros(x1 x2) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ")" :=
-  iRevertIntros(x1 x2 x3) "∗" with (iInductionCore x as pat IH).
+  iInductionRevert x "" with (iRevertIntros(x1 x2 x3) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")" :=
-  iRevertIntros(x1 x2 x3 x4) "∗" with (iInductionCore x as pat IH).
+  iInductionRevert x "" with (iRevertIntros(x1 x2 x3 x4) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ")" :=
-  iRevertIntros(x1 x2 x3 x4 x5) "∗" with (iInductionCore x as aat IH).
+  iInductionRevert x "" with (iRevertIntros(x1 x2 x3 x4 x5) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6) ")" :=
-  iRevertIntros(x1 x2 x3 x4 x5 x6) "∗" with (iInductionCore x as pat IH).
+  iInductionRevert x "" with (iRevertIntros(x1 x2 x3 x4 x5 x6) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6)
     ident(x7) ")" :=
-  iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "∗" with (iInductionCore x as pat IH).
+  iInductionRevert x "" with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6)
     ident(x7) ident(x8) ")" :=
-  iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "∗" with (iInductionCore x as pat IH).
+  iInductionRevert x "" with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "" with (iInductionCore x as pat IH)).
 
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros Hs with (iInductionCore x as pat IH).
+  iInductionRevert x Hs with (iInductionCore x as pat IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1) Hs with (iInductionCore x as pat IH).
+  iInductionRevert x Hs with (iRevertIntros(x1) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2) Hs with (iInductionCore x as pat IH).
+  iInductionRevert x Hs with (iRevertIntros(x1 x2) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3) Hs with (iInductionCore x as pat IH).
+  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3 x4) Hs with (iInductionCore x as pat IH).
+  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3 x4) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ")"
     constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3 x4 x5) Hs with (iInductionCore x as aat IH).
+  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3 x4 x5) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6) ")"
     constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3 x4 x5 x6) Hs with (iInductionCore x as pat IH).
+  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3 x4 x5 x6) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6)
     ident(x7) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3 x4 x5 x6 x7) Hs with (iInductionCore x as pat IH).
+  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "" with (iInductionCore x as pat IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6)
     ident(x7) ident(x8) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) Hs with (iInductionCore x as pat IH).
+  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "" with (iInductionCore x as pat IH)).
 
 (** * Löb Induction *)
 Tactic Notation "iLöbCore" "as" constr (IH) :=
@@ -1297,65 +1323,61 @@ Tactic Notation "iLöbCore" "as" constr (IH) :=
     [reflexivity || fail "iLöb: spatial context not empty, this should not happen"
     |env_reflexivity || fail "iLöb:" IH "not fresh"|].
 
+Tactic Notation "iLöbRevert" constr(Hs) "with" tactic(tac) :=
+  iRevertIntros Hs with (
+    iRevertIntros "∗" with tac
+  ).
+
 Tactic Notation "iLöb" "as" constr (IH) :=
-  iRevertIntros "∗" with (iLöbCore as IH).
+  iLöbRevert "" with (iLöbCore as IH).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ")" :=
-  iRevertIntros(x1) "∗" with (iLöbCore as IH).
+  iLöbRevert "" with (iRevertIntros(x1) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2) ")" :=
-  iRevertIntros(x1 x2) "∗" with (iLöbCore as IH).
+  iLöbRevert "" with (iRevertIntros(x1 x2) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ")" :=
-  iRevertIntros(x1 x2 x3) "∗" with (iLöbCore as IH).
+  iLöbRevert "" with (iRevertIntros(x1 x2 x3) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ")" :=
-  iRevertIntros(x1 x2 x3 x4) "∗" with (iLöbCore as IH).
+  iLöbRevert "" with (iRevertIntros(x1 x2 x3 x4) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ")" :=
-  iRevertIntros(x1 x2 x3 x4 x5) "∗" with (iLöbCore as IH).
+  iLöbRevert "" with (iRevertIntros(x1 x2 x3 x4 x5) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ident(x6) ")" :=
-  iRevertIntros(x1 x2 x3 x4 x5 x6) "∗" with (iLöbCore as IH).
+  iLöbRevert "" with (iRevertIntros(x1 x2 x3 x4 x5 x6) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ident(x6) ident(x7) ")" :=
-  iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "∗" with (iLöbCore as IH).
+  iLöbRevert "" with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ident(x6) ident(x7) ident(x8) ")" :=
-  iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "∗" with (iLöbCore as IH).
+  iLöbRevert "" with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "" with (iLöbCore as IH)).
 
 Tactic Notation "iLöb" "as" constr (IH) "forall" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros Hs with (iLöbCore as IH).
+  iLöbRevert Hs with (iLöbCore as IH).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1) Hs with (iLöbCore as IH).
+  iLöbRevert Hs with (iRevertIntros(x1) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2) ")"
     constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2) Hs with (iLöbCore as IH).
+  iLöbRevert Hs with (iRevertIntros(x1 x2) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3) Hs with (iLöbCore as IH).
+  iLöbRevert Hs with (iRevertIntros(x1 x2 x3) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3 x4) Hs with (iLöbCore as IH).
+  iLöbRevert Hs with (iRevertIntros(x1 x2 x3 x4) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3 x4 x5) Hs with (iLöbCore as IH).
+  iLöbRevert Hs with (iRevertIntros(x1 x2 x3 x4 x5) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ident(x6) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3 x4 x5 x6) Hs with (iLöbCore as IH).
+  iLöbRevert Hs with (iRevertIntros(x1 x2 x3 x4 x5 x6) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ident(x6) ident(x7) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3 x4 x5 x6 x7) Hs with (iLöbCore as IH).
+  iLöbRevert Hs with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "" with (iLöbCore as IH)).
 Tactic Notation "iLöb" "as" constr (IH) "forall" "(" ident(x1) ident(x2)
     ident(x3) ident(x4) ident(x5) ident(x6) ident(x7) ident(x8) ")" constr(Hs) :=
-  let Hs := constr:(Hs +:+ "∗") in
-  iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) Hs with (iLöbCore as IH).
+  iLöbRevert Hs with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "" with (iLöbCore as IH)).
 
 (** * Assert *)
 (* The argument [p] denotes whether [Q] is persistent. It can either be a
