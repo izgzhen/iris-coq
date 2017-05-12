@@ -1212,7 +1212,7 @@ Tactic Notation "iInductionCore" constr(x)
     lazymatch goal with
     | H : coq_tactics.of_envs _ ⊢ _ |- _ =>
        eapply tac_revert_ih;
-         [reflexivity || fail "iInduction: spatial context not empty"
+         [reflexivity || fail "iInduction: spatial context not empty, this should not happen"
          |apply H|];
        clear H; fix_ihs;
        let IH' := iFresh' IH in iIntros [IAlwaysElim (IName IH')]
@@ -1251,41 +1251,50 @@ Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
 
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros Hs with (iInductionCore x as pat IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1) Hs with (iInductionCore x as pat IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2) Hs with (iInductionCore x as pat IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3) Hs with (iInductionCore x as pat IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3 x4) Hs with (iInductionCore x as pat IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ")"
     constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3 x4 x5) Hs with (iInductionCore x as aat IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6) ")"
     constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3 x4 x5 x6) Hs with (iInductionCore x as pat IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6)
     ident(x7) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3 x4 x5 x6 x7) Hs with (iInductionCore x as pat IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6)
     ident(x7) ident(x8) ")" constr(Hs) :=
+  let Hs := constr:(Hs +:+ "∗") in
   iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) Hs with (iInductionCore x as pat IH).
 
 (** * Löb Induction *)
 Tactic Notation "iLöbCore" "as" constr (IH) :=
   iStartProof;
   eapply tac_löb with _ IH;
-    [reflexivity || fail "iLöb: persistent context not empty"
+    [reflexivity || fail "iLöb: spatial context not empty, this should not happen"
     |env_reflexivity || fail "iLöb:" IH "not fresh"|].
 
 Tactic Notation "iLöb" "as" constr (IH) :=
