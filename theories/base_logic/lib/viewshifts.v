@@ -79,4 +79,7 @@ Qed.
 
 Lemma vs_alloc N P : ▷ P ={↑N}=> inv N P.
 Proof. iIntros "!# HP". by iApply inv_alloc. Qed.
+
+Lemma wand_fupd_alt E1 E2 P Q : (P ={E1,E2}=∗ Q) ⊣⊢ ∃ R, R ∗ (P ∗ R ={E1,E2}=> Q).
+Proof. rewrite uPred.wand_alt. by setoid_rewrite <-uPred.always_wand_impl. Qed.
 End vs.

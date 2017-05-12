@@ -536,6 +536,24 @@ Proof. intros; rewrite -always_and_sep_r'; auto. Qed.
 Lemma always_laterN n P : □ ▷^n P ⊣⊢ ▷^n □ P.
 Proof. induction n as [|n IH]; simpl; auto. by rewrite always_later IH. Qed.
 
+Lemma wand_alt P Q : (P -∗ Q) ⊣⊢ ∃ R, R ∗ □ (P ∗ R → Q).
+Proof.
+  apply (anti_symm (⊢)).
+  - rewrite -(right_id True%I uPred_sep (P -∗ Q)%I) -(exist_intro (P -∗ Q)%I).
+    apply sep_mono_r. rewrite -always_pure. apply always_mono, impl_intro_l.
+    by rewrite wand_elim_r right_id.
+  - apply exist_elim=> R. apply wand_intro_l. rewrite assoc -always_and_sep_r'.
+    by rewrite always_elim impl_elim_r.
+Qed.
+Lemma impl_alt P Q : (P → Q) ⊣⊢ ∃ R, R ∧ □ (P ∧ R -∗ Q).
+Proof.
+  apply (anti_symm (⊢)).
+  - rewrite -(right_id True%I uPred_and (P → Q)%I) -(exist_intro (P → Q)%I).
+    apply and_mono_r. rewrite -always_pure. apply always_mono, wand_intro_l.
+    by rewrite impl_elim_r right_id.
+  - apply exist_elim=> R. apply impl_intro_l. rewrite assoc always_and_sep_r'.
+    by rewrite always_elim wand_elim_r.
+Qed.
 
 (* Later derived *)
 Lemma later_proper P Q : (P ⊣⊢ Q) → ▷ P ⊣⊢ ▷ Q.
