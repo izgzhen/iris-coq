@@ -28,6 +28,9 @@ Proof. rewrite /FromAssumption=>->. apply later_intro. Qed.
 Global Instance from_assumption_laterN n p P Q :
   FromAssumption p P Q → FromAssumption p P (▷^n Q)%I.
 Proof. rewrite /FromAssumption=>->. apply laterN_intro. Qed.
+Global Instance from_assumption_except_0 p P Q :
+  FromAssumption p P Q → FromAssumption p P (◇ Q)%I.
+Proof. rewrite /FromAssumption=>->. apply except_0_intro. Qed.
 Global Instance from_assumption_bupd p P Q :
   FromAssumption p P Q → FromAssumption p P (|==> Q)%I.
 Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
@@ -90,6 +93,15 @@ Proof.
   rewrite /FromPure. eapply pure_elim; [done|]=> ?.
   rewrite -cmra_valid_intro //. auto with I.
 Qed.
+
+Global Instance from_pure_always P φ : FromPure P φ → FromPure (□ P) φ.
+Proof. rewrite /FromPure=> <-. by rewrite always_pure. Qed.
+Global Instance from_pure_later P φ : FromPure P φ → FromPure (▷ P) φ.
+Proof. rewrite /FromPure=> ->. apply later_intro. Qed.
+Global Instance from_pure_laterN n P φ : FromPure P φ → FromPure (▷^n P) φ.
+Proof. rewrite /FromPure=> ->. apply laterN_intro. Qed.
+Global Instance from_pure_except_0 P φ : FromPure P φ → FromPure (◇ P) φ.
+Proof. rewrite /FromPure=> ->. apply except_0_intro. Qed.
 Global Instance from_pure_bupd P φ : FromPure P φ → FromPure (|==> P) φ.
 Proof. rewrite /FromPure=> ->. apply bupd_intro. Qed.
 
@@ -123,9 +135,6 @@ Proof.
   rewrite /FromPure=>Hx. apply forall_intro=>x. apply pure_elim'=>Hφ.
   rewrite -Hx. apply pure_intro. done.
 Qed.
-
-Global Instance from_pure_later P φ : FromPure P φ → FromPure (▷ P)%I φ.
-Proof. rewrite /FromPure=> ->. apply later_intro. Qed.
 
 (* IntoPersistentP *)
 Global Instance into_persistentP_always_trans P Q :
@@ -212,7 +221,7 @@ Proof.
 Qed.
 
 (* FromLater *)
-Global Instance from_laterN_later P :FromLaterN 1 (▷ P) P | 0.
+Global Instance from_laterN_later P : FromLaterN 1 (▷ P) P | 0.
 Proof. done. Qed.
 Global Instance from_laterN_laterN n P : FromLaterN n (▷^n P) P | 0.
 Proof. done. Qed.
@@ -339,6 +348,11 @@ Proof. rewrite /FromAnd=> <-. destruct p; by rewrite ?later_and ?later_sep. Qed.
 Global Instance from_and_laterN p n P Q1 Q2 :
   FromAnd p P Q1 Q2 → FromAnd p (▷^n P) (▷^n Q1) (▷^n Q2).
 Proof. rewrite /FromAnd=> <-. destruct p; by rewrite ?laterN_and ?laterN_sep. Qed.
+Global Instance from_and_except_0 p P Q1 Q2 :
+  FromAnd p P Q1 Q2 → FromAnd p (◇ P) (◇ Q1) (◇ Q2).
+Proof.
+  rewrite /FromAnd=><-. by destruct p; rewrite ?except_0_and ?except_0_sep.
+Qed.
 
 Global Instance from_sep_ownM (a b1 b2 : M) :
   FromOp a b1 b2 →
@@ -443,6 +457,11 @@ Proof. rewrite /IntoAnd=>->. destruct p; by rewrite ?later_and ?later_sep. Qed.
 Global Instance into_and_laterN n p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p (▷^n P) (▷^n Q1) (▷^n Q2).
 Proof. rewrite /IntoAnd=>->. destruct p; by rewrite ?laterN_and ?laterN_sep. Qed.
+Global Instance into_and_except_0 p P Q1 Q2 :
+  IntoAnd p P Q1 Q2 → IntoAnd p (◇ P) (◇ Q1) (◇ Q2).
+Proof.
+  rewrite /IntoAnd=>->. by destruct p; rewrite ?except_0_and ?except_0_sep.
+Qed.
 
 (* We use [IsCons] and [IsApp] to make sure that [frame_big_sepL_cons] and
 [frame_big_sepL_app] cannot be applied repeatedly often when having
@@ -621,6 +640,9 @@ Proof. rewrite /FromOr=><-. by rewrite later_or. Qed.
 Global Instance from_or_laterN n P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (▷^n P) (▷^n Q1) (▷^n Q2).
 Proof. rewrite /FromOr=><-. by rewrite laterN_or. Qed.
+Global Instance from_or_except_0 P Q1 Q2 :
+  FromOr P Q1 Q2 → FromOr (◇ P) (◇ Q1) (◇ Q2).
+Proof. rewrite /FromOr=><-. by rewrite except_0_or. Qed.
 
 (* IntoOr *)
 Global Instance into_or_or P Q : IntoOr (P ∨ Q) P Q.
@@ -636,6 +658,9 @@ Proof. rewrite /IntoOr=>->. by rewrite later_or. Qed.
 Global Instance into_or_laterN n P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (▷^n P) (▷^n Q1) (▷^n Q2).
 Proof. rewrite /IntoOr=>->. by rewrite laterN_or. Qed.
+Global Instance into_or_except_0 P Q1 Q2 :
+  IntoOr P Q1 Q2 → IntoOr (◇ P) (◇ Q1) (◇ Q2).
+Proof. rewrite /IntoOr=>->. by rewrite except_0_or. Qed.
 
 (* FromExist *)
 Global Instance from_exist_exist {A} (Φ : A → uPred M): FromExist (∃ a, Φ a) Φ.
@@ -650,9 +675,7 @@ Global Instance from_exist_pure {A} (φ : A → Prop) :
 Proof. by rewrite /FromExist pure_exist. Qed.
 Global Instance from_exist_always {A} P (Φ : A → uPred M) :
   FromExist P Φ → FromExist (□ P) (λ a, □ (Φ a))%I.
-Proof.
-  rewrite /FromExist=> <-. apply exist_elim=>x. apply always_mono, exist_intro.
-Qed.
+Proof. rewrite /FromExist=> <-. by rewrite always_exist. Qed.
 Global Instance from_exist_later {A} P (Φ : A → uPred M) :
   FromExist P Φ → FromExist (▷ P) (λ a, ▷ (Φ a))%I.
 Proof.
@@ -663,6 +686,9 @@ Global Instance from_exist_laterN {A} n P (Φ : A → uPred M) :
 Proof.
   rewrite /FromExist=> <-. apply exist_elim=>x. apply laterN_mono, exist_intro.
 Qed.
+Global Instance from_exist_except_0 {A} P (Φ : A → uPred M) :
+  FromExist P Φ → FromExist (◇ P) (λ a, ◇ (Φ a))%I.
+Proof. rewrite /FromExist=> <-. by rewrite except_0_exist_2. Qed.
 
 (* IntoExist *)
 Global Instance into_exist_exist {A} (Φ : A → uPred M) : IntoExist (∃ a, Φ a) Φ.
@@ -679,6 +705,9 @@ Proof. rewrite /IntoExist=> HP ?. by rewrite HP later_exist. Qed.
 Global Instance into_exist_laterN {A} n P (Φ : A → uPred M) :
   IntoExist P Φ → Inhabited A → IntoExist (▷^n P) (λ a, ▷^n (Φ a))%I.
 Proof. rewrite /IntoExist=> HP ?. by rewrite HP laterN_exist. Qed.
+Global Instance into_exist_except_0 {A} P (Φ : A → uPred M) :
+  IntoExist P Φ → Inhabited A → IntoExist (◇ P) (λ a, ◇ (Φ a))%I.
+Proof. rewrite /IntoExist=> HP ?. by rewrite HP except_0_exist. Qed.
 
 (* IntoForall *)
 Global Instance into_forall_forall {A} (Φ : A → uPred M) : IntoForall (∀ a, Φ a) Φ.
