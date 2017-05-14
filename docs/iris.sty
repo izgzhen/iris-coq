@@ -1,6 +1,7 @@
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{iris}
 
+\RequirePackage{faktor}
 \RequirePackage{tikz}
 \RequirePackage{scalerel}
 \RequirePackage{array}
@@ -22,10 +23,16 @@
 
 \newcommand{\nat}{\mathbb{N}}
 
-\DeclareMathOperator*{\Sep}{\scalerel*{\ast}{\sum}}
+\newcommand*{\Sep}{\scalerel*{\ast}{\sum}}
 \newcommand*{\disj}[1][]{\mathrel{\#_{#1}}}
 \newcommand\pord{\sqsubseteq}
+
+\makeatletter%
+\@ifundefined{dplus}{%
 \newcommand\dplus{\mathbin{+\kern-1.0ex+}}
+}{}
+\makeatother%
+
 \newcommand{\upclose}{\mathord{\uparrow}}
 \newcommand{\ALT}{\ |\ }
 
@@ -46,6 +53,7 @@
 \newcommand{\Ra}{\Rightarrow}
 \newcommand{\Lra}{\Leftrightarrow}
 \newcommand\monra{\xrightarrow{\kern-0.15ex\textrm{mon}\kern-0.05ex}}
+\newcommand\monnra{\xrightarrow{\kern-0.15ex\textrm{mon,ne}\kern-0.05ex}}
 \newcommand\nfn{\xrightarrow{\kern-0.15ex\textrm{ne}\kern-0.05ex}}
 \newcommand{\eqdef}{\triangleq}
 \newcommand{\bnfdef}{\vcentcolon\vcentcolon=}
@@ -155,6 +163,7 @@
 
 \newcommand{\monoid}{M}
 \newcommand{\mval}{\mathcal{V}}
+\newcommand{\mvalFull}{\overline{\mathcal{V}}}
 
 \newcommand{\melt}{a}
 \newcommand{\meltB}{b}
@@ -166,12 +175,21 @@
 
 \newcommand{\munit}{\varepsilon}
 \newcommand{\mcore}[1]{{\mid}#1{\mid}} % using "|" here makes LaTeX diverge. WTF.
+\newcommand{\bigmcore}[1]{{\big|}#1{\big|}} % using "|" here makes LaTeX diverge. WTF.
 \newcommand{\mnocore}{\bot}
 \newcommand{\mtimes}{\mathbin{\cdot}}
 \newcommand{\mundef}{\lightning}
 
+\newcommand{\exclusive}{\mathrm{exclusive}}
+
 \newcommand{\mupd}{\rightsquigarrow}
-\newcommand{\mincl}[1][]{\ensuremath{\mathrel{\stackrel{#1}{\preccurlyeq}}}}
+\newcommand{\mincl}[1][]{%
+  \ensuremath{\mathrel{\vbox{\offinterlineskip\ialign{%
+    \hfil##\hfil\cr
+    \ensuremath{\scriptstyle #1}\cr
+    \noalign{\kern-0.25ex}
+    $\preccurlyeq$\cr
+}}}}}
 
 \newcommand{\CMRAs}{\mathcal{CMRA}} % category of CMRAs
 
@@ -220,6 +238,8 @@
 \newcommand{\namesp}{\mathcal{N}}
 \newcommand{\namecl}[1]{{#1^{\kern0.2ex\uparrow}}}
 
+\newcommand{\fixp}{\mathit{fix}}
+
 %% various pieces of Syntax
 \def\MU #1.{\mu\spac #1.\spac}%
 \def\Lam #1.{\lambda #1.\spac}%
@@ -254,7 +274,7 @@
 }
 \newcommand*{\knowInv}[2]{\boxedassert{#2}[#1]}
 \newcommand*{\ownGhost}[2]{\boxedassert[densely dashed]{#2}[#1]}
-\newcommand*{\ownM}[1]{\textlog{Own}(#1)}
+\newcommand*{\ownM}[1]{\textlog{Own}\left(#1\right)}
 \newcommand*{\ownPhys}[1]{\textlog{Phy}(#1)}
 
 %% View Shifts
@@ -269,6 +289,7 @@
     }%
   }}%
 \NewDocumentCommand \vs {O{} O{}} {\vsGen[#1]{\Rrightarrow}[#2]}
+\NewDocumentCommand \bvs {O{} O{}} {\vsGen[#1]{\Rrightarrow_{\mathcal{B}}}[#2]}
 \NewDocumentCommand \vsL {O{} O{}} {\vsGen[#1]{\Lleftarrow}[#2]}
 \NewDocumentCommand \vsE {O{} O{}} %
   {\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
@@ -327,6 +348,7 @@
 
 
 %% Some commonly used identifiers
+\newcommand{\inhabited}[1]{\textlog{inhabited}(#1)}
 \newcommand{\timeless}[1]{\textlog{timeless}(#1)}
 \newcommand{\persistent}[1]{\textlog{persistent}(#1)}
 \newcommand{\physatomic}[1]{\textlog{atomic}($#1$)}
@@ -335,7 +357,7 @@
 \newcommand\InvName{\textdom{InvName}}
 \newcommand\GName{\textdom{GName}}
 
-\newcommand{\Prop}{\textlog{Prop}}
+\newcommand{\Prop}{\textlog{iProp}}
 \newcommand{\Pred}{\textlog{Pred}}
 
 \newcommand{\TRUE}{\textlog{True}}
@@ -348,7 +370,7 @@
 \newcommand{\val}{v}
 \newcommand{\valB}{w}
 \newcommand{\state}{\sigma}
-\newcommand{\step}{\ra}
+\newcommand{\step}{\ra_{\mathsf{t}}}
 \newcommand{\hstep}{\ra_{\mathsf{h}}}
 \newcommand{\tpstep}{\ra_{\mathsf{tp}}}
 \newcommand{\lctx}{K}
