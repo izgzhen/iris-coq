@@ -162,6 +162,12 @@ Proof. iIntros "#?". by iSplit. Qed.
 Lemma test_iSpecialize_persistent P Q :
   □ P -∗ (□ P -∗ Q) -∗ Q.
 Proof. iIntros "#HP HPQ". by iSpecialize ("HPQ" with "HP"). Qed.
+
+Lemma test_iLöb P : (∃ n, ▷^n P)%I.
+Proof.
+  iLöb as "IH". iDestruct "IH" as (n) "IH".
+  by iExists (S n).
+Qed.
 End tests.
 
 Section more_tests.
