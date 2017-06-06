@@ -25,7 +25,8 @@ Notation "( e1 , e2 , .. , en )" := (Pair .. (Pair e1 e2) .. en) : expr_scope.
 Notation "( e1 , e2 , .. , en )" := (PairV .. (PairV e1 e2) .. en) : val_scope.
 Notation "'match:' e0 'with' 'InjL' x1 => e1 | 'InjR' x2 => e2 'end'" :=
   (Match e0 x1%bind e1 x2%bind e2)
-  (e0, x1, e1, x2, e2 at level 200) : expr_scope.
+  (e0, x1, e1, x2, e2 at level 200,
+   format "'[' 'match:'  e0  'with'  '/' '[hv' 'InjL'  x1  =>  '[' e1 ']'  '/' |  'InjR'  x2  =>  '[' e2 ']'  '/' 'end' ']' ']'") : expr_scope.
 Notation "'match:' e0 'with' 'InjR' x1 => e1 | 'InjL' x2 => e2 'end'" :=
   (Match e0 x2%bind e2 x1%bind e1)
   (e0, x1, e1, x2, e2 at level 200, only parsing) : expr_scope.
@@ -47,9 +48,11 @@ Notation "~ e" := (UnOp NegOp e%E) (at level 75, right associativity) : expr_sco
 (* The unicode ← is already part of the notation "_ ← _; _" for bind. *)
 Notation "e1 <- e2" := (Store e1%E e2%E) (at level 80) : expr_scope.
 Notation "'rec:' f x := e" := (Rec f%bind x%bind e%E)
-  (at level 102, f at level 1, x at level 1, e at level 200) : expr_scope.
+  (at level 102, f at level 1, x at level 1, e at level 200,
+   format "'[' '[hv' 'rec:'  f  x  :=  ']' '/  ' e ']'") : expr_scope.
 Notation "'rec:' f x := e" := (locked (RecV f%bind x%bind e%E))
-  (at level 102, f at level 1, x at level 1, e at level 200) : val_scope.
+  (at level 102, f at level 1, x at level 1, e at level 200,
+   format "'[' '[hv' 'rec:'  f  x  :=  ']' '/  ' e ']'") : val_scope.
 Notation "'if:' e1 'then' e2 'else' e3" := (If e1%E e2%E e3%E)
   (at level 200, e1, e2, e3 at level 200) : expr_scope.
 
@@ -57,33 +60,41 @@ Notation "'if:' e1 'then' e2 'else' e3" := (If e1%E e2%E e3%E)
 are stated explicitly instead of relying on the Notations Let and Seq as
 defined above. This is needed because App is now a coercion, and these
 notations are otherwise not pretty printed back accordingly. *)
-Notation "'rec:' f x y := e" := (Rec f%bind x%bind (Lam y%bind e%E))
-  (at level 102, f, x, y at level 1, e at level 200) : expr_scope.
-Notation "'rec:' f x y := e" := (locked (RecV f%bind x%bind (Lam y%bind e%E)))
-  (at level 102, f, x, y at level 1, e at level 200) : val_scope.
 Notation "'rec:' f x y .. z := e" := (Rec f%bind x%bind (Lam y%bind .. (Lam z%bind e%E) ..))
-  (at level 102, f, x, y, z at level 1, e at level 200) : expr_scope.
+  (at level 102, f, x, y, z at level 1, e at level 200,
+   format "'[' '[hv' 'rec:'  f  x  y  ..  z  :=  ']' '/  ' e ']'") : expr_scope.
 Notation "'rec:' f x y .. z := e" := (locked (RecV f%bind x%bind (Lam y%bind .. (Lam z%bind e%E) ..)))
-  (at level 102, f, x, y, z at level 1, e at level 200) : val_scope.
+  (at level 102, f, x, y, z at level 1, e at level 200,
+   format "'[' '[hv' 'rec:'  f  x  y  ..  z  :=  ']' '/  ' e ']'") : val_scope.
 
 Notation "λ: x , e" := (Lam x%bind e%E)
-  (at level 102, x at level 1, e at level 200) : expr_scope.
+  (at level 102, x at level 1, e at level 200,
+   format "'[' '[hv' 'λ:'  x  ,  ']' '/  ' e ']'") : expr_scope.
 Notation "λ: x y .. z , e" := (Lam x%bind (Lam y%bind .. (Lam z%bind e%E) ..))
-  (at level 102, x, y, z at level 1, e at level 200) : expr_scope.
+  (at level 102, x, y, z at level 1, e at level 200,
+   format "'[' '[hv' 'λ:'  x  y  ..  z ,  ']' '/  ' e ']'") : expr_scope.
 Notation "λ: x , e" := (locked (LamV x%bind e%E))
-  (at level 102, x at level 1, e at level 200) : val_scope.
+  (at level 102, x at level 1, e at level 200,
+   format "'[' '[hv' 'λ:'  x  ,  ']' '/  ' e ']'") : val_scope.
 Notation "λ: x y .. z , e" := (locked (LamV x%bind (Lam y%bind .. (Lam z%bind e%E) .. )))
-  (at level 102, x, y, z at level 1, e at level 200) : val_scope.
+  (at level 102, x, y, z at level 1, e at level 200,
+   format "'[' '[hv' 'λ:'  x  y  ..  z ,  ']' '/  ' e ']'") : val_scope.
 
 Notation "'let:' x := e1 'in' e2" := (Lam x%bind e2%E e1%E)
-  (at level 102, x at level 1, e1, e2 at level 200) : expr_scope.
+  (at level 102, x at level 1, e1, e2 at level 200,
+   format "'[' '[hv' 'let:'  x  :=  '[' e1 ']'  'in'  ']' '/' e2 ']'") : expr_scope.
+
 Notation "e1 ;; e2" := (Lam BAnon e2%E e1%E)
-  (at level 100, e2 at level 200, format "e1  ;;  e2") : expr_scope.
+  (at level 100, e2 at level 200,
+   format "'[' '[hv' '[' e1 ']'  ;;  ']' '/' e2 ']'") : expr_scope.
+
 (* These are not actually values, but we want them to be pretty-printed. *)
 Notation "'let:' x := e1 'in' e2" := (LamV x%bind e2%E e1%E)
-  (at level 102, x at level 1, e1, e2 at level 200) : val_scope.
+  (at level 102, x at level 1, e1, e2 at level 200,
+   format "'[' '[hv' 'let:'  x  :=  '[' e1 ']'  'in'  ']' '/' e2 ']'") : val_scope.
 Notation "e1 ;; e2" := (LamV BAnon e2%E e1%E)
-  (at level 100, e2 at level 200, format "e1  ;;  e2") : val_scope.
+  (at level 100, e2 at level 200,
+   format "'[' '[hv' '[' e1 ']'  ;;  ']' '/' e2 ']'") : val_scope.
 
 (* Shortcircuit Boolean connectives *)
 Notation "e1 && e2" :=
