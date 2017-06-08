@@ -8,6 +8,9 @@ Add Printing Constructor auth.
 Arguments Auth {_} _ _.
 Arguments authoritative {_} _.
 Arguments auth_own {_} _.
+Instance: Params (@Auth) 1.
+Instance: Params (@authoritative) 1.
+Instance: Params (@auth_own) 1.
 Notation "◯ a" := (Auth None a) (at level 20).
 Notation "● a" := (Auth (Excl' a) ∅) (at level 20).
 
