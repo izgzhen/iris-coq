@@ -389,7 +389,7 @@ Global Instance from_sep_big_sepL_app_persistent {A} (Φ : nat → A → uPred M
 Proof. intros. by rewrite /FromAnd big_opL_app always_and_sep_l. Qed.
 
 (* FromOp *)
-Global Instance from_op_op {A : cmraT} (a b : A) : FromOp (a ⋅ b) a b.
+Global Instance from_op_op {A : cmraT} (a b : A) : FromOp (a ⋅ b) a b | 100.
 Proof. by rewrite /FromOp. Qed.
 
 (* TODO: Worst case there could be a lot of backtracking on these instances,
