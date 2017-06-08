@@ -84,6 +84,11 @@ Section frac_auth.
   Lemma frag_auth_op q1 q2 a1 a2 : ◯!{q1+q2} (a1 ⋅ a2) ≡ ◯!{q1} a1 ⋅ ◯!{q2} a2.
   Proof. done. Qed.
 
+  Lemma frac_auth_frag_validN_op_1_l n q a b : ✓{n} (◯!{1} a ⋅ ◯!{q} b) → False.
+  Proof. rewrite -frag_auth_op frac_auth_frag_validN=> -[/exclusiveN_l []]. Qed.
+  Lemma frac_auth_frag_valid_op_1_l q a b : ✓ (◯!{1} a ⋅ ◯!{q} b) → False.
+  Proof. rewrite -frag_auth_op frac_auth_frag_valid=> -[/exclusive_l []]. Qed.
+
   Global Instance into_op_frac_auth (q q1 q2 : frac) (a a1 a2 : A) :
     IntoOp q q1 q2 → IntoOp a a1 a2 → IntoOp (◯!{q} a) (◯!{q1} a1) (◯!{q2} a2).
   Proof. by rewrite /IntoOp=> /leibniz_equiv_iff -> ->. Qed.
@@ -92,15 +97,15 @@ Section frac_auth.
   Proof. by rewrite /FromOp=> /leibniz_equiv_iff <- <-. Qed.
 
   Global Instance into_op_frac_auth_persistent (q q1 q2 : frac) (a  : A) :
-    IntoOp q q1 q2 → Persistent a → IntoOp (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
+    Persistent a → IntoOp q q1 q2 → IntoOp (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
   Proof.
-    rewrite /IntoOp=> /leibniz_equiv_iff -> ?.
+    rewrite /IntoOp=> ? /leibniz_equiv_iff ->.
     by rewrite -frag_auth_op -persistent_dup.
   Qed.
   Global Instance from_op_frac_auth_persistent (q q1 q2 : frac) (a : A) :
-    FromOp q q1 q2 → Persistent a → FromOp (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
+    Persistent a → FromOp q q1 q2 → FromOp (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
   Proof.
-    rewrite /FromOp=> /leibniz_equiv_iff <- ?.
+    rewrite /FromOp=> ? /leibniz_equiv_iff <-.
     by rewrite -frag_auth_op -persistent_dup.
   Qed.
 
