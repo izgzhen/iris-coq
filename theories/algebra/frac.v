@@ -1,5 +1,6 @@
 From Coq.QArith Require Import Qcanon.
 From iris.algebra Require Export cmra.
+From iris.proofmode Require Import classes.
 Set Default Proof Using "Type".
 
 Notation frac := Qp (only parsing).
@@ -48,3 +49,8 @@ Proof. done. Qed.
 
 Lemma frac_valid' (p : Qp) : ✓ p ↔ (p ≤ 1%Qp)%Qc.
 Proof. done. Qed.
+
+Global Instance frac_into_op q : IntoOp q (q/2)%Qp (q/2)%Qp.
+Proof. by rewrite /IntoOp frac_op' Qp_div_2. Qed.
+Global Instance frac_from_op q : FromOp q (q/2)%Qp (q/2)%Qp.
+Proof. by rewrite /FromOp frac_op' Qp_div_2. Qed.
