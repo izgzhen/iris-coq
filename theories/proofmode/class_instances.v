@@ -355,15 +355,15 @@ Proof.
 Qed.
 
 Global Instance from_sep_ownM (a b1 b2 : M) :
-  FromOp a b1 b2 →
+  IsOp a b1 b2 →
   FromAnd false (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
-Proof. intros. by rewrite /FromAnd -ownM_op from_op. Qed.
+Proof. intros. by rewrite /FromAnd -ownM_op -is_op. Qed.
 Global Instance from_sep_ownM_persistent (a b1 b2 : M) :
-  FromOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
+  IsOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
   FromAnd true (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof.
   intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].
-  by rewrite -ownM_op from_op.
+  by rewrite -ownM_op -is_op.
 Qed.
 
 Global Instance from_sep_bupd P Q1 Q2 :
@@ -389,51 +389,28 @@ Global Instance from_sep_big_sepL_app_persistent {A} (Φ : nat → A → uPred M
 Proof. intros. by rewrite /FromAnd big_opL_app always_and_sep_l. Qed.
 
 (* FromOp *)
-Global Instance from_op_op {A : cmraT} (a b : A) : FromOp (a ⋅ b) a b | 100.
-Proof. by rewrite /FromOp. Qed.
-
 (* TODO: Worst case there could be a lot of backtracking on these instances,
 try to refactor. *)
-Global Instance from_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
-  FromOp a b1 b2 → FromOp a' b1' b2' → FromOp (a,a') (b1,b1') (b2,b2').
+Global Instance is_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
+  IsOp' a b1 b2 → IsOp a' b1' b2' → IsOp' (a,a') (b1,b1') (b2,b2').
 Proof. by constructor. Qed.
-Global Instance from_op_pair_persistent_l {A B : cmraT} (a : A) (a' b1' b2' : B) :
-  Persistent a → FromOp a' b1' b2' → FromOp (a,a') (a,b1') (a,b2').
+Global Instance is_op_pair_persistent_l {A B : cmraT} (a : A) (a' b1' b2' : B) :
+  Persistent a → IsOp a' b1' b2' → IsOp' (a,a') (a,b1') (a,b2').
 Proof. constructor=> //=. by rewrite -persistent_dup. Qed.
-Global Instance from_op_pair_persistent_r {A B : cmraT} (a b1 b2 : A) (a' : B) :
-  Persistent a' → FromOp a b1 b2 → FromOp (a,a') (b1,a') (b2,a').
-Proof. constructor=> //=. by rewrite -persistent_dup. Qed.
-
-Global Instance from_op_Some {A : cmraT} (a : A) b1 b2 :
-  FromOp a b1 b2 → FromOp (Some a) (Some b1) (Some b2).
-Proof. by constructor. Qed.
-
-(* IntoOp *)
-Global Instance into_op_op {A : cmraT} (a b : A) : IntoOp (a ⋅ b) a b.
-Proof. by rewrite /IntoOp. Qed.
-
-Global Instance into_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
-  IntoOp a b1 b2 → IntoOp a' b1' b2' →
-  IntoOp (a,a') (b1,b1') (b2,b2').
-Proof. by constructor. Qed.
-Global Instance into_op_pair_persistent_l {A B : cmraT} (a : A) (a' b1' b2' : B) :
-  Persistent a → IntoOp a' b1' b2' → IntoOp (a,a') (a,b1') (a,b2').
-Proof. constructor=> //=. by rewrite -persistent_dup. Qed.
-Global Instance into_op_pair_persistent_r {A B : cmraT} (a b1 b2 : A) (a' : B) :
-  Persistent a' → IntoOp a b1 b2 → IntoOp (a,a') (b1,a') (b2,a').
+Global Instance is_op_pair_persistent_r {A B : cmraT} (a b1 b2 : A) (a' : B) :
+  Persistent a' → IsOp a b1 b2 → IsOp' (a,a') (b1,a') (b2,a').
 Proof. constructor=> //=. by rewrite -persistent_dup. Qed.
 
-Global Instance into_op_Some {A : cmraT} (a : A) b1 b2 :
-  IntoOp a b1 b2 → IntoOp (Some a) (Some b1) (Some b2).
+Global Instance is_op_Some {A : cmraT} (a : A) b1 b2 :
+  IsOp a b1 b2 → IsOp' (Some a) (Some b1) (Some b2).
 Proof. by constructor. Qed.
 
 (* IntoAnd *)
 Global Instance into_and_sep p P Q : IntoAnd p (P ∗ Q) P Q.
 Proof. by apply mk_into_and_sep. Qed.
 Global Instance into_and_ownM p (a b1 b2 : M) :
-  IntoOp a b1 b2 →
-  IntoAnd p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
-Proof. intros. apply mk_into_and_sep. by rewrite (into_op a) ownM_op. Qed.
+  IsOp a b1 b2 → IntoAnd p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
+Proof. intros. apply mk_into_and_sep. by rewrite (is_op a) ownM_op. Qed.
 
 Global Instance into_and_and P Q : IntoAnd true (P ∧ Q) P Q.
 Proof. done. Qed.

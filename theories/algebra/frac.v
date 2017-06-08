@@ -50,7 +50,5 @@ Proof. done. Qed.
 Lemma frac_valid' (p : Qp) : ✓ p ↔ (p ≤ 1%Qp)%Qc.
 Proof. done. Qed.
 
-Global Instance frac_into_op q : IntoOp q (q/2)%Qp (q/2)%Qp.
-Proof. by rewrite /IntoOp frac_op' Qp_div_2. Qed.
-Global Instance frac_from_op q : FromOp q (q/2)%Qp (q/2)%Qp.
-Proof. by rewrite /FromOp frac_op' Qp_div_2. Qed.
+Global Instance is_op_frac q : IsOp' q (q/2)%Qp (q/2)%Qp.
+Proof. by rewrite /IsOp' /IsOp frac_op' Qp_div_2. Qed.

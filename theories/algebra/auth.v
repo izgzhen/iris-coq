@@ -248,11 +248,8 @@ Arguments authR : clear implicits.
 Arguments authUR : clear implicits.
 
 (* Proof mode class instances *)
-Instance from_op_auth_frag {A : ucmraT} (a b1 b2 : A) :
-  FromOp a b1 b2 → FromOp (◯ a) (◯ b1) (◯ b2).
-Proof. done. Qed.
-Instance into_op_auth_frag {A : ucmraT} (a b1 b2 : A) :
-  IntoOp a b1 b2 → IntoOp (◯ a) (◯ b1) (◯ b2).
+Instance is_op_auth_frag {A : ucmraT} (a b1 b2 : A) :
+  IsOp a b1 b2 → IsOp' (◯ a) (◯ b1) (◯ b2).
 Proof. done. Qed.
 
 (* Functor *)

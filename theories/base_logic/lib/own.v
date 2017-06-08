@@ -187,16 +187,16 @@ Section proofmode_classes.
   Implicit Types a b : A.
 
   Global Instance into_and_own p γ a b1 b2 :
-    IntoOp a b1 b2 → IntoAnd p (own γ a) (own γ b1) (own γ b2).
-  Proof. intros. apply mk_into_and_sep. by rewrite (into_op a) own_op. Qed.
+    IsOp a b1 b2 → IntoAnd p (own γ a) (own γ b1) (own γ b2).
+  Proof. intros. apply mk_into_and_sep. by rewrite (is_op a) own_op. Qed.
   Global Instance from_and_own γ a b1 b2 :
-    FromOp a b1 b2 → FromAnd false (own γ a) (own γ b1) (own γ b2).
-  Proof. intros. by rewrite /FromAnd -own_op from_op. Qed.
+    IsOp a b1 b2 → FromAnd false (own γ a) (own γ b1) (own γ b2).
+  Proof. intros. by rewrite /FromAnd -own_op -is_op. Qed.
   Global Instance from_and_own_persistent γ a b1 b2 :
-    FromOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
+    IsOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
     FromAnd true (own γ a) (own γ b1) (own γ b2).
   Proof.
     intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].
-    by rewrite -own_op from_op.
+    by rewrite -own_op -is_op.
   Qed.
 End proofmode_classes.

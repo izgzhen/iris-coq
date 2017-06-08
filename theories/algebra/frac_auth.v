@@ -89,23 +89,14 @@ Section frac_auth.
   Lemma frac_auth_frag_valid_op_1_l q a b : ✓ (◯!{1} a ⋅ ◯!{q} b) → False.
   Proof. rewrite -frag_auth_op frac_auth_frag_valid=> -[/exclusive_l []]. Qed.
 
-  Global Instance into_op_frac_auth (q q1 q2 : frac) (a a1 a2 : A) :
-    IntoOp q q1 q2 → IntoOp a a1 a2 → IntoOp (◯!{q} a) (◯!{q1} a1) (◯!{q2} a2).
-  Proof. by rewrite /IntoOp=> /leibniz_equiv_iff -> ->. Qed.
-  Global Instance from_op_frac_auth (q q1 q2 : frac) (a a1 a2 : A) :
-    FromOp q q1 q2 → FromOp a a1 a2 → FromOp (◯!{q} a) (◯!{q1} a1) (◯!{q2} a2).
-  Proof. by rewrite /FromOp=> /leibniz_equiv_iff <- <-. Qed.
+  Global Instance is_op_frac_auth (q q1 q2 : frac) (a a1 a2 : A) :
+    IsOp q q1 q2 → IsOp a a1 a2 → IsOp' (◯!{q} a) (◯!{q1} a1) (◯!{q2} a2).
+  Proof. by rewrite /IsOp' /IsOp=> /leibniz_equiv_iff -> ->. Qed.
 
-  Global Instance into_op_frac_auth_persistent (q q1 q2 : frac) (a  : A) :
-    Persistent a → IntoOp q q1 q2 → IntoOp (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
+  Global Instance is_op_frac_auth_persistent (q q1 q2 : frac) (a  : A) :
+    Persistent a → IsOp q q1 q2 → IsOp' (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
   Proof.
-    rewrite /IntoOp=> ? /leibniz_equiv_iff ->.
-    by rewrite -frag_auth_op -persistent_dup.
-  Qed.
-  Global Instance from_op_frac_auth_persistent (q q1 q2 : frac) (a : A) :
-    Persistent a → FromOp q q1 q2 → FromOp (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
-  Proof.
-    rewrite /FromOp=> ? /leibniz_equiv_iff <-.
+    rewrite /IsOp' /IsOp=> ? /leibniz_equiv_iff ->.
     by rewrite -frag_auth_op -persistent_dup.
   Qed.
 

@@ -74,21 +74,21 @@ Section auth.
   Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
 
   Global Instance from_and_auth_own γ a b1 b2 :
-    FromOp a b1 b2 →
+    IsOp a b1 b2 →
     FromAnd false (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
-  Proof. rewrite /FromOp /FromAnd=> <-. by rewrite auth_own_op. Qed.
+  Proof. rewrite /IsOp /FromAnd=> ->. by rewrite auth_own_op. Qed.
   Global Instance from_and_auth_own_persistent γ a b1 b2 :
-    FromOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
+    IsOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
     FromAnd true (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 91.
   Proof.
     intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].
-    by rewrite -auth_own_op from_op.
+    by rewrite -auth_own_op -is_op.
   Qed.
 
   Global Instance into_and_auth_own p γ a b1 b2 :
-    IntoOp a b1 b2 →
+    IsOp a b1 b2 →
     IntoAnd p (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
-  Proof. intros. apply mk_into_and_sep. by rewrite (into_op a) auth_own_op. Qed.
+  Proof. intros. apply mk_into_and_sep. by rewrite (is_op a) auth_own_op. Qed.
 
   Lemma auth_own_mono γ a b : a ≼ b → auth_own γ b ⊢ auth_own γ a.
   Proof. intros [? ->]. by rewrite auth_own_op sep_elim_l. Qed.
