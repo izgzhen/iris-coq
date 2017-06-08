@@ -6,6 +6,7 @@ theories/algebra/big_op.v
 theories/algebra/cmra_big_op.v
 theories/algebra/sts.v
 theories/algebra/auth.v
+theories/algebra/frac_auth.v
 theories/algebra/gmap.v
 theories/algebra/ofe.v
 theories/algebra/base.v

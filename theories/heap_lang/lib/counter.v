@@ -2,7 +2,7 @@ From iris.program_logic Require Export weakestpre.
 From iris.base_logic.lib Require Export invariants.
 From iris.heap_lang Require Export lang.
 From iris.proofmode Require Import tactics.
-From iris.algebra Require Import frac auth.
+From iris.algebra Require Import frac_auth auth.
 From iris.heap_lang Require Import proofmode notation.
 Set Default Proof Using "Type".
 
@@ -83,9 +83,9 @@ End mono_proof.
 
 (** Counter with contributions *)
 Class ccounterG Σ :=
-  CCounterG { ccounter_inG :> inG Σ (authR (optionUR (prodR fracR natR))) }.
+  CCounterG { ccounter_inG :> inG Σ (frac_authR natR) }.
 Definition ccounterΣ : gFunctors :=
-  #[GFunctor (authR (optionUR (prodR fracR natR)))].
+  #[GFunctor (frac_authR natR)].
 
 Instance subG_ccounterΣ {Σ} : subG ccounterΣ Σ → ccounterG Σ.
 Proof. solve_inG. Qed.
@@ -94,26 +94,25 @@ Section contrib_spec.
   Context `{!heapG Σ, !ccounterG Σ} (N : namespace).
 
   Definition ccounter_inv (γ : gname) (l : loc) : iProp Σ :=
-    (∃ n, own γ (● Some (1%Qp, n)) ∗ l ↦ #n)%I.
+    (∃ n, own γ (●! n) ∗ l ↦ #n)%I.
 
   Definition ccounter_ctx (γ : gname) (l : loc) : iProp Σ :=
     inv N (ccounter_inv γ l).
 
   Definition ccounter (γ : gname) (q : frac) (n : nat) : iProp Σ :=
-    own γ (◯ Some (q, n)).
+    own γ (◯!{q} n).
 
   (** The main proofs. *)
   Lemma ccounter_op γ q1 q2 n1 n2 :
-    ccounter γ (q1 + q2) (n1 + n2) ⊣⊢ ccounter γ q1 n1∗ ccounter γ q2 n2.
-  Proof. by rewrite /ccounter -own_op -auth_frag_op. Qed.
+    ccounter γ (q1 + q2) (n1 + n2) ⊣⊢ ccounter γ q1 n1 ∗ ccounter γ q2 n2.
+  Proof. by rewrite /ccounter frag_auth_op -own_op. Qed.
 
   Lemma newcounter_contrib_spec (R : iProp Σ) :
     {{{ True }}} newcounter #()
     {{{ γ l, RET #l; ccounter_ctx γ l ∗ ccounter γ 1 0 }}}.
   Proof.
     iIntros (Φ) "HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
-    iMod (own_alloc (● (Some (1%Qp, O%nat)) ⋅ ◯ (Some (1%Qp, 0%nat))))
-      as (γ) "[Hγ Hγ']"; first done.
+    iMod (own_alloc (●! O%nat ⋅ ◯! 0%nat)) as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (ccounter_inv γ l) with "[Hl Hγ]").
     { iNext. iExists 0%nat. by iFrame. }
     iModIntro. iApply "HΦ". rewrite /ccounter_ctx /ccounter; eauto 10.
@@ -130,8 +129,7 @@ Section contrib_spec.
     wp_bind (CAS _ _ _). iInv N as (c') ">[Hγ Hl]" "Hclose".
     destruct (decide (c' = c)) as [->|].
     - iMod (own_update_2 with "Hγ Hγf") as "[Hγ Hγf]".
-      { apply auth_update, option_local_update, prod_local_update_2.
-        apply (nat_local_update _ _ (S c) (S n)); omega. }
+      { apply frac_auth_update, (nat_local_update _ _ (S c) (S n)); omega. }
       wp_cas_suc. iMod ("Hclose" with "[Hl Hγ]") as "_".
       { iNext. iExists (S c). rewrite Nat2Z.inj_succ Z.add_1_l. by iFrame. }
       iModIntro. wp_if. by iApply "HΦ".
@@ -146,8 +144,7 @@ Section contrib_spec.
   Proof.
     iIntros (Φ) "[#? Hγf] HΦ".
     rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
-    iDestruct (own_valid_2 with "Hγ Hγf")
-      as %[[? ?%nat_included]%Some_pair_included_total_2 _]%auth_valid_discrete_2.
+    iDestruct (own_valid_2 with "Hγ Hγf") as % ?%frac_auth_included_total%nat_included.
     iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c; by iFrame|].
     iApply ("HΦ" with "[-]"); rewrite /ccounter; eauto 10.
   Qed.
@@ -158,8 +155,7 @@ Section contrib_spec.
   Proof.
     iIntros (Φ) "[#? Hγf] HΦ".
     rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]" "Hclose". wp_load.
-    iDestruct (own_valid_2 with "Hγ Hγf") as %[Hn _]%auth_valid_discrete_2.
-    apply (Some_included_exclusive _) in Hn as [= ->]%leibniz_equiv; last done.
+    iDestruct (own_valid_2 with "Hγ Hγf") as % <-%frac_auth_agreeL.
     iMod ("Hclose" with "[Hl Hγ]") as "_"; [iNext; iExists c; by iFrame|].
     by iApply "HΦ".
   Qed.
