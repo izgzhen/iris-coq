@@ -1251,6 +1251,21 @@ Section option.
       + exists (Some z); by constructor.
   Qed.
 
+  Lemma option_includedN n (mx my : option A) :
+    mx ≼{n} my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ (x ≡{n}≡ y ∨ x ≼{n} y).
+  Proof.
+    split.
+    - intros [mz Hmz].
+      destruct mx as [x|]; [right|by left].
+      destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
+      destruct mz as [z|]; inversion_clear Hmz; split_and?; auto;
+        ofe_subst; eauto using cmra_includedN_l.
+    - intros [->|(x&y&->&->&[Hz|[z Hz]])].
+      + exists my. by destruct my.
+      + exists None; by constructor.
+      + exists (Some z); by constructor.
+  Qed.
+
   Lemma option_cmra_mixin : CMRAMixin (option A).
   Proof.
     apply cmra_total_mixin.
@@ -1317,16 +1332,27 @@ Section option.
   Lemma exclusive_Some_r x `{!Exclusive x} my : ✓ (my ⋅ Some x) → my = None.
   Proof. rewrite comm. by apply exclusive_Some_l. Qed.
 
+  Lemma Some_includedN n x y : Some x ≼{n} Some y ↔ x ≡{n}≡ y ∨ x ≼{n} y.
+  Proof. rewrite option_includedN; naive_solver. Qed.
   Lemma Some_included x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y.
   Proof. rewrite option_included; naive_solver. Qed.
   Lemma Some_included_2 x y : x ≼ y → Some x ≼ Some y.
   Proof. rewrite Some_included; eauto. Qed.
+
+  Lemma Some_includedN_total `{CMRATotal A} n x y : Some x ≼{n} Some y ↔ x ≼{n} y.
+  Proof. rewrite Some_includedN. split. by intros [->|?]. eauto. Qed.
   Lemma Some_included_total `{CMRATotal A} x y : Some x ≼ Some y ↔ x ≼ y.
   Proof. rewrite Some_included. split. by intros [->|?]. eauto. Qed.
+
+  Lemma Some_includedN_exclusive n x `{!Exclusive x} y :
+    Some x ≼{n} Some y → ✓{n} y → x ≡{n}≡ y.
+  Proof. move=> /Some_includedN [//|/exclusive_includedN]; tauto. Qed.
   Lemma Some_included_exclusive x `{!Exclusive x} y :
     Some x ≼ Some y → ✓ y → x ≡ y.
   Proof. move=> /Some_included [//|/exclusive_included]; tauto. Qed.
 
+  Lemma is_Some_includedN n mx my : mx ≼{n} my → is_Some mx → is_Some my.
+  Proof. rewrite -!not_eq_None_Some option_includedN. naive_solver. Qed.
   Lemma is_Some_included mx my : mx ≼ my → is_Some mx → is_Some my.
   Proof. rewrite -!not_eq_None_Some option_included. naive_solver. Qed.
 
@@ -1348,7 +1374,18 @@ Arguments optionUR : clear implicits.
 
 Section option_prod.
   Context {A B : cmraT}.
-  Lemma Some_pair_included  (x1 x2 : A) (y1 y2 : B) :
+
+  Lemma Some_pair_includedN n (x1 x2 : A) (y1 y2 : B) :
+    Some (x1,y1) ≼{n} Some (x2,y2) → Some x1 ≼{n} Some x2 ∧ Some y1 ≼{n} Some y2.
+  Proof. rewrite !Some_includedN. intros [[??]|[??]%prod_includedN]; eauto. Qed.
+  Lemma Some_pair_includedN_total_1 `{CMRATotal A} n (x1 x2 : A) (y1 y2 : B) :
+    Some (x1,y1) ≼{n} Some (x2,y2) → x1 ≼{n} x2 ∧ Some y1 ≼{n} Some y2.
+  Proof. intros ?%Some_pair_includedN. by rewrite -(Some_includedN_total _ x1). Qed.
+  Lemma Some_pair_includedN_total_2 `{CMRATotal B} n (x1 x2 : A) (y1 y2 : B) :
+    Some (x1,y1) ≼{n} Some (x2,y2) → Some x1 ≼{n} Some x2 ∧ y1 ≼{n} y2.
+  Proof. intros ?%Some_pair_includedN. by rewrite -(Some_includedN_total _ y1). Qed.
+
+  Lemma Some_pair_included (x1 x2 : A) (y1 y2 : B) :
     Some (x1,y1) ≼ Some (x2,y2) → Some x1 ≼ Some x2 ∧ Some y1 ≼ Some y2.
   Proof. rewrite !Some_included. intros [[??]|[??]%prod_included]; eauto. Qed.
   Lemma Some_pair_included_total_1 `{CMRATotal A} (x1 x2 : A) (y1 y2 : B) :
