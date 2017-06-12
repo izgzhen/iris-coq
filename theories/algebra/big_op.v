@@ -90,6 +90,9 @@ Section list.
     by rewrite IH assoc.
   Qed.
 
+  Lemma big_opL_unit l : ([^o list] k↦y ∈ l, monoid_unit) ≡ (monoid_unit : M).
+  Proof. induction l; rewrite /= ?left_id //. Qed.
+
   Lemma big_opL_forall R f g l :
     Reflexive R →
     Proper (R ==> R ==> R) o →
@@ -204,6 +207,9 @@ Section gmap.
     by rewrite big_opM_empty right_id.
   Qed.
 
+  Lemma big_opM_unit m : ([^o map] k↦y ∈ m, monoid_unit) ≡ (monoid_unit : M).
+  Proof. induction m using map_ind; rewrite /= ?big_opM_insert ?left_id //. Qed.
+
   Lemma big_opM_fmap {B} (h : A → B) (f : K → B → M) m :
     ([^o map] k↦y ∈ h <$> m, f k y) ≡ ([^o map] k↦y ∈ m, f k (h y)).
   Proof.
@@ -310,6 +316,11 @@ Section gset.
   Lemma big_opS_singleton f x : ([^o set] y ∈ {[ x ]}, f y) ≡ f x.
   Proof. intros. by rewrite /big_opS elements_singleton /= right_id. Qed.
 
+  Lemma big_opS_unit X : ([^o set] y ∈ X, monoid_unit) ≡ (monoid_unit : M).
+  Proof.
+    induction X using collection_ind_L; rewrite /= ?big_opS_insert ?left_id //.
+  Qed.
+
   Lemma big_opS_opS f g X :
     ([^o set] y ∈ X, f y `o` g y) ≡ ([^o set] y ∈ X, f y) `o` ([^o set] y ∈ X, g y).
   Proof. by rewrite /big_opS -big_opL_opL. Qed.
@@ -370,6 +381,12 @@ Section gmultiset.
   Proof.
     intros. rewrite -big_opMS_singleton -big_opMS_union.
     by rewrite -gmultiset_union_difference'.
+  Qed.
+
+  Lemma big_opMS_unit X : ([^o mset] y ∈ X, monoid_unit) ≡ (monoid_unit : M).
+  Proof.
+    induction X using gmultiset_ind;
+      rewrite /= ?big_opMS_union ?big_opMS_singleton ?left_id //.
   Qed.
 
   Lemma big_opMS_opMS f g X :
