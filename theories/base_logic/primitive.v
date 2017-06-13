@@ -437,11 +437,6 @@ Proof. by unseal. Qed.
 Lemma always_exist_1 {A} (Ψ : A → uPred M) : (□ ∃ a, Ψ a) ⊢ (∃ a, □ Ψ a).
 Proof. by unseal. Qed.
 
-Lemma always_and_sep_1 P Q : □ (P ∧ Q) ⊢ □ (P ∗ Q).
-Proof.
-  unseal; split=> n x ? [??].
-  exists (core x), (core x); rewrite -cmra_core_dup; auto.
-Qed.
 Lemma always_and_sep_l_1 P Q : □ P ∧ Q ⊢ □ P ∗ Q.
 Proof.
   unseal; split=> n x ? [??]; exists (core x), x; simpl in *.

@@ -479,6 +479,8 @@ Proof. intros P Q; apply always_mono. Qed.
 
 Lemma always_intro' P Q : (□ P ⊢ Q) → □ P ⊢ □ Q.
 Proof. intros <-. apply always_idemp. Qed.
+Lemma always_idemp P : □ □ P ⊣⊢ □ P.
+Proof. apply (anti_symm _); auto using always_idemp. Qed.
 
 Lemma always_pure φ : □ ⌜φ⌝ ⊣⊢ ⌜φ⌝.
 Proof. apply (anti_symm _); auto using always_pure_2. Qed.
@@ -509,16 +511,20 @@ Proof.
   rewrite -(internal_eq_refl a) always_pure; auto.
 Qed.
 
-Lemma always_and_sep P Q : □ (P ∧ Q) ⊣⊢ □ (P ∗ Q).
-Proof. apply (anti_symm (⊢)); auto using always_and_sep_1. Qed.
 Lemma always_and_sep_l' P Q : □ P ∧ Q ⊣⊢ □ P ∗ Q.
 Proof. apply (anti_symm (⊢)); auto using always_and_sep_l_1. Qed.
 Lemma always_and_sep_r' P Q : P ∧ □ Q ⊣⊢ P ∗ □ Q.
 Proof. by rewrite !(comm _ P) always_and_sep_l'. Qed.
+Lemma always_sep_dup' P : □ P ⊣⊢ □ P ∗ □ P.
+Proof. by rewrite -always_and_sep_l' idemp. Qed.
+
+Lemma always_and_sep P Q : □ (P ∧ Q) ⊣⊢ □ (P ∗ Q).
+Proof.
+  apply (anti_symm (⊢)); auto.
+  rewrite -{1}always_idemp always_and always_and_sep_l'; auto.
+Qed.
 Lemma always_sep P Q : □ (P ∗ Q) ⊣⊢ □ P ∗ □ Q.
 Proof. by rewrite -always_and_sep -always_and_sep_l' always_and. Qed.
-Lemma always_sep_dup' P : □ P ⊣⊢ □ P ∗ □ P.
-Proof. by rewrite -always_sep -always_and_sep (idemp _). Qed.
 
 Lemma always_wand P Q : □ (P -∗ Q) ⊢ □ P -∗ □ Q.
 Proof. by apply wand_intro_r; rewrite -always_sep wand_elim_l. Qed.
