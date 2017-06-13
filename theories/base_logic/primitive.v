@@ -427,7 +427,7 @@ Proof.
   unseal; split=> n x ? /=.
   eauto using uPred_mono, @cmra_included_core, cmra_included_includedN.
 Qed.
-Lemma always_idemp P : □ P ⊢ □ □ P.
+Lemma always_idemp_2 P : □ P ⊢ □ □ P.
 Proof. unseal; split=> n x ?? /=. by rewrite cmra_core_idemp. Qed.
 
 Lemma always_pure_2 φ : ⌜φ⌝ ⊢ □ ⌜φ⌝.

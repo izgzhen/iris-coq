@@ -478,9 +478,9 @@ Global Instance always_flip_mono' :
 Proof. intros P Q; apply always_mono. Qed.
 
 Lemma always_intro' P Q : (□ P ⊢ Q) → □ P ⊢ □ Q.
-Proof. intros <-. apply always_idemp. Qed.
+Proof. intros <-. apply always_idemp_2. Qed.
 Lemma always_idemp P : □ □ P ⊣⊢ □ P.
-Proof. apply (anti_symm _); auto using always_idemp. Qed.
+Proof. apply (anti_symm _); auto using always_idemp_2. Qed.
 
 Lemma always_pure φ : □ ⌜φ⌝ ⊣⊢ ⌜φ⌝.
 Proof. apply (anti_symm _); auto using always_pure_2. Qed.
