@@ -430,8 +430,6 @@ Qed.
 Lemma always_idemp_2 P : □ P ⊢ □ □ P.
 Proof. unseal; split=> n x ?? /=. by rewrite cmra_core_idemp. Qed.
 
-Lemma always_pure_2 φ : ⌜φ⌝ ⊢ □ ⌜φ⌝.
-Proof. by unseal. Qed.
 Lemma always_forall_2 {A} (Ψ : A → uPred M) : (∀ a, □ Ψ a) ⊢ (□ ∀ a, Ψ a).
 Proof. by unseal. Qed.
 Lemma always_exist_1 {A} (Ψ : A → uPred M) : (□ ∃ a, Ψ a) ⊢ (∃ a, □ Ψ a).

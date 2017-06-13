@@ -483,7 +483,12 @@ Lemma always_idemp P : □ □ P ⊣⊢ □ P.
 Proof. apply (anti_symm _); auto using always_idemp_2. Qed.
 
 Lemma always_pure φ : □ ⌜φ⌝ ⊣⊢ ⌜φ⌝.
-Proof. apply (anti_symm _); auto using always_pure_2. Qed.
+Proof.
+  apply (anti_symm _); auto.
+  apply pure_elim'=> Hφ.
+  trans (∀ x : False, □ True : uPred M)%I; [by apply forall_intro|].
+  rewrite always_forall_2. auto using always_mono, pure_intro.
+Qed.
 Lemma always_forall {A} (Ψ : A → uPred M) : (□ ∀ a, Ψ a) ⊣⊢ (∀ a, □ Ψ a).
 Proof.
   apply (anti_symm _); auto using always_forall_2.
