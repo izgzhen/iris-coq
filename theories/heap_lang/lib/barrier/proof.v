@@ -78,7 +78,7 @@ Proof.
   iIntros (????) "#HQ #H1 #H2 HQR"; iDestruct 1 as (Ψ) "[HPΨ HΨ]".
   iDestruct (big_opS_delete _ _ i with "HΨ") as "[#HΨi HΨ]"; first done.
   iExists (<[i1:=R1]> (<[i2:=R2]> Ψ)). iSplitL "HQR HPΨ".
-  - iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by iSplit.
+  - iPoseProof (saved_prop_agree with "HQ HΨi") as "#Heq".
     iNext. iRewrite "Heq" in "HQR". iIntros "HP". iSpecialize ("HPΨ" with "HP").
     iDestruct (big_opS_delete _ _ i with "HPΨ") as "[HΨ HPΨ]"; first done.
     iDestruct ("HQR" with "HΨ") as "[HR1 HR2]".
@@ -153,7 +153,7 @@ Proof.
     iMod ("Hclose" $! (State High (I ∖ {[ i ]})) (∅ : set token) with "[HΨ' Hl Hsp]").
     { iSplit; [iPureIntro; by eauto using wait_step|].
       rewrite /barrier_inv /=. iNext. iFrame "Hl". iExists Ψ; iFrame. auto. }
-    iPoseProof (saved_prop_agree i Q (Ψ i) with "[#]") as "Heq"; first by auto.
+    iPoseProof (saved_prop_agree with "HQ HΨi") as "#Heq".
     iModIntro. wp_if.
     iApply "HΦ". iApply "HQR". by iRewrite "Heq".
 Qed.
