@@ -34,32 +34,33 @@ Definition sum' : val := λ: "t",
   sum_loop "t" "l";;
   !"l".
 
-Lemma sum_loop_wp `{!heapG Σ} v t l (n : Z) (Φ : val → iProp Σ) :
-  l ↦ #n -∗ is_tree v t -∗ (l ↦ #(sum t + n) -∗ is_tree v t -∗ Φ #()) -∗
-  WP sum_loop v #l {{ Φ }}.
+Lemma sum_loop_wp `{!heapG Σ} v t l (n : Z) :
+  {{{ l ↦ #n ∗ is_tree v t }}}
+    sum_loop v #l
+  {{{ RET #(); l ↦ #(sum t + n) ∗ is_tree v t }}}.
 Proof.
-  iIntros "Hl Ht HΦ".
+  iIntros (Φ) "[Hl Ht] HΦ".
   iLöb as "IH" forall (v t l n Φ). wp_rec. wp_let.
   destruct t as [n'|tl tr]; simpl in *.
   - iDestruct "Ht" as "%"; subst.
     wp_match. wp_load. wp_op. wp_store.
-    by iApply ("HΦ" with "Hl").
+    by iApply ("HΦ" with "[$Hl]").
   - iDestruct "Ht" as (ll lr vl vr) "(% & Hll & Htl & Hlr & Htr)"; subst.
     wp_match. wp_proj. wp_load.
-    wp_apply ("IH" with "Hl Htl"). iIntros "Hl Htl".
+    wp_apply ("IH" with "Hl Htl"). iIntros "[Hl Htl]".
     wp_seq. wp_proj. wp_load.
-    wp_apply ("IH" with "Hl Htr"). iIntros "Hl Htr".
-    iApply ("HΦ" with "[Hl]").
+    wp_apply ("IH" with "Hl Htr"). iIntros "[Hl Htr]".
+    iApply "HΦ". iSplitL "Hl".
     { by replace (sum tl + sum tr + n) with (sum tr + (sum tl + n)) by omega. }
     iExists ll, lr, vl, vr. by iFrame.
 Qed.
 
-Lemma sum_wp `{!heapG Σ} v t Φ :
-  is_tree v t -∗ (is_tree v t -∗ Φ #(sum t)) -∗ WP sum' v {{ Φ }}.
+Lemma sum_wp `{!heapG Σ} v t :
+  {{{ is_tree v t }}} sum' v {{{ RET #(sum t); is_tree v t }}}.
 Proof.
-  iIntros "Ht HΦ". rewrite /sum' /=.
+  iIntros (Φ) "Ht HΦ". rewrite /sum' /=.
   wp_let. wp_alloc l as "Hl". wp_let.
-  wp_apply (sum_loop_wp with "Hl Ht").
+  wp_apply (sum_loop_wp with "[$Hl $Ht]").
   rewrite Z.add_0_r.
-  iIntros "Hl Ht". wp_seq. wp_load. by iApply "HΦ".
+  iIntros "[Hl Ht]". wp_seq. wp_load. by iApply "HΦ".
 Qed.
