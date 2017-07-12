@@ -392,7 +392,7 @@ Proof. intros. by rewrite /FromAnd big_opL_app always_and_sep_l. Qed.
 (* TODO: Worst case there could be a lot of backtracking on these instances,
 try to refactor. *)
 Global Instance is_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
-  IsOp' a b1 b2 → IsOp a' b1' b2' → IsOp' (a,a') (b1,b1') (b2,b2').
+  IsOp a b1 b2 → IsOp a' b1' b2' → IsOp' (a,a') (b1,b1') (b2,b2').
 Proof. by constructor. Qed.
 Global Instance is_op_pair_persistent_l {A B : cmraT} (a : A) (a' b1' b2' : B) :
   Persistent a → IsOp a' b1' b2' → IsOp' (a,a') (a,b1') (a,b2').
