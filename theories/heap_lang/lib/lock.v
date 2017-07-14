@@ -26,6 +26,8 @@ Structure lock Σ `{!heapG Σ} := Lock {
     {{{ is_lock N γ lk R ∗ locked γ ∗ R }}} release lk {{{ RET #(); True }}}
 }.
 
+
+
 Arguments newlock {_ _} _.
 Arguments acquire {_ _} _.
 Arguments release {_ _} _.
@@ -34,6 +36,6 @@ Arguments locked {_ _} _ _.
 
 Existing Instances is_lock_ne is_lock_persistent locked_timeless.
 
-Instance is_lock_proper Σ `{!heapG Σ} (L: lock Σ) N lk R:
-  Proper ((≡) ==> (≡)) (is_lock L N lk R) := ne_proper _.
+Instance is_lock_proper Σ `{!heapG Σ} (L: lock Σ) N γ lk:
+  Proper ((≡) ==> (≡)) (is_lock L N γ lk) := ne_proper _.
 
