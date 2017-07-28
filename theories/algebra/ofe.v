@@ -586,7 +586,7 @@ Section ofe_mor.
     intros ? c n x y Hx. by rewrite (conv_compl n (ofe_mor_chain c x))
       (conv_compl n (ofe_mor_chain c y)) /= Hx.
   Qed.
-  Global Program Instance ofe_more_cofe `{Cofe B} : Cofe ofe_morC :=
+  Global Program Instance ofe_mor_cofe `{Cofe B} : Cofe ofe_morC :=
     {| compl := ofe_mor_compl |}.
   Next Obligation.
     intros ? n c x; simpl.
