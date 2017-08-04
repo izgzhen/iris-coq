@@ -778,7 +778,8 @@ Local Tactic Notation "iExistDestruct" constr(H)
 (** * Always *)
 Tactic Notation "iAlways":=
   iStartProof;
-  apply tac_always_intro; env_cbv.
+  apply tac_always_intro; env_cbv
+    || fail "iAlways: the goal is not an always modality".
 
 (** * Later *)
 Tactic Notation "iNext" open_constr(n) :=
