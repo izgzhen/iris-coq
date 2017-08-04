@@ -188,8 +188,13 @@ _introduction patterns_:
 - `?` : create an anonymous hypothesis.
 - `_` : remove the hypothesis.
 - `$` : frame the hypothesis in the goal.
-- `[ipat ipat]` : (separating) conjunction elimination.
-- `[ipat|ipat]` : disjunction elimination.
+- `[ipat1 ipat2]` : (separating) conjunction elimination. In order to eliminate
+  conjunctions `P ∧ Q` in the spatial context, one of the following conditions
+  should hold:
+  + Either the proposition `P` or `Q` should be persistent.
+  + Either `ipat1` or `ipat2` should be `_`, which results in one of the
+    conjuncts to be thrown away.
+- `[ipat1|ipat2]` : disjunction elimination.
 - `[]` : false elimination.
 - `%` : move the hypothesis to the pure Coq context (anonymously).
 - `# ipat` : move the hypothesis to the persistent context.
