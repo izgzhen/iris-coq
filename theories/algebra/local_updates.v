@@ -166,9 +166,8 @@ Proof.
   destruct z as [z|]; last done. destruct y; inversion Heq.
 Qed.
 
-Lemma delete_option_local_update {A : cmraT} (x y : A) :
-  Exclusive y →
-  (Some x, Some y) ~l~> (None, None).
+Lemma delete_option_local_update {A : cmraT} (x : option A) (y : A) :
+  Exclusive y → (x, Some y) ~l~> (None, None).
 Proof.
   move=>Hex. apply local_update_unital=>n z /= Hy Heq. split; first done.
   destruct z as [z|]; last done. exfalso.
