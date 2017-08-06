@@ -592,5 +592,10 @@ Lemma cofe_funC_equivI {A B} (f g : A -c> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x
 Proof. by unseal. Qed.
 Lemma cofe_morC_equivI {A B : ofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.
+
+(* Sig ofes *)
+Lemma sig_equivI {A : ofeT} (P : A → Prop) (x y : sigC P) :
+  x ≡ y ⊣⊢ proj1_sig x ≡ proj1_sig y.
+Proof. by unseal. Qed.
 End primitive.
 End uPred.
