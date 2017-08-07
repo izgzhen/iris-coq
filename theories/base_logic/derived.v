@@ -138,7 +138,7 @@ Global Instance forall_flip_mono' A :
   Proper (pointwise_relation _ (flip (⊢)) ==> flip (⊢)) (@uPred_forall M A).
 Proof. intros P1 P2; apply forall_mono. Qed.
 Global Instance exist_mono' A :
-  Proper (pointwise_relation _ (flip (⊢)) ==> flip (⊢)) (@uPred_exist M A).
+  Proper (pointwise_relation _ (⊢) ==> (⊢)) (@uPred_exist M A).
 Proof. intros P1 P2; apply exist_mono. Qed.
 Global Instance exist_flip_mono' A :
   Proper (pointwise_relation _ (flip (⊢)) ==> flip (⊢)) (@uPred_exist M A).
