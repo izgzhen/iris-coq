@@ -62,6 +62,8 @@ Global Instance slice_ne γ : NonExpansive (slice N γ).
 Proof. solve_proper. Qed.
 Global Instance slice_contractive γ : Contractive (slice N γ).
 Proof. solve_contractive. Qed.
+Global Instance slice_proper γ : Proper ((≡) ==> (≡)) (slice N γ).
+Proof. apply ne_proper, _. Qed.
 
 Global Instance slice_persistent γ P : PersistentP (slice N γ P).
 Proof. apply _. Qed.
@@ -70,6 +72,8 @@ Global Instance box_contractive f : Contractive (box N f).
 Proof. solve_contractive. Qed.
 Global Instance box_ne f : NonExpansive (box N f).
 Proof. apply (contractive_ne _). Qed.
+Global Instance box_proper f : Proper ((≡) ==> (≡)) (box N f).
+Proof. apply ne_proper, _. Qed.
 
 Lemma box_own_auth_agree γ b1 b2 :
   box_own_auth γ (● Excl' b1) ∗ box_own_auth γ (◯ Excl' b2) ⊢ ⌜b1 = b2⌝.
