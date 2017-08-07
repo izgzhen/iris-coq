@@ -236,6 +236,8 @@ Lemma pure_mono φ1 φ2 : (φ1 → φ2) → ⌜φ1⌝ ⊢ ⌜φ2⌝.
 Proof. intros; apply pure_elim with φ1; eauto. Qed.
 Global Instance pure_mono' : Proper (impl ==> (⊢)) (@uPred_pure M).
 Proof. intros φ1 φ2; apply pure_mono. Qed.
+Global Instance pure_flip_mono : Proper (flip impl ==> flip (⊢)) (@uPred_pure M).
+Proof. intros φ1 φ2; apply pure_mono. Qed.
 Lemma pure_iff φ1 φ2 : (φ1 ↔ φ2) → ⌜φ1⌝ ⊣⊢ ⌜φ2⌝.
 Proof. intros [??]; apply (anti_symm _); auto using pure_mono. Qed.
 Lemma pure_intro_l φ Q R : φ → (⌜φ⌝ ∧ Q ⊢ R) → Q ⊢ R.
