@@ -195,11 +195,11 @@ Section ofe.
 End ofe.
 
 (** Contractive functions *)
-Definition dist_later {A : ofeT} (n : nat) (x y : A) : Prop :=
+Definition dist_later `{Dist A} (n : nat) (x y : A) : Prop :=
   match n with 0 => True | S n => x ≡{n}≡ y end.
-Arguments dist_later _ !_ _ _ /.
+Arguments dist_later _ _ !_ _ _ /.
 
-Global Instance dist_later_equivalence A n : Equivalence (@dist_later A n).
+Global Instance dist_later_equivalence (A : ofeT) n : Equivalence (@dist_later A _ n).
 Proof. destruct n as [|n]. by split. apply dist_equivalence. Qed.
 
 Lemma dist_dist_later {A : ofeT} n (x y : A) : dist n x y → dist_later n x y.
@@ -244,7 +244,7 @@ Ltac f_contractive :=
   | |- ?f _ _ ≡{_}≡ ?f _ _ => apply (_ : Proper (_ ==> dist_later _ ==> _) f)
   end;
   try match goal with
-  | |- @dist_later ?A ?n ?x ?y =>
+  | |- @dist_later ?A _ ?n ?x ?y =>
          destruct n as [|n]; [exact I|change (@dist A _ n x y)]
   end;
   try reflexivity.
