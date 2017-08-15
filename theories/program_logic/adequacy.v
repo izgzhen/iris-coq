@@ -1,6 +1,6 @@
 From iris.program_logic Require Export weakestpre.
 From iris.algebra Require Import gmap auth agree gset coPset.
-From iris.base_logic Require Import big_op soundness.
+From iris.base_logic Require Import soundness.
 From iris.base_logic.lib Require Import wsat.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
@@ -172,17 +172,17 @@ Proof.
   - intros t2 σ2 v2 [n ?]%rtc_nsteps.
     eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
     rewrite Nat_iter_S. iMod wsat_alloc as (Hinv) "[Hw HE]".
-    rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
+    rewrite fupd_eq in Hwp. iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iModIntro. iNext. iApply (@wptp_result _ _ (IrisG _ _ Hinv Istate)); eauto.
-    by iFrame.
+    iFrame; auto.
   - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
     eapply (soundness (M:=iResUR Σ) _ (S (S (S n)))); iIntros "".
     rewrite Nat_iter_S. iMod wsat_alloc as (Hinv) "[Hw HE]".
     rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iModIntro. iNext. iApply (@wptp_safe _ _ (IrisG _ _ Hinv Istate)); eauto.
-    by iFrame.
+    iFrame; auto.
 Qed.
 
 Theorem wp_invariance Σ Λ `{invPreG Σ} e σ1 t2 σ2 φ :
@@ -199,5 +199,5 @@ Proof.
   rewrite {1}fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
   iDestruct "Hwp" as (Istate) "(HIstate & Hwp & Hclose)".
   iModIntro. iNext. iApply (@wptp_invariance _ _ (IrisG _ _ Hinv Istate)); eauto.
-  by iFrame.
+  iFrame; auto.
 Qed.

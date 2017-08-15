@@ -1,6 +1,6 @@
 From Coq.QArith Require Import Qcanon.
 From iris.algebra Require Export cmra.
-From iris.proofmode Require Import classes.
+From iris.base_logic Require Import proofmode_classes.
 Set Default Proof Using "Type".
 
 Notation frac := Qp (only parsing).

@@ -1,4 +1,5 @@
-From iris.base_logic.lib Require Export invariants fractional.
+From iris.base_logic.lib Require Export invariants.
+From iris.bi Require Import fractional.
 From iris.algebra Require Export frac.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".

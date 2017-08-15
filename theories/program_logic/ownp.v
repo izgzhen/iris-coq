@@ -44,7 +44,7 @@ Theorem ownP_adequacy Σ `{ownPPreG Λ Σ} e σ φ :
   adequate e σ φ.
 Proof.
   intros Hwp. apply (wp_adequacy Σ _).
-  iIntros (?) "". iMod (own_alloc (● (Excl' (σ : leibnizC _)) ⋅ ◯ (Excl' σ)))
+  iIntros (?). iMod (own_alloc (● (Excl' (σ : leibnizC _)) ⋅ ◯ (Excl' σ)))
     as (γσ) "[Hσ Hσf]"; first done.
   iModIntro. iExists (λ σ, own γσ (● (Excl' (σ:leibnizC _)))). iFrame "Hσ".
   iApply (Hwp (OwnPG _ _ _ _ γσ)). by rewrite /ownP.
@@ -57,7 +57,7 @@ Theorem ownP_invariance Σ `{ownPPreG Λ Σ} e σ1 t2 σ2 φ :
   φ σ2.
 Proof.
   intros Hwp Hsteps. eapply (wp_invariance Σ Λ e σ1 t2 σ2 _)=> //.
-  iIntros (?) "". iMod (own_alloc (● (Excl' (σ1 : leibnizC _)) ⋅ ◯ (Excl' σ1)))
+  iIntros (?). iMod (own_alloc (● (Excl' (σ1 : leibnizC _)) ⋅ ◯ (Excl' σ1)))
     as (γσ) "[Hσ Hσf]"; first done.
   iExists (λ σ, own γσ (● (Excl' (σ:leibnizC _)))). iFrame "Hσ".
   iMod (Hwp (OwnPG _ _ _ _ γσ) with "[Hσf]") as "[$ H]"; first by rewrite /ownP.
@@ -211,7 +211,7 @@ Section ectx_lifting.
     {{{ ▷ ownP σ1 }}} e1 @ E {{{ RET v2; ownP σ2 }}}.
   Proof.
     intros. rewrite -(ownP_lift_atomic_det_head_step σ1 v2 σ2 []); [|done..].
-    rewrite /= right_id. by apply uPred.wand_intro_r.
+    rewrite /= right_id. by apply bi.wand_intro_r.
   Qed.
 
   Lemma ownP_lift_pure_det_head_step {E Φ} e1 e2 efs :

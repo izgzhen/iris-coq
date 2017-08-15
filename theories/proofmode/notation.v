@@ -5,7 +5,7 @@ Set Default Proof Using "Type".
 Delimit Scope proof_scope with env.
 Arguments Envs _ _%proof_scope _%proof_scope.
 Arguments Enil {_}.
-Arguments Esnoc {_} _%proof_scope _%string _%uPred_scope.
+Arguments Esnoc {_} _%proof_scope _%string _%I.
 
 Notation "" := Enil (only printing) : proof_scope.
 Notation "Γ H : P" := (Esnoc Γ H P)

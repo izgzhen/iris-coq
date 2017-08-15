@@ -68,7 +68,7 @@ Section heap.
 Context `{heapG Σ}.
 Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val → iProp Σ.
-Implicit Types Δ : envs (iResUR Σ).
+Implicit Types Δ : envs (uPredI (iResUR Σ)).
 
 Lemma tac_wp_alloc Δ Δ' E j K e v Φ :
   IntoVal e v →

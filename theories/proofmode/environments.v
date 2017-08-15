@@ -73,6 +73,12 @@ Fixpoint env_lookup_delete {A} (i : string) (Γ : env A) : option (A * env A) :=
      else '(y,Γ') ← env_lookup_delete i Γ; Some (y, Esnoc Γ' j x)
   end.
 
+Definition env_is_singleton {A} (Γ : env A) : bool :=
+  match Γ with
+  | Esnoc (Esnoc Enil _ _) _ _ => true
+  | _ => false
+  end.
+
 Inductive env_Forall2 {A B} (P : A → B → Prop) : env A → env B → Prop :=
   | env_Forall2_nil : env_Forall2 P Enil Enil
   | env_Forall2_snoc Γ1 Γ2 i x y :

@@ -44,7 +44,6 @@ Section saved_prop.
     { intros z. rewrite /G1 /G2 -cFunctor_compose -{2}[z]cFunctor_id.
       apply (ne_proper (cFunctor_map F)); split=>?; apply iProp_fold_unfold. }
     rewrite -{2}[x]help -{2}[y]help. apply later_mono.
-    apply (internal_eq_rewrite (G1 x) (G1 y) (λ z, G2 (G1 x) ≡ G2 z))%I;
-      first solve_proper; auto with I.
+    apply f_equiv. solve_proper.
   Qed.
 End saved_prop.

@@ -64,9 +64,9 @@ Proof.
   iSplitL "Hi"; first by eauto. iIntros "HP [Hw HE\N]".
   iDestruct (ownI_close with "[$Hw $Hi $HP $HD]") as "[$ HEi]".
   do 2 iModIntro. iSplitL; [|done].
-  iCombine "HEi" "HEN\i" as "HEN"; iCombine "HEN" "HE\N" as "HE".
+  iCombine "HEi HEN\i HE\N" as "HEN".
   rewrite -?ownE_op; [|set_solver..].
-  rewrite -!union_difference_L //; set_solver.
+  rewrite assoc_L -!union_difference_L //; set_solver.
 Qed.
 
 Lemma inv_open E N P :

@@ -1,6 +1,7 @@
 (* This file shows that the fancy update can be encoded in terms of the
 view shift, and that the laws of the fancy update can be derived from the
 laws of the view shift. *)
+From iris.base_logic Require Import proofmode.
 From iris.proofmode Require Import tactics.
 From stdpp Require Export coPset.
 Set Default Proof Using "Type*".
@@ -10,7 +11,7 @@ Context {M} (vs : coPset → coPset → uPred M → uPred M → uPred M).
 
 Notation "P ={ E1 , E2 }=> Q" := (vs E1 E2 P Q)
   (at level 99, E1,E2 at level 50, Q at level 200,
-   format "P  ={ E1 , E2 }=>  Q") : uPred_scope.
+   format "P  ={ E1 , E2 }=>  Q") : bi_scope.
 
 Context (vs_ne : ∀ E1 E2, NonExpansive2 (vs E1 E2)).
 Context (vs_persistent : ∀ E1 E2 P Q, Persistent (P ={E1,E2}=> Q)).
@@ -32,7 +33,7 @@ Definition fupd (E1 E2 : coPset) (P : uPred M) : uPred M :=
 
 Notation "|={ E1 , E2 }=> Q" := (fupd E1 E2 Q)
   (at level 99, E1, E2 at level 50, Q at level 200,
-   format "|={ E1 , E2 }=>  Q") : uPred_scope.
+   format "|={ E1 , E2 }=>  Q") : bi_scope.
 
 Global Instance fupd_ne E1 E2 : NonExpansive (@fupd E1 E2).
 Proof. solve_proper. Qed.

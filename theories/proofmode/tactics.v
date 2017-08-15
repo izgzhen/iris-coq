@@ -1,6 +1,6 @@
 From iris.proofmode Require Import coq_tactics.
 From iris.proofmode Require Import intro_patterns spec_patterns sel_patterns.
-From iris.base_logic Require Export base_logic.
+From iris.bi Require Export bi.
 From iris.proofmode Require Export classes notation.
 From iris.proofmode Require Import class_instances.
 From stdpp Require Import stringmap hlist.
@@ -50,25 +50,26 @@ Tactic Notation "iMatchHyp" tactic1(tac) :=
   | |- context[ environments.Esnoc _ ?x ?P ] => tac x P
   end.
 
-Class AsValid {M} (φ : Prop) (P : uPred M) := as_entails : φ ↔ P.
+Class AsValid {PROP : bi} (φ : Prop) (P : PROP) := as_entails : φ ↔ P.
 Arguments AsValid {_} _%type _%I.
 
-Instance as_valid_valid {M} (P : uPred M) : AsValid (uPred_valid P) P | 0.
+Instance as_valid_valid {PROP : bi} (P : PROP) : AsValid (bi_valid P) P | 0.
 Proof. by rewrite /AsValid. Qed.
 
-Instance as_valid_entails {M} (P Q : uPred M) : AsValid (P ⊢ Q) (P -∗ Q) | 1.
-Proof. split. apply uPred.entails_wand. apply uPred.wand_entails. Qed.
+Instance as_valid_entails {PROP : bi} (P Q : PROP) : AsValid (P ⊢ Q) (P -∗ Q) | 1.
+Proof. split. apply bi.entails_wand. apply bi.wand_entails. Qed.
 
-Instance as_valid_equiv {M} (P Q : uPred M) : AsValid (P ≡ Q) (P ↔ Q).
-Proof. split. apply uPred.equiv_iff. apply uPred.iff_equiv. Qed.
+Instance as_valid_equiv {PROP : bi} (P Q : PROP) : AsValid (P ≡ Q) (P ∗-∗ Q).
+Proof. split. apply bi.equiv_wand_iff. apply bi.wand_iff_equiv. Qed.
 
 (** * Start a proof *)
 Ltac iStartProof :=
   lazymatch goal with
   | |- of_envs _ ⊢ _ => idtac
+  | |- let _ := _ in _ => fail
   | |- ?P =>
     apply (proj2 (_ : AsValid P _)), tac_adequate
-    || fail "iStartProof: not a uPred"
+    || fail "iStartProof: not a BI entailment"
   end.
 
 (** * Context manipulation *)
@@ -112,7 +113,11 @@ Tactic Notation "iClear" constr(Hs) :=
     | ESelPure :: ?Hs => clear; go Hs
     | ESelName _ ?H :: ?Hs =>
        eapply tac_clear with _ H _ _; (* (i:=H) *)
-         [env_reflexivity || fail "iClear:" H "not found"|go Hs]
+         [env_reflexivity || fail "iClear:" H "not found"
+         |env_cbv; apply _ ||
+          let P := match goal with |- TCOr (Affine ?P) _ => P end in
+          fail "iClear:" H ":" P "not affine and the goal not absorbing"
+         |go Hs]
     end in
   let Hs := iElaborateSelPat Hs in go Hs.
 
@@ -121,16 +126,18 @@ Tactic Notation "iClear" "(" ident_list(xs) ")" constr(Hs) :=
 
 (** * Assumptions *)
 Tactic Notation "iExact" constr(H) :=
-  eapply tac_assumption with H _ _; (* (i:=H) *)
+  eapply tac_assumption with _ H _ _; (* (i:=H) *)
     [env_reflexivity || fail "iExact:" H "not found"
     |apply _ ||
      let P := match goal with |- FromAssumption _ ?P _ => P end in
-     fail "iExact:" H ":" P "does not match goal"].
+     fail "iExact:" H ":" P "does not match goal"
+    |env_cbv; apply _ ||
+     fail "iExact:" H "not absorbing and the remaining hypotheses not affine"].
 
 Tactic Notation "iAssumptionCore" :=
   let rec find Γ i P :=
     match Γ with
-    | Esnoc ?Γ ?j ?Q => first [unify P Q; unify i j| find Γ i P]
+    | Esnoc ?Γ ?j ?Q => first [unify P Q; unify i j|find Γ i P]
     end in
   match goal with
   | |- envs_lookup ?i (Envs ?Γp ?Γs) = Some (_, ?P) =>
@@ -149,7 +156,15 @@ Tactic Notation "iAssumption" :=
     match Γ with
     | Esnoc ?Γ ?j ?P => first
        [pose proof (_ : FromAssumption p P Q) as Hass;
-        apply (tac_assumption _ j p P); [env_reflexivity|apply Hass]
+        eapply (tac_assumption _ _ j p P);
+          [env_reflexivity
+          |apply Hass
+          |env_cbv; apply _ ||
+           fail 1 "iAssumption:" j "not absorbing and the remaining hypotheses not affine"]
+       |assert (P = False%I) as Hass by reflexivity;
+        apply (tac_false_destruct _ j p P);
+          [env_reflexivity
+          |exact Hass]
        |find p Γ Q]
     end in
   match goal with
@@ -166,8 +181,11 @@ Local Tactic Notation "iPersistent" constr(H) :=
   eapply tac_persistent with _ H _ _ _; (* (i:=H) *)
     [env_reflexivity || fail "iPersistent:" H "not found"
     |apply _ ||
-     let Q := match goal with |- IntoPersistent _ ?Q _ => Q end in
-     fail "iPersistent:" Q "not persistent"
+     let P := match goal with |- IntoPersistent _ ?P _ => P end in
+     fail "iPersistent:" P "not persistent"
+    |env_cbv; apply _ ||
+     let P := match goal with |- Affine ?P => P end in
+     fail "iPersistent:" P "not affine"
     |env_reflexivity|].
 
 Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
@@ -176,7 +194,15 @@ Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
     |apply _ ||
      let P := match goal with |- IntoPure ?P _ => P end in
      fail "iPure:" P "not pure"
+    |env_cbv; apply _ ||
+     let P := match goal with |- Affine ?P => P end in
+     fail "iPure:" P "not affine"
     |intros pat].
+
+Tactic Notation "iEmpIntro" :=
+  iStartProof;
+  eapply tac_emp_intro;
+    [env_reflexivity || fail "iEmpIntro: spatial context is non-empty"].
 
 Tactic Notation "iPureIntro" :=
   iStartProof;
@@ -190,7 +216,8 @@ Tactic Notation "iPureIntro" :=
 Local Ltac iFrameFinish :=
   lazy iota beta;
   try match goal with
-  | |- _ ⊢ True => exact (uPred.pure_intro _ _ I)
+  | |- _ ⊢ True => exact (bi.pure_intro _ _ I)
+  | |- _ ⊢ emp => iEmpIntro
   end.
 
 Local Ltac iFramePure t :=
@@ -303,7 +330,7 @@ Local Tactic Notation "iIntro" constr(H) :=
        let P := lazymatch goal with |- Persistent ?P => P end in
        fail 1 "iIntro: introducing non-persistent" H ":" P
               "into non-empty spatial context"
-      |env_reflexivity || fail "iIntro:" H "not fresh"
+      |env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
   | (* (_ -∗ _) *)
     eapply tac_wand_intro with _ H; (* (i:=H) *)
@@ -316,16 +343,19 @@ Local Tactic Notation "iIntro" "#" constr(H) :=
   first
   [ (* (?P → _) *)
     eapply tac_impl_intro_persistent with _ H _; (* (i:=H) *)
-      [apply _ || 
+      [apply _ ||
        let P := match goal with |- IntoPersistent _ ?P _ => P end in
-       fail 1 "iIntro: " P " not persistent"
+       fail 1 "iIntro:" P "not persistent"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
   | (* (?P -∗ _) *)
     eapply tac_wand_intro_persistent with _ H _; (* (i:=H) *)
-      [apply _ || 
+      [apply _ ||
        let P := match goal with |- IntoPersistent _ ?P _ => P end in
-       fail 1 "iIntro: " P " not persistent"
+       fail 1 "iIntro:" P "not persistent"
+      |apply _ ||
+       let P := match goal with |- Affine ?P => P end in
+       fail 1 "iIntro:" P "not affine"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
   | fail 1 "iIntro: nothing to introduce" ].
@@ -334,14 +364,19 @@ Local Tactic Notation "iIntro" "_" :=
   try iStartProof;
   first
   [ (* (?Q → _) *) apply tac_impl_intro_drop
-  | (* (_ -∗ _) *) apply tac_wand_intro_drop
+  | (* (_ -∗ _) *)
+    apply tac_wand_intro_drop;
+      [apply _ ||
+       let P := match goal with |- TCOr (Affine ?P) _ => P end in
+       fail 1 "iIntro:" P "not affine and the goal not absorbing"
+      |]
   | (* (∀ _, _) *) iIntro (_)
   | fail 1 "iIntro: nothing to introduce" ].
 
 Local Tactic Notation "iIntroForall" :=
   try iStartProof;
   lazymatch goal with
-  | |- ∀ _, ?P => fail
+  | |- ∀ _, ?P => fail (* actually an →, this is handled by iIntro below *)
   | |- ∀ _, _ => intro
   | |- _ ⊢ (∀ x : _, _) => let x' := fresh x in iIntro (x')
   end.
@@ -394,7 +429,7 @@ Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
 Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
   let solve_to_wand H1 :=
     apply _ ||
-    let P := match goal with |- IntoWand _ ?P _ _ => P end in
+    let P := match goal with |- IntoWand _ _ ?P _ _ => P end in
     fail "iSpecialize:" P "not an implication/wand" in
   let rec go H1 pats :=
     lazymatch pats with
@@ -407,8 +442,8 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          [env_reflexivity || fail "iSpecialize:" H2 "not found"
          |env_reflexivity || fail "iSpecialize:" H1 "not found"
          |apply _ ||
-          let P := match goal with |- IntoWand _ ?P ?Q _ => P end in
-          let Q := match goal with |- IntoWand _ ?P ?Q _ => Q end in
+          let P := match goal with |- IntoWand _ _ ?P ?Q _ => P end in
+          let Q := match goal with |- IntoWand _ _ ?P ?Q _ => Q end in
           fail "iSpecialize: cannot instantiate" P "with" Q
          |env_reflexivity|go H1 pats]
     | SPureGoal ?d :: ?pats =>
@@ -485,7 +520,7 @@ Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
     match type of t with string => constr:(ITrm t hnil "") | _ => t end in
   lazymatch t with
   | ITrm ?H ?xs ?pat =>
-    let pat := spec_pat.parse pat in
+    iSpecializeArgs H xs;
     lazymatch type of H with
     | string =>
       (* The lemma [tac_specialize_persistent_helper] allows one to use all
@@ -494,17 +529,22 @@ Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
       the result of the specialization is persistent, and no modality is
       eliminated. As an optimization, we do not use this when only universal
       quantifiers are instantiated. *)
+      let pat := spec_pat.parse pat in
       lazymatch eval compute in
         (bool_decide (pat ≠ []) && p && negb (existsb spec_pat_modal pat)) with
       | true =>
-         eapply tac_specialize_persistent_helper with _ H _ _ _;
+         eapply tac_specialize_persistent_helper with _ H _ _ _ _;
            [env_reflexivity || fail "iSpecialize:" H "not found"
-           |iSpecializeArgs H xs; iSpecializePat H pat; last (iExact H)
+           |iSpecializePat H pat; last (iExact H)
            |apply _ ||
-            let Q := match goal with |- Persistent ?Q => Q end in
+            let Q := match goal with |- IntoPersistent _ ?Q _ => Q end in
             fail "iSpecialize:" Q "not persistent"
-           |env_reflexivity|(* goal *)]
-      | false => iSpecializeArgs H xs; iSpecializePat H pat
+           |env_cbv; apply _ ||
+            let Q := match goal with |- Affine ?Q => Q end in
+            fail "iSpecialize:" Q "not affine"
+           |env_reflexivity
+           |(* goal *)]
+      | false => iSpecializePat H pat
       end
     | _ => fail "iSpecialize:" H "should be a hypothesis, use iPoseProof instead"
     end
@@ -697,7 +737,7 @@ Tactic Notation "iSplit" :=
   | |- _ ⊢ _ =>
     eapply tac_and_split;
       [apply _ ||
-       let P := match goal with |- FromAnd _ ?P _ _ => P end in
+       let P := match goal with |- FromAnd ?P _ _ => P end in
        fail "iSplit:" P "not a conjunction"| |]
   end.
 
@@ -706,7 +746,7 @@ Tactic Notation "iSplitL" constr(Hs) :=
   let Hs := words Hs in
   eapply tac_sep_split with _ _ false Hs _ _; (* (js:=Hs) *)
     [apply _ ||
-     let P := match goal with |- FromAnd _ ?P _ _ => P end in
+     let P := match goal with |- FromSep _ ?P _ _ => P end in
      fail "iSplitL:" P "not a separating conjunction"
     |env_reflexivity ||
      let Hs := iMissingHyps Hs in
@@ -718,7 +758,7 @@ Tactic Notation "iSplitR" constr(Hs) :=
   let Hs := words Hs in
   eapply tac_sep_split with _ _ true Hs _ _; (* (js:=Hs) *)
     [apply _ ||
-     let P := match goal with |- FromAnd _ ?P _ _ => P end in
+     let P := match goal with |- FromSep _ ?P _ _ => P end in
      fail "iSplitR:" P "not a separating conjunction"
     |env_reflexivity ||
      let Hs := iMissingHyps Hs in
@@ -732,15 +772,15 @@ Local Tactic Notation "iAndDestruct" constr(H) "as" constr(H1) constr(H2) :=
   eapply tac_and_destruct with _ H _ H1 H2 _ _ _; (* (i:=H) (j1:=H1) (j2:=H2) *)
     [env_reflexivity || fail "iAndDestruct:" H "not found"
     |apply _ ||
-     let P := match goal with |- IntoAnd _ ?P _ _ => P end in
+     let P := match goal with |- IntoSep _ ?P _ _ => P end in
      fail "iAndDestruct: cannot destruct" P
     |env_reflexivity || fail "iAndDestruct:" H1 "or" H2 " not fresh"|].
 
 Local Tactic Notation "iAndDestructChoice" constr(H) "as" constr(lr) constr(H') :=
   eapply tac_and_destruct_choice with _ H _ lr H' _ _ _;
     [env_reflexivity || fail "iAndDestructChoice:" H "not found"
-    |apply _ ||
-     let P := match goal with |- IntoAnd _ ?P _ _ => P end in
+    |env_cbv; apply _ ||
+     let P := match goal with |- TCOr (IntoAnd _ ?P _ _) _ => P end in
      fail "iAndDestructChoice: cannot destruct" P
     |env_reflexivity || fail "iAndDestructChoice:" H' " not fresh"|].
 
@@ -802,8 +842,9 @@ Local Tactic Notation "iExistDestruct" constr(H)
 (** * Always *)
 Tactic Notation "iAlways":=
   iStartProof;
-  apply tac_persistently_intro; env_cbv
-    || fail "iAlways: the goal is not an persistently modality".
+  eapply tac_persistently_intro;
+    [apply _ || fail "iAlways: the goal is not a persistently modality"
+    |env_cbv].
 
 (** * Later *)
 Tactic Notation "iNext" open_constr(n) :=
@@ -1209,15 +1250,18 @@ Tactic Notation "iRevertIntros" "(" ident(x1) ident(x2) ident(x3) ident(x4)
   iRevertIntros (x1 x2 x3 x4 x5 x6 x7 x8) "" with tac.
 
 (** * Destruct tactic *)
-Class CopyDestruct {M} (P : uPred M).
+Class CopyDestruct {PROP : bi} (P : PROP).
+Arguments CopyDestruct {_} _%I.
 Hint Mode CopyDestruct + ! : typeclass_instances.
 
-Instance copy_destruct_forall {M A} (Φ : A → uPred M) : CopyDestruct (∀ x, Φ x).
-Instance copy_destruct_impl {M} (P Q : uPred M) :
+Instance copy_destruct_forall {PROP : bi} {A} (Φ : A → PROP) : CopyDestruct (∀ x, Φ x).
+Instance copy_destruct_impl {PROP : bi} (P Q : PROP) :
   CopyDestruct Q → CopyDestruct (P → Q).
-Instance copy_destruct_wand {M} (P Q : uPred M) :
+Instance copy_destruct_wand {PROP : bi} (P Q : PROP) :
   CopyDestruct Q → CopyDestruct (P -∗ Q).
-Instance copy_destruct_persistently {M} (P : uPred M) :
+Instance copy_destruct_bare {PROP : bi} (P : PROP) :
+  CopyDestruct P → CopyDestruct (■ P).
+Instance copy_destruct_persistently {PROP : bi} (P : PROP) :
   CopyDestruct P → CopyDestruct (□ P).
 
 Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
@@ -1526,13 +1570,15 @@ Tactic Notation "iAssertCore" open_constr(Q)
      eapply tac_assert_pure with _ H Q _;
        [env_reflexivity
        |apply _ || fail "iAssert:" Q "not pure"
+       |apply _
        |done_if d (*goal*)
        |tac H]
   | [SGoal (SpecGoal GPersistent _ ?Hs_frame [] ?d)] =>
-     eapply tac_assert_persistent with _ _ _ true [] H Q;
+     eapply tac_assert_persistent with _ _ _ true [] H Q _;
        [env_reflexivity
-       |env_reflexivity
        |apply _ || fail "iAssert:" Q "not persistent"
+       |apply _
+       |env_reflexivity
        |iFrame Hs_frame; done_if d (*goal*)
        |tac H]
   | [SGoal (SpecGoal GPersistent false ?Hs_frame _ ?d)] =>
@@ -1554,12 +1600,13 @@ Tactic Notation "iAssertCore" open_constr(Q)
          |iFrame Hs_frame; done_if d (*goal*)
          |tac H]
      | true =>
-       eapply tac_assert_persistent with _ _ _ lr Hs' H Q;
+       eapply tac_assert_persistent with _ _ _ lr Hs' H Q _;
          [env_reflexivity ||
           let Hs' := iMissingHyps Hs' in
           fail "iAssert: hypotheses" Hs' "not found"
-         |env_reflexivity
          |apply _ || fail "iAssert:" Q "not persistent"
+         |apply _
+         |env_reflexivity
          |done_if d (*goal*)
          |tac H]
      end
@@ -1625,11 +1672,9 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) :=
   iPoseProofCore lem as true true (fun Heq =>
     eapply (tac_rewrite _ Heq _ _ lr);
       [env_reflexivity || fail "iRewrite:" Heq "not found"
-      |let P := match goal with |- ?P ⊢ _ => P end in
-       (* use ssreflect apply: which is better at dealing with unification
-       involving canonical structures. This is useful for the COFE canonical
-       structure in uPred_eq that it may have to infer. *)
-       apply: reflexivity || fail "iRewrite:" P "not an equality"
+      |apply _ ||
+       let P := match goal with |- IntoInternalEq ?P _ _ ⊢ _ => P end in
+       fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
       |intros ??? ->; reflexivity|lazy beta; iClear Heq]).
 
@@ -1641,8 +1686,8 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) "in" constr(H) 
     eapply (tac_rewrite_in _ Heq _ _ H _ _ lr);
       [env_reflexivity || fail "iRewrite:" Heq "not found"
       |env_reflexivity || fail "iRewrite:" H "not found"
-      |apply: reflexivity ||
-       let P := match goal with |- ?P ⊢ _ => P end in
+      |apply _ ||
+       let P := match goal with |- IntoInternalEq ?P _ _ ⊢ _ => P end in
        fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
       |intros ??? ->; reflexivity
@@ -1705,7 +1750,8 @@ Tactic Notation "iMod" open_constr(lem) "as" "%" simple_intropattern(pat) :=
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
 Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
-Hint Resolve uPred.internal_eq_refl'. (* Maybe make an [iReflexivity] tactic *)
+Hint Extern 0 (of_envs _ ⊢ emp) => iEmpIntro.
+Hint Resolve bi.internal_eq_refl. (* Maybe make an [iReflexivity] tactic *)
 
 (* For iIntros we do not check whether we are in proof mode because we actually
 want it to enter proof mode when we are not already in it. *)
@@ -1716,7 +1762,6 @@ Hint Extern 1 (of_envs _ ⊢ _ ∗ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ ▷ _) => iNext.
 Hint Extern 1 (of_envs _ ⊢ □ _) => iAlways.
 Hint Extern 1 (of_envs _ ⊢ ∃ _, _) => iExists _.
-Hint Extern 1 (of_envs _ ⊢ |==> _) => iModIntro.
 Hint Extern 1 (of_envs _ ⊢ ◇ _) => iModIntro.
 Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iLeft.
 Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iRight.

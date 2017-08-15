@@ -1,8 +1,8 @@
 From iris.base_logic.lib Require Export own.
 From stdpp Require Export coPset.
 From iris.algebra Require Import gmap auth agree gset coPset.
-From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.
+From iris.base_logic Require Import proofmode.
 Set Default Proof Using "Type".
 
 Module invG.
@@ -53,7 +53,10 @@ Global Instance ownI_persistent i P : Persistent (ownI i P).
 Proof. rewrite /ownI. apply _. Qed.
 
 Lemma ownE_empty : (|==> ownE ∅)%I.
-Proof. by rewrite /uPred_valid (own_unit (coPset_disjUR) enabled_name). Qed.
+Proof.
+  rewrite /uPred_valid /bi_valid.
+  by rewrite (own_unit (coPset_disjUR) enabled_name).
+Qed.
 Lemma ownE_op E1 E2 : E1 ⊥ E2 → ownE (E1 ∪ E2) ⊣⊢ ownE E1 ∗ ownE E2.
 Proof. intros. by rewrite /ownE -own_op coPset_disj_union. Qed.
 Lemma ownE_disjoint E1 E2 : ownE E1 ∗ ownE E2 ⊢ ⌜E1 ⊥ E2⌝.
@@ -68,7 +71,10 @@ Lemma ownE_singleton_twice i : ownE {[i]} ∗ ownE {[i]} ⊢ False.
 Proof. rewrite ownE_disjoint. iIntros (?); set_solver. Qed.
 
 Lemma ownD_empty : (|==> ownD ∅)%I.
-Proof. by rewrite /uPred_valid (own_unit (gset_disjUR positive) disabled_name). Qed.
+Proof.
+  rewrite /uPred_valid /bi_valid.
+  by rewrite (own_unit (gset_disjUR positive) disabled_name).
+Qed.
 Lemma ownD_op E1 E2 : E1 ⊥ E2 → ownD (E1 ∪ E2) ⊣⊢ ownD E1 ∗ ownD E2.
 Proof. intros. by rewrite /ownD -own_op gset_disj_union. Qed.
 Lemma ownD_disjoint E1 E2 : ownD E1 ∗ ownD E2 ⊢ ⌜E1 ⊥ E2⌝.
@@ -90,7 +96,7 @@ Proof.
   rewrite -own_op own_valid auth_validI /=. iIntros "[#HI #HvI]".
   iDestruct "HI" as (I') "HI". rewrite gmap_equivI gmap_validI.
   iSpecialize ("HI" $! i). iSpecialize ("HvI" $! i).
-  rewrite left_id_L lookup_fmap lookup_op lookup_singleton uPred.option_equivI.
+  rewrite left_id_L lookup_fmap lookup_op lookup_singleton bi.option_equivI.
   case: (I !! i)=> [Q|] /=; [|case: (I' !! i)=> [Q'|] /=; by iExFalso].
   iExists Q; iSplit; first done.
   iAssert (invariant_unfold Q ≡ invariant_unfold P)%I as "?".
@@ -98,7 +104,7 @@ Proof.
     iRewrite "HI" in "HvI". rewrite uPred.option_validI agree_validI.
     iRewrite -"HvI" in "HI". by rewrite agree_idemp. }
   rewrite /invariant_unfold.
-  by rewrite agree_equivI uPred.later_equivI iProp_unfold_equivI.
+  by rewrite agree_equivI bi.later_equivI iProp_unfold_equivI.
 Qed.
 
 Lemma ownI_open i P : wsat ∗ ownI i P ∗ ownE {[i]} ⊢ wsat ∗ ▷ P ∗ ownD {[i]}.

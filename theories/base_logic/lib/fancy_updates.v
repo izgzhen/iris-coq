@@ -2,7 +2,6 @@ From iris.base_logic.lib Require Export own.
 From stdpp Require Export coPset.
 From iris.base_logic.lib Require Import wsat.
 From iris.algebra Require Import gmap.
-From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics classes.
 Set Default Proof Using "Type".
 Export invG.
@@ -19,19 +18,19 @@ Instance: Params (@fupd) 4.
 
 Notation "|={ E1 , E2 }=> Q" := (fupd E1 E2 Q)
   (at level 99, E1, E2 at level 50, Q at level 200,
-   format "|={ E1 , E2 }=>  Q") : uPred_scope.
+   format "|={ E1 , E2 }=>  Q") : bi_scope.
 Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)%I
   (at level 99, E1,E2 at level 50, Q at level 200,
-   format "P  ={ E1 , E2 }=∗  Q") : uPred_scope.
+   format "P  ={ E1 , E2 }=∗  Q") : bi_scope.
 Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)
   (at level 99, E1, E2 at level 50, Q at level 200, only parsing) : C_scope.
 
 Notation "|={ E }=> Q" := (fupd E E Q)
   (at level 99, E at level 50, Q at level 200,
-   format "|={ E }=>  Q") : uPred_scope.
+   format "|={ E }=>  Q") : bi_scope.
 Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)%I
   (at level 99, E at level 50, Q at level 200,
-   format "P  ={ E }=∗  Q") : uPred_scope.
+   format "P  ={ E }=∗  Q") : bi_scope.
 Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)
   (at level 99, E at level 50, Q at level 200, only parsing) : C_scope.
 
@@ -154,22 +153,37 @@ Section proofmode_classes.
     FromAssumption p P (|==> Q) → FromAssumption p P (|={E}=> Q)%I.
   Proof. rewrite /FromAssumption=>->. apply bupd_fupd. Qed.
 
-  Global Instance wand_weaken_fupd E1 E2 P Q P' Q' :
-    WandWeaken false P Q P' Q' →
-    WandWeaken' false P Q (|={E1,E2}=> P') (|={E1,E2}=> Q').
+  Global Instance into_wand_fupd E p q R P Q :
+    IntoWand false false R P Q →
+    IntoWand p q (|={E}=> R) (|={E}=> P) (|={E}=> Q).
   Proof.
-    rewrite /WandWeaken' /WandWeaken=>->. apply wand_intro_l. by rewrite fupd_wand_r.
+    rewrite /IntoWand /= => HR. rewrite !bare_persistently_if_elim HR.
+    apply wand_intro_l. by rewrite fupd_sep wand_elim_r.
   Qed.
 
-  Global Instance from_and_fupd E P Q1 Q2 :
-    FromAnd false P Q1 Q2 → FromAnd false (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
-  Proof. rewrite /FromAnd=><-. apply fupd_sep. Qed.
+  Global Instance into_wand_fupd_persistent E1 E2 p q R P Q :
+    IntoWand false q R P Q → IntoWand p q (|={E1,E2}=> R) P (|={E1,E2}=> Q).
+  Proof.
+    rewrite /IntoWand /= => HR. rewrite bare_persistently_if_elim HR.
+    apply wand_intro_l. by rewrite fupd_frame_l wand_elim_r.
+  Qed.
 
-  Global Instance or_split_fupd E1 E2 P Q1 Q2 :
+  Global Instance into_wand_fupd_args E1 E2 p q R P Q :
+    IntoWand p false R P Q → IntoWand' p q R (|={E1,E2}=> P) (|={E1,E2}=> Q).
+  Proof.
+    rewrite /IntoWand' /IntoWand /= => ->.
+    apply wand_intro_l. by rewrite bare_persistently_if_elim fupd_wand_r.
+  Qed.
+
+  Global Instance from_sep_fupd E P Q1 Q2 :
+    FromSep P Q1 Q2 → FromSep (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
+  Proof. rewrite /FromSep =><-. apply fupd_sep. Qed.
+
+  Global Instance from_or_fupd E1 E2 P Q1 Q2 :
     FromOr P Q1 Q2 → FromOr (|={E1,E2}=> P) (|={E1,E2}=> Q1) (|={E1,E2}=> Q2).
   Proof. rewrite /FromOr=><-. apply or_elim; apply fupd_mono; auto with I. Qed.
 
-  Global Instance exists_split_fupd {A} E1 E2 P (Φ : A → iProp Σ) :
+  Global Instance from_exist_fupd {A} E1 E2 P (Φ : A → iProp Σ) :
     FromExist P Φ → FromExist (|={E1,E2}=> P) (λ a, |={E1,E2}=> Φ a)%I.
   Proof.
     rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
@@ -204,16 +218,16 @@ Hint Extern 2 (coq_tactics.of_envs _ ⊢ |={_}=> _) => iModIntro.
 
 Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E1}=> Q))%I
   (at level 99, E1, E2 at level 50, Q at level 200,
-   format "|={ E1 , E2 }▷=>  Q") : uPred_scope.
+   format "|={ E1 , E2 }▷=>  Q") : bi_scope.
 Notation "P ={ E1 , E2 }▷=∗ Q" := (P -∗ |={ E1 , E2 }▷=> Q)%I
   (at level 99, E1, E2 at level 50, Q at level 200,
-   format "P  ={ E1 , E2 }▷=∗  Q") : uPred_scope.
+   format "P  ={ E1 , E2 }▷=∗  Q") : bi_scope.
 Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I
   (at level 99, E at level 50, Q at level 200,
-   format "|={ E }▷=>  Q") : uPred_scope.
+   format "|={ E }▷=>  Q") : bi_scope.
 Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I
   (at level 99, E at level 50, Q at level 200,
-   format "P  ={ E }▷=∗  Q") : uPred_scope.
+   format "P  ={ E }▷=∗  Q") : bi_scope.
 
 Section step_fupd.
 Context `{invG Σ}.

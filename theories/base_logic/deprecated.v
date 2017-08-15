@@ -1,3 +1,6 @@
+(*
+FIXME
+
 From iris.base_logic Require Import primitive.
 Set Default Proof Using "Type".
 
@@ -10,3 +13,4 @@ Notation "x = y" := (uPred_pure (x%C%type = y%C%type)) (only parsing) : uPred_sc
 
 (* Deprecated 2016-11-22. Use ⌜x ⊥ y ⌝ instead. *)
 Notation "x ⊥ y" := (uPred_pure (x%C%type ⊥ y%C%type)) (only parsing) : uPred_scope.
+*)

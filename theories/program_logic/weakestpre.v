@@ -1,6 +1,5 @@
 From iris.base_logic.lib Require Export fancy_updates.
 From iris.program_logic Require Export language.
-From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics classes.
 Set Default Proof Using "Type".
 Import uPred.
@@ -40,37 +39,37 @@ Instance: Params (@wp) 5.
 
 Notation "'WP' e @ E {{ Φ } }" := (wp E e%E Φ)
   (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' @  E  {{  Φ  } } ']'") : uPred_scope.
+   format "'[' 'WP'  e  '/' @  E  {{  Φ  } } ']'") : bi_scope.
 Notation "'WP' e {{ Φ } }" := (wp ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' {{  Φ  } } ']'") : uPred_scope.
+   format "'[' 'WP'  e  '/' {{  Φ  } } ']'") : bi_scope.
 
 Notation "'WP' e @ E {{ v , Q } }" := (wp E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' @  E  {{  v ,  Q  } } ']'") : uPred_scope.
+   format "'[' 'WP'  e  '/' @  E  {{  v ,  Q  } } ']'") : bi_scope.
 Notation "'WP' e {{ v , Q } }" := (wp ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' {{  v ,  Q  } } ']'") : uPred_scope.
+   format "'[' 'WP'  e  '/' {{  v ,  Q  } } ']'") : bi_scope.
 
 (* Texan triples *)
 Notation "'{{{' P } } } e @ E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  E  {{{  x .. y ,  RET  pat ;  Q } } }") : uPred_scope.
+     format "{{{  P  } } }  e  @  E  {{{  x .. y ,  RET  pat ;  Q } } }") : bi_scope.
 Notation "'{{{' P } } } e {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  {{{  x .. y ,   RET  pat ;  Q } } }") : uPred_scope.
+     format "{{{  P  } } }  e  {{{  x .. y ,   RET  pat ;  Q } } }") : bi_scope.
 Notation "'{{{' P } } } e @ E {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }})%I
     (at level 20,
-     format "{{{  P  } } }  e  @  E  {{{  RET  pat ;  Q } } }") : uPred_scope.
+     format "{{{  P  } } }  e  @  E  {{{  RET  pat ;  Q } } }") : bi_scope.
 Notation "'{{{' P } } } e {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }})%I
     (at level 20,
-     format "{{{  P  } } }  e  {{{  RET  pat ;  Q } } }") : uPred_scope.
+     format "{{{  P  } } }  e  {{{  RET  pat ;  Q } } }") : bi_scope.
 
 Notation "'{{{' P } } } e @ E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,

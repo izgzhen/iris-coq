@@ -1,7 +1,6 @@
 From iris.base_logic.lib Require Export invariants.
 From iris.algebra Require Export auth.
 From iris.algebra Require Import gmap.
-From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 Import uPred.
@@ -73,6 +72,7 @@ Section auth.
   Lemma auth_own_op γ a b : auth_own γ (a ⋅ b) ⊣⊢ auth_own γ a ∗ auth_own γ b.
   Proof. by rewrite /auth_own -own_op auth_frag_op. Qed.
 
+(*
   Global Instance from_and_auth_own γ a b1 b2 :
     IsOp a b1 b2 →
     FromAnd false (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
@@ -89,6 +89,7 @@ Section auth.
     IsOp a b1 b2 →
     IntoAnd p (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
   Proof. intros. apply mk_into_and_sep. by rewrite (is_op a) auth_own_op. Qed.
+*)
 
   Lemma auth_own_mono γ a b : a ≼ b → auth_own γ b ⊢ auth_own γ a.
   Proof. intros [? ->]. by rewrite auth_own_op sep_elim_l. Qed.

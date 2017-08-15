@@ -1,5 +1,4 @@
 From iris.program_logic Require Export weakestpre.
-From iris.base_logic Require Export big_op.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 
@@ -76,7 +75,7 @@ Lemma wp_pure_step_fupd `{Inhabited (state Λ)} E E' e1 e2 φ Φ :
 Proof.
   iIntros ([??] Hφ) "HWP".
   iApply (wp_lift_pure_det_step with "[HWP]"); [eauto|naive_solver|].
-  rewrite big_sepL_nil right_id //.
+  rewrite bi.big_sepL_nil right_id //.
 Qed.
 
 Lemma wp_pure_step_later `{Inhabited (state Λ)} E e1 e2 φ Φ :

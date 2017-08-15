@@ -1,4 +1,4 @@
-From iris.base_logic Require Import base_logic soundness.
+From iris.base_logic Require Import base_logic soundness proofmode.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type*".
 
@@ -7,7 +7,7 @@ name-dependent allocation. *)
 Module savedprop. Section savedprop.
   Context (M : ucmraT).
   Notation iProp := (uPred M).
-  Notation "¬ P" := (□ (P → False))%I : uPred_scope.
+  Notation "¬ P" := (□ (P → False))%I : bi_scope.
   Implicit Types P : iProp.
 
   (** Saved Propositions and the update modality *)
@@ -41,7 +41,7 @@ Module savedprop. Section savedprop.
   Lemma contradiction : False.
   Proof using All.
     apply (@soundness M False 1); simpl.
-    iIntros "". iMod A_alloc as (i) "#H".
+    iMod A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
     iModIntro. iNext.
     iApply "HN". iApply saved_A. done.
@@ -108,25 +108,25 @@ Module inv. Section inv.
   Proof. intros P Q ?. by apply fupd_mono. Qed.
   Instance fupd_proper E : Proper ((⊣⊢) ==> (⊣⊢)) (fupd E).
   Proof.
-    intros P Q; rewrite !uPred.equiv_spec=> -[??]; split; by apply fupd_mono.
+    intros P Q; rewrite !bi.equiv_spec=> -[??]; split; by apply fupd_mono.
   Qed.
 
   Lemma fupd_frame_r E P Q : fupd E P ∗ Q ⊢ fupd E (P ∗ Q).
   Proof. by rewrite comm fupd_frame_l comm. Qed.
 
   Global Instance elim_fupd_fupd E P Q : ElimModal (fupd E P) P (fupd E Q) (fupd E Q).
-  Proof. by rewrite /ElimModal fupd_frame_r uPred.wand_elim_r fupd_fupd. Qed.
+  Proof. by rewrite /ElimModal fupd_frame_r bi.wand_elim_r fupd_fupd. Qed.
 
   Global Instance elim_fupd0_fupd1 P Q : ElimModal (fupd M0 P) P (fupd M1 Q) (fupd M1 Q).
   Proof.
-    by rewrite /ElimModal fupd_frame_r uPred.wand_elim_r fupd_mask_mono fupd_fupd.
+    by rewrite /ElimModal fupd_frame_r bi.wand_elim_r fupd_mask_mono fupd_fupd.
   Qed.
 
   Global Instance exists_split_fupd0 {A} E P (Φ : A → iProp) :
     FromExist P Φ → FromExist (fupd E P) (λ a, fupd E (Φ a)).
   Proof.
-    rewrite /FromExist=>HP. apply uPred.exist_elim=> a.
-    apply fupd_mono. by rewrite -HP -(uPred.exist_intro a).
+    rewrite /FromExist=>HP. apply bi.exist_elim=> a.
+    apply fupd_mono. by rewrite -HP -(bi.exist_intro a).
   Qed.
 
   (** Now to the actual counterexample. We start with a weird form of saved propositions. *)
@@ -163,7 +163,7 @@ Module inv. Section inv.
   Qed.
 
   (** And now we tie a bad knot. *)
-  Notation "¬ P" := (□ (P -∗ fupd M1 False))%I : uPred_scope.
+  Notation "¬ P" := (□ (P -∗ fupd M1 False))%I : bi_scope.
   Definition A i : iProp := ∃ P, ¬P ∗ saved i P.
   Global Instance A_persistent i : Persistent (A i) := _.
 

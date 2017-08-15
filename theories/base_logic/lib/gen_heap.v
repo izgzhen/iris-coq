@@ -1,6 +1,7 @@
 From iris.algebra Require Import auth gmap frac agree.
+From iris.base_logic Require Import proofmode.
 From iris.base_logic.lib Require Export own.
-From iris.base_logic.lib Require Import fractional.
+From iris.bi Require Import fractional.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 Import uPred.
@@ -41,12 +42,12 @@ Section definitions.
 End definitions.
 
 Local Notation "l ↦{ q } v" := (mapsto l q v)
-  (at level 20, q at level 50, format "l  ↦{ q }  v") : uPred_scope.
-Local Notation "l ↦ v" := (mapsto l 1 v) (at level 20) : uPred_scope.
+  (at level 20, q at level 50, format "l  ↦{ q }  v") : bi_scope.
+Local Notation "l ↦ v" := (mapsto l 1 v) (at level 20) : bi_scope.
 
 Local Notation "l ↦{ q } -" := (∃ v, l ↦{q} v)%I
-  (at level 20, q at level 50, format "l  ↦{ q }  -") : uPred_scope.
-Local Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : uPred_scope.
+  (at level 20, q at level 50, format "l  ↦{ q }  -") : bi_scope.
+Local Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : bi_scope.
 
 Section to_gen_heap.
   Context (L V : Type) `{Countable L}.

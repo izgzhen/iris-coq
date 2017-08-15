@@ -1,6 +1,6 @@
 From iris.algebra Require Export frac auth.
 From iris.algebra Require Export updates local_updates.
-From iris.proofmode Require Import classes.
+From iris.base_logic Require Import proofmode_classes.
 
 Definition frac_authR (A : cmraT) : cmraT :=
   authR (optionUR (prodR fracR A)).

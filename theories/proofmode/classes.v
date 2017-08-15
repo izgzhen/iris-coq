@@ -1,26 +1,19 @@
-From iris.base_logic Require Export base_logic.
+From iris.bi Require Export bi.
 Set Default Proof Using "Type".
-Import uPred.
+Import bi.
 
-(* The Or class is useful for efficiency: instead of having two instances
-[P → Q1 → R] and [P → Q2 → R] we could have one instance [P → Or Q1 Q2 → R],
-which avoids the need to derive [P] twice. *)
-Inductive Or (P1 P2 : Type) :=
-  | Or_l : P1 → Or P1 P2
-  | Or_r : P2 → Or P1 P2.
-Existing Class Or.
-Existing Instance Or_l | 9.
-Existing Instance Or_r | 10.
-
-Class FromAssumption {M} (p : bool) (P Q : uPred M) :=
-  from_assumption : □?p P ⊢ Q.
-Arguments from_assumption {_} _ _ _ {_}.
-(* No need to restrict Hint Mode, we have a default instance that will persistently
+Class FromAssumption {PROP : bi} (p : bool) (P Q : PROP) :=
+  from_assumption : ⬕?p P ⊢ Q.
+Arguments FromAssumption {_} _ _%I _%I : simpl never.
+Arguments from_assumption {_} _ _%I _%I {_}.
+(* No need to restrict Hint Mode, we have a default instance that will always
 be used in case of evars *)
 Hint Mode FromAssumption + + - - : typeclass_instances.
 
-Class IntoPure {M} (P : uPred M) (φ : Prop) := into_pure : P ⊢ ⌜φ⌝.
-Arguments into_pure {_} _ _ {_}.
+Class IntoPure {PROP : bi} (P : PROP) (φ : Prop) :=
+  into_pure : P ⊢ ⌜φ⌝.
+Arguments IntoPure {_} _%I _%type_scope : simpl never.
+Arguments into_pure {_} _%I _%type_scope {_}.
 Hint Mode IntoPure + ! - : typeclass_instances.
 
 (* [IntoPureT] is a variant of [IntoPure] with the argument in [Type] to avoid
@@ -43,21 +36,180 @@ once, and use [IntoPureT] in any instance like [into_exist_and_pure].
 
 TODO: Report this as a Coq bug, or wait for https://github.com/coq/coq/pull/991
 to be finished and merged someday. *)
-Class IntoPureT {M} (P : uPred M) (φ : Type) :=
+Class IntoPureT {PROP : bi} (P : PROP) (φ : Type) :=
   into_pureT : ∃ ψ : Prop, φ = ψ ∧ IntoPure P ψ.
-Lemma into_pureT_hint {M} (P : uPred M) (φ : Prop) : IntoPure P φ → IntoPureT P φ.
+Lemma into_pureT_hint {PROP : bi} (P : PROP) (φ : Prop) : IntoPure P φ → IntoPureT P φ.
 Proof. by exists φ. Qed.
 Hint Extern 0 (IntoPureT _ _) =>
   notypeclasses refine (into_pureT_hint _ _ _) : typeclass_instances.
 
-Class FromPure {M} (P : uPred M) (φ : Prop) := from_pure : ⌜φ⌝ ⊢ P.
-Arguments from_pure {_} _ _ {_}.
+Class FromPure {PROP : bi} (P : PROP) (φ : Prop) :=
+  from_pure : ⌜φ⌝ ⊢ P.
+Arguments FromPure {_} _%I _%type_scope : simpl never.
+Arguments from_pure {_} _%I _%type_scope {_}.
 Hint Mode FromPure + ! - : typeclass_instances.
 
-Class IntoPersistent {M} (p : bool) (P Q : uPred M) :=
+Class IntoPersistent {PROP : bi} (p : bool) (P Q : PROP) :=
   into_persistent : □?p P ⊢ □ Q.
-Arguments into_persistent {_} _ _ _ {_}.
+Arguments IntoPersistent {_} _ _%I _%I : simpl never.
+Arguments into_persistent {_} _ _%I _%I {_}.
 Hint Mode IntoPersistent + + ! - : typeclass_instances.
+
+Class FromPersistent {PROP : bi} (P Q : PROP) :=
+  from_persistent : □ Q ⊢ P.
+Arguments FromPersistent {_} _%I _%I : simpl never.
+Arguments from_persistent {_} _%I _%I {_}.
+Hint Mode FromPersistent + ! - : typeclass_instances.
+
+Class FromBare {PROP : bi} (P Q : PROP) :=
+  from_bare : ■ Q ⊢ P.
+Arguments FromBare {_} _%I _%type_scope : simpl never.
+Arguments from_bare {_} _%I _%type_scope {_}.
+Hint Mode FromBare + ! - : typeclass_instances.
+Hint Mode FromBare + - ! : typeclass_instances.
+
+Class IntoInternalEq {PROP : bi} {A : ofeT} (P : PROP) (x y : A) :=
+  into_internal_eq : P ⊢ x ≡ y.
+Arguments IntoInternalEq {_ _} _%I _%type_scope _%type_scope : simpl never.
+Arguments into_internal_eq {_ _} _%I _%type_scope _%type_scope {_}.
+Hint Mode IntoInternalEq + - ! - - : typeclass_instances.
+
+(*
+Converting an assumption [R] into a wand [P -∗ Q] is done in three stages:
+
+- Strip modalities and universal quantifiers of [R] until an arrow or a wand
+  has been obtained.
+- Balance modalities in the arguments [P] and [Q] to match the goal (which used
+  for [iApply]) or the premise (when used with [iSpecialize] and a specific
+  hypothesis).
+- Instantiate the premise of the wand or implication.
+*)
+Class IntoWand {PROP : bi} (p q : bool) (R P Q : PROP) :=
+  into_wand : ⬕?p R ⊢ ⬕?q P -∗ Q.
+Arguments IntoWand {_} _ _ _%I _%I _%I : simpl never.
+Arguments into_wand {_} _ _ _%I _%I _%I {_}.
+Hint Mode IntoWand + + + ! - - : typeclass_instances.
+
+Class IntoWand' {PROP : bi} (p q : bool) (R P Q : PROP) :=
+  into_wand' : IntoWand p q R P Q.
+Arguments IntoWand' {_} _ _ _%I _%I _%I : simpl never.
+Hint Mode IntoWand' + + + ! ! - : typeclass_instances.
+Hint Mode IntoWand' + + + ! - ! : typeclass_instances.
+
+Instance into_wand_wand' {PROP : bi} p q (P Q P' Q' : PROP) :
+  IntoWand' p q (P -∗ Q) P' Q' → IntoWand p q (P -∗ Q) P' Q' | 100.
+Proof. done. Qed.
+Instance into_wand_impl' {PROP : bi} p q (P Q P' Q' : PROP) :
+  IntoWand' p q (P → Q) P' Q' → IntoWand p q (P → Q) P' Q' | 100.
+Proof. done. Qed.
+
+Class FromSep {PROP : bi} (P Q1 Q2 : PROP) := from_sep : Q1 ∗ Q2 ⊢ P.
+Arguments FromSep {_} _%I _%I _%I : simpl never.
+Arguments from_sep {_} _%I _%I _%I {_}.
+Hint Mode FromSep + ! - - : typeclass_instances.
+Hint Mode FromSep + - ! ! : typeclass_instances. (* For iCombine *)
+
+Class FromAnd {PROP : bi} (P Q1 Q2 : PROP) := from_and : Q1 ∧ Q2 ⊢ P.
+Arguments FromAnd {_} _%I _%I _%I : simpl never.
+Arguments from_and {_} _%I _%I _%I {_}.
+Hint Mode FromAnd + ! - - : typeclass_instances.
+Hint Mode FromAnd + - ! ! : typeclass_instances. (* For iCombine *)
+
+Class IntoAnd {PROP : bi} (p : bool) (P Q1 Q2 : PROP) :=
+  into_and : ⬕?p P ⊢ ⬕?p (Q1 ∧ Q2).
+Arguments IntoAnd {_} _ _%I _%I _%I : simpl never.
+Arguments into_and {_} _ _%I _%I _%I {_}.
+Hint Mode IntoAnd + + ! - - : typeclass_instances.
+
+Class IntoSep {PROP : bi} (p : bool) (P Q1 Q2 : PROP) :=
+  into_sep : ⬕?p P ⊢ ⬕?p (Q1 ∗ Q2).
+Arguments IntoSep {_} _ _%I _%I _%I : simpl never.
+Arguments into_sep {_} _ _%I _%I _%I {_}.
+Hint Mode IntoAnd + + ! - - : typeclass_instances.
+
+Class FromOr {PROP : bi} (P Q1 Q2 : PROP) := from_or : Q1 ∨ Q2 ⊢ P.
+Arguments FromOr {_} _%I _%I _%I : simpl never.
+Arguments from_or {_} _%I _%I _%I {_}.
+Hint Mode FromOr + ! - - : typeclass_instances.
+
+Class IntoOr {PROP : bi} (P Q1 Q2 : PROP) := into_or : P ⊢ Q1 ∨ Q2.
+Arguments IntoOr {_} _%I _%I _%I : simpl never.
+Arguments into_or {_} _%I _%I _%I {_}.
+Hint Mode IntoOr + ! - - : typeclass_instances.
+
+Class FromExist {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :=
+  from_exist : (∃ x, Φ x) ⊢ P.
+Arguments FromExist {_ _} _%I _%I : simpl never.
+Arguments from_exist {_ _} _%I _%I {_}.
+Hint Mode FromExist + - ! - : typeclass_instances.
+
+Class IntoExist {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :=
+  into_exist : P ⊢ ∃ x, Φ x.
+Arguments IntoExist {_ _} _%I _%I : simpl never.
+Arguments into_exist {_ _} _%I _%I {_}.
+Hint Mode IntoExist + - ! - : typeclass_instances.
+
+Class IntoForall {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :=
+  into_forall : P ⊢ ∀ x, Φ x.
+Arguments IntoForall {_ _} _%I _%I : simpl never.
+Arguments into_forall {_ _} _%I _%I {_}.
+Hint Mode IntoForall + - ! - : typeclass_instances.
+
+Class FromForall {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :=
+  from_forall : (∀ x, Φ x) ⊢ P.
+Arguments from_forall {_ _} _ _ {_}.
+Hint Mode FromForall + - ! - : typeclass_instances.
+
+Class IsExcept0 {PROP : sbi} (Q : PROP) := is_except_0 : ◇ Q ⊢ Q.
+Arguments IsExcept0 {_} _%I : simpl never.
+Arguments is_except_0 {_} _%I {_}.
+Hint Mode IsExcept0 + ! : typeclass_instances.
+
+Class FromModal {PROP : bi} (P Q : PROP) := from_modal : Q ⊢ P.
+Arguments FromModal {_} _%I _%I : simpl never.
+Arguments from_modal {_} _%I _%I {_}.
+Hint Mode FromModal + ! - : typeclass_instances.
+
+Class ElimModal {PROP : bi} (P P' : PROP) (Q Q' : PROP) :=
+  elim_modal : P ∗ (P' -∗ Q') ⊢ Q.
+Arguments ElimModal {_} _%I _%I _%I _%I : simpl never.
+Arguments elim_modal {_} _%I _%I _%I _%I {_}.
+Hint Mode ElimModal + ! - ! - : typeclass_instances.
+Hint Mode ElimModal + - ! - ! : typeclass_instances.
+
+Lemma elim_modal_dummy {PROP : bi} (P Q : PROP) : ElimModal P P Q Q.
+Proof. by rewrite /ElimModal wand_elim_r. Qed.
+
+Class IsCons {A} (l : list A) (x : A) (k : list A) := is_cons : l = x :: k.
+Class IsApp {A} (l k1 k2 : list A) := is_app : l = k1 ++ k2.
+Global Hint Mode IsCons + ! - - : typeclass_instances.
+Global Hint Mode IsApp + ! - - : typeclass_instances.
+
+Instance is_cons_cons {A} (x : A) (l : list A) : IsCons (x :: l) x l.
+Proof. done. Qed.
+Instance is_app_app {A} (l1 l2 : list A) : IsApp (l1 ++ l2) l1 l2.
+Proof. done. Qed.
+
+Class Frame {PROP : bi} (p : bool) (R P Q : PROP) := frame : ⬕?p R ∗ Q ⊢ P.
+Arguments Frame {_} _ _%I _%I _%I.
+Arguments frame {_ _} _%I _%I _%I {_}.
+Hint Mode Frame + + ! ! - : typeclass_instances.
+
+Class MaybeFrame {PROP : bi} (p : bool) (R P Q : PROP) :=
+  maybe_frame : ⬕?p R ∗ Q ⊢ P.
+Arguments MaybeFrame {_} _ _%I _%I _%I.
+Arguments maybe_frame {_} _%I _%I _%I {_}.
+Hint Mode MaybeFrame + + ! ! - : typeclass_instances.
+
+Instance maybe_frame_frame {PROP : bi} p (R P Q : PROP) :
+  Frame p R P Q → MaybeFrame p R P Q.
+Proof. done. Qed.
+Instance maybe_frame_default_persistent {PROP : bi} (R P : PROP) :
+  MaybeFrame true R P P | 100.
+Proof. intros. rewrite /MaybeFrame /=. by rewrite sep_elim_r. Qed.
+Instance maybe_frame_default {PROP : bi} (R P : PROP) :
+  TCOr (Affine R) (Absorbing P) → MaybeFrame false R P P | 100.
+Proof. intros. rewrite /MaybeFrame /=. apply: sep_elim_r. Qed.
 
 (* The class [IntoLaterN] has only two instances:
 
@@ -83,160 +235,23 @@ IntoLaterN' n P P'       IntoLaterN n Q Q'
 IntoLaterN n (P /\ Q) (P /\ Q')
 >>
 *)
-Class IntoLaterN {M} (n : nat) (P Q : uPred M) := into_laterN : P ⊢ ▷^n Q.
-Arguments into_laterN {_} _ _ _ {_}.
+Class IntoLaterN {PROP : sbi} (n : nat) (P Q : PROP) := into_laterN : P ⊢ ▷^n Q.
+Arguments IntoLaterN {_} _%nat_scope _%I _%I.
+Arguments into_laterN {_} _%nat_scope _%I _%I {_}.
 Hint Mode IntoLaterN + - - - : typeclass_instances.
 
-Class IntoLaterN' {M} (n : nat) (P Q : uPred M) :=
+Class IntoLaterN' {PROP : sbi} (n : nat) (P Q : PROP) :=
   into_laterN' :> IntoLaterN n P Q.
-Arguments into_laterN' {_} _ _ _ {_}.
+Arguments IntoLaterN' {_} _%nat_scope _%I _%I.
 Hint Mode IntoLaterN' + - ! - : typeclass_instances.
 
-Instance into_laterN_default {M} n (P : uPred M) : IntoLaterN n P P | 1000.
+Instance into_laterN_default {PROP : sbi} n (P : PROP) : IntoLaterN n P P | 1000.
 Proof. apply laterN_intro. Qed.
 
-Class FromLaterN {M} (n : nat) (P Q : uPred M) := from_laterN : ▷^n Q ⊢ P.
-Arguments from_laterN {_} _ _ _ {_}.
+Class FromLaterN {PROP : sbi} (n : nat) (P Q : PROP) := from_laterN : ▷^n Q ⊢ P.
+Arguments FromLaterN {_} _%nat_scope _%I _%I.
+Arguments from_laterN {_} _%nat_scope _%I _%I {_}.
 Hint Mode FromLaterN + - ! - : typeclass_instances.
-
-Class WandWeaken {M} (p : bool) (P Q P' Q' : uPred M) :=
-  wand_weaken : (P -∗ Q) ⊢ (□?p P' -∗ Q').
-Hint Mode WandWeaken + + - - - - : typeclass_instances.
-
-Class WandWeaken' {M} (p : bool) (P Q P' Q' : uPred M) :=
-  wand_weaken' :> WandWeaken p P Q P' Q'.
-Hint Mode WandWeaken' + + - - ! - : typeclass_instances.
-Hint Mode WandWeaken' + + - - - ! : typeclass_instances.
-
-Class IntoWand {M} (p : bool) (R P Q : uPred M) := into_wand : R ⊢ □?p P -∗ Q.
-Arguments into_wand {_} _ _ _ _ {_}.
-Hint Mode IntoWand + + ! - - : typeclass_instances.
-
-Class FromAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=
-  from_and : (if p then Q1 ∧ Q2 else Q1 ∗ Q2) ⊢ P.
-Arguments from_and {_} _ _ _ _ {_}.
-Hint Mode FromAnd + + ! - - : typeclass_instances.
-Hint Mode FromAnd + + - ! ! : typeclass_instances. (* For iCombine *)
-
-Lemma mk_from_and_and {M} p (P Q1 Q2 : uPred M) :
-  (Q1 ∧ Q2 ⊢ P) → FromAnd p P Q1 Q2.
-Proof. rewrite /FromAnd=><-. destruct p; auto using sep_and. Qed.
-Lemma mk_from_and_persistent {M} (P Q1 Q2 : uPred M) :
-  Or (Persistent Q1) (Persistent Q2) → (Q1 ∗ Q2 ⊢ P) → FromAnd true P Q1 Q2.
-Proof.
-  intros [?|?] ?; rewrite /FromAnd.
-  - by rewrite and_sep_l.
-  - by rewrite and_sep_r.
-Qed.
-
-Class IntoAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=
-  into_and : P ⊢ if p then Q1 ∧ Q2 else Q1 ∗ Q2.
-Arguments into_and {_} _ _ _ _ {_}.
-Hint Mode IntoAnd + + ! - - : typeclass_instances.
-
-Lemma mk_into_and_sep {M} p (P Q1 Q2 : uPred M) :
-  (P ⊢ Q1 ∗ Q2) → IntoAnd p P Q1 Q2.
-Proof. rewrite /IntoAnd=>->. destruct p; auto using sep_and. Qed.
-
-(* There are various versions of [IsOp] with different modes:
-
-- [IsOp a b1 b2]: this one has no mode, it can be used regardless of whether
-  any of the arguments is an evar. This class has only one direct instance:
-  [IsOp (a ⋅ b) a b].
-- [IsOp' a b1 b2]: requires either [a] to start with a constructor, OR [b1] and
-  [b2] to start with a constructor. All usual instances should be of this
-  class to avoid loops.
-- [IsOp'LR a b1 b2]: requires either [a] to start with a constructor. This one
-  has just one instance: [IsOp'LR (a ⋅ b) a b] with a very low precendence.
-  This is important so that when performing, for example, an [iDestruct] on
-  [own γ (q1 + q2)] where [q1] and [q2] are fractions, we actually get
-  [own γ q1] and [own γ q2] instead of [own γ ((q1 + q2)/2)] twice.
-*)
-Class IsOp {A : cmraT} (a b1 b2 : A) := is_op : a ≡ b1 ⋅ b2.
-Arguments is_op {_} _ _ _ {_}.
-Hint Mode IsOp + - - - : typeclass_instances.
-
-Instance is_op_op {A : cmraT} (a b : A) : IsOp (a ⋅ b) a b | 100.
-Proof. by rewrite /IsOp. Qed.
-
-Class IsOp' {A : cmraT} (a b1 b2 : A) := is_op' :> IsOp a b1 b2.
-Hint Mode IsOp' + ! - - : typeclass_instances.
-Hint Mode IsOp' + - ! ! : typeclass_instances.
-
-Class IsOp'LR {A : cmraT} (a b1 b2 : A) := is_op_lr : IsOp a b1 b2.
-Existing Instance is_op_lr | 0.
-Hint Mode IsOp'LR + ! - - : typeclass_instances.
-Instance is_op_lr_op {A : cmraT} (a b : A) : IsOp'LR (a ⋅ b) a b | 0.
-Proof. by rewrite /IsOp'LR /IsOp. Qed.
-
-Class Frame {M} (p : bool) (R P Q : uPred M) := frame : □?p R ∗ Q ⊢ P.
-Arguments frame {_ _} _ _ _ {_}.
-Hint Mode Frame + + ! ! - : typeclass_instances.
-
-Class MaybeFrame {M} (p : bool) (R P Q : uPred M) := maybe_frame : □?p R ∗ Q ⊢ P.
-Arguments maybe_frame {_} _ _ _ {_}.
-Hint Mode MaybeFrame + + ! ! - : typeclass_instances.
-
-Instance maybe_frame_frame {M} p (R P Q : uPred M) :
-  Frame p R P Q → MaybeFrame p R P Q.
-Proof. done. Qed.
-Instance maybe_frame_default {M} p (R P : uPred M) : MaybeFrame p R P P | 100.
-Proof. apply sep_elim_r. Qed.
-
-Class FromOr {M} (P Q1 Q2 : uPred M) := from_or : Q1 ∨ Q2 ⊢ P.
-Arguments from_or {_} _ _ _ {_}.
-Hint Mode FromOr + ! - - : typeclass_instances.
-
-Class IntoOr {M} (P Q1 Q2 : uPred M) := into_or : P ⊢ Q1 ∨ Q2.
-Arguments into_or {_} _ _ _ {_}.
-Hint Mode IntoOr + ! - - : typeclass_instances.
-
-Class FromExist {M A} (P : uPred M) (Φ : A → uPred M) :=
-  from_exist : (∃ x, Φ x) ⊢ P.
-Arguments from_exist {_ _} _ _ {_}.
-Hint Mode FromExist + - ! - : typeclass_instances.
-
-Class IntoExist {M A} (P : uPred M) (Φ : A → uPred M) :=
-  into_exist : P ⊢ ∃ x, Φ x.
-Arguments into_exist {_ _} _ _ {_}.
-Hint Mode IntoExist + - ! - : typeclass_instances.
-
-Class IntoForall {M A} (P : uPred M) (Φ : A → uPred M) :=
-  into_forall : P ⊢ ∀ x, Φ x.
-Arguments into_forall {_ _} _ _ {_}.
-Hint Mode IntoForall + - ! - : typeclass_instances.
-
-Class FromForall {M A} (P : uPred M) (Φ : A → uPred M) :=
-  from_forall : (∀ x, Φ x) ⊢ P.
-Arguments from_forall {_ _} _ _ {_}.
-Hint Mode FromForall + - ! - : typeclass_instances.
-
-Class FromModal {M} (P Q : uPred M) := from_modal : Q ⊢ P.
-Arguments from_modal {_} _ _ {_}.
-Hint Mode FromModal + ! - : typeclass_instances.
-
-Class ElimModal {M} (P P' : uPred M) (Q Q' : uPred M) :=
-  elim_modal : P ∗ (P' -∗ Q') ⊢ Q.
-Arguments elim_modal {_} _ _ _ _ {_}.
-Hint Mode ElimModal + ! - ! - : typeclass_instances.
-Hint Mode ElimModal + - ! - ! : typeclass_instances.
-
-Lemma elim_modal_dummy {M} (P Q : uPred M) : ElimModal P P Q Q.
-Proof. by rewrite /ElimModal wand_elim_r. Qed.
-
-Class IsExcept0 {M} (Q : uPred M) := is_except_0 : ◇ Q ⊢ Q.
-Arguments is_except_0 {_} _ {_}.
-Hint Mode IsExcept0 + ! : typeclass_instances.
-
-Class IsCons {A} (l : list A) (x : A) (k : list A) := is_cons : l = x :: k.
-Class IsApp {A} (l k1 k2 : list A) := is_app : l = k1 ++ k2.
-Global Hint Mode IsCons + ! - - : typeclass_instances.
-Global Hint Mode IsApp + ! - - : typeclass_instances.
-
-Instance is_cons_cons {A} (x : A) (l : list A) : IsCons (x :: l) x l.
-Proof. done. Qed.
-Instance is_app_app {A} (l1 l2 : list A) : IsApp (l1 ++ l2) l1 l2.
-Proof. done. Qed.
 
 (* We make sure that tactics that perform actions on *specific* hypotheses or
 parts of the goal look through the [tc_opaque] connective, which is used to make
@@ -250,34 +265,34 @@ This means that there are [tc_opaque] instances for all proofmode type classes
 with the exception of:
 
 - [FromAssumption] used by [iAssumption]
-- [Frame] used by [iFrame]
+- [Frame] and [MaybeFrame] used by [iFrame]
 - [IntoLaterN] and [FromLaterN] used by [iNext]
-- [IntoPersistentP] used by [iPersistent]
+- [IntoPersistent] used by [iPersistent]
 *)
-Instance into_pure_tc_opaque {M} (P : uPred M) φ :
+Instance into_pure_tc_opaque {PROP : bi} (P : PROP) φ :
   IntoPure P φ → IntoPure (tc_opaque P) φ := id.
-Instance from_pure_tc_opaque {M} (P : uPred M) φ :
+Instance from_pure_tc_opaque {PROP : bi} (P : PROP) φ :
   FromPure P φ → FromPure (tc_opaque P) φ := id.
-Instance from_laterN_tc_opaque {M} n (P Q : uPred M) :
+Instance from_laterN_tc_opaque {PROP : sbi} n (P Q : PROP) :
   FromLaterN n P Q → FromLaterN n (tc_opaque P) Q := id.
-Instance into_wand_tc_opaque {M} p (R P Q : uPred M) :
-  IntoWand p R P Q → IntoWand p (tc_opaque R) P Q := id.
+Instance into_wand_tc_opaque {PROP : bi} p q (R P Q : PROP) :
+  IntoWand p q R P Q → IntoWand p q (tc_opaque R) P Q := id.
 (* Higher precedence than [from_and_sep] so that [iCombine] does not loop. *)
-Instance from_and_tc_opaque {M} p (P Q1 Q2 : uPred M) :
-  FromAnd p P Q1 Q2 → FromAnd p (tc_opaque P) Q1 Q2 | 102 := id.
-Instance into_and_tc_opaque {M} p (P Q1 Q2 : uPred M) :
+Instance from_and_tc_opaque {PROP : bi} (P Q1 Q2 : PROP) :
+  FromAnd P Q1 Q2 → FromAnd (tc_opaque P) Q1 Q2 | 102 := id.
+Instance into_and_tc_opaque {PROP : bi} p (P Q1 Q2 : PROP) :
   IntoAnd p P Q1 Q2 → IntoAnd p (tc_opaque P) Q1 Q2 := id.
-Instance from_or_tc_opaque {M} (P Q1 Q2 : uPred M) :
+Instance from_or_tc_opaque {PROP : bi} (P Q1 Q2 : PROP) :
   FromOr P Q1 Q2 → FromOr (tc_opaque P) Q1 Q2 := id.
-Instance into_or_tc_opaque {M} (P Q1 Q2 : uPred M) :
+Instance into_or_tc_opaque {PROP : bi} (P Q1 Q2 : PROP) :
   IntoOr P Q1 Q2 → IntoOr (tc_opaque P) Q1 Q2 := id.
-Instance from_exist_tc_opaque {M A} (P : uPred M) (Φ : A → uPred M) :
+Instance from_exist_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   FromExist P Φ → FromExist (tc_opaque P) Φ := id.
-Instance into_exist_tc_opaque {M A} (P : uPred M) (Φ : A → uPred M) :
+Instance into_exist_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (tc_opaque P) Φ := id.
-Instance into_forall_tc_opaque {M A} (P : uPred M) (Φ : A → uPred M) :
+Instance into_forall_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (tc_opaque P) Φ := id.
-Instance from_modal_tc_opaque {M} (P Q : uPred M) :
+Instance from_modal_tc_opaque {PROP : bi} (P Q : PROP) :
   FromModal P Q → FromModal (tc_opaque P) Q := id.
-Instance elim_modal_tc_opaque {M} (P P' Q Q' : uPred M) :
+Instance elim_modal_tc_opaque {PROP : bi} (P P' Q Q' : PROP) :
   ElimModal P P' Q Q' → ElimModal (tc_opaque P) P' Q Q' := id.

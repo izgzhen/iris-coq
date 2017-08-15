@@ -1,15 +1,16 @@
-From stdpp Require Import gmap gmultiset.
-From iris.base_logic Require Export derived.
-From iris.base_logic Require Import big_op.
+From iris.bi Require Export bi.
 From iris.proofmode Require Import classes class_instances.
 Set Default Proof Using "Type".
 
-Class Fractional {M} (Φ : Qp → uPred M) :=
+Class Fractional {PROP : bi} (Φ : Qp → PROP) :=
   fractional p q : Φ (p + q)%Qp ⊣⊢ Φ p ∗ Φ q.
-Class AsFractional {M} (P : uPred M) (Φ : Qp → uPred M) (q : Qp) := {
+Arguments Fractional {_} _%I : simpl never.
+
+Class AsFractional {PROP : bi} (P : PROP) (Φ : Qp → PROP) (q : Qp) := {
   as_fractional : P ⊣⊢ Φ q;
   as_fractional_fractional :> Fractional Φ
 }.
+Arguments AsFractional {_} _%I _%I _%Qp.
 
 Arguments fractional {_ _ _} _ _.
 
@@ -17,9 +18,9 @@ Hint Mode AsFractional - + - - : typeclass_instances.
 Hint Mode AsFractional - - + + : typeclass_instances.
 
 Section fractional.
-  Context {M : ucmraT}.
-  Implicit Types P Q : uPred M.
-  Implicit Types Φ : Qp → uPred M.
+  Context {PROP : bi}.
+  Implicit Types P Q : PROP.
+  Implicit Types Φ : Qp → PROP.
   Implicit Types q : Qp.
 
   Lemma fractional_split P P1 P2 Φ q1 q2 :
@@ -33,7 +34,7 @@ Section fractional.
   Lemma fractional_split_2 P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
     P1 -∗ P2 -∗ P.
-  Proof. intros. apply uPred.wand_intro_r. by rewrite -fractional_split. Qed.
+  Proof. intros. apply bi.wand_intro_r. by rewrite -fractional_split. Qed.
 
   Lemma fractional_half P P12 Φ q :
     AsFractional P Φ q → AsFractional P12 Φ (q/2) →
@@ -46,12 +47,12 @@ Section fractional.
   Lemma fractional_half_2 P P12 Φ q :
     AsFractional P Φ q → AsFractional P12 Φ (q/2) →
     P12 -∗ P12 -∗ P.
-  Proof. intros. apply uPred.wand_intro_r. by rewrite -fractional_half. Qed.
+  Proof. intros. apply bi.wand_intro_r. by rewrite -fractional_half. Qed.
 
   (** Fractional and logical connectives *)
   Global Instance persistent_fractional P :
     Persistent P → Fractional (λ _, P).
-  Proof. intros HP q q'. by apply uPred.sep_dup. Qed.
+  Proof. intros HP q q'. by apply bi.persistent_sep_dup. Qed.
 
   Global Instance fractional_sep Φ Ψ :
     Fractional Φ → Fractional Ψ → Fractional (λ q, Φ q ∗ Ψ q)%I.
@@ -62,22 +63,22 @@ Section fractional.
 
   Global Instance fractional_big_sepL {A} l Ψ :
     (∀ k (x : A), Fractional (Ψ k x)) →
-    Fractional (M:=M) (λ q, [∗ list] k↦x ∈ l, Ψ k x q)%I.
+    Fractional (PROP:=PROP) (λ q, [∗ list] k↦x ∈ l, Ψ k x q)%I.
   Proof. intros ? q q'. rewrite -big_opL_opL. by setoid_rewrite fractional. Qed.
 
   Global Instance fractional_big_sepM `{Countable K} {A} (m : gmap K A) Ψ :
     (∀ k (x : A), Fractional (Ψ k x)) →
-    Fractional (M:=M) (λ q, [∗ map] k↦x ∈ m, Ψ k x q)%I.
+    Fractional (PROP:=PROP) (λ q, [∗ map] k↦x ∈ m, Ψ k x q)%I.
   Proof. intros ? q q'. rewrite -big_opM_opM. by setoid_rewrite fractional. Qed.
 
   Global Instance fractional_big_sepS `{Countable A} (X : gset A) Ψ :
     (∀ x, Fractional (Ψ x)) →
-    Fractional (M:=M) (λ q, [∗ set] x ∈ X, Ψ x q)%I.
+    Fractional (PROP:=PROP) (λ q, [∗ set] x ∈ X, Ψ x q)%I.
   Proof. intros ? q q'. rewrite -big_opS_opS. by setoid_rewrite fractional. Qed.
 
   Global Instance fractional_big_sepMS `{Countable A} (X : gmultiset A) Ψ :
     (∀ x, Fractional (Ψ x)) →
-    Fractional (M:=M) (λ q, [∗ mset] x ∈ X, Ψ x q)%I.
+    Fractional (PROP:=PROP) (λ q, [∗ mset] x ∈ X, Ψ x q)%I.
   Proof. intros ? q q'. rewrite -big_opMS_opMS. by setoid_rewrite fractional. Qed.
 
   (** Mult instances *)
@@ -114,38 +115,31 @@ Section fractional.
   (** Proof mode instances *)
   Global Instance from_and_fractional_fwd P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
-    FromAnd false P P1 P2.
-  Proof. by rewrite /FromAnd=>-[-> ->] [-> _] [-> _]. Qed.
+    FromSep P P1 P2.
+  Proof. by rewrite /FromSep=>-[-> ->] [-> _] [-> _]. Qed.
   Global Instance from_sep_fractional_bwd P P1 P2 Φ q1 q2 :
     AsFractional P1 Φ q1 → AsFractional P2 Φ q2 → AsFractional P Φ (q1 + q2) →
-    FromAnd false P P1 P2 | 10.
-  Proof. by rewrite /FromAnd=>-[-> _] [-> <-] [-> _]. Qed.
+    FromSep P P1 P2 | 10.
+  Proof. by rewrite /FromSep=>-[-> _] [-> <-] [-> _]. Qed.
 
-  Global Instance from_and_fractional_half_fwd P Q Φ q :
+  Global Instance from_sep_fractional_half_fwd P Q Φ q :
     AsFractional P Φ q → AsFractional Q Φ (q/2) →
-    FromAnd false P Q Q | 10.
-  Proof. by rewrite /FromAnd -{1}(Qp_div_2 q)=>-[-> ->] [-> _]. Qed.
-  Global Instance from_and_fractional_half_bwd P Q Φ q :
+    FromSep P Q Q | 10.
+  Proof. by rewrite /FromSep -{1}(Qp_div_2 q)=>-[-> ->] [-> _]. Qed.
+  Global Instance from_sep_fractional_half_bwd P Q Φ q :
     AsFractional P Φ (q/2) → AsFractional Q Φ q →
-    FromAnd false Q P P.
-  Proof. rewrite /FromAnd=>-[-> <-] [-> _]. by rewrite Qp_div_2. Qed.
+    FromSep Q P P.
+  Proof. rewrite /FromSep=>-[-> <-] [-> _]. by rewrite Qp_div_2. Qed.
 
-  Global Instance into_and_fractional p P P1 P2 Φ q1 q2 :
+  Global Instance into_sep_fractional p P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
-    IntoAnd p P P1 P2.
-  Proof.
-    (* TODO: We need a better way to handle this boolean here; persistently
-       applying mk_into_and_sep (which only works after introducing all
-       assumptions) is rather annoying.
-       Ideally, it'd not even be possible to make the mistake that
-       was originally made here, which is to give this instance for
-       "false" only, thus breaking some intro patterns. *)
-    intros. apply mk_into_and_sep. rewrite [P]fractional_split //.
-  Qed.
-  Global Instance into_and_fractional_half p P Q Φ q :
+    IntoSep p P P1 P2.
+  Proof. intros. rewrite /IntoSep [P]fractional_split //. Qed.
+
+  Global Instance into_sep_fractional_half p P Q Φ q :
     AsFractional P Φ q → AsFractional Q Φ (q/2) →
-    IntoAnd p P Q Q | 100.
-  Proof. intros. apply mk_into_and_sep. rewrite [P]fractional_half //. Qed.
+    IntoSep p P Q Q | 100.
+  Proof. intros. rewrite /IntoSep [P]fractional_half //. Qed.
 
   (* The instance [frame_fractional] can be tried at all the nodes of
      the proof search. The proof search then fails almost persistently on
@@ -153,7 +147,7 @@ Section fractional.
      that reason, we factorize the three instances that could have been
      defined for that purpose into one. *)
   Inductive FrameFractionalHyps
-      (p : bool) (R : uPred M) (Φ : Qp → uPred M) (RES : uPred M) : Qp → Qp → Prop :=
+      (p : bool) (R : PROP) (Φ : Qp → PROP) (RES : PROP) : Qp → Qp → Prop :=
     | frame_fractional_hyps_l Q q q' r:
        Frame p R (Φ q) Q →
        MakeSep Q (Φ q') RES →
@@ -176,9 +170,9 @@ Section fractional.
   Proof.
     rewrite /Frame=>-[HR _][->?]H.
     revert H HR=>-[Q q0 q0' r0|Q q0 q0' r0|q0].
-    - rewrite fractional=><-<-. by rewrite assoc.
-    - rewrite fractional=><-<-=>_.
+    - rewrite fractional /Frame /MakeSep=><-<-. by rewrite assoc.
+    - rewrite fractional /Frame /MakeSep=><-<-=>_.
       by rewrite (comm _ Q (Φ q0)) !assoc (comm _ (Φ _)).
-    - move=>-[-> _]->. by rewrite uPred.persistently_if_elim -fractional Qp_div_2.
+    - move=>-[-> _]->. by rewrite bi.bare_persistently_if_elim -fractional Qp_div_2.
   Qed.
 End fractional.
