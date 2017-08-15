@@ -1,8 +1,10 @@
 From iris.algebra Require Export monoid.
-From stdpp Require Import functions gmap gmultiset.
+From stdpp Require Export functions gmap gmultiset.
 Set Default Proof Using "Type*".
 Local Existing Instances monoid_ne monoid_assoc monoid_comm
   monoid_left_id monoid_right_id monoid_proper
+  monoid_homomorphism_rel_po monoid_homomorphism_rel_proper
+  monoid_homomorphism_op_proper
   monoid_homomorphism_ne weak_monoid_homomorphism_proper.
 
 (** We define the following big operators with binders build in:
@@ -399,35 +401,36 @@ Section homomorphisms.
   Context `{Monoid M1 o1, Monoid M2 o2}.
   Infix "`o1`" := o1 (at level 50, left associativity).
   Infix "`o2`" := o2 (at level 50, left associativity).
+  Instance foo {A} (R : relation A) : RewriteRelation R.
 
-  Lemma big_opL_commute {A} (h : M1 → M2) `{!MonoidHomomorphism o1 o2 h}
+  Lemma big_opL_commute {A} (h : M1 → M2) `{!MonoidHomomorphism o1 o2 R h}
       (f : nat → A → M1) l :
-    h ([^o1 list] k↦x ∈ l, f k x) ≡ ([^o2 list] k↦x ∈ l, h (f k x)).
+    R (h ([^o1 list] k↦x ∈ l, f k x)) ([^o2 list] k↦x ∈ l, h (f k x)).
   Proof.
     revert f. induction l as [|x l IH]=> f /=.
-    - by rewrite monoid_homomorphism_unit.
-    - by rewrite monoid_homomorphism -IH.
+    - apply monoid_homomorphism_unit.
+    - by rewrite monoid_homomorphism IH.
   Qed.
-  Lemma big_opL_commute1 {A} (h : M1 → M2) `{!WeakMonoidHomomorphism o1 o2 h}
+  Lemma big_opL_commute1 {A} (h : M1 → M2) `{!WeakMonoidHomomorphism o1 o2 R h}
       (f : nat → A → M1) l :
-    l ≠ [] → h ([^o1 list] k↦x ∈ l, f k x) ≡ ([^o2 list] k↦x ∈ l, h (f k x)).
+    l ≠ [] → R (h ([^o1 list] k↦x ∈ l, f k x)) ([^o2 list] k↦x ∈ l, h (f k x)).
   Proof.
     intros ?. revert f. induction l as [|x [|x' l'] IH]=> f //.
     - by rewrite !big_opL_singleton.
-    - by rewrite !(big_opL_cons _ x) monoid_homomorphism -IH.
+    - by rewrite !(big_opL_cons _ x) monoid_homomorphism IH.
   Qed.
 
   Lemma big_opM_commute `{Countable K} {A} (h : M1 → M2)
-      `{!MonoidHomomorphism o1 o2 h} (f : K → A → M1) m :
-    h ([^o1 map] k↦x ∈ m, f k x) ≡ ([^o2 map] k↦x ∈ m, h (f k x)).
+      `{!MonoidHomomorphism o1 o2 R h} (f : K → A → M1) m :
+    R (h ([^o1 map] k↦x ∈ m, f k x)) ([^o2 map] k↦x ∈ m, h (f k x)).
   Proof.
     intros. induction m as [|i x m ? IH] using map_ind.
     - by rewrite !big_opM_empty monoid_homomorphism_unit.
     - by rewrite !big_opM_insert // monoid_homomorphism -IH.
   Qed.
   Lemma big_opM_commute1 `{Countable K} {A} (h : M1 → M2)
-      `{!WeakMonoidHomomorphism o1 o2 h} (f : K → A → M1) m :
-    m ≠ ∅ → h ([^o1 map] k↦x ∈ m, f k x) ≡ ([^o2 map] k↦x ∈ m, h (f k x)).
+      `{!WeakMonoidHomomorphism o1 o2 R h} (f : K → A → M1) m :
+    m ≠ ∅ → R (h ([^o1 map] k↦x ∈ m, f k x)) ([^o2 map] k↦x ∈ m, h (f k x)).
   Proof.
     intros. induction m as [|i x m ? IH] using map_ind; [done|].
     destruct (decide (m = ∅)) as [->|].
@@ -436,16 +439,16 @@ Section homomorphisms.
   Qed.
 
   Lemma big_opS_commute `{Countable A} (h : M1 → M2)
-      `{!MonoidHomomorphism o1 o2 h} (f : A → M1) X :
-    h ([^o1 set] x ∈ X, f x) ≡ ([^o2 set] x ∈ X, h (f x)).
+      `{!MonoidHomomorphism o1 o2 R h} (f : A → M1) X :
+    R (h ([^o1 set] x ∈ X, f x)) ([^o2 set] x ∈ X, h (f x)).
   Proof.
     intros. induction X as [|x X ? IH] using collection_ind_L.
     - by rewrite !big_opS_empty monoid_homomorphism_unit.
     - by rewrite !big_opS_insert // monoid_homomorphism -IH.
   Qed.
   Lemma big_opS_commute1 `{Countable A} (h : M1 → M2)
-      `{!WeakMonoidHomomorphism o1 o2 h} (f : A → M1) X :
-    X ≠ ∅ → h ([^o1 set] x ∈ X, f x) ≡ ([^o2 set] x ∈ X, h (f x)).
+      `{!WeakMonoidHomomorphism o1 o2 R h} (f : A → M1) X :
+    X ≠ ∅ → R (h ([^o1 set] x ∈ X, f x)) ([^o2 set] x ∈ X, h (f x)).
   Proof.
     intros. induction X as [|x X ? IH] using collection_ind_L; [done|].
     destruct (decide (X = ∅)) as [->|].
@@ -454,16 +457,16 @@ Section homomorphisms.
   Qed.
 
   Lemma big_opMS_commute `{Countable A} (h : M1 → M2)
-      `{!MonoidHomomorphism o1 o2 h} (f : A → M1) X :
-    h ([^o1 mset] x ∈ X, f x) ≡ ([^o2 mset] x ∈ X, h (f x)).
+      `{!MonoidHomomorphism o1 o2 R h} (f : A → M1) X :
+    R (h ([^o1 mset] x ∈ X, f x)) ([^o2 mset] x ∈ X, h (f x)).
   Proof.
     intros. induction X as [|x X IH] using gmultiset_ind.
     - by rewrite !big_opMS_empty monoid_homomorphism_unit.
     - by rewrite !big_opMS_union !big_opMS_singleton monoid_homomorphism -IH.
   Qed.
   Lemma big_opMS_commute1 `{Countable A} (h : M1 → M2)
-      `{!WeakMonoidHomomorphism o1 o2 h} (f : A → M1) X :
-    X ≠ ∅ → h ([^o1 mset] x ∈ X, f x) ≡ ([^o2 mset] x ∈ X, h (f x)).
+      `{!WeakMonoidHomomorphism o1 o2 R h} (f : A → M1) X :
+    X ≠ ∅ → R (h ([^o1 mset] x ∈ X, f x)) ([^o2 mset] x ∈ X, h (f x)).
   Proof.
     intros. induction X as [|x X IH] using gmultiset_ind; [done|].
     destruct (decide (X = ∅)) as [->|].
@@ -474,38 +477,38 @@ Section homomorphisms.
   Context `{!LeibnizEquiv M2}.
 
   Lemma big_opL_commute_L {A} (h : M1 → M2)
-      `{!MonoidHomomorphism o1 o2 h} (f : nat → A → M1) l :
+      `{!MonoidHomomorphism o1 o2 (≡) h} (f : nat → A → M1) l :
     h ([^o1 list] k↦x ∈ l, f k x) = ([^o2 list] k↦x ∈ l, h (f k x)).
   Proof. unfold_leibniz. by apply big_opL_commute. Qed.
   Lemma big_opL_commute1_L {A} (h : M1 → M2)
-      `{!WeakMonoidHomomorphism o1 o2 h} (f : nat → A → M1) l :
+      `{!WeakMonoidHomomorphism o1 o2 (≡) h} (f : nat → A → M1) l :
     l ≠ [] → h ([^o1 list] k↦x ∈ l, f k x) = ([^o2 list] k↦x ∈ l, h (f k x)).
   Proof. unfold_leibniz. by apply big_opL_commute1. Qed.
 
   Lemma big_opM_commute_L `{Countable K} {A} (h : M1 → M2)
-      `{!MonoidHomomorphism o1 o2 h} (f : K → A → M1) m :
+      `{!MonoidHomomorphism o1 o2 (≡) h} (f : K → A → M1) m :
     h ([^o1 map] k↦x ∈ m, f k x) = ([^o2 map] k↦x ∈ m, h (f k x)).
   Proof. unfold_leibniz. by apply big_opM_commute. Qed.
   Lemma big_opM_commute1_L `{Countable K} {A} (h : M1 → M2)
-      `{!WeakMonoidHomomorphism o1 o2 h} (f : K → A → M1) m :
+      `{!WeakMonoidHomomorphism o1 o2 (≡) h} (f : K → A → M1) m :
     m ≠ ∅ → h ([^o1 map] k↦x ∈ m, f k x) = ([^o2 map] k↦x ∈ m, h (f k x)).
   Proof. unfold_leibniz. by apply big_opM_commute1. Qed.
 
   Lemma big_opS_commute_L `{Countable A} (h : M1 → M2)
-      `{!MonoidHomomorphism o1 o2 h} (f : A → M1) X :
+      `{!MonoidHomomorphism o1 o2 (≡) h} (f : A → M1) X :
     h ([^o1 set] x ∈ X, f x) = ([^o2 set] x ∈ X, h (f x)).
   Proof. unfold_leibniz. by apply big_opS_commute. Qed.
   Lemma big_opS_commute1_L `{ Countable A} (h : M1 → M2)
-      `{!WeakMonoidHomomorphism o1 o2 h} (f : A → M1) X :
+      `{!WeakMonoidHomomorphism o1 o2 (≡) h} (f : A → M1) X :
     X ≠ ∅ → h ([^o1 set] x ∈ X, f x) = ([^o2 set] x ∈ X, h (f x)).
   Proof. intros. rewrite <-leibniz_equiv_iff. by apply big_opS_commute1. Qed.
 
   Lemma big_opMS_commute_L `{Countable A} (h : M1 → M2)
-      `{!MonoidHomomorphism o1 o2 h} (f : A → M1) X :
+      `{!MonoidHomomorphism o1 o2 (≡) h} (f : A → M1) X :
     h ([^o1 mset] x ∈ X, f x) = ([^o2 mset] x ∈ X, h (f x)).
   Proof. unfold_leibniz. by apply big_opMS_commute. Qed.
   Lemma big_opMS_commute1_L `{Countable A} (h : M1 → M2)
-      `{!WeakMonoidHomomorphism o1 o2 h} (f : A → M1) X :
+      `{!WeakMonoidHomomorphism o1 o2 (≡) h} (f : A → M1) X :
     X ≠ ∅ → h ([^o1 mset] x ∈ X, f x) = ([^o2 mset] x ∈ X, h (f x)).
   Proof. intros. rewrite <-leibniz_equiv_iff. by apply big_opMS_commute1. Qed.
 End homomorphisms.

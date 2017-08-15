@@ -33,18 +33,23 @@ Proof. intros x. etrans; [apply monoid_comm|apply monoid_left_id]. Qed.
 commuting with each other. We also consider a [WeakMonoidHomomorphism] which
 does not necesarrily commute with unit; an example is the [own] connective: we
 only have `True ==∗ own γ ∅`, not `True ↔ own γ ∅`. *)
-Class WeakMonoidHomomorphism {M1 M2 : ofeT} (o1 : M1 → M1 → M1) (o2 : M2 → M2 → M2)
-    `{Monoid M1 o1, Monoid M2 o2} (f : M1 → M2) := {
+Class WeakMonoidHomomorphism {M1 M2 : ofeT}
+    (o1 : M1 → M1 → M1) (o2 : M2 → M2 → M2) `{Monoid M1 o1, Monoid M2 o2}
+    (R : relation M2) (f : M1 → M2) := {
+  monoid_homomorphism_rel_po : PreOrder R;
+  monoid_homomorphism_rel_proper : Proper ((≡) ==> (≡) ==> iff) R;
+  monoid_homomorphism_op_proper : Proper (R ==> R ==> R) o2;
   monoid_homomorphism_ne : NonExpansive f;
-  monoid_homomorphism x y : f (o1 x y) ≡ o2 (f x) (f y)
+  monoid_homomorphism x y : R (f (o1 x y)) (o2 (f x) (f y))
 }.
 
-Class MonoidHomomorphism {M1 M2 : ofeT} (o1 : M1 → M1 → M1) (o2 : M2 → M2 → M2)
-    `{Monoid M1 o1, Monoid M2 o2} (f : M1 → M2) := {
-  monoid_homomorphism_weak :> WeakMonoidHomomorphism o1 o2 f;
-  monoid_homomorphism_unit : f monoid_unit ≡ monoid_unit
+Class MonoidHomomorphism {M1 M2 : ofeT}
+    (o1 : M1 → M1 → M1) (o2 : M2 → M2 → M2) `{Monoid M1 o1, Monoid M2 o2}
+    (R : relation M2) (f : M1 → M2) := {
+  monoid_homomorphism_weak :> WeakMonoidHomomorphism o1 o2 R f;
+  monoid_homomorphism_unit : R (f monoid_unit) monoid_unit
 }.
 
 Lemma weak_monoid_homomorphism_proper
-  `{WeakMonoidHomomorphism M1 M2 o1 o2 f} : Proper ((≡) ==> (≡)) f.
+  `{WeakMonoidHomomorphism M1 M2 o1 o2 R f} : Proper ((≡) ==> (≡)) f.
 Proof. apply ne_proper, monoid_homomorphism_ne. Qed.

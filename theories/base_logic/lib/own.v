@@ -178,8 +178,8 @@ Qed.
 
 (** Big op class instances *)
 Instance own_cmra_sep_homomorphism `{inG Σ (A:ucmraT)} :
-  WeakMonoidHomomorphism op uPred_sep (own γ).
-Proof. split. apply _. apply own_op. Qed.
+  WeakMonoidHomomorphism op uPred_sep (≡) (own γ).
+Proof. split; try apply _. apply own_op. Qed.
 
 (** Proofmode class instances *)
 Section proofmode_classes.
