@@ -239,17 +239,18 @@ End contractive.
 
 Ltac f_contractive :=
   match goal with
-  | |- ?f _ ≡{_}≡ ?f _ => apply (_ : Proper (dist_later _ ==> _) f)
-  | |- ?f _ _ ≡{_}≡ ?f _ _ => apply (_ : Proper (dist_later _ ==> _ ==> _) f)
-  | |- ?f _ _ ≡{_}≡ ?f _ _ => apply (_ : Proper (_ ==> dist_later _ ==> _) f)
+  | |- ?f _ ≡{_}≡ ?f _ => simple apply (_ : Proper (dist_later _ ==> _) f)
+  | |- ?f _ _ ≡{_}≡ ?f _ _ => simple apply (_ : Proper (dist_later _ ==> _ ==> _) f)
+  | |- ?f _ _ ≡{_}≡ ?f _ _ => simple apply (_ : Proper (_ ==> dist_later _ ==> _) f)
   end;
   try match goal with
   | |- @dist_later ?A _ ?n ?x ?y =>
          destruct n as [|n]; [exact I|change (@dist A _ n x y)]
   end;
-  try reflexivity.
+  try simple apply reflexivity.
 
-Ltac solve_contractive := solve_proper_core ltac:(fun _ => first [f_contractive | f_equiv]).
+Ltac solve_contractive :=
+  solve_proper_core ltac:(fun _ => first [f_contractive | f_equiv]).
 
 (** Limit preserving predicates *)
 Class LimitPreserving `{!Cofe A} (P : A → Prop) : Prop :=

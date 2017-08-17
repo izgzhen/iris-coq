@@ -279,7 +279,8 @@ Proof.
   split; try apply _.
   - intros n [[[a|]|] b]; rewrite !auth_validN_eq; try
       naive_solver eauto using cmra_morphism_monotoneN, cmra_morphism_validN.
-  - intros [??]. apply Some_proper. by f_equiv; rewrite /= cmra_morphism_core.
+  - intros [??]. apply Some_proper; rewrite /auth_map /=.
+    by f_equiv; rewrite /= cmra_morphism_core.
   - intros [[?|]?] [[?|]?]; try apply Auth_proper=>//=; by rewrite cmra_morphism_op.
 Qed.
 Definition authC_map {A B} (f : A -n> B) : authC A -n> authC B :=
