@@ -976,7 +976,7 @@ Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5)
     ")" constr(p) :=
   iIntros ( x1 x2 x3 x4 x5 ); iIntros p.
-Tactic Notation "iIntros" "("simple_intropattern(x1) simple_intropattern(x2)
+Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x3) simple_intropattern(x4) simple_intropattern(x5)
     simple_intropattern(x6) ")" constr(p) :=
   iIntros ( x1 x2 x3 x4 x5 x6 ); iIntros p.
@@ -1011,6 +1011,112 @@ Tactic Notation "iIntros" "(" simple_intropattern(x1) simple_intropattern(x2)
     simple_intropattern(x9) simple_intropattern(x10) simple_intropattern(x11)
     simple_intropattern(x12) ")" constr(p) :=
   iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 ); iIntros p.
+
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1) ")" :=
+  iIntros p; iIntros ( x1 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) ")" :=
+  iIntros p; iIntros ( x1 x2 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) ")" :=
+  iIntros p; iIntros ( x1 x2 x3 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")" :=
+  iIntros p; iIntros ( x1 x2 x3 x4 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) ")" :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) ")" :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")" :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) ")" :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) simple_intropattern(x9) ")" :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 x9 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) simple_intropattern(x9) simple_intropattern(x10) ")" :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) simple_intropattern(x9) simple_intropattern(x10)
+    simple_intropattern(x11) ")" :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 ).
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) simple_intropattern(x9) simple_intropattern(x10)
+    simple_intropattern(x11) simple_intropattern(x12) ")" :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 ).
+
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1) ")" constr(p2) :=
+  iIntros p; iIntros ( x1 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 x3 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 x3 x4 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) simple_intropattern(x9) ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 x9 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) simple_intropattern(x9) simple_intropattern(x10)
+    ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) simple_intropattern(x9) simple_intropattern(x10)
+    simple_intropattern(x11) ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 ); iIntros p2.
+Tactic Notation "iIntros" constr(p) "(" simple_intropattern(x1)
+    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
+    simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
+    simple_intropattern(x8) simple_intropattern(x9) simple_intropattern(x10)
+    simple_intropattern(x11) simple_intropattern(x12) ")" constr(p2) :=
+  iIntros p; iIntros ( x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 ); iIntros p2.
+
 
 (* Used for generalization in iInduction and iLöb *)
 Tactic Notation "iRevertIntros" constr(Hs) "with" tactic(tac) :=

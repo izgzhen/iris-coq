@@ -46,7 +46,7 @@ Section client.
     - (* The original thread, the sender. *)
       wp_store. iApply (signal_spec with "[-]"); last by iNext; auto.
       iSplitR "Hy"; first by eauto.
-      iExists _; iSplitL; [done|]. iAlways; iIntros (n). wp_let. by wp_op.
+      iExists _; iSplitL; [done|]. iIntros "!#" (n). wp_let. by wp_op.
     - (* The two spawned threads, the waiters. *)
       iDestruct (recv_weaken with "[] Hr") as "Hr".
       { iIntros "Hy". by iApply (y_inv_split with "Hy"). }

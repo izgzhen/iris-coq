@@ -214,7 +214,7 @@ Proof.
   iCombine "Hf" "HP" as "Hf".
   rewrite -big_opM_opM big_opM_fmap; iApply (fupd_big_sepM _ _ f).
   iApply (@big_sepM_impl with "[$Hf]").
-  iAlways; iIntros (γ b' ?) "[(Hγ' & #$ & #$) HΦ]".
+  iIntros "!#" (γ b' ?) "[(Hγ' & #$ & #$) HΦ]".
   iInv N as (b) "[>Hγ _]" "Hclose".
   iMod (box_own_auth_update γ with "[Hγ Hγ']") as "[Hγ $]"; first by iFrame.
   iApply "Hclose". iNext; iExists true. by iFrame.
@@ -230,7 +230,7 @@ Proof.
     [∗ map] γ↦b ∈ f, box_own_auth γ (◯ Excl' false) ∗  box_own_prop γ (Φ γ) ∗
       inv N (slice_inv γ (Φ γ)))%I with "[> Hf]" as "[HΦ ?]".
   { rewrite -big_opM_opM -fupd_big_sepM. iApply (@big_sepM_impl with "[$Hf]").
-    iAlways; iIntros (γ b ?) "(Hγ' & #HγΦ & #Hinv)".
+    iIntros "!#" (γ b ?) "(Hγ' & #HγΦ & #Hinv)".
     assert (true = b) as <- by eauto.
     iInv N as (b) "[>Hγ HΦ]" "Hclose".
     iDestruct (box_own_auth_agree γ b true with "[-]") as %->; first by iFrame.
@@ -252,11 +252,11 @@ Proof.
   - iMod (slice_delete_full with "Hs Hb") as (P') "(HQ & Heq & Hb)"; try done.
     iDestruct ("HQQ'" with "HQ") as "HQ'".
     iMod (slice_insert_full with "HQ' Hb") as (γ') "(% & #Hs' & Hb)"; try done.
-    iExists γ', _. iFrame "∗#%". iIntros "!>". do 2 iNext. iRewrite "Heq".
+    iExists γ', _. iIntros "{$∗ $# $%} !>". do 2 iNext. iRewrite "Heq".
     iAlways. by iSplit; iIntros "[? $]"; iApply "HQQ'".
   - iMod (slice_delete_empty with "Hs Hb") as (P') "(Heq & Hb)"; try done.
     iMod (slice_insert_empty with "Hb") as (γ') "(% & #Hs' & Hb)"; try done.
-    iExists γ', _. iFrame "∗#%". iIntros "!>". do 2 iNext. iRewrite "Heq".
+    iExists γ', _. iIntros "{$∗ $# $%} !>". do 2 iNext. iRewrite "Heq".
     iAlways. by iSplit; iIntros "[? $]"; iApply "HQQ'".
 Qed.
 
@@ -270,7 +270,7 @@ Proof.
   - iMod (slice_delete_full with "Hslice Hbox") as (P') "([HQ1 HQ2] & Heq & Hbox)"; try done.
     iMod (slice_insert_full with "HQ1 Hbox") as (γ1) "(% & #Hslice1 & Hbox)"; first done.
     iMod (slice_insert_full with "HQ2 Hbox") as (γ2) "(% & #Hslice2 & Hbox)"; first done.
-    iExists γ1, γ2. iFrame "%#". iModIntro. iSplit; last iSplit; try iPureIntro.
+    iExists γ1, γ2. iIntros "{$% $#} !>". iSplit; last iSplit; try iPureIntro.
     { by eapply lookup_insert_None. }
     { by apply (lookup_insert_None (delete γ f) γ1 γ2 true). }
     iNext. eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
@@ -278,7 +278,7 @@ Proof.
   - iMod (slice_delete_empty with "Hslice Hbox") as (P') "[Heq Hbox]"; try done.
     iMod (slice_insert_empty with "Hbox") as (γ1) "(% & #Hslice1 & Hbox)".
     iMod (slice_insert_empty with "Hbox") as (γ2) "(% & #Hslice2 & Hbox)".
-    iExists γ1, γ2. iFrame "%#". iModIntro. iSplit; last iSplit; try iPureIntro.
+    iExists γ1, γ2. iIntros "{$% $#} !>". iSplit; last iSplit; try iPureIntro.
     { by eapply lookup_insert_None. }
     { by apply (lookup_insert_None (delete γ f) γ1 γ2 false). }
     iNext. eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
@@ -297,14 +297,14 @@ Proof.
     { by simplify_map_eq. }
     iMod (slice_insert_full _ _ _ _ (Q1 ∗ Q2)%I with "[$HQ1 $HQ2] Hbox")
       as (γ) "(% & #Hslice & Hbox)"; first done.
-    iExists γ. iFrame "%#". iModIntro. iNext.
+    iExists γ. iIntros "{$% $#} !>". iNext.
     eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
     iNext. iRewrite "Heq1". iRewrite "Heq2". by rewrite assoc.
   - iMod (slice_delete_empty with "Hslice1 Hbox") as (P1) "(Heq1 & Hbox)"; try done.
     iMod (slice_delete_empty with "Hslice2 Hbox") as (P2) "(Heq2 & Hbox)"; first done.
     { by simplify_map_eq. }
     iMod (slice_insert_empty with "Hbox") as (γ) "(% & #Hslice & Hbox)".
-    iExists γ. iFrame "%#". iModIntro. iNext.
+    iExists γ. iIntros "{$% $#} !>". iNext.
     eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
     iNext. iRewrite "Heq1". iRewrite "Heq2". by rewrite assoc.
 Qed.

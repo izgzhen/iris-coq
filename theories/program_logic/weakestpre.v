@@ -207,7 +207,7 @@ Qed.
 Lemma wp_mono E e Φ Ψ : (∀ v, Φ v ⊢ Ψ v) → WP e @ E {{ Φ }} ⊢ WP e @ E {{ Ψ }}.
 Proof.
   iIntros (HΦ) "H"; iApply (wp_strong_mono E E); auto.
-  iFrame. iIntros (v) "?". by iApply HΦ.
+  iIntros "{$H}" (v) "?". by iApply HΦ.
 Qed.
 Lemma wp_mask_mono E1 E2 e Φ : E1 ⊆ E2 → WP e @ E1 {{ Φ }} ⊢ WP e @ E2 {{ Φ }}.
 Proof. iIntros (?) "H"; iApply (wp_strong_mono E1 E2); auto. iFrame; eauto. Qed.
@@ -253,7 +253,7 @@ Lemma wp_wand E e Φ Ψ :
   WP e @ E {{ Φ }} -∗ (∀ v, Φ v -∗ Ψ v) -∗ WP e @ E {{ Ψ }}.
 Proof.
   iIntros "Hwp H". iApply (wp_strong_mono E); auto.
-  iFrame "Hwp". iIntros (?) "?". by iApply "H".
+  iIntros "{$Hwp}" (?) "?". by iApply "H".
 Qed.
 Lemma wp_wand_l E e Φ Ψ :
   (∀ v, Φ v -∗ Ψ v) ∗ WP e @ E {{ Φ }} ⊢ WP e @ E {{ Ψ }}.
