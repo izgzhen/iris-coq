@@ -451,21 +451,13 @@ Proof.
     by unseal.
   - (* P ⊢ □ emp (ADMISSIBLE) *)
     intros P. unfold uPred_emp; unseal; by split=> n x ? _.
-  - (* emp ∧ □ P ⊢ P *)
-    intros P. unseal; split=> n x ? [_ ?]; simpl in *.
-    eauto using uPred_mono, @cmra_included_core, cmra_included_includedN.
   - (* □ P ∗ Q ⊢ □ P (ADMISSIBLE) *)
     intros P Q. move: (uPred_persistently P)=> P'.
     unseal; split; intros n x ? (x1&x2&?&?&_); ofe_subst;
       eauto using uPred_mono, cmra_includedN_l.
-  - (* □ P ∧ (Q ∗ R) ⊢ (□ P ∧ Q) ∗ R (ADMISSIBLE) *)
-    intros P Q R. unseal; split; intros n x ? [? (x1&x2&Hx&?&?)]; simpl in *.
-    exists (core (x1 ⋅ x2) ⋅ x1), x2. split_and!.
-    + by rewrite -assoc cmra_core_l.
-    + eapply uPred_mono; first done. rewrite -{1}cmra_core_idemp Hx.
-      eapply cmra_core_monoN, cmra_includedN_l.
-    + eauto using uPred_mono, cmra_includedN_r.
-    + done.
+  - (* □ P ∧ Q ⊢ (emp ∧ P) ∗ Q *)
+    intros P Q. unseal; split=> n x ? [??]; simpl in *.
+    exists (core x), x; rewrite ?cmra_core_l; auto.
 Qed.
 
 Lemma uPred_sbi_mixin (M : ucmraT) : SBIMixin

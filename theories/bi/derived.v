@@ -872,6 +872,15 @@ Proof. intros P Q; apply persistently_mono. Qed.
 Global Instance persistently_absorbing P : Absorbing (□ P).
 Proof. rewrite /Absorbing=> R. apply persistently_absorbing. Qed.
 
+Lemma persistently_and_sep_assoc_1 P Q R : □ P ∧ (Q ∗ R) ⊢ (□ P ∧ Q) ∗ R.
+Proof.
+  rewrite {1}persistently_idemp_2 persistently_and_sep_elim assoc.
+  apply sep_mono_l, and_intro.
+  - by rewrite and_elim_r absorbing.
+  - by rewrite and_elim_l left_id.
+Qed.
+Lemma persistently_and_emp_elim P : emp ∧ □ P ⊢ P.
+Proof. by rewrite comm persistently_and_sep_elim right_id and_elim_r. Qed.
 Lemma persistently_elim P : □ P ⊢ P ∗ True.
 Proof.
   rewrite -(right_id True%I _ (□ _)%I) -{1}(left_id emp%I _ True%I).

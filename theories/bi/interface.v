@@ -111,10 +111,8 @@ Section bi_mixin.
       □ (∃ a, Ψ a) ⊢ ∃ a, □ Ψ a;
 
     bi_mixin_persistently_emp_intro P : P ⊢ □ emp;
-    bi_mixin_persistently_and_emp_elim P : emp ∧ □ P ⊢ P;
-
     bi_mixin_persistently_absorbing P Q : □ P ∗ Q ⊢ □ P;
-    bi_mixin_persistently_and_sep_assoc_1 P Q R : □ P ∧ (Q ∗ R) ⊢ (□ P ∧ Q) ∗ R;
+    bi_mixin_persistently_and_sep_elim P Q : □ P ∧ Q ⊢ (emp ∧ P) ∗ Q;
   }.
 
   Record SBIMixin := {
@@ -420,12 +418,10 @@ Proof. eapply bi_mixin_persistently_exist_1, bi_bi_mixin. Qed.
 
 Lemma persistently_emp_intro P : P ⊢ □ emp.
 Proof. eapply bi_mixin_persistently_emp_intro, bi_bi_mixin. Qed.
-Lemma persistently_and_emp_elim P : emp ∧ □ P ⊢ P.
-Proof. eapply bi_mixin_persistently_and_emp_elim, bi_bi_mixin. Qed.
 Lemma persistently_absorbing P Q : □ P ∗ Q ⊢ □ P.
 Proof. eapply (bi_mixin_persistently_absorbing bi_entails), bi_bi_mixin. Qed.
-Lemma persistently_and_sep_assoc_1 P Q R : □ P ∧ (Q ∗ R) ⊢ (□ P ∧ Q) ∗ R.
-Proof. eapply bi_mixin_persistently_and_sep_assoc_1, bi_bi_mixin. Qed.
+Lemma persistently_and_sep_elim P Q : □ P ∧ Q ⊢ (emp ∧ P) ∗ Q.
+Proof. eapply bi_mixin_persistently_and_sep_elim, bi_bi_mixin. Qed.
 End bi_laws.
 
 Section sbi_laws.
