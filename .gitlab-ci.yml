@@ -3,7 +3,7 @@ image: ralfjung/opam-ci:latest
 variables:
   CPU_CORES: "9"
 
-.iris-template: &iris
+.template: &template
   tags:
   - fp-timing
   script:
@@ -24,7 +24,7 @@ variables:
   - /^ci/
 
 iris-coq8.6.1:
-  <<: *iris
+  <<: *template
   variables:
     COQ_VERSION: "8.6.1"
     SSR_VERSION: "1.6.1"
@@ -35,7 +35,7 @@ iris-coq8.6.1:
     - build-env.txt
 
 iris-coq8.6:
-  <<: *iris
+  <<: *template
   variables:
     COQ_VERSION: "8.6"
     SSR_VERSION: "1.6.1"
