@@ -9,5 +9,5 @@
 *~
 *.bak
 .coq-native/
-Makefile.coq
+Makefile.coq*
 *.crashcoqide

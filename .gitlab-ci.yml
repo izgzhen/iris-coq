@@ -23,6 +23,12 @@ variables:
   - master
   - /^ci/
 
+iris-coq8.7:
+  <<: *template
+  variables:
+    COQ_VERSION: "8.7.dev"
+    SSR_VERSION: "dev"
+
 iris-coq8.6.1:
   <<: *template
   variables:
