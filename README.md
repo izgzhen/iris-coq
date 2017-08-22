@@ -6,7 +6,7 @@ This is the Coq development of the [Iris Project](http://iris-project.org).
 
 This version is known to compile with:
 
- - Coq 8.6
+ - Coq 8.6.1
  - Ssreflect 1.6.1
  - A development version of [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
 
