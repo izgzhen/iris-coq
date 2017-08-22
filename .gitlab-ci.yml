@@ -3,26 +3,39 @@ image: ralfjung/opam-ci:latest
 variables:
   CPU_CORES: "9"
 
-iris-coq8.6:
+.iris-template: &iris
   tags:
   - fp-timing
   script:
   # prepare
-  - . build/opam-ci.sh coq 8.6.1 coq-mathcomp-ssreflect 1.6.1
+  - . build/opam-ci.sh coq "$COQ_VERSION" coq-mathcomp-ssreflect "$SSR_VERSION"
   - env | egrep '^(CI_BUILD_REF|CI_RUNNER)' > build-env.txt
   # build
   - 'time make -k -j$CPU_CORES TIMED=y 2>&1 | tee build-log.txt'
   - 'if fgrep Axiom build-log.txt >/dev/null; then exit 1; fi'
   - 'cat build-log.txt | egrep "[a-zA-Z0-9_/-]+ \(user: [0-9]" | tee build-time.txt'
-  - 'if (( RANDOM % 10 == 0 )); then make validate; fi'
+  - 'if test -n "$VALIDATE" && (( RANDOM % 10 == 0 )); then make validate; fi'
   cache:
-    key: "coq8.6"
+    key: "coq$COQ_VERSION-ssr$SSR_VERSION"
     paths:
     - opamroot/
   only:
   - master
   - /^ci/
+
+iris-coq8.6.1:
+  <<: *iris
+  variables:
+    COQ_VERSION: "8.6.1"
+    SSR_VERSION: "1.6.1"
+    VALIDATE: 1
   artifacts:
     paths:
     - build-time.txt
     - build-env.txt
+
+iris-coq8.6:
+  <<: *iris
+  variables:
+    COQ_VERSION: "8.6"
+    SSR_VERSION: "1.6.1"
