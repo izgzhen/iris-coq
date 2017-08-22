@@ -34,6 +34,7 @@ theories/base_logic/hlist.v
 theories/base_logic/soundness.v
 theories/base_logic/double_negation.v
 theories/base_logic/deprecated.v
+theories/base_logic/fix.v
 theories/base_logic/lib/iprop.v
 theories/base_logic/lib/own.v
 theories/base_logic/lib/saved_prop.v
