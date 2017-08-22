@@ -9,7 +9,7 @@ def parse(file, parse_times = True):
     '''[file] should be a file-like object, an iterator over the lines.
        yields a list of Result objects.'''
     commit_re = re.compile("^# ([a-z0-9]+)$")
-    time_re = re.compile("^([a-zA-Z0-9_/-]+) \(user: ([0-9.]+) mem: ([0-9]+) ko\)$")
+    time_re = re.compile("^([a-zA-Z0-9_/-]+) \((real|user): ([0-9.]+).* mem: ([0-9]+) ko\)$")
     commit = None
     times = None
     for line in file:
