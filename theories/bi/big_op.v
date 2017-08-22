@@ -14,6 +14,16 @@ Notation "'[∗' 'list]' x ∈ l , P" := (big_opL bi_sep (λ _ x, P) l)
 Notation "'[∗]' Ps" :=
   (big_opL bi_sep (λ _ x, x) Ps) (at level 20) : bi_scope.
 
+Notation "'[∧' 'list]' k ↦ x ∈ l , P" := (big_opL bi_and (λ k x, P) l)
+  (at level 200, l at level 10, k, x at level 1, right associativity,
+   format "[∧  list]  k ↦ x  ∈  l ,  P") : bi_scope.
+Notation "'[∧' 'list]' x ∈ l , P" := (big_opL bi_and (λ _ x, P) l)
+  (at level 200, l at level 10, x at level 1, right associativity,
+   format "[∧  list]  x  ∈  l ,  P") : bi_scope.
+
+Notation "'[∧]' Ps" :=
+  (big_opL bi_and (λ _ x, x) Ps) (at level 20) : bi_scope.
+
 Notation "'[∗' 'map]' k ↦ x ∈ m , P" := (big_opM bi_sep (λ k x, P) m)
   (at level 200, m at level 10, k, x at level 1, right associativity,
    format "[∗  map]  k ↦ x  ∈  m ,  P") : bi_scope.
@@ -38,7 +48,7 @@ Implicit Types Ps Qs : list PROP.
 Implicit Types A : Type.
 
 (** ** Big ops over lists *)
-Section list.
+Section sep_list.
   Context {A : Type}.
   Implicit Types l : list A.
   Implicit Types Φ Ψ : nat → A → PROP.
@@ -165,9 +175,9 @@ Section list.
   Global Instance big_sepL_persistent_id `{AffineBI PROP} Ps :
     TCForall Persistent Ps → Persistent ([∗] Ps).
   Proof. induction 1; simpl; apply _. Qed.
-End list.
+End sep_list.
 
-Section list2.
+Section sep_list2.
   Context {A : Type}.
   Implicit Types l : list A.
   Implicit Types Φ Ψ : nat → A → PROP.
@@ -181,7 +191,100 @@ Section list2.
     - by rewrite big_sepL_emp left_id.
     - by rewrite IH.
   Qed.
-End list2.
+End sep_list2.
+
+Section and_list.
+  Context {A : Type}.
+  Implicit Types l : list A.
+  Implicit Types Φ Ψ : nat → A → PROP.
+
+  Lemma big_andL_nil Φ : ([∧ list] k↦y ∈ nil, Φ k y) ⊣⊢ True.
+  Proof. done. Qed.
+  Lemma big_andL_nil' P Φ : P ⊢ [∧ list] k↦y ∈ nil, Φ k y.
+  Proof. by apply pure_intro. Qed.
+  Lemma big_andL_cons Φ x l :
+    ([∧ list] k↦y ∈ x :: l, Φ k y) ⊣⊢ Φ 0 x ∧ [∧ list] k↦y ∈ l, Φ (S k) y.
+  Proof. by rewrite big_opL_cons. Qed.
+  Lemma big_andL_singleton Φ x : ([∧ list] k↦y ∈ [x], Φ k y) ⊣⊢ Φ 0 x.
+  Proof. by rewrite big_opL_singleton. Qed.
+  Lemma big_andL_app Φ l1 l2 :
+    ([∧ list] k↦y ∈ l1 ++ l2, Φ k y)
+    ⊣⊢ ([∧ list] k↦y ∈ l1, Φ k y) ∧ ([∧ list] k↦y ∈ l2, Φ (length l1 + k) y).
+  Proof. by rewrite big_opL_app. Qed.
+
+  Lemma big_andL_mono Φ Ψ l :
+    (∀ k y, l !! k = Some y → Φ k y ⊢ Ψ k y) →
+    ([∧ list] k ↦ y ∈ l, Φ k y) ⊢ [∧ list] k ↦ y ∈ l, Ψ k y.
+  Proof. apply big_opL_forall; apply _. Qed.
+  Lemma big_andL_proper Φ Ψ l :
+    (∀ k y, l !! k = Some y → Φ k y ⊣⊢ Ψ k y) →
+    ([∧ list] k ↦ y ∈ l, Φ k y) ⊣⊢ ([∧ list] k ↦ y ∈ l, Ψ k y).
+  Proof. apply big_opL_proper. Qed.
+  Lemma big_andL_submseteq (Φ : A → PROP) l1 l2 :
+    l1 ⊆+ l2 → ([∧ list] y ∈ l2, Φ y) ⊢ [∧ list] y ∈ l1, Φ y.
+  Proof.
+    intros [l ->]%submseteq_Permutation. by rewrite big_andL_app and_elim_l.
+  Qed.
+
+  Global Instance big_andL_mono' :
+    Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (=) ==> (⊢))
+           (big_opL (@bi_and PROP) (A:=A)).
+  Proof. intros f g Hf m ? <-. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
+  Global Instance big_and_mono' :
+    Proper (Forall2 (⊢) ==> (⊢)) (big_opL (@bi_and M) (λ _ P, P)).
+  Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
+
+  Lemma big_andL_lookup Φ l i x `{!Absorbing (Φ i x)} :
+    l !! i = Some x → ([∧ list] k↦y ∈ l, Φ k y) ⊢ Φ i x.
+  Proof.
+    intros. rewrite -(take_drop_middle l i x) // big_andL_app /=.
+    rewrite Nat.add_0_r take_length_le;
+      eauto using lookup_lt_Some, Nat.lt_le_incl, and_elim_l', and_elim_r'.
+  Qed.
+
+  Lemma big_andL_elem_of (Φ : A → PROP) l x `{!Absorbing (Φ x)} :
+    x ∈ l → ([∧ list] y ∈ l, Φ y) ⊢ Φ x.
+  Proof.
+    intros [i ?]%elem_of_list_lookup; eauto using (big_andL_lookup (λ _, Φ)).
+  Qed.
+
+  Lemma big_andL_fmap {B} (f : A → B) (Φ : nat → B → PROP) l :
+    ([∧ list] k↦y ∈ f <$> l, Φ k y) ⊣⊢ ([∧ list] k↦y ∈ l, Φ k (f y)).
+  Proof. by rewrite big_opL_fmap. Qed.
+
+  Lemma big_andL_andL Φ Ψ l :
+    ([∧ list] k↦x ∈ l, Φ k x ∧ Ψ k x)
+    ⊣⊢ ([∧ list] k↦x ∈ l, Φ k x) ∧ ([∧ list] k↦x ∈ l, Ψ k x).
+  Proof. by rewrite big_opL_opL. Qed.
+
+  Lemma big_andL_and Φ Ψ l :
+    ([∧ list] k↦x ∈ l, Φ k x ∧ Ψ k x)
+    ⊢ ([∧ list] k↦x ∈ l, Φ k x) ∧ ([∧ list] k↦x ∈ l, Ψ k x).
+  Proof. auto using and_intro, big_andL_mono, and_elim_l, and_elim_r. Qed.
+
+  Lemma big_andL_persistently Φ l :
+    (□ [∧ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∧ list] k↦x ∈ l, □ Φ k x).
+  Proof. apply (big_opL_commute _). Qed.
+
+  Lemma big_andL_forall `{AffineBI PROP} Φ l :
+    ([∧ list] k↦x ∈ l, Φ k x) ⊣⊢ (∀ k x, ⌜l !! k = Some x⌝ → Φ k x).
+  Proof.
+    apply (anti_symm _).
+    { apply forall_intro=> k; apply forall_intro=> x.
+      apply impl_intro_l, pure_elim_l=> ?; by apply: big_andL_lookup. }
+    revert Φ. induction l as [|x l IH]=> Φ; [by auto using big_andL_nil'|].
+    rewrite big_andL_cons. apply and_intro.
+    - by rewrite (forall_elim 0) (forall_elim x) pure_True // True_impl.
+    - rewrite -IH. apply forall_intro=> k; by rewrite (forall_elim (S k)).
+  Qed.
+
+  Global Instance big_andL_nil_persistent Φ :
+    Persistent ([∧ list] k↦x ∈ [], Φ k x).
+  Proof. simpl; apply _. Qed.
+  Global Instance big_andL_persistent Φ l :
+    (∀ k x, Persistent (Φ k x)) → Persistent ([∧ list] k↦x ∈ l, Φ k x).
+  Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
+End and_list.
 
 (** ** Big ops over finite maps *)
 Section gmap.

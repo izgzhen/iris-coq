@@ -1282,8 +1282,8 @@ Global Instance bi_sep_monoid : Monoid (@bi_sep PROP) :=
   {| monoid_unit := emp%I |}.
 
 Global Instance bi_persistently_and_homomorphism :
-  WeakMonoidHomomorphism bi_and bi_and (≡) (@bi_persistently PROP).
-Proof. split; try apply _. apply persistently_and. Qed.
+  MonoidHomomorphism bi_and bi_and (≡) (@bi_persistently PROP).
+Proof. split; [split|]; try apply _. apply persistently_and. apply persistently_pure. Qed.
 
 Global Instance bi_persistently_or_homomorphism :
   MonoidHomomorphism bi_or bi_or (≡) (@bi_persistently PROP).
