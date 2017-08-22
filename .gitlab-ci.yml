@@ -8,7 +8,7 @@ iris-coq8.6:
   - fp-timing
   script:
   # prepare
-  - . build/opam-ci.sh coq 8.6 coq-mathcomp-ssreflect 1.6.1
+  - . build/opam-ci.sh coq 8.6.1 coq-mathcomp-ssreflect 1.6.1
   - env | egrep '^(CI_BUILD_REF|CI_RUNNER)' > build-env.txt
   # build
   - 'time make -k -j$CPU_CORES TIMED=y 2>&1 | tee build-log.txt'
