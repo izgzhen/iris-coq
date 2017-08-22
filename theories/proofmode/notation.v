@@ -7,7 +7,7 @@ Arguments Envs _ _%proof_scope _%proof_scope.
 Arguments Enil {_}.
 Arguments Esnoc {_} _%proof_scope _%string _%uPred_scope.
 
-Notation "​" := Enil (format "​", only printing) : proof_scope.
+Notation "" := Enil (format "", only printing) : proof_scope.
 Notation "Γ H : P" := (Esnoc Γ H P)
   (at level 1, P at level 200,
    left associativity, format "Γ H  :  P '//'", only printing) : proof_scope.

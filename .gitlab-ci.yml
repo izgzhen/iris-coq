@@ -33,9 +33,3 @@ iris-coq8.6.1:
     paths:
     - build-time.txt
     - build-env.txt
-
-iris-coq8.6:
-  <<: *template
-  variables:
-    COQ_VERSION: "8.6"
-    SSR_VERSION: "1.6.1"
