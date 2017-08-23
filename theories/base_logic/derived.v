@@ -541,6 +541,11 @@ Proof.
   apply always_intro', impl_intro_r.
   by rewrite always_and_sep_l' always_elim wand_elim_l.
 Qed.
+Lemma wand_impl_always P Q : ((□ P) -∗ Q) ⊣⊢ ((□ P) → Q).
+Proof.
+  apply (anti_symm (⊢)); [|by rewrite -impl_wand].
+  apply impl_intro_l. by rewrite always_and_sep_l' wand_elim_r.
+Qed.
 Lemma always_entails_l' P Q : (P ⊢ □ Q) → P ⊢ □ Q ∗ P.
 Proof. intros; rewrite -always_and_sep_l'; auto. Qed.
 Lemma always_entails_r' P Q : (P ⊢ □ Q) → P ⊢ P ∗ □ Q.
