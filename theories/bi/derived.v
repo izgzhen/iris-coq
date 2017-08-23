@@ -1554,13 +1554,14 @@ Proof. by rewrite {1}(except_0_intro Q) except_0_sep. Qed.
 Global Instance Timeless_proper : Proper ((≡) ==> iff) (@Timeless PROP).
 Proof. solve_proper. Qed.
 
-Global Instance emp_timeless : Timeless (emp : PROP)%I.
-Proof. apply later_emp_false. Qed.
 Global Instance pure_timeless φ : Timeless (⌜φ⌝ : PROP)%I.
 Proof.
   rewrite /Timeless /bi_except_0 pure_alt later_exist_false.
   apply or_elim, exist_elim; [auto|]=> Hφ. rewrite -(exist_intro Hφ). auto.
 Qed.
+Global Instance emp_timeless `{AffineBI PROP} : Timeless (emp : PROP)%I.
+Proof. rewrite -True_emp. apply _. Qed.
+
 Global Instance and_timeless P Q : Timeless P → Timeless Q → Timeless (P ∧ Q).
 Proof. intros; rewrite /Timeless except_0_and later_and; auto. Qed.
 Global Instance or_timeless P Q : Timeless P → Timeless Q → Timeless (P ∨ Q).

@@ -127,7 +127,6 @@ Section bi_mixin.
     sbi_mixin_later_forall_2 {A} (Φ : A → PROP) : (∀ a, ▷ Φ a) ⊢ ▷ ∀ a, Φ a;
     sbi_mixin_later_exist_false {A} (Φ : A → PROP) :
       (▷ ∃ a, Φ a) ⊢ ▷ False ∨ (∃ a, ▷ Φ a);
-    sbi_mixin_later_emp_false : ▷ emp ⊢ ▷ False ∨ emp;
     sbi_mixin_later_sep_1 P Q : ▷ (P ∗ Q) ⊢ ▷ P ∗ ▷ Q;
     sbi_mixin_later_sep_2 P Q : ▷ P ∗ ▷ Q ⊢ ▷ (P ∗ Q);
     sbi_mixin_later_persistently_1 P : ▷ □ P ⊢ □ ▷ P;
@@ -213,7 +212,7 @@ Structure sbi := SBI {
   sbi_bi_mixin : BIMixin sbi_entails sbi_emp sbi_pure sbi_and sbi_or sbi_impl
                          sbi_forall sbi_exist sbi_internal_eq
                          sbi_sep sbi_wand sbi_persistently;
-  sbi_sbi_mixin : SBIMixin sbi_entails sbi_emp sbi_pure sbi_or sbi_impl
+  sbi_sbi_mixin : SBIMixin sbi_entails sbi_pure sbi_or sbi_impl
                            sbi_forall sbi_exist sbi_internal_eq
                            sbi_sep sbi_persistently bi_later;
 }.
@@ -447,8 +446,6 @@ Proof. eapply sbi_mixin_later_forall_2, sbi_sbi_mixin. Qed.
 Lemma later_exist_false {A} (Φ : A → PROP) :
   (▷ ∃ a, Φ a) ⊢ ▷ False ∨ (∃ a, ▷ Φ a).
 Proof. eapply sbi_mixin_later_exist_false, sbi_sbi_mixin. Qed.
-Lemma later_emp_false : ▷ (emp : PROP) ⊢ ▷ False ∨ emp.
-Proof. eapply sbi_mixin_later_emp_false, sbi_sbi_mixin. Qed.
 Lemma later_sep_1 P Q : ▷ (P ∗ Q) ⊢ ▷ P ∗ ▷ Q.
 Proof. eapply sbi_mixin_later_sep_1, sbi_sbi_mixin. Qed.
 Lemma later_sep_2 P Q : ▷ P ∗ ▷ Q ⊢ ▷ (P ∗ Q).

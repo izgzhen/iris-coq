@@ -687,10 +687,10 @@ Section list.
     ▷^n ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, ▷^n Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
-  Global Instance big_sepL_nil_timeless Φ :
+  Global Instance big_sepL_nil_timeless `{!Timeless (emp%I : PROP)} Φ :
     Timeless ([∗ list] k↦x ∈ [], Φ k x).
   Proof. simpl; apply _. Qed.
-  Global Instance big_sepL_timeless Φ l :
+  Global Instance big_sepL_timeless `{!Timeless (emp%I : PROP)} Φ l :
     (∀ k x, Timeless (Φ k x)) → Timeless ([∗ list] k↦x ∈ l, Φ k x).
   Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
   Global Instance big_sepL_timeless_id `{!Timeless (emp%I : PROP)} Ps :
@@ -712,10 +712,10 @@ Section gmap.
     ▷^n ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, ▷^n Φ k x).
   Proof. apply (big_opM_commute _). Qed.
 
-  Global Instance big_sepM_nil_timeless Φ :
+  Global Instance big_sepM_nil_timeless `{!Timeless (emp%I : PROP)} Φ :
     Timeless ([∗ map] k↦x ∈ ∅, Φ k x).
   Proof. rewrite /big_opM map_to_list_empty. apply _. Qed.
-  Global Instance big_sepM_timeless Φ m :
+  Global Instance big_sepM_timeless `{!Timeless (emp%I : PROP)} Φ m :
     (∀ k x, Timeless (Φ k x)) → Timeless ([∗ map] k↦x ∈ m, Φ k x).
   Proof. intros. apply big_sepL_timeless=> _ [??]; apply _. Qed.
 End gmap.
@@ -734,9 +734,10 @@ Section gset.
     ▷^n ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ▷^n Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
-  Global Instance big_sepS_nil_timeless Φ : Timeless ([∗ set] x ∈ ∅, Φ x).
+  Global Instance big_sepS_nil_timeless `{!Timeless (emp%I : PROP)} Φ :
+    Timeless ([∗ set] x ∈ ∅, Φ x).
   Proof. rewrite /big_opS elements_empty. apply _. Qed.
-  Global Instance big_sepS_timeless Φ X :
+  Global Instance big_sepS_timeless `{!Timeless (emp%I : PROP)} Φ X :
     (∀ x, Timeless (Φ x)) → Timeless ([∗ set] x ∈ X, Φ x).
   Proof. rewrite /big_opS. apply _. Qed.
 End gset.
@@ -755,9 +756,10 @@ Section gmultiset.
     ▷^n ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, ▷^n Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 
-  Global Instance big_sepMS_nil_timeless Φ : Timeless ([∗ mset] x ∈ ∅, Φ x).
+  Global Instance big_sepMS_nil_timeless `{!Timeless (emp%I : PROP)} Φ :
+    Timeless ([∗ mset] x ∈ ∅, Φ x).
   Proof. rewrite /big_opMS gmultiset_elements_empty. apply _. Qed.
-  Global Instance big_sepMS_timeless Φ X :
+  Global Instance big_sepMS_timeless `{!Timeless (emp%I : PROP)} Φ X :
     (∀ x, Timeless (Φ x)) → Timeless ([∗ mset] x ∈ X, Φ x).
   Proof. rewrite /big_opMS. apply _. Qed.
 End gmultiset.

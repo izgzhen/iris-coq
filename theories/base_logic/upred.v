@@ -461,7 +461,7 @@ Proof.
 Qed.
 
 Lemma uPred_sbi_mixin (M : ucmraT) : SBIMixin
-  uPred_entails uPred_emp uPred_pure uPred_or uPred_impl
+  uPred_entails uPred_pure uPred_or uPred_impl
   (@uPred_forall M) (@uPred_exist M) (@uPred_internal_eq M)
   uPred_sep uPred_persistently uPred_later.
 Proof.
@@ -483,8 +483,6 @@ Proof.
     intros A Φ. unseal; by split=> -[|n] x.
   - (* (▷ ∃ a, Φ a) ⊢ ▷ False ∨ (∃ a, ▷ Φ a) *)
     intros A Φ. unseal; split=> -[|[|n]] x /=; eauto.
-  - (* ▷ emp ⊢ ▷ False ∨ emp *)
-    rewrite /uPred_emp. unseal; split; by right.
   - (* ▷ (P ∗ Q) ⊢ ▷ P ∗ ▷ Q *)
     intros P Q. unseal; split=> -[|n] x ? /=.
     { by exists x, (core x); rewrite cmra_core_r. }
