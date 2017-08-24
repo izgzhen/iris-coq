@@ -40,8 +40,8 @@ Section least.
   Qed.
 
   Lemma uPred_least_fixpoint_ind (P : A → uPred M) (x : A) :
-    uPred_least_fixpoint F x -∗ □ (∀ y, F P y -∗ P y) -∗ P x.
-  Proof. iIntros "HF #HP". iApply "HF". done. Qed.
+    □ (∀ y, F P y -∗ P y) -∗ uPred_least_fixpoint F x -∗ P x.
+  Proof. iIntros "#HP HF". iApply "HF". done. Qed.
 End least.
 
 Section greatest.
