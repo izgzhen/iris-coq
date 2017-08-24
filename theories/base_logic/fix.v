@@ -7,13 +7,13 @@ Import uPred.
     the logic.  *)
 
 Definition uPred_mono_pred {M A} (F : (A → uPred M) → (A → uPred M)) :=
-  ∀ P Q, ((□ ∀ x, P x -∗ Q x) -∗ ∀ x, F P x -∗ F Q x)%I.
+  ∀ P Q, ((□ ∀ x, P x → Q x) → ∀ x, F P x → F Q x)%I.
 
 Definition uPred_least_fixpoint {M A} (F : (A → uPred M) → (A → uPred M)) (x : A) : uPred M :=
-  (∀ P, □ (∀ x, F P x -∗ P x) → P x)%I.
+  (∀ P, □ (∀ x, F P x → P x) → P x)%I.
 
 Definition uPred_greatest_fixpoint {M A} (F : (A → uPred M) → (A → uPred M)) (x : A) : uPred M :=
-  (∃ P, □ (∀ x, P x -∗ F P x) ∧ P x)%I.
+  (∃ P, □ (∀ x, P x → F P x) ∧ P x)%I.
 
 Section least.
   Context {M : ucmraT} {A} (F : (A → uPred M) → (A → uPred M)) (Hmono : uPred_mono_pred F).
@@ -40,7 +40,7 @@ Section least.
   Qed.
 
   Lemma uPred_least_fixpoint_ind (P : A → uPred M) :
-    □ (∀ y, F P y -∗ P y) -∗ ∀ x, uPred_least_fixpoint F x -∗ P x.
+    □ (∀ y, F P y → P y) ⊢ ∀ x, uPred_least_fixpoint F x → P x.
   Proof. iIntros "#HP" (x) "HF". iApply "HF". done. Qed.
 End least.
 
@@ -61,7 +61,7 @@ Section greatest.
   Proof.
     iIntros "HF". iExists (F (uPred_greatest_fixpoint F)).
     iIntros "{$HF} !#"; iIntros (y) "Hy". iApply (Hmono with "[] Hy").
-    iAlways. iIntros (z). by iApply greatest_fixpoint_implies_F_fix.
+    iAlways. iIntros (z) "?". by iApply greatest_fixpoint_implies_F_fix.
   Qed.
 
   Corollary uPred_greatest_fixpoint_unfold x :
@@ -71,6 +71,6 @@ Section greatest.
   Qed.
 
   Lemma uPred_greatest_fixpoint_coind (P : A → uPred M) :
-    □ (∀ y, P y -∗ F P y) -∗ ∀ x, P x -∗ uPred_greatest_fixpoint F x.
+    □ (∀ y, P y → F P y) ⊢ ∀ x, P x → uPred_greatest_fixpoint F x.
   Proof. iIntros "#HP" (x) "Hx". iExists P. by iIntros "{$Hx} !#". Qed.
 End greatest.
