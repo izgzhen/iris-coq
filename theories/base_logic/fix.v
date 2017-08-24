@@ -20,7 +20,7 @@ Section least.
 
   Lemma F_fix_implies_least_fixpoint x : F (uPred_least_fixpoint F) x ⊢ uPred_least_fixpoint F x.
   Proof.
-    iIntros "HF" (P). iApply wand_impl_always. iIntros "#Hincl".
+    iIntros "HF" (P) "#Hincl".
     iApply "Hincl". iApply (Hmono _ P); last done.
     iIntros "!#" (y) "Hy". iApply "Hy". done.
   Qed.
@@ -39,9 +39,9 @@ Section least.
     apply (anti_symm _); auto using least_fixpoint_implies_F_fix, F_fix_implies_least_fixpoint.
   Qed.
 
-  Lemma uPred_least_fixpoint_ind (P : A → uPred M) (x : A) :
-    □ (∀ y, F P y -∗ P y) -∗ uPred_least_fixpoint F x -∗ P x.
-  Proof. iIntros "#HP HF". iApply "HF". done. Qed.
+  Lemma uPred_least_fixpoint_ind (P : A → uPred M) :
+    □ (∀ y, F P y -∗ P y) -∗ ∀ x, uPred_least_fixpoint F x -∗ P x.
+  Proof. iIntros "#HP" (x) "HF". iApply "HF". done. Qed.
 End least.
 
 Section greatest.
@@ -70,7 +70,7 @@ Section greatest.
     apply (anti_symm _); auto using greatest_fixpoint_implies_F_fix, F_fix_implies_greatest_fixpoint.
   Qed.
 
-  Lemma uPred_greatest_fixpoint_coind (P : A → uPred M) (x : A) :
-    □ (∀ y, P y -∗ F P y) -∗ P x -∗ uPred_greatest_fixpoint F x.
-  Proof. iIntros "#HP Hx". iExists P. by iIntros "{$Hx} !#". Qed.
+  Lemma uPred_greatest_fixpoint_coind (P : A → uPred M) :
+    □ (∀ y, P y -∗ F P y) -∗ ∀ x, P x -∗ uPred_greatest_fixpoint F x.
+  Proof. iIntros "#HP" (x) "Hx". iExists P. by iIntros "{$Hx} !#". Qed.
 End greatest.
