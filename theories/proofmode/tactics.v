@@ -299,8 +299,10 @@ Local Tactic Notation "iIntro" constr(H) :=
   first
   [ (* (?Q → _) *)
     eapply tac_impl_intro with _ H; (* (i:=H) *)
-      [reflexivity || fail 1 "iIntro: introducing" H
-                             "into non-empty spatial context"
+      [env_cbv; apply _ ||
+       let P := lazymatch goal with |- PersistentP ?P => P end in
+       fail 1 "iIntro: introducing non-persistent" H ":" P
+              "into non-empty spatial context"
       |env_reflexivity || fail "iIntro:" H "not fresh"
       |]
   | (* (_ -∗ _) *)

@@ -492,12 +492,15 @@ Qed.
 
 (** * Implication and wand *)
 Lemma tac_impl_intro Δ Δ' i P Q :
-  env_spatial_is_nil Δ = true →
+  (if env_spatial_is_nil Δ then Unit else PersistentP P) →
   envs_app false (Esnoc Enil i P) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ P → Q.
 Proof.
-  intros ?? HQ. rewrite (persistentP Δ) envs_app_sound //; simpl.
-  by rewrite right_id always_wand_impl always_elim HQ.
+  intros ?? <-. destruct (env_spatial_is_nil Δ) eqn:?.
+  - rewrite (persistentP Δ) envs_app_sound //; simpl.
+    by rewrite right_id always_wand_impl always_elim.
+  - apply impl_intro_l. rewrite envs_app_sound //; simpl.
+    by rewrite always_and_sep_l right_id wand_elim_r.
 Qed.
 Lemma tac_impl_intro_persistent Δ Δ' i P P' Q :
   IntoPersistentP P P' →
