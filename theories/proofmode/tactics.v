@@ -136,7 +136,7 @@ Tactic Notation "iExact" constr(H) :=
 
 Tactic Notation "iAssumptionCore" :=
   let rec find Γ i P :=
-    match Γ with
+    lazymatch Γ with
     | Esnoc ?Γ ?j ?Q => first [unify P Q; unify i j|find Γ i P]
     end in
   match goal with
@@ -153,7 +153,7 @@ Tactic Notation "iAssumptionCore" :=
 Tactic Notation "iAssumption" :=
   let Hass := fresh in
   let rec find p Γ Q :=
-    match Γ with
+    lazymatch Γ with
     | Esnoc ?Γ ?j ?P => first
        [pose proof (_ : FromAssumption p P Q) as Hass;
         eapply (tac_assumption _ _ j p P);
@@ -167,7 +167,7 @@ Tactic Notation "iAssumption" :=
           |exact Hass]
        |find p Γ Q]
     end in
-  match goal with
+  lazymatch goal with
   | |- of_envs (Envs ?Γp ?Γs) ⊢ ?Q =>
      first [find true Γp Q | find false Γs Q
            |fail "iAssumption:" Q "not found"]

@@ -408,16 +408,28 @@ Proof.
   intros. by rewrite (env_spatial_is_nil_bare_persistently Δ) // (affine (⬕ Δ)).
 Qed.
 
+Class AffineEnv (Γ : env PROP) := affine_env : Forall Affine Γ.
+Global Instance affine_env_nil : AffineEnv Enil.
+Proof. constructor. Qed.
+Global Instance affine_env_snoc Γ i P :
+  Affine P → AffineEnv Γ → AffineEnv (Esnoc Γ i P).
+Proof. by constructor. Qed.
+
+Instance affine_env_spatial Δ :
+  TCOr (AffineBI PROP) (AffineEnv (env_spatial Δ)) → Affine ([∗] env_spatial Δ).
+Proof. destruct 1 as [?|H]. apply _. induction H; simpl; apply _. Qed.
+
 Lemma tac_assumption Δ Δ' i p P Q :
   envs_lookup_delete i Δ = Some (p,P,Δ') →
   FromAssumption p P Q →
-  (if env_spatial_is_nil Δ' then TCTrue else Absorbing Q) →
+  (if env_spatial_is_nil Δ' then TCTrue
+   else TCOr (Absorbing Q) (AffineEnv (env_spatial Δ'))) →
   Δ ⊢ Q.
 Proof.
-  intros. rewrite envs_lookup_delete_sound //.
+  intros ?? H. rewrite envs_lookup_delete_sound //.
   destruct (env_spatial_is_nil Δ') eqn:?.
   - by rewrite (env_spatial_is_nil_bare_persistently Δ') // sep_elim_l.
-  - by rewrite from_assumption.
+  - rewrite from_assumption. destruct H as [?|?]=>//. by rewrite sep_elim_l.
 Qed.
 
 Lemma tac_rename Δ Δ' i j p P Q :

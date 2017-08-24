@@ -71,6 +71,9 @@ Lemma test_very_fast_iIntros P :
   ∀ x y : nat, (⌜ x = y ⌝ → P -∗ P)%I.
 Proof. by iIntros. Qed.
 
+Lemma test_iAssumption_affine P Q R `{!Affine P, !Affine R} : P -∗ Q -∗ R -∗ Q.
+Proof. iIntros "H1 H2 H3". iAssumption. Qed.
+
 Lemma test_iDestruct_spatial_and P Q1 Q2 : P ∗ (Q1 ∧ Q2) -∗ P ∗ Q1.
 Proof. iIntros "[H1 [H2 _]]". iFrame. Qed.
 
