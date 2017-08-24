@@ -77,6 +77,9 @@ Proof.
   done.
 Qed.
 
+Lemma test_iIntros_persistent P Q `{!PersistentP Q} : (P → Q → P ∗ Q)%I.
+Proof. iIntros "H1 H2". by iFrame. Qed.
+
 Lemma test_fast_iIntros P Q :
   (∀ x y z : nat,
     ⌜x = plus 0 x⌝ → ⌜y = 0⌝ → ⌜z = 0⌝ → P → □ Q → foo (x ≡ x))%I.
