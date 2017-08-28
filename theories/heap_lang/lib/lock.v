@@ -26,8 +26,6 @@ Structure lock Σ `{!heapG Σ} := Lock {
     {{{ is_lock N γ lk R ∗ locked γ ∗ R }}} release lk {{{ RET #(); True }}}
 }.
 
-
-
 Arguments newlock {_ _} _.
 Arguments acquire {_ _} _.
 Arguments release {_ _} _.
