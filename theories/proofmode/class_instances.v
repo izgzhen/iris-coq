@@ -140,13 +140,13 @@ Proof.
 Qed.
 
 (* IntoPersistentP *)
-Global Instance into_persistentP_always_trans P Q :
-  IntoPersistentP P Q → IntoPersistentP (□ P) Q | 0.
-Proof. rewrite /IntoPersistentP=> ->. by rewrite always_always. Qed.
-Global Instance into_persistentP_always P : IntoPersistentP (□ P) P | 1.
+Global Instance into_persistentP_always_trans p P Q :
+  IntoPersistentP true P Q → IntoPersistentP p (□ P) Q | 0.
+Proof. rewrite /IntoPersistentP /==> ->. by rewrite always_if_always. Qed.
+Global Instance into_persistentP_always P : IntoPersistentP true P P | 1.
 Proof. done. Qed.
 Global Instance into_persistentP_persistent P :
-  PersistentP P → IntoPersistentP P P | 100.
+  PersistentP P → IntoPersistentP false P P | 100.
 Proof. done. Qed.
 
 (* IntoLater *)

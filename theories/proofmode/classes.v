@@ -27,9 +27,10 @@ Class FromPure {M} (P : uPred M) (φ : Prop) := from_pure : ⌜φ⌝ ⊢ P.
 Arguments from_pure {_} _ _ {_}.
 Hint Mode FromPure + ! - : typeclass_instances.
 
-Class IntoPersistentP {M} (P Q : uPred M) := into_persistentP : P ⊢ □ Q.
-Arguments into_persistentP {_} _ _ {_}.
-Hint Mode IntoPersistentP + ! - : typeclass_instances.
+Class IntoPersistentP {M} (p : bool) (P Q : uPred M) :=
+  into_persistentP : □?p P ⊢ □ Q.
+Arguments into_persistentP {_} _ _ _ {_}.
+Hint Mode IntoPersistentP + + ! - : typeclass_instances.
 
 (* The class [IntoLaterN] has only two instances:
 

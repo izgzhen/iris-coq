@@ -160,7 +160,7 @@ Local Tactic Notation "iPersistent" constr(H) :=
   eapply tac_persistent with _ H _ _ _; (* (i:=H) *)
     [env_reflexivity || fail "iPersistent:" H "not found"
     |apply _ ||
-     let Q := match goal with |- IntoPersistentP ?Q _ => Q end in
+     let Q := match goal with |- IntoPersistentP _ ?Q _ => Q end in
      fail "iPersistent:" Q "not persistent"
     |env_reflexivity|].
 
@@ -317,14 +317,14 @@ Local Tactic Notation "iIntro" "#" constr(H) :=
   [ (* (?P → _) *)
     eapply tac_impl_intro_persistent with _ H _; (* (i:=H) *)
       [apply _ || 
-       let P := match goal with |- IntoPersistentP ?P _ => P end in
+       let P := match goal with |- IntoPersistentP _ ?P _ => P end in
        fail 1 "iIntro: " P " not persistent"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
   | (* (?P -∗ _) *)
     eapply tac_wand_intro_persistent with _ H _; (* (i:=H) *)
       [apply _ || 
-       let P := match goal with |- IntoPersistentP ?P _ => P end in
+       let P := match goal with |- IntoPersistentP _ ?P _ => P end in
        fail 1 "iIntro: " P " not persistent"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
