@@ -381,7 +381,7 @@ Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
 Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
   let solve_to_wand H1 :=
     apply _ ||
-    let P := match goal with |- IntoWand ?P _ _ => P end in
+    let P := match goal with |- IntoWand _ ?P _ _ => P end in
     fail "iSpecialize:" P "not an implication/wand" in
   let rec go H1 pats :=
     lazymatch pats with
@@ -394,8 +394,8 @@ Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
          [env_reflexivity || fail "iSpecialize:" H2 "not found"
          |env_reflexivity || fail "iSpecialize:" H1 "not found"
          |apply _ ||
-          let P := match goal with |- IntoWand ?P ?Q _ => P end in
-          let Q := match goal with |- IntoWand ?P ?Q _ => Q end in
+          let P := match goal with |- IntoWand _ ?P ?Q _ => P end in
+          let Q := match goal with |- IntoWand _ ?P ?Q _ => Q end in
           fail "iSpecialize: cannot instantiate" P "with" Q
          |env_reflexivity|go H1 pats]
     | SPureGoal ?d :: ?pats =>
