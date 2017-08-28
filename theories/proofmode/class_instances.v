@@ -48,6 +48,9 @@ Global Instance into_pure_cmra_valid `{CMRADiscrete A} (a : A) :
   @IntoPure M (✓ a) (✓ a).
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 
+Global Instance into_pure_always P φ : IntoPure P φ → IntoPure (□ P) φ.
+Proof. rewrite /IntoPure=> ->. by rewrite always_pure. Qed.
+
 Global Instance into_pure_pure_and (φ1 φ2 : Prop) P1 P2 :
   IntoPure P1 φ1 → IntoPure P2 φ2 → IntoPure (P1 ∧ P2) (φ1 ∧ φ2).
 Proof. rewrite /IntoPure pure_and. by intros -> ->. Qed.
