@@ -475,7 +475,14 @@ Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
     let pat := spec_pat.parse pat in
     lazymatch type of H with
     | string =>
-      lazymatch eval compute in (p && negb (existsb spec_pat_modal pat)) with
+      (* The lemma [tac_specialize_persistent_helper] allows one to use all
+      spatial hypotheses for both proving the premises of the lemma we
+      specialize as well as those of the remaining goal. We can only use it when
+      the result of the specialization is persistent, and no modality is
+      eliminated. As an optimization, we do not use this when only universal
+      quantifiers are instantiated. *)
+      lazymatch eval compute in
+        (bool_decide (pat ≠ []) && p && negb (existsb spec_pat_modal pat)) with
       | true =>
          eapply tac_specialize_persistent_helper with _ H _ _ _;
            [env_reflexivity || fail "iSpecialize:" H "not found"
