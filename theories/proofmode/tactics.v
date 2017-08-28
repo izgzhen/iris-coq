@@ -564,19 +564,21 @@ Tactic Notation "iPoseProofCore" open_constr(lem)
   end.
 
 (** * Apply *)
-Tactic Notation "iApply" open_constr(lem) :=
+Tactic Notation "iApplyHyp" constr(H) :=
   let rec go H := first
     [eapply tac_apply with _ H _ _ _;
       [env_reflexivity
       |apply _
       |lazy beta (* reduce betas created by instantiation *)]
     |iSpecializePat H "[]"; last go H] in
-  iPoseProofCore lem as false true (fun H => first
-    [iExact H
-    |go H
-    |lazymatch iTypeOf H with
-     | Some (_,?Q) => fail 1 "iApply: cannot apply" Q
-     end]).
+  iExact H ||
+  go H ||
+  lazymatch iTypeOf H with
+  | Some (_,?Q) => fail "iApply: cannot apply" Q
+  end.
+
+Tactic Notation "iApply" open_constr(lem) :=
+  iPoseProofCore lem as false true (fun H => iApplyHyp H).
 
 (** * Revert *)
 Local Tactic Notation "iForallRevert" ident(x) :=

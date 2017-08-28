@@ -219,12 +219,16 @@ Qed.
 End heap.
 
 Tactic Notation "wp_apply" open_constr(lem) :=
-  iStartProof;
-  lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    wp_bind_core K; iApply lem; try iNext; simpl)
-  | _ => fail "wp_apply: not a 'wp'"
-  end.
+  iPoseProofCore lem as false true (fun H =>
+    lazymatch goal with
+    | |- _ ⊢ wp ?E ?e ?Q =>
+      reshape_expr e ltac:(fun K e' =>
+        wp_bind_core K; iApplyHyp H; try iNext; simpl) ||
+      lazymatch iTypeOf H with
+      | Some (_,?P) => fail "wp_apply: cannot apply" P
+      end
+    | _ => fail "wp_apply: not a 'wp'"
+    end).
 
 Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
   iStartProof;
