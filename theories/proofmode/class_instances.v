@@ -164,19 +164,19 @@ Proof.
 Qed.
 
 Global Instance into_wand_impl_false_true P Q P' :
-  FromAssumption true P P' → Absorbing P' →
+  Absorbing P' → FromAssumption true P P' →
   IntoWand false true (P' → Q) P Q.
 Proof.
-  rewrite /IntoWand /FromAssumption /= => HP ?. apply wand_intro_l.
+  rewrite /IntoWand /FromAssumption /= => ? HP. apply wand_intro_l.
   rewrite -(bare_persistently_idemp P) HP.
   by rewrite -persistently_and_bare_sep_l persistently_elim_absorbing impl_elim_r.
 Qed.
 
 Global Instance into_wand_impl_true_false P Q P' :
-  FromAssumption false P P' → Affine P' →
+  Affine P' → FromAssumption false P P' →
   IntoWand true false (P' → Q) P Q.
 Proof.
-  rewrite /FromAssumption /IntoWand /= => HP ?. apply wand_intro_r.
+  rewrite /FromAssumption /IntoWand /= => ? HP. apply wand_intro_r.
   rewrite -persistently_and_bare_sep_l HP -{2}(affine_bare P') bare_and_l -bare_and_r.
   by rewrite bare_persistently_elim impl_elim_l.
 Qed.
