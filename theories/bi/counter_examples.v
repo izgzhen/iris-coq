@@ -1,24 +1,39 @@
-From iris.base_logic Require Import base_logic soundness proofmode.
+From iris.bi Require Export bi.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type*".
 
 (** This proves that we need the ▷ in a "Saved Proposition" construction with
 name-dependent allocation. *)
 Module savedprop. Section savedprop.
-  Context (M : ucmraT).
-  Notation iProp := (uPred M).
+  Context `{AffineBI PROP}.
   Notation "¬ P" := (□ (P → False))%I : bi_scope.
-  Implicit Types P : iProp.
+  Implicit Types P : PROP.
 
-  (** Saved Propositions and the update modality *)
-  Context (sprop : Type) (saved : sprop → iProp → iProp).
+  Context (bupd : PROP → PROP).
+  Notation "|==> Q" := (bupd Q)
+    (at level 99, Q at level 200, format "|==>  Q") : bi_scope.
+
+  Hypothesis bupd_intro : ∀ P, P ⊢ |==> P.
+  Hypothesis bupd_mono : ∀ P Q, (P ⊢ Q) → (|==> P) ⊢ |==> Q.
+  Hypothesis bupd_trans : ∀ P, (|==> |==> P) ⊢ |==> P.
+  Hypothesis bupd_frame_r : ∀ P R, (|==> P) ∗ R ⊢ |==> (P ∗ R).
+
+  Context (ident : Type) (saved : ident → PROP → PROP).
   Hypothesis sprop_persistent : ∀ i P, Persistent (saved i P).
   Hypothesis sprop_alloc_dep :
-    ∀ (P : sprop → iProp), (|==> (∃ i, saved i (P i)))%I.
+    ∀ (P : ident → PROP), (|==> ∃ i, saved i (P i))%I.
   Hypothesis sprop_agree : ∀ i P Q, saved i P ∧ saved i Q ⊢ □ (P ↔ Q).
 
+  (** We assume that we cannot update to false. *)
+  Hypothesis consistency : ¬(|==> False)%I.
+
+  Instance bupd_mono' : Proper ((⊢) ==> (⊢)) bupd.
+  Proof. intros P Q ?. by apply bupd_mono. Qed.
+  Instance elim_modal_bupd P Q : ElimModal (|==> P) P (|==> Q) (|==> Q).
+  Proof. by rewrite /ElimModal bupd_frame_r bi.wand_elim_r bupd_trans. Qed.
+
   (** A bad recursive reference: "Assertion with name [i] does not hold" *)
-  Definition A (i : sprop) : iProp := ∃ P, ¬ P ∗ saved i P.
+  Definition A (i : ident) : PROP := (∃ P, ¬ P ∗ saved i P)%I.
 
   Lemma A_alloc : (|==> ∃ i, saved i (A i))%I.
   Proof. by apply sprop_alloc_dep. Qed.
@@ -40,27 +55,24 @@ Module savedprop. Section savedprop.
 
   Lemma contradiction : False.
   Proof using All.
-    apply (@soundness M False 1); simpl.
+    apply consistency.
     iMod A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
-    iModIntro. iNext.
-    iApply "HN". iApply saved_A. done.
+    iApply bupd_intro. iApply "HN". iApply saved_A. done.
   Qed.
-
 End savedprop. End savedprop.
 
+
 (** This proves that we need the ▷ when opening invariants. *)
-(** We fork in [uPred M] for any M, but the proof would work in any BI. *)
 Module inv. Section inv.
-  Context (M : ucmraT).
-  Notation iProp := (uPred M).
-  Implicit Types P : iProp.
+  Context `{AffineBI PROP}.
+  Implicit Types P : PROP.
 
   (** Assumptions *)
   (** We have the update modality (two classes: empty/full mask) *)
   Inductive mask := M0 | M1.
-  Context (fupd : mask → iProp → iProp).
-
+  Context (fupd : mask → PROP → PROP).
+  Arguments fupd _ _%I.
   Hypothesis fupd_intro : ∀ E P, P ⊢ fupd E P.
   Hypothesis fupd_mono : ∀ E P Q, (P ⊢ Q) → fupd E P ⊢ fupd E Q.
   Hypothesis fupd_fupd : ∀ E P, fupd E (fupd E P) ⊢ fupd E P.
@@ -68,7 +80,8 @@ Module inv. Section inv.
   Hypothesis fupd_mask_mono : ∀ P, fupd M0 P ⊢ fupd M1 P.
 
   (** We have invariants *)
-  Context (name : Type) (inv : name → iProp → iProp).
+  Context (name : Type) (inv : name → PROP → PROP).
+  Arguments inv _ _%I.
   Hypothesis inv_persistent : ∀ i P, Persistent (inv i P).
   Hypothesis inv_alloc : ∀ P, P ⊢ fupd M1 (∃ i, inv i P).
   Hypothesis inv_open :
@@ -84,7 +97,7 @@ Module inv. Section inv.
      * Ex () +_⊥ ()
   *)
   Context (gname : Type).
-  Context (start finished : gname → iProp).
+  Context (start finished : gname → PROP).
 
   Hypothesis sts_alloc : fupd M0 (∃ γ, start γ).
   Hypotheses start_finish : ∀ γ, start γ ⊢ fupd M0 (finished γ).
@@ -122,7 +135,7 @@ Module inv. Section inv.
     by rewrite /ElimModal fupd_frame_r bi.wand_elim_r fupd_mask_mono fupd_fupd.
   Qed.
 
-  Global Instance exists_split_fupd0 {A} E P (Φ : A → iProp) :
+  Global Instance exists_split_fupd0 {A} E P (Φ : A → PROP) :
     FromExist P Φ → FromExist (fupd E P) (λ a, fupd E (Φ a)).
   Proof.
     rewrite /FromExist=>HP. apply bi.exist_elim=> a.
@@ -130,14 +143,14 @@ Module inv. Section inv.
   Qed.
 
   (** Now to the actual counterexample. We start with a weird form of saved propositions. *)
-  Definition saved (γ : gname) (P : iProp) : iProp :=
-    ∃ i, inv i (start γ ∨ (finished γ ∗ □ P)).
+  Definition saved (γ : gname) (P : PROP) : PROP :=
+    (∃ i, inv i (start γ ∨ (finished γ ∗ □ P)))%I.
   Global Instance saved_persistent γ P : Persistent (saved γ P) := _.
 
-  Lemma saved_alloc (P : gname → iProp) : fupd M1 (∃ γ, saved γ (P γ)).
+  Lemma saved_alloc (P : gname → PROP) : fupd M1 (∃ γ, saved γ (P γ)).
   Proof.
     iIntros "". iMod (sts_alloc) as (γ) "Hs".
-    iMod (inv_alloc (start γ ∨ (finished γ ∗ □ (P γ))) with "[Hs]") as (i) "#Hi".
+    iMod (inv_alloc (start γ ∨ (finished γ ∗ □ (P γ)))%I with "[Hs]") as (i) "#Hi".
     { auto. }
     iApply fupd_intro. by iExists γ, i.
   Qed.
@@ -164,7 +177,7 @@ Module inv. Section inv.
 
   (** And now we tie a bad knot. *)
   Notation "¬ P" := (□ (P -∗ fupd M1 False))%I : bi_scope.
-  Definition A i : iProp := ∃ P, ¬P ∗ saved i P.
+  Definition A i : PROP := (∃ P, ¬P ∗ saved i P)%I.
   Global Instance A_persistent i : Persistent (A i) := _.
 
   Lemma A_alloc : fupd M1 (∃ i, saved i (A i)).

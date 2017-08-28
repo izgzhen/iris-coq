@@ -30,6 +30,7 @@ theories/bi/big_op.v
 theories/bi/bi.v
 theories/bi/tactics.v
 theories/bi/fractional.v
+theories/bi/counter_examples.v
 theories/base_logic/upred.v
 theories/base_logic/derived.v
 theories/base_logic/base_logic.v
@@ -52,7 +53,6 @@ theories/base_logic/lib/sts.v
 theories/base_logic/lib/boxes.v
 theories/base_logic/lib/na_invariants.v
 theories/base_logic/lib/cancelable_invariants.v
-theories/base_logic/lib/counter_examples.v
 theories/base_logic/lib/gen_heap.v
 theories/base_logic/lib/core.v
 theories/base_logic/lib/fancy_updates_from_vs.v
