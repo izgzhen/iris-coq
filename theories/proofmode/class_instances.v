@@ -185,8 +185,8 @@ Global Instance into_wand_impl_true_true P Q P' :
   FromAssumption true P P' → IntoWand true true (P' → Q) P Q.
 Proof.
   rewrite /FromAssumption /IntoWand /= => <-. apply wand_intro_l.
-  rewrite -{1}(bare_persistently_idemp P) -bare_persistently_sep -persistently_and_sep.
-  by rewrite impl_elim_r bare_persistently_elim.
+  rewrite -{1}(bare_persistently_idemp P) -and_sep_bare_persistently.
+  by rewrite -bare_persistently_and impl_elim_r bare_persistently_elim.
 Qed.
 
 Global Instance into_wand_and_l p q R1 R2 P' Q' :
@@ -266,10 +266,10 @@ Proof. by rewrite /FromSep pure_and sep_and. Qed.
 
 Global Instance from_sep_bare P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (■ P) (■ Q1) (■ Q2).
-Proof. rewrite /FromSep=> <-. by rewrite bare_sep. Qed.
+Proof. rewrite /FromSep=> <-. by rewrite bare_sep_2. Qed.
 Global Instance from_sep_persistently P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (□ P) (□ Q1) (□ Q2).
-Proof. rewrite /FromSep=> <-. by rewrite persistently_sep. Qed.
+Proof. rewrite /FromSep=> <-. by rewrite persistently_sep_2. Qed.
 
 Global Instance from_sep_big_sepL_cons {A} (Φ : nat → A → PROP) x l :
   FromSep ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
@@ -282,11 +282,8 @@ Proof. by rewrite /FromSep big_opL_app. Qed.
 (* IntoAnd *)
 Global Instance into_and_and p P Q : IntoAnd p (P ∧ Q) P Q.
 Proof. by rewrite /IntoAnd bare_persistently_if_and. Qed.
-Global Instance into_and_sep P Q : IntoAnd true (P ∗ Q) P Q.
-Proof.
-    by rewrite /IntoAnd /= bare_persistently_sep -bare_persistently_sep
-               persistently_and_sep.
-Qed.
+Global Instance into_and_sep `{PositiveBI PROP} P Q : IntoAnd true (P ∗ Q) P Q.
+Proof. by rewrite /IntoAnd /= persistently_sep -and_sep_persistently persistently_and. Qed.
 
 Global Instance into_and_pure p φ ψ : @IntoAnd PROP p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /IntoAnd pure_and bare_persistently_if_and. Qed.
@@ -307,55 +304,44 @@ Proof.
 Qed.
 
 (* IntoSep *)
-Global Instance into_sep_sep p P Q : IntoSep p (P ∗ Q) P Q.
-Proof. by rewrite /IntoSep bare_persistently_if_sep. Qed.
-Global Instance into_sep_and P Q : IntoSep true (P ∧ Q) P Q.
-Proof. by rewrite /IntoSep /= persistently_and_sep. Qed.
+Global Instance into_sep_sep P Q : IntoSep (P ∗ Q) P Q.
+Proof. by rewrite /IntoSep. Qed.
 
 Global Instance into_sep_and_persistent_l P P' Q :
-  Persistent P → FromBare P' P → IntoSep false (P ∧ Q) P' Q.
+  Persistent P → FromBare P' P → IntoSep (P ∧ Q) P' Q.
 Proof.
   rewrite /FromBare /IntoSep /=. intros ? <-.
   by rewrite persistent_and_bare_sep_l_1.
 Qed.
 Global Instance into_sep_and_persistent_r P Q Q' :
-  Persistent Q → FromBare Q' Q → IntoSep false (P ∧ Q) P Q'.
+  Persistent Q → FromBare Q' Q → IntoSep (P ∧ Q) P Q'.
 Proof.
   rewrite /FromBare /IntoSep /=. intros ? <-.
   by rewrite persistent_and_bare_sep_r_1.
 Qed.
 
-Global Instance into_sep_pure p φ ψ : @IntoSep PROP p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
-Proof.
-  by rewrite /IntoSep pure_and persistent_and_sep_1 bare_persistently_if_sep.
-Qed.
 
-Global Instance into_sep_bare p P Q1 Q2 :
-  IntoSep p P Q1 Q2 → IntoSep p (■ P) (■ Q1) (■ Q2).
-Proof.
-  rewrite /IntoSep /=. destruct p; simpl.
-  - by rewrite -bare_sep !persistently_bare.
-  - intros ->. by rewrite bare_sep.
-Qed.
-Global Instance into_sep_persistently p P Q1 Q2 :
-  IntoSep p P Q1 Q2 → IntoSep p (□ P) (□ Q1) (□ Q2).
-Proof.
-  rewrite /IntoSep /=. destruct p; simpl.
-  - by rewrite -persistently_sep !persistently_idemp.
-  - intros ->. by rewrite persistently_sep.
-Qed.
+Global Instance into_sep_pure φ ψ : @IntoSep PROP ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
+Proof. by rewrite /IntoSep pure_and persistent_and_sep_1. Qed.
+
+Global Instance into_sep_bare `{PositiveBI PROP} P Q1 Q2 :
+  IntoSep P Q1 Q2 → IntoSep (■ P) (■ Q1) (■ Q2).
+Proof. rewrite /IntoSep /= => ->. by rewrite bare_sep. Qed.
+Global Instance into_sep_persistently `{PositiveBI PROP} P Q1 Q2 :
+  IntoSep P Q1 Q2 → IntoSep (□ P) (□ Q1) (□ Q2).
+Proof. rewrite /IntoSep /= => ->. by rewrite persistently_sep. Qed.
 
 (* We use [IsCons] and [IsApp] to make sure that [frame_big_sepL_cons] and
 [frame_big_sepL_app] cannot be applied repeatedly often when having
 [ [∗ list] k ↦ x ∈ ?e, Φ k x] with [?e] an evar. *)
-Global Instance into_sep_big_sepL_cons {A} p (Φ : nat → A → PROP) l x l' :
+Global Instance into_sep_big_sepL_cons {A} (Φ : nat → A → PROP) l x l' :
   IsCons l x l' →
-  IntoSep p ([∗ list] k ↦ y ∈ l, Φ k y)
+  IntoSep ([∗ list] k ↦ y ∈ l, Φ k y)
     (Φ 0 x) ([∗ list] k ↦ y ∈ l', Φ (S k) y).
 Proof. rewrite /IsCons=>->. by rewrite /IntoSep big_sepL_cons. Qed.
-Global Instance into_sep_big_sepL_app {A} p (Φ : nat → A → PROP) l l1 l2 :
+Global Instance into_sep_big_sepL_app {A} (Φ : nat → A → PROP) l l1 l2 :
   IsApp l l1 l2 →
-  IntoSep p ([∗ list] k ↦ y ∈ l, Φ k y)
+  IntoSep ([∗ list] k ↦ y ∈ l, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
 Proof. rewrite /IsApp=>->. by rewrite /IntoSep big_sepL_app. Qed.
 
@@ -499,7 +485,7 @@ Global Instance frame_sep_persistent_l R P1 P2 Q1 Q2 Q' :
   Frame true R (P1 ∗ P2) Q' | 9.
 Proof.
   rewrite /Frame /MaybeFrame /MakeSep /= => <- <- <-.
-  rewrite {1}(persistently_sep_dup R) bare_sep. solve_sep_entails.
+  rewrite {1}(bare_persistently_sep_dup R). solve_sep_entails.
 Qed.
 Global Instance frame_sep_l R P1 P2 Q Q' :
   Frame false R P1 Q → MakeSep Q P2 Q' → Frame false R (P1 ∗ P2) Q' | 9.
@@ -602,7 +588,10 @@ Proof. by rewrite /MakeBare. Qed.
 
 Global Instance frame_bare R P Q Q' :
   Frame true R P Q → MakeBare Q Q' → Frame true R (■ P) Q'.
-Proof. rewrite /Frame /MakeBare=> <- <- /=. by rewrite bare_sep bare_idemp. Qed.
+Proof.
+  rewrite /Frame /MakeBare=> <- <- /=.
+  by rewrite -{1}bare_idemp bare_sep_2.
+Qed.
 
 Class MakePersistently (P Q : PROP) := make_persistently : □ P ⊣⊢ Q.
 Arguments MakePersistently _%I _%I.
@@ -616,9 +605,9 @@ Proof. by rewrite /MakePersistently. Qed.
 Global Instance frame_persistently R P Q Q' :
   Frame true R P Q → MakePersistently Q Q' → Frame true R (□ P) Q'.
 Proof.
-  rewrite /Frame /MakePersistently=> <- <- /=.
-  by rewrite -persistently_and_bare_sep_l persistently_sep persistently_bare
-             persistently_idemp -persistently_and_sep_l_1.
+  rewrite /Frame /MakePersistently=> <- <- /=. rewrite -persistently_and_bare_sep_l.
+  by rewrite -persistently_sep_2 -persistently_and_sep_l_1 persistently_bare
+              persistently_idemp.
 Qed.
 
 Global Instance frame_exist {A} p R (Φ Ψ : A → PROP) :
@@ -722,24 +711,15 @@ Proof.
 Qed.
 
 (* IntoSep *)
-Global Instance into_sep_later p P Q1 Q2 :
-  IntoSep p P Q1 Q2 → IntoSep p (▷ P) (▷ Q1) (▷ Q2).
-Proof.
-  rewrite /IntoSep=> HP. apply bare_persistently_if_intro'.
-  by rewrite bare_persistently_if_later HP bare_persistently_if_elim later_sep.
-Qed.
-Global Instance into_sep_laterN n p P Q1 Q2 :
-  IntoSep p P Q1 Q2 → IntoSep p (▷^n P) (▷^n Q1) (▷^n Q2).
-Proof.
-  rewrite /IntoSep=> HP. apply bare_persistently_if_intro'.
-  by rewrite bare_persistently_if_laterN HP bare_persistently_if_elim laterN_sep.
-Qed.
-Global Instance into_sep_except_0 p P Q1 Q2 :
-  IntoSep p P Q1 Q2 → IntoSep p (◇ P) (◇ Q1) (◇ Q2).
-Proof.
-  rewrite /IntoSep=> HP. apply bare_persistently_if_intro'.
-  by rewrite bare_persistently_if_except_0 HP bare_persistently_if_elim except_0_sep.
-Qed.
+Global Instance into_sep_later P Q1 Q2 :
+  IntoSep P Q1 Q2 → IntoSep (▷ P) (▷ Q1) (▷ Q2).
+Proof. rewrite /IntoSep=> ->. by rewrite later_sep. Qed.
+Global Instance into_sep_laterN n P Q1 Q2 :
+  IntoSep P Q1 Q2 → IntoSep (▷^n P) (▷^n Q1) (▷^n Q2).
+Proof. rewrite /IntoSep=> ->. by rewrite laterN_sep. Qed.
+Global Instance into_sep_except_0 P Q1 Q2 :
+  IntoSep P Q1 Q2 → IntoSep (◇ P) (◇ Q1) (◇ Q2).
+Proof. rewrite /IntoSep=> ->. by rewrite except_0_sep. Qed.
 
 (* FromOr *)
 Global Instance from_or_later P Q1 Q2 :

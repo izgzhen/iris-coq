@@ -121,11 +121,11 @@ Arguments IntoAnd {_} _ _%I _%I _%I : simpl never.
 Arguments into_and {_} _ _%I _%I _%I {_}.
 Hint Mode IntoAnd + + ! - - : typeclass_instances.
 
-Class IntoSep {PROP : bi} (p : bool) (P Q1 Q2 : PROP) :=
-  into_sep : ⬕?p P ⊢ ⬕?p (Q1 ∗ Q2).
-Arguments IntoSep {_} _ _%I _%I _%I : simpl never.
-Arguments into_sep {_} _ _%I _%I _%I {_}.
-Hint Mode IntoAnd + + ! - - : typeclass_instances.
+Class IntoSep {PROP : bi} (P Q1 Q2 : PROP) :=
+  into_sep : P ⊢ Q1 ∗ Q2.
+Arguments IntoSep {_} _%I _%I _%I : simpl never.
+Arguments into_sep {_} _%I _%I _%I {_}.
+Hint Mode IntoSep + ! - - : typeclass_instances.
 
 Class FromOr {PROP : bi} (P Q1 Q2 : PROP) := from_or : Q1 ∨ Q2 ⊢ P.
 Arguments FromOr {_} _%I _%I _%I : simpl never.

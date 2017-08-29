@@ -131,14 +131,14 @@ Section fractional.
     FromSep Q P P.
   Proof. rewrite /FromSep=>-[-> <-] [-> _]. by rewrite Qp_div_2. Qed.
 
-  Global Instance into_sep_fractional p P P1 P2 Φ q1 q2 :
+  Global Instance into_sep_fractional P P1 P2 Φ q1 q2 :
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
-    IntoSep p P P1 P2.
+    IntoSep P P1 P2.
   Proof. intros. rewrite /IntoSep [P]fractional_split //. Qed.
 
-  Global Instance into_sep_fractional_half p P Q Φ q :
+  Global Instance into_sep_fractional_half P Q Φ q :
     AsFractional P Φ q → AsFractional Q Φ (q/2) →
-    IntoSep p P Q Q | 100.
+    IntoSep P Q Q | 100.
   Proof. intros. rewrite /IntoSep [P]fractional_half //. Qed.
 
   (* The instance [frame_fractional] can be tried at all the nodes of

@@ -531,8 +531,9 @@ Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
       quantifiers are instantiated. *)
       let pat := spec_pat.parse pat in
       lazymatch eval compute in
-        (bool_decide (pat ≠ []) && p && negb (existsb spec_pat_modal pat)) with
+        (p && bool_decide (pat ≠ []) && negb (existsb spec_pat_modal pat)) with
       | true =>
+         (* FIXME: do something reasonable when the BI is not positive *)
          eapply tac_specialize_persistent_helper with _ H _ _ _ _;
            [env_reflexivity || fail "iSpecialize:" H "not found"
            |iSpecializePat H pat; last (iExact H)
@@ -540,7 +541,7 @@ Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
             let Q := match goal with |- IntoPersistent _ ?Q _ => Q end in
             fail "iSpecialize:" Q "not persistent"
            |env_cbv; apply _ ||
-            let Q := match goal with |- Affine ?Q => Q end in
+            let Q := match goal with |- TCAnd _ (Affine ?Q) => Q end in
             fail "iSpecialize:" Q "not affine"
            |env_reflexivity
            |(* goal *)]

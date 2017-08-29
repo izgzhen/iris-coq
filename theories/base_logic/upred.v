@@ -438,9 +438,6 @@ Proof.
   - (* (P ⊢ Q -∗ R) → P ∗ Q ⊢ R *)
     intros P Q R. unseal=> HPQR. split; intros n x ? (?&?&?&?&?). ofe_subst.
     eapply HPQR; eauto using cmra_validN_op_l.
-  - (* emp ∧ (Q ∗ R) ⊢ (emp ∧ Q) ∗ R (ADMISSIBLE) *)
-    intros Q R. unfold uPred_emp; unseal; split; intros n x ? [_ (x1&x2&?&?&?)].
-    exists x1, x2; simpl; auto. 
   - (* (P ⊢ Q) → □ P ⊢ □ Q *)
     intros P QR HP. unseal; split=> n x ? /=. by apply HP, cmra_core_validN.
   - (* □ P ⊢ □ □ P *)

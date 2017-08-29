@@ -88,8 +88,8 @@ Proof.
   intros. apply bare_persistently_if_mono. by rewrite (is_op a) ownM_op sep_and.
 Qed.
 
-Global Instance into_sep_ownM p (a b1 b2 : M) :
-  IsOp a b1 b2 → IntoSep p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
+Global Instance into_sep_ownM (a b1 b2 : M) :
+  IsOp a b1 b2 → IntoSep (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof. intros. by rewrite /IntoSep (is_op a) ownM_op. Qed.
 
 Global Instance from_sep_bupd P Q1 Q2 :

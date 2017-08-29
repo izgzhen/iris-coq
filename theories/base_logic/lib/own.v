@@ -185,8 +185,8 @@ Section proofmode_classes.
   Context `{inG Σ A}.
   Implicit Types a b : A.
 
-  Global Instance into_sep_own p γ a b1 b2 :
-    IsOp a b1 b2 → IntoSep p (own γ a) (own γ b1) (own γ b2).
+  Global Instance into_sep_own γ a b1 b2 :
+    IsOp a b1 b2 → IntoSep (own γ a) (own γ b1) (own γ b2).
   Proof. intros. by rewrite /IntoSep (is_op a) own_op. Qed.
   Global Instance into_and_own p γ a b1 b2 :
     IsOp a b1 b2 → IntoAnd p (own γ a) (own γ b1) (own γ b2).

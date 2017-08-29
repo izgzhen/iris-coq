@@ -44,9 +44,9 @@ Lemma test_unfold_constants : bar.
 Proof. iIntros (P) "HP //". Qed.
 
 Lemma test_iRewrite {A : ofeT} (x y : A) P :
-  (∀ z, P -∗ ■ (z ≡ y)) -∗ (P -∗ P ∧ (x,x) ≡ (y,x)).
+  ⬕ (∀ z, P -∗ ■ (z ≡ y)) -∗ (P -∗ P ∧ (x,x) ≡ (y,x)).
 Proof.
-  iIntros "H1 H2".
+  iIntros "#H1 H2".
   iRewrite (bi.internal_eq_sym x x with "[# //]").
   iRewrite -("H1" $! _ with "[- //]").
   auto.

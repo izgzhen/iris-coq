@@ -99,8 +99,6 @@ Section bi_mixin.
     bi_mixin_wand_intro_r P Q R : (P ∗ Q ⊢ R) → P ⊢ Q -∗ R;
     bi_mixin_wand_elim_l' P Q R : (P ⊢ Q -∗ R) → P ∗ Q ⊢ R;
 
-    bi_mixin_emp_and_sep_assoc_1 Q R : emp ∧ (Q ∗ R) ⊢ (emp ∧ Q) ∗ R;
-
     (* Persistently *)
     bi_mixin_persistently_mono P Q : (P ⊢ Q) → □ P ⊢ □ Q;
     bi_mixin_persistently_idemp_2 P : □ P ⊢ □ □ P;
@@ -400,9 +398,6 @@ Lemma wand_intro_r P Q R : (P ∗ Q ⊢ R) → P ⊢ Q -∗ R.
 Proof. eapply bi_mixin_wand_intro_r, bi_bi_mixin. Qed.
 Lemma wand_elim_l' P Q R : (P ⊢ Q -∗ R) → P ∗ Q ⊢ R.
 Proof. eapply bi_mixin_wand_elim_l', bi_bi_mixin. Qed.
-
-Lemma emp_and_sep_assoc_1 Q R : emp ∧ (Q ∗ R) ⊢ (emp ∧ Q) ∗ R.
-Proof. eapply bi_mixin_emp_and_sep_assoc_1, bi_bi_mixin. Qed.
 
 (* Persistently *)
 Lemma persistently_mono P Q : (P ⊢ Q) → □ P ⊢ □ Q.
