@@ -1,4 +1,5 @@
 From iris.algebra Require Export ofe.
+Set Primitive Projections.
 
 Reserved Notation "P ⊢ Q" (at level 99, Q at level 200, right associativity).
 Reserved Notation "'emp'".

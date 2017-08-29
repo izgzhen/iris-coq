@@ -324,14 +324,13 @@ Definition unseal_eqs :=
   uPred_exist_eq, uPred_internal_eq_eq, uPred_sep_eq, uPred_wand_eq,
   uPred_plainly_eq, uPred_persistently_eq, uPred_later_eq, uPred_ownM_eq,
   uPred_cmra_valid_eq, uPred_bupd_eq).
-Ltac unseal := rewrite
-  /bi_emp /= /uPred_emp /bi_pure /bi_and /bi_or /bi_impl
-  /bi_forall /bi_exist /bi_internal_eq /bi_sep /bi_wand /bi_plainly
-  /bi_persistently /bi_later /=
-  /sbi_emp /sbi_pure /sbi_and /sbi_or /sbi_impl
-  /sbi_forall /sbi_exist /sbi_internal_eq /sbi_sep /sbi_wand /sbi_plainly
-  /sbi_persistently /=
-  !unseal_eqs /=.
+Ltac unseal := (* Coq unfold is used to circumvent bug #5699 in rewrite /foo *)
+  unfold bi_emp; simpl;
+  unfold uPred_emp, bi_pure, bi_and, bi_or, bi_impl, bi_forall, bi_exist,
+  bi_internal_eq, bi_sep, bi_wand, bi_plainly, bi_persistently, bi_later; simpl;
+  unfold sbi_emp, sbi_pure, sbi_and, sbi_or, sbi_impl, sbi_forall, sbi_exist,
+  sbi_internal_eq, sbi_sep, sbi_wand, sbi_plainly, sbi_persistently; simpl;
+  rewrite !unseal_eqs /=.
 End uPred_unseal.
 Import uPred_unseal.
 
