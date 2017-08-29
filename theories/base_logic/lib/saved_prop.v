@@ -37,7 +37,8 @@ Section saved_prop.
     saved_prop_own γ x -∗ saved_prop_own γ y -∗ ▷ (x ≡ y).
   Proof.
     apply wand_intro_r.
-    rewrite -own_op own_valid agree_validI agree_equivI later_equivI.
+    rewrite /saved_prop_own -own_op own_valid agree_validI agree_equivI.
+    rewrite later_equivI.
     set (G1 := cFunctor_map F (iProp_fold, iProp_unfold)).
     set (G2 := cFunctor_map F (@iProp_unfold Σ, @iProp_fold Σ)).
     assert (∀ z, G2 (G1 z) ≡ z) as help.
