@@ -38,8 +38,8 @@ Proof. intros P. rewrite /Affine. by apply bi.pure_intro. Qed.
 (* Own and valid derived *)
 Lemma persistently_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
-  intros; apply (anti_symm _); first by apply: persistently_elim_absorbing.
-    by rewrite {1}persistently_ownM_core core_id_core.
+  intros; apply (anti_symm _); first by rewrite persistently_elim.
+  by rewrite {1}persistently_ownM_core core_id_core.
 Qed.
 Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊢ False.
 Proof. by intros; rewrite ownM_valid cmra_valid_elim. Qed.
@@ -49,7 +49,7 @@ Lemma ownM_unit' : uPred_ownM ε ⊣⊢ True.
 Proof. apply (anti_symm _); first by apply pure_intro. apply ownM_empty. Qed.
 Lemma persistently_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
 Proof.
-  intros; apply (anti_symm _); first by apply: persistently_elim_absorbing.
+  intros; apply (anti_symm _); first by rewrite persistently_elim.
   apply:persistently_cmra_valid_1.
 Qed.
 
@@ -93,7 +93,7 @@ Qed.
 (* Derived lemmas for persistence *)
 Global Instance limit_preserving_Persistent {A:ofeT} `{Cofe A} (Φ : A → uPred M) :
   NonExpansive Φ → LimitPreserving (λ x, Persistent (Φ x)).
-Proof. intros. apply limit_preserving_equiv; solve_proper. Qed.
+Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 
 (* Persistence *)
 Global Instance cmra_valid_persistent {A : cmraT} (a : A) :

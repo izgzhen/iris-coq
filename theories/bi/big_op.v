@@ -137,7 +137,7 @@ Section sep_list.
     { apply forall_intro=> k; apply forall_intro=> x.
       apply impl_intro_l, pure_elim_l=> ?; by apply: big_sepL_lookup. }
     revert Φ HΦ. induction l as [|x l IH]=> Φ HΦ; [by auto using big_sepL_nil'|].
-    rewrite big_sepL_cons. rewrite -persistent_and_sep_l; apply and_intro.
+    rewrite big_sepL_cons. rewrite -persistent_and_sep; apply and_intro.
     - by rewrite (forall_elim 0) (forall_elim x) pure_True // True_impl.
     - rewrite -IH. apply forall_intro=> k; by rewrite (forall_elim (S k)).
   Qed.
@@ -158,21 +158,13 @@ Section sep_list.
       apply forall_intro=> k. by rewrite (forall_elim (S k)).
   Qed.
 
-  Global Instance big_sepL_nil_persistent `{AffineBI PROP} Φ :
+  Global Instance big_sepL_nil_persistent Φ :
     Persistent ([∗ list] k↦x ∈ [], Φ k x).
   Proof. simpl; apply _. Qed.
-  Global Instance big_sepL_persistent1 Φ l :
-    (∀ k x, Persistent (Φ k x)) →
-    l ≠ [] →
-    Persistent ([∗ list] k↦x ∈ l, Φ k x).
-  Proof.
-    intros. rewrite /Persistent (big_opL_commute1 bi_persistently (R:=(≡))) //.
-    apply big_opL_proper=> k y ?. by apply persistent_persistently.
-  Qed.
-  Global Instance big_sepL_persistent `{AffineBI PROP} Φ l :
+  Global Instance big_sepL_persistent Φ l :
     (∀ k x, Persistent (Φ k x)) → Persistent ([∗ list] k↦x ∈ l, Φ k x).
   Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
-  Global Instance big_sepL_persistent_id `{AffineBI PROP} Ps :
+  Global Instance big_sepL_persistent_id Ps :
     TCForall Persistent Ps → Persistent ([∗] Ps).
   Proof. induction 1; simpl; apply _. Qed.
 End sep_list.
@@ -404,7 +396,7 @@ Section gmap.
     { apply forall_intro=> k; apply forall_intro=> x.
       apply impl_intro_l, pure_elim_l=> ?; by apply: big_sepM_lookup. }
     induction m as [|i x m ? IH] using map_ind; auto using big_sepM_empty'.
-    rewrite big_sepM_insert // -persistent_and_sep_l. apply and_intro.
+    rewrite big_sepM_insert // -persistent_and_sep. apply and_intro.
     - rewrite (forall_elim i) (forall_elim x) lookup_insert.
       by rewrite pure_True // True_impl.
     - rewrite -IH. apply forall_mono=> k; apply forall_mono=> y.
@@ -431,14 +423,13 @@ Section gmap.
       by rewrite pure_True // True_impl.
   Qed.
 
-  Global Instance big_sepM_empty_persistent `{AffineBI PROP} Φ :
+  Global Instance big_sepM_empty_persistent Φ :
     Persistent ([∗ map] k↦x ∈ ∅, Φ k x).
   Proof. rewrite /big_opM map_to_list_empty. apply _. Qed.
-  Global Instance big_sepM_persistent `{AffineBI PROP} Φ m :
+  Global Instance big_sepM_persistent Φ m :
     (∀ k x, Persistent (Φ k x)) → Persistent ([∗ map] k↦x ∈ m, Φ k x).
   Proof. intros. apply big_sepL_persistent=> _ [??]; apply _. Qed.
 End gmap.
-
 
 (** ** Big ops over finite sets *)
 Section gset.
@@ -562,7 +553,7 @@ Section gset.
     { apply forall_intro=> x.
       apply impl_intro_l, pure_elim_l=> ?; by apply: big_sepS_elem_of. }
     induction X as [|x X ? IH] using collection_ind_L; auto using big_sepS_empty'.
-    rewrite big_sepS_insert // -persistent_and_sep_l. apply and_intro.
+    rewrite big_sepS_insert // -persistent_and_sep. apply and_intro.
     - by rewrite (forall_elim x) pure_True ?True_impl; last set_solver.
     - rewrite -IH. apply forall_mono=> y. apply impl_intro_l, pure_elim_l=> ?.
       by rewrite pure_True ?True_impl; last set_solver.
@@ -583,11 +574,10 @@ Section gset.
       apply forall_mono=> y. apply impl_intro_l, pure_elim_l=> ?.
       by rewrite pure_True ?True_impl; last set_solver.
   Qed.
-
-  Global Instance big_sepS_empty_persistent `{AffineBI PROP} Φ :
+  Global Instance big_sepS_empty_persistent Φ :
     Persistent ([∗ set] x ∈ ∅, Φ x).
   Proof. rewrite /big_opS elements_empty. apply _. Qed.
-  Global Instance big_sepS_persistent `{AffineBI PROP} Φ X :
+  Global Instance big_sepS_persistent Φ X :
     (∀ x, Persistent (Φ x)) → Persistent ([∗ set] x ∈ X, Φ x).
   Proof. rewrite /big_opS. apply _. Qed.
 End gset.
@@ -658,10 +648,10 @@ Section gmultiset.
     □ ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, □ Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 
-  Global Instance big_sepMS_empty_persistent `{AffineBI PROP} Φ :
+  Global Instance big_sepMS_empty_persistent Φ :
     Persistent ([∗ mset] x ∈ ∅, Φ x).
   Proof. rewrite /big_opMS gmultiset_elements_empty. apply _. Qed.
-  Global Instance big_sepMS_persistent `{AffineBI PROP} Φ X :
+  Global Instance big_sepMS_persistent Φ X :
     (∀ x, Persistent (Φ x)) → Persistent ([∗ mset] x ∈ X, Φ x).
   Proof. rewrite /big_opMS. apply _. Qed.
 End gmultiset.

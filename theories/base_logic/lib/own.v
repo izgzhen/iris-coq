@@ -200,6 +200,6 @@ Section proofmode_classes.
     FromAnd (own γ a) (own γ b1) (own γ b2).
   Proof.
     intros ? Hb. rewrite /FromAnd (is_op a) own_op.
-    destruct Hb. by rewrite persistent_and_sep_l. by rewrite persistent_and_sep_r.
+    destruct Hb; by rewrite persistent_and_sep.
   Qed.
 End proofmode_classes.

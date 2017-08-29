@@ -79,7 +79,7 @@ Global Instance from_sep_ownM_core_id (a b1 b2 : M) :
   FromAnd (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof.
   intros ? H. rewrite /FromAnd (is_op a) ownM_op.
-  destruct H. by rewrite persistent_and_sep_l. by rewrite persistent_and_sep_r.
+  destruct H; by rewrite persistent_and_sep.
 Qed.
 
 Global Instance into_and_ownM p (a b1 b2 : M) :

@@ -518,7 +518,7 @@ Proof.
     rewrite right_id. apply impl_intro_l. rewrite bare_and_l persistently_and_sep_r_1.
     by rewrite bare_sep bare_persistently_elim bare_elim wand_elim_r.
   - apply impl_intro_l. rewrite envs_app_sound //; simpl.
-    by rewrite persistent_and_sep_l_1 right_id wand_elim_r.
+    by rewrite persistent_and_sep_1 right_id wand_elim_r.
 Qed.
 Lemma tac_impl_intro_persistent Δ Δ' i P P' Q :
   IntoPersistent false P P' →
@@ -635,11 +635,11 @@ Proof.
   intros [? ->]%envs_lookup_delete_Some ??? HP1 <-.
   rewrite envs_lookup_sound //.
   rewrite -(idemp bi_and (envs_delete _ _ _)).
-  rewrite {2}envs_simple_replace_sound' //; simpl.
-  rewrite {1}HP1 persistent_and_bare_sep_l -(persistent_persistently P1) assoc.
+  rewrite {2}envs_simple_replace_sound' //; rewrite /= right_id.
+  rewrite {1}HP1 (persistent_persistently_2 P1) persistently_and_bare_sep_l assoc.
   rewrite -bare_persistently_if_idemp -bare_persistently_idemp.
   rewrite (bare_persistently_bare_persistently_if q) -bare_persistently_if_sep.
-  by rewrite into_wand wand_elim_l right_id wand_elim_r.
+  by rewrite into_wand wand_elim_l wand_elim_r.
 Qed.
 
 Lemma tac_specialize_persistent_helper Δ Δ'' j q P R R' Q :
@@ -709,7 +709,8 @@ Lemma tac_assert_persistent Δ Δ1 Δ2 Δ' lr js j P P' Q :
   (Δ1 ⊢ P) → (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ???? HP <-. rewrite -(idemp bi_and Δ) {1}envs_split_sound //.
-  rewrite HP sep_elim_l persistent_and_bare_sep_l from_bare.
+  rewrite HP. rewrite (persistent_persistently_2 P) sep_elim_l.
+  rewrite persistently_and_bare_sep_l -bare_idemp bare_persistently_elim from_bare.
   rewrite envs_app_sound //; simpl.
   by rewrite right_id wand_elim_r.
 Qed.
