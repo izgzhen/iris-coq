@@ -167,6 +167,10 @@ Section sep_list.
   Global Instance big_sepL_persistent_id Ps :
     TCForall Persistent Ps → Persistent ([∗] Ps).
   Proof. induction 1; simpl; apply _. Qed.
+
+  Global Instance big_sepL_affine Φ l :
+    (∀ k x, Affine (Φ k x)) → Affine ([∗ list] k↦x ∈ l, Φ k x).
+  Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
 End sep_list.
 
 Section sep_list2.
@@ -429,6 +433,12 @@ Section gmap.
   Global Instance big_sepM_persistent Φ m :
     (∀ k x, Persistent (Φ k x)) → Persistent ([∗ map] k↦x ∈ m, Φ k x).
   Proof. intros. apply big_sepL_persistent=> _ [??]; apply _. Qed.
+
+  Global Instance big_sepM_affine Φ m :
+    (∀ k x, Affine (Φ k x)) → Affine ([∗ map] k↦x ∈ m, Φ k x).
+  Proof.
+     intros. apply big_sepL_affine=> _ [??]; apply _.
+  Qed.
 End gmap.
 
 (** ** Big ops over finite sets *)
@@ -580,6 +590,10 @@ Section gset.
   Global Instance big_sepS_persistent Φ X :
     (∀ x, Persistent (Φ x)) → Persistent ([∗ set] x ∈ X, Φ x).
   Proof. rewrite /big_opS. apply _. Qed.
+
+  Global Instance big_sepS_affine Φ X :
+    (∀ x, Affine (Φ x)) → Affine ([∗ set] x ∈ X, Φ x).
+  Proof. rewrite /big_opS. apply _. Qed.
 End gset.
 
 Lemma big_sepM_dom `{Countable K} {A} (Φ : K → PROP) (m : gmap K A) :
@@ -653,6 +667,10 @@ Section gmultiset.
   Proof. rewrite /big_opMS gmultiset_elements_empty. apply _. Qed.
   Global Instance big_sepMS_persistent Φ X :
     (∀ x, Persistent (Φ x)) → Persistent ([∗ mset] x ∈ X, Φ x).
+  Proof. rewrite /big_opMS. apply _. Qed.
+
+  Global Instance big_sepMS_affine Φ X :
+    (∀ x, Affine (Φ x)) → Affine ([∗ mset] x ∈ X, Φ x).
   Proof. rewrite /big_opMS. apply _. Qed.
 End gmultiset.
 End bi_big_op.
