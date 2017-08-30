@@ -547,17 +547,19 @@ Lemma envs_app_singleton_sound_foo Δ Δ' p j Q :
   envs_app p (Esnoc Enil j Q) Δ = Some Δ' → Δ ∗ ⬕?p Q ⊢ Δ'.
 Proof. intros. apply wand_elim_l'. eapply envs_app_singleton_sound. eauto. Qed.
 
-Lemma tac_impl_intro Δ Δ' i P Q :
+Lemma tac_impl_intro Δ Δ' i P P' Q :
   (if env_spatial_is_nil Δ then TCTrue else Persistent P) →
-  envs_app false (Esnoc Enil i P) Δ = Some Δ' →
+  envs_app false (Esnoc Enil i P') Δ = Some Δ' →
+  FromBare P' P →
   (Δ' ⊢ Q) → Δ ⊢ P → Q.
 Proof.
-  intros ?? <-. destruct (env_spatial_is_nil Δ) eqn:?.
+  intros ??? <-. destruct (env_spatial_is_nil Δ) eqn:?.
   - rewrite (env_spatial_is_nil_bare_persistently Δ) //; simpl. apply impl_intro_l.
     rewrite envs_app_singleton_sound //; simpl.
-    by rewrite bare_elim persistently_and_bare_sep_r bare_persistently_elim wand_elim_r.
+    rewrite -(from_bare P') bare_and_l -bare_and_r.
+    by rewrite persistently_and_bare_sep_r bare_persistently_elim wand_elim_r.
   - apply impl_intro_l. rewrite envs_app_singleton_sound //; simpl.
-    by rewrite persistent_and_sep_1 wand_elim_r.
+    by rewrite -(from_bare P') persistent_and_bare_sep_l_1 wand_elim_r.
 Qed.
 Lemma tac_impl_intro_persistent Δ Δ' i P P' Q :
   IntoPersistent false P P' →

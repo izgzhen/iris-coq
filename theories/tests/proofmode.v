@@ -52,8 +52,12 @@ Proof.
   auto.
 Qed.
 
-Lemma test_iIntros_persistent P Q `{!Persistent Q} : (P → Q → P ∗ Q)%I.
-Proof. iIntros "H1 H2". by iFrame. Qed.
+Lemma test_iDestruct_and_emp P Q `{!Persistent P, !Persistent Q} :
+  P ∧ emp -∗ emp ∧ Q -∗ ■ (P ∗ Q).
+Proof. iIntros "[#? _] [_ #?]". auto. Qed.
+
+Lemma test_iIntros_persistent P Q `{!Persistent Q} : (P → Q → P ∧ Q)%I.
+Proof. iIntros "H1 #H2". by iFrame. Qed.
 
 Lemma test_iIntros_pure (ψ φ : Prop) P : ψ → (⌜ φ ⌝ → P → ⌜ φ ∧ ψ ⌝ ∧ P)%I.
 Proof. iIntros (??) "H". auto. Qed.
@@ -167,6 +171,13 @@ Proof. iIntros "#?". by iSplit. Qed.
 
 Lemma test_iSpecialize_persistent P Q : ⬕ P -∗ (□ P → Q) -∗ Q.
 Proof. iIntros "#HP HPQ". by iSpecialize ("HPQ" with "HP"). Qed.
+
+Lemma test_iDestruct_persistent P (Φ : nat → PROP) `{!∀ x, Persistent (Φ x)}:
+  ⬕ (P -∗ ∃ x, Φ x) -∗
+  P -∗ ∃ x, Φ x ∗ P.
+Proof.
+  iIntros "#H HP". iDestruct ("H" with "HP") as (x) "#H2". eauto with iFrame.
+Qed.
 
 Lemma test_iLöb P : (∃ n, ▷^n P)%I.
 Proof.

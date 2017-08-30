@@ -326,12 +326,13 @@ Local Tactic Notation "iIntro" constr(H) :=
   iStartProof;
   first
   [ (* (?Q → _) *)
-    eapply tac_impl_intro with _ H; (* (i:=H) *)
+    eapply tac_impl_intro with _ H _; (* (i:=H) *)
       [env_cbv; apply _ ||
        let P := lazymatch goal with |- Persistent ?P => P end in
        fail 1 "iIntro: introducing non-persistent" H ":" P
               "into non-empty spatial context"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
+      |apply _
       |]
   | (* (_ -∗ _) *)
     eapply tac_wand_intro with _ H; (* (i:=H) *)
@@ -1763,6 +1764,7 @@ Hint Extern 1 (of_envs _ ⊢ _ ∧ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ _ ∗ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ ▷ _) => iNext.
 Hint Extern 1 (of_envs _ ⊢ □ _) => iAlways.
+Hint Extern 1 (of_envs _ ⊢ ■ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ ∃ _, _) => iExists _.
 Hint Extern 1 (of_envs _ ⊢ ◇ _) => iModIntro.
 Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iLeft.

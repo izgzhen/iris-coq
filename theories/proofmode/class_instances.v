@@ -47,6 +47,9 @@ Proof. rewrite /FromAssumption /= =><-. by rewrite persistently_idemp. Qed.
 Global Instance from_assumption_persistently_l_false `{AffineBI PROP} P Q :
   FromAssumption true P Q → FromAssumption false (□ P) Q.
 Proof. rewrite /FromAssumption /= =><-. by rewrite affine_bare. Qed.
+Global Instance from_assumption_bare_l_true p P Q :
+  FromAssumption p P Q → FromAssumption p (■ P) Q.
+Proof. rewrite /FromAssumption /= =><-. by rewrite bare_elim. Qed.
 
 Global Instance from_assumption_forall {A} p (Φ : A → PROP) Q x :
   FromAssumption p (Φ x) Q → FromAssumption p (∀ x, Φ x) Q.
@@ -212,6 +215,8 @@ Global Instance into_wand_bare_persistently p q R P Q :
 Proof. by rewrite /IntoWand bare_persistently_elim. Qed.
 
 (* FromAnd *)
+Global Instance from_and_bare P : FromAnd (■ P) emp P | 100.
+Proof. by rewrite /FromAnd /bi_bare. Qed.
 Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2 | 100.
 Proof. by rewrite /FromAnd. Qed.
 Global Instance from_and_sep_persistent_l P1 P1' P2 :
@@ -233,9 +238,6 @@ Qed.
 Global Instance from_and_pure φ ψ : @FromAnd PROP ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /FromAnd pure_and. Qed.
 
-Global Instance from_and_bare P Q1 Q2 :
-  FromAnd P Q1 Q2 → FromAnd (■ P) (■ Q1) (■ Q2).
-Proof. rewrite /FromAnd=> <-. by rewrite bare_and. Qed.
 Global Instance from_and_persistently P Q1 Q2 :
   FromAnd P Q1 Q2 → FromAnd (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /FromAnd=> <-. by rewrite persistently_and. Qed.
@@ -280,8 +282,21 @@ Global Instance from_sep_big_sepL_app {A} (Φ : nat → A → PROP) l1 l2 :
 Proof. by rewrite /FromSep big_opL_app. Qed.
 
 (* IntoAnd *)
-Global Instance into_and_and p P Q : IntoAnd p (P ∧ Q) P Q.
+Global Instance into_and_and p P Q : IntoAnd p (P ∧ Q) P Q | 10.
 Proof. by rewrite /IntoAnd bare_persistently_if_and. Qed.
+Global Instance into_and_and_affine_l P Q Q' :
+  Affine P → FromBare Q' Q → IntoAnd false (P ∧ Q) P Q'.
+Proof.
+  intros. rewrite /IntoAnd /=.
+  by rewrite -(affine_bare P) bare_and_r bare_and (from_bare Q').
+Qed.
+Global Instance into_and_and_affine_r P P' Q :
+  Affine Q → FromBare P' P → IntoAnd false (P ∧ Q) P' Q.
+Proof.
+  intros. rewrite /IntoAnd /=.
+  by rewrite -(affine_bare Q) bare_and_l bare_and (from_bare P').
+Qed.
+
 Global Instance into_and_sep `{PositiveBI PROP} P Q : IntoAnd true (P ∗ Q) P Q.
 Proof. by rewrite /IntoAnd /= persistently_sep -and_sep_persistently persistently_and. Qed.
 
@@ -307,17 +322,28 @@ Qed.
 Global Instance into_sep_sep P Q : IntoSep (P ∗ Q) P Q.
 Proof. by rewrite /IntoSep. Qed.
 
-Global Instance into_sep_and_persistent_l P P' Q :
-  Persistent P → FromBare P' P → IntoSep (P ∧ Q) P' Q.
+Inductive AndIntoSep : PROP → PROP → PROP → PROP → Prop :=
+  | and_into_sep_affine P Q Q' : Affine P → FromBare Q' Q → AndIntoSep P P Q Q'
+  | and_into_sep P Q : AndIntoSep P (■ P)%I Q Q.
+Existing Class AndIntoSep.
+Global Existing Instance and_into_sep_affine | 0.
+Global Existing Instance and_into_sep | 2.
+
+Global Instance into_sep_and_persistent_l P P' Q Q' :
+  Persistent P → AndIntoSep P P' Q Q' → IntoSep (P ∧ Q) P' Q'.
 Proof.
-  rewrite /FromBare /IntoSep /=. intros ? <-.
-  by rewrite persistent_and_bare_sep_l_1.
+  destruct 2 as [P Q Q'|P Q]; rewrite /IntoSep.
+  - rewrite -(from_bare Q') -(affine_bare P) bare_and_r -bare_and_l.
+    by rewrite persistent_and_bare_sep_l_1.
+  - by rewrite persistent_and_bare_sep_l_1.
 Qed.
-Global Instance into_sep_and_persistent_r P Q Q' :
-  Persistent Q → FromBare Q' Q → IntoSep (P ∧ Q) P Q'.
+Global Instance into_sep_and_persistent_r P P' Q Q' :
+  Persistent Q → AndIntoSep Q Q' P P' → IntoSep (P ∧ Q) P' Q'.
 Proof.
-  rewrite /FromBare /IntoSep /=. intros ? <-.
-  by rewrite persistent_and_bare_sep_r_1.
+  destruct 2 as [Q P P'|Q P]; rewrite /IntoSep.
+  - rewrite -(from_bare P') -(affine_bare Q) bare_and_l -bare_and_r.
+    by rewrite persistent_and_bare_sep_r_1.
+  - by rewrite persistent_and_bare_sep_r_1.
 Qed.
 
 
@@ -458,10 +484,15 @@ Proof.
 Qed.
 
 (* Frame *)
-Global Instance frame_here_absorbing p R : Absorbing R → Frame p R R True.
+Global Instance frame_here_absorbing p R : Absorbing R → Frame p R R True | 0.
 Proof. intros. by rewrite /Frame bare_persistently_if_elim sep_elim_l. Qed.
-Global Instance frame_here p R : Frame p R R emp.
+Global Instance frame_here p R : Frame p R R emp | 1.
 Proof. intros. by rewrite /Frame bare_persistently_if_elim sep_elim_l. Qed.
+Global Instance frame_bare_here_absorbing p R : Absorbing R → Frame p (■ R) R True | 0.
+Proof. intros. by rewrite /Frame bare_persistently_if_elim bare_elim sep_elim_l. Qed.
+Global Instance frame_bare_here p R : Frame p (■ R) R emp | 1.
+Proof. intros. by rewrite /Frame bare_persistently_if_elim bare_elim sep_elim_l. Qed.
+
 Global Instance frame_here_pure p φ Q : FromPure Q φ → Frame p ⌜φ⌝ Q True.
 Proof.
   rewrite /FromPure /Frame=> <-. by rewrite bare_persistently_if_elim sep_elim_l.
@@ -514,8 +545,12 @@ Global Instance make_and_true_r P : MakeAnd P True P.
 Proof. by rewrite /MakeAnd right_id. Qed.
 Global Instance make_and_emp_l P : Affine P → MakeAnd emp P P.
 Proof. intros. by rewrite /MakeAnd emp_and. Qed.
+Global Instance make_and_emp_l_bare P : MakeAnd emp P (■ P) | 10.
+Proof. intros. by rewrite /MakeAnd. Qed.
 Global Instance make_and_emp_r P : Affine P → MakeAnd P emp P.
 Proof. intros. by rewrite /MakeAnd and_emp. Qed.
+Global Instance make_and_emp_r_bare P : MakeAnd P emp (■ P) | 10.
+Proof. intros. by rewrite /MakeAnd comm. Qed.
 Global Instance make_and_default P Q : MakeAnd P Q (P ∧ Q) | 100.
 Proof. by rewrite /MakeAnd. Qed.
 
@@ -581,7 +616,9 @@ Qed.
 
 Class MakeBare (P Q : PROP) := make_bare : ■ P ⊣⊢ Q.
 Arguments MakeBare _%I _%I.
-Global Instance make_bare_affine P : Affine P → MakeBare P P.
+Global Instance make_bare_True : MakeBare True emp | 0.
+Proof. by rewrite /MakeBare bare_True_emp bare_emp. Qed.
+Global Instance make_bare_affine P : Affine P → MakeBare P P | 1.
 Proof. intros. by rewrite /MakeBare affine_bare. Qed.
 Global Instance make_bare_default P : MakeBare P (■ P) | 100.
 Proof. by rewrite /MakeBare. Qed.
