@@ -727,10 +727,12 @@ Proof. by rewrite /bi_bare and_exist_l. Qed.
 Lemma bare_True_emp : ■ True ⊣⊢ ■ emp.
 Proof. apply (anti_symm _); rewrite /bi_bare; auto. Qed.
 
-Lemma bare_and_l P Q : P ∧ ■ Q ⊣⊢ ■ (P ∧ Q).
-Proof. by rewrite /bi_bare !assoc (comm _ P). Qed.
-Lemma bare_and_r P Q : ■ P ∧ Q ⊣⊢ ■ (P ∧ Q).
+Lemma bare_and_l P Q : ■ P ∧ Q ⊣⊢ ■ (P ∧ Q).
 Proof. by rewrite /bi_bare assoc. Qed.
+Lemma bare_and_r P Q : P ∧ ■ Q ⊣⊢ ■ (P ∧ Q).
+Proof. by rewrite /bi_bare !assoc (comm _ P). Qed.
+Lemma bare_and_lr P Q : ■ P ∧ Q ⊣⊢ P ∧ ■ Q.
+Proof. by rewrite bare_and_l bare_and_r. Qed.
 
 (* Affine propositions *)
 Global Instance Affine_proper : Proper ((≡) ==> iff) (@Affine PROP).
@@ -1073,10 +1075,10 @@ Qed.
 Lemma persistently_and_bare_sep_r P Q : P ∧ □ Q ⊣⊢ P ∗ ⬕ Q.
 Proof. by rewrite !(comm _ P) persistently_and_bare_sep_l. Qed.
 Lemma and_sep_bare_persistently P Q : ⬕ P ∧ ⬕ Q ⊣⊢ ⬕ P ∗ ⬕ Q.
-Proof. by rewrite -persistently_and_bare_sep_l -bare_and bare_and_l. Qed.
+Proof. by rewrite -persistently_and_bare_sep_l -bare_and bare_and_r. Qed.
 
 Lemma bare_persistently_sep_dup P : ⬕ P ⊣⊢ ⬕ P ∗ ⬕ P.
-Proof. by rewrite -persistently_and_bare_sep_l bare_and_l bare_and idemp. Qed.
+Proof. by rewrite -persistently_and_bare_sep_l bare_and_r bare_and idemp. Qed.
 
 (* Conditional bare modality *)
 Global Instance bare_if_ne p : NonExpansive (@bi_bare_if PROP p).

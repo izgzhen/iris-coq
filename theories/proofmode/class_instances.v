@@ -180,7 +180,7 @@ Global Instance into_wand_impl_true_false P Q P' :
   IntoWand true false (P' → Q) P Q.
 Proof.
   rewrite /FromAssumption /IntoWand /= => ? HP. apply wand_intro_r.
-  rewrite -persistently_and_bare_sep_l HP -{2}(affine_bare P') bare_and_l -bare_and_r.
+  rewrite -persistently_and_bare_sep_l HP -{2}(affine_bare P') -bare_and_lr.
   by rewrite bare_persistently_elim impl_elim_l.
 Qed.
 
@@ -288,13 +288,13 @@ Global Instance into_and_and_affine_l P Q Q' :
   Affine P → FromBare Q' Q → IntoAnd false (P ∧ Q) P Q'.
 Proof.
   intros. rewrite /IntoAnd /=.
-  by rewrite -(affine_bare P) bare_and_r bare_and (from_bare Q').
+  by rewrite -(affine_bare P) bare_and_l bare_and (from_bare Q').
 Qed.
 Global Instance into_and_and_affine_r P P' Q :
   Affine Q → FromBare P' P → IntoAnd false (P ∧ Q) P' Q.
 Proof.
   intros. rewrite /IntoAnd /=.
-  by rewrite -(affine_bare Q) bare_and_l bare_and (from_bare P').
+  by rewrite -(affine_bare Q) bare_and_r bare_and (from_bare P').
 Qed.
 
 Global Instance into_and_sep `{PositiveBI PROP} P Q : IntoAnd true (P ∗ Q) P Q.
@@ -333,7 +333,7 @@ Global Instance into_sep_and_persistent_l P P' Q Q' :
   Persistent P → AndIntoSep P P' Q Q' → IntoSep (P ∧ Q) P' Q'.
 Proof.
   destruct 2 as [P Q Q'|P Q]; rewrite /IntoSep.
-  - rewrite -(from_bare Q') -(affine_bare P) bare_and_r -bare_and_l.
+  - rewrite -(from_bare Q') -(affine_bare P) bare_and_lr.
     by rewrite persistent_and_bare_sep_l_1.
   - by rewrite persistent_and_bare_sep_l_1.
 Qed.
@@ -341,7 +341,7 @@ Global Instance into_sep_and_persistent_r P P' Q Q' :
   Persistent Q → AndIntoSep Q Q' P P' → IntoSep (P ∧ Q) P' Q'.
 Proof.
   destruct 2 as [Q P P'|Q P]; rewrite /IntoSep.
-  - rewrite -(from_bare P') -(affine_bare Q) bare_and_l -bare_and_r.
+  - rewrite -(from_bare P') -(affine_bare Q) -bare_and_lr.
     by rewrite persistent_and_bare_sep_r_1.
   - by rewrite persistent_and_bare_sep_r_1.
 Qed.

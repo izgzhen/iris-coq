@@ -339,7 +339,7 @@ Lemma env_spatial_is_nil_bare_persistently Δ :
   env_spatial_is_nil Δ = true → Δ ⊢ ⬕ Δ.
 Proof.
   intros. unfold of_envs; destruct Δ as [? []]; simplify_eq/=.
-  rewrite !right_id {1}bare_and_l persistently_and.
+  rewrite !right_id {1}bare_and_r persistently_and.
   by rewrite persistently_bare persistently_idemp persistently_pure.
 Qed.
 
@@ -556,7 +556,7 @@ Proof.
   intros ??? <-. destruct (env_spatial_is_nil Δ) eqn:?.
   - rewrite (env_spatial_is_nil_bare_persistently Δ) //; simpl. apply impl_intro_l.
     rewrite envs_app_singleton_sound //; simpl.
-    rewrite -(from_bare P') bare_and_l -bare_and_r.
+    rewrite -(from_bare P') -bare_and_lr.
     by rewrite persistently_and_bare_sep_r bare_persistently_elim wand_elim_r.
   - apply impl_intro_l. rewrite envs_app_singleton_sound //; simpl.
     by rewrite -(from_bare P') persistent_and_bare_sep_l_1 wand_elim_r.
@@ -712,7 +712,7 @@ Proof.
     by rewrite sep_elim_r persistently_and_bare_sep_l wand_elim_r.
   - destruct Hpos.
     rewrite -(affine_bare R) (_ : R = □?false R)%I // (into_persistent _ R).
-    rewrite bare_and_r -bare_and_l bare_sep sep_elim_r bare_elim.
+    rewrite bare_and_lr bare_sep sep_elim_r bare_elim.
     by rewrite persistently_and_bare_sep_l wand_elim_r.
 Qed.
 
