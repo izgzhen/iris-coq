@@ -435,13 +435,6 @@ Proof.
 Qed.
 
 (** * Basic rules *)
-Lemma tac_emp_intro Δ :
-  env_spatial_is_nil Δ = true →
-  Δ ⊢ emp.
-Proof.
-  intros. by rewrite (env_spatial_is_nil_bare_persistently Δ) // (affine (⬕ Δ)).
-Qed.
-
 Class AffineEnv (Γ : env PROP) := affine_env : Forall Affine Γ.
 Global Instance affine_env_nil : AffineEnv Enil.
 Proof. constructor. Qed.
@@ -452,6 +445,14 @@ Proof. by constructor. Qed.
 Instance affine_env_spatial Δ :
   TCOr (AffineBI PROP) (AffineEnv (env_spatial Δ)) → Affine ([∗] env_spatial Δ).
 Proof. destruct 1 as [?|H]. apply _. induction H; simpl; apply _. Qed.
+
+Lemma tac_emp_intro Δ :
+  (* Establishing [AffineEnv (env_spatial Δ)] is rather expensive (linear in the
+  size of the context), so first check whether the whole BI is affine (which
+  takes constant time). *)
+  TCOr (AffineBI PROP) (AffineEnv (env_spatial Δ)) →
+  Δ ⊢ emp.
+Proof. intros [?|?]; by rewrite (affine Δ). Qed.
 
 Lemma tac_assumption Δ Δ' i p P Q :
   envs_lookup_delete i Δ = Some (p,P,Δ') →

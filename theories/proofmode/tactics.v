@@ -202,7 +202,8 @@ Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
 Tactic Notation "iEmpIntro" :=
   iStartProof;
   eapply tac_emp_intro;
-    [env_reflexivity || fail "iEmpIntro: spatial context is non-empty"].
+    [env_cbv; apply _ ||
+     fail "iEmpIntro: spatial context contains non-affine hypotheses"].
 
 Tactic Notation "iPureIntro" :=
   iStartProof;

@@ -91,6 +91,10 @@ Lemma test_iSpecialize_auto_frame P Q R :
   (P -∗ True -∗ True -∗ Q -∗ R) -∗ P -∗ Q -∗ R.
 Proof. iIntros "H HP HQ". by iApply ("H" with "[$]"). Qed.
 
+Lemma test_iEmp_intro P Q R `{!Affine P, !Persistent Q, !Affine R} :
+  P -∗ Q → R -∗ emp.
+Proof. iIntros "HP #HQ HR". iEmpIntro. Qed.
+
 (* Check coercions *)
 Lemma test_iExist_coercion (P : Z → PROP) : (∀ x, P x) -∗ ∃ x, P x.
 Proof. iIntros "HP". iExists (0:nat). iApply ("HP" $! (0:nat)). Qed.
