@@ -1182,8 +1182,6 @@ Global Instance pure_persistent φ : Persistent (⌜φ⌝%I : PROP).
 Proof. by rewrite /Persistent persistently_pure. Qed.
 Global Instance emp_persistent : Persistent (emp%I : PROP).
 Proof. rewrite /Persistent. apply persistently_emp_intro. Qed.
-Global Instance persistently_persistent P : Persistent (□ P).
-Proof. by rewrite /Persistent persistently_idemp. Qed.
 Global Instance and_persistent P Q :
   Persistent P → Persistent Q → Persistent (P ∧ Q).
 Proof. intros. by rewrite /Persistent persistently_and -!persistent. Qed.
@@ -1216,6 +1214,11 @@ Proof. intros. rewrite pure_wand_forall. apply _. Qed.
 Global Instance sep_persistent P Q :
   Persistent P → Persistent Q → Persistent (P ∗ Q).
 Proof. intros. by rewrite /Persistent -persistently_sep_2 -!persistent. Qed.
+
+Global Instance persistently_persistent P : Persistent (□ P).
+Proof. by rewrite /Persistent persistently_idemp. Qed.
+Global Instance bare_persistent P : Persistent P → Persistent (■ P).
+Proof. rewrite /bi_bare. apply _. Qed.
 
 Global Instance from_option_persistent {A} P (Ψ : A → PROP) (mx : option A) :
   (∀ x, Persistent (Ψ x)) → Persistent P → Persistent (from_option Ψ P mx).
