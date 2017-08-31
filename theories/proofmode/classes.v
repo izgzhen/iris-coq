@@ -55,11 +55,11 @@ Arguments IntoPersistent {_} _ _%I _%I : simpl never.
 Arguments into_persistent {_} _ _%I _%I {_}.
 Hint Mode IntoPersistent + + ! - : typeclass_instances.
 
-Class FromPersistent {PROP : bi} (P Q : PROP) :=
-  from_persistent : □ Q ⊢ P.
-Arguments FromPersistent {_} _%I _%I : simpl never.
-Arguments from_persistent {_} _%I _%I {_}.
-Hint Mode FromPersistent + ! - : typeclass_instances.
+Class FromPersistent {PROP : bi} (a p : bool) (P Q : PROP) :=
+  from_persistent : ■?a □?p Q ⊢ P.
+Arguments FromPersistent {_} _ _ _%I _%I : simpl never.
+Arguments from_persistent {_} _ _ _%I _%I {_}.
+Hint Mode FromPersistent + - - ! - : typeclass_instances.
 
 Class FromBare {PROP : bi} (P Q : PROP) :=
   from_bare : ■ Q ⊢ P.

@@ -219,7 +219,7 @@ Proof. iIntros (Q R) "$ _ $". Qed.
 
 Lemma test_foo P Q : ■ ▷ (Q ≡ P) -∗ ■ ▷ Q -∗ ■ ▷ P.
 Proof.
-  iIntros "#HPQ HQ". iSplit; first done. iNext. by iRewrite "HPQ" in "HQ".
+  iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ".
 Qed.
 
 Lemma test_iIntros_modalities `(!Absorbing P) :
@@ -230,4 +230,9 @@ Proof.
   iIntros ([]).
 Qed.
 
+Lemma test_iNext_affine P Q : ■ ▷ (Q ≡ P) -∗ ■ ▷ Q -∗ ■ ▷ P.
+Proof. iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ". Qed.
+
+Lemma test_iAlways P Q R : ⬕ P -∗ □ Q → R -∗ □ ■ ■ P ∗ ■ □ Q.
+Proof. iIntros "#HP #HQ HR". iSplitL. iAlways. done. iAlways. done. Qed.
 End tests.

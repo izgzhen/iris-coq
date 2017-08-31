@@ -846,7 +846,9 @@ Local Tactic Notation "iExistDestruct" constr(H)
 Tactic Notation "iAlways":=
   iStartProof;
   eapply tac_persistently_intro;
-    [apply _ || fail "iAlways: the goal is not a persistently modality"
+    [apply _ (* || fail "iAlways: the goal is not a persistently modality" *)
+    |env_cbv; apply _ ||
+     fail "iAlways: spatial context contains non-affine hypotheses"
     |env_cbv].
 
 (** * Later *)
@@ -1764,7 +1766,7 @@ Hint Extern 1 (of_envs _ ⊢ _ ∧ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ _ ∗ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ ▷ _) => iNext.
 Hint Extern 1 (of_envs _ ⊢ □ _) => iAlways.
-Hint Extern 1 (of_envs _ ⊢ ■ _) => iSplit.
+Hint Extern 1 (of_envs _ ⊢ ■ _) => iAlways.
 Hint Extern 1 (of_envs _ ⊢ ∃ _, _) => iExists _.
 Hint Extern 1 (of_envs _ ⊢ ◇ _) => iModIntro.
 Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iLeft.

@@ -452,7 +452,7 @@ Lemma tac_emp_intro Δ :
   takes constant time). *)
   TCOr (AffineBI PROP) (AffineEnv (env_spatial Δ)) →
   Δ ⊢ emp.
-Proof. intros [?|?]; by rewrite (affine Δ). Qed.
+Proof. intros. by rewrite (affine Δ). Qed.
 
 Lemma tac_assumption Δ Δ' i p P Q :
   envs_lookup_delete i Δ = Some (p,P,Δ') →
@@ -520,13 +520,16 @@ Lemma tac_pure_revert Δ φ Q : (Δ ⊢ ⌜φ⌝ → Q) → (φ → Δ ⊢ Q).
 Proof. intros HΔ ?. by rewrite HΔ pure_True // left_id. Qed.
 
 (** * Persistently *)
-Lemma tac_persistently_intro Δ Q Q' :
-  FromPersistent Q' Q →
-  (envs_clear_spatial Δ ⊢ Q) → Δ ⊢ Q'.
+Lemma tac_persistently_intro Δ a p Q Q' :
+  FromPersistent a p Q' Q →
+  (if a then TCOr (AffineBI PROP) (AffineEnv (env_spatial Δ)) else TCTrue) →
+  ((if p then envs_clear_spatial Δ else Δ) ⊢ Q) → Δ ⊢ Q'.
 Proof.
-  intros ? HQ. rewrite -(from_persistent Q') -HQ envs_clear_spatial_sound.
-  rewrite {1}(env_spatial_is_nil_bare_persistently (envs_clear_spatial Δ)) //.
-  by rewrite -persistently_and_bare_sep_l and_elim_l.
+  intros ? Haffine HQ. rewrite -(from_persistent a p Q') -HQ. destruct p=> /=.
+  - rewrite envs_clear_spatial_sound.
+    rewrite {1}(env_spatial_is_nil_bare_persistently (envs_clear_spatial Δ)) //.
+    destruct a=> /=. by rewrite sep_elim_l. by rewrite bare_elim sep_elim_l.
+  - destruct a=> //=. apply and_intro; auto using tac_emp_intro.
 Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :

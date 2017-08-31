@@ -146,11 +146,16 @@ Global Instance into_persistent_persistent P :
 Proof. intros. by rewrite /IntoPersistent. Qed.
 
 (* FromPersistent *)
-Global Instance from_persistent_persistently P : FromPersistent (□ P) P | 1.
+Global Instance from_persistent_here P : FromPersistent false false P P | 1.
 Proof. by rewrite /FromPersistent. Qed.
-Global Instance from_persistent_bare `{AffineBI PROP} P Q :
-  FromPersistent P Q → FromPersistent (■ P) Q.
-Proof. rewrite /FromPersistent=> ->. by rewrite affine_bare. Qed.
+Global Instance from_persistent_persistently a P Q :
+  FromPersistent a false P Q → FromPersistent false true (□ P) Q | 0.
+Proof.
+  rewrite /FromPersistent /= => <-. by destruct a; rewrite /= ?persistently_bare.
+Qed.
+Global Instance from_persistent_bare a p P Q :
+  FromPersistent a p P Q → FromPersistent true p (■ P) Q | 0.
+Proof. rewrite /FromPersistent /= => <-. destruct a; by rewrite /= ?bare_idemp. Qed.
 
 (* IntoWand *)
 Global Instance into_wand_wand p q P Q P' :
@@ -215,8 +220,6 @@ Global Instance into_wand_bare_persistently p q R P Q :
 Proof. by rewrite /IntoWand bare_persistently_elim. Qed.
 
 (* FromAnd *)
-Global Instance from_and_bare P : FromAnd (■ P) emp P | 100.
-Proof. by rewrite /FromAnd /bi_bare. Qed.
 Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2 | 100.
 Proof. by rewrite /FromAnd. Qed.
 Global Instance from_and_sep_persistent_l P1 P1' P2 :
