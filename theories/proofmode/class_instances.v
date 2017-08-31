@@ -682,27 +682,27 @@ Proof. rewrite /FromPure=> ->. apply except_0_intro. Qed.
 Global Instance into_wand_later p q R P Q :
   IntoWand p q R P Q → IntoWand p q (▷ R) (▷ P) (▷ Q).
 Proof.
-  rewrite /IntoWand /= => HR. by rewrite !bare_persistently_if_later -later_wand HR.
+  rewrite /IntoWand /= => HR. by rewrite !later_bare_persistently_if_2 -later_wand HR.
 Qed.
 
 Global Instance into_wand_later_args p q R P Q :
   IntoWand p q R P Q → IntoWand' p q R (▷ P) (▷ Q).
 Proof.
   rewrite /IntoWand' /IntoWand /= => HR.
-  by rewrite !bare_persistently_if_later (later_intro (⬕?p R)%I) -later_wand HR.
+  by rewrite !later_bare_persistently_if_2 (later_intro (⬕?p R)%I) -later_wand HR.
 Qed.
 
 Global Instance into_wand_laterN n p q R P Q :
   IntoWand p q R P Q → IntoWand p q (▷^n R) (▷^n P) (▷^n Q).
 Proof.
-  rewrite /IntoWand /= => HR. by rewrite !bare_persistently_if_laterN -laterN_wand HR.
+  rewrite /IntoWand /= => HR. by rewrite !laterN_bare_persistently_if_2 -laterN_wand HR.
 Qed.
 
 Global Instance into_wand_laterN_args n p q R P Q :
   IntoWand p q R P Q → IntoWand' p q R (▷^n P) (▷^n Q).
 Proof.
   rewrite /IntoWand' /IntoWand /= => HR.
-  by rewrite !bare_persistently_if_laterN (laterN_intro _ (⬕?p R)%I) -laterN_wand HR.
+  by rewrite !laterN_bare_persistently_if_2 (laterN_intro _ (⬕?p R)%I) -laterN_wand HR.
 Qed.
 
 (* FromAnd *)
@@ -732,19 +732,19 @@ Global Instance into_and_later p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p (▷ P) (▷ Q1) (▷ Q2).
 Proof.
   rewrite /IntoAnd=> HP. apply bare_persistently_if_intro'.
-  by rewrite bare_persistently_if_later HP bare_persistently_if_elim later_and.
+  by rewrite later_bare_persistently_if_2 HP bare_persistently_if_elim later_and.
 Qed.
 Global Instance into_and_laterN n p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p (▷^n P) (▷^n Q1) (▷^n Q2).
 Proof.
   rewrite /IntoAnd=> HP. apply bare_persistently_if_intro'.
-  by rewrite bare_persistently_if_laterN HP bare_persistently_if_elim laterN_and.
+  by rewrite laterN_bare_persistently_if_2 HP bare_persistently_if_elim laterN_and.
 Qed.
 Global Instance into_and_except_0 p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p (◇ P) (◇ Q1) (◇ Q2).
 Proof.
   rewrite /IntoAnd=> HP. apply bare_persistently_if_intro'.
-  by rewrite bare_persistently_if_except_0 HP bare_persistently_if_elim except_0_and.
+  by rewrite except_0_bare_persistently_if_2 HP bare_persistently_if_elim except_0_and.
 Qed.
 
 (* IntoSep *)
@@ -860,7 +860,7 @@ Global Instance frame_later p R R' P Q Q' :
   IntoLaterN 1 R' R → Frame p R P Q → MakeLater Q Q' → Frame p R' (▷ P) Q'.
 Proof.
   rewrite /Frame /MakeLater /IntoLaterN=>-> <- <- /=.
-  by rewrite bare_persistently_if_later later_sep.
+  by rewrite later_bare_persistently_if_2 later_sep.
 Qed.
 
 Class MakeLaterN (n : nat) (P lP : PROP) := make_laterN : ▷^n P ⊣⊢ lP.
@@ -875,7 +875,7 @@ Global Instance frame_laterN p n R R' P Q Q' :
   IntoLaterN n R' R → Frame p R P Q → MakeLaterN n Q Q' → Frame p R' (▷^n P) Q'.
 Proof.
   rewrite /Frame /MakeLaterN /IntoLaterN=>-> <- <-.
-  by rewrite bare_persistently_if_laterN laterN_sep.
+  by rewrite laterN_bare_persistently_if_2 laterN_sep.
 Qed.
 
 Class MakeExcept0 (P Q : PROP) := make_except_0 : ◇ P ⊣⊢ Q.

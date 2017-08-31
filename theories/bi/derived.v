@@ -1419,15 +1419,13 @@ Proof. apply wand_intro_l. by rewrite -later_sep wand_elim_r. Qed.
 Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ ▷ P ↔ ▷ Q.
 Proof. by rewrite /bi_iff later_and !later_impl. Qed.
 Lemma later_persistently P : ▷ □ P ⊣⊢ □ ▷ P.
-Proof.
-  apply (anti_symm _); auto using later_persistently_1, later_persistently_2.
-Qed.
-Lemma bare_later P : ■ ▷ P ⊢ ▷ ■ P.
+Proof. apply (anti_symm _); auto using later_persistently_1, later_persistently_2. Qed.
+Lemma later_bare_2 P : ■ ▷ P ⊢ ▷ ■ P.
 Proof. rewrite /bi_bare later_and. auto using later_intro. Qed.
-Lemma bare_persistently_later P : ⬕ ▷ P ⊢ ▷ ⬕ P.
-Proof. by rewrite -later_persistently bare_later. Qed.
-Lemma bare_persistently_if_later p P : ⬕?p ▷ P ⊢ ▷ ⬕?p P.
-Proof. destruct p; simpl; auto using bare_persistently_later. Qed.
+Lemma later_bare_persistently_2 P : ⬕ ▷ P ⊢ ▷ ⬕ P.
+Proof. by rewrite -later_persistently later_bare_2. Qed.
+Lemma later_bare_persistently_if_2 p P : ⬕?p ▷ P ⊢ ▷ ⬕?p P.
+Proof. destruct p; simpl; auto using later_bare_persistently_2. Qed.
 
 Global Instance later_persistent P : Persistent P → Persistent (▷ P).
 Proof.
@@ -1490,12 +1488,12 @@ Lemma laterN_iff n P Q : ▷^n (P ↔ Q) ⊢ ▷^n P ↔ ▷^n Q.
 Proof. by rewrite /bi_iff laterN_and !laterN_impl. Qed.
 Lemma laterN_persistently n P : ▷^n □ P ⊣⊢ □ ▷^n P.
 Proof. induction n as [|n IH]; simpl; auto. by rewrite IH later_persistently. Qed.
-Lemma bare_laterN n P : ■ ▷^n P ⊢ ▷^n ■ P.
+Lemma laterN_bare_2 n P : ■ ▷^n P ⊢ ▷^n ■ P.
 Proof. rewrite /bi_bare laterN_and. auto using laterN_intro. Qed.
-Lemma bare_persistently_laterN n P : ⬕ ▷^n P ⊢ ▷^n ⬕ P.
-Proof. by rewrite -laterN_persistently bare_laterN. Qed.
-Lemma bare_persistently_if_laterN n p P : ⬕?p ▷^n P ⊢ ▷^n ⬕?p P.
-Proof. destruct p; simpl; auto using bare_persistently_laterN. Qed.
+Lemma laterN_bare_persistently_2 n P : ⬕ ▷^n P ⊢ ▷^n ⬕ P.
+Proof. by rewrite -laterN_persistently laterN_bare_2. Qed.
+Lemma laterN_bare_persistently_if_2 n p P : ⬕?p ▷^n P ⊢ ▷^n ⬕?p P.
+Proof. destruct p; simpl; auto using laterN_bare_persistently_2. Qed.
 
 Global Instance laterN_persistent n P : Persistent P → Persistent (▷^n P).
 Proof. induction n; apply _. Qed.
@@ -1550,15 +1548,13 @@ Qed.
 Lemma except_0_later P : ◇ ▷ P ⊢ ▷ P.
 Proof. by rewrite /bi_except_0 -later_or False_or. Qed.
 Lemma except_0_persistently P : ◇ □ P ⊣⊢ □ ◇ P.
-Proof.
-  by rewrite /bi_except_0 persistently_or -later_persistently persistently_pure.
-Qed.
-Lemma bare_except_0 P : ■ ◇ P ⊢ ◇ ■ P.
+Proof. by rewrite /bi_except_0 persistently_or -later_persistently persistently_pure. Qed.
+Lemma except_0_bare_2 P : ■ ◇ P ⊢ ◇ ■ P.
 Proof. rewrite /bi_bare except_0_and. auto using except_0_intro. Qed.
-Lemma bare_persistently_except_0 P : ⬕ ◇ P ⊢ ◇ ⬕ P.
-Proof. by rewrite -except_0_persistently bare_except_0. Qed.
-Lemma bare_persistently_if_except_0 p P : ⬕?p ◇ P ⊢ ◇ ⬕?p P.
-Proof. destruct p; simpl; auto using bare_persistently_except_0. Qed.
+Lemma except_0_bare_persistently_2 P : ⬕ ◇ P ⊢ ◇ ⬕ P.
+Proof. by rewrite -except_0_persistently except_0_bare_2. Qed.
+Lemma except_0_bare_persistently_if_2 p P : ⬕?p ◇ P ⊢ ◇ ⬕?p P.
+Proof. destruct p; simpl; auto using except_0_bare_persistently_2. Qed.
 
 Lemma except_0_frame_l P Q : P ∗ ◇ Q ⊢ ◇ (P ∗ Q).
 Proof. by rewrite {1}(except_0_intro P) except_0_sep. Qed.

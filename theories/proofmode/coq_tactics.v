@@ -1044,7 +1044,7 @@ Lemma into_laterN_env_sound n Δ1 Δ2 :
   IntoLaterNEnvs n Δ1 Δ2 → Δ1 ⊢ ▷^n (Δ2 : bi_car _).
 Proof.
   intros [Hp Hs]; rewrite /of_envs /= !laterN_and !laterN_sep.
-  rewrite -{1}laterN_intro -bare_persistently_laterN.
+  rewrite -{1}laterN_intro -laterN_bare_persistently_2.
   apply and_mono, sep_mono.
   - apply pure_mono; destruct 1; constructor;
       naive_solver eauto using env_Forall2_wf, env_Forall2_fresh.
