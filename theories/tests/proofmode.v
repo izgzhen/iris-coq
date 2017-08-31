@@ -217,6 +217,11 @@ Lemma test_iIntros_let P :
   ∀ Q, let R := emp%I in P -∗ R -∗ Q -∗ P ∗ Q.
 Proof. iIntros (Q R) "$ _ $". Qed.
 
+Lemma test_foo P Q : ■ ▷ (Q ≡ P) -∗ ■ ▷ Q -∗ ■ ▷ P.
+Proof.
+  iIntros "#HPQ HQ". iSplit; first done. iNext. by iRewrite "HPQ" in "HQ".
+Qed.
+
 Lemma test_iIntros_modalities `(!Absorbing P) :
   (□ ▷ ∀  x : nat, ⌜ x = 0 ⌝ → ⌜ x = 0 ⌝ -∗ False -∗ P -∗ P)%I.
 Proof.
@@ -224,4 +229,5 @@ Proof.
   iIntros "* **". (* Test that fast intros do not work under modalities *)
   iIntros ([]).
 Qed.
+
 End tests.

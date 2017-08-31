@@ -932,6 +932,13 @@ Global Instance into_laterN_exist {A} n (Φ Ψ : A → PROP) :
   IntoLaterN' n (∃ x, Φ x) (∃ x, Ψ x).
 Proof. rewrite /IntoLaterN' /IntoLaterN -laterN_exist_2=> ?. by apply exist_mono. Qed.
 
+Global Instance into_later_bare n P Q :
+  IntoLaterN n P Q → IntoLaterN n (■ P) (■ Q).
+Proof. rewrite /IntoLaterN=> ->. by rewrite laterN_bare_2. Qed.
+Global Instance into_later_persistently n P Q :
+  IntoLaterN n P Q → IntoLaterN n (□ P) (□ Q).
+Proof. rewrite /IntoLaterN=> ->. by rewrite laterN_persistently. Qed.
+
 Global Instance into_laterN_sep_l n P1 P2 Q1 Q2 :
   IntoLaterN' n P1 Q1 → IntoLaterN n P2 Q2 →
   IntoLaterN' n (P1 ∗ P2) (Q1 ∗ Q2) | 10.
