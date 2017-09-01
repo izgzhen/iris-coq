@@ -831,23 +831,25 @@ Proof. apply later_intro. Qed.
 Global Instance from_modal_except_0 P : FromModal (◇ P) P.
 Proof. apply except_0_intro. Qed.
 
+(* IntoExcept0 *)
+Global Instance into_timeless_except_0 P : IntoExcept0 (◇ P) P.
+Proof. by rewrite /IntoExcept0. Qed.
+Global Instance into_timeless_later P : Timeless P → IntoExcept0 (▷ P) P.
+Proof. by rewrite /IntoExcept0. Qed.
+Global Instance into_timeless_later_if p P : Timeless P → IntoExcept0 (▷?p P) P.
+Proof. rewrite /IntoExcept0. destruct p; auto using except_0_intro. Qed.
+
+Global Instance into_timeless_bare P Q : IntoExcept0 P Q → IntoExcept0 (■ P) (■ Q).
+Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_bare_2. Qed.
+Global Instance into_timeless_persistently P Q : IntoExcept0 P Q → IntoExcept0 (□ P) (□ Q).
+Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_persistently. Qed.
+
 (* ElimModal *)
-Global Instance elim_modal_except_0 P Q : IsExcept0 Q → ElimModal (◇ P) P Q Q.
+Global Instance elim_modal_timeless P Q :
+  IntoExcept0 P P' → IsExcept0 Q → ElimModal P P' Q Q.
 Proof.
   intros. rewrite /ElimModal (except_0_intro (_ -∗ _)%I).
-  by rewrite -except_0_sep wand_elim_r.
-Qed.
-Global Instance elim_modal_timeless_later P Q :
-  Timeless P → IsExcept0 Q → ElimModal (▷ P) P Q Q.
-Proof.
-  intros. rewrite /ElimModal (except_0_intro (_ -∗ _)%I) (timeless P).
-  by rewrite -except_0_sep wand_elim_r.
-Qed.
-Global Instance elim_modal_timeless_later_if p P Q :
-  Timeless P → IsExcept0 Q → ElimModal (▷?p P) P Q Q.
-Proof.
-  destruct p; simpl; auto using elim_modal_timeless_later.
-  intros _ _. by rewrite /ElimModal wand_elim_r.
+  by rewrite (into_except_0 P) -except_0_sep wand_elim_r.
 Qed.
 
 (* Frame *)

@@ -211,6 +211,12 @@ Instance maybe_frame_default {PROP : bi} (R P : PROP) :
   TCOr (Affine R) (Absorbing P) → MaybeFrame false R P P | 100.
 Proof. intros. rewrite /MaybeFrame /=. apply: sep_elim_r. Qed.
 
+Class IntoExcept0 {PROP : sbi} (P Q : PROP) := into_except_0 : P ⊢ ◇ Q.
+Arguments IntoExcept0 {_} _%I _%I : simpl never.
+Arguments into_except_0 {_} _%I _%I {_}.
+Hint Mode IntoExcept0 + ! - : typeclass_instances.
+Hint Mode IntoExcept0 + - ! : typeclass_instances.
+
 (* The class [IntoLaterN] has only two instances:
 
 - The default instance [IntoLaterN n P P], i.e. [▷^n P -∗ P]
@@ -294,5 +300,7 @@ Instance into_forall_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (tc_opaque P) Φ := id.
 Instance from_modal_tc_opaque {PROP : bi} (P Q : PROP) :
   FromModal P Q → FromModal (tc_opaque P) Q := id.
+(* Higher precedence than [elim_modal_timeless], so that [iAssert] does not
+   loop (see test [test_iAssert_modality] in proofmode.v). *)
 Instance elim_modal_tc_opaque {PROP : bi} (P P' Q Q' : PROP) :
-  ElimModal P P' Q Q' → ElimModal (tc_opaque P) P' Q Q' := id.
+  ElimModal P P' Q Q' → ElimModal (tc_opaque P) P' Q Q' | 100 := id.

@@ -120,6 +120,9 @@ Proof.
   by iMod "HF".
 Qed.
 
+Lemma test_iMod_bare_timeless P `{!Timeless P} : ■ ▷ P -∗ ◇ ■ P.
+Proof. iIntros "H". iMod "H". done. Qed.
+
 Lemma test_iAssumption_False P : False -∗ P.
 Proof. iIntros "H". done. Qed.
 
