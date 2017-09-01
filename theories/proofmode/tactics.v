@@ -774,8 +774,12 @@ Tactic Notation "iSplitR" := iSplitL "".
 Local Tactic Notation "iAndDestruct" constr(H) "as" constr(H1) constr(H2) :=
   eapply tac_and_destruct with _ H _ H1 H2 _ _ _; (* (i:=H) (j1:=H1) (j2:=H2) *)
     [env_reflexivity || fail "iAndDestruct:" H "not found"
-    |apply _ ||
-     let P := match goal with |- IntoSep _ ?P _ _ => P end in
+    |env_cbv; apply _ ||
+     let P :=
+       lazymatch goal with
+       | |- IntoSep ?P _ _ => P
+       | |- IntoAnd _ ?P _ _ => P
+       end in
      fail "iAndDestruct: cannot destruct" P
     |env_reflexivity || fail "iAndDestruct:" H1 "or" H2 " not fresh"|].
 
