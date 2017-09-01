@@ -884,7 +884,7 @@ Tactic Notation "iModCore" constr(H) :=
     |env_reflexivity|].
 
 (** * Basic destruct tactic *)
-Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
+Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let rec go Hz pat :=
     lazymatch pat with
     | IAnom => idtac
@@ -921,33 +921,33 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let pats := intro_pat.parse pat in
   find_pat false pats.
 
-Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1) ")"
+Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as @ pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as ( x2 ) pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 ) pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 ) pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) ")" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 ) pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) ")" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 x6 ) pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7) ")"
     constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 x6 x7 ) pat.
-Local Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
+Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
     simple_intropattern(x8) ")" constr(pat) :=

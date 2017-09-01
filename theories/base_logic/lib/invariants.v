@@ -99,18 +99,18 @@ Tactic Notation "iInvCore" constr(N) "as" tactic(tac) constr(Hclose) :=
     |tac Htmp].
 
 Tactic Notation "iInv" constr(N) "as" constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestruct H as pat) Hclose.
+   iInvCore N as (fun H => iDestructHyp H as pat) Hclose.
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1) ")"
     constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestruct H as (x1) pat) Hclose.
+   iInvCore N as (fun H => iDestructHyp H as (x1) pat) Hclose.
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestruct H as (x1 x2) pat) Hclose.
+   iInvCore N as (fun H => iDestructHyp H as (x1 x2) pat) Hclose.
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")"
     constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestruct H as (x1 x2 x3) pat) Hclose.
+   iInvCore N as (fun H => iDestructHyp H as (x1 x2 x3) pat) Hclose.
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestruct H as (x1 x2 x3 x4) pat) Hclose.
+   iInvCore N as (fun H => iDestructHyp H as (x1 x2 x3 x4) pat) Hclose.
