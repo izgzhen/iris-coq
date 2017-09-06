@@ -433,7 +433,7 @@ Global Instance into_exist_sep_pure P Q φ :
   TCOr (Affine P) (Absorbing Q) → IntoPureT P φ → IntoExist (P ∗ Q) (λ _ : φ, Q).
 Proof.
   intros ? (φ'&->&?). rewrite /IntoExist.
-  eapply (pure_elim φ'); [by rewrite (into_pure P); apply absorbing, _|]=>?.
+  eapply (pure_elim φ'); [by rewrite (into_pure P); apply sep_elim_l, _|]=>?.
   rewrite -exist_intro //. apply sep_elim_r, _.
 Qed.
 Global Instance into_exist_persistently {A} P (Φ : A → PROP) :

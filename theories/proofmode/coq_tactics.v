@@ -464,7 +464,7 @@ Proof.
   intros ?? H. rewrite envs_lookup_delete_sound //.
   destruct (env_spatial_is_nil Δ') eqn:?.
   - by rewrite (env_spatial_is_nil_bare_persistently Δ') // sep_elim_l.
-  - rewrite from_assumption. destruct H as [?|?]=>//. by rewrite sep_elim_l.
+  - rewrite from_assumption. destruct H; by rewrite sep_elim_l.
 Qed.
 
 Lemma tac_rename Δ Δ' i j p P Q :

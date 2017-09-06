@@ -103,7 +103,7 @@ Section sep_list.
 
   Lemma big_sepL_lookup Φ l i x `{!Absorbing (Φ i x)} :
     l !! i = Some x → ([∗ list] k↦y ∈ l, Φ k y) ⊢ Φ i x.
-  Proof. intros. rewrite big_sepL_lookup_acc // sep_elim_l. Qed.
+  Proof. intros. rewrite big_sepL_lookup_acc //. by rewrite sep_elim_l. Qed.
 
   Lemma big_sepL_elem_of (Φ : A → PROP) l x `{!Absorbing (Φ x)} :
     x ∈ l → ([∗ list] y ∈ l, Φ y) ⊢ Φ x.
@@ -334,7 +334,7 @@ Section gmap.
 
   Lemma big_sepM_lookup Φ m i x `{!Absorbing (Φ i x)} :
     m !! i = Some x → ([∗ map] k↦y ∈ m, Φ k y) ⊢ Φ i x.
-  Proof. intros. by rewrite big_sepM_lookup_acc // sep_elim_l. Qed.
+  Proof. intros. rewrite big_sepM_lookup_acc //. by rewrite sep_elim_l. Qed.
 
   Lemma big_sepM_lookup_dom (Φ : K → PROP) m i `{!Absorbing (Φ i)} :
     is_Some (m !! i) → ([∗ map] k↦_ ∈ m, Φ k) ⊢ Φ i.
@@ -499,7 +499,7 @@ Section gset.
 
   Lemma big_sepS_elem_of Φ X x `{!Absorbing (Φ x)} :
     x ∈ X → ([∗ set] y ∈ X, Φ y) ⊢ Φ x.
-  Proof. intros. rewrite big_sepS_delete; auto. Qed.
+  Proof. intros. rewrite big_sepS_delete //. by rewrite sep_elim_l. Qed.
 
   Lemma big_sepS_elem_of_acc Φ X x :
     x ∈ X →
@@ -646,7 +646,7 @@ Section gmultiset.
 
   Lemma big_sepMS_elem_of Φ X x `{!Absorbing (Φ x)} :
     x ∈ X → ([∗ mset] y ∈ X, Φ y) ⊢ Φ x.
-  Proof. intros. by rewrite big_sepMS_delete // sep_elim_l. Qed.
+  Proof. intros. rewrite big_sepMS_delete //. by rewrite sep_elim_l. Qed.
 
   Lemma big_sepMS_elem_of_acc Φ X x :
     x ∈ X →
