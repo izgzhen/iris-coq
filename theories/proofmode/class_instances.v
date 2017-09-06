@@ -353,9 +353,12 @@ Qed.
 Global Instance into_sep_pure φ ψ : @IntoSep PROP ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /IntoSep pure_and persistent_and_sep_1. Qed.
 
-Global Instance into_sep_bare `{PositiveBI PROP} P Q1 Q2 :
-  IntoSep P Q1 Q2 → IntoSep (■ P) (■ Q1) (■ Q2).
-Proof. rewrite /IntoSep /= => ->. by rewrite bare_sep. Qed.
+(* FIXME: This instance is kind of strange, it just gets rid of the ■. Also, it
+overlaps with `into_sep_bare_later`, and hence has lower precedence. *)
+Global Instance into_sep_bare P Q1 Q2 :
+  IntoSep P Q1 Q2 → IntoSep (■ P) Q1 Q2 | 20.
+Proof. rewrite /IntoSep /= => ->. by rewrite bare_elim. Qed.
+
 Global Instance into_sep_persistently `{PositiveBI PROP} P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /IntoSep /= => ->. by rewrite persistently_sep. Qed.
@@ -760,6 +763,17 @@ Proof. rewrite /IntoSep=> ->. by rewrite laterN_sep. Qed.
 Global Instance into_sep_except_0 P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep (◇ P) (◇ Q1) (◇ Q2).
 Proof. rewrite /IntoSep=> ->. by rewrite except_0_sep. Qed.
+
+(* FIXME: This instance is overly specific, generalize it. *)
+Global Instance into_sep_bare_later `{!Timeless (emp%I : PROP)} P Q1 Q2 :
+  Affine Q1 → Affine Q2 → IntoSep P Q1 Q2 → IntoSep (■ ▷ P) (■ ▷ Q1) (■ ▷ Q2).
+Proof.
+  rewrite /IntoSep /= => ?? ->.
+  rewrite -{1}(affine_bare Q1) -{1}(affine_bare Q2) later_sep !later_bare_1.
+  rewrite -except_0_sep /bi_except_0 bare_or. apply or_elim, bare_elim.
+  rewrite -(idemp bi_and (■ ▷ False)%I) persistent_and_sep_1.
+  by rewrite -(False_elim Q1) -(False_elim Q2).
+Qed.
 
 (* FromOr *)
 Global Instance from_or_later P Q1 Q2 :

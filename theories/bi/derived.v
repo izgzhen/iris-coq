@@ -1561,7 +1561,13 @@ Proof. by rewrite {1}(except_0_intro P) except_0_sep. Qed.
 Lemma except_0_frame_r P Q : ◇ P ∗ Q ⊢ ◇ (P ∗ Q).
 Proof. by rewrite {1}(except_0_intro Q) except_0_sep. Qed.
 
-(* Discrete instances *)
+Lemma later_bare_1 `{!Timeless (emp%I : PROP)} P : ▷ ■ P ⊢ ◇ ■ ▷ P.
+Proof.
+  rewrite /bi_bare later_and (timeless emp%I) except_0_and.
+  by apply and_mono, except_0_intro.
+Qed.
+
+(* Timeless instances *)
 Global Instance Timeless_proper : Proper ((≡) ==> iff) (@Timeless PROP).
 Proof. solve_proper. Qed.
 
