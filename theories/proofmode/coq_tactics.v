@@ -493,7 +493,7 @@ Qed.
 
 (** * Implication and wand *)
 Lemma tac_impl_intro Δ Δ' i P Q :
-  (if env_spatial_is_nil Δ then Unit else PersistentP P) →
+  (if env_spatial_is_nil Δ then TCTrue else PersistentP P) →
   envs_app false (Esnoc Enil i P) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ P → Q.
 Proof.
