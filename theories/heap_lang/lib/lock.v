@@ -14,8 +14,8 @@ Structure lock Σ `{!heapG Σ} := Lock {
   locked (γ: name) : iProp Σ;
   (* -- general properties -- *)
   is_lock_ne N γ lk : NonExpansive (is_lock N γ lk);
-  is_lock_persistent N γ lk R : PersistentP (is_lock N γ lk R);
-  locked_timeless γ : TimelessP (locked γ);
+  is_lock_persistent N γ lk R : Persistent (is_lock N γ lk R);
+  locked_timeless γ : Timeless (locked γ);
   locked_exclusive γ : locked γ -∗ locked γ -∗ False;
   (* -- operation specs -- *)
   newlock_spec N (R : iProp Σ) :

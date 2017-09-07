@@ -31,7 +31,7 @@ Proof. apply contractive_ne, _. Qed.
 Global Instance inv_Proper N : Proper ((⊣⊢) ==> (⊣⊢)) (inv N).
 Proof. apply ne_proper, _. Qed.
 
-Global Instance inv_persistent N P : PersistentP (inv N P).
+Global Instance inv_persistent N P : Persistent (inv N P).
 Proof. rewrite inv_eq /inv; apply _. Qed.
 
 Lemma fresh_inv_name (E : gset positive) N : ∃ i, i ∉ E ∧ i ∈ (↑N:coPset).
@@ -81,7 +81,7 @@ Proof.
   iIntros "HP [Hw $] !> !>". iApply ownI_close; by iFrame.
 Qed.
 
-Lemma inv_open_timeless E N P `{!TimelessP P} :
+Lemma inv_open_timeless E N P `{!Timeless P} :
   ↑N ⊆ E → inv N P ={E,E∖↑N}=∗ P ∗ (P ={E∖↑N,E}=∗ True).
 Proof.
   iIntros (?) "Hinv". iMod (inv_open with "Hinv") as "[>HP Hclose]"; auto.

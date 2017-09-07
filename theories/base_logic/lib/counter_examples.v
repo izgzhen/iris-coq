@@ -12,7 +12,7 @@ Module savedprop. Section savedprop.
 
   (** Saved Propositions and the update modality *)
   Context (sprop : Type) (saved : sprop → iProp → iProp).
-  Hypothesis sprop_persistent : ∀ i P, PersistentP (saved i P).
+  Hypothesis sprop_persistent : ∀ i P, Persistent (saved i P).
   Hypothesis sprop_alloc_dep :
     ∀ (P : sprop → iProp), (|==> (∃ i, saved i (P i)))%I.
   Hypothesis sprop_agree : ∀ i P Q, saved i P ∧ saved i Q ⊢ □ (P ↔ Q).
@@ -69,7 +69,7 @@ Module inv. Section inv.
 
   (** We have invariants *)
   Context (name : Type) (inv : name → iProp → iProp).
-  Hypothesis inv_persistent : ∀ i P, PersistentP (inv i P).
+  Hypothesis inv_persistent : ∀ i P, Persistent (inv i P).
   Hypothesis inv_alloc : ∀ P, P ⊢ fupd M1 (∃ i, inv i P).
   Hypothesis inv_open :
     ∀ i P Q R, (P ∗ Q ⊢ fupd M0 (P ∗ R)) → (inv i P ∗ Q ⊢ fupd M1 R).
@@ -132,7 +132,7 @@ Module inv. Section inv.
   (** Now to the actual counterexample. We start with a weird form of saved propositions. *)
   Definition saved (γ : gname) (P : iProp) : iProp :=
     ∃ i, inv i (start γ ∨ (finished γ ∗ □ P)).
-  Global Instance saved_persistent γ P : PersistentP (saved γ P) := _.
+  Global Instance saved_persistent γ P : Persistent (saved γ P) := _.
 
   Lemma saved_alloc (P : gname → iProp) : fupd M1 (∃ γ, saved γ (P γ)).
   Proof.
@@ -165,7 +165,7 @@ Module inv. Section inv.
   (** And now we tie a bad knot. *)
   Notation "¬ P" := (□ (P -∗ fupd M1 False))%I : uPred_scope.
   Definition A i : iProp := ∃ P, ¬P ∗ saved i P.
-  Global Instance A_persistent i : PersistentP (A i) := _.
+  Global Instance A_persistent i : Persistent (A i) := _.
 
   Lemma A_alloc : fupd M1 (∃ i, saved i (A i)).
   Proof. by apply saved_alloc. Qed.

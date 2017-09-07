@@ -13,7 +13,7 @@ Notation "P ={ E1 , E2 }=> Q" := (vs E1 E2 P Q)
    format "P  ={ E1 , E2 }=>  Q") : uPred_scope.
 
 Context (vs_ne : ∀ E1 E2, NonExpansive2 (vs E1 E2)).
-Context (vs_persistent : ∀ E1 E2 P Q, PersistentP (P ={E1,E2}=> Q)).
+Context (vs_persistent : ∀ E1 E2 P Q, Persistent (P ={E1,E2}=> Q)).
 
 Context (vs_impl : ∀ E P Q, □ (P → Q) ⊢ P ={E,E}=> Q).
 Context (vs_transitive : ∀ E1 E2 E3 P Q R,
@@ -24,7 +24,7 @@ Context (vs_frame_r : ∀ E1 E2 P Q R, (P ={E1,E2}=> Q) ⊢ P ∗ R ={E1,E2}=> Q
 Context (vs_exists : ∀ {A} E1 E2 (Φ : A → uPred M) Q,
   (∀ x, Φ x ={E1,E2}=> Q) ⊢ (∃ x, Φ x) ={E1,E2}=> Q).
 Context (vs_persistent_intro_r : ∀ E1 E2 P Q R,
-  PersistentP R →
+  Persistent R →
   (R -∗ (P ={E1,E2}=> Q)) ⊢ P ∗ R ={E1,E2}=> Q).
 
 Definition fupd (E1 E2 : coPset) (P : uPred M) : uPred M :=

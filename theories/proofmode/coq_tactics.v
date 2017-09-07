@@ -302,7 +302,7 @@ Proof.
 Qed.
 
 Lemma env_spatial_is_nil_persistent Δ :
-  env_spatial_is_nil Δ = true → PersistentP Δ.
+  env_spatial_is_nil Δ = true → Persistent Δ.
 Proof. intros; destruct Δ as [? []]; simplify_eq/=; apply _. Qed.
 Hint Immediate env_spatial_is_nil_persistent : typeclass_instances.
 
@@ -483,33 +483,33 @@ Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :
   envs_lookup i Δ = Some (p, P) →
-  IntoPersistentP p P P' →
+  IntoPersistent p P P' →
   envs_replace i p true (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ? HP ? <-. rewrite envs_replace_sound //; simpl.
-  by rewrite right_id (into_persistentP _ P) wand_elim_r.
+  by rewrite right_id (into_persistent _ P) wand_elim_r.
 Qed.
 
 (** * Implication and wand *)
 Lemma tac_impl_intro Δ Δ' i P Q :
-  (if env_spatial_is_nil Δ then TCTrue else PersistentP P) →
+  (if env_spatial_is_nil Δ then TCTrue else Persistent P) →
   envs_app false (Esnoc Enil i P) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ P → Q.
 Proof.
   intros ?? <-. destruct (env_spatial_is_nil Δ) eqn:?.
-  - rewrite (persistentP Δ) envs_app_sound //; simpl.
+  - rewrite (persistent Δ) envs_app_sound //; simpl.
     by rewrite right_id always_wand_impl always_elim.
   - apply impl_intro_l. rewrite envs_app_sound //; simpl.
     by rewrite always_and_sep_l right_id wand_elim_r.
 Qed.
 Lemma tac_impl_intro_persistent Δ Δ' i P P' Q :
-  IntoPersistentP false P P' →
+  IntoPersistent false P P' →
   envs_app true (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ P → Q.
 Proof.
   intros ?? HQ. rewrite envs_app_sound //=; simpl. apply impl_intro_l.
-  rewrite (_ : P = □?false P) // (into_persistentP false P).
+  rewrite (_ : P = □?false P) // (into_persistent false P).
   by rewrite right_id always_and_sep_l wand_elim_r.
 Qed.
 
@@ -522,7 +522,7 @@ Proof.
   intros ? HQ. rewrite envs_app_sound //; simpl. by rewrite right_id HQ.
 Qed.
 Lemma tac_wand_intro_persistent Δ Δ' i P P' Q :
-  IntoPersistentP false P P' →
+  IntoPersistent false P P' →
   envs_app true (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ P -∗ Q.
 Proof.
@@ -608,14 +608,14 @@ Qed.
 
 Lemma tac_specialize_assert_persistent Δ Δ' Δ'' j q P1 P2 R Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  IntoWand false R P1 P2 → PersistentP P1 →
+  IntoWand false R P1 P2 → Persistent P1 →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ'' →
   (Δ' ⊢ P1) → (Δ'' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros [? ->]%envs_lookup_delete_Some ??? HP1 <-.
   rewrite envs_lookup_sound //.
   rewrite -(idemp uPred_and (envs_delete _ _ _)).
-  rewrite {1}HP1 (persistentP P1) always_and_sep_l assoc.
+  rewrite {1}HP1 (persistent P1) always_and_sep_l assoc.
   rewrite envs_simple_replace_sound' //; simpl.
   rewrite right_id (into_wand _ R) (always_elim_if q) -always_if_sep wand_elim_l.
   by rewrite wand_elim_r.
@@ -623,7 +623,7 @@ Qed.
 
 Lemma tac_specialize_persistent_helper Δ Δ' j q P R Q :
   envs_lookup j Δ = Some (q,P) →
-  (Δ ⊢ R) → PersistentP R →
+  (Δ ⊢ R) → Persistent R →
   envs_replace j q true (Esnoc Enil j R) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
@@ -659,7 +659,7 @@ Lemma tac_revert_ih Δ P Q {φ : Prop} (Hφ : φ) :
   (of_envs Δ ⊢ Q).
 Proof.
   rewrite /IntoIH. intros HP ? HPQ.
-  by rewrite -(idemp uPred_and Δ) {1}(persistentP Δ) {1}HP // HPQ impl_elim_r.
+  by rewrite -(idemp uPred_and Δ) {1}(persistent Δ) {1}HP // HPQ impl_elim_r.
 Qed.
 
 Lemma tac_assert Δ Δ1 Δ2 Δ2' lr js j P P' Q :
@@ -676,7 +676,7 @@ Qed.
 Lemma tac_assert_persistent Δ Δ1 Δ2 Δ' lr js j P Q :
   envs_split lr js Δ = Some (Δ1,Δ2) →
   envs_app false (Esnoc Enil j P) Δ = Some Δ' →
-  PersistentP P →
+  Persistent P →
   (Δ1 ⊢ P) → (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ??? HP <-. rewrite -(idemp uPred_and Δ) {1}envs_split_sound //.

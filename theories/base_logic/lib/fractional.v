@@ -50,7 +50,7 @@ Section fractional.
 
   (** Fractional and logical connectives *)
   Global Instance persistent_fractional P :
-    PersistentP P → Fractional (λ _, P).
+    Persistent P → Fractional (λ _, P).
   Proof. intros HP q q'. by apply uPred.always_sep_dup. Qed.
 
   Global Instance fractional_sep Φ Ψ :

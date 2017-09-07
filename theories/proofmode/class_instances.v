@@ -139,14 +139,14 @@ Proof.
   rewrite -Hx. apply pure_intro. done.
 Qed.
 
-(* IntoPersistentP *)
-Global Instance into_persistentP_always_trans p P Q :
-  IntoPersistentP true P Q → IntoPersistentP p (□ P) Q | 0.
-Proof. rewrite /IntoPersistentP /==> ->. by rewrite always_if_always. Qed.
-Global Instance into_persistentP_always P : IntoPersistentP true P P | 1.
+(* IntoPersistent *)
+Global Instance into_persistent_always_trans p P Q :
+  IntoPersistent true P Q → IntoPersistent p (□ P) Q | 0.
+Proof. rewrite /IntoPersistent /==> ->. by rewrite always_if_always. Qed.
+Global Instance into_persistent_always P : IntoPersistent true P P | 1.
 Proof. done. Qed.
-Global Instance into_persistentP_persistent P :
-  PersistentP P → IntoPersistentP false P P | 100.
+Global Instance into_persistent_persistent P :
+  Persistent P → IntoPersistent false P P | 100.
 Proof. done. Qed.
 
 (* IntoLater *)
@@ -339,10 +339,10 @@ Proof. by apply mk_from_and_and. Qed.
 Global Instance from_and_sep P1 P2 : FromAnd false (P1 ∗ P2) P1 P2 | 100.
 Proof. done. Qed.
 Global Instance from_and_sep_persistent_l P1 P2 :
-  PersistentP P1 → FromAnd true (P1 ∗ P2) P1 P2 | 9.
+  Persistent P1 → FromAnd true (P1 ∗ P2) P1 P2 | 9.
 Proof. intros. by rewrite /FromAnd always_and_sep_l. Qed.
 Global Instance from_and_sep_persistent_r P1 P2 :
-  PersistentP P2 → FromAnd true (P1 ∗ P2) P1 P2 | 10.
+  Persistent P2 → FromAnd true (P1 ∗ P2) P1 P2 | 10.
 Proof. intros. by rewrite /FromAnd always_and_sep_r. Qed.
 
 Global Instance from_and_pure p φ ψ : @FromAnd M p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
@@ -385,7 +385,7 @@ Global Instance from_and_big_sepL_cons {A} (Φ : nat → A → uPred M) x l :
   FromAnd false ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
 Proof. by rewrite /FromAnd big_sepL_cons. Qed.
 Global Instance from_and_big_sepL_cons_persistent {A} (Φ : nat → A → uPred M) x l :
-  PersistentP (Φ 0 x) →
+  Persistent (Φ 0 x) →
   FromAnd true ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
 Proof. intros. by rewrite /FromAnd big_opL_cons always_and_sep_l. Qed.
 
@@ -394,7 +394,7 @@ Global Instance from_and_big_sepL_app {A} (Φ : nat → A → uPred M) l1 l2 :
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
 Proof. by rewrite /FromAnd big_opL_app. Qed.
 Global Instance from_sep_big_sepL_app_persistent {A} (Φ : nat → A → uPred M) l1 l2 :
-  (∀ k y, PersistentP (Φ k y)) →
+  (∀ k y, Persistent (Φ k y)) →
   FromAnd true ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
 Proof. intros. by rewrite /FromAnd big_opL_app always_and_sep_l. Qed.
@@ -430,10 +430,10 @@ Proof. intros. apply mk_into_and_sep. by rewrite (is_op a) ownM_op. Qed.
 Global Instance into_and_and P Q : IntoAnd true (P ∧ Q) P Q.
 Proof. done. Qed.
 Global Instance into_and_and_persistent_l P Q :
-  PersistentP P → IntoAnd false (P ∧ Q) P Q.
+  Persistent P → IntoAnd false (P ∧ Q) P Q.
 Proof. intros; by rewrite /IntoAnd /= always_and_sep_l. Qed.
 Global Instance into_and_and_persistent_r P Q :
-  PersistentP Q → IntoAnd false (P ∧ Q) P Q.
+  Persistent Q → IntoAnd false (P ∧ Q) P Q.
 Proof. intros; by rewrite /IntoAnd /= always_and_sep_r. Qed.
 
 Global Instance into_and_pure p φ ψ : @IntoAnd M p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
@@ -783,13 +783,13 @@ Proof.
   by rewrite -except_0_sep wand_elim_r.
 Qed.
 Global Instance elim_modal_timeless_bupd P Q :
-  TimelessP P → IsExcept0 Q → ElimModal (▷ P) P Q Q.
+  Timeless P → IsExcept0 Q → ElimModal (▷ P) P Q Q.
 Proof.
   intros. rewrite /ElimModal (except_0_intro (_ -∗ _)) (timelessP P).
   by rewrite -except_0_sep wand_elim_r.
 Qed.
 Global Instance elim_modal_timeless_bupd' p P Q :
-  TimelessP P → IsExcept0 Q → ElimModal (▷?p P) P Q Q.
+  Timeless P → IsExcept0 Q → ElimModal (▷?p P) P Q Q.
 Proof.
   destruct p; simpl; auto using elim_modal_timeless_bupd.
   intros _ _. by rewrite /ElimModal wand_elim_r.

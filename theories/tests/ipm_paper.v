@@ -191,7 +191,7 @@ Section counter_proof.
     (∃ N γ, inv N (I γ l) ∧ own γ (Frag n))%I.
 
   (** The main proofs. *)
-  Global Instance C_persistent l n : PersistentP (C l n).
+  Global Instance C_persistent l n : Persistent (C l n).
   Proof. apply _. Qed.
 
   Lemma newcounter_spec :

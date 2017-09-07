@@ -29,15 +29,15 @@ Notation "◇ P" := (uPred_except_0 P)
 Instance: Params (@uPred_except_0) 1.
 Typeclasses Opaque uPred_except_0.
 
-Class TimelessP {M} (P : uPred M) := timelessP : ▷ P ⊢ ◇ P.
+Class Timeless {M} (P : uPred M) := timelessP : ▷ P ⊢ ◇ P.
 Arguments timelessP {_} _ {_}.
-Hint Mode TimelessP + ! : typeclass_instances.
-Instance: Params (@TimelessP) 1.
+Hint Mode Timeless + ! : typeclass_instances.
+Instance: Params (@Timeless) 1.
 
-Class PersistentP {M} (P : uPred M) := persistentP : P ⊢ □ P.
-Arguments persistentP {_} _ {_}.
-Hint Mode PersistentP + ! : typeclass_instances.
-Instance: Params (@PersistentP) 1.
+Class Persistent {M} (P : uPred M) := persistent : P ⊢ □ P.
+Arguments persistent {_} _ {_}.
+Hint Mode Persistent + ! : typeclass_instances.
+Instance: Params (@Persistent) 1.
 
 Module uPred.
 Section derived.
@@ -794,33 +794,32 @@ Proof.
   by rewrite -bupd_intro -or_intro_l.
 Qed.
 
-(* Discrete instances *)
-Global Instance TimelessP_proper : Proper ((≡) ==> iff) (@TimelessP M).
+Global Instance Timeless_proper : Proper ((≡) ==> iff) (@Timeless M).
 Proof. solve_proper. Qed.
-Global Instance pure_timeless φ : TimelessP (⌜φ⌝ : uPred M)%I.
+Global Instance pure_timeless φ : Timeless (⌜φ⌝ : uPred M)%I.
 Proof.
-  rewrite /TimelessP pure_alt later_exist_false. by setoid_rewrite later_True.
+  rewrite /Timeless pure_alt later_exist_false. by setoid_rewrite later_True.
 Qed.
 Global Instance valid_timeless {A : cmraT} `{CmraDiscrete A} (a : A) :
-  TimelessP (✓ a : uPred M)%I.
-Proof. rewrite /TimelessP !discrete_valid. apply (timelessP _). Qed.
-Global Instance and_timeless P Q: TimelessP P → TimelessP Q → TimelessP (P ∧ Q).
-Proof. intros; rewrite /TimelessP except_0_and later_and; auto. Qed.
-Global Instance or_timeless P Q : TimelessP P → TimelessP Q → TimelessP (P ∨ Q).
-Proof. intros; rewrite /TimelessP except_0_or later_or; auto. Qed.
-Global Instance impl_timeless P Q : TimelessP Q → TimelessP (P → Q).
+  Timeless (✓ a : uPred M)%I.
+Proof. rewrite /Timeless !discrete_valid. apply (timelessP _). Qed.
+Global Instance and_timeless P Q: Timeless P → Timeless Q → Timeless (P ∧ Q).
+Proof. intros; rewrite /Timeless except_0_and later_and; auto. Qed.
+Global Instance or_timeless P Q : Timeless P → Timeless Q → Timeless (P ∨ Q).
+Proof. intros; rewrite /Timeless except_0_or later_or; auto. Qed.
+Global Instance impl_timeless P Q : Timeless Q → Timeless (P → Q).
 Proof.
-  rewrite /TimelessP=> HQ. rewrite later_false_excluded_middle.
+  rewrite /Timeless=> HQ. rewrite later_false_excluded_middle.
   apply or_mono, impl_intro_l; first done.
   rewrite -{2}(löb Q); apply impl_intro_l.
   rewrite HQ /uPred_except_0 !and_or_r. apply or_elim; last auto.
   by rewrite assoc (comm _ _ P) -assoc !impl_elim_r.
 Qed.
-Global Instance sep_timeless P Q: TimelessP P → TimelessP Q → TimelessP (P ∗ Q).
-Proof. intros; rewrite /TimelessP except_0_sep later_sep; auto. Qed.
-Global Instance wand_timeless P Q : TimelessP Q → TimelessP (P -∗ Q).
+Global Instance sep_timeless P Q: Timeless P → Timeless Q → Timeless (P ∗ Q).
+Proof. intros; rewrite /Timeless except_0_sep later_sep; auto. Qed.
+Global Instance wand_timeless P Q : Timeless Q → Timeless (P -∗ Q).
 Proof.
-  rewrite /TimelessP=> HQ. rewrite later_false_excluded_middle.
+  rewrite /Timeless=> HQ. rewrite later_false_excluded_middle.
   apply or_mono, wand_intro_l; first done.
   rewrite -{2}(löb Q); apply impl_intro_l.
   rewrite HQ /uPred_except_0 !and_or_r. apply or_elim; last auto.
@@ -828,113 +827,113 @@ Proof.
   by rewrite assoc (comm _ _ P) -assoc -always_and_sep_l' impl_elim_r wand_elim_r.
 Qed.
 Global Instance forall_timeless {A} (Ψ : A → uPred M) :
-  (∀ x, TimelessP (Ψ x)) → TimelessP (∀ x, Ψ x).
+  (∀ x, Timeless (Ψ x)) → Timeless (∀ x, Ψ x).
 Proof.
-  rewrite /TimelessP=> HQ. rewrite later_false_excluded_middle.
+  rewrite /Timeless=> HQ. rewrite later_false_excluded_middle.
   apply or_mono; first done. apply forall_intro=> x.
   rewrite -(löb (Ψ x)); apply impl_intro_l.
   rewrite HQ /uPred_except_0 !and_or_r. apply or_elim; last auto.
   by rewrite impl_elim_r (forall_elim x).
 Qed.
 Global Instance exist_timeless {A} (Ψ : A → uPred M) :
-  (∀ x, TimelessP (Ψ x)) → TimelessP (∃ x, Ψ x).
+  (∀ x, Timeless (Ψ x)) → Timeless (∃ x, Ψ x).
 Proof.
-  rewrite /TimelessP=> ?. rewrite later_exist_false. apply or_elim.
+  rewrite /Timeless=> ?. rewrite later_exist_false. apply or_elim.
   - rewrite /uPred_except_0; auto.
   - apply exist_elim=> x. rewrite -(exist_intro x); auto.
 Qed.
-Global Instance always_timeless P : TimelessP P → TimelessP (□ P).
-Proof. intros; rewrite /TimelessP except_0_always -always_later; auto. Qed.
-Global Instance always_if_timeless p P : TimelessP P → TimelessP (□?p P).
+Global Instance always_timeless P : Timeless P → Timeless (□ P).
+Proof. intros; rewrite /Timeless except_0_always -always_later; auto. Qed.
+Global Instance always_if_timeless p P : Timeless P → Timeless (□?p P).
 Proof. destruct p; apply _. Qed.
 Global Instance eq_timeless {A : ofeT} (a b : A) :
-  Discrete a → TimelessP (a ≡ b : uPred M)%I.
-Proof. intros. rewrite /TimelessP !discrete_eq. apply (timelessP _). Qed.
-Global Instance ownM_timeless (a : M) : Discrete a → TimelessP (uPred_ownM a).
+  Discrete a → Timeless (a ≡ b : uPred M)%I.
+Proof. intros. rewrite /Timeless !discrete_eq. apply (timelessP _). Qed.
+Global Instance ownM_timeless (a : M) : Discrete a → Timeless (uPred_ownM a).
 Proof.
-  intros ?. rewrite /TimelessP later_ownM. apply exist_elim=> b.
+  intros ?. rewrite /Timeless later_ownM. apply exist_elim=> b.
   rewrite (timelessP (a≡b)) (except_0_intro (uPred_ownM b)) -except_0_and.
   apply except_0_mono. rewrite internal_eq_sym.
   apply (internal_eq_rewrite b a (uPred_ownM)); first apply _; auto.
 Qed.
 Global Instance from_option_timeless {A} P (Ψ : A → uPred M) (mx : option A) :
-  (∀ x, TimelessP (Ψ x)) → TimelessP P → TimelessP (from_option Ψ P mx).
+  (∀ x, Timeless (Ψ x)) → Timeless P → Timeless (from_option Ψ P mx).
 Proof. destruct mx; apply _. Qed.
 
 (* Derived lemmas for persistence *)
-Global Instance PersistentP_proper : Proper ((≡) ==> iff) (@PersistentP M).
+Global Instance Persistent_proper : Proper ((≡) ==> iff) (@Persistent M).
 Proof. solve_proper. Qed.
-Global Instance limit_preserving_PersistentP {A:ofeT} `{Cofe A} (Φ : A → uPred M) :
-  NonExpansive Φ → LimitPreserving (λ x, PersistentP (Φ x)).
+Global Instance limit_preserving_Persistent {A:ofeT} `{Cofe A} (Φ : A → uPred M) :
+  NonExpansive Φ → LimitPreserving (λ x, Persistent (Φ x)).
 Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 
-Lemma always_always P `{!PersistentP P} : □ P ⊣⊢ P.
+Lemma always_always P `{!Persistent P} : □ P ⊣⊢ P.
 Proof. apply (anti_symm (⊢)); auto using always_elim. Qed.
-Lemma always_if_always p P `{!PersistentP P} : □?p P ⊣⊢ P.
+Lemma always_if_always p P `{!Persistent P} : □?p P ⊣⊢ P.
 Proof. destruct p; simpl; auto using always_always. Qed.
-Lemma always_intro P Q `{!PersistentP P} : (P ⊢ Q) → P ⊢ □ Q.
+Lemma always_intro P Q `{!Persistent P} : (P ⊢ Q) → P ⊢ □ Q.
 Proof. rewrite -(always_always P); apply always_intro'. Qed.
-Lemma always_and_sep_l P Q `{!PersistentP P} : P ∧ Q ⊣⊢ P ∗ Q.
+Lemma always_and_sep_l P Q `{!Persistent P} : P ∧ Q ⊣⊢ P ∗ Q.
 Proof. by rewrite -(always_always P) always_and_sep_l'. Qed.
-Lemma always_and_sep_r P Q `{!PersistentP Q} : P ∧ Q ⊣⊢ P ∗ Q.
+Lemma always_and_sep_r P Q `{!Persistent Q} : P ∧ Q ⊣⊢ P ∗ Q.
 Proof. by rewrite -(always_always Q) always_and_sep_r'. Qed.
-Lemma always_sep_dup P `{!PersistentP P} : P ⊣⊢ P ∗ P.
+Lemma always_sep_dup P `{!Persistent P} : P ⊣⊢ P ∗ P.
 Proof. by rewrite -(always_always P) -always_sep_dup'. Qed.
-Lemma always_entails_l P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ Q ∗ P.
+Lemma always_entails_l P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ Q ∗ P.
 Proof. by rewrite -(always_always Q); apply always_entails_l'. Qed.
-Lemma always_entails_r P Q `{!PersistentP Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
+Lemma always_entails_r P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
 Proof. by rewrite -(always_always Q); apply always_entails_r'. Qed.
-Lemma always_impl_wand P `{!PersistentP P} Q : (P → Q) ⊣⊢ (P -∗ Q).
+Lemma always_impl_wand P `{!Persistent P} Q : (P → Q) ⊣⊢ (P -∗ Q).
 Proof.
   apply (anti_symm _); auto using impl_wand.
   apply impl_intro_l. by rewrite always_and_sep_l wand_elim_r.
 Qed.
 
 (* Persistence *)
-Global Instance pure_persistent φ : PersistentP (⌜φ⌝ : uPred M)%I.
-Proof. by rewrite /PersistentP always_pure. Qed.
+Global Instance pure_persistent φ : Persistent (⌜φ⌝ : uPred M)%I.
+Proof. by rewrite /Persistent always_pure. Qed.
 Global Instance pure_impl_persistent φ Q :
-  PersistentP Q → PersistentP (⌜φ⌝ → Q)%I.
+  Persistent Q → Persistent (⌜φ⌝ → Q)%I.
 Proof.
-  rewrite /PersistentP pure_impl_forall always_forall. auto using forall_mono.
+  rewrite /Persistent pure_impl_forall always_forall. auto using forall_mono.
 Qed.
 Global Instance pure_wand_persistent φ Q :
-  PersistentP Q → PersistentP (⌜φ⌝ -∗ Q)%I.
+  Persistent Q → Persistent (⌜φ⌝ -∗ Q)%I.
 Proof.
-  rewrite /PersistentP -always_impl_wand pure_impl_forall always_forall.
+  rewrite /Persistent -always_impl_wand pure_impl_forall always_forall.
   auto using forall_mono.
 Qed.
-Global Instance always_persistent P : PersistentP (□ P).
+Global Instance always_persistent P : Persistent (□ P).
 Proof. by intros; apply always_intro'. Qed.
 Global Instance and_persistent P Q :
-  PersistentP P → PersistentP Q → PersistentP (P ∧ Q).
-Proof. by intros; rewrite /PersistentP always_and; apply and_mono. Qed.
+  Persistent P → Persistent Q → Persistent (P ∧ Q).
+Proof. by intros; rewrite /Persistent always_and; apply and_mono. Qed.
 Global Instance or_persistent P Q :
-  PersistentP P → PersistentP Q → PersistentP (P ∨ Q).
-Proof. by intros; rewrite /PersistentP always_or; apply or_mono. Qed.
+  Persistent P → Persistent Q → Persistent (P ∨ Q).
+Proof. by intros; rewrite /Persistent always_or; apply or_mono. Qed.
 Global Instance sep_persistent P Q :
-  PersistentP P → PersistentP Q → PersistentP (P ∗ Q).
-Proof. by intros; rewrite /PersistentP always_sep; apply sep_mono. Qed.
+  Persistent P → Persistent Q → Persistent (P ∗ Q).
+Proof. by intros; rewrite /Persistent always_sep; apply sep_mono. Qed.
 Global Instance forall_persistent {A} (Ψ : A → uPred M) :
-  (∀ x, PersistentP (Ψ x)) → PersistentP (∀ x, Ψ x).
-Proof. by intros; rewrite /PersistentP always_forall; apply forall_mono. Qed.
+  (∀ x, Persistent (Ψ x)) → Persistent (∀ x, Ψ x).
+Proof. by intros; rewrite /Persistent always_forall; apply forall_mono. Qed.
 Global Instance exist_persistent {A} (Ψ : A → uPred M) :
-  (∀ x, PersistentP (Ψ x)) → PersistentP (∃ x, Ψ x).
-Proof. by intros; rewrite /PersistentP always_exist; apply exist_mono. Qed.
+  (∀ x, Persistent (Ψ x)) → Persistent (∃ x, Ψ x).
+Proof. by intros; rewrite /Persistent always_exist; apply exist_mono. Qed.
 Global Instance internal_eq_persistent {A : ofeT} (a b : A) :
-  PersistentP (a ≡ b : uPred M)%I.
-Proof. by intros; rewrite /PersistentP always_internal_eq. Qed.
+  Persistent (a ≡ b : uPred M)%I.
+Proof. by intros; rewrite /Persistent always_internal_eq. Qed.
 Global Instance cmra_valid_persistent {A : cmraT} (a : A) :
-  PersistentP (✓ a : uPred M)%I.
-Proof. by intros; rewrite /PersistentP always_cmra_valid. Qed.
-Global Instance later_persistent P : PersistentP P → PersistentP (▷ P).
-Proof. by intros; rewrite /PersistentP always_later; apply later_mono. Qed.
-Global Instance laterN_persistent n P : PersistentP P → PersistentP (▷^n P).
+  Persistent (✓ a : uPred M)%I.
+Proof. by intros; rewrite /Persistent always_cmra_valid. Qed.
+Global Instance later_persistent P : Persistent P → Persistent (▷ P).
+Proof. by intros; rewrite /Persistent always_later; apply later_mono. Qed.
+Global Instance laterN_persistent n P : Persistent P → Persistent (▷^n P).
 Proof. induction n; apply _. Qed.
-Global Instance ownM_persistent : CoreId a → PersistentP (@uPred_ownM M a).
-Proof. intros. by rewrite /PersistentP always_ownM. Qed.
+Global Instance ownM_persistent : CoreId a → Persistent (@uPred_ownM M a).
+Proof. intros. by rewrite /Persistent always_ownM. Qed.
 Global Instance from_option_persistent {A} P (Ψ : A → uPred M) (mx : option A) :
-  (∀ x, PersistentP (Ψ x)) → PersistentP P → PersistentP (from_option Ψ P mx).
+  (∀ x, Persistent (Ψ x)) → Persistent P → Persistent (from_option Ψ P mx).
 Proof. destruct mx; apply _. Qed.
 
 (* For big ops *)

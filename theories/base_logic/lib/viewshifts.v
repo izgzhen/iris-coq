@@ -41,7 +41,7 @@ Proof. solve_proper. Qed.
 
 Lemma vs_false_elim E1 E2 P : False ={E1,E2}=> P.
 Proof. iIntros "!# []". Qed.
-Lemma vs_timeless E P : TimelessP P → ▷ P ={E}=> P.
+Lemma vs_timeless E P : Timeless P → ▷ P ={E}=> P.
 Proof. by iIntros (?) "!# > ?". Qed.
 
 Lemma vs_transitive E1 E2 E3 P Q R :

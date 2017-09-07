@@ -75,7 +75,7 @@ Section lifting.
 
   Lemma ownP_twice σ1 σ2 : ownP σ1 ∗ ownP σ2 ⊢ False.
   Proof. rewrite /ownP -own_op own_valid. by iIntros (?). Qed.
-  Global Instance ownP_timeless σ : TimelessP (@ownP (state Λ) Σ _ σ).
+  Global Instance ownP_timeless σ : Timeless (@ownP (state Λ) Σ _ σ).
   Proof. rewrite /ownP; apply _. Qed.
 
   Lemma ownP_lift_step E Φ e1 :

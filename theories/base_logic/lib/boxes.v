@@ -65,7 +65,7 @@ Proof. solve_contractive. Qed.
 Global Instance slice_proper γ : Proper ((≡) ==> (≡)) (slice N γ).
 Proof. apply ne_proper, _. Qed.
 
-Global Instance slice_persistent γ P : PersistentP (slice N γ P).
+Global Instance slice_persistent γ P : Persistent (slice N γ P).
 Proof. apply _. Qed.
 
 Global Instance box_contractive f : Contractive (box N f).

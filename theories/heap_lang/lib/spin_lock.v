@@ -40,9 +40,9 @@ Section proof.
   Proof. solve_proper. Qed.
 
   (** The main proofs. *)
-  Global Instance is_lock_persistent γ l R : PersistentP (is_lock γ l R).
+  Global Instance is_lock_persistent γ l R : Persistent (is_lock γ l R).
   Proof. apply _. Qed.
-  Global Instance locked_timeless γ : TimelessP (locked γ).
+  Global Instance locked_timeless γ : Timeless (locked γ).
   Proof. apply _. Qed.
 
   Lemma newlock_spec (R : iProp Σ):

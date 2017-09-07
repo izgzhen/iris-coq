@@ -43,11 +43,11 @@ Section definitions.
   Global Instance sts_ctx_proper `{!invG Σ} N :
     Proper (pointwise_relation _ (≡) ==> (⊣⊢)) (sts_ctx N).
   Proof. solve_proper. Qed.
-  Global Instance sts_ctx_persistent `{!invG Σ} N φ : PersistentP (sts_ctx N φ).
+  Global Instance sts_ctx_persistent `{!invG Σ} N φ : Persistent (sts_ctx N φ).
   Proof. apply _. Qed.
-  Global Instance sts_own_persistent s : PersistentP (sts_own s ∅).
+  Global Instance sts_own_persistent s : Persistent (sts_own s ∅).
   Proof. apply _. Qed.
-  Global Instance sts_ownS_persistent S : PersistentP (sts_ownS S ∅).
+  Global Instance sts_ownS_persistent S : Persistent (sts_ownS S ∅).
   Proof. apply _. Qed.
 End definitions.
 

@@ -24,7 +24,7 @@ Instance: Params (@cinv) 5.
 Section proofs.
   Context `{invG Σ, cinvG Σ}.
 
-  Global Instance cinv_own_timeless γ p : TimelessP (cinv_own γ p).
+  Global Instance cinv_own_timeless γ p : Timeless (cinv_own γ p).
   Proof. rewrite /cinv_own; apply _. Qed.
 
   Global Instance cinv_contractive N γ : Contractive (cinv N γ).
@@ -34,7 +34,7 @@ Section proofs.
   Global Instance cinv_proper N γ : Proper ((≡) ==> (≡)) (cinv N γ).
   Proof. exact: ne_proper. Qed.
 
-  Global Instance cinv_persistent N γ P : PersistentP (cinv N γ P).
+  Global Instance cinv_persistent N γ P : Persistent (cinv N γ P).
   Proof. rewrite /cinv; apply _. Qed.
 
   Global Instance cinv_own_fractionnal γ : Fractional (cinv_own γ).

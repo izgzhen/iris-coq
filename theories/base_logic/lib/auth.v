@@ -30,9 +30,9 @@ Section definitions.
   Proof. solve_proper. Qed.
   Global Instance auth_own_proper : Proper ((≡) ==> (⊣⊢)) auth_own.
   Proof. solve_proper. Qed.
-  Global Instance auth_own_timeless a : TimelessP (auth_own a).
+  Global Instance auth_own_timeless a : Timeless (auth_own a).
   Proof. apply _. Qed.
-  Global Instance auth_own_core_id a : CoreId a → PersistentP (auth_own a).
+  Global Instance auth_own_core_id a : CoreId a → Persistent (auth_own a).
   Proof. apply _. Qed.
 
   Global Instance auth_inv_ne n :
@@ -51,7 +51,7 @@ Section definitions.
     Proper (pointwise_relation T (≡) ==>
             pointwise_relation T (⊣⊢) ==> (⊣⊢)) (auth_ctx N).
   Proof. solve_proper. Qed.
-  Global Instance auth_ctx_persistent N f φ : PersistentP (auth_ctx N f φ).
+  Global Instance auth_ctx_persistent N f φ : Persistent (auth_ctx N f φ).
   Proof. apply _. Qed.
 End definitions.
 
