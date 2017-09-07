@@ -1713,6 +1713,12 @@ Proof.
   by rewrite (timeless P) /bi_except_0 persistently_or {1}persistently_elim.
 Qed.
 
+Global Instance bare_timeless P :
+  Timeless (emp%I : PROP) → Timeless P → Timeless (■ P).
+Proof. rewrite /bi_bare; apply _. Qed.
+Global Instance sink_timeless P : Timeless P → Timeless (▲ P).
+Proof. rewrite /bi_sink; apply _. Qed.
+
 Global Instance eq_timeless {A : ofeT} (a b : A) :
   Discrete a → Timeless (a ≡ b : PROP)%I.
 Proof. intros. rewrite /Discrete !discrete_eq. apply (timeless _). Qed.
