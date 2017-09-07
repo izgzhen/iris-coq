@@ -100,7 +100,7 @@ Section iprod_cmra.
     intros [h ?]%finite_choice. by exists h.
   Qed.
 
-  Lemma iprod_cmra_mixin : CMRAMixin (iprod B).
+  Lemma iprod_cmra_mixin : CmraMixin (iprod B).
   Proof.
     apply cmra_total_mixin.
     - eauto.
@@ -126,21 +126,21 @@ Section iprod_cmra.
         exists (y1,y2); eauto. }
       exists (λ x, gg x.1), (λ x, gg x.2). split_and!=> -?; naive_solver.
   Qed.
-  Canonical Structure iprodR := CMRAT (iprod B) iprod_cmra_mixin.
+  Canonical Structure iprodR := CmraT (iprod B) iprod_cmra_mixin.
 
   Instance iprod_unit : Unit (iprod B) := λ x, ε.
   Definition iprod_lookup_empty x : ε x = ε := eq_refl.
 
-  Lemma iprod_ucmra_mixin : UCMRAMixin (iprod B).
+  Lemma iprod_ucmra_mixin : UcmraMixin (iprod B).
   Proof.
     split.
     - intros x; apply ucmra_unit_valid.
     - by intros f x; rewrite iprod_lookup_op left_id.
     - constructor=> x. apply persistent_core, _.
   Qed.
-  Canonical Structure iprodUR := UCMRAT (iprod B) iprod_ucmra_mixin.
+  Canonical Structure iprodUR := UcmraT (iprod B) iprod_ucmra_mixin.
 
-  Global Instance iprod_empty_discrete :
+  Global Instance iprod_unit_discrete :
     (∀ i, Discrete (ε : B i)) → Discrete (ε : iprod B).
   Proof. intros ? f Hf x. by apply: discrete. Qed.
 
@@ -284,7 +284,7 @@ Instance iprod_map_ne `{Finite A} {B1 B2 : A → ofeT} (f : ∀ x, B1 x → B2 x
 Proof. by intros ? y1 y2 Hy x; rewrite /iprod_map (Hy x). Qed.
 Instance iprod_map_cmra_morphism
     `{Finite A} {B1 B2 : A → ucmraT} (f : ∀ x, B1 x → B2 x) :
-  (∀ x, CMRAMorphism (f x)) → CMRAMorphism (iprod_map f).
+  (∀ x, CmraMorphism (f x)) → CmraMorphism (iprod_map f).
 Proof.
   split; first apply _.
   - intros n g Hg x; rewrite /iprod_map; apply (cmra_morphism_validN (f _)), Hg.

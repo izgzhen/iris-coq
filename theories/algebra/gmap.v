@@ -37,7 +37,7 @@ Next Obligation.
   by rewrite conv_compl /=; apply reflexive_eq.
 Qed.
 
-Global Instance gmap_ofe_discrete : OFEDiscrete A → OFEDiscrete gmapC.
+Global Instance gmap_ofe_discrete : OfeDiscrete A → OfeDiscrete gmapC.
 Proof. intros ? m m' ? i. by apply (discrete _). Qed.
 (* why doesn't this go automatic? *)
 Global Instance gmapC_leibniz: LeibnizEquiv A → LeibnizEquiv gmapC.
@@ -127,7 +127,7 @@ Proof.
       lookup_insert_ne // lookup_partial_alter_ne.
 Qed.
 
-Lemma gmap_cmra_mixin : CMRAMixin (gmap K A).
+Lemma gmap_cmra_mixin : CmraMixin (gmap K A).
 Proof.
   apply cmra_total_mixin.
   - eauto.
@@ -171,19 +171,19 @@ Proof.
       * by rewrite lookup_partial_alter.
       * by rewrite lookup_partial_alter_ne // Hm2' lookup_delete_ne.
 Qed.
-Canonical Structure gmapR := CMRAT (gmap K A) gmap_cmra_mixin.
+Canonical Structure gmapR := CmraT (gmap K A) gmap_cmra_mixin.
 
-Global Instance gmap_cmra_discrete : CMRADiscrete A → CMRADiscrete gmapR.
+Global Instance gmap_cmra_discrete : CmraDiscrete A → CmraDiscrete gmapR.
 Proof. split; [apply _|]. intros m ? i. by apply: cmra_discrete_valid. Qed.
 
-Lemma gmap_ucmra_mixin : UCMRAMixin (gmap K A).
+Lemma gmap_ucmra_mixin : UcmraMixin (gmap K A).
 Proof.
   split.
   - by intros i; rewrite lookup_empty.
   - by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
   - constructor=> i. by rewrite lookup_omap lookup_empty.
 Qed.
-Canonical Structure gmapUR := UCMRAT (gmap K A) gmap_ucmra_mixin.
+Canonical Structure gmapUR := UcmraT (gmap K A) gmap_ucmra_mixin.
 
 (** Internalized properties *)
 Lemma gmap_equivI {M} m1 m2 : m1 ≡ m2 ⊣⊢ (∀ i, m1 !! i ≡ m2 !! i : uPred M).
@@ -477,7 +477,7 @@ Instance gmap_fmap_ne `{Countable K} {A B : ofeT} (f : A → B) n :
   Proper (dist n ==> dist n) f → Proper (dist n ==>dist n) (fmap (M:=gmap K) f).
 Proof. by intros ? m m' Hm k; rewrite !lookup_fmap; apply option_fmap_ne. Qed.
 Instance gmap_fmap_cmra_morphism `{Countable K} {A B : cmraT} (f : A → B)
-  `{!CMRAMorphism f} : CMRAMorphism (fmap f : gmap K A → gmap K B).
+  `{!CmraMorphism f} : CmraMorphism (fmap f : gmap K A → gmap K B).
 Proof.
   split; try apply _.
   - by intros n m ? i; rewrite lookup_fmap; apply (cmra_morphism_validN _).

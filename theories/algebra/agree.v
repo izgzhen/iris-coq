@@ -131,7 +131,7 @@ Proof.
   - destruct (elem_of_agree x1); naive_solver.
 Qed.
 
-Definition agree_cmra_mixin : CMRAMixin (agree A).
+Definition agree_cmra_mixin : CmraMixin (agree A).
 Proof.
   apply cmra_total_mixin; try apply _ || by eauto.
   - intros n x; rewrite !agree_validN_def; eauto using dist_S.
@@ -142,14 +142,14 @@ Proof.
     + by rewrite agree_idemp.
     + by move: Hval; rewrite Hx; move=> /agree_op_invN->; rewrite agree_idemp.
 Qed.
-Canonical Structure agreeR : cmraT := CMRAT (agree A) agree_cmra_mixin.
+Canonical Structure agreeR : cmraT := CmraT (agree A) agree_cmra_mixin.
 
-Global Instance agree_total : CMRATotal agreeR.
-Proof. rewrite /CMRATotal; eauto. Qed.
+Global Instance agree_cmra_total : CmraTotal agreeR.
+Proof. rewrite /CmraTotal; eauto. Qed.
 Global Instance agree_persistent (x : agree A) : Persistent x.
 Proof. by constructor. Qed.
 
-Global Instance agree_cmra_discrete : OFEDiscrete A → CMRADiscrete agreeR.
+Global Instance agree_cmra_discrete : OfeDiscrete A → CmraDiscrete agreeR.
 Proof.
   intros HD. split.
   - intros x y [H H'] n; split=> a; setoid_rewrite <-(discrete_iff_0 _ _); auto.
@@ -267,7 +267,7 @@ Section agree_map.
     - intros (a&->&?). exists (f a). rewrite -Hfg; eauto.
   Qed.
 
-  Global Instance agree_map_morphism : CMRAMorphism (agree_map f).
+  Global Instance agree_map_morphism : CmraMorphism (agree_map f).
   Proof using Hf.
     split; first apply _.
     - intros n x. rewrite !agree_validN_def=> Hv b b' /=.

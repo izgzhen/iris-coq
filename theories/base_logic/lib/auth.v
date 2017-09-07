@@ -9,11 +9,11 @@ Import uPred.
 (* The CMRA we need. *)
 Class authG Σ (A : ucmraT) := AuthG {
   auth_inG :> inG Σ (authR A);
-  auth_discrete :> CMRADiscrete A;
+  auth_cmra_discrete :> CmraDiscrete A;
 }.
 Definition authΣ (A : ucmraT) : gFunctors := #[ GFunctor (authR A) ].
 
-Instance subG_authΣ Σ A : subG (authΣ A) Σ → CMRADiscrete A → authG Σ A.
+Instance subG_authΣ Σ A : subG (authΣ A) Σ → CmraDiscrete A → authG Σ A.
 Proof. solve_inG. Qed.
 
 Section definitions.

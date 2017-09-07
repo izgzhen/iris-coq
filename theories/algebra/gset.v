@@ -38,12 +38,12 @@ Section gset.
   Qed.
   Canonical Structure gsetR := discreteR (gset K) gset_ra_mixin.
 
-  Global Instance gset_cmra_discrete : CMRADiscrete gsetR.
+  Global Instance gset_cmra_discrete : CmraDiscrete gsetR.
   Proof. apply discrete_cmra_discrete. Qed.
 
-  Lemma gset_ucmra_mixin : UCMRAMixin (gset K).
+  Lemma gset_ucmra_mixin : UcmraMixin (gset K).
   Proof. split. done. intros X. by rewrite gset_op_union left_id_L. done. Qed.
-  Canonical Structure gsetUR := UCMRAT (gset K) gset_ucmra_mixin.
+  Canonical Structure gsetUR := UcmraT (gset K) gset_ucmra_mixin.
 
   Lemma gset_opM X mY : X ⋅? mY = X ∪ from_option id ∅ mY.
   Proof. destruct mY; by rewrite /= ?right_id_L. Qed.
@@ -123,12 +123,12 @@ Section gset_disj.
   Qed.
   Canonical Structure gset_disjR := discreteR (gset_disj K) gset_disj_ra_mixin.
 
-  Global Instance gset_disj_cmra_discrete : CMRADiscrete gset_disjR.
+  Global Instance gset_disj_cmra_discrete : CmraDiscrete gset_disjR.
   Proof. apply discrete_cmra_discrete. Qed.
 
-  Lemma gset_disj_ucmra_mixin : UCMRAMixin (gset_disj K).
+  Lemma gset_disj_ucmra_mixin : UcmraMixin (gset_disj K).
   Proof. split; try apply _ || done. intros [X|]; gset_disj_solve. Qed.
-  Canonical Structure gset_disjUR := UCMRAT (gset_disj K) gset_disj_ucmra_mixin.
+  Canonical Structure gset_disjUR := UcmraT (gset_disj K) gset_disj_ucmra_mixin.
 
   Arguments op _ _ _ _ : simpl never.
 

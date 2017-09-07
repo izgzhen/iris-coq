@@ -77,7 +77,7 @@ Next Obligation.
   by rewrite Hcn.
 Qed.
 
-Global Instance list_ofe_discrete : OFEDiscrete A → OFEDiscrete listC.
+Global Instance list_ofe_discrete : OfeDiscrete A → OfeDiscrete listC.
 Proof. induction 2; constructor; try apply (discrete _); auto. Qed.
 
 Global Instance nil_discrete : Discrete (@nil A).
@@ -186,7 +186,7 @@ Section cmra.
       + exists (core x :: l3); constructor; by rewrite ?cmra_core_r.
   Qed.
 
-  Definition list_cmra_mixin : CMRAMixin (list A).
+  Definition list_cmra_mixin : CmraMixin (list A).
   Proof.
     apply cmra_total_mixin.
     - eauto.
@@ -219,19 +219,19 @@ Section cmra.
           (cmra_extend n x y1 y2) as (y1'&y2'&?&?&?); simplify_eq/=; auto.
         exists (y1' :: l1'), (y2' :: l2'); repeat constructor; auto.
   Qed.
-  Canonical Structure listR := CMRAT (list A) list_cmra_mixin.
+  Canonical Structure listR := CmraT (list A) list_cmra_mixin.
 
   Global Instance list_unit : Unit (list A) := [].
-  Definition list_ucmra_mixin : UCMRAMixin (list A).
+  Definition list_ucmra_mixin : UcmraMixin (list A).
   Proof.
     split.
     - constructor.
     - by intros l.
     - by constructor.
   Qed.
-  Canonical Structure listUR := UCMRAT (list A) list_ucmra_mixin.
+  Canonical Structure listUR := UcmraT (list A) list_ucmra_mixin.
 
-  Global Instance list_cmra_discrete : CMRADiscrete A → CMRADiscrete listR.
+  Global Instance list_cmra_discrete : CmraDiscrete A → CmraDiscrete listR.
   Proof.
     split; [apply _|]=> l; rewrite list_lookup_valid list_lookup_validN=> Hl i.
     by apply cmra_discrete_valid.
@@ -436,7 +436,7 @@ End properties.
 
 (** Functor *)
 Instance list_fmap_cmra_morphism {A B : ucmraT} (f : A → B)
-  `{!CMRAMorphism f} : CMRAMorphism (fmap f : list A → list B).
+  `{!CmraMorphism f} : CmraMorphism (fmap f : list A → list B).
 Proof.
   split; try apply _.
   - intros n l. rewrite !list_lookup_validN=> Hl i. rewrite list_lookup_fmap.

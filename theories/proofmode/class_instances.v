@@ -44,7 +44,7 @@ Proof. done. Qed.
 Global Instance into_pure_eq {A : ofeT} (a b : A) :
   Discrete a → @IntoPure M (a ≡ b) (a ≡ b).
 Proof. intros. by rewrite /IntoPure discrete_eq. Qed.
-Global Instance into_pure_cmra_valid `{CMRADiscrete A} (a : A) :
+Global Instance into_pure_cmra_valid `{CmraDiscrete A} (a : A) :
   @IntoPure M (✓ a) (✓ a).
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 

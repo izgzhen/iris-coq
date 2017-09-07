@@ -63,7 +63,7 @@ Arguments ofe_mixin : simpl never.
 (** When declaring instances of subclasses of OFE (like CMRAs and unital CMRAs)
 we need Coq to *infer* the canonical OFE instance of a given type and take the
 mixin out of it. This makes sure we do not use two different OFE instances in
-different places (see for example the constructors [CMRAT] and [UCMRAT] in the
+different places (see for example the constructors [CmraT] and [UcmraT] in the
 file [cmra.v].)
 
 In order to infer the OFE instance, we use the definition [ofe_mixin_of'] which
@@ -105,8 +105,7 @@ Arguments discrete {_} _ {_} _ _.
 Hint Mode Discrete + ! : typeclass_instances.
 Instance: Params (@Discrete) 1.
 
-Class OFEDiscrete (A : ofeT) := ofe_discrete_discrete (x : A) :> Discrete x.
-Hint Mode OFEDiscrete ! : typeclass_instances.
+Class OfeDiscrete (A : ofeT) := ofe_discrete_discrete (x : A) :> Discrete x.
 
 (** OFEs with a completion *)
 Record chain (A : ofeT) := {
@@ -651,7 +650,7 @@ Section unit.
   Global Program Instance unit_cofe : Cofe unitC := { compl x := () }.
   Next Obligation. by repeat split; try exists 0. Qed.
 
-  Global Instance unit_ofe_discrete : OFEDiscrete unitC.
+  Global Instance unit_ofe_discrete : OfeDiscrete unitC.
   Proof. done. Qed.
 End unit.
 
@@ -684,7 +683,8 @@ Section product.
   Global Instance prod_discrete (x : A * B) :
     Discrete (x.1) → Discrete (x.2) → Discrete x.
   Proof. by intros ???[??]; split; apply (discrete _). Qed.
-  Global Instance prod_ofe_discrete : OFEDiscrete A → OFEDiscrete B → OFEDiscrete prodC.
+  Global Instance prod_ofe_discrete :
+    OfeDiscrete A → OfeDiscrete B → OfeDiscrete prodC.
   Proof. intros ?? [??]; apply _. Qed.
 End product.
 
@@ -866,7 +866,8 @@ Section sum.
   Proof. inversion_clear 2; constructor; by apply (discrete _). Qed.
   Global Instance inr_discrete (y : B) : Discrete y → Discrete (inr y).
   Proof. inversion_clear 2; constructor; by apply (discrete _). Qed.
-  Global Instance sum_ofe_discrete : OFEDiscrete A → OFEDiscrete B → OFEDiscrete sumC.
+  Global Instance sum_ofe_discrete :
+    OfeDiscrete A → OfeDiscrete B → OfeDiscrete sumC.
   Proof. intros ?? [?|?]; apply _. Qed.
 End sum.
 
@@ -921,7 +922,7 @@ Section discrete_ofe.
     - done.
   Qed.
 
-  Global Instance discrete_ofe_discrete : OFEDiscrete (OfeT A discrete_ofe_mixin).
+  Global Instance discrete_ofe_discrete : OfeDiscrete (OfeT A discrete_ofe_mixin).
   Proof. by intros x y. Qed.
 
   Global Program Instance discrete_cofe : Cofe (OfeT A discrete_ofe_mixin) :=
@@ -990,7 +991,7 @@ Section option.
     destruct (c n); naive_solver.
   Qed.
 
-  Global Instance option_ofe_discrete : OFEDiscrete A → OFEDiscrete optionC.
+  Global Instance option_ofe_discrete : OfeDiscrete A → OfeDiscrete optionC.
   Proof. destruct 2; constructor; by apply (discrete _). Qed.
 
   Global Instance Some_ne : NonExpansive (@Some A).
@@ -1224,7 +1225,7 @@ Section sigma.
 
   Global Instance sig_discrete (x : sig P) :  Discrete (`x) → Discrete x.
   Proof. intros ? y. rewrite sig_dist_alt sig_equiv_alt. apply (discrete _). Qed.
-  Global Instance sig_ofe_discrete : OFEDiscrete A → OFEDiscrete sigC.
+  Global Instance sig_ofe_discrete : OfeDiscrete A → OfeDiscrete sigC.
   Proof. intros ??. apply _. Qed.
 End sigma.
 

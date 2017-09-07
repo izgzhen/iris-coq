@@ -8,13 +8,13 @@ Local Arguments core _ _ !_ /.
 
 (** * Definition of STSs *)
 Module sts.
-Structure stsT := STS {
+Structure stsT := Sts {
   state : Type;
   token : Type;
   prim_step : relation state;
   tok : state → set token;
 }.
-Arguments STS {_ _} _ _.
+Arguments Sts {_ _} _ _.
 Arguments prim_step {_} _ _.
 Arguments tok {_} _.
 Notation states sts := (set (state sts)).
@@ -177,7 +177,7 @@ Arguments frag {_} _ _.
 End sts.
 
 Notation stsT := sts.stsT.
-Notation STS := sts.STS.
+Notation Sts := sts.Sts.
 
 (** * STSs form a disjoint RA *)
 Section sts_dra.
@@ -232,7 +232,7 @@ Proof.
   - by destruct 1; constructor.
   - destruct 1; inversion_clear 1; constructor; etrans; eauto.
 Qed.
-Lemma sts_dra_mixin : DRAMixin (car sts).
+Lemma sts_dra_mixin : DraMixin (car sts).
 Proof.
   split.
   - apply _.
@@ -266,7 +266,7 @@ Proof.
            unless (s ∈ up s T) by done; pose proof (elem_of_up s T)
         end; auto with sts.
 Qed.
-Canonical Structure stsDR : draT := DRAT (car sts) sts_dra_mixin.
+Canonical Structure stsDR : draT := DraT (car sts) sts_dra_mixin.
 End sts_dra.
 
 (** * The STS Resource Algebra *)
@@ -442,11 +442,11 @@ End stsRA.
 
 (** STSs without tokens: Some stuff is simpler *)
 Module sts_notok.
-Structure stsT := STS {
+Structure stsT := Sts {
   state : Type;
   prim_step : relation state;
 }.
-Arguments STS {_} _.
+Arguments Sts {_} _.
 Arguments prim_step {_} _ _.
 Notation states sts := (set (state sts)).
 
@@ -454,7 +454,7 @@ Definition stsT_token := Empty_set.
 Definition stsT_tok {sts : stsT} (_ : state sts) : set stsT_token := ∅.
 
 Canonical Structure sts_notok (sts : stsT) : sts.stsT :=
-  sts.STS (@prim_step sts) stsT_tok.
+  sts.Sts (@prim_step sts) stsT_tok.
 Coercion sts_notok.sts_notok : sts_notok.stsT >-> sts.stsT.
 
 Section sts.
@@ -486,7 +486,7 @@ End sts.
 End sts_notok.
 
 Notation sts_notokT := sts_notok.stsT.
-Notation STS_NoTok := sts_notok.STS.
+Notation Sts_NoTok := sts_notok.Sts.
 
 Section sts_notokRA.
   Context {sts : sts_notokT}.

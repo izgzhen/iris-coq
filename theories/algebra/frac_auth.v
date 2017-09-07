@@ -58,13 +58,13 @@ Section frac_auth.
 
   Lemma frac_auth_includedN n q a b : ✓{n} (●! a ⋅ ◯!{q} b) → Some b ≼{n} Some a.
   Proof. by rewrite auth_validN_eq /= => -[/Some_pair_includedN [_ ?] _]. Qed.
-  Lemma frac_auth_included `{CMRADiscrete A} q a b :
+  Lemma frac_auth_included `{CmraDiscrete A} q a b :
     ✓ (●! a ⋅ ◯!{q} b) → Some b ≼ Some a.
   Proof. by rewrite auth_valid_discrete /= => -[/Some_pair_included [_ ?] _]. Qed.
-  Lemma frac_auth_includedN_total `{CMRATotal A} n q a b :
+  Lemma frac_auth_includedN_total `{CmraTotal A} n q a b :
     ✓{n} (●! a ⋅ ◯!{q} b) → b ≼{n} a.
   Proof. intros. by eapply Some_includedN_total, frac_auth_includedN. Qed.
-  Lemma frac_auth_included_total `{CMRADiscrete A, CMRATotal A} q a b :
+  Lemma frac_auth_included_total `{CmraDiscrete A, CmraTotal A} q a b :
     ✓ (●! a ⋅ ◯!{q} b) → b ≼ a.
   Proof. intros. by eapply Some_included_total, frac_auth_included. Qed.
 

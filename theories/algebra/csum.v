@@ -96,7 +96,8 @@ Next Obligation.
   + rewrite (conv_compl n (csum_chain_r c b')) /=. destruct (c n); naive_solver.
 Qed.
 
-Global Instance csum_ofe_discrete : OFEDiscrete A → OFEDiscrete B → OFEDiscrete csumC.
+Global Instance csum_ofe_discrete :
+  OfeDiscrete A → OfeDiscrete B → OfeDiscrete csumC.
 Proof. by inversion_clear 3; constructor; apply (discrete _). Qed.
 Global Instance csum_leibniz :
   LeibnizEquiv A → LeibnizEquiv B → LeibnizEquiv (csumC A B).
@@ -202,7 +203,7 @@ Proof.
     + exists (Cinr c); by constructor.
 Qed.
 
-Lemma csum_cmra_mixin : CMRAMixin (csum A B).
+Lemma csum_cmra_mixin : CmraMixin (csum A B).
 Proof.
   split.
   - intros [] n; destruct 1; constructor; by ofe_subst.
@@ -246,10 +247,10 @@ Proof.
       exists (Cinr z1), (Cinr z2). by repeat constructor.
     + by exists CsumBot, CsumBot; destruct y1, y2; inversion_clear Hx'.
 Qed.
-Canonical Structure csumR := CMRAT (csum A B) csum_cmra_mixin.
+Canonical Structure csumR := CmraT (csum A B) csum_cmra_mixin.
 
 Global Instance csum_cmra_discrete :
-  CMRADiscrete A → CMRADiscrete B → CMRADiscrete csumR.
+  CmraDiscrete A → CmraDiscrete B → CmraDiscrete csumR.
 Proof.
   split; first apply _.
   by move=>[a|b|] HH /=; try apply cmra_discrete_valid.
@@ -357,7 +358,7 @@ Arguments csumR : clear implicits.
 
 (* Functor *)
 Instance csum_map_cmra_morphism {A A' B B' : cmraT} (f : A → A') (g : B → B') :
-  CMRAMorphism f → CMRAMorphism g → CMRAMorphism (csum_map f g).
+  CmraMorphism f → CmraMorphism g → CmraMorphism (csum_map f g).
 Proof.
   split; try apply _.
   - intros n [a|b|]; simpl; auto using cmra_morphism_validN.

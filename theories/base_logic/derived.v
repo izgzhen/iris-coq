@@ -801,7 +801,7 @@ Global Instance pure_timeless φ : TimelessP (⌜φ⌝ : uPred M)%I.
 Proof.
   rewrite /TimelessP pure_alt later_exist_false. by setoid_rewrite later_True.
 Qed.
-Global Instance valid_timeless {A : cmraT} `{CMRADiscrete A} (a : A) :
+Global Instance valid_timeless {A : cmraT} `{CmraDiscrete A} (a : A) :
   TimelessP (✓ a : uPred M)%I.
 Proof. rewrite /TimelessP !discrete_valid. apply (timelessP _). Qed.
 Global Instance and_timeless P Q: TimelessP P → TimelessP Q → TimelessP (P ∧ Q).

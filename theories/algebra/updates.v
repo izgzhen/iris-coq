@@ -87,7 +87,7 @@ Qed.
 (** ** Frame preserving updates for total CMRAs *)
 Section total_updates.
   Local Set Default Proof Using "Type*".
-  Context `{CMRATotal A}.
+  Context `{CmraTotal A}.
 
   Lemma cmra_total_updateP x (P : A → Prop) :
     x ~~>: P ↔ ∀ n z, ✓{n} (x ⋅ z) → ∃ y, P y ∧ ✓{n} (y ⋅ z).
@@ -100,7 +100,7 @@ Section total_updates.
   Lemma cmra_total_update x y : x ~~> y ↔ ∀ n z, ✓{n} (x ⋅ z) → ✓{n} (y ⋅ z).
   Proof. rewrite cmra_update_updateP cmra_total_updateP. naive_solver. Qed.
 
-  Context `{CMRADiscrete A}.
+  Context `{CmraDiscrete A}.
 
   Lemma cmra_discrete_updateP (x : A) (P : A → Prop) :
     x ~~>: P ↔ ∀ z, ✓ (x ⋅ z) → ∃ y, P y ∧ ✓ (y ⋅ z).
