@@ -32,7 +32,7 @@ Section definitions.
   Proof. solve_proper. Qed.
   Global Instance auth_own_timeless a : TimelessP (auth_own a).
   Proof. apply _. Qed.
-  Global Instance auth_own_persistent a : Persistent a → PersistentP (auth_own a).
+  Global Instance auth_own_core_id a : CoreId a → PersistentP (auth_own a).
   Proof. apply _. Qed.
 
   Global Instance auth_inv_ne n :
@@ -78,7 +78,7 @@ Section auth.
     FromAnd false (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
   Proof. rewrite /IsOp /FromAnd=> ->. by rewrite auth_own_op. Qed.
   Global Instance from_and_auth_own_persistent γ a b1 b2 :
-    IsOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
+    IsOp a b1 b2 → Or (CoreId b1) (CoreId b2) →
     FromAnd true (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 91.
   Proof.
     intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].

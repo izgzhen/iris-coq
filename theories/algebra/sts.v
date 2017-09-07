@@ -391,7 +391,7 @@ Proof.
     eapply closed_steps, Hsup; first done. set_solver +Hs'.
 Qed.
 
-Global Instance sts_frag_peristent S : Persistent (sts_frag S ∅).
+Global Instance sts_frag_core_id S : CoreId (sts_frag S ∅).
 Proof.
   constructor; split=> //= [[??]]. by rewrite /dra.dra_core /= sts.up_closed.
 Qed.

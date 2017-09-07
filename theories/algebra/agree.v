@@ -146,7 +146,7 @@ Canonical Structure agreeR : cmraT := CmraT (agree A) agree_cmra_mixin.
 
 Global Instance agree_cmra_total : CmraTotal agreeR.
 Proof. rewrite /CmraTotal; eauto. Qed.
-Global Instance agree_persistent (x : agree A) : Persistent x.
+Global Instance agree_core_id (x : agree A) : CoreId x.
 Proof. by constructor. Qed.
 
 Global Instance agree_cmra_discrete : OfeDiscrete A → CmraDiscrete agreeR.

@@ -136,7 +136,7 @@ Section iprod_cmra.
     split.
     - intros x; apply ucmra_unit_valid.
     - by intros f x; rewrite iprod_lookup_op left_id.
-    - constructor=> x. apply persistent_core, _.
+    - constructor=> x. apply core_id_core, _.
   Qed.
   Canonical Structure iprodUR := UcmraT (iprod B) iprod_ucmra_mixin.
 
@@ -215,12 +215,12 @@ Section iprod_singleton.
   Proof.
     move=>x'; destruct (decide (x = x')) as [->|];
       by rewrite iprod_lookup_core ?iprod_lookup_singleton
-      ?iprod_lookup_singleton_ne // (persistent_core ∅).
+      ?iprod_lookup_singleton_ne // (core_id_core ∅).
   Qed.
 
-  Global Instance iprod_singleton_persistent x (y : B x) :
-    Persistent y → Persistent (iprod_singleton x y).
-  Proof. by rewrite !persistent_total iprod_core_singleton=> ->. Qed.
+  Global Instance iprod_singleton_core_id x (y : B x) :
+    CoreId y → CoreId (iprod_singleton x y).
+  Proof. by rewrite !core_id_total iprod_core_singleton=> ->. Qed.
 
   Lemma iprod_op_singleton (x : A) (y1 y2 : B x) :
     iprod_singleton x y1 ⋅ iprod_singleton x y2 ≡ iprod_singleton x (y1 ⋅ y2).

@@ -56,7 +56,7 @@ Global Instance dec_agree_cmra_total : CmraTotal dec_agreeR.
 Proof. intros x. by exists x. Qed.
 
 (* Some properties of this CMRA *)
-Global Instance dec_agree_persistent (x : dec_agreeR) : Persistent x.
+Global Instance dec_agree_core_id (x : dec_agreeR) : CoreId x.
 Proof. by constructor. Qed.
 
 Lemma dec_agree_ne a b : a ≠ b → DecAgree a ⋅ DecAgree b = DecAgreeBot.

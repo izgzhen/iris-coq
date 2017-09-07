@@ -142,11 +142,11 @@ Definition opM {A : cmraT} (x : A) (my : option A) :=
   match my with Some y => x ⋅ y | None => x end.
 Infix "⋅?" := opM (at level 50, left associativity) : C_scope.
 
-(** * Persistent elements *)
-Class Persistent {A : cmraT} (x : A) := persistent : pcore x ≡ Some x.
-Arguments persistent {_} _ {_}.
-Hint Mode Persistent + ! : typeclass_instances.
-Instance: Params (@Persistent) 1.
+(** * CoreId elements *)
+Class CoreId {A : cmraT} (x : A) := core_id : pcore x ≡ Some x.
+Arguments core_id {_} _ {_}.
+Hint Mode CoreId + ! : typeclass_instances.
+Instance: Params (@CoreId) 1.
 
 (** * Exclusive elements (i.e., elements that cannot have a frame). *)
 Class Exclusive {A : cmraT} (x : A) := exclusive0_l y : ✓{0} (x ⋅ y) → False.
@@ -316,7 +316,7 @@ Proof. destruct 2; by ofe_subst. Qed.
 Global Instance cmra_opM_proper : Proper ((≡) ==> (≡) ==> (≡)) (@opM A).
 Proof. destruct 2; by setoid_subst. Qed.
 
-Global Instance Persistent_proper : Proper ((≡) ==> iff) (@Persistent A).
+Global Instance CoreId_proper : Proper ((≡) ==> iff) (@CoreId A).
 Proof. solve_proper. Qed.
 Global Instance Exclusive_proper : Proper ((≡) ==> iff) (@Exclusive A).
 Proof. intros x y Hxy. rewrite /Exclusive. by setoid_rewrite Hxy. Qed.
@@ -361,8 +361,8 @@ Proof.
   intros Hv Hx%cmra_pcore_l. move: Hv; rewrite -Hx. apply cmra_valid_op_l.
 Qed.
 
-(** ** Persistent elements *)
-Lemma persistent_dup x `{!Persistent x} : x ≡ x ⋅ x.
+(** ** CoreId elements *)
+Lemma core_id_dup x `{!CoreId x} : x ≡ x ⋅ x.
 Proof. by apply cmra_pcore_dup' with x. Qed.
 
 (** ** Exclusive elements *)
@@ -498,19 +498,19 @@ Section total_core.
   Lemma cmra_core_valid x : ✓ x → ✓ core x.
   Proof. rewrite -{1}(cmra_core_l x); apply cmra_valid_op_l. Qed.
 
-  Lemma persistent_total x : Persistent x ↔ core x ≡ x.
+  Lemma core_id_total x : CoreId x ↔ core x ≡ x.
   Proof.
-    split; [intros; by rewrite /core /= (persistent x)|].
-    rewrite /Persistent /core /=.
+    split; [intros; by rewrite /core /= (core_id x)|].
+    rewrite /CoreId /core /=.
     destruct (cmra_total x) as [? ->]. by constructor.
   Qed.
-  Lemma persistent_core x `{!Persistent x} : core x ≡ x.
-  Proof. by apply persistent_total. Qed.
+  Lemma core_id_core x `{!CoreId x} : core x ≡ x.
+  Proof. by apply core_id_total. Qed.
 
-  Global Instance cmra_core_persistent x : Persistent (core x).
+  Global Instance cmra_core_core_id x : CoreId (core x).
   Proof.
     destruct (cmra_total x) as [cx Hcx].
-    rewrite /Persistent /core /= Hcx /=. eauto using cmra_pcore_idemp.
+    rewrite /CoreId /core /= Hcx /=. eauto using cmra_pcore_idemp.
   Qed.
 
   Lemma cmra_included_core x : core x ≼ x.
@@ -624,13 +624,13 @@ Section ucmra.
   Proof. by exists x; rewrite left_id. Qed.
   Global Instance ucmra_unit_right_id : RightId (≡) ε (@op A _).
   Proof. by intros x; rewrite (comm op) left_id. Qed.
-  Global Instance ucmra_unit_persistent : Persistent (ε:A).
+  Global Instance ucmra_unit_core_id : CoreId (ε:A).
   Proof. apply ucmra_pcore_unit. Qed.
 
   Global Instance cmra_unit_cmra_total : CmraTotal A.
   Proof.
     intros x. destruct (cmra_pcore_mono' ε x ε) as (cx&->&?);
-      eauto using ucmra_unit_least, (persistent (ε:A)).
+      eauto using ucmra_unit_least, (core_id (ε:A)).
   Qed.
   Global Instance empty_cancelable : Cancelable (ε:A).
   Proof. intros ???. by rewrite !left_id. Qed.
@@ -666,9 +666,9 @@ Section cmra_leibniz.
   Lemma cmra_pcore_dup_L x cx : pcore x = Some cx → cx = cx ⋅ cx.
   Proof. unfold_leibniz. apply cmra_pcore_dup'. Qed.
 
-  (** ** Persistent elements *)
-  Lemma persistent_dup_L x `{!Persistent x} : x = x ⋅ x.
-  Proof. unfold_leibniz. by apply persistent_dup. Qed.
+  (** ** CoreId elements *)
+  Lemma core_id_dup_L x `{!CoreId x} : x = x ⋅ x.
+  Proof. unfold_leibniz. by apply core_id_dup. Qed.
 
   (** ** Total core *)
   Section total_core.
@@ -682,10 +682,10 @@ Section cmra_leibniz.
     Proof. unfold_leibniz. apply cmra_core_idemp. Qed.
     Lemma cmra_core_dup_L x : core x = core x ⋅ core x.
     Proof. unfold_leibniz. apply cmra_core_dup. Qed.
-    Lemma persistent_total_L x : Persistent x ↔ core x = x.
-    Proof. unfold_leibniz. apply persistent_total. Qed.
-    Lemma persistent_core_L x `{!Persistent x} : core x = x.
-    Proof. by apply persistent_total_L. Qed.
+    Lemma core_id_total_L x : CoreId x ↔ core x = x.
+    Proof. unfold_leibniz. apply core_id_total. Qed.
+    Lemma core_id_core_L x `{!CoreId x} : core x = x.
+    Proof. by apply core_id_total_L. Qed.
   End total_core.
 End cmra_leibniz.
 
@@ -847,7 +847,7 @@ Section cmra_transport.
   Proof. by destruct H. Qed.
   Global Instance cmra_transport_discrete x : Discrete x → Discrete (T x).
   Proof. by destruct H. Qed.
-  Global Instance cmra_transport_persistent x : Persistent x → Persistent (T x).
+  Global Instance cmra_transport_core_id x : CoreId x → CoreId (T x).
   Proof. by destruct H. Qed.
 End cmra_transport.
 
@@ -938,7 +938,7 @@ Section unit.
 
   Global Instance unit_cmra_discrete : CmraDiscrete unitR.
   Proof. done. Qed.
-  Global Instance unit_persistent (x : ()) : Persistent x.
+  Global Instance unit_core_id (x : ()) : CoreId x.
   Proof. by constructor. Qed.
   Global Instance unit_cancelable (x : ()) : Cancelable x.
   Proof. by constructor. Qed.
@@ -1008,7 +1008,7 @@ Section mnat.
   Proof. split; apply _ || done. Qed.
   Canonical Structure mnatUR : ucmraT := UcmraT mnat mnat_ucmra_mixin.
 
-  Global Instance mnat_persistent (x : mnat) : Persistent x.
+  Global Instance mnat_core_id (x : mnat) : CoreId x.
   Proof. by constructor. Qed.
 End mnat.
 
@@ -1122,9 +1122,9 @@ Section prod.
     CmraDiscrete A → CmraDiscrete B → CmraDiscrete prodR.
   Proof. split. apply _. by intros ? []; split; apply cmra_discrete_valid. Qed.
 
-  Global Instance pair_persistent x y :
-    Persistent x → Persistent y → Persistent (x,y).
-  Proof. by rewrite /Persistent prod_pcore_Some'. Qed.
+  Global Instance pair_core_id x y :
+    CoreId x → CoreId y → CoreId (x,y).
+  Proof. by rewrite /CoreId prod_pcore_Some'. Qed.
 
   Global Instance pair_exclusive_l x y : Exclusive x → Exclusive (x,y).
   Proof. by intros ?[][?%exclusive0_l]. Qed.
@@ -1152,7 +1152,7 @@ Section prod_unit.
     split.
     - split; apply ucmra_unit_valid.
     - by split; rewrite /=left_id.
-    - rewrite prod_pcore_Some'; split; apply (persistent _).
+    - rewrite prod_pcore_Some'; split; apply (core_id _).
   Qed.
   Canonical Structure prodUR := UcmraT (prod A B) prod_ucmra_mixin.
 
@@ -1328,10 +1328,10 @@ Section option.
   Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
   Proof. rewrite -!not_eq_None_Some op_None. destruct mx, my; naive_solver. Qed.
 
-  Global Instance Some_persistent (x : A) : Persistent x → Persistent (Some x).
+  Global Instance Some_core_id (x : A) : CoreId x → CoreId (Some x).
   Proof. by constructor. Qed.
-  Global Instance option_persistent (mx : option A) :
-    (∀ x : A, Persistent x) → Persistent mx.
+  Global Instance option_core_id (mx : option A) :
+    (∀ x : A, CoreId x) → CoreId mx.
   Proof. intros. destruct mx; apply _. Qed.
 
   Lemma exclusiveN_Some_l n x `{!Exclusive x} my :

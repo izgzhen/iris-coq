@@ -237,10 +237,10 @@ Section cmra.
     by apply cmra_discrete_valid.
   Qed.
 
-  Global Instance list_persistent l : (∀ x : A, Persistent x) → Persistent l.
+  Global Instance list_core_id l : (∀ x : A, CoreId x) → CoreId l.
   Proof.
     intros ?; constructor; apply list_equiv_lookup=> i.
-    by rewrite list_lookup_core (persistent_core (l !! i)).
+    by rewrite list_lookup_core (core_id_core (l !! i)).
   Qed.
 
   (** Internalized properties *)
@@ -329,7 +329,7 @@ Section properties.
   Lemma list_core_singletonM i (x : A) : core {[ i := x ]} ≡ {[ i := core x ]}.
   Proof.
     rewrite /singletonM /list_singletonM.
-    by rewrite {1}/core /= fmap_app fmap_replicate (persistent_core ∅).
+    by rewrite {1}/core /= fmap_app fmap_replicate (core_id_core ∅).
   Qed.
   Lemma list_op_singletonM i (x y : A) :
     {[ i := x ]} ⋅ {[ i := y ]} ≡ {[ i := x ⋅ y ]}.
@@ -342,9 +342,9 @@ Section properties.
   Proof.
     rewrite /singletonM /list_singletonM /=. induction i; f_equal/=; auto.
   Qed.
-  Global Instance list_singleton_persistent i (x : A) :
-    Persistent x → Persistent {[ i := x ]}.
-  Proof. by rewrite !persistent_total list_core_singletonM=> ->. Qed.
+  Global Instance list_singleton_core_id i (x : A) :
+    CoreId x → CoreId {[ i := x ]}.
+  Proof. by rewrite !core_id_total list_core_singletonM=> ->. Qed.
 
   (* Update *)
   Lemma list_singleton_updateP (P : A → Prop) (Q : list A → Prop) x :

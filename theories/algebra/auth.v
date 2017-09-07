@@ -183,12 +183,12 @@ Proof.
   split; simpl.
   - rewrite auth_valid_eq /=. apply ucmra_unit_valid.
   - by intros x; constructor; rewrite /= left_id.
-  - do 2 constructor; simpl; apply (persistent_core _).
+  - do 2 constructor; simpl; apply (core_id_core _).
 Qed.
 Canonical Structure authUR := UcmraT (auth A) auth_ucmra_mixin.
 
-Global Instance auth_frag_persistent a : Persistent a → Persistent (◯ a).
-Proof. do 2 constructor; simpl; auto. by apply persistent_core. Qed.
+Global Instance auth_frag_core_id a : CoreId a → CoreId (◯ a).
+Proof. do 2 constructor; simpl; auto. by apply core_id_core. Qed.
 
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :

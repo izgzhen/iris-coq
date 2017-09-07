@@ -753,10 +753,10 @@ Lemma except_0_frame_r P Q : ◇ P ∗ Q ⊢ ◇ (P ∗ Q).
 Proof. by rewrite {1}(except_0_intro Q) except_0_sep. Qed.
 
 (* Own and valid derived *)
-Lemma always_ownM (a : M) : Persistent a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
+Lemma always_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
   intros; apply (anti_symm _); first by apply:always_elim.
-  by rewrite {1}always_ownM_core persistent_core.
+  by rewrite {1}always_ownM_core core_id_core.
 Qed.
 Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊢ False.
 Proof. by intros; rewrite ownM_valid cmra_valid_elim. Qed.
@@ -931,7 +931,7 @@ Global Instance later_persistent P : PersistentP P → PersistentP (▷ P).
 Proof. by intros; rewrite /PersistentP always_later; apply later_mono. Qed.
 Global Instance laterN_persistent n P : PersistentP P → PersistentP (▷^n P).
 Proof. induction n; apply _. Qed.
-Global Instance ownM_persistent : Persistent a → PersistentP (@uPred_ownM M a).
+Global Instance ownM_persistent : CoreId a → PersistentP (@uPred_ownM M a).
 Proof. intros. by rewrite /PersistentP always_ownM. Qed.
 Global Instance from_option_persistent {A} P (Ψ : A → uPred M) (mx : option A) :
   (∀ x, PersistentP (Ψ x)) → PersistentP P → PersistentP (from_option Ψ P mx).

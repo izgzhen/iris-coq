@@ -58,8 +58,8 @@ Section gset.
     split. done. rewrite gset_op_union. set_solver.
   Qed.
 
-  Global Instance gset_persistent X : Persistent X.
-  Proof. by apply persistent_total; rewrite gset_core_self. Qed.
+  Global Instance gset_core_id X : CoreId X.
+  Proof. by apply core_id_total; rewrite gset_core_self. Qed.
 End gset.
 
 Arguments gsetC _ {_ _}.

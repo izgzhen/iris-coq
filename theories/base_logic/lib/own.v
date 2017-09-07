@@ -108,7 +108,7 @@ Proof. by rewrite comm -own_valid_r. Qed.
 
 Global Instance own_timeless γ a : Discrete a → TimelessP (own γ a).
 Proof. rewrite !own_eq /own_def; apply _. Qed.
-Global Instance own_core_persistent γ a : Persistent a → PersistentP (own γ a).
+Global Instance own_core_persistent γ a : CoreId a → PersistentP (own γ a).
 Proof. rewrite !own_eq /own_def; apply _. Qed.
 
 (** ** Allocation *)
@@ -193,7 +193,7 @@ Section proofmode_classes.
     IsOp a b1 b2 → FromAnd false (own γ a) (own γ b1) (own γ b2).
   Proof. intros. by rewrite /FromAnd -own_op -is_op. Qed.
   Global Instance from_and_own_persistent γ a b1 b2 :
-    IsOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
+    IsOp a b1 b2 → Or (CoreId b1) (CoreId b2) →
     FromAnd true (own γ a) (own γ b1) (own γ b2).
   Proof.
     intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].

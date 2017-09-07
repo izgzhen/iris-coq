@@ -370,7 +370,7 @@ Global Instance from_sep_ownM (a b1 b2 : M) :
   FromAnd false (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof. intros. by rewrite /FromAnd -ownM_op -is_op. Qed.
 Global Instance from_sep_ownM_persistent (a b1 b2 : M) :
-  IsOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
+  IsOp a b1 b2 → Or (CoreId b1) (CoreId b2) →
   FromAnd true (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof.
   intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].
@@ -406,11 +406,11 @@ Global Instance is_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
   IsOp a b1 b2 → IsOp a' b1' b2' → IsOp' (a,a') (b1,b1') (b2,b2').
 Proof. by constructor. Qed.
 Global Instance is_op_pair_persistent_l {A B : cmraT} (a : A) (a' b1' b2' : B) :
-  Persistent a → IsOp a' b1' b2' → IsOp' (a,a') (a,b1') (a,b2').
-Proof. constructor=> //=. by rewrite -persistent_dup. Qed.
+  CoreId a → IsOp a' b1' b2' → IsOp' (a,a') (a,b1') (a,b2').
+Proof. constructor=> //=. by rewrite -core_id_dup. Qed.
 Global Instance is_op_pair_persistent_r {A B : cmraT} (a b1 b2 : A) (a' : B) :
-  Persistent a' → IsOp a b1 b2 → IsOp' (a,a') (b1,a') (b2,a').
-Proof. constructor=> //=. by rewrite -persistent_dup. Qed.
+  CoreId a' → IsOp a b1 b2 → IsOp' (a,a') (b1,a') (b2,a').
+Proof. constructor=> //=. by rewrite -core_id_dup. Qed.
 
 Global Instance is_op_Some {A : cmraT} (a : A) b1 b2 :
   IsOp a b1 b2 → IsOp' (Some a) (Some b1) (Some b2).

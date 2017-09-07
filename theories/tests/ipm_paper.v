@@ -162,7 +162,7 @@ Section M.
   Qed.
   Canonical Structure M_UR : ucmraT := UcmraT M M_ucmra_mixin.
 
-  Global Instance frag_persistent n : Persistent (Frag n).
+  Global Instance frag_core_id n : CoreId (Frag n).
   Proof. by constructor. Qed.
   Lemma auth_frag_valid j n : ✓ (Auth n ⋅ Frag j) → (j ≤ n)%nat.
   Proof. simpl. case_decide. done. by intros []. Qed.

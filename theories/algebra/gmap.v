@@ -250,14 +250,14 @@ Lemma op_singleton (i : K) (x y : A) :
   {[ i := x ]} ⋅ {[ i := y ]} = ({[ i := x ⋅ y ]} : gmap K A).
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
 
-Global Instance gmap_persistent m : (∀ x : A, Persistent x) → Persistent m.
+Global Instance gmap_core_id m : (∀ x : A, CoreId x) → CoreId m.
 Proof.
-  intros; apply persistent_total=> i.
-  rewrite lookup_core. apply (persistent_core _).
+  intros; apply core_id_total=> i.
+  rewrite lookup_core. apply (core_id_core _).
 Qed.
-Global Instance gmap_singleton_persistent i (x : A) :
-  Persistent x → Persistent {[ i := x ]}.
-Proof. intros. by apply persistent_total, core_singleton'. Qed.
+Global Instance gmap_singleton_core_id i (x : A) :
+  CoreId x → CoreId {[ i := x ]}.
+Proof. intros. by apply core_id_total, core_singleton'. Qed.
 
 Lemma singleton_includedN n m i x :
   {[ i := x ]} ≼{n} m ↔ ∃ y, m !! i ≡{n}≡ Some y ∧ Some x ≼{n} Some y.

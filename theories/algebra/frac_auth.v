@@ -94,10 +94,10 @@ Section frac_auth.
   Proof. by rewrite /IsOp' /IsOp=> /leibniz_equiv_iff -> ->. Qed.
 
   Global Instance is_op_frac_auth_persistent (q q1 q2 : frac) (a  : A) :
-    Persistent a → IsOp q q1 q2 → IsOp' (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
+    CoreId a → IsOp q q1 q2 → IsOp' (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
   Proof.
     rewrite /IsOp' /IsOp=> ? /leibniz_equiv_iff ->.
-    by rewrite -frag_auth_op -persistent_dup.
+    by rewrite -frag_auth_op -core_id_dup.
   Qed.
 
   Lemma frac_auth_update q a b a' b' :

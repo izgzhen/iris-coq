@@ -256,10 +256,10 @@ Proof.
   by move=>[a|b|] HH /=; try apply cmra_discrete_valid.
 Qed.
 
-Global Instance Cinl_persistent a : Persistent a → Persistent (Cinl a).
-Proof. rewrite /Persistent /=. inversion_clear 1; by repeat constructor. Qed.
-Global Instance Cinr_persistent b : Persistent b → Persistent (Cinr b).
-Proof. rewrite /Persistent /=. inversion_clear 1; by repeat constructor. Qed.
+Global Instance Cinl_core_id a : CoreId a → CoreId (Cinl a).
+Proof. rewrite /CoreId /=. inversion_clear 1; by repeat constructor. Qed.
+Global Instance Cinr_core_id b : CoreId b → CoreId (Cinr b).
+Proof. rewrite /CoreId /=. inversion_clear 1; by repeat constructor. Qed.
 
 Global Instance Cinl_exclusive a : Exclusive a → Exclusive (Cinl a).
 Proof. by move=> H[]? =>[/H||]. Qed.
