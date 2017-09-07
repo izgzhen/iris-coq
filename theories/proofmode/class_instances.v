@@ -11,12 +11,15 @@ Implicit Types P Q R : PROP.
 Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
   @IntoInternalEq PROP A (x ≡ y) x y.
 Proof. by rewrite /IntoInternalEq. Qed.
-Global Instance into_internal_eq_persistently {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (□ P) x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite persistently_elim. Qed.
 Global Instance into_internal_eq_bare {A : ofeT} (x y : A) P :
   IntoInternalEq P x y → IntoInternalEq (■ P) x y.
 Proof. rewrite /IntoInternalEq=> ->. by rewrite bare_elim. Qed.
+Global Instance into_internal_eq_sink {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (▲ P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite sink_internal_eq. Qed.
+Global Instance into_internal_eq_persistently {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (□ P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite persistently_elim. Qed.
 
 (* FromBare *)
 Global Instance from_bare_affine P : Affine P → FromBare P P.
@@ -37,6 +40,9 @@ Qed.
 Global Instance from_assumption_bare_r P Q :
   FromAssumption true P Q → FromAssumption true P (■ Q).
 Proof. rewrite /FromAssumption /= =><-. by rewrite bare_idemp. Qed.
+Global Instance from_assumption_sink_r p P Q :
+  FromAssumption p P Q → FromAssumption p P (▲ Q).
+Proof. rewrite /FromAssumption /= =><-. apply sink_intro. Qed.
 
 Global Instance from_assumption_bare_persistently_l p P Q :
   FromAssumption true P Q → FromAssumption p (⬕ P) Q.
@@ -89,6 +95,8 @@ Proof. rewrite /FromPure /IntoPure=> <- ->. by rewrite pure_impl impl_wand_2. Qe
 
 Global Instance into_pure_bare P φ : IntoPure P φ → IntoPure (■ P) φ.
 Proof. rewrite /IntoPure=> ->. apply bare_elim. Qed.
+Global Instance into_pure_sink P φ : IntoPure P φ → IntoPure (▲ P) φ.
+Proof. rewrite /IntoPure=> ->. by rewrite sink_pure. Qed.
 Global Instance into_pure_persistently P φ : IntoPure P φ → IntoPure (□ P) φ.
 Proof. rewrite /IntoPure=> ->. apply: persistently_elim. Qed.
 
@@ -128,18 +136,20 @@ Qed.
 
 Global Instance from_pure_persistently P φ : FromPure P φ → FromPure (□ P) φ.
 Proof. rewrite /FromPure=> <-. by rewrite persistently_pure. Qed.
+Global Instance from_pure_sink P φ : FromPure P φ → FromPure (▲ P) φ.
+Proof. rewrite /FromPure=> <-. by rewrite sink_pure. Qed.
 
 (* IntoPersistent *)
-Global Instance into_persistent_persistently_trans p P Q :
+Global Instance into_persistent_persistently p P Q :
   IntoPersistent true P Q → IntoPersistent p (□ P) Q | 0.
 Proof.
   rewrite /IntoPersistent /= => ->.
   destruct p; simpl; auto using persistently_idemp_1.
 Qed.
-Global Instance into_persistent_bare_trans p P Q :
+Global Instance into_persistent_bare p P Q :
   IntoPersistent p P Q → IntoPersistent p (■ P) Q | 0.
 Proof. rewrite /IntoPersistent /= => <-. by rewrite bare_elim. Qed.
-Global Instance into_persistent_persistently P : IntoPersistent true P P | 1.
+Global Instance into_persistent_here P : IntoPersistent true P P | 1.
 Proof. by rewrite /IntoPersistent. Qed.
 Global Instance into_persistent_persistent P :
   Persistent P → IntoPersistent false P P | 100.
@@ -272,6 +282,9 @@ Proof. by rewrite /FromSep pure_and sep_and. Qed.
 Global Instance from_sep_bare P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (■ P) (■ Q1) (■ Q2).
 Proof. rewrite /FromSep=> <-. by rewrite bare_sep_2. Qed.
+Global Instance from_sep_sink P Q1 Q2 :
+  FromSep P Q1 Q2 → FromSep (▲ P) (▲ Q1) (▲ Q2).
+Proof. rewrite /FromSep=> <-. by rewrite sink_sep. Qed.
 Global Instance from_sep_persistently P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /FromSep=> <-. by rewrite persistently_sep_2. Qed.
@@ -385,6 +398,9 @@ Proof. by rewrite /FromOr pure_or. Qed.
 Global Instance from_or_bare P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (■ P) (■ Q1) (■ Q2).
 Proof. rewrite /FromOr=> <-. by rewrite bare_or. Qed.
+Global Instance from_or_sink P Q1 Q2 :
+  FromOr P Q1 Q2 → FromOr (▲ P) (▲ Q1) (▲ Q2).
+Proof. rewrite /FromOr=> <-. by rewrite sink_or. Qed.
 Global Instance from_or_persistently P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /FromOr=> <-. by rewrite persistently_or. Qed.
@@ -397,6 +413,9 @@ Proof. by rewrite /IntoOr pure_or. Qed.
 Global Instance into_or_bare P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (■ P) (■ Q1) (■ Q2).
 Proof. rewrite /IntoOr=>->. by rewrite bare_or. Qed.
+Global Instance into_or_sink P Q1 Q2 :
+  IntoOr P Q1 Q2 → IntoOr (▲ P) (▲ Q1) (▲ Q2).
+Proof. rewrite /IntoOr=>->. by rewrite sink_or. Qed.
 Global Instance into_or_persistently P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /IntoOr=>->. by rewrite persistently_or. Qed.
@@ -410,6 +429,9 @@ Proof. by rewrite /FromExist pure_exist. Qed.
 Global Instance from_exist_bare {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (■ P) (λ a, ■ (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite bare_exist. Qed.
+Global Instance from_exist_sink {A} P (Φ : A → PROP) :
+  FromExist P Φ → FromExist (▲ P) (λ a, ▲ (Φ a))%I.
+Proof. rewrite /FromExist=> <-. by rewrite sink_exist. Qed.
 Global Instance from_exist_persistently {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite persistently_exist. Qed.
@@ -436,6 +458,9 @@ Proof.
   eapply (pure_elim φ'); [by rewrite (into_pure P); apply sep_elim_l, _|]=>?.
   rewrite -exist_intro //. apply sep_elim_r, _.
 Qed.
+Global Instance into_exist_sink {A} P (Φ : A → PROP) :
+  IntoExist P Φ → IntoExist (▲ P) (λ a, ▲ (Φ a))%I.
+Proof. rewrite /IntoExist=> HP. by rewrite HP sink_exist. Qed.
 Global Instance into_exist_persistently {A} P (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP persistently_exist. Qed.
@@ -488,6 +513,10 @@ Global Instance forall_modal_wand {A} P P' (Φ Ψ : A → PROP) :
 Proof.
   rewrite /ElimModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
 Qed.
+Global Instance elim_modal_sink P Q : Absorbing Q → ElimModal (▲ P) P Q Q.
+Proof.
+  rewrite /ElimModal=> H. by rewrite sink_sep_l wand_elim_r absorbing_sink.
+Qed.
 
 (* Frame *)
 Global Instance frame_here_absorbing p R : Absorbing R → Frame p R R True | 0.
@@ -512,8 +541,12 @@ Global Instance make_sep_emp_r P : MakeSep P emp P.
 Proof. by rewrite /MakeSep right_id. Qed.
 Global Instance make_sep_true_l P : Absorbing P → MakeSep True P P.
 Proof. intros. by rewrite /MakeSep True_sep. Qed.
+Global Instance make_and_emp_l_sink P : MakeSep True P (▲ P) | 10.
+Proof. intros. by rewrite /MakeSep. Qed.
 Global Instance make_sep_true_r P : Absorbing P → MakeSep P True P.
 Proof. intros. by rewrite /MakeSep sep_True. Qed.
+Global Instance make_and_emp_r_sink P : MakeSep P True (▲ P) | 10.
+Proof. intros. by rewrite /MakeSep comm. Qed.
 Global Instance make_sep_default P Q : MakeSep P Q (P ∗ Q) | 100.
 Proof. by rewrite /MakeSep. Qed.
 
@@ -636,6 +669,20 @@ Proof.
   by rewrite -{1}bare_idemp bare_sep_2.
 Qed.
 
+Class MakeSink (P Q : PROP) := make_sink : ▲ P ⊣⊢ Q.
+Arguments MakeSink _%I _%I.
+Global Instance make_sink_emp : MakeSink emp True | 0.
+Proof. by rewrite /MakeSink -sink_True_emp sink_pure. Qed.
+(* Note: there is no point in having an instance `Absorbing P → MakeSink P P`
+because framing will never turn a proposition that is not absorbing into
+something that is absorbing. *)
+Global Instance make_sink_default P : MakeSink P (▲ P) | 100.
+Proof. by rewrite /MakeSink. Qed.
+
+Global Instance frame_sink p R P Q Q' :
+  Frame p R P Q → MakeSink Q Q' → Frame p R (▲ P) Q'.
+Proof. rewrite /Frame /MakeSink=> <- <- /=. by rewrite sink_sep_r. Qed.
+
 Class MakePersistently (P Q : PROP) := make_persistently : □ P ⊣⊢ Q.
 Arguments MakePersistently _%I _%I.
 Global Instance make_persistently_true : MakePersistently True True.
@@ -659,7 +706,12 @@ Proof. rewrite /Frame=> ?. by rewrite sep_exist_l; apply exist_mono. Qed.
 Global Instance frame_forall {A} p R (Φ Ψ : A → PROP) :
   (∀ a, Frame p R (Φ a) (Ψ a)) → Frame p R (∀ x, Φ x) (∀ x, Ψ x).
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
+
+(* FromModal *)
+Global Instance from_modal_sink P : FromModal (▲ P) P.
+Proof. apply sink_intro. Qed.
 End bi_instances.
+
 
 Section sbi_instances.
 Context {PROP : sbi}.
@@ -855,6 +907,8 @@ Proof. rewrite /IntoExcept0. destruct p; auto using except_0_intro. Qed.
 
 Global Instance into_timeless_bare P Q : IntoExcept0 P Q → IntoExcept0 (■ P) (■ Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_bare_2. Qed.
+Global Instance into_timeless_sink P Q : IntoExcept0 P Q → IntoExcept0 (▲ P) (▲ Q).
+Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_sink. Qed.
 Global Instance into_timeless_persistently P Q : IntoExcept0 P Q → IntoExcept0 (□ P) (□ Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_persistently. Qed.
 
@@ -954,6 +1008,9 @@ Proof. rewrite /IntoLaterN' /IntoLaterN -laterN_exist_2=> ?. by apply exist_mono
 Global Instance into_later_bare n P Q :
   IntoLaterN n P Q → IntoLaterN n (■ P) (■ Q).
 Proof. rewrite /IntoLaterN=> ->. by rewrite laterN_bare_2. Qed.
+Global Instance into_later_sink n P Q :
+  IntoLaterN n P Q → IntoLaterN n (▲ P) (▲ Q).
+Proof. rewrite /IntoLaterN=> ->. by rewrite laterN_sink. Qed.
 Global Instance into_later_persistently n P Q :
   IntoLaterN n P Q → IntoLaterN n (□ P) (□ Q).
 Proof. rewrite /IntoLaterN=> ->. by rewrite laterN_persistently. Qed.
@@ -1031,6 +1088,9 @@ Proof. intros ??; red. by rewrite laterN_sep; apply sep_mono. Qed.
 Global Instance from_later_persistently n P Q :
   FromLaterN n P Q → FromLaterN n (□ P) (□ Q).
 Proof. by rewrite /FromLaterN laterN_persistently=> ->. Qed.
+Global Instance from_later_sink n P Q :
+  FromLaterN n P Q → FromLaterN n (▲ P) (▲ Q).
+Proof. by rewrite /FromLaterN laterN_sink=> ->. Qed.
 
 Global Instance from_later_forall {A} n (Φ Ψ : A → PROP) :
   (∀ x, FromLaterN n (Φ x) (Ψ x)) → FromLaterN n (∀ x, Φ x) (∀ x, Ψ x).
