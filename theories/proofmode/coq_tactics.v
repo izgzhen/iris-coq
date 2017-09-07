@@ -684,18 +684,20 @@ Proof.
   by rewrite emp_wand wand_elim_r.
 Qed.
 
-Lemma tac_specialize_assert_persistent Δ Δ' Δ'' j q P1 P2 R Q :
+Lemma tac_specialize_assert_persistent Δ Δ' Δ'' j q P1 P1' P2 R Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
   IntoWand q true R P1 P2 →
   Persistent P1 →
+  IntoSink P1' P1 →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ'' →
-  (Δ' ⊢ P1) → (Δ'' ⊢ Q) → Δ ⊢ Q.
+  (Δ' ⊢ P1') → (Δ'' ⊢ Q) → Δ ⊢ Q.
 Proof.
-  intros [? ->]%envs_lookup_delete_Some ??? HP1 <-.
+  intros [? ->]%envs_lookup_delete_Some ???? HP1 <-.
   rewrite envs_lookup_sound //.
   rewrite -(idemp bi_and (envs_delete _ _ _)).
   rewrite {2}envs_simple_replace_singleton_sound' //; simpl.
-  rewrite {1}HP1 (persistent_persistently_2 P1) persistently_and_bare_sep_l assoc.
+  rewrite {1}HP1 (into_sink P1') (persistent_persistently_2 P1) sink_persistently.
+  rewrite persistently_and_bare_sep_l assoc.
   rewrite -bare_persistently_if_idemp -bare_persistently_idemp.
   rewrite (bare_persistently_bare_persistently_if q) bare_persistently_if_sep_2.
   by rewrite into_wand wand_elim_l wand_elim_r.
@@ -703,20 +705,18 @@ Qed.
 
 Lemma tac_specialize_persistent_helper Δ Δ'' j q P R R' Q :
   envs_lookup j Δ = Some (q,P) →
-  (Δ ⊢ R) →
+  (Δ ⊢ ▲ R) →
   IntoPersistent false R R' →
-  (if q then TCTrue else TCAnd (PositiveBI PROP) (Affine R)) →
+  (if q then TCTrue else AffineBI PROP) →
   envs_replace j q true (Esnoc Enil j R') Δ = Some Δ'' →
   (Δ'' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ? HR ? Hpos ? <-. rewrite -(idemp bi_and Δ) {1}HR.
   rewrite envs_replace_singleton_sound //; destruct q; simpl.
-  - rewrite (_ : R = □?false R)%I // (into_persistent _ R).
+  - rewrite (_ : R = □?false R)%I // (into_persistent _ R) sink_persistently.
     by rewrite sep_elim_r persistently_and_bare_sep_l wand_elim_r.
-  - destruct Hpos.
-    rewrite -(affine_bare R) (_ : R = □?false R)%I // (into_persistent _ R).
-    rewrite bare_and_lr bare_sep sep_elim_r bare_elim.
-    by rewrite persistently_and_bare_sep_l wand_elim_r.
+  - rewrite (absorbing_sink R) (_ : R = □?false R)%I // (into_persistent _ R).
+    by rewrite sep_elim_r persistently_and_bare_sep_l wand_elim_r.
 Qed.
 
 Lemma tac_revert Δ Δ' i p P Q :

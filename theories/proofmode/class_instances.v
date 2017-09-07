@@ -27,6 +27,14 @@ Proof. intros. by rewrite /FromBare bare_elim. Qed.
 Global Instance from_bare_default P : FromBare (■ P) P | 100.
 Proof. by rewrite /FromBare. Qed.
 
+(* IntoSink *)
+Global Instance into_sink_True : @IntoSink PROP True emp | 0.
+Proof. by rewrite /IntoSink -sink_True_emp sink_pure. Qed.
+Global Instance into_sink_absorbing P : Absorbing P → IntoSink P P | 1.
+Proof. intros. by rewrite /IntoSink absorbing_sink. Qed.
+Global Instance into_sink_default P : IntoSink (▲ P) P | 100.
+Proof. by rewrite /IntoSink. Qed.
+
 (* FromAssumption *)
 Global Instance from_assumption_exact p P : FromAssumption p P P | 0.
 Proof. by rewrite /FromAssumption /= bare_persistently_if_elim. Qed.

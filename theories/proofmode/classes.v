@@ -68,6 +68,12 @@ Arguments from_bare {_} _%I _%type_scope {_}.
 Hint Mode FromBare + ! - : typeclass_instances.
 Hint Mode FromBare + - ! : typeclass_instances.
 
+Class IntoSink {PROP : bi} (P Q : PROP) := into_sink : P ⊢ ▲ Q.
+Arguments IntoSink {_} _%I _%I.
+Arguments into_sink {_} _%I _%I {_}.
+Hint Mode IntoSink + ! -  : typeclass_instances.
+Hint Mode IntoSink + - ! : typeclass_instances.
+
 Class IntoInternalEq {PROP : bi} {A : ofeT} (P : PROP) (x y : A) :=
   into_internal_eq : P ⊢ x ≡ y.
 Arguments IntoInternalEq {_ _} _%I _%type_scope _%type_scope : simpl never.

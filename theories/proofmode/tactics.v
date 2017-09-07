@@ -459,12 +459,13 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          |done_if d (*goal*)
          |go H1 pats]
     | SGoal (SpecGoal GPersistent false ?Hs_frame [] ?d) :: ?pats =>
-       eapply tac_specialize_assert_persistent with _ _ H1 _ _ _ _;
+       eapply tac_specialize_assert_persistent with _ _ H1 _ _ _ _ _;
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |apply _ ||
           let Q := match goal with |- Persistent ?Q => Q end in
           fail "iSpecialize:" Q "not persistent"
+         |apply _
          |env_reflexivity
          |iFrame Hs_frame; done_if d (*goal*)
          |go H1 pats]
@@ -535,7 +536,7 @@ Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
       lazymatch eval compute in
         (p && bool_decide (pat ≠ []) && negb (existsb spec_pat_modal pat)) with
       | true =>
-         (* FIXME: do something reasonable when the BI is not positive *)
+         (* FIXME: do something reasonable when the BI is not affine *)
          eapply tac_specialize_persistent_helper with _ H _ _ _ _;
            [env_reflexivity || fail "iSpecialize:" H "not found"
            |iSpecializePat H pat; last (iExact H)
