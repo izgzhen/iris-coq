@@ -26,10 +26,10 @@ Class EctxiLanguage (expr val ectx_item state : Type) := {
     head_step (fill_item Ki e) σ1 e2 σ2 efs → is_Some (to_val e);
 }.
 
-Arguments of_val {_ _ _ _ _} _.
-Arguments to_val {_ _ _ _ _} _.
-Arguments fill_item {_ _ _ _ _} _ _.
-Arguments head_step {_ _ _ _ _} _ _ _ _ _.
+Arguments of_val {_ _ _ _ _} _%V.
+Arguments to_val {_ _ _ _ _} _%E.
+Arguments fill_item {_ _ _ _ _} _ _%E.
+Arguments head_step {_ _ _ _ _} _%E _ _%E _ _.
 
 Arguments to_of_val {_ _ _ _ _} _.
 Arguments of_to_val {_ _ _ _ _} _ _ _.
@@ -101,3 +101,5 @@ Section ectxi_language.
     LanguageCtx (ectx_lang expr) (fill_item Ki).
   Proof. change (LanguageCtx _ (fill [Ki])). apply _. Qed.
 End ectxi_language.
+
+Arguments fill {_ _ _ _ _} _ _%E.

@@ -36,12 +36,12 @@ Class EctxLanguage (expr val ectx state : Type) := {
     exists K'', K' = comp_ectx K K'';
 }.
 
-Arguments of_val {_ _ _ _ _} _.
-Arguments to_val {_ _ _ _ _} _.
+Arguments of_val {_ _ _ _ _} _%V.
+Arguments to_val {_ _ _ _ _} _%E.
 Arguments empty_ectx {_ _ _ _ _}.
 Arguments comp_ectx {_ _ _ _ _} _ _.
-Arguments fill {_ _ _ _ _} _ _.
-Arguments head_step {_ _ _ _ _} _ _ _ _ _.
+Arguments fill {_ _ _ _ _} _ _%E.
+Arguments head_step {_ _ _ _ _} _%E _ _%E _ _.
 
 Arguments to_of_val {_ _ _ _ _} _.
 Arguments of_to_val {_ _ _ _ _} _ _ _.
