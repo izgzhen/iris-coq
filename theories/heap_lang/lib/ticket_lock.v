@@ -108,7 +108,7 @@ Section proof.
     {{{ is_lock γ lk R }}} acquire lk {{{ RET #(); locked γ ∗ R }}}.
   Proof.
     iIntros (ϕ) "Hl HΦ". iDestruct "Hl" as (lo ln) "[% #?]".
-    iLöb as "IH". wp_rec. wp_bind (! _)%E. subst. wp_proj.
+    iLöb as "IH". wp_rec. wp_bind (! _)%E. simplify_eq/=. wp_proj.
     iInv N as (o n) "[Hlo [Hln Ha]]" "Hclose".
     wp_load. iMod ("Hclose" with "[Hlo Hln Ha]") as "_".
     { iNext. iExists o, n. by iFrame. }
@@ -140,7 +140,7 @@ Section proof.
   Proof.
     iIntros (Φ) "(Hl & Hγ & HR) HΦ". iDestruct "Hl" as (lo ln) "[% #?]"; subst.
     iDestruct "Hγ" as (o) "Hγo".
-    rewrite /release. wp_let. wp_proj. wp_proj. wp_bind (! _)%E.
+    wp_let. wp_proj. wp_proj. wp_bind (! _)%E.
     iInv N as (o' n) "(>Hlo & >Hln & >Hauth & Haown)" "Hclose".
     wp_load.
     iDestruct (own_valid_2 with "Hauth Hγo") as

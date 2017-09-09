@@ -22,7 +22,7 @@ Ltac wp_done :=
   | _ => fast_done
   end.
 
-Ltac wp_value_head := etrans; [|eapply wp_value; wp_done]; lazy beta.
+Ltac wp_value_head := etrans; [|eapply wp_value; wp_done]; simpl.
 
 Ltac wp_seq_head :=
   lazymatch goal with

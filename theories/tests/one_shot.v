@@ -56,7 +56,7 @@ Proof.
       iNext; iRight; iExists n; by iFrame.
     + wp_cas_fail. iMod ("Hclose" with "[-]"); last eauto.
       rewrite /one_shot_inv; eauto 10.
-  - iIntros "!#". wp_seq. wp_bind (! _)%E.
+  - iIntros "!# /=". wp_seq. wp_bind (! _)%E.
     iInv N as ">Hγ" "Hclose".
     iAssert (∃ v, l ↦ v ∗ ((⌜v = NONEV⌝ ∗ own γ Pending) ∨
        ∃ n : Z, ⌜v = SOMEV #n⌝ ∗ own γ (Shot n)))%I with "[Hγ]" as "Hv".
