@@ -34,6 +34,6 @@ Arguments locked {_ _} _ _.
 
 Existing Instances is_lock_ne is_lock_persistent locked_timeless.
 
-Instance is_lock_proper Σ `{!heapG Σ} (L: lock Σ) N lk R:
-  Proper ((≡) ==> (≡)) (is_lock L N lk R) := ne_proper _.
+Instance is_lock_proper Σ `{!heapG Σ} (L: lock Σ) N γ lk:
+  Proper ((≡) ==> (≡)) (is_lock L N γ lk) := ne_proper _.
 
