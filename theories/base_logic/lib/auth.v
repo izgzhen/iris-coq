@@ -119,8 +119,8 @@ Section auth.
     iMod (auth_alloc_strong N E t ∅ with "Hφ") as (γ) "[_ ?]"; eauto.
   Qed.
 
-  Lemma auth_empty γ : (|==> auth_own γ ∅)%I.
-  Proof. by rewrite /auth_own -own_empty. Qed.
+  Lemma auth_empty γ : (|==> auth_own γ ε)%I.
+  Proof. by rewrite /auth_own -own_unit. Qed.
 
   Lemma auth_acc E γ a :
     ▷ auth_inv γ f φ ∗ auth_own γ a ={E}=∗ ∃ t,

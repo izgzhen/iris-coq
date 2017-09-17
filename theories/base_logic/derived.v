@@ -758,8 +758,8 @@ Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊢ False.
 Proof. by intros; rewrite ownM_valid cmra_valid_elim. Qed.
 Global Instance ownM_mono : Proper (flip (≼) ==> (⊢)) (@uPred_ownM M).
 Proof. intros a b [b' ->]. rewrite ownM_op. eauto. Qed.
-Lemma ownM_empty' : uPred_ownM ∅ ⊣⊢ True.
-Proof. apply (anti_symm _); first by auto. apply ownM_empty. Qed.
+Lemma ownM_unit' : uPred_ownM ε ⊣⊢ True.
+Proof. apply (anti_symm _); first by auto. apply ownM_unit. Qed.
 Lemma always_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
 Proof.
   intros; apply (anti_symm _); first by apply:always_elim.
@@ -990,6 +990,6 @@ Global Instance uPred_except_0_sep_homomorphism :
 Proof. split; [split; try apply _|]. apply except_0_sep. apply except_0_True. Qed.
 Global Instance uPred_ownM_sep_homomorphism :
   MonoidHomomorphism op uPred_sep (≡) (@uPred_ownM M).
-Proof. split; [split; try apply _|]. apply ownM_op. apply ownM_empty'. Qed.
+Proof. split; [split; try apply _|]. apply ownM_op. apply ownM_unit'. Qed.
 End derived.
 End uPred.

@@ -307,7 +307,7 @@ Proof.
   case (decide (n' < n)).
   - intros. move: laterN_small. unseal. naive_solver.
   - intros. assert (n ≤ n'). omega. 
-    exfalso. specialize (Hupd n' ∅).
+    exfalso. specialize (Hupd n' ε).
     eapply Hdne. intros Hfal.
     eapply laterN_big; eauto. 
     unseal. rewrite right_id in Hupd *; naive_solver.
@@ -323,7 +323,7 @@ Proof.
   - rewrite /uPred_nnupd. unseal=> k P x Hx Hf1 Hf2.
     eapply Hf1. intros Hf3.
     eapply (laterN_big (S k) (S k)); eauto.
-    specialize (Hf3 (S k) (S k) ∅). rewrite right_id in Hf3 *. unseal.
+    specialize (Hf3 (S k) (S k) ε). rewrite right_id in Hf3 *. unseal.
     intros Hf3. eapply Hf3; eauto.
     intros ??? Hx'. rewrite left_id in Hx' *=> Hx'.
     unseal. 

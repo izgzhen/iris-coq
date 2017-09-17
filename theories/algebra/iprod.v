@@ -128,8 +128,8 @@ Section iprod_cmra.
   Qed.
   Canonical Structure iprodR := CMRAT (iprod B) iprod_cmra_mixin.
 
-  Instance iprod_empty : Empty (iprod B) := λ x, ∅.
-  Definition iprod_lookup_empty x : ∅ x = ∅ := eq_refl.
+  Instance iprod_unit : Unit (iprod B) := λ x, ε.
+  Definition iprod_lookup_empty x : ε x = ε := eq_refl.
 
   Lemma iprod_ucmra_mixin : UCMRAMixin (iprod B).
   Proof.
@@ -141,7 +141,7 @@ Section iprod_cmra.
   Canonical Structure iprodUR := UCMRAT (iprod B) iprod_ucmra_mixin.
 
   Global Instance iprod_empty_timeless :
-    (∀ i, Timeless (∅ : B i)) → Timeless (∅ : iprod B).
+    (∀ i, Timeless (ε : B i)) → Timeless (ε : iprod B).
   Proof. intros ? f Hf x. by apply: timeless. Qed.
 
   (** Internalized properties *)
@@ -179,7 +179,7 @@ Arguments iprodR {_ _ _} _.
 Arguments iprodUR {_ _ _} _.
 
 Definition iprod_singleton `{Finite A} {B : A → ucmraT} 
-  (x : A) (y : B x) : iprod B := iprod_insert x y ∅.
+  (x : A) (y : B x) : iprod B := iprod_insert x y ε.
 Instance: Params (@iprod_singleton) 5.
 
 Section iprod_singleton.
@@ -195,11 +195,11 @@ Section iprod_singleton.
   Lemma iprod_lookup_singleton x (y : B x) : (iprod_singleton x y) x = y.
   Proof. by rewrite /iprod_singleton iprod_lookup_insert. Qed.
   Lemma iprod_lookup_singleton_ne x x' (y : B x) :
-    x ≠ x' → (iprod_singleton x y) x' = ∅.
+    x ≠ x' → (iprod_singleton x y) x' = ε.
   Proof. intros; by rewrite /iprod_singleton iprod_lookup_insert_ne. Qed.
 
   Global Instance iprod_singleton_timeless x (y : B x) :
-    (∀ i, Timeless (∅ : B i)) →  Timeless y → Timeless (iprod_singleton x y).
+    (∀ i, Timeless (ε : B i)) →  Timeless y → Timeless (iprod_singleton x y).
   Proof. apply _. Qed.
 
   Lemma iprod_singleton_validN n x (y : B x) : ✓{n} iprod_singleton x y ↔ ✓{n} y.
@@ -243,7 +243,7 @@ Section iprod_singleton.
   Proof. eauto using iprod_insert_update. Qed.
 
   Lemma iprod_singleton_updateP_empty x (P : B x → Prop) (Q : iprod B → Prop) :
-    ∅ ~~>: P → (∀ y2, P y2 → Q (iprod_singleton x y2)) → ∅ ~~>: Q.
+    ε ~~>: P → (∀ y2, P y2 → Q (iprod_singleton x y2)) → ε ~~>: Q.
   Proof.
     intros Hx HQ; apply cmra_total_updateP.
     intros n gf Hg. destruct (Hx n (Some (gf x))) as (y2&?&?); first apply Hg.
@@ -253,10 +253,10 @@ Section iprod_singleton.
     - rewrite iprod_lookup_op iprod_lookup_singleton_ne //. apply Hg.
   Qed.
   Lemma iprod_singleton_updateP_empty' x (P : B x → Prop) :
-    ∅ ~~>: P → ∅ ~~>: λ g, ∃ y2, g = iprod_singleton x y2 ∧ P y2.
+    ε ~~>: P → ε ~~>: λ g, ∃ y2, g = iprod_singleton x y2 ∧ P y2.
   Proof. eauto using iprod_singleton_updateP_empty. Qed.
   Lemma iprod_singleton_update_empty x (y : B x) :
-    ∅ ~~> y → ∅ ~~> iprod_singleton x y.
+    ε ~~> y → ε ~~> iprod_singleton x y.
   Proof.
     rewrite !cmra_update_updateP;
       eauto using iprod_singleton_updateP_empty with subst.

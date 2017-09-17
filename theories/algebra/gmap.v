@@ -100,6 +100,7 @@ Section cmra.
 Context `{Countable K} {A : cmraT}.
 Implicit Types m : gmap K A.
 
+Instance gmap_unit : Unit (gmap K A) := (∅ : gmap K A).
 Instance gmap_op : Op (gmap K A) := merge op.
 Instance gmap_pcore : PCore (gmap K A) := λ m, Some (omap pcore m).
 Instance gmap_valid : Valid (gmap K A) := λ m, ∀ i, ✓ (m !! i).
@@ -218,8 +219,9 @@ Lemma insert_valid m i x : ✓ x → ✓ m → ✓ <[i:=x]>m.
 Proof. by intros ?? j; destruct (decide (i = j)); simplify_map_eq. Qed.
 Lemma singleton_validN n i x : ✓{n} ({[ i := x ]} : gmap K A) ↔ ✓{n} x.
 Proof.
-  split; [|by intros; apply insert_validN, ucmra_unit_validN].
-  by move=>/(_ i); simplify_map_eq.
+  split.
+  - move=>/(_ i); by simplify_map_eq.
+  - intros. apply insert_validN. done. apply: ucmra_unit_validN.
 Qed.
 Lemma singleton_valid i x : ✓ ({[ i := x ]} : gmap K A) ↔ ✓ x.
 Proof. rewrite !cmra_valid_validN. by setoid_rewrite singleton_validN. Qed.

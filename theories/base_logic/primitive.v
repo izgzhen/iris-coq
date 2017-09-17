@@ -491,7 +491,7 @@ Lemma always_ownM_core (a : M) : uPred_ownM a ⊢ □ uPred_ownM (core a).
 Proof.
   split=> n x /=; unseal; intros Hx. simpl. by apply cmra_core_monoN.
 Qed.
-Lemma ownM_empty : uPred_valid (M:=M) (uPred_ownM ∅).
+Lemma ownM_unit : uPred_valid (M:=M) (uPred_ownM ε).
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
 Lemma later_ownM a : ▷ uPred_ownM a ⊢ ∃ b, uPred_ownM b ∧ ▷ (a ≡ b).
 Proof.
