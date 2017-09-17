@@ -146,7 +146,7 @@ Proof.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
   - intros n m. induction m as [|i x m Hi IH] using map_ind=> m1 m2 Hmv Hm.
-    { exists ∅, ∅. split_and!=> -i; symmetry; symmetry in Hm; move: Hm=> /(_ i);
+    { eexists ∅, ∅. split_and!=> -i; symmetry; symmetry in Hm; move: Hm=> /(_ i);
         rewrite !lookup_op !lookup_empty ?dist_None op_None; intuition. }
     destruct (IH (delete i m1) (delete i m2)) as (m1'&m2'&Hm'&Hm1'&Hm2').
     { intros j; move: Hmv=> /(_ j). destruct (decide (i = j)) as [->|].
@@ -347,10 +347,10 @@ Section freshness.
     assert (i ∉ I ∧ i ∉ dom (gset K) m ∧ i ∉ dom (gset K) mf) as [?[??]].
     { rewrite -not_elem_of_union -dom_op -not_elem_of_union; apply is_fresh. }
     exists (<[i:=x]>m); split.
-    { by apply HQ; last done; apply not_elem_of_dom. }
-    rewrite insert_singleton_op; last by apply not_elem_of_dom.
+    { apply HQ; last done. by eapply not_elem_of_dom. }
+    rewrite insert_singleton_op; last by eapply not_elem_of_dom.
     rewrite -assoc -insert_singleton_op;
-      last by apply not_elem_of_dom; rewrite dom_op not_elem_of_union.
+      last by eapply (not_elem_of_dom (D:=gset K)); rewrite dom_op not_elem_of_union.
     by apply insert_validN; [apply cmra_valid_validN|].
   Qed.
   Lemma alloc_updateP (Q : gmap K A → Prop) m x :

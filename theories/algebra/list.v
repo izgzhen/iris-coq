@@ -298,16 +298,17 @@ Section properties.
   Global Instance list_singletonM_proper i :
     Proper ((≡) ==> (≡)) (list_singletonM i) := ne_proper _.
 
-  Lemma elem_of_list_singletonM i z x : z ∈ {[i := x]} → z = ∅ ∨ z = x.
+  Lemma elem_of_list_singletonM i z x : z ∈ ({[i := x]} : list A) → z = ∅ ∨ z = x.
   Proof.
     rewrite elem_of_app elem_of_list_singleton elem_of_replicate. naive_solver.
   Qed.
-  Lemma list_lookup_singletonM i x : {[ i := x ]} !! i = Some x.
+  Lemma list_lookup_singletonM i x : ({[ i := x ]} : list A) !! i = Some x.
   Proof. induction i; by f_equal/=. Qed.
   Lemma list_lookup_singletonM_ne i j x :
-    i ≠ j → {[ i := x ]} !! j = None ∨ {[ i := x ]} !! j = Some ∅.
+    i ≠ j →
+    ({[ i := x ]} : list A) !! j = None ∨ ({[ i := x ]} : list A) !! j = Some ∅.
   Proof. revert j; induction i; intros [|j]; naive_solver auto with omega. Qed.
-  Lemma list_singletonM_validN n i x : ✓{n} {[ i := x ]} ↔ ✓{n} x.
+  Lemma list_singletonM_validN n i x : ✓{n} ({[ i := x ]} : list A) ↔ ✓{n} x.
   Proof.
     rewrite list_lookup_validN. split.
     { move=> /(_ i). by rewrite list_lookup_singletonM. }
@@ -316,7 +317,7 @@ Section properties.
     - destruct (list_lookup_singletonM_ne i j x) as [Hi|Hi]; first done;
         rewrite Hi; by try apply (ucmra_unit_validN (A:=A)).
   Qed.
-  Lemma list_singleton_valid  i x : ✓ {[ i := x ]} ↔ ✓ x.
+  Lemma list_singleton_valid  i x : ✓ ({[ i := x ]} : list A) ↔ ✓ x.
   Proof.
     rewrite !cmra_valid_validN. by setoid_rewrite list_singletonM_validN.
   Qed.
@@ -336,7 +337,8 @@ Section properties.
     rewrite /singletonM /list_singletonM /=.
     induction i; constructor; rewrite ?left_id; auto.
   Qed.
-  Lemma list_alter_singletonM f i x : alter f i {[i := x]} = {[i := f x]}.
+  Lemma list_alter_singletonM f i x :
+    alter f i ({[i := x]} : list A) = {[i := f x]}.
   Proof.
     rewrite /singletonM /list_singletonM /=. induction i; f_equal/=; auto.
   Qed.

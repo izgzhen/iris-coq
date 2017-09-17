@@ -7,7 +7,7 @@ Import uPred.
 
 (** Derived forms and lemmas about them. *)
 Definition inv_def `{invG Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
-  (∃ i, ⌜i ∈ ↑N⌝ ∧ ownI i P)%I.
+  (∃ i, ⌜i ∈ (↑N:coPset)⌝ ∧ ownI i P)%I.
 Definition inv_aux : seal (@inv_def). by eexists. Qed.
 Definition inv {Σ i} := unseal inv_aux Σ i.
 Definition inv_eq : @inv = @inv_def := seal_eq inv_aux.
@@ -34,7 +34,7 @@ Proof. apply ne_proper, _. Qed.
 Global Instance inv_persistent N P : PersistentP (inv N P).
 Proof. rewrite inv_eq /inv; apply _. Qed.
 
-Lemma fresh_inv_name (E : gset positive) N : ∃ i, i ∉ E ∧ i ∈ ↑N.
+Lemma fresh_inv_name (E : gset positive) N : ∃ i, i ∉ E ∧ i ∈ (↑N:coPset).
 Proof.
   exists (coPpick (↑ N ∖ coPset.of_gset E)).
   rewrite -coPset.elem_of_of_gset (comm and) -elem_of_difference.
@@ -46,7 +46,7 @@ Qed.
 Lemma inv_alloc N E P : ▷ P ={E}=∗ inv N P.
 Proof.
   rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros "HP [Hw $]".
-  iMod (ownI_alloc (∈ ↑ N) P with "[$HP $Hw]")
+  iMod (ownI_alloc (∈ (↑N : coPset)) P with "[$HP $Hw]")
     as (i) "(% & $ & ?)"; auto using fresh_inv_name.
 Qed.
 
@@ -54,7 +54,7 @@ Lemma inv_alloc_open N E P :
   ↑N ⊆ E → True ={E, E∖↑N}=∗ inv N P ∗ (▷P ={E∖↑N, E}=∗ True).
 Proof.
   rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros (Sub) "[Hw HE]".
-  iMod (ownI_alloc_open (∈ ↑ N) P with "Hw")
+  iMod (ownI_alloc_open (∈ (↑N : coPset)) P with "Hw")
     as (i) "(% & Hw & #Hi & HD)"; auto using fresh_inv_name.
   iAssert (ownE {[i]} ∗ ownE (↑ N ∖ {[i]}) ∗ ownE (E ∖ ↑ N))%I
     with "[HE]" as "(HEi & HEN\i & HE\N)".

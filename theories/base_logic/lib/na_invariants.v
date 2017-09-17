@@ -22,7 +22,7 @@ Section defs.
     own p (CoPset E, ∅).
 
   Definition na_inv (p : na_inv_pool_name) (N : namespace) (P : iProp Σ) : iProp Σ :=
-    (∃ i, ⌜i ∈ ↑N⌝ ∧
+    (∃ i, ⌜i ∈ (↑N:coPset)⌝ ∧
           inv N (P ∗ own p (∅, GSet {[i]}) ∨ na_own p {[i]}))%I.
 End defs.
 
@@ -71,7 +71,7 @@ Section proofs.
     iMod (own_empty (prodUR coPset_disjUR (gset_disjUR positive)) p) as "Hempty".
     iMod (own_updateP with "Hempty") as ([m1 m2]) "[Hm Hown]".
     { apply prod_updateP'. apply cmra_updateP_id, (reflexivity (R:=eq)).
-      apply (gset_disj_alloc_empty_updateP_strong' (λ i, i ∈ ↑N)).
+      apply (gset_disj_alloc_empty_updateP_strong' (λ i, i ∈ (↑N:coPset))).
       intros Ef. exists (coPpick (↑ N ∖ coPset.of_gset Ef)).
       rewrite -coPset.elem_of_of_gset comm -elem_of_difference.
       apply coPpick_elem_of=> Hfin.

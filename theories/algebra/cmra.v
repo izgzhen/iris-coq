@@ -2,9 +2,11 @@ From iris.algebra Require Export ofe monoid.
 Set Default Proof Using "Type".
 
 Class PCore (A : Type) := pcore : A → option A.
+Hint Mode PCore ! : typeclass_instances.
 Instance: Params (@pcore) 2.
 
 Class Op (A : Type) := op : A → A → A.
+Hint Mode Op ! : typeclass_instances.
 Instance: Params (@op) 2.
 Infix "⋅" := op (at level 50, left associativity) : C_scope.
 Notation "(⋅)" := op (only parsing) : C_scope.
@@ -21,11 +23,13 @@ Hint Extern 0 (_ ≼ _) => reflexivity.
 Instance: Params (@included) 3.
 
 Class ValidN (A : Type) := validN : nat → A → Prop.
+Hint Mode ValidN ! : typeclass_instances.
 Instance: Params (@validN) 3.
 Notation "✓{ n } x" := (validN n x)
   (at level 20, n at next level, format "✓{ n }  x").
 
 Class Valid (A : Type) := valid : A → Prop.
+Hint Mode Valid ! : typeclass_instances.
 Instance: Params (@valid) 2.
 Notation "✓ x" := (valid x) (at level 20) : C_scope.
 
@@ -165,8 +169,10 @@ Instance: Params (@IdFree) 1.
 (** The function [core] may return a dummy when used on CMRAs without total
 core. *)
 Class CMRATotal (A : cmraT) := cmra_total (x : A) : is_Some (pcore x).
+Hint Mode CMRATotal ! : typeclass_instances.
 
 Class Core (A : Type) := core : A → A.
+Hint Mode Core ! : typeclass_instances.
 Instance: Params (@core) 2.
 
 Instance core' `{PCore A} : Core A := λ x, from_option id x (pcore x).
@@ -233,6 +239,7 @@ Class CMRADiscrete (A : cmraT) := {
   cmra_discrete :> Discrete A;
   cmra_discrete_valid (x : A) : ✓{0} x → ✓ x
 }.
+Hint Mode CMRADiscrete ! : typeclass_instances.
 
 (** * Morphisms *)
 Class CMRAMorphism {A B : cmraT} (f : A → B) := {
@@ -690,8 +697,8 @@ End ucmra_leibniz.
 (** * Constructing a CMRA with total core *)
 Section cmra_total.
   Context A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A}.
-  Context (total : ∀ x, is_Some (pcore x)).
-  Context (op_ne : ∀ (x : A), NonExpansive (op x)).
+  Context (total : ∀ x : A, is_Some (pcore x)).
+  Context (op_ne : ∀ x : A, NonExpansive (op x)).
   Context (core_ne : NonExpansive (@core A _)).
   Context (validN_ne : ∀ n, Proper (dist n ==> impl) (@validN A _ n)).
   Context (valid_validN : ∀ (x : A), ✓ x ↔ ∀ n, ✓{n} x).
@@ -885,8 +892,8 @@ Notation discreteR A ra_mix :=
 Section ra_total.
   Local Set Default Proof Using "Type*".
   Context A `{Equiv A, PCore A, Op A, Valid A}.
-  Context (total : ∀ x, is_Some (pcore x)).
-  Context (op_proper : ∀ (x : A), Proper ((≡) ==> (≡)) (op x)).
+  Context (total : ∀ x : A, is_Some (pcore x)).
+  Context (op_proper : ∀ x : A, Proper ((≡) ==> (≡)) (op x)).
   Context (core_proper: Proper ((≡) ==> (≡)) (@core A _)).
   Context (valid_proper : Proper ((≡) ==> impl) (@valid A _)).
   Context (op_assoc : Assoc (≡) (@op A _)).
@@ -1217,6 +1224,7 @@ Qed.
 (** ** CMRA for the option type *)
 Section option.
   Context {A : cmraT}.
+  Implicit Types a : A.
   Local Arguments core _ _ !_ /.
   Local Arguments pcore _ _ !_ /.
 

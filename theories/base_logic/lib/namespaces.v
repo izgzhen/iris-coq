@@ -37,7 +37,7 @@ Section namespace.
 
   Lemma nclose_nroot : ↑nroot = ⊤.
   Proof. rewrite nclose_eq. by apply (sig_eq_pi _). Qed.
-  Lemma encode_nclose N : encode N ∈ ↑N.
+  Lemma encode_nclose N : encode N ∈ (↑N:coPset).
   Proof.
     rewrite nclose_eq.
     by apply elem_coPset_suffixes; exists xH; rewrite (left_id_L _ _).
@@ -54,7 +54,7 @@ Section namespace.
   Lemma nclose_subseteq' E N x : ↑N ⊆ E → ↑N.@x ⊆ E.
   Proof. intros. etrans; eauto using nclose_subseteq. Qed.
 
-  Lemma ndot_nclose N x : encode (N.@x) ∈ ↑ N.
+  Lemma ndot_nclose N x : encode (N.@x) ∈ (↑N:coPset).
   Proof. apply nclose_subseteq with x, encode_nclose. Qed.
   Lemma nclose_infinite N : ¬set_finite (↑ N : coPset).
   Proof. rewrite nclose_eq. apply coPset_suffixes_infinite. Qed.

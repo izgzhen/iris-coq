@@ -314,7 +314,7 @@ Proof.
 Qed.
 
 Lemma alloc_fresh e v σ :
-  let l := fresh (dom _ σ) in
+  let l := fresh (dom (gset loc) σ) in
   to_val e = Some v → head_step (Alloc e) σ (Lit (LitLoc l)) (<[l:=v]>σ) [].
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
 

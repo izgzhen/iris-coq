@@ -105,6 +105,7 @@ Hint Mode Timeless + ! : typeclass_instances.
 Instance: Params (@Timeless) 1.
 
 Class Discrete (A : ofeT) := discrete_timeless (x : A) :> Timeless x.
+Hint Mode Discrete ! : typeclass_instances.
 
 (** OFEs with a completion *)
 Record chain (A : ofeT) := {
