@@ -35,7 +35,7 @@ Section namespace.
   Global Instance ndot_inj : Inj2 (=) (=) (=) (@ndot A _ _).
   Proof. intros N1 x1 N2 x2; rewrite !ndot_eq=> ?; by simplify_eq. Qed.
 
-  Lemma nclose_nroot : ↑nroot = ⊤.
+  Lemma nclose_nroot : ↑nroot = (⊤:coPset).
   Proof. rewrite nclose_eq. by apply (sig_eq_pi _). Qed.
   Lemma encode_nclose N : encode N ∈ (↑N:coPset).
   Proof.

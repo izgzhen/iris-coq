@@ -77,7 +77,7 @@ Proof.
   - destruct p; set_solver.
   - apply elem_of_equiv=> /= -[j|]; last set_solver.
     set_unfold; rewrite !(inj_iff Change).
-    assert (Change j ∈ match p with Low => ∅ | High => {[Send]} end ↔ False)
+    assert (Change j ∈ match p with Low => ∅ : set token | High => {[Send]} end ↔ False)
       as -> by (destruct p; set_solver).
     destruct (decide (i1 = j)) as [->|]; first naive_solver.
     destruct (decide (i2 = j)) as [->|]; first naive_solver.
