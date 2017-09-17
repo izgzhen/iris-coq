@@ -155,7 +155,8 @@ Section list.
   Global Instance big_sepL_persistent Φ l :
     (∀ k x, PersistentP (Φ k x)) → PersistentP ([∗ list] k↦x ∈ l, Φ k x).
   Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
-  Global Instance big_sepL_persistent_id Ps : PersistentL Ps → PersistentP ([∗] Ps).
+  Global Instance big_sepL_persistent_id Ps :
+    TCForall PersistentP Ps → PersistentP ([∗] Ps).
   Proof. induction 1; simpl; apply _. Qed.
 
   Global Instance big_sepL_nil_timeless Φ :
@@ -164,7 +165,8 @@ Section list.
   Global Instance big_sepL_timeless Φ l :
     (∀ k x, TimelessP (Φ k x)) → TimelessP ([∗ list] k↦x ∈ l, Φ k x).
   Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
-  Global Instance big_sepL_timeless_id Ps : TimelessL Ps → TimelessP ([∗] Ps).
+  Global Instance big_sepL_timeless_id Ps :
+    TCForall TimelessP Ps → TimelessP ([∗] Ps).
   Proof. induction 1; simpl; apply _. Qed.
 End list.
 
