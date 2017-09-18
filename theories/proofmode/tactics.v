@@ -184,8 +184,8 @@ Local Tactic Notation "iPersistent" constr(H) :=
      let P := match goal with |- IntoPersistent _ ?P _ => P end in
      fail "iPersistent:" P "not persistent"
     |env_cbv; apply _ ||
-     let P := match goal with |- Affine ?P => P end in
-     fail "iPersistent:" P "not affine"
+     let P := match goal with |- TCOr (Affine ?P) _ => P end in
+     fail "iPersistent:" P "not affine and the goal not absorbing"
     |env_reflexivity|].
 
 Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
@@ -195,8 +195,8 @@ Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
      let P := match goal with |- IntoPure ?P _ => P end in
      fail "iPure:" P "not pure"
     |env_cbv; apply _ ||
-     let P := match goal with |- Affine ?P => P end in
-     fail "iPure:" P "not affine"
+     let P := match goal with |- TCOr (Affine ?P) _ => P end in
+     fail "iPure:" P "not affine and the goal not absorbing"
     |intros pat].
 
 Tactic Notation "iEmpIntro" :=
@@ -338,7 +338,7 @@ Local Tactic Notation "iIntro" constr(H) :=
     eapply tac_wand_intro with _ H; (* (i:=H) *)
       [env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
-  | fail 1 "iIntro: nothing to introduce" ].
+  | fail "iIntro: nothing to introduce" ].
 
 Local Tactic Notation "iIntro" "#" constr(H) :=
   iStartProof;
@@ -356,11 +356,11 @@ Local Tactic Notation "iIntro" "#" constr(H) :=
        let P := match goal with |- IntoPersistent _ ?P _ => P end in
        fail 1 "iIntro:" P "not persistent"
       |apply _ ||
-       let P := match goal with |- Affine ?P => P end in
-       fail 1 "iIntro:" P "not affine"
+       let P := match goal with |- TCOr (Affine ?P) _ => P end in
+       fail 1 "iIntro:" P "not affine and the goal not absorbing"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
-  | fail 1 "iIntro: nothing to introduce" ].
+  | fail "iIntro: nothing to introduce" ].
 
 Local Tactic Notation "iIntro" "_" :=
   try iStartProof;

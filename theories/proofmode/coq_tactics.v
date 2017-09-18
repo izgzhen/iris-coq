@@ -506,14 +506,17 @@ Proof. intros ??. rewrite -(from_pure Q). by apply pure_intro. Qed.
 Lemma tac_pure Δ Δ' i p P φ Q :
   envs_lookup_delete i Δ = Some (p, P, Δ') →
   IntoPure P φ →
-  (if p then TCTrue else Affine P) →
+  (if p then TCTrue else TCOr (Affine P) (Absorbing Q)) →
   (φ → Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
-  intros ??? HQ. rewrite envs_lookup_delete_sound //; simpl. destruct p; simpl.
+  intros ?? HPQ HQ. rewrite envs_lookup_delete_sound //; simpl. destruct p; simpl.
   - rewrite (into_pure P) -persistently_and_bare_sep_l persistently_pure.
     by apply pure_elim_l.
-  - rewrite -(affine_bare P) (into_pure P) -persistent_and_bare_sep_l.
-    by apply pure_elim_l.
+  - destruct HPQ.
+    + rewrite -(affine_bare P) (into_pure P) -persistent_and_bare_sep_l.
+      by apply pure_elim_l.
+    + rewrite (into_pure P) (persistent_sink_bare ⌜ _ ⌝%I) sink_sep_lr.
+      rewrite -persistent_and_bare_sep_l. apply pure_elim_l=> ?. by rewrite HQ.
 Qed.
 
 Lemma tac_pure_revert Δ φ Q : (Δ ⊢ ⌜φ⌝ → Q) → (φ → Δ ⊢ Q).
@@ -535,14 +538,18 @@ Qed.
 Lemma tac_persistent Δ Δ' i p P P' Q :
   envs_lookup i Δ = Some (p, P) →
   IntoPersistent p P P' →
-  (if p then TCTrue else Affine P) →
+  (if p then TCTrue else TCOr (Affine P) (Absorbing Q)) →
   envs_replace i p true (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
-  intros ???? <-. rewrite envs_replace_singleton_sound //; simpl.
-  apply wand_elim_r', wand_mono=> //. destruct p; simpl.
-  - by rewrite -(into_persistent _ P).
-  - by rewrite -(into_persistent _ P) /= affine_bare.
+  intros ?? HPQ ? HQ. rewrite envs_replace_singleton_sound //; simpl.
+  destruct p; simpl.
+  - by rewrite -(into_persistent _ P) /= wand_elim_r.
+  - destruct HPQ.
+    + rewrite -(affine_bare P) (_ : P = □?false P)%I // (into_persistent _ P).
+      by rewrite wand_elim_r.
+    + rewrite (_ : P = □?false P)%I // (into_persistent _ P).
+      by rewrite {1}(persistent_sink_bare (□ _)%I) sink_sep_l wand_elim_r HQ.
 Qed.
 
 (** * Implication and wand *)
@@ -591,20 +598,27 @@ Proof.
 Qed.
 Lemma tac_wand_intro_persistent Δ Δ' i P P' Q :
   IntoPersistent false P P' →
-  Affine P →
+  TCOr (Affine P) (Absorbing Q) →
   envs_app true (Esnoc Enil i P') Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ P -∗ Q.
 Proof.
-  intros ??? <-. rewrite envs_app_singleton_sound //; simpl.
-  apply wand_mono=>//. by rewrite -(into_persistent _ P) /= affine_bare.
+  intros ? HPQ ? HQ. rewrite envs_app_singleton_sound //; simpl.
+  apply wand_intro_l. destruct HPQ.
+  - rewrite -(affine_bare P) (_ : P = □?false P)%I // (into_persistent _ P).
+    by rewrite wand_elim_r.
+  - rewrite (_ : P = □?false P)%I // (into_persistent _ P).
+    by rewrite {1}(persistent_sink_bare (□ _)%I) sink_sep_l wand_elim_r HQ.
 Qed.
 Lemma tac_wand_intro_pure Δ P φ Q :
   IntoPure P φ →
-  Affine P →
+  TCOr (Affine P) (Absorbing Q) →
   (φ → Δ ⊢ Q) → Δ ⊢ P -∗ Q.
 Proof.
-  intros. apply wand_intro_l. rewrite -(affine_bare P) (into_pure P).
-  rewrite -persistent_and_bare_sep_l. by apply pure_elim_l.
+  intros ? HPQ HQ. apply wand_intro_l. destruct HPQ.
+  - rewrite -(affine_bare P) (into_pure P) -persistent_and_bare_sep_l.
+    by apply pure_elim_l.
+  - rewrite (into_pure P) (persistent_sink_bare ⌜ _ ⌝%I) sink_sep_lr.
+    rewrite -persistent_and_bare_sep_l. apply pure_elim_l=> ?. by rewrite HQ.
 Qed.
 Lemma tac_wand_intro_drop Δ P Q :
   TCOr (Affine P) (Absorbing Q) →

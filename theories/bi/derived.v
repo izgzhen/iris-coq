@@ -1345,6 +1345,12 @@ Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
 Lemma persistent_entails_r P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
 Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
 
+Lemma persistent_sink_bare P `{!Persistent P} : P ⊢ ▲ ■ P.
+Proof.
+  by rewrite {1}(persistent_persistently_2 P) -persistently_bare
+             persistently_elim_sink.
+Qed.
+
 Lemma persistent_and_sep_assoc P `{!Persistent P, !Absorbing P} Q R :
   P ∧ (Q ∗ R) ⊣⊢ (P ∧ Q) ∗ R.
 Proof. by rewrite -(persistent_persistently P) persistently_and_sep_assoc. Qed.
