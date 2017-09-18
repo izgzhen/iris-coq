@@ -5,9 +5,9 @@ Import uPred.
 
 (** Least and greatest fixpoint of a monotone function, defined entirely inside
     the logic.  *)
-
-Definition uPred_mono_pred {M A} (F : (A → uPred M) → (A → uPred M)) :=
-  ∀ Φ Ψ, ((□ ∀ x, Φ x → Ψ x) → ∀ x, F Φ x → F Ψ x)%I.
+Class BIMonoPred {M A} (F : (A → uPred M) → (A → uPred M)) :=
+  bi_mono_pred Φ Ψ : ((□ ∀ x, Φ x -∗ Ψ x) → ∀ x, F Φ x -∗ F Ψ x)%I.
+Arguments bi_mono_pred {_ _ _ _} _ _.
 
 Definition uPred_least_fixpoint {M A} (F : (A → uPred M) → (A → uPred M))
     (x : A) : uPred M :=
@@ -18,13 +18,12 @@ Definition uPred_greatest_fixpoint {M A} (F : (A → uPred M) → (A → uPred M
   (∃ Φ, □ (∀ x, Φ x → F Φ x) ∧ Φ x)%I.
 
 Section least.
-  Context {M : ucmraT}.
-  Context {A} (F : (A → uPred M) → (A → uPred M)) (Hmono : uPred_mono_pred F).
+  Context {M A} (F : (A → uPred M) → (A → uPred M)) `{!BIMonoPred F}.
 
   Lemma least_fixpoint_unfold_2 x : F (uPred_least_fixpoint F) x ⊢ uPred_least_fixpoint F x.
   Proof.
     iIntros "HF" (Φ) "#Hincl".
-    iApply "Hincl". iApply (Hmono _ Φ); last done.
+    iApply "Hincl". iApply (bi_mono_pred _ Φ); last done.
     iIntros "!#" (y) "Hy". iApply "Hy". done.
   Qed.
 
@@ -32,7 +31,7 @@ Section least.
     uPred_least_fixpoint F x ⊢ F (uPred_least_fixpoint F) x.
   Proof.
     iIntros "HF". iApply "HF". iIntros "!#" (y) "Hy".
-    iApply Hmono; last done. iIntros "!#" (z) "?".
+    iApply bi_mono_pred; last done. iIntros "!#" (z) "?".
     by iApply least_fixpoint_unfold_2.
   Qed.
 
@@ -48,13 +47,13 @@ Section least.
 End least.
 
 Section greatest.
-  Context {M : ucmraT} {A} (F : (A → uPred M) → (A → uPred M)) (Hmono : uPred_mono_pred F).
+  Context {M A} (F : (A → uPred M) → (A → uPred M)) `{!BIMonoPred F}.
 
   Lemma greatest_fixpoint_unfold_1 x :
     uPred_greatest_fixpoint F x ⊢ F (uPred_greatest_fixpoint F) x.
   Proof.
     iDestruct 1 as (Φ) "[#Hincl HΦ]".
-    iApply (Hmono Φ (uPred_greatest_fixpoint F)).
+    iApply (bi_mono_pred Φ (uPred_greatest_fixpoint F)).
     - iIntros "!#" (y) "Hy". iExists Φ. auto.
     - by iApply "Hincl".
   Qed.
@@ -63,7 +62,7 @@ Section greatest.
     F (uPred_greatest_fixpoint F) x ⊢ uPred_greatest_fixpoint F x.
   Proof.
     iIntros "HF". iExists (F (uPred_greatest_fixpoint F)).
-    iIntros "{$HF} !#" (y) "Hy". iApply (Hmono with "[] Hy").
+    iIntros "{$HF} !#" (y) "Hy". iApply (bi_mono_pred with "[] Hy").
     iIntros "!#" (z) "?". by iApply greatest_fixpoint_unfold_1.
   Qed.
 
