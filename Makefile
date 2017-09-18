@@ -22,9 +22,7 @@ Makefile.coq: _CoqProject Makefile awk.Makefile
 
 # Install build-dependencies
 build-dep:
-	build/opam-pins.sh < opam.pins
-	opam upgrade $(YFLAG) # it is not nice that we upgrade *all* packages here, but I found no nice way to upgrade only those that we pinned
-	opam pin add opam-builddep-temp "$$(pwd)#HEAD" -k git -n -y
+	opam pin add opam-builddep-temp "$$(pwd)" -k path -n -y
 	opam install opam-builddep-temp --deps-only $(YFLAG)
 	opam pin remove opam-builddep-temp
 

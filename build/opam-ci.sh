@@ -19,6 +19,11 @@ fi
 test -d "$OPAMROOT/repo/coq-extra-dev" || opam repo add coq-extra-dev https://coq.inria.fr/opam/extra-dev -p 5
 test -d "$OPAMROOT/repo/coq-core-dev" || opam repo add coq-core-dev https://coq.inria.fr/opam/core-dev -p 5
 test -d "$OPAMROOT/repo/coq-released" || opam repo add coq-released https://coq.inria.fr/opam/released -p 10
+test -d "$OPAMROOT/repo/iris-dev" || opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git -p 20
+
+# Make sure we have no undesired pins left from opam.pins times
+opam pin remove coq-stdpp -n
+opam pin remove coq-iris -n
 
 # Install fixed versions of some dependencies
 echo
@@ -33,6 +38,9 @@ while (( "$#" )); do # while there are arguments left
         opam pin add "$PACKAGE" "$VERSION" -k version -y
     fi
 done
+
+# Upgrade cached things
+opam upgrade -y
 
 # Install build-dependencies
 echo
