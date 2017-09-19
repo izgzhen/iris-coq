@@ -26,8 +26,8 @@ build-dep: phony
 	mkdir -p build-dep
 	@sed <opam 's/^\(build\|install\|remove\):.*/\1: []/; s/^name: *"\(.*\)" */name: "\1-builddep"/' > build-dep/opam
 	@fgrep builddep build-dep/opam >/dev/null || (echo "sed failed to fix the package name" && exit 1) # sanity check
-	@# Compute the package name, add the pin and (re)install it.  Reinstallation is needed
-	@# in case the pin already exists, but the builddep package changed.
+	# Compute the package name, add the pin and (re)install it.
+	@# Reinstallation is needed in case the pin already exists, but the builddep package changed.
 	@BUILD_DEP_PACKAGE="$$(egrep "^name:" build-dep/opam | sed 's/^name: *"\(.*\)" */\1/')"; \
 	  opam pin add "$$BUILD_DEP_PACKAGE" "$$(pwd)/build-dep" -k path $(OPAMFLAGS) && \
 	  opam reinstall "$$BUILD_DEP_PACKAGE"

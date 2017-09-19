@@ -21,7 +21,7 @@ variables:
   - 'cat build-log.txt | egrep "[a-zA-Z0-9_/-]+ \((real|user): [0-9]" | tee build-time.txt'
   - 'if test -n "$VALIDATE" && (( RANDOM % 10 == 0 )); then make validate; fi'
   cache:
-    key: "coq$COQ_VERSION-ssr$SSR_VERSION"
+    key: "coq.$COQ_VERSION-ssr.$SSR_VERSION"
     paths:
     - opamroot/
   only:

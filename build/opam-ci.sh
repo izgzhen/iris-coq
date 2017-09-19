@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-# This script installs the build dependencies for CI builds.
+## This script installs the build dependencies for CI builds.
 
 # Prepare OPAM configuration
 export OPAMROOT="$(pwd)/opamroot"
@@ -44,10 +44,12 @@ while (( "$#" )); do # while there are arguments left
 done
 
 # Upgrade cached things.
+echo "[opam-ci] Upgrading opam"
 opam upgrade -y
 
 # Install build-dependencies.
 echo
+echo "[opam-ci] Installing build-dependencies"
 make build-dep OPAMFLAGS=-y
 
 # done
