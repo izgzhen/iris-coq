@@ -24,11 +24,13 @@ build-dep: phony
 	@# To achieve this, we create a fake opam package that has our build-dependencies as
 	@# dependencies, but does not actually install anything.
 	mkdir -p build-dep
-	@echo "build-dep package is $$BUILD_DEP_PACKAGE"
-	sed <opam 's/^\(build\|install\|remove\):.*/\1: []/; s/^name: *"\(.*\)" */name: "\1-builddep"/' > build-dep/opam
+	@sed <opam 's/^\(build\|install\|remove\):.*/\1: []/; s/^name: *"\(.*\)" */name: "\1-builddep"/' > build-dep/opam
 	@fgrep builddep build-dep/opam >/dev/null || (echo "sed failed to fix the package name" && exit 1) # sanity check
-	@# Compute the package name, add the pin and install it
-	opam pin add "$$(egrep "^name:" build-dep/opam | sed 's/^name: *"\(.*\)" */\1/')" "$$(pwd)/build-dep" -k path $(OPAMFLAGS)
+	@# Compute the package name, add the pin and (re)install it.  Reinstallation is needed
+	@# in case the pin already exists, but the builddep package changed.
+	@BUILD_DEP_PACKAGE="$$(egrep "^name:" build-dep/opam | sed 's/^name: *"\(.*\)" */\1/')"; \
+	  opam pin add "$$BUILD_DEP_PACKAGE" "$$(pwd)/build-dep" -k path $(OPAMFLAGS) && \
+	  opam reinstall "$$BUILD_DEP_PACKAGE"
 
 # Some files that do *not* need to be forwarded to Makefile.coq
 Makefile: ;
