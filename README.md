@@ -11,14 +11,14 @@ This version is known to compile with:
  - A development version of [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
 
 The easiest way to install the correct versions of the dependencies is through
-opam.  Coq packages are available on the coq-released repository, set up by the
-command:
+opam.  You will need the Coq and Iris opam repositories:
 
     opam repo add coq-released https://coq.inria.fr/opam/released
+    opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git
 
-Once you got opam set up, just run `make build-dep` to install the right
-versions of the dependencies.  When the dependencies change, just run `make
-build-dep` again.
+Once you got opam set up, run `make build-dep` to install the right versions
+of the dependencies.  When the dependencies change, just run `make build-dep`
+again.
 
 If you need to work with Coq 8.5, please check out the
 [iris-3.0 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.0).
