@@ -13,5 +13,5 @@ remove: ["sh" "-c" "rm -rf '%{lib}%/coq/user-contrib/iris'"]
 depends: [
   "coq" { (>= "8.6.1" & < "8.8~") }
   "coq-mathcomp-ssreflect" { ((>= "1.6.1" & < "1.7~") | (= "dev")) }
-  "coq-stdpp" { ((= "dev.2017-09-18.1") | (= "dev")) }
+  "coq-stdpp" { ((= "dev.2017-09-18.4") | (= "dev")) }
 ]

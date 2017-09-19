@@ -139,6 +139,84 @@ Proof.
  refine (λ v v', cast_if (decide (of_val v = of_val v'))); abstract naive_solver.
 Defined.
 
+Instance base_lit_countable : Countable base_lit.
+Proof.
+ refine (inj_countable' (λ l, match l with
+  | LitInt n => inl (inl n) | LitBool b => inl (inr b)
+  | LitUnit => inr (inl ()) | LitLoc l => inr (inr l)
+  end) (λ l, match l with
+  | inl (inl n) => LitInt n | inl (inr b) => LitBool b
+  | inr (inl ()) => LitUnit | inr (inr l) => LitLoc l
+  end) _); by intros [].
+Qed.
+Instance un_op_finite : Countable un_op.
+Proof.
+ refine (inj_countable' (λ op, match op with NegOp => 0 | MinusUnOp => 1 end)
+  (λ n, match n with 0 => NegOp | _ => MinusUnOp end) _); by intros [].
+Qed.
+Instance bin_op_countable : Countable bin_op.
+Proof.
+ refine (inj_countable' (λ op, match op with
+  | PlusOp => 0 | MinusOp => 1 | LeOp => 2 | LtOp => 3 | EqOp => 4
+  end) (λ n, match n with
+  | 0 => PlusOp | 1 => MinusOp | 2 => LeOp | 3 => LtOp | _ => EqOp
+  end) _); by intros [].
+Qed.
+Instance binder_countable : Countable binder.
+Proof.
+ refine (inj_countable' (λ b, match b with BNamed s => Some s | BAnon => None end)
+  (λ b, match b with Some s => BNamed s | None => BAnon end) _); by intros [].
+Qed.
+Instance expr_countable : Countable expr.
+Proof.
+ set (enc := fix go e :=
+  match e with
+  | Var x => GenLeaf (inl (inl x))
+  | Rec f x e => GenNode 0 [GenLeaf (inl (inr f)); GenLeaf (inl (inr x)); go e]
+  | App e1 e2 => GenNode 1 [go e1; go e2]
+  | Lit l => GenLeaf (inr (inl l))
+  | UnOp op e => GenNode 2 [GenLeaf (inr (inr (inl op))); go e]
+  | BinOp op e1 e2 => GenNode 3 [GenLeaf (inr (inr (inr op))); go e1; go e2]
+  | If e0 e1 e2 => GenNode 4 [go e0; go e1; go e2]
+  | Pair e1 e2 => GenNode 5 [go e1; go e2]
+  | Fst e => GenNode 6 [go e]
+  | Snd e => GenNode 7 [go e]
+  | InjL e => GenNode 8 [go e]
+  | InjR e => GenNode 9 [go e]
+  | Case e0 e1 e2 => GenNode 10 [go e0; go e1; go e2]
+  | Fork e => GenNode 11 [go e]
+  | Alloc e => GenNode 12 [go e]
+  | Load e => GenNode 13 [go e]
+  | Store e1 e2 => GenNode 14 [go e1; go e2]
+  | CAS e0 e1 e2 => GenNode 15 [go e0; go e1; go e2]
+  end).
+ set (dec := fix go e :=
+  match e with
+  | GenLeaf (inl (inl x)) => Var x
+  | GenNode 0 [GenLeaf (inl (inr f)); GenLeaf (inl (inr x)); e] => Rec f x (go e)
+  | GenNode 1 [e1; e2] => App (go e1) (go e2)
+  | GenLeaf (inr (inl l)) => Lit l
+  | GenNode 2 [GenLeaf (inr (inr (inl op))); e] => UnOp op (go e)
+  | GenNode 3 [GenLeaf (inr (inr (inr op))); e1; e2] => BinOp op (go e1) (go e2)
+  | GenNode 4 [e0; e1; e2] => If (go e0) (go e1) (go e2)
+  | GenNode 5 [e1; e2] => Pair (go e1) (go e2)
+  | GenNode 6 [e] => Fst (go e)
+  | GenNode 7 [e] => Snd (go e)
+  | GenNode 8 [e] => InjL (go e)
+  | GenNode 9 [e] => InjR (go e)
+  | GenNode 10 [e0; e1; e2] => Case (go e0) (go e1) (go e2)
+  | GenNode 11 [e] => Fork (go e)
+  | GenNode 12 [e] => Alloc (go e)
+  | GenNode 13 [e] => Load (go e)
+  | GenNode 14 [e1; e2] => Store (go e1) (go e2)
+  | GenNode 15 [e0; e1; e2] => CAS (go e0) (go e1) (go e2)
+  | _ => Lit LitUnit (* dummy *)
+  end).
+ refine (inj_countable' enc dec _). intros e. induction e; f_equal/=; auto.
+Qed.
+Instance val_countable : Countable val.
+Proof. refine (inj_countable of_val to_val _); auto using to_of_val. Qed.
+
 Instance expr_inhabited : Inhabited expr := populate (Lit LitUnit).
 Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
 
