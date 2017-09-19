@@ -47,7 +47,7 @@ iris-coq8.6.1:
   variables:
     COQ_VERSION: "8.6.1"
     SSR_VERSION: "1.6.1"
-    VALIDATE: 1
+    VALIDATE: "1"
   artifacts:
     paths:
     - build-time.txt

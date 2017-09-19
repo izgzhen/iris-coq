@@ -16,7 +16,7 @@ if test $(find "$OPAMROOT/repo/package-index" -mtime +0); then
 else
     echo "[opam-ci] Not updating opam."
 fi
-test -d "$OPAMROOT/repo/coq-extra-dev" || opam repo add coq-extra-dev https://coq.inria.fr/opam/extra-dev -p 5
+test -d "$OPAMROOT/repo/coq-extra-dev" && opam repo remove coq-extra-dev
 test -d "$OPAMROOT/repo/coq-core-dev" || opam repo add coq-core-dev https://coq.inria.fr/opam/core-dev -p 5
 test -d "$OPAMROOT/repo/coq-released" || opam repo add coq-released https://coq.inria.fr/opam/released -p 10
 test -d "$OPAMROOT/repo/iris-dev" || opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git -p 20
@@ -25,11 +25,15 @@ test -d "$OPAMROOT/repo/iris-dev" || opam repo add iris-dev https://gitlab.mpi-s
 opam pin remove coq-stdpp -n
 opam pin remove coq-iris -n
 
-# Install fixed versions of some dependencies
+# We really want to run all of the following in one opam transaction, but due to opam limitations,
+# that is not currently possible.
+
+# Install fixed versions of some dependencies.
 echo
 while (( "$#" )); do # while there are arguments left
     PACKAGE="$1" ; shift
     VERSION="$1" ; shift
+
     # Check if the pin is already set
     if opam pin list | fgrep "$PACKAGE.$VERSION " > /dev/null; then
         echo "[opam-ci] $PACKAGE already pinned to $VERSION"
@@ -39,12 +43,12 @@ while (( "$#" )); do # while there are arguments left
     fi
 done
 
-# Upgrade cached things
+# Upgrade cached things.
 opam upgrade -y
 
-# Install build-dependencies
+# Install build-dependencies.
 echo
-make build-dep Y=1
+make build-dep OPAMFLAGS=-y
 
 # done
 echo
