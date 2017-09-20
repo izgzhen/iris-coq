@@ -24,21 +24,6 @@ Ltac wp_done :=
 
 Ltac wp_value_head := etrans; [|eapply wp_value; wp_done]; simpl.
 
-Ltac wp_seq_head :=
-  lazymatch goal with
-  | |- _ ⊢ wp ?E (Seq _ _) ?Q =>
-    etrans; [|eapply wp_seq; wp_done]; iNext
-  end.
-
-Ltac wp_finish := intros_revert ltac:(
-  rewrite /= ?to_of_val;
-  try iNext;
-  repeat lazymatch goal with
-  | |- _ ⊢ wp ?E (Seq _ _) ?Q =>
-     etrans; [|eapply wp_seq; wp_done]; iNext
-  | |- _ ⊢ wp ?E _ ?Q => wp_value_head
-  end).
-
 Tactic Notation "wp_value" :=
   iStartProof;
   lazymatch goal with
@@ -53,7 +38,6 @@ Proof. by unlock. Qed.
 (* Applied to goals that are equalities of expressions. Will try to unlock the
    LHS once if necessary, to get rid of the lock added by the syntactic sugar. *)
 Ltac solve_of_val_unlock := try apply of_val_unlock; reflexivity.
-
 
 (* Solves side-conditions generated specifically by wp_pure *)
 Ltac wp_pure_done :=
@@ -81,12 +65,11 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
     let e'' := eval hnf in e' in
     unify e'' efoc;
-    wp_bind_core K;
-    eapply (tac_wp_pure []);
+    eapply (tac_wp_pure K);
     [apply _                  (* IntoLaters *)
     |unlock; simpl; apply _   (* PureExec *)
     |wp_pure_done             (* The pure condition for PureExec *)
-    |simpl_subst; wp_finish   (* new goal *)])
+    |simpl_subst; try wp_value_head (* new goal *)])
    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a reduct"
   | _ => fail "wp_pure: not a 'wp'"
   end.
@@ -103,18 +86,7 @@ Tactic Notation "wp_let" := wp_lam.
 Tactic Notation "wp_seq" := wp_lam.
 Tactic Notation "wp_proj" := wp_pure (Fst _) || wp_pure (Snd _).
 Tactic Notation "wp_case" := wp_pure (Case _ _ _).
-Tactic Notation "wp_match" :=
-  iStartProof;
-  lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with
-    | Case _ _ _ =>
-      wp_bind_core K;
-      etrans; [|first[eapply wp_match_inl; wp_done|eapply wp_match_inr; wp_done]];
-      simpl_subst; wp_finish
-    end) || fail "wp_match: cannot find 'Match' in" e
-  | _ => fail "wp_match: not a 'wp'"
-  end.
+Tactic Notation "wp_match" := wp_case; wp_let.
 
 Tactic Notation "wp_bind" open_constr(efoc) :=
   iStartProof;
@@ -133,65 +105,65 @@ Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val → iProp Σ.
 Implicit Types Δ : envs (iResUR Σ).
 
-Lemma tac_wp_alloc Δ Δ' E j e v Φ :
+Lemma tac_wp_alloc Δ Δ' E j K e v Φ :
   to_val e = Some v →
   IntoLaterNEnvs 1 Δ Δ' →
   (∀ l, ∃ Δ'',
     envs_app false (Esnoc Enil j (l ↦ v)) Δ' = Some Δ'' ∧
-    (Δ'' ⊢ Φ (LitV (LitLoc l)))) →
-  Δ ⊢ WP Alloc e @ E {{ Φ }}.
+    (Δ'' ⊢ WP fill K (Lit (LitLoc l)) @ E {{ Φ }})) →
+  Δ ⊢ WP fill K (Alloc e) @ E {{ Φ }}.
 Proof.
-  intros ?? HΔ. eapply wand_apply; first exact: wp_alloc.
+  intros ?? HΔ. rewrite -wp_bind. eapply wand_apply; first exact: wp_alloc.
   rewrite left_id into_laterN_env_sound; apply later_mono, forall_intro=> l.
   destruct (HΔ l) as (Δ''&?&HΔ'). rewrite envs_app_sound //; simpl.
   by rewrite right_id HΔ'.
 Qed.
 
-Lemma tac_wp_load Δ Δ' E i l q v Φ :
+Lemma tac_wp_load Δ Δ' E i K l q v Φ :
   IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I →
-  (Δ' ⊢ Φ v) →
-  Δ ⊢ WP Load (Lit (LitLoc l)) @ E {{ Φ }}.
+  (Δ' ⊢ WP fill K (of_val v) @ E {{ Φ }}) →
+  Δ ⊢ WP fill K (Load (Lit (LitLoc l))) @ E {{ Φ }}.
 Proof.
-  intros. eapply wand_apply; first exact: wp_load.
+  intros. rewrite -wp_bind. eapply wand_apply; first exact: wp_load.
   rewrite into_laterN_env_sound -later_sep envs_lookup_split //; simpl.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_store Δ Δ' Δ'' E i l v e v' Φ :
+Lemma tac_wp_store Δ Δ' Δ'' E i K l v e v' Φ :
   to_val e = Some v' →
   IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v')) Δ' = Some Δ'' →
-  (Δ'' ⊢ Φ (LitV LitUnit)) →
-  Δ ⊢ WP Store (Lit (LitLoc l)) e @ E {{ Φ }}.
+  (Δ'' ⊢ WP fill K (Lit LitUnit) @ E {{ Φ }}) →
+  Δ ⊢ WP fill K (Store (Lit (LitLoc l)) e) @ E {{ Φ }}.
 Proof.
-  intros. eapply wand_apply; first by eapply wp_store.
+  intros. rewrite -wp_bind. eapply wand_apply; first by eapply wp_store.
   rewrite into_laterN_env_sound -later_sep envs_simple_replace_sound //; simpl.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_cas_fail Δ Δ' E i l q v e1 v1 e2 v2 Φ :
+Lemma tac_wp_cas_fail Δ Δ' E i K l q v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
   IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
-  (Δ' ⊢ Φ (LitV (LitBool false))) →
-  Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
+  (Δ' ⊢ WP fill K (Lit (LitBool false)) @ E {{ Φ }}) →
+  Δ ⊢ WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ E {{ Φ }}.
 Proof.
-  intros. eapply wand_apply; first exact: wp_cas_fail.
+  intros. rewrite -wp_bind. eapply wand_apply; first exact: wp_cas_fail.
   rewrite into_laterN_env_sound -later_sep envs_lookup_split //; simpl.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_cas_suc Δ Δ' Δ'' E i l v e1 v1 e2 v2 Φ :
+Lemma tac_wp_cas_suc Δ Δ' Δ'' E i K l v e1 v1 e2 v2 Φ :
   to_val e1 = Some v1 → to_val e2 = Some v2 →
   IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →
-  (Δ'' ⊢ Φ (LitV (LitBool true))) →
-  Δ ⊢ WP CAS (Lit (LitLoc l)) e1 e2 @ E {{ Φ }}.
+  (Δ'' ⊢ WP fill K (Lit (LitBool true)) @ E {{ Φ }}) →
+  Δ ⊢ WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ E {{ Φ }}.
 Proof.
-  intros; subst. eapply wand_apply; first exact: wp_cas_suc.
+  intros; subst. rewrite -wp_bind. eapply wand_apply; first exact: wp_cas_suc.
   rewrite into_laterN_env_sound -later_sep envs_simple_replace_sound //; simpl.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
@@ -214,17 +186,15 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
-      [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with Alloc _ => wp_bind_core K end)
+      [reshape_expr e ltac:(fun K e' => eapply (tac_wp_alloc _ _ _ H K))
       |fail 1 "wp_alloc: cannot find 'Alloc' in" e];
-    eapply tac_wp_alloc with _ H _;
-      [let e' := match goal with |- to_val ?e' = _ => e' end in
-       wp_done || fail "wp_alloc:" e' "not a value"
-      |apply _
-      |first [intros l | fail 1 "wp_alloc:" l "not fresh"];
-        eexists; split;
-          [env_cbv; reflexivity || fail "wp_alloc:" H "not fresh"
-          |wp_finish]]
+    [let e' := match goal with |- to_val ?e' = _ => e' end in
+     wp_done || fail "wp_alloc:" e' "not a value"
+    |apply _
+    |first [intros l | fail 1 "wp_alloc:" l "not fresh"];
+      eexists; split;
+        [env_cbv; reflexivity || fail "wp_alloc:" H "not fresh"
+        |simpl; try wp_value_head]]
   | _ => fail "wp_alloc: not a 'wp'"
   end.
 
@@ -236,14 +206,12 @@ Tactic Notation "wp_load" :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
-      [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with Load _ => wp_bind_core K end)
+      [reshape_expr e ltac:(fun K e' => eapply (tac_wp_load _ _ _ _ K))
       |fail 1 "wp_load: cannot find 'Load' in" e];
-    eapply tac_wp_load;
-      [apply _
-      |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
-       iAssumptionCore || fail "wp_load: cannot find" l "↦ ?"
-      |wp_finish]
+    [apply _
+    |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
+     iAssumptionCore || fail "wp_load: cannot find" l "↦ ?"
+    |simpl; try wp_value_head]
   | _ => fail "wp_load: not a 'wp'"
   end.
 
@@ -252,17 +220,15 @@ Tactic Notation "wp_store" :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
-      [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with Store _ _ => wp_bind_core K end)
+      [reshape_expr e ltac:(fun K e' => eapply (tac_wp_store _ _ _ _ _ K))
       |fail 1 "wp_store: cannot find 'Store' in" e];
-    eapply tac_wp_store;
-      [let e' := match goal with |- to_val ?e' = _ => e' end in
-       wp_done || fail "wp_store:" e' "not a value"
-      |apply _
-      |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
-       iAssumptionCore || fail "wp_store: cannot find" l "↦ ?"
-      |env_cbv; reflexivity
-      |wp_finish]
+    [let e' := match goal with |- to_val ?e' = _ => e' end in
+     wp_done || fail "wp_store:" e' "not a value"
+    |apply _
+    |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
+     iAssumptionCore || fail "wp_store: cannot find" l "↦ ?"
+    |env_cbv; reflexivity
+    |simpl; try first [wp_pure (Seq (Lit LitUnit) _)|wp_value_head]]
   | _ => fail "wp_store: not a 'wp'"
   end.
 
@@ -271,19 +237,17 @@ Tactic Notation "wp_cas_fail" :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
-      [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with CAS _ _ _ => wp_bind_core K end)
+      [reshape_expr e ltac:(fun K e' => eapply (tac_wp_cas_fail _ _ _ _ K))
       |fail 1 "wp_cas_fail: cannot find 'CAS' in" e];
-    eapply tac_wp_cas_fail;
-      [let e' := match goal with |- to_val ?e' = _ => e' end in
-       wp_done || fail "wp_cas_fail:" e' "not a value"
-      |let e' := match goal with |- to_val ?e' = _ => e' end in
-       wp_done || fail "wp_cas_fail:" e' "not a value"
-      |apply _
-      |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
-       iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
-      |try congruence
-      |wp_finish]
+    [let e' := match goal with |- to_val ?e' = _ => e' end in
+     wp_done || fail "wp_cas_fail:" e' "not a value"
+    |let e' := match goal with |- to_val ?e' = _ => e' end in
+     wp_done || fail "wp_cas_fail:" e' "not a value"
+    |apply _
+    |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
+     iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
+    |try congruence
+    |simpl; try wp_value_head]
   | _ => fail "wp_cas_fail: not a 'wp'"
   end.
 
@@ -292,19 +256,17 @@ Tactic Notation "wp_cas_suc" :=
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q =>
     first
-      [reshape_expr e ltac:(fun K e' =>
-         match eval hnf in e' with CAS _ _ _ => wp_bind_core K end)
+      [reshape_expr e ltac:(fun K e' => eapply (tac_wp_cas_suc _ _ _ _ _ K))
       |fail 1 "wp_cas_suc: cannot find 'CAS' in" e];
-    eapply tac_wp_cas_suc;
-      [let e' := match goal with |- to_val ?e' = _ => e' end in
-       wp_done || fail "wp_cas_suc:" e' "not a value"
-      |let e' := match goal with |- to_val ?e' = _ => e' end in
-       wp_done || fail "wp_cas_suc:" e' "not a value"
-      |apply _
-      |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
-       iAssumptionCore || fail "wp_cas_suc: cannot find" l "↦ ?"
-      |try congruence
-      |env_cbv; reflexivity
-      |wp_finish]
+    [let e' := match goal with |- to_val ?e' = _ => e' end in
+     wp_done || fail "wp_cas_suc:" e' "not a value"
+    |let e' := match goal with |- to_val ?e' = _ => e' end in
+     wp_done || fail "wp_cas_suc:" e' "not a value"
+    |apply _
+    |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
+     iAssumptionCore || fail "wp_cas_suc: cannot find" l "↦ ?"
+    |try congruence
+    |env_cbv; reflexivity
+    |simpl; try wp_value_head]
   | _ => fail "wp_cas_suc: not a 'wp'"
   end.
