@@ -31,6 +31,17 @@ Section LiftingTests.
     wp_load. wp_op. wp_store. wp_load. done.
   Qed.
 
+  Definition heap_e3 : expr :=
+    let: "x" := #true in
+    let: "f" := λ: "z", "z" + #1 in
+    if: "x" then "f" #0 else "f" #1.
+
+  Lemma heap_e3_spec E : WP heap_e3 @ E {{ v, ⌜v = #1⌝ }}%I.
+  Proof.
+    iIntros "". rewrite /heap_e3.
+    by repeat (wp_pure _).
+  Qed.
+
   Definition FindPred : val :=
     rec: "pred" "x" "y" :=
       let: "yp" := "y" + #1 in
