@@ -46,9 +46,9 @@ Lemma tac_wp_pure `{heapG Σ} K Δ Δ' E e1 e2 φ Φ :
   (Δ' ⊢ WP fill K e2 @ E {{ Φ }}) →
   (Δ ⊢ WP fill K e1 @ E {{ Φ }}).
 Proof.
-  intros ??? HΔ'.
-  rewrite into_laterN_env_sound /=.
-  rewrite HΔ' -wp_pure' //.
+  intros ??? HΔ'. rewrite into_laterN_env_sound /=.
+  rewrite -lifting.wp_bind HΔ' -wp_pure' //.
+  by rewrite -ectx_lifting.wp_ectx_bind_inv.
 Qed.
 
 Tactic Notation "wp_pure" open_constr(efoc) :=

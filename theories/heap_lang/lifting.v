@@ -83,7 +83,8 @@ Qed.
 Local Ltac solve_exec_safe := intros; subst; do 3 eexists; econstructor; eauto.
 Local Ltac solve_exec_puredet := simpl; intros; by inv_head_step.
 Local Ltac solve_pureexec :=
-  intros; split; intros ?; destruct_and?; [ solve_exec_safe | solve_exec_puredet ].
+  apply hoist_pred_pureexec; intros; destruct_and?;
+  apply det_head_step_pureexec; [ solve_exec_safe | solve_exec_puredet ].
 
 Global Instance pure_rec f x erec e1 e2 v2 :
   PureExec (to_val e2 = Some v2 ∧ e1 = Rec f x erec ∧ Closed (f :b: x :b: []) erec)
@@ -194,7 +195,7 @@ Qed.
 Lemma wp_seq E e1 e2 Φ :
   is_Some (to_val e1) → Closed [] e2 →
   ▷ WP e2 @ E {{ Φ }} ⊢ WP Seq e1 e2 @ E {{ Φ }}.
-Proof. iIntros ([? ?] ?). rewrite -(wp_pure' []); by eauto. Qed.
+Proof. iIntros ([? ?] ?). rewrite -wp_pure'; by eauto. Qed.
 
 Lemma wp_skip E Φ : ▷ Φ (LitV LitUnit) ⊢ WP Skip @ E {{ Φ }}.
 Proof. rewrite -wp_seq; last eauto. by rewrite -wp_value. Qed.
@@ -202,11 +203,11 @@ Proof. rewrite -wp_seq; last eauto. by rewrite -wp_value. Qed.
 Lemma wp_match_inl E e0 x1 e1 x2 e2 Φ :
   is_Some (to_val e0) → Closed (x1 :b: []) e1 →
   ▷ WP subst' x1 e0 e1 @ E {{ Φ }} ⊢ WP Match (InjL e0) x1 e1 x2 e2 @ E {{ Φ }}.
-Proof. iIntros ([? ?] ?) "?". do 2 (iApply (wp_pure' []); eauto). Qed.
+Proof. iIntros ([? ?] ?) "?". rewrite -!wp_pure'; by eauto. Qed.
 
 Lemma wp_match_inr E e0 x1 e1 x2 e2 Φ :
   is_Some (to_val e0) → Closed (x2 :b: []) e2 →
   ▷ WP subst' x2 e0 e2 @ E {{ Φ }} ⊢ WP Match (InjR e0) x1 e1 x2 e2 @ E {{ Φ }}.
-Proof. iIntros ([? ?] ?) "?". do 2 (iApply (wp_pure' []); eauto). Qed.
+Proof. iIntros ([? ?] ?) "?". rewrite -!wp_pure'; by eauto. Qed.
 
 End lifting.
