@@ -14,7 +14,8 @@ if test $(find "$OPAMROOT/repo/package-index" -mtime +0); then
     # last update was more than a day ago
     opam update
 else
-    echo "[opam-ci] Not updating opam."
+    # only update iris-dev
+    test -d "$OPAMROOT/repo/iris-dev" && opam update iris-dev
 fi
 test -d "$OPAMROOT/repo/coq-extra-dev" && opam repo remove coq-extra-dev
 test -d "$OPAMROOT/repo/coq-core-dev" || opam repo add coq-core-dev https://coq.inria.fr/opam/core-dev -p 5
