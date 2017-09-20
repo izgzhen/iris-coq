@@ -24,14 +24,6 @@ Ltac wp_done :=
 
 Ltac wp_value_head := etrans; [|eapply wp_value; wp_done]; simpl.
 
-Tactic Notation "wp_value" :=
-  iStartProof;
-  lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    wp_bind_core K; wp_value_head) || fail "wp_value: cannot find value in" e
-  | _ => fail "wp_value: not a wp"
-  end.
-
 Lemma of_val_unlock v e : of_val v = e → of_val (locked v) = e.
 Proof. by unlock. Qed.
 
