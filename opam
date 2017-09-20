@@ -1,6 +1,5 @@
 opam-version: "1.2"
 name: "coq-iris"
-version: "dev"
 maintainer: "Ralf Jung <jung@mpi-sws.org>"
 authors: "The Iris Team"
 homepage: "http://iris-project.org/"
