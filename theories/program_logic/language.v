@@ -40,6 +40,9 @@ Class LanguageCtx (Λ : language) (K : expr Λ → expr Λ) := {
     ∃ e2', e2 = K e2' ∧ prim_step e1' σ1 e2' σ2 efs
 }.
 
+Instance language_ctx_id Λ : LanguageCtx Λ id.
+Proof. constructor; naive_solver. Qed.
+
 Section language.
   Context {Λ : language}.
   Implicit Types v : val Λ.
