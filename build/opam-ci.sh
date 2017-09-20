@@ -1,30 +1,38 @@
 #!/bin/bash
 set -e
 ## This script installs the build dependencies for CI builds.
+function run_and_print() {
+    echo "$ $@"
+    "$@"
+}
 
 # Prepare OPAM configuration
 export OPAMROOT="$(pwd)/opamroot"
 export OPAMJOBS="$((2*$CPU_CORES))"
 export OPAM_EDITOR="$(which false)"
 
-# Make sure we got a good OPAM
-test -d "$OPAMROOT" || (mkdir "$OPAMROOT" && opam init --no-setup -y)
+# Make sure we got a good OPAM.
+test -d "$OPAMROOT" || (mkdir "$OPAMROOT" && run_and_print opam init --no-setup -y)
 eval `opam conf env`
+# Delete old pins from opam.pins times.
+run_and_print opam pin remove coq-stdpp -n
+run_and_print opam pin remove coq-iris -n
+# Make sure the pin for the builddep package is not stale.
+run_and_print make build-dep/opam
+
+# Get us all the latest repositories
 if test $(find "$OPAMROOT/repo/package-index" -mtime +0); then
     # last update was more than a day ago
-    opam update
+    run_and_print opam update
 else
     # only update iris-dev
-    test -d "$OPAMROOT/repo/iris-dev" && opam update iris-dev
+    if test -d "$OPAMROOT/repo/iris-dev"; then run_and_print opam update iris-dev; fi
 fi
-test -d "$OPAMROOT/repo/coq-extra-dev" && opam repo remove coq-extra-dev
-test -d "$OPAMROOT/repo/coq-core-dev" || opam repo add coq-core-dev https://coq.inria.fr/opam/core-dev -p 5
-test -d "$OPAMROOT/repo/coq-released" || opam repo add coq-released https://coq.inria.fr/opam/released -p 10
-test -d "$OPAMROOT/repo/iris-dev" || opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git -p 20
-
-# Make sure we have no undesired pins left from opam.pins times
-opam pin remove coq-stdpp -n
-opam pin remove coq-iris -n
+test -d "$OPAMROOT/repo/coq-extra-dev" && run_and_print opam repo remove coq-extra-dev
+test -d "$OPAMROOT/repo/coq-core-dev" || run_and_print opam repo add coq-core-dev https://coq.inria.fr/opam/core-dev -p 5
+test -d "$OPAMROOT/repo/coq-released" || run_and_print opam repo add coq-released https://coq.inria.fr/opam/released -p 10
+test -d "$OPAMROOT/repo/iris-dev" || run_and_print opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git -p 20
+echo
 
 # We really want to run all of the following in one opam transaction, but due to opam limitations,
 # that is not currently possible.
@@ -40,16 +48,14 @@ while (( "$#" )); do # while there are arguments left
         echo "[opam-ci] $PACKAGE already pinned to $VERSION"
     else
         echo "[opam-ci] Pinning $PACKAGE to $VERSION"
-        opam pin add "$PACKAGE" "$VERSION" -k version -y
+        run_and_print opam pin add "$PACKAGE" "$VERSION" -k version -y
     fi
 done
 
-# Make sure the pin for the builddep package is not stale.
-make build-dep/opam
-
 # Upgrade cached things.
+echo
 echo "[opam-ci] Upgrading opam"
-opam upgrade -y
+run_and_print opam upgrade -y
 
 # Install build-dependencies.
 echo
