@@ -54,76 +54,55 @@ Proof. by unlock. Qed.
    LHS once if necessary, to get rid of the lock added by the syntactic sugar. *)
 Ltac solve_of_val_unlock := try apply of_val_unlock; reflexivity.
 
-Tactic Notation "wp_rec" :=
+
+(* Solves side-conditions generated specifically by wp_pure *)
+Ltac wp_pure_done :=
+  split_and?;
+  lazymatch goal with
+  | |- of_val _ = _ => solve_of_val_unlock
+  | _ => wp_done
+  end.
+
+Lemma tac_wp_pure `{heapG Σ} K Δ Δ' E e1 e2 φ Φ :
+  IntoLaterNEnvs 1 Δ Δ' →
+  PureExec φ e1 e2 →
+  φ →
+  (Δ' ⊢ WP fill K e2 @ E {{ Φ }}) →
+  (Δ ⊢ WP fill K e1 @ E {{ Φ }}).
+Proof.
+  intros ??? HΔ'.
+  rewrite into_laterN_env_sound /=.
+  rewrite HΔ' -wp_pure' //.
+Qed.
+
+Tactic Notation "wp_pure" open_constr(efoc) :=
   iStartProof;
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with App ?e1 _ =>
-(* hnf does not reduce through an of_val *)
-(*      match eval hnf in e1 with Rec _ _ _ => *)
-    wp_bind_core K; etrans;
-      [|eapply wp_rec; [solve_of_val_unlock|wp_done..]]; simpl_subst; wp_finish
-(*      end *) end) || fail "wp_rec: cannot find 'Rec' in" e
-  | _ => fail "wp_rec: not a 'wp'"
+    let e'' := eval hnf in e' in
+    unify e'' efoc;
+    wp_bind_core K;
+    eapply (tac_wp_pure []);
+    [apply _                  (* IntoLaters *)
+    |unlock; simpl; apply _   (* PureExec *)
+    |wp_pure_done             (* The pure condition for PureExec *)
+    |simpl_subst; wp_finish   (* new goal *)])
+   || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a reduct"
+  | _ => fail "wp_pure: not a 'wp'"
   end.
 
-Tactic Notation "wp_lam" :=
-  iStartProof;
-  lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with App ?e1 _ =>
-(*    match eval hnf in e1 with Rec BAnon _ _ => *)
-    wp_bind_core K; etrans;
-      [|eapply wp_lam; [solve_of_val_unlock|wp_done..]]; simpl_subst; wp_finish
-(*    end *) end) || fail "wp_lam: cannot find 'Lam' in" e
-  | _ => fail "wp_lam: not a 'wp'"
-  end.
-
+Tactic Notation "wp_if" := wp_pure (If _ _ _).
+Tactic Notation "wp_if_true" := wp_pure (If (Lit (LitBool true)) _ _).
+Tactic Notation "wp_if_false" := wp_pure (If (Lit (LitBool false)) _ _).
+Tactic Notation "wp_unop" := wp_pure (UnOp _ _).
+Tactic Notation "wp_binop" := wp_pure (BinOp _ _ _).
+Tactic Notation "wp_op" := wp_unop || wp_binop.
+Tactic Notation "wp_rec" := wp_pure (App _ _).
+Tactic Notation "wp_lam" := wp_rec.
 Tactic Notation "wp_let" := wp_lam.
-Tactic Notation "wp_seq" := wp_let.
-
-Tactic Notation "wp_op" :=
-  iStartProof;
-  lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    lazymatch eval hnf in e' with
-    | BinOp LtOp _ _ => wp_bind_core K; apply wp_lt; wp_finish
-    | BinOp LeOp _ _ => wp_bind_core K; apply wp_le; wp_finish
-    | BinOp EqOp _ _ =>
-       wp_bind_core K; eapply wp_eq; [wp_done|wp_done|wp_finish|wp_finish]
-    | BinOp _ _ _ =>
-       wp_bind_core K; etrans;
-         [|eapply wp_bin_op; [wp_done|wp_done|try fast_done]]; wp_finish
-    | UnOp _ _ =>
-       wp_bind_core K; etrans;
-         [|eapply wp_un_op; [wp_done|try fast_done]]; wp_finish
-    end) || fail "wp_op: cannot find 'BinOp' or 'UnOp' in" e
-  | _ => fail "wp_op: not a 'wp'"
-  end.
-
-Tactic Notation "wp_proj" :=
-  iStartProof;
-  lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with
-    | Fst _ => wp_bind_core K; etrans; [|eapply wp_fst; wp_done]; wp_finish
-    | Snd _ => wp_bind_core K; etrans; [|eapply wp_snd; wp_done]; wp_finish
-    end) || fail "wp_proj: cannot find 'Fst' or 'Snd' in" e
-  | _ => fail "wp_proj: not a 'wp'"
-  end.
-
-Tactic Notation "wp_if" :=
-  iStartProof;
-  lazymatch goal with
-  | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    match eval hnf in e' with
-    | If _ _ _ =>
-      wp_bind_core K;
-      etrans; [|eapply wp_if_true || eapply wp_if_false]; wp_finish
-    end) || fail "wp_if: cannot find 'If' in" e
-  | _ => fail "wp_if: not a 'wp'"
-  end.
-
+Tactic Notation "wp_seq" := wp_lam.
+Tactic Notation "wp_proj" := wp_pure (Fst _) || wp_pure (Snd _).
+Tactic Notation "wp_case" := wp_pure (Case _ _ _).
 Tactic Notation "wp_match" :=
   iStartProof;
   lazymatch goal with

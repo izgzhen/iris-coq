@@ -55,6 +55,7 @@ theories/base_logic/lib/core.v
 theories/base_logic/lib/fancy_updates_from_vs.v
 theories/program_logic/adequacy.v
 theories/program_logic/lifting.v
+theories/program_logic/pure.v
 theories/program_logic/weakestpre.v
 theories/program_logic/hoare.v
 theories/program_logic/language.v
