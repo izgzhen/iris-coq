@@ -52,6 +52,18 @@ Section least.
   Proof.
     iIntros "#HΦ" (x) "HF". by iApply ("HF" $! (CofeMor Φ) with "[#]").
   Qed.
+
+  Lemma least_fixpoint_strong_ind (Φ : A → uPred M) `{!NonExpansive Φ} :
+    □ (∀ y, F (λ x, Φ x ∧ uPred_least_fixpoint F x) y → Φ y)
+    ⊢ ∀ x, uPred_least_fixpoint F x → Φ x.
+  Proof.
+    trans (∀ x, uPred_least_fixpoint F x → Φ x ∧ uPred_least_fixpoint F x)%I.
+    { iIntros "#HΦ". iApply least_fixpoint_ind; first solve_proper.
+      iIntros "!#" (y) "H". iSplit; first by iApply "HΦ".
+      iApply least_fixpoint_unfold_2. iApply (bi_mono_pred with "[] H").
+      by iIntros "!# * [_ ?]". }
+    by setoid_rewrite and_elim_l.
+  Qed.
 End least.
 
 Section greatest.
