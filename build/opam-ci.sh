@@ -43,14 +43,17 @@ while (( "$#" )); do # while there are arguments left
     fi
 done
 
-# Install build-dependencies.
-echo
-echo "[opam-ci] Installing build-dependencies"
-make build-dep OPAMFLAGS=-y
+# Make sure the pin for the builddep package is not stale.
+make build-dep/opam
 
 # Upgrade cached things.
 echo "[opam-ci] Upgrading opam"
 opam upgrade -y
+
+# Install build-dependencies.
+echo
+echo "[opam-ci] Installing build-dependencies"
+make build-dep OPAMFLAGS=-y
 
 # done
 echo

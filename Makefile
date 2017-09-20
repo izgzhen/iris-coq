@@ -4,11 +4,13 @@
 
 all: Makefile.coq
 	+@make -f Makefile.coq all
+.PHONY: all
 
 clean: Makefile.coq
 	+@make -f Makefile.coq clean
 	find theories \( -name "*.v.d" -o -name "*.vo" -o -name "*.aux" -o -name "*.cache" -o -name "*.glob" -o -name "*.vio" \) -print -delete
 	rm -f Makefile.coq
+.PHONY: clean
 
 # Create Coq Makefile. POSIX awk can't do in-place editing, but coq_makefile wants the real
 # filename, so we do some file gymnastics.
@@ -17,16 +19,19 @@ Makefile.coq: _CoqProject Makefile awk.Makefile
 	mv Makefile.coq Makefile.coq.tmp && awk -f awk.Makefile Makefile.coq.tmp > Makefile.coq && rm Makefile.coq.tmp
 
 # Install build-dependencies
-build-dep: phony
+build-dep/opam:
+	# Create the build-dep package.
+	@mkdir -p build-dep
+	@sed <opam 's/^\(build\|install\|remove\):.*/\1: []/; s/^name: *"\(.*\)" */name: "\1-builddep"/' > build-dep/opam
+	@fgrep builddep build-dep/opam >/dev/null || (echo "sed failed to fix the package name" && exit 1) # sanity check
+
+build-dep: build-dep/opam phony
 	@# We want opam to not just instal the build-deps now, but to also keep satisfying these
 	@# constraints.  Otherwise, `opam upgrade` may well update some packages to versions
 	@# that are incompatible with our build requirements.
 	@# To achieve this, we create a fake opam package that has our build-dependencies as
 	@# dependencies, but does not actually install anything.
-	mkdir -p build-dep
-	# Create the build-dep package, add the pin and (re)install it.
-	@sed <opam 's/^\(build\|install\|remove\):.*/\1: []/; s/^name: *"\(.*\)" */name: "\1-builddep"/' > build-dep/opam
-	@fgrep builddep build-dep/opam >/dev/null || (echo "sed failed to fix the package name" && exit 1) # sanity check
+	# Add the pin and (re)install build-dep package.
 	@# Reinstallation is needed in case the pin already exists, but the builddep package changed.
 	@BUILD_DEP_PACKAGE="$$(egrep "^name:" build-dep/opam | sed 's/^name: *"\(.*\)" */\1/')"; \
 	  opam pin add "$$BUILD_DEP_PACKAGE" "$$(pwd)/build-dep" -k path $(OPAMFLAGS) && \
@@ -37,6 +42,6 @@ Makefile: ;
 _CoqProject: ;
 awk.Makefile: ;
 
-# Phony targets (i.e. targets that should be run no matter the timestamps of the involved files)
+# Phony wildcard targets
 phony: ;
-.PHONY: all clean phony
+.PHONY: phony
