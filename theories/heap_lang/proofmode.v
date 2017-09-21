@@ -40,9 +40,9 @@ Ltac wp_pure_done :=
   end.
 
 Lemma tac_wp_pure `{heapG Σ} K Δ Δ' E e1 e2 φ Φ :
-  IntoLaterNEnvs 1 Δ Δ' →
   PureExec φ e1 e2 →
   φ →
+  IntoLaterNEnvs 1 Δ Δ' →
   (Δ' ⊢ WP fill K e2 @ E {{ Φ }}) →
   (Δ ⊢ WP fill K e1 @ E {{ Φ }}).
 Proof.
@@ -55,12 +55,11 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
   iStartProof;
   lazymatch goal with
   | |- _ ⊢ wp ?E ?e ?Q => reshape_expr e ltac:(fun K e' =>
-    let e'' := eval hnf in e' in
-    unify e'' efoc;
+    unify e' efoc;
     eapply (tac_wp_pure K);
-    [apply _                  (* IntoLaters *)
-    |unlock; simpl; apply _   (* PureExec *)
+    [unlock; simpl; apply _   (* PureExec *)
     |wp_pure_done             (* The pure condition for PureExec *)
+    |apply _                  (* IntoLaters *)
     |simpl_subst; try wp_value_head (* new goal *)])
    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a reduct"
   | _ => fail "wp_pure: not a 'wp'"
