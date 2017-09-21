@@ -1,5 +1,6 @@
 From iris.proofmode Require Import tactics.
 From iris.base_logic.lib Require Import invariants.
+From stdpp Require Import gmap.
 Set Default Proof Using "Type".
 
 Section tests.
@@ -116,6 +117,12 @@ Proof. iIntros "H HP HQ". by iApply ("H" with "[$]"). Qed.
 (* Check coercions *)
 Lemma test_iExist_coercion (P : Z → uPred M) : (∀ x, P x) -∗ ∃ x, P x.
 Proof. iIntros "HP". iExists (0:nat). iApply ("HP" $! (0:nat)). Qed.
+
+Lemma test_iExist_tc `{Collection A C} P : (∃ x1 x2 : gset positive, P -∗ P)%I.
+Proof. iExists {[ 1%positive ]}, ∅. auto. Qed.
+
+Lemma test_iSpecialize_tc P : (∀ x y z : gset positive, P) -∗ P.
+Proof. iIntros "H". iSpecialize ("H" $! ∅ {[ 1%positive ]} ∅). done. Qed.
 
 Lemma test_iAssert_modality P : (|==> False) -∗ |==> P.
 Proof. iIntros. iAssert False%I with "[> - //]" as %[]. Qed.

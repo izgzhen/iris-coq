@@ -17,7 +17,7 @@ Declare Reduction env_cbv := cbv [
     envs_split_go envs_split].
 Ltac env_cbv :=
   match goal with |- ?u => let v := eval env_cbv in u in change v end.
-Ltac env_reflexivity := env_cbv; reflexivity.
+Ltac env_reflexivity := env_cbv; exact eq_refl.
 
 (** * Misc *)
 (* Tactic Notation tactics cannot return terms *)
@@ -364,21 +364,34 @@ Notation "( H $! x1 .. xn 'with' pat )" :=
   (ITrm H (hcons x1 .. (hcons xn hnil) ..) pat) (at level 0, x1, xn at level 9).
 Notation "( H 'with' pat )" := (ITrm H hnil pat) (at level 0).
 
+(*
+There is some hacky stuff going on here (most probably there is a Coq bug).
+Holes -- like unresolved type class instances -- in the argument `xs` are
+resolved at arbitrary moments. It seems that tactics like `apply`, `split` and
+`eexists` trigger type class search to resolve these holes. To avoid TC being
+triggered too eagerly, this tactic uses `refine` at various places instead of
+`apply`.
+
+TODO: Investigate what really is going on. Is there a related to Cog bug #5752?
+When should holes in an `open_constr` be resolved?
+*)
 Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
   let rec go xs :=
     lazymatch xs with
-    | hnil => idtac
+    | hnil => apply id (* Finally, trigger TC *)
     | hcons ?x ?xs =>
        eapply tac_forall_specialize with _ H _ _ _; (* (i:=H) (a:=x) *)
-         [env_reflexivity || fail 1 "iSpecialize:" H "not found"
-         |apply _ ||
+         [env_reflexivity || fail "iSpecialize:" H "not found"
+         |typeclasses eauto ||
           let P := match goal with |- IntoForall ?P _ => P end in
-          fail 1 "iSpecialize: cannot instantiate" P "with" x
-         |exists x; split; [env_reflexivity|go xs]]
+          fail "iSpecialize: cannot instantiate" P "with" x
+         |lazymatch goal with (* Force [A] in [ex_intro] to deal with coercions. *)
+          | |- ∃ _ : ?A, _ => refine (@ex_intro A _ x (conj _ _))
+          end; [env_reflexivity|go xs]]
     end in
   go xs.
 
-Local Tactic Notation "iSpecializePat" constr(H) constr(pat) :=
+Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
   let solve_to_wand H1 :=
     apply _ ||
     let P := match goal with |- IntoWand _ ?P _ _ => P end in

@@ -138,7 +138,7 @@ Proof.
   iMod (sts_openS (barrier_inv l P) _ _ γ with "[Hγ]")
     as ([p I]) "(% & [Hl Hr] & Hclose)"; eauto.
   wp_load. destruct p.
-  - iMod ("Hclose" $! (State Low I) with "[Hl Hr]") as "Hγ".
+  - iMod ("Hclose" $! (State Low I) {[ Change i ]} with "[Hl Hr]") as "Hγ".
     { iSplit; first done. rewrite /barrier_inv /=. by iFrame. }
     iAssert (sts_ownS γ (i_states i) {[Change i]})%I with "[> Hγ]" as "Hγ".
     { iApply (sts_own_weaken with "Hγ"); eauto using i_states_closed. }
@@ -150,7 +150,7 @@ Proof.
     iDestruct (big_opS_delete _ _ i with "Hsp") as "[#HΨi Hsp]"; first done.
     iAssert (▷ Ψ i ∗ ▷ [∗ set] j ∈ I ∖ {[i]}, Ψ j)%I with "[HΨ]" as "[HΨ HΨ']".
     { iNext. iApply (big_opS_delete _ _ i); first done. by iApply "HΨ". }
-    iMod ("Hclose" $! (State High (I ∖ {[ i ]})) (∅ : set token) with "[HΨ' Hl Hsp]").
+    iMod ("Hclose" $! (State High (I ∖ {[ i ]})) ∅ with "[HΨ' Hl Hsp]").
     { iSplit; [iPureIntro; by eauto using wait_step|].
       rewrite /barrier_inv /=. iNext. iFrame "Hl". iExists Ψ; iFrame. auto. }
     iPoseProof (saved_prop_agree with "HQ HΨi") as "#Heq".
@@ -169,7 +169,8 @@ Proof.
   iMod (saved_prop_alloc_strong (R2: ∙%CF (iProp Σ)) (I ∪ {[i1]}))
     as (i2) "[Hi2' #Hi2]"; iDestruct "Hi2'" as %Hi2.
   rewrite ->not_elem_of_union, elem_of_singleton in Hi2; destruct Hi2.
-  iMod ("Hclose" $! (State p ({[i1; i2]} ∪ I ∖ {[i]})) with "[-]") as "Hγ".
+  iMod ("Hclose" $! (State p ({[i1; i2]} ∪ I ∖ {[i]}))
+                    {[Change i1; Change i2 ]} with "[-]") as "Hγ".
   { iSplit; first by eauto using split_step.
     rewrite /barrier_inv /=. iNext. iFrame "Hl".
     by iApply (ress_split with "HQ Hi1 Hi2 HQR"). }
