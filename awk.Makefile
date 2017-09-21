@@ -11,7 +11,8 @@
 
 # Patch the uninstall target to work properly, and to also uninstall stale files.
 # Also see <https://coq.inria.fr/bugs/show_bug.cgi?id=4907>.
-/^uninstall:/ {
+# This (and the section above) can be removed once we no longer support Coq 8.6.
+/^uninstall: / {
 	print "uninstall:";
 	print "\tif [ -d \"$(DSTROOT)\"$(COQLIBINSTALL)/"PROJECT"/ ]; then find \"$(DSTROOT)\"$(COQLIBINSTALL)/"PROJECT"/ \\( -name \"*.vo\" -o -name \"*.v\" -o -name \"*.glob\" -o \\( -type d -empty \\) \\) -print -delete; fi";
 	getline;
