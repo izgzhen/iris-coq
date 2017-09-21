@@ -41,6 +41,7 @@ build-dep: build-dep/opam phony
 Makefile: ;
 _CoqProject: ;
 awk.Makefile: ;
+opam: ;
 
 # Phony wildcard targets
 phony: ;
