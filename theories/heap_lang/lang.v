@@ -394,7 +394,7 @@ Qed.
 Lemma alloc_fresh e v σ :
   let l := fresh (dom (gset loc) σ) in
   to_val e = Some v → head_step (Alloc e) σ (Lit (LitLoc l)) (<[l:=v]>σ) [].
-Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset _)), is_fresh. Qed.
+Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset loc)), is_fresh. Qed.
 
 (* Misc *)
 Lemma to_val_rec f x e `{!Closed (f :b: x :b: []) e} :

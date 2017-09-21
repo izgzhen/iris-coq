@@ -15,6 +15,7 @@ Class gen_heapG (L V : Type) (Σ : gFunctors) `{Countable L} := GenHeapG {
   gen_heap_inG :> inG Σ (authR (gen_heapUR L V));
   gen_heap_name : gname
 }.
+Arguments gen_heap_name {_ _ _ _ _} _ : assert.
 
 Class gen_heapPreG (L V : Type) (Σ : gFunctors) `{Countable L} :=
   { gen_heap_preG_inG :> inG Σ (authR (gen_heapUR L V)) }.
@@ -27,13 +28,13 @@ Instance subG_gen_heapPreG {Σ L V} `{Countable L} :
 Proof. solve_inG. Qed.
 
 Section definitions.
-  Context `{gen_heapG L V Σ}.
+  Context `{hG : gen_heapG L V Σ}.
 
   Definition gen_heap_ctx (σ : gmap L V) : iProp Σ :=
-    own gen_heap_name (● to_gen_heap σ).
+    own (gen_heap_name hG) (● (to_gen_heap σ)).
 
   Definition mapsto_def (l : L) (q : Qp) (v: V) : iProp Σ :=
-    own gen_heap_name (◯ {[ l := (q, to_agree (v : leibnizC V)) ]}).
+    own (gen_heap_name hG) (◯ {[ l := (q, to_agree (v : leibnizC V)) ]}).
   Definition mapsto_aux : seal (@mapsto_def). by eexists. Qed.
   Definition mapsto := unseal mapsto_aux.
   Definition mapsto_eq : @mapsto = @mapsto_def := seal_eq mapsto_aux.
@@ -77,6 +78,8 @@ Section gen_heap.
   Implicit Types Φ : V → iProp Σ.
   Implicit Types σ : gmap L V.
   Implicit Types h g : gen_heapUR L V.
+  Implicit Types l : L.
+  Implicit Types v : V.
 
   (** General properties of mapsto *)
   Global Instance mapsto_timeless l q v : TimelessP (l ↦{q} v).

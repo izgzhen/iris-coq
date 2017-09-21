@@ -180,11 +180,11 @@ Section gmap.
 
   Global Instance big_opM_ne n :
     Proper (pointwise_relation _ (pointwise_relation _ (dist n)) ==> eq ==> dist n)
-           (big_opM o (A:=A)).
+           (big_opM o (K:=K) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
   Global Instance big_opM_proper' :
     Proper (pointwise_relation _ (pointwise_relation _ (≡)) ==> eq ==> (≡))
-           (big_opM o (A:=A)).
+           (big_opM o (K:=K) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_opM_empty f : ([^o map] k↦x ∈ ∅, f k x) = monoid_unit.

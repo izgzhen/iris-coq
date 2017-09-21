@@ -213,7 +213,7 @@ Section gmap.
 
   Global Instance big_sepM_mono' :
     Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (=) ==> (⊢))
-           (big_opM (@uPred_sep M) (A:=A)).
+           (big_opM (@uPred_sep M) (K:=K) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opM_forall; apply _ || intros; apply Hf. Qed.
 
   Lemma big_sepM_empty Φ : ([∗ map] k↦x ∈ ∅, Φ k x) ⊣⊢ True.

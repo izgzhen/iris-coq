@@ -427,7 +427,7 @@ Lemma singleton_local_update m i x y x' y' :
   (m, {[ i := y ]}) ~l~> (<[i:=x']>m, {[ i := y' ]}).
 Proof.
   intros. rewrite /singletonM /map_singleton -(insert_insert ∅ i y' y).
-  eapply insert_local_update; eauto using lookup_insert.
+  by eapply insert_local_update; [|eapply lookup_insert|].
 Qed.
 
 Lemma delete_local_update m1 m2 i x `{!Exclusive x} :
@@ -446,7 +446,7 @@ Lemma delete_singleton_local_update m i x `{!Exclusive x} :
   (m, {[ i := x ]}) ~l~> (delete i m, ∅).
 Proof.
   rewrite -(delete_singleton i x).
-  eapply delete_local_update; eauto using lookup_singleton.
+  by eapply delete_local_update, lookup_singleton.
 Qed.
 
 Lemma delete_local_update_cancelable m1 m2 i mx `{!Cancelable mx} :
