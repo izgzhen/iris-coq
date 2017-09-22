@@ -93,4 +93,16 @@ Section language.
     exists (tl' ++ e2 :: tr' ++ efs); split; [|by econstructor].
     by rewrite -!Permutation_middle !assoc_L Ht.
   Qed.
+
+  Class PureExec (P : Prop) (e1 e2 : expr Λ) := {
+    pure_exec_safe σ :
+      P → reducible e1 σ;
+    pure_exec_puredet σ1 e2' σ2 efs :
+      P → prim_step e1 σ1 e2' σ2 efs → σ1 = σ2 ∧ e2 = e2' ∧ efs = [];
+  }.
+
+  Lemma hoist_pred_pureexec (P : Prop) (e1 e2 : expr Λ) :
+    (P → PureExec True e1 e2) →
+    PureExec P e1 e2.
+  Proof. intros HPE. split; intros; eapply HPE; eauto. Qed.
 End language.

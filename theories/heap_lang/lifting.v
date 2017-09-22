@@ -1,5 +1,5 @@
 From iris.base_logic Require Export gen_heap.
-From iris.program_logic Require Export weakestpre pure.
+From iris.program_logic Require Export weakestpre lifting.
 From iris.program_logic Require Import ectx_lifting.
 From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import tactics.
@@ -195,7 +195,7 @@ Qed.
 Lemma wp_seq E e1 e2 Φ :
   is_Some (to_val e1) → Closed [] e2 →
   ▷ WP e2 @ E {{ Φ }} ⊢ WP Seq e1 e2 @ E {{ Φ }}.
-Proof. iIntros ([? ?] ?). rewrite -wp_pure'; by eauto. Qed.
+Proof. iIntros ([? ?] ?). rewrite -wp_pure_step_later; by eauto. Qed.
 
 Lemma wp_skip E Φ : ▷ Φ (LitV LitUnit) ⊢ WP Skip @ E {{ Φ }}.
 Proof. rewrite -wp_seq; last eauto. by rewrite -wp_value. Qed.
@@ -203,11 +203,11 @@ Proof. rewrite -wp_seq; last eauto. by rewrite -wp_value. Qed.
 Lemma wp_match_inl E e0 x1 e1 x2 e2 Φ :
   is_Some (to_val e0) → Closed (x1 :b: []) e1 →
   ▷ WP subst' x1 e0 e1 @ E {{ Φ }} ⊢ WP Match (InjL e0) x1 e1 x2 e2 @ E {{ Φ }}.
-Proof. iIntros ([? ?] ?) "?". rewrite -!wp_pure'; by eauto. Qed.
+Proof. iIntros ([? ?] ?) "?". rewrite -!wp_pure_step_later; by eauto. Qed.
 
 Lemma wp_match_inr E e0 x1 e1 x2 e2 Φ :
   is_Some (to_val e0) → Closed (x2 :b: []) e2 →
   ▷ WP subst' x2 e0 e2 @ E {{ Φ }} ⊢ WP Match (InjR e0) x1 e1 x2 e2 @ E {{ Φ }}.
-Proof. iIntros ([? ?] ?) "?". rewrite -!wp_pure'; by eauto. Qed.
+Proof. iIntros ([? ?] ?) "?". rewrite -!wp_pure_step_later; by eauto. Qed.
 
 End lifting.
