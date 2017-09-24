@@ -83,4 +83,14 @@ Section language.
   Lemma irreducible_fill `{LanguageCtx Λ K} e σ :
     to_val e = None → irreducible e σ → irreducible (K e) σ.
   Proof. rewrite -!not_reducible. naive_solver eauto using reducible_fill. Qed.
+
+  Lemma step_Permutation (t1 t1' t2 : list (expr Λ)) σ1 σ2 :
+    t1 ≡ₚ t1' → step (t1,σ1) (t2,σ2) → ∃ t2', t2 ≡ₚ t2' ∧ step (t1',σ1) (t2',σ2).
+  Proof.
+    intros Ht [e1 σ1' e2 σ2' efs tl tr ?? Hstep]; simplify_eq/=.
+    move: Ht; rewrite -Permutation_middle (symmetry_iff (≡ₚ)).
+    intros (tl'&tr'&->&Ht)%Permutation_cons_inv.
+    exists (tl' ++ e2 :: tr' ++ efs); split; [|by econstructor].
+    by rewrite -!Permutation_middle !assoc_L Ht.
+  Qed.
 End language.
