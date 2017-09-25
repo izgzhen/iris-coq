@@ -5,15 +5,6 @@ From iris.heap_lang Require Export tactics lifting.
 Set Default Proof Using "Type".
 Import uPred.
 
-(** wp-specific helper tactics *)
-Ltac wp_bind_core K :=
-  lazymatch eval hnf in K with
-  | [] => idtac
-  | _ => etrans; [|fast_by apply (wp_bind K)]; simpl
-  end.
-
-Ltac wp_value_head := etrans; [|eapply wp_value; apply _]; simpl.
-
 Lemma tac_wp_pure `{heapG Σ} K Δ Δ' E e1 e2 φ Φ :
   PureExec φ e1 e2 →
   φ →
@@ -25,6 +16,8 @@ Proof.
   rewrite -lifting.wp_bind HΔ' -wp_pure_step_later //.
   by rewrite -ectx_lifting.wp_ectx_bind_inv.
 Qed.
+
+Ltac wp_value_head := etrans; [|eapply wp_value; apply _]; simpl.
 
 Tactic Notation "wp_pure" open_constr(efoc) :=
   iStartProof;
@@ -53,6 +46,12 @@ Tactic Notation "wp_seq" := wp_lam.
 Tactic Notation "wp_proj" := wp_pure (Fst _) || wp_pure (Snd _).
 Tactic Notation "wp_case" := wp_pure (Case _ _ _).
 Tactic Notation "wp_match" := wp_case; wp_let.
+
+Ltac wp_bind_core K :=
+  lazymatch eval hnf in K with
+  | [] => idtac
+  | _ => etrans; [|fast_by apply (wp_bind K)]; simpl
+  end.
 
 Tactic Notation "wp_bind" open_constr(efoc) :=
   iStartProof;
