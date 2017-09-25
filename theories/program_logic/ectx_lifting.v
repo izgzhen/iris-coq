@@ -16,6 +16,10 @@ Lemma wp_ectx_bind {E Φ} K e :
   WP e @ E {{ v, WP fill K (of_val v) @ E {{ Φ }} }} ⊢ WP fill K e @ E {{ Φ }}.
 Proof. apply: weakestpre.wp_bind. Qed.
 
+Lemma wp_ectx_bind_inv {E Φ} K e :
+  WP fill K e @ E {{ Φ }} ⊢ WP e @ E {{ v, WP fill K (of_val v) @ E {{ Φ }} }}.
+Proof. apply: weakestpre.wp_bind_inv. Qed.
+
 Lemma wp_lift_head_step {E Φ} e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E,∅}=∗
