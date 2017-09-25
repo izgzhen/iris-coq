@@ -42,6 +42,16 @@ Section LiftingTests.
     by repeat (wp_pure _).
   Qed.
 
+  Definition heap_e4 : expr :=
+    let: "x" := (let: "y" := ref (ref #1) in ref "y") in
+    ! ! !"x".
+
+  Lemma heap_e4_spec : WP heap_e4 {{ v, ⌜ v = #1 ⌝ }}%I.
+  Proof.
+    rewrite /heap_e4. wp_alloc l. wp_alloc l'. wp_let.
+    wp_alloc l''. wp_let. by repeat wp_load.
+  Qed.
+
   Definition FindPred : val :=
     rec: "pred" "x" "y" :=
       let: "yp" := "y" + #1 in
