@@ -1,4 +1,4 @@
-From iris.program_logic Require Export ectx_language ectxi_language.
+From iris.program_logic Require Export language ectx_language ectxi_language.
 From iris.algebra Require Export ofe.
 From stdpp Require Export strings.
 From stdpp Require Import gmap.
@@ -108,6 +108,14 @@ Fixpoint to_val (e : expr) : option val :=
   | InjR e => InjRV <$> to_val e
   | _ => None
   end.
+
+Class AsRec (e : expr) (f x : binder) (erec : expr) :=
+  as_rec : e = Rec f x erec.
+
+Instance AsRec_rec f x e : AsRec (Rec f x e) f x e := eq_refl.
+Instance AsRec_rec_locked_val v f x e :
+  AsRec (of_val v) f x e → AsRec (of_val (locked v)) f x e.
+Proof. by unlock. Qed.
 
 (** The state: heaps of vals. *)
 Definition state := gmap loc val.
@@ -410,6 +418,9 @@ Proof. intros. by apply is_closed_weaken with [], list_subseteq_nil. Qed.
 
 Lemma is_closed_of_val X v : is_closed X (of_val v).
 Proof. apply is_closed_weaken_nil. induction v; simpl; auto. Qed.
+
+Lemma is_closed_to_val X e v : to_val e = Some v → is_closed X e.
+Proof. intros Hev; rewrite -(of_to_val e v Hev); apply is_closed_of_val. Qed.
 
 Lemma is_closed_subst X e x es :
   is_closed [] es → is_closed (x :: X) e → is_closed X (subst x es e).

@@ -24,20 +24,9 @@ Ltac wp_done :=
 
 Ltac wp_value_head := etrans; [|eapply wp_value; wp_done]; simpl.
 
-Lemma of_val_unlock v e : of_val v = e → of_val (locked v) = e.
-Proof. by unlock. Qed.
-
-(* Applied to goals that are equalities of expressions. Will try to unlock the
-   LHS once if necessary, to get rid of the lock added by the syntactic sugar. *)
-Ltac solve_of_val_unlock := try apply of_val_unlock; reflexivity.
-
 (* Solves side-conditions generated specifically by wp_pure *)
 Ltac wp_pure_done :=
-  split_and?;
-  lazymatch goal with
-  | |- of_val _ = _ => solve_of_val_unlock
-  | _ => wp_done
-  end.
+  split_and?; wp_done.
 
 Lemma tac_wp_pure `{heapG Σ} K Δ Δ' E e1 e2 φ Φ :
   PureExec φ e1 e2 →

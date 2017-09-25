@@ -83,25 +83,24 @@ Qed.
 Local Ltac solve_exec_safe := intros; subst; do 3 eexists; econstructor; eauto.
 Local Ltac solve_exec_puredet := simpl; intros; by inv_head_step.
 Local Ltac solve_pureexec :=
+  repeat lazymatch goal with
+  | H: IntoVal ?e _ |- _ => rewrite -(of_to_val e _ into_val); clear H
+  | H: AsRec _ _ _ _ |- _ => rewrite H; clear H
+  end;
   apply hoist_pred_pureexec; intros; destruct_and?;
   apply det_head_step_pureexec; [ solve_exec_safe | solve_exec_puredet ].
 
-Global Instance pure_rec f x erec e1 e2 v2 :
-  PureExec (to_val e2 = Some v2 ∧ e1 = Rec f x erec ∧ Closed (f :b: x :b: []) erec)
-           (App e1 e2)
-           (subst' x e2 (subst' f e1 erec)).
+Global Instance pure_rec f x (erec e1 e2 : expr) (v2 : val)
+    `{!IntoVal e2 v2, AsRec e1 f x erec, Closed (f :b: x :b: []) erec} :
+  PureExec True (App e1 e2) (subst' x e2 (subst' f e1 erec)).
 Proof. solve_pureexec. Qed.
 
-Global Instance pure_unop op e v v' :
-  PureExec (to_val e = Some v ∧ un_op_eval op v = Some v')
-           (UnOp op e)
-           (of_val v').
+Global Instance pure_unop op e v v' `{!IntoVal e v} :
+  PureExec (un_op_eval op v = Some v') (UnOp op e) (of_val v').
 Proof. solve_pureexec. Qed.
 
-Global Instance pure_binop op e1 e2 v1 v2 v' :
-  PureExec (to_val e1 = Some v1 ∧ to_val e2 = Some v2 ∧ bin_op_eval op v1 v2 = Some v')
-           (BinOp op e1 e2)
-           (of_val v').
+Global Instance pure_binop op e1 e2 v1 v2 v' `{!IntoVal e1 v1, !IntoVal e2 v2} :
+  PureExec (bin_op_eval op v1 v2 = Some v') (BinOp op e1 e2) (of_val v').
 Proof. solve_pureexec. Qed.
 
 Global Instance pure_if_true e1 e2 :
@@ -112,24 +111,20 @@ Global Instance pure_if_false e1 e2 :
   PureExec True (If (Lit (LitBool false)) e1 e2) e2.
 Proof. solve_pureexec. Qed.
 
-Global Instance pure_fst e1 e2 v1 v2 :
-  PureExec (to_val e1 = Some v1 ∧ to_val e2 = Some v2)
-           (Fst (Pair e1 e2))
-           e1.
+Global Instance pure_fst e1 e2 v1 v2 `{!IntoVal e1 v1, !IntoVal e2 v2} :
+  PureExec True (Fst (Pair e1 e2)) e1.
 Proof. solve_pureexec. Qed.
 
-Global Instance pure_snd e1 e2 v1 v2 :
-  PureExec (to_val e1 = Some v1 ∧ to_val e2 = Some v2)
-           (Snd (Pair e1 e2))
-           e2.
+Global Instance pure_snd e1 e2 v1 v2 `{!IntoVal e1 v1, !IntoVal e2 v2} :
+  PureExec True (Snd (Pair e1 e2)) e2.
 Proof. solve_pureexec. Qed.
 
-Global Instance pure_case_inl e0 v e1 e2  :
-  PureExec (to_val e0 = Some v) (Case (InjL e0) e1 e2) (App e1 e0).
+Global Instance pure_case_inl e0 v e1 e2 `{!IntoVal e0 v} :
+  PureExec True (Case (InjL e0) e1 e2) (App e1 e0).
 Proof. solve_pureexec. Qed.
 
-Global Instance pure_case_inr e0 v e1 e2  :
-  PureExec (to_val e0 = Some v) (Case (InjR e0) e1 e2) (App e2 e0).
+Global Instance pure_case_inr e0 v e1 e2 `{!IntoVal e0 v} :
+  PureExec True (Case (InjR e0) e1 e2) (App e2 e0).
 Proof. solve_pureexec. Qed.
 
 (** Heap *)
@@ -209,5 +204,4 @@ Lemma wp_match_inr E e0 x1 e1 x2 e2 Φ :
   is_Some (to_val e0) → Closed (x2 :b: []) e2 →
   ▷ WP subst' x2 e0 e2 @ E {{ Φ }} ⊢ WP Match (InjR e0) x1 e1 x2 e2 @ E {{ Φ }}.
 Proof. iIntros ([? ?] ?) "?". rewrite -!wp_pure_step_later; by eauto. Qed.
-
 End lifting.

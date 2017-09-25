@@ -105,4 +105,8 @@ Section language.
     (P → PureExec True e1 e2) →
     PureExec P e1 e2.
   Proof. intros HPE. split; intros; eapply HPE; eauto. Qed.
+
+  (* This is a family of frequent assumptions for PureExec *)
+  Class IntoVal (e : expr Λ) (v : val Λ) :=
+    into_val : to_val e = Some v.
 End language.
