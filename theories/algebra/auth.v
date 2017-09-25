@@ -12,7 +12,7 @@ Instance: Params (@Auth) 1.
 Instance: Params (@authoritative) 1.
 Instance: Params (@auth_own) 1.
 Notation "◯ a" := (Auth None a) (at level 20).
-Notation "● a" := (Auth (Excl' a) ∅) (at level 20).
+Notation "● a" := (Auth (Excl' a) ε) (at level 20).
 
 (* COFE *)
 Section cofe.
@@ -177,7 +177,7 @@ Proof.
   - by rewrite -cmra_discrete_valid_iff.
 Qed.
 
-Instance auth_empty : Empty (auth A) := Auth ∅ ∅.
+Instance auth_empty : Unit (auth A) := Auth ε ε.
 Lemma auth_ucmra_mixin : UCMRAMixin (auth A).
 Proof.
   split; simpl.
@@ -226,9 +226,9 @@ Proof.
   split; last done. exists bf2. by rewrite -assoc.
 Qed.
 
-Lemma auth_update_alloc a a' b' : (a,∅) ~l~> (a',b') → ● a ~~> ● a' ⋅ ◯ b'.
+Lemma auth_update_alloc a a' b' : (a,ε) ~l~> (a',b') → ● a ~~> ● a' ⋅ ◯ b'.
 Proof. intros. rewrite -(right_id _ _ (● a)). by apply auth_update. Qed.
-Lemma auth_update_dealloc a b a' : (a,b) ~l~> (a',∅) → ● a ⋅ ◯ b ~~> ● a'.
+Lemma auth_update_dealloc a b a' : (a,b) ~l~> (a',ε) → ● a ⋅ ◯ b ~~> ● a'.
 Proof. intros. rewrite -(right_id _ _ (● a')). by apply auth_update. Qed.
 
 Lemma auth_local_update (a b0 b1 a' b0' b1': A) :

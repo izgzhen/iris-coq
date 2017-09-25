@@ -136,7 +136,7 @@ Section M.
     end.
   Instance M_pcore : PCore M := λ x,
     Some match x with Auth j | Frag j => Frag j | _ => Bot end.
-  Instance M_empty : Empty M := Frag 0.
+  Instance M_unit : Unit M := Frag 0.
 
   Definition M_ra_mixin : RAMixin M.
   Proof.

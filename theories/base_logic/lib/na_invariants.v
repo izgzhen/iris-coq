@@ -19,11 +19,11 @@ Section defs.
   Context `{invG Σ, na_invG Σ}.
 
   Definition na_own (p : na_inv_pool_name) (E : coPset) : iProp Σ :=
-    own p (CoPset E, ∅).
+    own p (CoPset E, GSet ∅).
 
   Definition na_inv (p : na_inv_pool_name) (N : namespace) (P : iProp Σ) : iProp Σ :=
     (∃ i, ⌜i ∈ (↑N:coPset)⌝ ∧
-          inv N (P ∗ own p (∅, GSet {[i]}) ∨ na_own p {[i]}))%I.
+          inv N (P ∗ own p (CoPset ∅, GSet {[i]}) ∨ na_own p {[i]}))%I.
 End defs.
 
 Instance: Params (@na_inv) 3.
@@ -68,7 +68,7 @@ Section proofs.
   Lemma na_inv_alloc p E N P : ▷ P ={E}=∗ na_inv p N P.
   Proof.
     iIntros "HP".
-    iMod (own_empty (prodUR coPset_disjUR (gset_disjUR positive)) p) as "Hempty".
+    iMod (own_unit (prodUR coPset_disjUR (gset_disjUR positive)) p) as "Hempty".
     iMod (own_updateP with "Hempty") as ([m1 m2]) "[Hm Hown]".
     { apply prod_updateP'. apply cmra_updateP_id, (reflexivity (R:=eq)).
       apply (gset_disj_alloc_empty_updateP_strong' (λ i, i ∈ (↑N:coPset))).

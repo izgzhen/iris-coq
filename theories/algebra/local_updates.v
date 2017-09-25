@@ -105,7 +105,7 @@ Section updates_unital.
     split.
     - intros Hup n z. apply (Hup _ (Some z)).
     - intros Hup n [z|]; simpl; [by auto|].
-      rewrite -(right_id ∅ op y) -(right_id ∅ op y'). auto.
+      rewrite -(right_id ε op y) -(right_id ε op y'). auto.
   Qed.
 
   Lemma local_update_unital_discrete `{!CMRADiscrete A} (x y x' y' : A) :
@@ -114,12 +114,12 @@ Section updates_unital.
     rewrite local_update_discrete. split.
     - intros Hup z. apply (Hup (Some z)).
     - intros Hup [z|]; simpl; [by auto|].
-      rewrite -(right_id ∅ op y) -(right_id ∅ op y'). auto.
+      rewrite -(right_id ε op y) -(right_id ε op y'). auto.
   Qed.
 
-  Lemma cancel_local_update_empty x y `{!Cancelable x} :
-    (x ⋅ y, x) ~l~> (y, ∅).
-  Proof. rewrite -{2}(right_id ∅ op x). by apply cancel_local_update. Qed.
+  Lemma cancel_local_update_unit x y `{!Cancelable x} :
+    (x ⋅ y, x) ~l~> (y, ε).
+  Proof. rewrite -{2}(right_id ε op x). by apply cancel_local_update. Qed.
 End updates_unital.
 
 (** * Product *)

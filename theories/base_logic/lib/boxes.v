@@ -23,10 +23,10 @@ Section box_defs.
   Definition slice_name := gname.
 
   Definition box_own_auth (γ : slice_name) (a : auth (option (excl bool))) : iProp Σ :=
-    own γ (a, (∅:option (agree (later (iPreProp Σ))))).
+    own γ (a, None).
 
   Definition box_own_prop (γ : slice_name) (P : iProp Σ) : iProp Σ :=
-    own γ (∅:auth (option (excl bool)), Some (to_agree (Next (iProp_unfold P)))).
+    own γ (ε, Some (to_agree (Next (iProp_unfold P)))).
 
   Definition slice_inv (γ : slice_name) (P : iProp Σ) : iProp Σ :=
     (∃ b, box_own_auth γ (● Excl' b) ∗ if b then P else True)%I.

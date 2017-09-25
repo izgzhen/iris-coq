@@ -43,16 +43,16 @@ Section proof.
     (∃ o n : nat,
       lo ↦ #o ∗ ln ↦ #n ∗
       own γ (● (Excl' o, GSet (seq_set 0 n))) ∗
-      ((own γ (◯ (Excl' o, ∅)) ∗ R) ∨ own γ (◯ (∅, GSet {[ o ]}))))%I.
+      ((own γ (◯ (Excl' o, GSet ∅)) ∗ R) ∨ own γ (◯ (ε, GSet {[ o ]}))))%I.
 
   Definition is_lock (γ : gname) (lk : val) (R : iProp Σ) : iProp Σ :=
     (∃ lo ln : loc,
        ⌜lk = (#lo, #ln)%V⌝ ∗ inv N (lock_inv γ lo ln R))%I.
 
   Definition issued (γ : gname) (x : nat) : iProp Σ :=
-    own γ (◯ (∅, GSet {[ x ]}))%I.
+    own γ (◯ (ε, GSet {[ x ]}))%I.
 
-  Definition locked (γ : gname) : iProp Σ := (∃ o, own γ (◯ (Excl' o, ∅)))%I.
+  Definition locked (γ : gname) : iProp Σ := (∃ o, own γ (◯ (Excl' o, GSet ∅)))%I.
 
   Global Instance lock_inv_ne γ lo ln :
     NonExpansive (lock_inv γ lo ln).
@@ -75,7 +75,7 @@ Section proof.
   Proof.
     iIntros (Φ) "HR HΦ". rewrite -wp_fupd /newlock /=.
     wp_seq. wp_alloc lo as "Hlo". wp_alloc ln as "Hln".
-    iMod (own_alloc (● (Excl' 0%nat, ∅) ⋅ ◯ (Excl' 0%nat, ∅))) as (γ) "[Hγ Hγ']".
+    iMod (own_alloc (● (Excl' 0%nat, GSet ∅) ⋅ ◯ (Excl' 0%nat, GSet ∅))) as (γ) "[Hγ Hγ']".
     { by rewrite -auth_both_op. }
     iMod (inv_alloc _ _ (lock_inv γ lo ln R) with "[-HΦ]").
     { iNext. rewrite /lock_inv.

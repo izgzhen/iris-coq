@@ -179,12 +179,13 @@ Instance core' `{PCore A} : Core A := λ x, from_option id x (pcore x).
 Arguments core' _ _ _ /.
 
 (** * CMRAs with a unit element *)
-(** We use the notation ∅ because for most instances (maps, sets, etc) the
-`empty' element is the unit. *)
-Record UCMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, Empty A} := {
-  mixin_ucmra_unit_valid : ✓ ∅;
-  mixin_ucmra_unit_left_id : LeftId (≡) ∅ (⋅);
-  mixin_ucmra_pcore_unit : pcore ∅ ≡ Some ∅
+Class Unit (A : Type) := ε : A.
+Arguments ε {_ _}.
+
+Record UCMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, Unit A} := {
+  mixin_ucmra_unit_valid : ✓ ε;
+  mixin_ucmra_unit_left_id : LeftId (≡) ε (⋅);
+  mixin_ucmra_pcore_unit : pcore ε ≡ Some ε
 }.
 
 Structure ucmraT := UCMRAT' {
@@ -195,7 +196,7 @@ Structure ucmraT := UCMRAT' {
   ucmra_op : Op ucmra_car;
   ucmra_valid : Valid ucmra_car;
   ucmra_validN : ValidN ucmra_car;
-  ucmra_empty : Empty ucmra_car;
+  ucmra_unit : Unit ucmra_car;
   ucmra_ofe_mixin : OfeMixin ucmra_car;
   ucmra_cmra_mixin : CMRAMixin ucmra_car;
   ucmra_mixin : UCMRAMixin ucmra_car;
@@ -215,7 +216,7 @@ Arguments ucmra_ofe_mixin : simpl never.
 Arguments ucmra_cmra_mixin : simpl never.
 Arguments ucmra_mixin : simpl never.
 Add Printing Constructor ucmraT.
-Hint Extern 0 (Empty _) => eapply (@ucmra_empty _) : typeclass_instances.
+Hint Extern 0 (Unit _) => eapply (@ucmra_unit _) : typeclass_instances.
 Coercion ucmra_ofeC (A : ucmraT) : ofeT := OfeT A (ucmra_ofe_mixin A).
 Canonical Structure ucmra_ofeC.
 Coercion ucmra_cmraR (A : ucmraT) : cmraT :=
@@ -226,11 +227,11 @@ Canonical Structure ucmra_cmraR.
 Section ucmra_mixin.
   Context {A : ucmraT}.
   Implicit Types x y : A.
-  Lemma ucmra_unit_valid : ✓ (∅ : A).
+  Lemma ucmra_unit_valid : ✓ (ε : A).
   Proof. apply (mixin_ucmra_unit_valid _ (ucmra_mixin A)). Qed.
-  Global Instance ucmra_unit_left_id : LeftId (≡) ∅ (@op A _).
+  Global Instance ucmra_unit_left_id : LeftId (≡) ε (@op A _).
   Proof. apply (mixin_ucmra_unit_left_id _ (ucmra_mixin A)). Qed.
-  Lemma ucmra_pcore_unit : pcore (∅:A) ≡ Some ∅.
+  Lemma ucmra_pcore_unit : pcore (ε:A) ≡ Some ε.
   Proof. apply (mixin_ucmra_pcore_unit _ (ucmra_mixin A)). Qed.
 End ucmra_mixin.
 
@@ -610,27 +611,27 @@ Section ucmra.
   Context {A : ucmraT}.
   Implicit Types x y z : A.
 
-  Lemma ucmra_unit_validN n : ✓{n} (∅:A).
+  Lemma ucmra_unit_validN n : ✓{n} (ε:A).
   Proof. apply cmra_valid_validN, ucmra_unit_valid. Qed.
-  Lemma ucmra_unit_leastN n x : ∅ ≼{n} x.
+  Lemma ucmra_unit_leastN n x : ε ≼{n} x.
   Proof. by exists x; rewrite left_id. Qed.
-  Lemma ucmra_unit_least x : ∅ ≼ x.
+  Lemma ucmra_unit_least x : ε ≼ x.
   Proof. by exists x; rewrite left_id. Qed.
-  Global Instance ucmra_unit_right_id : RightId (≡) ∅ (@op A _).
+  Global Instance ucmra_unit_right_id : RightId (≡) ε (@op A _).
   Proof. by intros x; rewrite (comm op) left_id. Qed.
-  Global Instance ucmra_unit_persistent : Persistent (∅:A).
+  Global Instance ucmra_unit_persistent : Persistent (ε:A).
   Proof. apply ucmra_pcore_unit. Qed.
 
   Global Instance cmra_unit_total : CMRATotal A.
   Proof.
-    intros x. destruct (cmra_pcore_mono' ∅ x ∅) as (cx&->&?);
-      eauto using ucmra_unit_least, (persistent (∅:A)).
+    intros x. destruct (cmra_pcore_mono' ε x ε) as (cx&->&?);
+      eauto using ucmra_unit_least, (persistent (ε:A)).
   Qed.
-  Global Instance empty_cancelable : Cancelable (∅:A).
+  Global Instance empty_cancelable : Cancelable (ε:A).
   Proof. intros ???. by rewrite !left_id. Qed.
 
   (* For big ops *)
-  Global Instance cmra_monoid : Monoid (@op A _) := {| monoid_unit := ∅ |}.
+  Global Instance cmra_monoid : Monoid (@op A _) := {| monoid_unit := ε |}.
 End ucmra.
 
 Hint Immediate cmra_unit_total.
@@ -688,9 +689,9 @@ Section ucmra_leibniz.
   Context {A : ucmraT} `{!LeibnizEquiv A}.
   Implicit Types x y z : A.
 
-  Global Instance ucmra_unit_left_id_L : LeftId (=) ∅ (@op A _).
+  Global Instance ucmra_unit_left_id_L : LeftId (=) ε (@op A _).
   Proof. intros x. unfold_leibniz. by rewrite left_id. Qed.
-  Global Instance ucmra_unit_right_id_L : RightId (=) ∅ (@op A _).
+  Global Instance ucmra_unit_right_id_L : RightId (=) ε (@op A _).
   Proof. intros x. unfold_leibniz. by rewrite right_id. Qed.
 End ucmra_leibniz.
 
@@ -925,7 +926,7 @@ Section unit.
   Proof. apply discrete_cmra_mixin, ra_total_mixin; by eauto. Qed.
   Canonical Structure unitR : cmraT := CMRAT unit unit_cmra_mixin.
 
-  Instance unit_empty : Empty () := ().
+  Instance unit_unit : Unit () := ().
   Lemma unit_ucmra_mixin : UCMRAMixin ().
   Proof. done. Qed.
   Canonical Structure unitUR : ucmraT := UCMRAT unit unit_ucmra_mixin.
@@ -960,7 +961,7 @@ Section nat.
   Global Instance nat_cmra_discrete : CMRADiscrete natR.
   Proof. apply discrete_cmra_discrete. Qed.
 
-  Instance nat_empty : Empty nat := 0.
+  Instance nat_unit : Unit nat := 0.
   Lemma nat_ucmra_mixin : UCMRAMixin nat.
   Proof. split; apply _ || done. Qed.
   Canonical Structure natUR : ucmraT := UCMRAT nat nat_ucmra_mixin.
@@ -972,6 +973,7 @@ End nat.
 Definition mnat := nat.
 
 Section mnat.
+  Instance mnat_unit : Unit mnat := 0.
   Instance mnat_valid : Valid mnat := λ x, True.
   Instance mnat_validN : ValidN mnat := λ n x, True.
   Instance mnat_pcore : PCore mnat := Some.
@@ -997,7 +999,6 @@ Section mnat.
   Global Instance mnat_cmra_discrete : CMRADiscrete mnatR.
   Proof. apply discrete_cmra_discrete. Qed.
 
-  Instance mnat_empty : Empty mnat := 0.
   Lemma mnat_ucmra_mixin : UCMRAMixin mnat.
   Proof. split; apply _ || done. Qed.
   Canonical Structure mnatUR : ucmraT := UCMRAT mnat mnat_ucmra_mixin.
@@ -1140,7 +1141,7 @@ Arguments prodR : clear implicits.
 Section prod_unit.
   Context {A B : ucmraT}.
 
-  Instance prod_empty `{Empty A, Empty B} : Empty (A * B) := (∅, ∅).
+  Instance prod_unit `{Unit A, Unit B} : Unit (A * B) := (ε, ε).
   Lemma prod_ucmra_mixin : UCMRAMixin (A * B).
   Proof.
     split.
@@ -1150,11 +1151,11 @@ Section prod_unit.
   Qed.
   Canonical Structure prodUR := UCMRAT (prod A B) prod_ucmra_mixin.
 
-  Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ∅) ⋅ (∅, y).
+  Lemma pair_split (x : A) (y : B) : (x, y) ≡ (x, ε) ⋅ (ε, y).
   Proof. by rewrite pair_op left_id right_id. Qed.
 
   Lemma pair_split_L `{!LeibnizEquiv A, !LeibnizEquiv B} (x : A) (y : B) :
-    (x, y) = (x, ∅) ⋅ (∅, y).
+    (x, y) = (x, ε) ⋅ (ε, y).
   Proof. unfold_leibniz. apply pair_split. Qed.
 End prod_unit.
 
@@ -1311,7 +1312,7 @@ Section option.
   Global Instance option_cmra_discrete : CMRADiscrete A → CMRADiscrete optionR.
   Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
 
-  Instance option_empty : Empty (option A) := None.
+  Instance option_unit : Unit (option A) := None.
   Lemma option_ucmra_mixin : UCMRAMixin optionR.
   Proof. split. done. by intros []. done. Qed.
   Canonical Structure optionUR := UCMRAT (option A) option_ucmra_mixin.

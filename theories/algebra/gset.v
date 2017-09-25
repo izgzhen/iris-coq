@@ -11,6 +11,7 @@ Section gset.
   Canonical Structure gsetC := discreteC (gset K).
 
   Instance gset_valid : Valid (gset K) := λ _, True.
+  Instance gset_unit : Unit (gset K) := (∅ : gset K).
   Instance gset_op : Op (gset K) := union.
   Instance gset_pcore : PCore (gset K) := λ X, Some X.
 
@@ -82,13 +83,13 @@ Section gset_disj.
 
   Instance gset_disj_valid : Valid (gset_disj K) := λ X,
     match X with GSet _ => True | GSetBot => False end.
-  Instance gset_disj_empty : Empty (gset_disj K) := GSet ∅.
+  Instance gset_disj_unit : Unit (gset_disj K) := GSet ∅.
   Instance gset_disj_op : Op (gset_disj K) := λ X Y,
     match X, Y with
     | GSet X, GSet Y => if decide (X ⊥ Y) then GSet (X ∪ Y) else GSetBot
     | _, _ => GSetBot
     end.
-  Instance gset_disj_pcore : PCore (gset_disj K) := λ _, Some ∅.
+  Instance gset_disj_pcore : PCore (gset_disj K) := λ _, Some ε.
 
   Ltac gset_disj_solve :=
     repeat (simpl || case_decide);
@@ -183,7 +184,7 @@ Section gset_disj.
   End fresh_updates.
 
   Lemma gset_disj_dealloc_local_update X Y :
-    (GSet X, GSet Y) ~l~> (GSet (X ∖ Y), ∅).
+    (GSet X, GSet Y) ~l~> (GSet (X ∖ Y), GSet ∅).
   Proof.
     apply local_update_total_valid=> _ _ /gset_disj_included HYX.
     rewrite local_update_unital_discrete=> -[Xf|] _ /leibniz_equiv_iff //=.
@@ -192,7 +193,7 @@ Section gset_disj.
       difference_diag_L !left_id_L difference_disjoint_L.
   Qed.
   Lemma gset_disj_dealloc_empty_local_update X Z :
-    (GSet Z ⋅ GSet X, GSet Z) ~l~> (GSet X,∅).
+    (GSet Z ⋅ GSet X, GSet Z) ~l~> (GSet X, GSet ∅).
   Proof.
     apply local_update_total_valid=> /gset_disj_valid_op HZX _ _.
     assert (X = (Z ∪ X) ∖ Z) as HX by set_solver.
@@ -201,7 +202,7 @@ Section gset_disj.
   Lemma gset_disj_dealloc_op_local_update X Y Z :
     (GSet Z ⋅ GSet X, GSet Z ⋅ GSet Y) ~l~> (GSet X,GSet Y).
   Proof.
-    rewrite -{2}(left_id ∅ _ (GSet Y)).
+    rewrite -{2}(left_id ε _ (GSet Y)).
     apply op_local_update_frame, gset_disj_dealloc_empty_local_update.
   Qed.
 

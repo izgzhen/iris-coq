@@ -221,7 +221,7 @@ Section cmra.
   Qed.
   Canonical Structure listR := CMRAT (list A) list_cmra_mixin.
 
-  Global Instance empty_list : Empty (list A) := [].
+  Global Instance list_unit : Unit (list A) := [].
   Definition list_ucmra_mixin : UCMRAMixin (list A).
   Proof.
     split.
@@ -254,7 +254,7 @@ Arguments listR : clear implicits.
 Arguments listUR : clear implicits.
 
 Instance list_singletonM {A : ucmraT} : SingletonM nat A (list A) := λ n x,
-  replicate n ∅ ++ [x].
+  replicate n ε ++ [x].
 
 Section properties.
   Context {A : ucmraT}.
@@ -298,7 +298,7 @@ Section properties.
   Global Instance list_singletonM_proper i :
     Proper ((≡) ==> (≡)) (list_singletonM i) := ne_proper _.
 
-  Lemma elem_of_list_singletonM i z x : z ∈ ({[i := x]} : list A) → z = ∅ ∨ z = x.
+  Lemma elem_of_list_singletonM i z x : z ∈ ({[i := x]} : list A) → z = ε ∨ z = x.
   Proof.
     rewrite elem_of_app elem_of_list_singleton elem_of_replicate. naive_solver.
   Qed.
@@ -306,7 +306,7 @@ Section properties.
   Proof. induction i; by f_equal/=. Qed.
   Lemma list_lookup_singletonM_ne i j x :
     i ≠ j →
-    ({[ i := x ]} : list A) !! j = None ∨ ({[ i := x ]} : list A) !! j = Some ∅.
+    ({[ i := x ]} : list A) !! j = None ∨ ({[ i := x ]} : list A) !! j = Some ε.
   Proof. revert j; induction i; intros [|j]; naive_solver auto with omega. Qed.
   Lemma list_singletonM_validN n i x : ✓{n} ({[ i := x ]} : list A) ↔ ✓{n} x.
   Proof.
@@ -351,7 +351,7 @@ Section properties.
     x ~~>: P → (∀ y, P y → Q [y]) → [x] ~~>: Q.
   Proof.
     rewrite !cmra_total_updateP=> Hup HQ n lf /list_lookup_validN Hv.
-    destruct (Hup n (from_option id ∅ (lf !! 0))) as (y&?&Hv').
+    destruct (Hup n (from_option id ε (lf !! 0))) as (y&?&Hv').
     { move: (Hv 0). by destruct lf; rewrite /= ?right_id. }
     exists [y]; split; first by auto.
     apply list_lookup_validN=> i.

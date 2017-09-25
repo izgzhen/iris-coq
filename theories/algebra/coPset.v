@@ -12,6 +12,7 @@ Section coPset.
   Canonical Structure coPsetC := discreteC coPset.
 
   Instance coPset_valid : Valid coPset := λ _, True.
+  Instance coPset_unit : Unit coPset := (∅ : coPset).
   Instance coPset_op : Op coPset := union.
   Instance coPset_pcore : PCore coPset := Some.
 
@@ -70,13 +71,13 @@ Section coPset_disj.
 
   Instance coPset_disj_valid : Valid coPset_disj := λ X,
     match X with CoPset _ => True | CoPsetBot => False end.
-  Instance coPset_disj_empty : Empty coPset_disj := CoPset ∅.
+  Instance coPset_disj_unit : Unit coPset_disj := CoPset ∅.
   Instance coPset_disj_op : Op coPset_disj := λ X Y,
     match X, Y with
     | CoPset X, CoPset Y => if decide (X ⊥ Y) then CoPset (X ∪ Y) else CoPsetBot
     | _, _ => CoPsetBot
     end.
-  Instance coPset_disj_pcore : PCore coPset_disj := λ _, Some ∅.
+  Instance coPset_disj_pcore : PCore coPset_disj := λ _, Some ε.
 
   Ltac coPset_disj_solve :=
     repeat (simpl || case_decide);

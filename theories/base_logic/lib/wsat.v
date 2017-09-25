@@ -53,7 +53,7 @@ Global Instance ownI_persistent i P : PersistentP (ownI i P).
 Proof. rewrite /ownI. apply _. Qed.
 
 Lemma ownE_empty : (|==> ownE ∅)%I.
-Proof. by rewrite /uPred_valid (own_empty (coPset_disjUR) enabled_name). Qed.
+Proof. by rewrite /uPred_valid (own_unit (coPset_disjUR) enabled_name). Qed.
 Lemma ownE_op E1 E2 : E1 ⊥ E2 → ownE (E1 ∪ E2) ⊣⊢ ownE E1 ∗ ownE E2.
 Proof. intros. by rewrite /ownE -own_op coPset_disj_union. Qed.
 Lemma ownE_disjoint E1 E2 : ownE E1 ∗ ownE E2 ⊢ ⌜E1 ⊥ E2⌝.
@@ -68,7 +68,7 @@ Lemma ownE_singleton_twice i : ownE {[i]} ∗ ownE {[i]} ⊢ False.
 Proof. rewrite ownE_disjoint. iIntros (?); set_solver. Qed.
 
 Lemma ownD_empty : (|==> ownD ∅)%I.
-Proof. by rewrite /uPred_valid (own_empty (gset_disjUR positive) disabled_name). Qed.
+Proof. by rewrite /uPred_valid (own_unit (gset_disjUR positive) disabled_name). Qed.
 Lemma ownD_op E1 E2 : E1 ⊥ E2 → ownD (E1 ∪ E2) ⊣⊢ ownD E1 ∗ ownD E2.
 Proof. intros. by rewrite /ownD -own_op gset_disj_union. Qed.
 Lemma ownD_disjoint E1 E2 : ownD E1 ∗ ownD E2 ⊢ ⌜E1 ⊥ E2⌝.
@@ -126,7 +126,7 @@ Lemma ownI_alloc φ P :
   wsat ∗ ▷ P ==∗ ∃ i, ⌜φ i⌝ ∗ wsat ∗ ownI i P.
 Proof.
   iIntros (Hfresh) "[Hw HP]". iDestruct "Hw" as (I) "[? HI]".
-  iMod (own_empty (gset_disjUR positive) disabled_name) as "HE".
+  iMod (own_unit (gset_disjUR positive) disabled_name) as "HE".
   iMod (own_updateP with "[$]") as "HE".
   { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).
     intros E. destruct (Hfresh (E ∪ dom _ I))
@@ -148,7 +148,7 @@ Lemma ownI_alloc_open φ P :
   wsat ==∗ ∃ i, ⌜φ i⌝ ∗ (ownE {[i]} -∗ wsat) ∗ ownI i P ∗ ownD {[i]}.
 Proof.
   iIntros (Hfresh) "Hw". iDestruct "Hw" as (I) "[? HI]".
-  iMod (own_empty (gset_disjUR positive) disabled_name) as "HD".
+  iMod (own_unit (gset_disjUR positive) disabled_name) as "HD".
   iMod (own_updateP with "[$]") as "HD".
   { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).
     intros E. destruct (Hfresh (E ∪ dom _ I))
