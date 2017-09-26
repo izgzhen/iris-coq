@@ -91,7 +91,7 @@ Qed.
 Lemma newbarrier_spec (P : iProp Σ) :
   {{{ True }}} newbarrier #() {{{ l, RET #l; recv l P ∗ send l P }}}.
 Proof.
-  iIntros (Φ) "HΦ".
+  iIntros (Φ) "_ HΦ".
   rewrite -wp_fupd /newbarrier /=. wp_seq. wp_alloc l as "Hl".
   iApply ("HΦ" with "[> -]").
   iMod (saved_prop_alloc (F:=idCF) P) as (γ) "#?".

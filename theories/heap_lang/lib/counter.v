@@ -35,7 +35,7 @@ Section mono_proof.
   Lemma newcounter_mono_spec (R : iProp Σ) :
     {{{ True }}} newcounter #() {{{ l, RET #l; mcounter l 0 }}}.
   Proof.
-    iIntros (Φ) "HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
+    iIntros (Φ) "_ HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (● (O:mnat) ⋅ ◯ (O:mnat))) as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (mcounter_inv γ l) with "[Hl Hγ]").
     { iNext. iExists 0%nat. by iFrame. }
@@ -111,7 +111,7 @@ Section contrib_spec.
     {{{ True }}} newcounter #()
     {{{ γ l, RET #l; ccounter_ctx γ l ∗ ccounter γ 1 0 }}}.
   Proof.
-    iIntros (Φ) "HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
+    iIntros (Φ) "_ HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
     iMod (own_alloc (●! O%nat ⋅ ◯! 0%nat)) as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (ccounter_inv γ l) with "[Hl Hγ]").
     { iNext. iExists 0%nat. by iFrame. }

@@ -40,7 +40,7 @@ Section client.
   Lemma client_safe : WP client {{ _, True }}%I.
   Proof.
     iIntros ""; rewrite /client. wp_alloc y as "Hy". wp_let.
-    wp_apply (newbarrier_spec N (y_inv 1 y)).
+    wp_apply (newbarrier_spec N (y_inv 1 y) with "[//]").
     iIntros (l) "[Hr Hs]". wp_let.
     iApply (wp_par (λ _, True%I) (λ _, True%I) with "[Hy Hs] [Hr]"); last auto.
     - (* The original thread, the sender. *)

@@ -190,6 +190,8 @@ Notation "P ==∗ Q" := (P -∗ |==> Q)%I
   (at level 99, Q at level 200, format "P  ==∗  Q") : uPred_scope.
 
 Coercion uPred_valid {M} (P : uPred M) : Prop := True%I ⊢ P.
+Typeclasses Opaque uPred_valid.
+
 Notation "P -∗ Q" := (P ⊢ Q)
   (at level 99, Q at level 200, right associativity) : C_scope.
 

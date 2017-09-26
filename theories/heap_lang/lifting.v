@@ -166,7 +166,7 @@ Lemma wp_alloc E e v :
   to_val e = Some v →
   {{{ True }}} Alloc e @ E {{{ l, RET LitV (LitLoc l); l ↦ v }}}.
 Proof.
-  iIntros (<-%of_to_val Φ) "HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
+  iIntros (<-%of_to_val Φ) "_ HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>"; iSplit; first by auto.
   iNext; iIntros (v2 σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_alloc with "Hσ") as "[Hσ Hl]"; first done.

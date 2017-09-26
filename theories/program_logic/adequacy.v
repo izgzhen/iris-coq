@@ -164,9 +164,9 @@ End adequacy.
 
 Theorem wp_adequacy Σ Λ `{invPreG Σ} e σ φ :
   (∀ `{Hinv : invG Σ},
-     True ={⊤}=∗ ∃ stateI : state Λ → iProp Σ,
+     (|={⊤}=> ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
-       stateI σ ∗ WP e {{ v, ⌜φ v⌝ }}) →
+       stateI σ ∗ WP e {{ v, ⌜φ v⌝ }})%I) →
   adequate e σ φ.
 Proof.
   intros Hwp; split.
@@ -188,9 +188,9 @@ Qed.
 
 Theorem wp_invariance Σ Λ `{invPreG Σ} e σ1 t2 σ2 φ :
   (∀ `{Hinv : invG Σ},
-     True ={⊤}=∗ ∃ stateI : state Λ → iProp Σ,
+     (|={⊤}=> ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
-       stateI σ1 ∗ WP e {{ _, True }} ∗ (stateI σ2 ={⊤,∅}=∗ ⌜φ⌝)) →
+       stateI σ1 ∗ WP e {{ _, True }} ∗ (stateI σ2 ={⊤,∅}=∗ ⌜φ⌝))%I) →
   rtc step ([e], σ1) (t2, σ2) →
   φ.
 Proof.

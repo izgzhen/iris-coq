@@ -50,19 +50,25 @@ Tactic Notation "iMatchHyp" tactic1(tac) :=
   | |- context[ environments.Esnoc _ ?x ?P ] => tac x P
   end.
 
+Class AsValid {M} (φ : Prop) (P : uPred M) := as_entails : φ ↔ P.
+Arguments AsValid {_} _%type _%I.
+
+Instance as_valid_valid {M} (P : uPred M) : AsValid (uPred_valid P) P | 0.
+Proof. by rewrite /AsValid. Qed.
+
+Instance as_valid_entails {M} (P Q : uPred M) : AsValid (P ⊢ Q) (P -∗ Q) | 1.
+Proof. split. apply uPred.entails_wand. apply uPred.wand_entails. Qed.
+
+Instance as_valid_equiv {M} (P Q : uPred M) : AsValid (P ≡ Q) (P ↔ Q).
+Proof. split. apply uPred.equiv_iff. apply uPred.iff_equiv. Qed.
+
 (** * Start a proof *)
 Ltac iStartProof :=
   lazymatch goal with
   | |- of_envs _ ⊢ _ => idtac
   | |- ?P =>
-    lazymatch eval hnf in P with
-    (* need to use the unfolded version of [uPred_valid] due to the hnf *)
-    | True ⊢ _ => apply tac_adequate
-    | _ ⊢ _ => apply uPred.wand_entails, tac_adequate
-    (* need to use the unfolded version of [⊣⊢] due to the hnf *)
-    | uPred_equiv' _ _ => apply uPred.iff_equiv, tac_adequate
-    | _ => fail "iStartProof: not a uPred"
-    end
+    apply (proj2 (_ : AsValid P _)), tac_adequate
+    || fail "iStartProof: not a uPred"
   end.
 
 (** * Context manipulation *)
@@ -529,18 +535,16 @@ a goal [P] for non-dependent arguments [x_i : P]. *)
 Tactic Notation "iIntoValid" open_constr(t) :=
   let rec go t :=
     let tT := type of t in
-    lazymatch eval hnf in tT with
-    | True ⊢ _ => apply t
-    | _ ⊢ _ => apply (uPred.entails_wand _ _ t)
-    (* need to use the unfolded version of [⊣⊢] due to the hnf *)
-    | uPred_equiv' _ _ => apply (uPred.equiv_iff _ _ t)
-    | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H); clear H]
-    | ∀ _ : ?T, _ =>
-       (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
-       (* This is a workarround for Coq bug #4969. *)
-       let e := fresh in evar (e:id T);
-       let e' := eval unfold e in e in clear e; go (t e')
-    end in
+    first
+      [apply (proj1 (_ : AsValid tT _) t)
+      |lazymatch eval hnf in tT with
+       | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H); clear H]
+       | ∀ _ : ?T, _ =>
+         (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
+         (* This is a workarround for Coq bug #4969. *)
+         let e := fresh in evar (e:id T);
+         let e' := eval unfold e in e in clear e; go (t e')
+       end] in
   go t.
 
 (* The tactic [tac] is called with a temporary fresh name [H]. The argument

@@ -51,7 +51,7 @@ Proof.
 Qed.
 
 Lemma inv_alloc_open N E P :
-  ↑N ⊆ E → True ={E, E∖↑N}=∗ inv N P ∗ (▷P ={E∖↑N, E}=∗ True).
+  ↑N ⊆ E → (|={E, E∖↑N}=> inv N P ∗ (▷P ={E∖↑N, E}=∗ True))%I.
 Proof.
   rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros (Sub) "[Hw HE]".
   iMod (ownI_alloc_open (∈ (↑N : coPset)) P with "Hw")
