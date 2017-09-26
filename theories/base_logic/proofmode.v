@@ -1,6 +1,6 @@
 From iris.base_logic Require Export base_logic.
 From iris.proofmode Require Export tactics.
-From iris.base_logic Require Import proofmode_classes.
+From iris.algebra Require Import proofmode_classes.
 Import uPred.
 Import bi.
 

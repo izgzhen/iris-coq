@@ -1,6 +1,6 @@
 From iris.algebra Require Import iprod gmap.
 From iris.base_logic.lib Require Export iprop.
-From iris.base_logic Require Import proofmode_classes.
+From iris.algebra Require Import proofmode_classes.
 Set Default Proof Using "Type".
 Import uPred.
 
