@@ -605,6 +605,7 @@ Local Tactic Notation "iForallRevert" ident(x) :=
       lazymatch P with
       | context [x] => fail 2 "iRevert:" x "is used in hypothesis" H
       end) in
+  iStartProof;
   let A := type of x in
   lazymatch type of A with
   | Prop => revert x; first [apply tac_pure_revert|err x]
@@ -623,7 +624,7 @@ Tactic Notation "iRevert" constr(Hs) :=
          [env_reflexivity || fail "iRevert:" H "not found"
          |env_cbv; go Hs]
     end in
-  let Hs := iElaborateSelPat Hs in go Hs.
+  let Hs := iElaborateSelPat Hs in iStartProof; go Hs.
 
 Tactic Notation "iRevert" "(" ident(x1) ")" :=
   iForallRevert x1.
@@ -938,7 +939,7 @@ Tactic Notation "iIntros" constr(pat) :=
     | ?pat :: ?pats =>
        let H := iFresh in iIntro H; iDestructHyp H as pat; go pats
     end
-  in let pats := intro_pat.parse pat in go pats.
+  in let pats := intro_pat.parse pat in iStartProof; go pats.
 Tactic Notation "iIntros" := iIntros [IAll].
 
 Tactic Notation "iIntros" "(" simple_intropattern(x1) ")" :=
