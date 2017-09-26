@@ -75,10 +75,10 @@ Fixpoint is_closed (X : list string) (e : expr) : bool :=
   end.
 
 Class Closed (X : list string) (e : expr) := closed : is_closed X e.
-Instance closed_proof_irrel env e : ProofIrrel (Closed env e).
+Instance closed_proof_irrel X e : ProofIrrel (Closed X e).
 Proof. rewrite /Closed. apply _. Qed.
-Instance closed_decision env e : Decision (Closed env e).
-Proof. rewrite /Closed. apply _. Qed.
+Instance closed_dec X e : Decision (Closed X e).
+Proof. rewrite /Closed. apply _. Defined.
 
 Inductive val :=
   | RecV (f x : binder) (e : expr) `{!Closed (f :b: x :b: []) e}
