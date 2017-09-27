@@ -150,6 +150,18 @@ Section ectx_language.
       exists (fill K' e2''); rewrite -fill_comp; split; auto.
       econstructor; eauto.
   Qed.
+
+  Lemma det_head_step_pureexec e1 e2 :
+    (∀ σ, head_reducible e1 σ) →
+    (∀ σ1 e2' σ2 efs, head_step e1 σ1 e2' σ2 efs → σ1 = σ2 ∧ e2=e2' ∧ efs = []) →
+    PureExec True e1 e2.
+  Proof.
+    intros Hp1 Hp2. split.
+    - intros σ _. destruct (Hp1 σ) as (e2' & σ2 & efs & ?).
+      eexists e2', σ2, efs.
+      eapply (Ectx_step _ _ _ _ _ empty_ectx); eauto using fill_empty.
+    - intros σ1 e2' σ2 efs _ ?%head_reducible_prim_step; eauto.
+  Qed.
 End ectx_language.
 
 Arguments ectx_lang _ {_ _ _ _}.

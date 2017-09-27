@@ -68,4 +68,22 @@ Proof.
   iApply (step_fupd_wand with "H"); iIntros "H".
   by iIntros (e' efs' σ (_&->&->)%Hpuredet).
 Qed.
+
+Lemma wp_pure_step_fupd `{Inhabited (state Λ)} E E' e1 e2 φ Φ :
+  PureExec φ e1 e2 →
+  φ →
+  (|={E,E'}▷=> WP e2 @ E {{ Φ }}) ⊢ WP e1 @ E {{ Φ }}.
+Proof.
+  iIntros ([??] Hφ) "HWP".
+  iApply (wp_lift_pure_det_step with "[HWP]"); [eauto|naive_solver|].
+  rewrite big_sepL_nil right_id //.
+Qed.
+
+Lemma wp_pure_step_later `{Inhabited (state Λ)} E e1 e2 φ Φ :
+  PureExec φ e1 e2 →
+  φ →
+  ▷ WP e2 @ E {{ Φ }} ⊢ WP e1 @ E {{ Φ }}.
+Proof.
+  intros ??. rewrite -wp_pure_step_fupd //. rewrite -step_fupd_intro //.
+Qed.
 End lifting.

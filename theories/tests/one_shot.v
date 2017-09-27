@@ -80,7 +80,8 @@ Proof.
     iDestruct (own_valid_2 with "Hγ Hγ'") as %?%agree_op_invL'; subst.
     iMod ("Hclose" with "[Hl]") as "_".
     { iNext; iRight; by eauto. }
-    iModIntro. wp_match. iApply wp_assert. wp_op=>?; simplify_eq/=; eauto.
+    iModIntro. wp_match. iApply wp_assert.
+    wp_op. by case_bool_decide.
 Qed.
 
 Lemma ht_one_shot (Φ : val → iProp Σ) :

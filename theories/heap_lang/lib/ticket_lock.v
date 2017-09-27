@@ -93,14 +93,15 @@ Section proof.
     - iDestruct "Ha" as "[Hainv [[Ho HR] | Haown]]".
       + iMod ("Hclose" with "[Hlo Hln Hainv Ht]") as "_".
         { iNext. iExists o, n. iFrame. eauto. }
-        iModIntro. wp_let. wp_op=>[_|[]] //.
+        iModIntro. wp_let. wp_op. case_bool_decide; [|done].
         wp_if. 
         iApply ("HΦ" with "[-]"). rewrite /locked. iFrame. eauto.
       + iDestruct (own_valid_2 with "Ht Haown") as % [_ ?%gset_disj_valid_op].
         set_solver.
     - iMod ("Hclose" with "[Hlo Hln Ha]").
       { iNext. iExists o, n. by iFrame. }
-      iModIntro. wp_let. wp_op=>[[/Nat2Z.inj //]|?].
+      iModIntro. wp_let.
+      wp_op. case_bool_decide; [simplify_eq |].
       wp_if. iApply ("IH" with "Ht"). iNext. by iExact "HΦ".
   Qed.
 

@@ -8,7 +8,8 @@ expressions into this type we can implementation substitution, closedness
 checking, atomic checking, and conversion into values, by computation. *)
 Module W.
 Inductive expr :=
-  | Val (v : val)
+  (* Value together with the original expression *)
+  | Val (v : val) (e : heap_lang.expr) (H : to_val e = Some v)
   | ClosedExpr (e : heap_lang.expr) `{!Closed [] e}
   (* Base lambda calculus *)
   | Var (x : string)
@@ -37,7 +38,7 @@ Inductive expr :=
 
 Fixpoint to_expr (e : expr) : heap_lang.expr :=
   match e with
-  | Val v => of_val v
+  | Val v e' _ => e'
   | ClosedExpr e _ => e
   | Var x => heap_lang.Var x
   | Rec f x e => heap_lang.Rec f x (to_expr e)
@@ -90,13 +91,16 @@ Ltac of_expr e :=
      let e0 := of_expr e0 in let e1 := of_expr e1 in let e2 := of_expr e2 in
      constr:(CAS e0 e1 e2)
   | to_expr ?e => e
-  | of_val ?v => constr:(Val v)
-  | _ => match goal with H : Closed [] e |- _ => constr:(@ClosedExpr e H) end
+  | of_val ?v => constr:(Val v (of_val v) (to_of_val v))
+  | _ => match goal with
+         | H : to_val e = Some ?v |- _ => constr:(Val v e H)
+         | H : Closed [] e |- _ => constr:(@ClosedExpr e H)
+         end
   end.
 
 Fixpoint is_closed (X : list string) (e : expr) : bool :=
   match e with
-  | Val _ | ClosedExpr _ _ => true
+  | Val _ _ _ | ClosedExpr _ _ => true
   | Var x => bool_decide (x ∈ X)
   | Rec f x e => is_closed (f :b: x :b: X) e
   | Lit _ => true
@@ -110,7 +114,7 @@ Fixpoint is_closed (X : list string) (e : expr) : bool :=
 Lemma is_closed_correct X e : is_closed X e → heap_lang.is_closed X (to_expr e).
 Proof.
   revert X.
-  induction e; naive_solver eauto using is_closed_of_val, is_closed_weaken_nil.
+  induction e; naive_solver eauto using is_closed_of_val, is_closed_to_val, is_closed_weaken_nil.
 Qed.
 
 (* We define [to_val (ClosedExpr _)] to be [None] since [ClosedExpr]
@@ -119,7 +123,7 @@ about apart from being closed. Notice that the reverse implication of
 [to_val_Some] thus does not hold. *)
 Fixpoint to_val (e : expr) : option val :=
   match e with
-  | Val v => Some v
+  | Val v _ _ => Some v
   | Rec f x e =>
      if decide (is_closed (f :b: x :b: []) e) is left H
      then Some (@RecV f x (to_expr e) (is_closed_correct _ _ H)) else None
@@ -142,7 +146,7 @@ Proof. intros [v ?]; exists v; eauto using to_val_Some. Qed.
 
 Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
   match e with
-  | Val v => Val v
+  | Val v e H => Val v e H
   | ClosedExpr e H => @ClosedExpr e H
   | Var y => if decide (x = y) then es else Var y
   | Rec f y e =>
@@ -168,7 +172,7 @@ Lemma to_expr_subst x er e :
   to_expr (subst x er e) = heap_lang.subst x (to_expr er) (to_expr e).
 Proof.
   induction e; simpl; repeat case_decide;
-    f_equal; auto using subst_is_closed_nil, is_closed_of_val, eq_sym.
+    f_equal; eauto using subst_is_closed_nil, is_closed_of_val, is_closed_to_val, eq_sym.
 Qed.
 
 Definition atomic (e : expr) :=
@@ -213,11 +217,15 @@ Ltac solve_to_val :=
   match goal with
   | |- to_val ?e = Some ?v =>
      let e' := W.of_expr e in change (to_val (W.to_expr e') = Some v);
-     apply W.to_val_Some; simpl; unfold W.to_expr; unlock; reflexivity
+     apply W.to_val_Some; simpl; unfold W.to_expr; reflexivity
+  | |- IntoVal ?e ?v =>
+     let e' := W.of_expr e in change (to_val (W.to_expr e') = Some v);
+     apply W.to_val_Some; simpl; unfold W.to_expr; reflexivity
   | |- is_Some (to_val ?e) =>
      let e' := W.of_expr e in change (is_Some (to_val (W.to_expr e')));
      apply W.to_val_is_Some, (bool_decide_unpack _); vm_compute; exact I
   end.
+Hint Extern 10 (IntoVal _ _) => solve_to_val : typeclass_instances.
 
 Ltac solve_atomic :=
   match goal with

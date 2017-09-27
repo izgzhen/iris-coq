@@ -31,6 +31,27 @@ Section LiftingTests.
     wp_load. wp_op. wp_store. wp_load. done.
   Qed.
 
+  Definition heap_e3 : expr :=
+    let: "x" := #true in
+    let: "f" := λ: "z", "z" + #1 in
+    if: "x" then "f" #0 else "f" #1.
+
+  Lemma heap_e3_spec E : WP heap_e3 @ E {{ v, ⌜v = #1⌝ }}%I.
+  Proof.
+    iIntros "". rewrite /heap_e3.
+    by repeat (wp_pure _).
+  Qed.
+
+  Definition heap_e4 : expr :=
+    let: "x" := (let: "y" := ref (ref #1) in ref "y") in
+    ! ! !"x".
+
+  Lemma heap_e4_spec : WP heap_e4 {{ v, ⌜ v = #1 ⌝ }}%I.
+  Proof.
+    rewrite /heap_e4. wp_alloc l. wp_alloc l'. wp_let.
+    wp_alloc l''. wp_let. by repeat wp_load.
+  Qed.
+
   Definition FindPred : val :=
     rec: "pred" "x" "y" :=
       let: "yp" := "y" + #1 in
@@ -44,14 +65,16 @@ Section LiftingTests.
     Φ #(n2 - 1) -∗ WP FindPred #n2 #n1 @ E {{ Φ }}.
   Proof.
     iIntros (Hn) "HΦ". iLöb as "IH" forall (n1 Hn).
-    wp_rec. wp_let. wp_op. wp_let. wp_op=> ?; wp_if.
+    wp_rec. wp_let. wp_op. wp_let.
+    wp_op; case_bool_decide; wp_if.
     - iApply ("IH" with "[%] HΦ"). omega.
     - by assert (n1 = n2 - 1) as -> by omega.
   Qed.
 
   Lemma Pred_spec n E Φ : ▷ Φ #(n - 1) -∗ WP Pred #n @ E {{ Φ }}.
   Proof.
-    iIntros "HΦ". wp_lam. wp_op=> ?; wp_if.
+    iIntros "HΦ". wp_lam.
+    wp_op. case_bool_decide; wp_if.
     - wp_op. wp_op.
       wp_apply FindPred_spec; first omega.
       wp_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
