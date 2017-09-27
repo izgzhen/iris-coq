@@ -32,17 +32,19 @@ opam:
   stage: opam
   script:
   # Send a trigger to the repository doing the work
-  - curl --fail -X POST -F "token=$OPAM_UPDATE_SECRET" -F "ref=master" -F "variables[REPO]=${CI_PROJECT_URL}.git" -F "variables[REF]=$CI_COMMIT_REF_NAME" -F "variables[SHA]=$CI_COMMIT_SHA" -F "variables[NAME]=coq-iris" https://gitlab.mpi-sws.org/api/v3/projects/581/trigger/builds
+  - curl --fail -X POST -F "token=$OPAM_UPDATE_SECRET" -F "ref=master" -F "variables[REPO]=${CI_PROJECT_URL}.git" -F "variables[REF]=$CI_COMMIT_REF_NAME" -F "variables[SHA]=$CI_COMMIT_SHA" -F "variables[NAME]=$OPAM_PKG" https://gitlab.mpi-sws.org/api/v3/projects/581/trigger/builds
+  variables:
+  - OPAM_PKG=coq-iris
   only:
   - master
 
-iris-coq8.7:
+build-coq8.7:
   <<: *template
   variables:
     COQ_VERSION: "8.7.dev"
     SSR_VERSION: "dev"
 
-iris-coq8.6.1:
+build-coq8.6.1:
   <<: *template
   variables:
     COQ_VERSION: "8.6.1"
