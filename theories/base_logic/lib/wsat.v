@@ -36,7 +36,7 @@ Typeclasses Opaque ownD.
 Instance: Params (@ownD) 3.
 
 Definition wsat `{invG Σ} : iProp Σ :=
-  (∃ I : gmap positive (iProp Σ),
+  locked (∃ I : gmap positive (iProp Σ),
     own invariant_name (● (invariant_unfold <$> I : gmap _ _)) ∗
     [∗ map] i ↦ Q ∈ I, ▷ Q ∗ ownD {[i]} ∨ ownE {[i]})%I.
 
@@ -103,7 +103,8 @@ Qed.
 
 Lemma ownI_open i P : wsat ∗ ownI i P ∗ ownE {[i]} ⊢ wsat ∗ ▷ P ∗ ownD {[i]}.
 Proof.
-  rewrite /ownI. iIntros "(Hw & Hi & HiE)". iDestruct "Hw" as (I) "[? HI]".
+  rewrite /ownI /wsat -!lock.
+  iIntros "(Hw & Hi & HiE)". iDestruct "Hw" as (I) "[? HI]".
   iDestruct (invariant_lookup I i P with "[$]") as (Q) "[% #HPQ]".
   iDestruct (big_opM_delete _ _ i with "HI") as "[[[HQ $]|HiE'] HI]"; eauto.
   - iSplitR "HQ"; last by iNext; iRewrite -"HPQ".
@@ -113,7 +114,8 @@ Proof.
 Qed.
 Lemma ownI_close i P : wsat ∗ ownI i P ∗ ▷ P ∗ ownD {[i]} ⊢ wsat ∗ ownE {[i]}.
 Proof.
-  rewrite /ownI. iIntros "(Hw & Hi & HP & HiD)". iDestruct "Hw" as (I) "[? HI]".
+  rewrite /ownI /wsat -!lock.
+  iIntros "(Hw & Hi & HP & HiD)". iDestruct "Hw" as (I) "[? HI]".
   iDestruct (invariant_lookup with "[$]") as (Q) "[% #HPQ]".
   iDestruct (big_opM_delete _ _ i with "HI") as "[[[HQ ?]|$] HI]"; eauto.
   - iDestruct (ownD_singleton_twice with "[$]") as %[].
@@ -125,7 +127,8 @@ Lemma ownI_alloc φ P :
   (∀ E : gset positive, ∃ i, i ∉ E ∧ φ i) →
   wsat ∗ ▷ P ==∗ ∃ i, ⌜φ i⌝ ∗ wsat ∗ ownI i P.
 Proof.
-  iIntros (Hfresh) "[Hw HP]". iDestruct "Hw" as (I) "[? HI]".
+  iIntros (Hfresh) "[Hw HP]". rewrite /wsat -!lock.
+  iDestruct "Hw" as (I) "[? HI]".
   iMod (own_unit (gset_disjUR positive) disabled_name) as "HE".
   iMod (own_updateP with "[$]") as "HE".
   { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).
@@ -147,7 +150,7 @@ Lemma ownI_alloc_open φ P :
   (∀ E : gset positive, ∃ i, i ∉ E ∧ φ i) →
   wsat ==∗ ∃ i, ⌜φ i⌝ ∗ (ownE {[i]} -∗ wsat) ∗ ownI i P ∗ ownD {[i]}.
 Proof.
-  iIntros (Hfresh) "Hw". iDestruct "Hw" as (I) "[? HI]".
+  iIntros (Hfresh) "Hw". rewrite /wsat -!lock. iDestruct "Hw" as (I) "[? HI]".
   iMod (own_unit (gset_disjUR positive) disabled_name) as "HD".
   iMod (own_updateP with "[$]") as "HD".
   { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).

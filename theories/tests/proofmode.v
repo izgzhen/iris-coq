@@ -165,6 +165,10 @@ Proof.
   iIntros "H". iNext. iExact "H". (* Check that the laters are all gone. *)
 Qed.
 
+Lemma test_iNext_quantifier (Φ : M → M → uPred M) :
+  (∀ y, ∃ x, ▷ Φ x y) -∗ ▷ (∀ y, ∃ x, Φ x y).
+Proof. iIntros "H". iNext. done. Qed.
+
 Lemma test_iFrame_persistent (P Q : uPred M) :
   □ P -∗ Q -∗ □ (P ∗ P) ∗ (P ∧ Q ∨ Q).
 Proof. iIntros "#HP". iFrame "HP". iIntros "$". Qed.
@@ -193,7 +197,6 @@ Lemma test_True_intros : (True : uPred M) -∗ True.
 Proof.
   iIntros "?". done.
 Qed.
-
 End tests.
 
 Section more_tests.

@@ -596,10 +596,12 @@ Proof.
   apply (anti_symm _); auto using later_forall_2.
   apply forall_intro=> x. by rewrite (forall_elim x).
 Qed.
+Lemma later_exist_2 {A} (Φ : A → uPred M) : (∃ a, ▷ Φ a) ⊢ ▷ (∃ a, Φ a).
+Proof. apply exist_elim; eauto using exist_intro. Qed.
 Lemma later_exist `{Inhabited A} (Φ : A → uPred M) :
   ▷ (∃ a, Φ a) ⊣⊢ (∃ a, ▷ Φ a).
 Proof.
-  apply: anti_symm; [|apply exist_elim; eauto using exist_intro].
+  apply: anti_symm; [|apply later_exist_2].
   rewrite later_exist_false. apply or_elim; last done.
   rewrite -(exist_intro inhabitant); auto.
 Qed.
@@ -647,6 +649,8 @@ Lemma laterN_True n : ▷^n True ⊣⊢ True.
 Proof. apply (anti_symm (⊢)); auto using laterN_intro. Qed.
 Lemma laterN_forall {A} n (Φ : A → uPred M) : (▷^n ∀ a, Φ a) ⊣⊢ (∀ a, ▷^n Φ a).
 Proof. induction n as [|n IH]; simpl; rewrite -?later_forall; auto. Qed.
+Lemma laterN_exist_2 {A} n (Φ : A → uPred M) : (∃ a, ▷^n Φ a) ⊢ ▷^n (∃ a, Φ a).
+Proof. apply exist_elim; eauto using exist_intro, laterN_mono. Qed.
 Lemma laterN_exist `{Inhabited A} n (Φ : A → uPred M) :
   (▷^n ∃ a, Φ a) ⊣⊢ ∃ a, ▷^n Φ a.
 Proof. induction n as [|n IH]; simpl; rewrite -?later_exist; auto. Qed.

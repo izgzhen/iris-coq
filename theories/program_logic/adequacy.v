@@ -29,7 +29,7 @@ Proof.
   iMod (own_alloc (CoPset ⊤)) as (γE) "HE"; first done.
   iMod (own_alloc (GSet ∅)) as (γD) "HD"; first done.
   iModIntro; iExists (WsatG _ _ _ _ γI γE γD).
-  rewrite /wsat /ownE; iFrame.
+  rewrite /wsat /ownE -lock; iFrame.
   iExists ∅. rewrite fmap_empty big_opM_empty. by iFrame.
 Qed.
 

@@ -169,6 +169,14 @@ Proof.
   rewrite /IntoLaterN' /IntoLaterN=> ->. by rewrite laterN_and -(laterN_intro _ P).
 Qed.
 
+Global Instance into_later_forall {A} n (Φ Ψ : A → uPred M) :
+  (∀ x, IntoLaterN' n (Φ x) (Ψ x)) → IntoLaterN' n (∀ x, Φ x) (∀ x, Ψ x).
+Proof. rewrite /IntoLaterN' /IntoLaterN laterN_forall=> ?. by apply forall_mono. Qed.
+Global Instance into_later_exist {A} n (Φ Ψ : A → uPred M) :
+  (∀ x, IntoLaterN' n (Φ x) (Ψ x)) →
+  IntoLaterN' n (∃ x, Φ x) (∃ x, Ψ x).
+Proof. rewrite /IntoLaterN' /IntoLaterN -laterN_exist_2=> ?. by apply exist_mono. Qed.
+
 Global Instance into_laterN_or_l n P1 P2 Q1 Q2 :
   IntoLaterN' n P1 Q1 → IntoLaterN n P2 Q2 →
   IntoLaterN' n (P1 ∨ P2) (Q1 ∨ Q2) | 10.
