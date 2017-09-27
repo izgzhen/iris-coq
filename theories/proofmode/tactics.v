@@ -939,7 +939,7 @@ Tactic Notation "iIntros" constr(pat) :=
     | ?pat :: ?pats =>
        let H := iFresh in iIntro H; iDestructHyp H as pat; go pats
     end
-  in let pats := intro_pat.parse pat in iStartProof; go pats.
+  in let pats := intro_pat.parse pat in try iStartProof; go pats.
 Tactic Notation "iIntros" := iIntros [IAll].
 
 Tactic Notation "iIntros" "(" simple_intropattern(x1) ")" :=

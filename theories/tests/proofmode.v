@@ -93,6 +93,10 @@ Proof.
   iIntros "# _ //".
 Qed.
 
+Lemma test_very_fast_iIntros P :
+  ∀ x y : nat, ⌜ x = y ⌝ -∗ P -∗ P.
+Proof. by iIntros. Qed.
+
 Lemma test_iDestruct_spatial_and P Q1 Q2 : P ∗ (Q1 ∧ Q2) -∗ P ∗ Q1.
 Proof. iIntros "[H1 [H2 _]]". by iFrame. Qed.
 
