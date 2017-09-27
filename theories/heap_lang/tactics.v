@@ -210,15 +210,13 @@ Ltac solve_closed :=
 Hint Extern 0 (Closed _ _) => solve_closed : typeclass_instances.
 
 Ltac solve_to_val :=
+  rewrite /IntoVal;
   try match goal with
   | |- context E [language.to_val ?e] =>
      let X := context E [to_val e] in change X
   end;
   match goal with
   | |- to_val ?e = Some ?v =>
-     let e' := W.of_expr e in change (to_val (W.to_expr e') = Some v);
-     apply W.to_val_Some; simpl; unfold W.to_expr; reflexivity
-  | |- IntoVal ?e ?v =>
      let e' := W.of_expr e in change (to_val (W.to_expr e') = Some v);
      apply W.to_val_Some; simpl; unfold W.to_expr; reflexivity
   | |- is_Some (to_val ?e) =>
