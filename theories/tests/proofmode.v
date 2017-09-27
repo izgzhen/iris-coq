@@ -181,6 +181,19 @@ Proof.
   iLöb as "IH". iDestruct "IH" as (n) "IH".
   by iExists (S n).
 Qed.
+
+Lemma test_iIntros_start_proof :
+  (True : uPred M)%I.
+Proof.
+  (* Make sure iIntros actually makes progress and enters the proofmode. *)
+  progress iIntros. done.
+Qed.
+
+Lemma test_True_intros : (True : uPred M) -∗ True.
+Proof.
+  iIntros "?". done.
+Qed.
+
 End tests.
 
 Section more_tests.
