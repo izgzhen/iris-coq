@@ -201,6 +201,18 @@ Lemma test_True_intros : (True : uPred M) -∗ True.
 Proof.
   iIntros "?". done.
 Qed.
+
+Lemma test_iPoseProof_let P Q :
+  (let R := True%I in R ∗ P ⊢ Q) →
+  P ⊢ Q.
+Proof.
+  iIntros (help) "HP".
+  iPoseProof (help with "[$HP]") as "?". done.
+Qed.
+
+Lemma test_iIntros_let P :
+  ∀ Q, let R := True%I in P -∗ R -∗ Q -∗ P ∗ Q.
+Proof. iIntros (Q R) "$ HR $". Qed.
 End tests.
 
 Section more_tests.

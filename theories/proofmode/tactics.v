@@ -535,16 +535,17 @@ a goal [P] for non-dependent arguments [x_i : P]. *)
 Tactic Notation "iIntoValid" open_constr(t) :=
   let rec go t :=
     let tT := type of t in
-    first
-      [apply (proj1 (_ : AsValid tT _) t)
-      |lazymatch eval hnf in tT with
-       | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H); clear H]
-       | ∀ _ : ?T, _ =>
-         (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
-         (* This is a workarround for Coq bug #4969. *)
-         let e := fresh in evar (e:id T);
-         let e' := eval unfold e in e in clear e; go (t e')
-       end] in
+    lazymatch eval hnf in tT with
+    | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H); clear H]
+    | ∀ _ : ?T, _ =>
+      (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
+      (* This is a workarround for Coq bug #4969. *)
+      let e := fresh in evar (e:id T);
+      let e' := eval unfold e in e in clear e; go (t e')
+    | _ =>
+      let tT' := eval cbv zeta in tT in apply (proj1 (_ : AsValid tT' _) t)
+      || fail "iPoseProof: not a uPred"
+    end in
   go t.
 
 (* The tactic [tac] is called with a temporary fresh name [H]. The argument
