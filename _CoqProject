@@ -64,6 +64,8 @@ theories/program_logic/ectx_language.v
 theories/program_logic/ectxi_language.v
 theories/program_logic/ectx_lifting.v
 theories/program_logic/ownp.v
+theories/program_logic/total_lifting.v
+theories/program_logic/total_ectx_lifting.v
 theories/heap_lang/lang.v
 theories/heap_lang/tactics.v
 theories/heap_lang/lifting.v
