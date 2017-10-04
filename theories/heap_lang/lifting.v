@@ -87,7 +87,6 @@ Local Ltac solve_pureexec :=
   | H: IntoVal ?e _ |- _ => rewrite -(of_to_val e _ into_val); clear H
   | H: AsRec _ _ _ _ |- _ => rewrite H; clear H
   end;
-  apply hoist_pred_pureexec; intros; destruct_and?;
   apply det_head_step_pureexec; [ solve_exec_safe | solve_exec_puredet ].
 
 Global Instance pure_rec f x (erec e1 e2 : expr) (v2 : val)
