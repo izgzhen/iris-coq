@@ -151,7 +151,7 @@ Section ectx_language.
       econstructor; eauto.
   Qed.
 
-  Lemma det_head_step_pureexec (P : Prop) e1 e2 :
+  Lemma det_head_step_pure_exec (P : Prop) e1 e2 :
     (∀ σ, P → head_reducible e1 σ) →
     (∀ σ1 e2' σ2 efs,
       P → head_step e1 σ1 e2' σ2 efs → σ1 = σ2 ∧ e2=e2' ∧ efs = []) →

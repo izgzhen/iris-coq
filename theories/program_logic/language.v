@@ -101,7 +101,7 @@ Section language.
       P → prim_step e1 σ1 e2' σ2 efs → σ1 = σ2 ∧ e2 = e2' ∧ efs = [];
   }.
 
-  Lemma hoist_pred_pureexec (P : Prop) (e1 e2 : expr Λ) :
+  Lemma hoist_pred_pure_exec (P : Prop) (e1 e2 : expr Λ) :
     (P → PureExec True e1 e2) →
     PureExec P e1 e2.
   Proof. intros HPE. split; intros; eapply HPE; eauto. Qed.
