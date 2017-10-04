@@ -62,3 +62,12 @@ Run `make` to build the full development.
 A LaTeX version of the core logic definitions and some derived forms is
 available in [docs/iris.tex](docs/iris.tex).  A compiled PDF version of this
 document is [available online](http://plv.mpi-sws.org/iris/appendix-3.0.pdf).
+
+## For Developers: How to update the std++ dependency
+
+* Do the change in std++, push it.
+* Wait for CI to publish a new std++ version on the opam archive.
+* In Iris, change opam to depend on the new version.
+* Run `make build-dep` (in Iris) to install the new version of std++.
+* You may have to do `make clean` as Coq will likely complain about .vo file
+  mismatches.
