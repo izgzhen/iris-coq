@@ -30,7 +30,8 @@ dependencies.  To fix that, please run `opam update` followed by
 
 ## Building Instructions
 
-Run `make` to build the full development.
+Run `make -jN` to build the full development, where `N` is the number of your
+CPU cores.
 
 ## Structure
 
