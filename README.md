@@ -10,6 +10,9 @@ This version is known to compile with:
  - Ssreflect 1.6.1
  - A development version of [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
 
+If you need to work with Coq 8.5, please check out the
+[iris-3.0 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.0).
+
 The easiest way to install the correct versions of the dependencies is through
 opam.  You will need the Coq and Iris opam repositories:
 
@@ -17,11 +20,13 @@ opam.  You will need the Coq and Iris opam repositories:
     opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git
 
 Once you got opam set up, run `make build-dep` to install the right versions
-of the dependencies.  When the dependencies change, just run `make build-dep`
-again.
+of the dependencies.
 
-If you need to work with Coq 8.5, please check out the
-[iris-3.0 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.0).
+## Updating
+
+After doing `git pull`, the development may fail to compile because of outdated
+dependencies.  To fix that, please run `opam update` followed by
+`make build-dep`.
 
 ## Building Instructions
 
