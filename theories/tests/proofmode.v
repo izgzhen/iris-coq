@@ -190,6 +190,14 @@ Proof.
   by iExists (S n).
 Qed.
 
+Lemma test_iInduction_wf (x : nat) P Q :
+  □ P -∗ Q -∗ ⌜ (x + 0 = x)%nat ⌝.
+Proof.
+  iIntros "#HP HQ".
+  iInduction (lt_wf x) as [[|x] _] "IH"; simpl; first done.
+  rewrite (inj_iff S). by iApply ("IH" with "[%]"); first omega.
+Qed.
+
 Lemma test_iIntros_start_proof :
   (True : uPred M)%I.
 Proof.

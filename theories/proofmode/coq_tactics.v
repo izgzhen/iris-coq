@@ -647,14 +647,25 @@ Proof.
   by rewrite HQ /uPred_always_if wand_elim_r.
 Qed.
 
-Lemma tac_revert_ih Δ P Q :
+Class IntoIH (φ : Prop) (Δ : envs M) (Q : uPred M) :=
+  into_ih : φ → Δ ⊢ Q.
+Global Instance into_ih_entails Δ Q : IntoIH (of_envs Δ ⊢ Q) Δ Q.
+Proof. by rewrite /IntoIH. Qed.
+Global Instance into_ih_forall {A} (φ : A → Prop) Δ Φ :
+  (∀ x, IntoIH (φ x) Δ (Φ x)) → IntoIH (∀ x, φ x) Δ (∀ x, Φ x) | 2.
+Proof. rewrite /IntoIH=> HΔ ?. apply forall_intro=> x. by rewrite (HΔ x). Qed.
+Global Instance into_ih_impl (φ ψ : Prop) Δ Q :
+  IntoIH φ Δ Q → IntoIH (ψ → φ) Δ (⌜ψ⌝ → Q) | 1.
+Proof. rewrite /IntoIH=> HΔ ?. apply impl_intro_l, pure_elim_l. auto. Qed.
+
+Lemma tac_revert_ih Δ P Q {φ : Prop} (Hφ : φ) :
+  IntoIH φ Δ P →
   env_spatial_is_nil Δ = true →
-  (of_envs Δ ⊢ P) →
   (of_envs Δ ⊢ □ P → Q) →
   (of_envs Δ ⊢ Q).
 Proof.
-  intros ? HP HPQ.
-  by rewrite -(idemp uPred_and Δ) {1}(persistentP Δ) {1}HP HPQ impl_elim_r.
+  rewrite /IntoIH. intros HP ? HPQ.
+  by rewrite -(idemp uPred_and Δ) {1}(persistentP Δ) {1}HP // HPQ impl_elim_r.
 Qed.
 
 Lemma tac_assert Δ Δ1 Δ2 Δ2' lr js j P P' Q :

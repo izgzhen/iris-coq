@@ -1360,10 +1360,10 @@ result in the following actions:
 Tactic Notation "iInductionCore" constr(x) "as" simple_intropattern(pat) constr(IH) :=
   let rec fix_ihs :=
     lazymatch goal with
-    | H : coq_tactics.of_envs _ ⊢ _ |- _ =>
-       eapply tac_revert_ih;
-         [reflexivity || fail "iInduction: spatial context not empty, this should not happen"
-         |apply H|];
+    | H : context [coq_tactics.of_envs _ ⊢ _] |- _ =>
+       eapply (tac_revert_ih _ _ _ H _);
+         [reflexivity
+          || fail "iInduction: spatial context not empty, this should not happen"|];
        clear H; fix_ihs;
        let IH' := iFresh' IH in iIntros [IAlwaysElim (IName IH')]
     | _ => idtac
