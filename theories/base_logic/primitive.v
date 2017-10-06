@@ -97,6 +97,14 @@ Definition uPred_wand {M} := unseal uPred_wand_aux M.
 Definition uPred_wand_eq :
   @uPred_wand = @uPred_wand_def := seal_eq uPred_wand_aux.
 
+Program Definition uPred_plainly_def {M} (P : uPred M) : uPred M :=
+  {| uPred_holds n x := P n ε |}.
+Solve Obligations with naive_solver eauto using uPred_closed, ucmra_unit_validN.
+Definition uPred_plainly_aux : seal (@uPred_plainly_def). by eexists. Qed.
+Definition uPred_plainly {M} := unseal uPred_plainly_aux M.
+Definition uPred_plainly_eq :
+  @uPred_plainly = @uPred_plainly_def := seal_eq uPred_plainly_aux.
+
 Program Definition uPred_persistently_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (core x) |}.
 Next Obligation.
@@ -176,6 +184,8 @@ Notation "∀ x .. y , P" :=
 Notation "∃ x .. y , P" :=
   (uPred_exist (λ x, .. (uPred_exist (λ y, P)) ..)%I)
   (at level 200, x binder, y binder, right associativity) : uPred_scope.
+Notation "■ P" := (uPred_plainly P)
+  (at level 20, right associativity) : uPred_scope.
 Notation "□ P" := (uPred_persistently P)
   (at level 20, right associativity) : uPred_scope.
 Notation "▷ P" := (uPred_later P)
@@ -198,7 +208,8 @@ Notation "P -∗ Q" := (P ⊢ Q)
 Module uPred.
 Definition unseal_eqs :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
-  uPred_exist_eq, uPred_internal_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_persistently_eq,
+  uPred_exist_eq, uPred_internal_eq_eq, uPred_sep_eq, uPred_wand_eq,
+  uPred_persistently_eq, uPred_plainly_eq, uPred_persistently_eq,
   uPred_later_eq, uPred_ownM_eq, uPred_cmra_valid_eq, uPred_bupd_eq).
 Ltac unseal := rewrite !unseal_eqs /=.
 
@@ -295,6 +306,13 @@ Proof.
 Qed.
 Global Instance later_proper' :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_later M) := ne_proper _.
+Global Instance plainly_ne : NonExpansive (@uPred_plainly M).
+Proof.
+  intros n P1 P2 HP.
+  unseal; split=> n' x; split; apply HP; eauto using @ucmra_unit_validN.
+Qed.
+Global Instance plainly_proper :
+  Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_plainly M) := ne_proper _.
 Global Instance persistently_ne : NonExpansive (@uPred_persistently M).
 Proof.
   intros n P1 P2 HP.
@@ -421,6 +439,25 @@ Proof.
   eapply HPQR; eauto using cmra_validN_op_l.
 Qed.
 
+(* The plainness modality *)
+Lemma plainly_mono P Q : (P ⊢ Q) → ■ P ⊢ ■ Q.
+Proof. intros HP; unseal; split=> n x ? /=. apply HP, ucmra_unit_validN. Qed.
+Lemma plainly_elim' P : ■ P ⊢ □ P.
+Proof. unseal; split; simpl; eauto using uPred_mono, @ucmra_unit_leastN. Qed.
+Lemma plainly_idemp P : ■ P ⊢ ■ ■ P.
+Proof. unseal; split=> n x ?? //. Qed.
+
+Lemma plainly_forall_2 {A} (Ψ : A → uPred M) : (∀ a, ■ Ψ a) ⊢ (■ ∀ a, Ψ a).
+Proof. by unseal. Qed.
+Lemma plainly_exist_1 {A} (Ψ : A → uPred M) : (■ ∃ a, Ψ a) ⊢ (∃ a, ■ Ψ a).
+Proof. by unseal. Qed.
+
+Lemma prop_ext P Q : ■ ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q.
+Proof.
+  unseal; split=> n x ? /= HPQ; split=> n' x' ? HP;
+    split; eapply HPQ; eauto using @ucmra_unit_least.
+Qed.
+
 (* Always *)
 Lemma persistently_mono P Q : (P ⊢ Q) → □ P ⊢ □ Q.
 Proof. intros HP; unseal; split=> n x ? /=. by apply HP, cmra_core_validN. Qed.
@@ -477,6 +514,8 @@ Proof.
 Qed.
 Lemma persistently_later P : □ ▷ P ⊣⊢ ▷ □ P.
 Proof. by unseal. Qed.
+Lemma plainly_later P : ■ ▷ P ⊣⊢ ▷ ■ P.
+Proof. by unseal. Qed.
 
 (* Own *)
 Lemma ownM_op (a1 a2 : M) :
@@ -512,7 +551,7 @@ Lemma cmra_valid_intro {A : cmraT} (a : A) : ✓ a → uPred_valid (M:=M) (✓ a
 Proof. unseal=> ?; split=> n x ? _ /=; by apply cmra_valid_validN. Qed.
 Lemma cmra_valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊢ False.
 Proof. unseal=> Ha; split=> n x ??; apply Ha, cmra_validN_le with n; auto. Qed.
-Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ □ ✓ a.
+Lemma plainly_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ ■ ✓ a.
 Proof. by unseal. Qed.
 Lemma cmra_valid_weaken {A : cmraT} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
 Proof. unseal; split=> n x _; apply cmra_validN_op_l. Qed.
@@ -548,6 +587,12 @@ Proof.
   { rewrite /= assoc -(dist_le _ _ _ _ Hx); auto. }
   exists (y ⋅ x3); split; first by rewrite -assoc.
   exists y; eauto using cmra_includedN_l.
+Qed.
+Lemma bupd_plainly P : (|==> ■ P) ⊢ P.
+Proof.
+  unseal; split => n x Hnx /= Hng.
+  destruct (Hng n ε) as [? [_ Hng']]; try rewrite right_id; auto.
+  eapply uPred_mono; eauto using ucmra_unit_leastN.
 Qed.
 
 (* Products *)
