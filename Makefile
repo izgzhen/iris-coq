@@ -31,11 +31,12 @@ build-dep: build-dep/opam phony
 	@# that are incompatible with our build requirements.
 	@# To achieve this, we create a fake opam package that has our build-dependencies as
 	@# dependencies, but does not actually install anything.
-	# Add the pin and (re)install build-dep package.
-	@# Reinstallation is needed in case the pin already exists, but the builddep package changed.
+	@# Upgrading is needed in case the pin already exists, but the builddep package changed.
 	@BUILD_DEP_PACKAGE="$$(egrep "^name:" build-dep/opam | sed 's/^name: *"\(.*\)" */\1/')"; \
+	  echo "# Pinning build-dep package." && \
 	  opam pin add "$$BUILD_DEP_PACKAGE".dev "$$(pwd)/build-dep" -k path $(OPAMFLAGS) && \
-	  opam reinstall "$$BUILD_DEP_PACKAGE"
+	  echo "# Updating build-dep package." && \
+	  opam upgrade "$$BUILD_DEP_PACKAGE"
 
 # Some files that do *not* need to be forwarded to Makefile.coq
 Makefile: ;
