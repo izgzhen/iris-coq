@@ -34,7 +34,7 @@ build-dep: build-dep/opam phony
 	@# Upgrading is needed in case the pin already exists, but the builddep package changed.
 	@BUILD_DEP_PACKAGE="$$(egrep "^name:" build-dep/opam | sed 's/^name: *"\(.*\)" */\1/')"; \
 	  echo "# Pinning build-dep package." && \
-	  opam pin add "$$BUILD_DEP_PACKAGE".dev "$$(pwd)/build-dep" -k path $(OPAMFLAGS) && \
+	  opam pin add -k path $(OPAMFLAGS) "$$BUILD_DEP_PACKAGE".dev build-dep && \
 	  echo "# Updating build-dep package." && \
 	  opam upgrade "$$BUILD_DEP_PACKAGE"
 
