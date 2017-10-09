@@ -79,14 +79,6 @@ theories/heap_lang/lib/barrier/protocol.v
 theories/heap_lang/lib/barrier/proof.v
 theories/heap_lang/proofmode.v
 theories/heap_lang/adequacy.v
-theories/tests/heap_lang.v
-theories/tests/one_shot.v
-theories/tests/joining_existentials.v
-theories/tests/proofmode.v
-theories/tests/barrier_client.v
-theories/tests/list_reverse.v
-theories/tests/tree_sum.v
-theories/tests/ipm_paper.v
 theories/proofmode/strings.v
 theories/proofmode/tokens.v
 theories/proofmode/coq_tactics.v
@@ -98,3 +90,12 @@ theories/proofmode/tactics.v
 theories/proofmode/notation.v
 theories/proofmode/classes.v
 theories/proofmode/class_instances.v
+theories/tests/heap_lang.v
+theories/tests/one_shot.v
+theories/tests/joining_existentials.v
+theories/tests/proofmode.v
+theories/tests/barrier_client.v
+theories/tests/list_reverse.v
+theories/tests/tree_sum.v
+theories/tests/ipm_paper.v
+theories/tests/algebra.v
