@@ -20,7 +20,7 @@ Makefile.coq: _CoqProject Makefile awk.Makefile
 
 # Install build-dependencies
 build-dep/opam: opam Makefile
-	# Create the build-dep package.
+	# Creating the build-dep package.
 	@mkdir -p build-dep
 	@sed <opam -E 's/^(build|install|remove):.*/\1: []/; s/^name: *"(.*)" */name: "\1-builddep"/' >build-dep/opam
 	@fgrep builddep build-dep/opam >/dev/null || (echo "sed failed to fix the package name" && exit 1) # sanity check
