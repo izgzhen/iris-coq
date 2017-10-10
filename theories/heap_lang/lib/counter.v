@@ -32,7 +32,7 @@ Section mono_proof.
   Global Instance mcounter_persistent l n : PersistentP (mcounter l n).
   Proof. apply _. Qed.
 
-  Lemma newcounter_mono_spec (R : iProp Σ) :
+  Lemma newcounter_mono_spec :
     {{{ True }}} newcounter #() {{{ l, RET #l; mcounter l 0 }}}.
   Proof.
     iIntros (Φ) "_ HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
