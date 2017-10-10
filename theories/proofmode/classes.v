@@ -90,6 +90,7 @@ Class FromAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=
 Arguments from_and {_} _ _ _ _ {_}.
 Hint Mode FromAnd + + ! - - : typeclass_instances.
 Hint Mode FromAnd + + - ! ! : typeclass_instances. (* For iCombine *)
+
 Lemma mk_from_and_and {M} p (P Q1 Q2 : uPred M) :
   (Q1 ∧ Q2 ⊢ P) → FromAnd p P Q1 Q2.
 Proof. rewrite /FromAnd=><-. destruct p; auto using sep_and. Qed.
@@ -105,6 +106,7 @@ Class IntoAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=
   into_and : P ⊢ if p then Q1 ∧ Q2 else Q1 ∗ Q2.
 Arguments into_and {_} _ _ _ _ {_}.
 Hint Mode IntoAnd + + ! - - : typeclass_instances.
+
 Lemma mk_into_and_sep {M} p (P Q1 Q2 : uPred M) :
   (P ⊢ Q1 ∗ Q2) → IntoAnd p P Q1 Q2.
 Proof. rewrite /IntoAnd=>->. destruct p; auto using sep_and. Qed.
@@ -203,3 +205,47 @@ Instance is_cons_cons {A} (x : A) (l : list A) : IsCons (x :: l) x l.
 Proof. done. Qed.
 Instance is_app_app {A} (l1 l2 : list A) : IsApp (l1 ++ l2) l1 l2.
 Proof. done. Qed.
+
+(* We make sure that tactics that perform actions on *specific* hypotheses or
+parts of the goal look through the [tc_opaque] connective, which is used to make
+definitions opaque for type class search. For example, when using `iDestruct`,
+an explicit hypothesis is affected, and as such, we should look through opaque
+definitions. However, when using `iFrame` or `iNext`, arbitrary hypotheses or
+parts of the goal are affected, and as such, type class opacity should be
+respected.
+
+This means that there are [tc_opaque] instances for all proofmode type classes
+with the exception of:
+
+- [FromAssumption] used by [iAssumption]
+- [Frame] used by [iFrame]
+- [IntoLaterN] and [FromLaterN] used by [iNext]
+- [IntoPersistentP] used by [iPersistent]
+*)
+Instance into_pure_tc_opaque {M} (P : uPred M) φ :
+  IntoPure P φ → IntoPure (tc_opaque P) φ := id.
+Instance from_pure_tc_opaque {M} (P : uPred M) φ :
+  FromPure P φ → FromPure (tc_opaque P) φ := id.
+Instance from_laterN_tc_opaque {M} n (P Q : uPred M) :
+  FromLaterN n P Q → FromLaterN n (tc_opaque P) Q := id.
+Instance into_wand_tc_opaque {M} p (R P Q : uPred M) :
+  IntoWand p R P Q → IntoWand p (tc_opaque R) P Q := id.
+(* Higher precedence than [from_and_sep] so that [iCombine] does not loop. *)
+Instance from_and_tc_opaque {M} p (P Q1 Q2 : uPred M) :
+  FromAnd p P Q1 Q2 → FromAnd p (tc_opaque P) Q1 Q2 | 102 := id.
+Instance into_and_tc_opaque {M} p (P Q1 Q2 : uPred M) :
+  IntoAnd p P Q1 Q2 → IntoAnd p (tc_opaque P) Q1 Q2 := id.
+Instance from_or_tc_opaque {M} (P Q1 Q2 : uPred M) :
+  FromOr P Q1 Q2 → FromOr (tc_opaque P) Q1 Q2 := id.
+Instance into_or_tc_opaque {M} (P Q1 Q2 : uPred M) :
+  IntoOr P Q1 Q2 → IntoOr (tc_opaque P) Q1 Q2 := id.
+Instance from_exist_tc_opaque {M A} (P : uPred M) (Φ : A → uPred M) :
+  FromExist P Φ → FromExist (tc_opaque P) Φ := id.
+Instance into_exist_tc_opaque {M A} (P : uPred M) (Φ : A → uPred M) :
+  IntoExist P Φ → IntoExist (tc_opaque P) Φ := id.
+Instance into_forall_tc_opaque {M A} (P : uPred M) (Φ : A → uPred M) :
+  IntoForall P Φ → IntoForall (tc_opaque P) Φ := id.
+Instance from_modal_tc_opaque {M} (P Q : uPred M) :
+  FromModal P Q → FromModal (tc_opaque P) Q := id.
+Instance elim_modal_tc_opaque {M} (P P' Q Q' : uPred M) :
+  ElimModal P P' Q Q' → ElimModal (tc_opaque P) P' Q Q' := id.
