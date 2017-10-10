@@ -39,6 +39,7 @@ Notation "x ≼{ n } y" := (includedN n x y)
 Instance: Params (@includedN) 4.
 Hint Extern 0 (_ ≼{_} _) => reflexivity.
 
+Set Primitive Projections.
 Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A} := {
   (* setoids *)
   mixin_cmra_op_ne (x : A) : NonExpansive (op x);
@@ -60,6 +61,7 @@ Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A} := {
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
     ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2
 }.
+Unset Primitive Projections.
 
 (** Bundeled version *)
 Structure cmraT := CMRAT' {

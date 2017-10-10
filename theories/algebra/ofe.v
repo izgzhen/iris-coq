@@ -33,11 +33,13 @@ Tactic Notation "ofe_subst" :=
   | H:@dist ?A ?d ?n _ ?x |- _ => symmetry in H;setoid_subst_aux (@dist A d n) x
   end.
 
+Set Primitive Projections.
 Record OfeMixin A `{Equiv A, Dist A} := {
   mixin_equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y;
   mixin_dist_equivalence n : Equivalence (dist n);
   mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y
 }.
+Unset Primitive Projections.
 
 (** Bundeled version *)
 Structure ofeT := OfeT' {
