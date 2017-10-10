@@ -14,9 +14,7 @@ export OPAM_EDITOR="$(which false)"
 # Make sure we got a good OPAM.
 test -d "$OPAMROOT" || (mkdir "$OPAMROOT" && run_and_print opam init --no-setup -y)
 eval `opam conf env`
-# Delete old pins from opam.pins times.
-run_and_print opam pin remove coq-stdpp -n
-run_and_print opam pin remove coq-iris -n
+
 # Make sure the pin for the builddep package is not stale.
 run_and_print make build-dep/opam
 
@@ -25,7 +23,7 @@ if test $(find "$OPAMROOT/repo/package-index" -mtime +0); then
     # last update was more than a day ago
     run_and_print opam update
 else
-    # only update iris-dev
+    # only update iris-dev, and only if it already exists
     if test -d "$OPAMROOT/repo/iris-dev"; then run_and_print opam update iris-dev; fi
 fi
 # Make sure we got the right set of repositories registered
