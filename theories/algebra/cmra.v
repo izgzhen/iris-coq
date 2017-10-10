@@ -39,27 +39,30 @@ Notation "x ≼{ n } y" := (includedN n x y)
 Instance: Params (@includedN) 4.
 Hint Extern 0 (_ ≼{_} _) => reflexivity.
 
-Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A} := {
-  (* setoids *)
-  mixin_cmra_op_ne (x : A) : NonExpansive (op x);
-  mixin_cmra_pcore_ne n x y cx :
-    x ≡{n}≡ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≡{n}≡ cy;
-  mixin_cmra_validN_ne n : Proper (dist n ==> impl) (validN n);
-  (* valid *)
-  mixin_cmra_valid_validN x : ✓ x ↔ ∀ n, ✓{n} x;
-  mixin_cmra_validN_S n x : ✓{S n} x → ✓{n} x;
-  (* monoid *)
-  mixin_cmra_assoc : Assoc (≡) (⋅);
-  mixin_cmra_comm : Comm (≡) (⋅);
-  mixin_cmra_pcore_l x cx : pcore x = Some cx → cx ⋅ x ≡ x;
-  mixin_cmra_pcore_idemp x cx : pcore x = Some cx → pcore cx ≡ Some cx;
-  mixin_cmra_pcore_mono x y cx :
-    x ≼ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy;
-  mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
-  mixin_cmra_extend n x y1 y2 :
-    ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-    ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2
-}.
+Section mixin.
+  Local Set Primitive Projections.
+  Record CMRAMixin A `{Dist A, Equiv A, PCore A, Op A, Valid A, ValidN A} := {
+    (* setoids *)
+    mixin_cmra_op_ne (x : A) : NonExpansive (op x);
+    mixin_cmra_pcore_ne n x y cx :
+      x ≡{n}≡ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≡{n}≡ cy;
+    mixin_cmra_validN_ne n : Proper (dist n ==> impl) (validN n);
+    (* valid *)
+    mixin_cmra_valid_validN x : ✓ x ↔ ∀ n, ✓{n} x;
+    mixin_cmra_validN_S n x : ✓{S n} x → ✓{n} x;
+    (* monoid *)
+    mixin_cmra_assoc : Assoc (≡) (⋅);
+    mixin_cmra_comm : Comm (≡) (⋅);
+    mixin_cmra_pcore_l x cx : pcore x = Some cx → cx ⋅ x ≡ x;
+    mixin_cmra_pcore_idemp x cx : pcore x = Some cx → pcore cx ≡ Some cx;
+    mixin_cmra_pcore_mono x y cx :
+      x ≼ y → pcore x = Some cx → ∃ cy, pcore y = Some cy ∧ cx ≼ cy;
+    mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
+    mixin_cmra_extend n x y1 y2 :
+      ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
+      ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2
+  }.
+End mixin.
 
 (** Bundeled version *)
 Structure cmraT := CMRAT' {
