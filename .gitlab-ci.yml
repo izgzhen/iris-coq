@@ -13,7 +13,7 @@ variables:
   - fp-timing
   script:
   # prepare
-  - . build/opam-ci.sh coq $OPAM_PINS
+  - . build/opam-ci.sh $OPAM_PINS
   - env | egrep '^(CI_BUILD_REF|CI_RUNNER)' > build-env.txt
   # build
   - 'time make -k -j$CPU_CORES TIMED=y 2>&1 | tee build-log.txt'
