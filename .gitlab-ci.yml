@@ -32,9 +32,17 @@ opam:
   stage: deploy
   script:
   # Send a trigger to the repository doing the work
-  - curl --fail -X POST -F "token=$OPAM_UPDATE_SECRET" -F "ref=master" -F "variables[REPO]=${CI_PROJECT_URL}.git" -F "variables[REF]=$CI_COMMIT_REF_NAME" -F "variables[SHA]=$CI_COMMIT_SHA" -F "variables[NAME]=$OPAM_PKG" https://gitlab.mpi-sws.org/api/v3/projects/581/trigger/builds
+  - curl --fail -X POST -F "token=$OPAM_UPDATE_SECRET" -F "ref=master" -F "variables[REPO]=${CI_PROJECT_URL}.git" -F "variables[REF]=$CI_COMMIT_REF_NAME" -F "variables[SHA]=$CI_COMMIT_SHA" -F "variables[NAME]=$OPAM_PKG" https://gitlab.mpi-sws.org/api/v4/projects/581/trigger/pipeline
   variables:
     OPAM_PKG: "coq-iris"
+  only:
+  - master
+
+reverse-deps:
+  stage: deploy
+  script:
+  # Send a trigger to reverse dependencies to have them tested
+  - curl --fail -X POST -F "token=$IRIS_ATOMIC_SECRET" -F "ref=master" https://gitlab.mpi-sws.org/api/v4/projects/250/trigger/pipeline
   only:
   - master
 
