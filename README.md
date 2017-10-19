@@ -56,9 +56,8 @@ CPU cores.
   language
   * The subfolder [lib](theories/heap_lang/lib) contains a few derived
     constructions within this language, e.g., parallel composition.
-    Most notable here is [lib/barrier](theories/heap_lang/lib/barrier), the
-    implementation and proof of a barrier as described in
-    <http://doi.acm.org/10.1145/2818638>.
+    For more examples of using Iris and heap_lang, have a look at the
+    [Iris Examples](https://gitlab.mpi-sws.org/FP/iris-examples).
 * The folder [tests](theories/tests) contains modules we use to test our
   infrastructure. Users of the Iris Coq library should *not* depend on these
   modules; they may change or disappear without any notice.
