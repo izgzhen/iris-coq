@@ -46,12 +46,12 @@ reverse-deps:
   only:
   - master
 
-build-coq8.7:
+build-coq.8.7:
   <<: *template
   variables:
     OPAM_PINS: "coq version 8.7.dev   coq-mathcomp-ssreflect version dev"
 
-build-coq8.6.1:
+build-coq.8.6.1:
   <<: *template
   variables:
     OPAM_PINS: "coq version 8.6.1   coq-mathcomp-ssreflect version 1.6.1"
