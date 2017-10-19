@@ -44,7 +44,7 @@ reverse-deps:
   stage: deploy
   script:
   # Send a trigger to reverse dependencies to have them tested
-  - curl --fail -X POST -F "token=$IRIS_ATOMIC_SECRET" -F "ref=master" -F "variables[REV]=$CI_COMMIT_SHA" https://gitlab.mpi-sws.org/api/v4/projects/250/trigger/pipeline
+  - curl --fail -X POST -F "token=$IRIS_ATOMIC_SECRET" -F "ref=master" -F "variables[IRIS_REV]=$CI_COMMIT_SHA" https://gitlab.mpi-sws.org/api/v4/projects/250/trigger/pipeline
   only:
   - master
   except:
