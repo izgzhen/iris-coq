@@ -88,7 +88,6 @@ theories/proofmode/classes.v
 theories/proofmode/class_instances.v
 theories/tests/heap_lang.v
 theories/tests/one_shot.v
-theories/tests/joining_existentials.v
 theories/tests/proofmode.v
 theories/tests/barrier_client.v
 theories/tests/list_reverse.v
