@@ -37,6 +37,8 @@ opam:
     OPAM_PKG: "coq-iris"
   only:
   - master
+  except:
+  - triggers
 
 reverse-deps:
   stage: deploy
@@ -45,11 +47,15 @@ reverse-deps:
   - curl --fail -X POST -F "token=$IRIS_ATOMIC_SECRET" -F "ref=master" -F "variables[REV]=$CI_COMMIT_SHA" https://gitlab.mpi-sws.org/api/v4/projects/250/trigger/pipeline
   only:
   - master
+  except:
+  - triggers
 
 build-coq.8.7:
   <<: *template
   variables:
     OPAM_PINS: "coq version 8.7.dev   coq-mathcomp-ssreflect version dev"
+  except:
+  - triggers
 
 build-coq.8.6.1:
   <<: *template
@@ -60,3 +66,5 @@ build-coq.8.6.1:
     paths:
     - build-time.txt
     - build-env.txt
+  except:
+  - triggers
