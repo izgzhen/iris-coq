@@ -73,10 +73,6 @@ theories/heap_lang/lib/lock.v
 theories/heap_lang/lib/spin_lock.v
 theories/heap_lang/lib/ticket_lock.v
 theories/heap_lang/lib/counter.v
-theories/heap_lang/lib/barrier/barrier.v
-theories/heap_lang/lib/barrier/specification.v
-theories/heap_lang/lib/barrier/protocol.v
-theories/heap_lang/lib/barrier/proof.v
 theories/heap_lang/proofmode.v
 theories/heap_lang/adequacy.v
 theories/proofmode/strings.v
