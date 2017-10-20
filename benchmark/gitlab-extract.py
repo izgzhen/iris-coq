@@ -45,7 +45,7 @@ if args.commits is None:
     last_result = last(parse_log.parse(open(args.file, "r"), parse_times = False))
     args.commits = "{}..origin/master".format(last_result.commit)
 
-projects = req("projects")
+projects = req("projects?per_page=512")
 project = first(filter(lambda p: p['path_with_namespace'] == args.project, projects.json()))
 if project is None:
     sys.stderr.write("Project not found.\n")
