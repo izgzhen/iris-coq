@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, pprint, sys
+import argparse, pprint, sys, glob, zipfile
 import requests
 import parse_log
 
@@ -35,6 +35,9 @@ parser.add_argument("-f", "--file",
 parser.add_argument("-c", "--commits",
                     dest="commits",
                     help="The commits to fetch. Default is everything since the most recent entry in the log file.")
+parser.add_argument("-a", "--artifacts",
+                    dest="artifacts",
+                    help="Location of the artifacts (following GitLab's folder structure).  If not given (which should be the common case), the artifacts will be downloaded from GitLab.")
 args = parser.parse_args()
 log_file = sys.stdout if args.file == "-" else open(args.file, "a")
 
@@ -72,13 +75,27 @@ for commit in parse_log.parse_git_commits(args.commits):
             # build failed or cancelled, skip to next
             continue
         # now fetch the build times
-        build_times = requests.get("{}/builds/{}/artifacts/file/build-time.txt".format(project['web_url'], build['id']))
-        if build_times.status_code != 200:
-            # no artifact at this build, try another one
-            continue
-        # Output in the log file format
-        log_file.write("# {}\n".format(commit))
-        log_file.write(build_times.text)
-        log_file.flush()
-        # don't fetch another one
-        break
+        if args.artifacts:
+            artifact_zip = glob.glob('{}/*/{}/{}/artifacts.zip'.format(args.artifacts, project['id'], build['id']))
+            if not artifact_zip:
+                # no artifact at this build, try another one
+                continue
+            assert len(artifact_zip) == 1, "Found too many artifacts"
+            artifact_zip = artifact_zip[0]
+            with zipfile.ZipFile(artifact_zip) as artifact:
+                with artifact.open('build-time.txt') as build_times:
+                    # Output into log file
+                    log_file.write("# {}\n".format(commit))
+                    log_file.write(build_times.read().decode('UTF-8'))
+                    log_file.flush()
+        else:
+            build_times = requests.get("{}/builds/{}/artifacts/raw/build-time.txt".format(project['web_url'], build['id']))
+            if build_times.status_code != 200:
+                # no artifact at this build, try another one
+                continue
+            # Output in the log file format
+            log_file.write("# {}\n".format(commit))
+            log_file.write(build_times.text)
+            log_file.flush()
+            # don't fetch another build
+            break

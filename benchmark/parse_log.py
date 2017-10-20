@@ -45,4 +45,7 @@ def parse_git_commits(commits):
     else:
         # a single commit
         commits = subprocess.check_output(["git", "rev-parse", commits])
-    return reversed(commits.decode("utf-8").strip().split('\n'))
+    output = commits.decode("utf-8").strip()
+    if not output: # empty output
+        return []
+    return reversed(output.split('\n'))
