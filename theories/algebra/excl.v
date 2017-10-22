@@ -59,7 +59,7 @@ Proof.
   - by intros []; constructor.
 Qed.
 
-Global Instance excl_discrete : Discrete A → Discrete exclC.
+Global Instance excl_ofe_discrete : OFEDiscrete A → OFEDiscrete exclC.
 Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
 Global Instance excl_leibniz : LeibnizEquiv A → LeibnizEquiv (excl A).
 Proof. by destruct 2; f_equal; apply leibniz_equiv. Qed.
@@ -91,7 +91,7 @@ Proof.
 Qed.
 Canonical Structure exclR := CMRAT (excl A) excl_cmra_mixin.
 
-Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclR.
+Global Instance excl_cmra_discrete : OFEDiscrete A → CMRADiscrete exclR.
 Proof. split. apply _. by intros []. Qed.
 
 (** Internalized properties *)

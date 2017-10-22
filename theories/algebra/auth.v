@@ -52,7 +52,7 @@ Qed.
 Global Instance Auth_timeless a b :
   Timeless a → Timeless b → Timeless (Auth a b).
 Proof. by intros ?? [??] [??]; split; apply: timeless. Qed.
-Global Instance auth_discrete : Discrete A → Discrete authC.
+Global Instance auth_ofe_discrete : OFEDiscrete A → OFEDiscrete authC.
 Proof. intros ? [??]; apply _. Qed.
 Global Instance auth_leibniz : LeibnizEquiv A → LeibnizEquiv (auth A).
 Proof. by intros ? [??] [??] [??]; f_equal/=; apply leibniz_equiv. Qed.

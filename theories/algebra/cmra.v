@@ -240,7 +240,7 @@ End ucmra_mixin.
 
 (** * Discrete CMRAs *)
 Class CMRADiscrete (A : cmraT) := {
-  cmra_discrete :> Discrete A;
+  cmra_discrete_ofe_discrete :> OFEDiscrete A;
   cmra_discrete_valid (x : A) : ✓{0} x → ✓ x
 }.
 Hint Mode CMRADiscrete ! : typeclass_instances.
@@ -554,7 +554,7 @@ Proof.
   split; first by rewrite cmra_valid_validN.
   eauto using cmra_discrete_valid, cmra_validN_le with lia.
 Qed.
-Lemma cmra_discrete_included_iff `{Discrete A} n x y : x ≼ y ↔ x ≼{n} y.
+Lemma cmra_discrete_included_iff `{OFEDiscrete A} n x y : x ≼ y ↔ x ≼{n} y.
 Proof.
   split; first by apply cmra_included_includedN.
   intros [z ->%(timeless_iff _ _)]; eauto using cmra_included_l.
@@ -597,7 +597,9 @@ Lemma id_free_l x `{!IdFree x} y : ✓x → y ⋅ x ≡ x → False.
 Proof. rewrite comm. eauto using id_free_r. Qed.
 Lemma discrete_id_free x `{CMRADiscrete A}:
   (∀ y, ✓ x → x ⋅ y ≡ x → False) → IdFree x.
-Proof. repeat intro. eauto using cmra_discrete_valid, cmra_discrete, timeless. Qed.
+Proof.
+  intros Hx y ??. apply (Hx y), (timeless _); eauto using cmra_discrete_valid.
+Qed.
 Global Instance id_free_op_r x y : IdFree y → Cancelable x → IdFree (x ⋅ y).
 Proof.
   intros ?? z ? Hid%symmetry. revert Hid. rewrite -assoc=>/(cancelableN x) ?.

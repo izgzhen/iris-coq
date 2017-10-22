@@ -77,7 +77,7 @@ Next Obligation.
   by rewrite Hcn.
 Qed.
 
-Global Instance list_discrete : Discrete A → Discrete listC.
+Global Instance list_ofe_discrete : OFEDiscrete A → OFEDiscrete listC.
 Proof. induction 2; constructor; try apply (timeless _); auto. Qed.
 
 Global Instance nil_timeless : Timeless (@nil A).

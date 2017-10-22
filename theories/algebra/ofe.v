@@ -107,8 +107,8 @@ Arguments timeless {_} _ {_} _ _.
 Hint Mode Timeless + ! : typeclass_instances.
 Instance: Params (@Timeless) 1.
 
-Class Discrete (A : ofeT) := discrete_timeless (x : A) :> Timeless x.
-Hint Mode Discrete ! : typeclass_instances.
+Class OFEDiscrete (A : ofeT) := ofe_discrete_timeless (x : A) :> Timeless x.
+Hint Mode OFEDiscrete ! : typeclass_instances.
 
 (** OFEs with a completion *)
 Record chain (A : ofeT) := {
@@ -653,7 +653,7 @@ Section unit.
   Global Program Instance unit_cofe : Cofe unitC := { compl x := () }.
   Next Obligation. by repeat split; try exists 0. Qed.
 
-  Global Instance unit_discrete_cofe : Discrete unitC.
+  Global Instance unit_ofe_discrete : OFEDiscrete unitC.
   Proof. done. Qed.
 End unit.
 
@@ -686,7 +686,7 @@ Section product.
   Global Instance prod_timeless (x : A * B) :
     Timeless (x.1) → Timeless (x.2) → Timeless x.
   Proof. by intros ???[??]; split; apply (timeless _). Qed.
-  Global Instance prod_discrete_cofe : Discrete A → Discrete B → Discrete prodC.
+  Global Instance prod_ofe_discrete : OFEDiscrete A → OFEDiscrete B → OFEDiscrete prodC.
   Proof. intros ?? [??]; apply _. Qed.
 End product.
 
@@ -868,7 +868,7 @@ Section sum.
   Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
   Global Instance inr_timeless (y : B) : Timeless y → Timeless (inr y).
   Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
-  Global Instance sum_discrete_ofe : Discrete A → Discrete B → Discrete sumC.
+  Global Instance sum_ofe_discrete : OFEDiscrete A → OFEDiscrete B → OFEDiscrete sumC.
   Proof. intros ?? [?|?]; apply _. Qed.
 End sum.
 
@@ -923,7 +923,7 @@ Section discrete_ofe.
     - done.
   Qed.
 
-  Global Instance discrete_discrete_ofe : Discrete (OfeT A discrete_ofe_mixin).
+  Global Instance discrete_ofe_discrete : OFEDiscrete (OfeT A discrete_ofe_mixin).
   Proof. by intros x y. Qed.
 
   Global Program Instance discrete_cofe : Cofe (OfeT A discrete_ofe_mixin) :=
@@ -992,7 +992,7 @@ Section option.
     destruct (c n); naive_solver.
   Qed.
 
-  Global Instance option_discrete : Discrete A → Discrete optionC.
+  Global Instance option_ofe_discrete : OFEDiscrete A → OFEDiscrete optionC.
   Proof. destruct 2; constructor; by apply (timeless _). Qed.
 
   Global Instance Some_ne : NonExpansive (@Some A).
@@ -1226,7 +1226,7 @@ Section sigma.
 
   Global Instance sig_timeless (x : sig P) :  Timeless (`x) → Timeless x.
   Proof. intros ? y. rewrite sig_dist_alt sig_equiv_alt. apply (timeless _). Qed.
-  Global Instance sig_discrete_ofe : Discrete A → Discrete sigC.
+  Global Instance sig_ofe_discrete : OFEDiscrete A → OFEDiscrete sigC.
   Proof. intros ??. apply _. Qed.
 End sigma.
 

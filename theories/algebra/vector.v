@@ -29,7 +29,7 @@ Section ofe.
     intros ?? v' ?. inv_vec v'=>x' v'. inversion_clear 1.
     constructor. by apply timeless. change (v ≡ v'). by apply timeless.
   Qed.
-  Global Instance vec_discrete_cofe m : Discrete A → Discrete (vecC m).
+  Global Instance vec_ofe_discrete m : OFEDiscrete A → OFEDiscrete (vecC m).
   Proof. intros ? v. induction v; apply _. Qed.
 End ofe.
 

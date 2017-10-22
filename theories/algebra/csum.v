@@ -96,7 +96,7 @@ Next Obligation.
   + rewrite (conv_compl n (csum_chain_r c b')) /=. destruct (c n); naive_solver.
 Qed.
 
-Global Instance csum_discrete : Discrete A → Discrete B → Discrete csumC.
+Global Instance csum_ofe_discrete : OFEDiscrete A → OFEDiscrete B → OFEDiscrete csumC.
 Proof. by inversion_clear 3; constructor; apply (timeless _). Qed.
 Global Instance csum_leibniz :
   LeibnizEquiv A → LeibnizEquiv B → LeibnizEquiv (csumC A B).

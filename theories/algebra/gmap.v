@@ -37,7 +37,7 @@ Next Obligation.
   by rewrite conv_compl /=; apply reflexive_eq.
 Qed.
 
-Global Instance gmap_discrete : Discrete A → Discrete gmapC.
+Global Instance gmap_ofe_discrete : OFEDiscrete A → OFEDiscrete gmapC.
 Proof. intros ? m m' ? i. by apply (timeless _). Qed.
 (* why doesn't this go automatic? *)
 Global Instance gmapC_leibniz: LeibnizEquiv A → LeibnizEquiv gmapC.
