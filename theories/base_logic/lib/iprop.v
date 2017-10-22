@@ -83,7 +83,7 @@ Class subG (Σ1 Σ2 : gFunctors) := in_subG i : { j | Σ1 i = Σ2 j }.
 
 (** Avoid trigger happy type class search: this line ensures that type class
 search is only triggered if the arguments of [subG] do not contain evars. Since
-instance search for [subG] is restrained, instances should always have [subG] as
+instance search for [subG] is restrained, instances should persistently have [subG] as
 their first parameter to avoid loops. For example, the instances [subG_authΣ]
 and [auth_discrete] otherwise create a cycle that pops up arbitrarily. *)
 Hint Mode subG + + : typeclass_instances.

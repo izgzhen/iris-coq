@@ -177,7 +177,7 @@ Lemma test_iFrame_persistent (P Q : uPred M) :
   □ P -∗ Q -∗ □ (P ∗ P) ∗ (P ∧ Q ∨ Q).
 Proof. iIntros "#HP". iFrame "HP". iIntros "$". Qed.
 
-Lemma test_iSplit_always P Q : □ P -∗ □ (P ∗ P).
+Lemma test_iSplit_persistently P Q : □ P -∗ □ (P ∗ P).
 Proof. iIntros "#?". by iSplit. Qed.
 
 Lemma test_iSpecialize_persistent P Q :

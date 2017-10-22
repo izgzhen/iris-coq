@@ -802,8 +802,8 @@ Local Tactic Notation "iExistDestruct" constr(H)
 (** * Always *)
 Tactic Notation "iAlways":=
   iStartProof;
-  apply tac_always_intro; env_cbv
-    || fail "iAlways: the goal is not an always modality".
+  apply tac_persistently_intro; env_cbv
+    || fail "iAlways: the goal is not an persistently modality".
 
 (** * Later *)
 Tactic Notation "iNext" open_constr(n) :=
@@ -1217,7 +1217,7 @@ Instance copy_destruct_impl {M} (P Q : uPred M) :
   CopyDestruct Q → CopyDestruct (P → Q).
 Instance copy_destruct_wand {M} (P Q : uPred M) :
   CopyDestruct Q → CopyDestruct (P -∗ Q).
-Instance copy_destruct_always {M} (P : uPred M) :
+Instance copy_destruct_persistently {M} (P : uPred M) :
   CopyDestruct P → CopyDestruct (□ P).
 
 Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=

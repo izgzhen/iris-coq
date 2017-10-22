@@ -15,7 +15,7 @@ Existing Instance Or_r | 10.
 Class FromAssumption {M} (p : bool) (P Q : uPred M) :=
   from_assumption : □?p P ⊢ Q.
 Arguments from_assumption {_} _ _ _ {_}.
-(* No need to restrict Hint Mode, we have a default instance that will always
+(* No need to restrict Hint Mode, we have a default instance that will persistently
 be used in case of evars *)
 Hint Mode FromAssumption + + - - : typeclass_instances.
 
@@ -125,8 +125,8 @@ Lemma mk_from_and_persistent {M} (P Q1 Q2 : uPred M) :
   Or (Persistent Q1) (Persistent Q2) → (Q1 ∗ Q2 ⊢ P) → FromAnd true P Q1 Q2.
 Proof.
   intros [?|?] ?; rewrite /FromAnd.
-  - by rewrite always_and_sep_l.
-  - by rewrite always_and_sep_r.
+  - by rewrite persistently_and_sep_l.
+  - by rewrite persistently_and_sep_r.
 Qed.
 
 Class IntoAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=

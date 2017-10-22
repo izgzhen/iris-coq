@@ -117,11 +117,11 @@ Section list.
     ▷^n ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, ▷^n Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
-  Lemma big_sepL_always Φ l :
+  Lemma big_sepL_persistently Φ l :
     (□ [∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, □ Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
-  Lemma big_sepL_always_if p Φ l :
+  Lemma big_sepL_persistently_if p Φ l :
     □?p ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, □?p Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
@@ -134,7 +134,7 @@ Section list.
       apply impl_intro_l, pure_elim_l=> ?; by apply big_sepL_lookup. }
     revert Φ HΦ. induction l as [|x l IH]=> Φ HΦ.
     { rewrite big_sepL_nil; auto with I. }
-    rewrite big_sepL_cons. rewrite -always_and_sep_l; apply and_intro.
+    rewrite big_sepL_cons. rewrite -persistently_and_sep_l; apply and_intro.
     - by rewrite (forall_elim 0) (forall_elim x) pure_True // True_impl.
     - rewrite -IH. apply forall_intro=> k; by rewrite (forall_elim (S k)).
   Qed.
@@ -143,10 +143,10 @@ Section list.
     □ (∀ k x, ⌜l !! k = Some x⌝ → Φ k x → Ψ k x) ∧ ([∗ list] k↦x ∈ l, Φ k x)
     ⊢ [∗ list] k↦x ∈ l, Ψ k x.
   Proof.
-    rewrite always_and_sep_l. do 2 setoid_rewrite always_forall.
-    setoid_rewrite always_impl; setoid_rewrite always_pure.
+    rewrite persistently_and_sep_l. do 2 setoid_rewrite persistently_forall.
+    setoid_rewrite persistently_impl; setoid_rewrite persistently_pure.
     rewrite -big_sepL_forall -big_sepL_sepL. apply big_sepL_mono; auto=> k x ?.
-    by rewrite -always_wand_impl always_elim wand_elim_l.
+    by rewrite -persistently_wand_impl persistently_elim wand_elim_l.
   Qed.
 
   Global Instance big_sepL_nil_persistent Φ :
@@ -307,11 +307,11 @@ Section gmap.
     ▷^n ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, ▷^n Φ k x).
   Proof. apply (big_opM_commute _). Qed.
 
-  Lemma big_sepM_always Φ m :
+  Lemma big_sepM_persistently Φ m :
     (□ [∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, □ Φ k x).
   Proof. apply (big_opM_commute _). Qed.
 
-  Lemma big_sepM_always_if p Φ m :
+  Lemma big_sepM_persistently_if p Φ m :
     □?p ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, □?p Φ k x).
   Proof. apply (big_opM_commute _). Qed.
 
@@ -323,7 +323,7 @@ Section gmap.
     { apply forall_intro=> k; apply forall_intro=> x.
       apply impl_intro_l, pure_elim_l=> ?; by apply big_sepM_lookup. }
     induction m as [|i x m ? IH] using map_ind; [rewrite ?big_sepM_empty; auto|].
-    rewrite big_sepM_insert // -always_and_sep_l. apply and_intro.
+    rewrite big_sepM_insert // -persistently_and_sep_l. apply and_intro.
     - rewrite (forall_elim i) (forall_elim x) lookup_insert.
       by rewrite pure_True // True_impl.
     - rewrite -IH. apply forall_mono=> k; apply forall_mono=> y.
@@ -336,10 +336,10 @@ Section gmap.
     □ (∀ k x, ⌜m !! k = Some x⌝ → Φ k x → Ψ k x) ∧ ([∗ map] k↦x ∈ m, Φ k x)
     ⊢ [∗ map] k↦x ∈ m, Ψ k x.
   Proof.
-    rewrite always_and_sep_l. do 2 setoid_rewrite always_forall.
-    setoid_rewrite always_impl; setoid_rewrite always_pure.
+    rewrite persistently_and_sep_l. do 2 setoid_rewrite persistently_forall.
+    setoid_rewrite persistently_impl; setoid_rewrite persistently_pure.
     rewrite -big_sepM_forall -big_sepM_sepM. apply big_sepM_mono; auto=> k x ?.
-    by rewrite -always_wand_impl always_elim wand_elim_l.
+    by rewrite -persistently_wand_impl persistently_elim wand_elim_l.
   Qed.
 
   Global Instance big_sepM_empty_persistent Φ :
@@ -460,10 +460,10 @@ Section gset.
     ▷^n ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ▷^n Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
-  Lemma big_sepS_always Φ X : □ ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, □ Φ y).
+  Lemma big_sepS_persistently Φ X : □ ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, □ Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
-  Lemma big_sepS_always_if q Φ X :
+  Lemma big_sepS_persistently_if q Φ X :
     □?q ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, □?q Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
@@ -475,7 +475,7 @@ Section gset.
       apply impl_intro_l, pure_elim_l=> ?; by apply big_sepS_elem_of. }
     induction X as [|x X ? IH] using collection_ind_L.
     { rewrite big_sepS_empty; auto. }
-    rewrite big_sepS_insert // -always_and_sep_l. apply and_intro.
+    rewrite big_sepS_insert // -persistently_and_sep_l. apply and_intro.
     - by rewrite (forall_elim x) pure_True ?True_impl; last set_solver.
     - rewrite -IH. apply forall_mono=> y. apply impl_intro_l, pure_elim_l=> ?.
       by rewrite pure_True ?True_impl; last set_solver.
@@ -484,10 +484,10 @@ Section gset.
   Lemma big_sepS_impl Φ Ψ X :
     □ (∀ x, ⌜x ∈ X⌝ → Φ x → Ψ x) ∧ ([∗ set] x ∈ X, Φ x) ⊢ [∗ set] x ∈ X, Ψ x.
   Proof.
-    rewrite always_and_sep_l always_forall.
-    setoid_rewrite always_impl; setoid_rewrite always_pure.
+    rewrite persistently_and_sep_l persistently_forall.
+    setoid_rewrite persistently_impl; setoid_rewrite persistently_pure.
     rewrite -big_sepS_forall -big_sepS_sepS. apply big_sepS_mono; auto=> x ?.
-    by rewrite -always_wand_impl always_elim wand_elim_l.
+    by rewrite -persistently_wand_impl persistently_elim wand_elim_l.
   Qed.
 
   Global Instance big_sepS_empty_persistent Φ : Persistent ([∗ set] x ∈ ∅, Φ x).
@@ -571,10 +571,10 @@ Section gmultiset.
     ▷^n ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, ▷^n Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 
-  Lemma big_sepMS_always Φ X : □ ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, □ Φ y).
+  Lemma big_sepMS_persistently Φ X : □ ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, □ Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 
-  Lemma big_sepMS_always_if q Φ X :
+  Lemma big_sepMS_persistently_if q Φ X :
     □?q ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, □?q Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 
