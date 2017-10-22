@@ -40,13 +40,11 @@ Module savedprop. Section savedprop.
 
   Lemma contradiction : False.
   Proof using All.
-    apply (@soundness M False 1); simpl.
+    apply (@consistency M); simpl.
     iIntros "". iMod A_alloc as (i) "#H".
     iPoseProof (saved_NA with "H") as "HN".
-    iModIntro. iNext.
-    iApply "HN". iApply saved_A. done.
+    iApply "HN". by iApply saved_A.
   Qed.
-
 End savedprop. End savedprop.
 
 (** This proves that we need the ▷ when opening invariants. *)
