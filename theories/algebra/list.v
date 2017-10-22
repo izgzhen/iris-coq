@@ -78,12 +78,12 @@ Next Obligation.
 Qed.
 
 Global Instance list_ofe_discrete : OFEDiscrete A → OFEDiscrete listC.
-Proof. induction 2; constructor; try apply (timeless _); auto. Qed.
+Proof. induction 2; constructor; try apply (discrete _); auto. Qed.
 
-Global Instance nil_timeless : Timeless (@nil A).
+Global Instance nil_discrete : Discrete (@nil A).
 Proof. inversion_clear 1; constructor. Qed.
-Global Instance cons_timeless x l : Timeless x → Timeless l → Timeless (x :: l).
-Proof. intros ??; inversion_clear 1; constructor; by apply timeless. Qed.
+Global Instance cons_discrete x l : Discrete x → Discrete l → Discrete (x :: l).
+Proof. intros ??; inversion_clear 1; constructor; by apply discrete. Qed.
 End cofe.
 
 Arguments listC : clear implicits.

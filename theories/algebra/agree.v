@@ -149,12 +149,12 @@ Proof. rewrite /CMRATotal; eauto. Qed.
 Global Instance agree_persistent (x : agree A) : Persistent x.
 Proof. by constructor. Qed.
 
-Global Instance agree_ofe_discrete : OFEDiscrete A → CMRADiscrete agreeR.
+Global Instance agree_cmra_discrete : OFEDiscrete A → CMRADiscrete agreeR.
 Proof.
   intros HD. split.
-  - intros x y [H H'] n; split=> a; setoid_rewrite <-(timeless_iff_0 _ _); auto.
+  - intros x y [H H'] n; split=> a; setoid_rewrite <-(discrete_iff_0 _ _); auto.
   - intros x; rewrite agree_validN_def=> Hv n. apply agree_validN_def=> a b ??.
-    apply timeless_iff_0; auto.
+    apply discrete_iff_0; auto.
 Qed.
 
 Program Definition to_agree (a : A) : agree A :=

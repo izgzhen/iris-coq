@@ -42,8 +42,8 @@ Proof. rewrite /FromAssumption=> <-. by rewrite forall_elim. Qed.
 Global Instance into_pure_pure φ : @IntoPure M ⌜φ⌝ φ.
 Proof. done. Qed.
 Global Instance into_pure_eq {A : ofeT} (a b : A) :
-  Timeless a → @IntoPure M (a ≡ b) (a ≡ b).
-Proof. intros. by rewrite /IntoPure timeless_eq. Qed.
+  Discrete a → @IntoPure M (a ≡ b) (a ≡ b).
+Proof. intros. by rewrite /IntoPure discrete_eq. Qed.
 Global Instance into_pure_cmra_valid `{CMRADiscrete A} (a : A) :
   @IntoPure M (✓ a) (✓ a).
 Proof. by rewrite /IntoPure discrete_valid. Qed.

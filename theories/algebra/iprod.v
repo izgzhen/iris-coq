@@ -61,22 +61,22 @@ Section iprod_cofe.
     x ≠ x' → (iprod_insert x y f) x' = f x'.
   Proof. by rewrite /iprod_insert; destruct (decide _). Qed.
 
-  Global Instance iprod_lookup_timeless f x : Timeless f → Timeless (f x).
+  Global Instance iprod_lookup_discrete f x : Discrete f → Discrete (f x).
   Proof.
     intros ? y ?.
     cut (f ≡ iprod_insert x y f).
     { by move=> /(_ x)->; rewrite iprod_lookup_insert. }
-    apply (timeless _)=> x'; destruct (decide (x = x')) as [->|];
+    apply (discrete _)=> x'; destruct (decide (x = x')) as [->|];
       by rewrite ?iprod_lookup_insert ?iprod_lookup_insert_ne.
   Qed.
-  Global Instance iprod_insert_timeless f x y :
-    Timeless f → Timeless y → Timeless (iprod_insert x y f).
+  Global Instance iprod_insert_discrete f x y :
+    Discrete f → Discrete y → Discrete (iprod_insert x y f).
   Proof.
     intros ?? g Heq x'; destruct (decide (x = x')) as [->|].
     - rewrite iprod_lookup_insert.
-      apply: timeless. by rewrite -(Heq x') iprod_lookup_insert.
+      apply: discrete. by rewrite -(Heq x') iprod_lookup_insert.
     - rewrite iprod_lookup_insert_ne //.
-      apply: timeless. by rewrite -(Heq x') iprod_lookup_insert_ne.
+      apply: discrete. by rewrite -(Heq x') iprod_lookup_insert_ne.
   Qed.
 End iprod_cofe.
 
@@ -140,9 +140,9 @@ Section iprod_cmra.
   Qed.
   Canonical Structure iprodUR := UCMRAT (iprod B) iprod_ucmra_mixin.
 
-  Global Instance iprod_empty_timeless :
-    (∀ i, Timeless (ε : B i)) → Timeless (ε : iprod B).
-  Proof. intros ? f Hf x. by apply: timeless. Qed.
+  Global Instance iprod_empty_discrete :
+    (∀ i, Discrete (ε : B i)) → Discrete (ε : iprod B).
+  Proof. intros ? f Hf x. by apply: discrete. Qed.
 
   (** Internalized properties *)
   Lemma iprod_equivI {M} g1 g2 : g1 ≡ g2 ⊣⊢ (∀ i, g1 i ≡ g2 i : uPred M).
@@ -198,8 +198,8 @@ Section iprod_singleton.
     x ≠ x' → (iprod_singleton x y) x' = ε.
   Proof. intros; by rewrite /iprod_singleton iprod_lookup_insert_ne. Qed.
 
-  Global Instance iprod_singleton_timeless x (y : B x) :
-    (∀ i, Timeless (ε : B i)) →  Timeless y → Timeless (iprod_singleton x y).
+  Global Instance iprod_singleton_discrete x (y : B x) :
+    (∀ i, Discrete (ε : B i)) →  Discrete y → Discrete (iprod_singleton x y).
   Proof. apply _. Qed.
 
   Lemma iprod_singleton_validN n x (y : B x) : ✓{n} iprod_singleton x y ↔ ✓{n} y.

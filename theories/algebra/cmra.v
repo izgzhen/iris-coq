@@ -530,22 +530,22 @@ Section total_core.
   Qed.
 End total_core.
 
-(** ** Timeless *)
-Lemma cmra_timeless_included_l x y : Timeless x → ✓{0} y → x ≼{0} y → x ≼ y.
+(** ** Discrete *)
+Lemma cmra_discrete_included_l x y : Discrete x → ✓{0} y → x ≼{0} y → x ≼ y.
 Proof.
   intros ?? [x' ?].
   destruct (cmra_extend 0 y x x') as (z&z'&Hy&Hz&Hz'); auto; simpl in *.
-  by exists z'; rewrite Hy (timeless x z).
+  by exists z'; rewrite Hy (discrete x z).
 Qed.
-Lemma cmra_timeless_included_r x y : Timeless y → x ≼{0} y → x ≼ y.
-Proof. intros ? [x' ?]. exists x'. by apply (timeless y). Qed.
-Lemma cmra_op_timeless x1 x2 :
-  ✓ (x1 ⋅ x2) → Timeless x1 → Timeless x2 → Timeless (x1 ⋅ x2).
+Lemma cmra_discrete_included_r x y : Discrete y → x ≼{0} y → x ≼ y.
+Proof. intros ? [x' ?]. exists x'. by apply (discrete y). Qed.
+Lemma cmra_op_discrete x1 x2 :
+  ✓ (x1 ⋅ x2) → Discrete x1 → Discrete x2 → Discrete (x1 ⋅ x2).
 Proof.
   intros ??? z Hz.
   destruct (cmra_extend 0 z x1 x2) as (y1&y2&Hz'&?&?); auto; simpl in *.
   { rewrite -?Hz. by apply cmra_valid_validN. }
-  by rewrite Hz' (timeless x1 y1) // (timeless x2 y2).
+  by rewrite Hz' (discrete x1 y1) // (discrete x2 y2).
 Qed.
 
 (** ** Discrete *)
@@ -557,7 +557,7 @@ Qed.
 Lemma cmra_discrete_included_iff `{OFEDiscrete A} n x y : x ≼ y ↔ x ≼{n} y.
 Proof.
   split; first by apply cmra_included_includedN.
-  intros [z ->%(timeless_iff _ _)]; eauto using cmra_included_l.
+  intros [z ->%(discrete_iff _ _)]; eauto using cmra_included_l.
 Qed.
 
 (** Cancelable elements  *)
@@ -567,7 +567,7 @@ Lemma cancelable x `{!Cancelable x} y z : ✓(x ⋅ y) → x ⋅ y ≡ x ⋅ z �
 Proof. rewrite !equiv_dist cmra_valid_validN. intros. by apply (cancelableN x). Qed.
 Lemma discrete_cancelable x `{CMRADiscrete A}:
   (∀ y z, ✓(x ⋅ y) → x ⋅ y ≡ x ⋅ z → y ≡ z) → Cancelable x.
-Proof. intros ????. rewrite -!timeless_iff -cmra_discrete_valid_iff. auto. Qed.
+Proof. intros ????. rewrite -!discrete_iff -cmra_discrete_valid_iff. auto. Qed.
 Global Instance cancelable_op x y :
   Cancelable x → Cancelable y → Cancelable (x ⋅ y).
 Proof.
@@ -598,7 +598,7 @@ Proof. rewrite comm. eauto using id_free_r. Qed.
 Lemma discrete_id_free x `{CMRADiscrete A}:
   (∀ y, ✓ x → x ⋅ y ≡ x → False) → IdFree x.
 Proof.
-  intros Hx y ??. apply (Hx y), (timeless _); eauto using cmra_discrete_valid.
+  intros Hx y ??. apply (Hx y), (discrete _); eauto using cmra_discrete_valid.
 Qed.
 Global Instance id_free_op_r x y : IdFree y → Cancelable x → IdFree (x ⋅ y).
 Proof.
@@ -845,7 +845,7 @@ Section cmra_transport.
   Proof. by destruct H. Qed.
   Lemma cmra_transport_valid x : ✓ T x ↔ ✓ x.
   Proof. by destruct H. Qed.
-  Global Instance cmra_transport_timeless x : Timeless x → Timeless (T x).
+  Global Instance cmra_transport_discrete x : Discrete x → Discrete (T x).
   Proof. by destruct H. Qed.
   Global Instance cmra_transport_persistent x : Persistent x → Persistent (T x).
   Proof. by destruct H. Qed.

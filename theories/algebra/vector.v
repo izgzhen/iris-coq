@@ -21,13 +21,13 @@ Section ofe.
     - intros c. by rewrite (conv_compl 0 (chain_map _ c)) /= vec_to_list_length.
   Qed.
 
-  Global Instance vnil_timeless : Timeless (@vnil A).
+  Global Instance vnil_discrete : Discrete (@vnil A).
   Proof. intros v _. by inv_vec v. Qed.
-  Global Instance vcons_timeless n x (v : vec A n) :
-    Timeless x → Timeless v → Timeless (x ::: v).
+  Global Instance vcons_discrete n x (v : vec A n) :
+    Discrete x → Discrete v → Discrete (x ::: v).
   Proof.
     intros ?? v' ?. inv_vec v'=>x' v'. inversion_clear 1.
-    constructor. by apply timeless. change (v ≡ v'). by apply timeless.
+    constructor. by apply discrete. change (v ≡ v'). by apply discrete.
   Qed.
   Global Instance vec_ofe_discrete m : OFEDiscrete A → OFEDiscrete (vecC m).
   Proof. intros ? v. induction v; apply _. Qed.

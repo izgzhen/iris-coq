@@ -563,9 +563,9 @@ Proof. by unseal. Qed.
 (* Discrete *)
 Lemma discrete_valid {A : cmraT} `{!CMRADiscrete A} (a : A) : ✓ a ⊣⊢ ⌜✓ a⌝.
 Proof. unseal; split=> n x _. by rewrite /= -cmra_discrete_valid_iff. Qed.
-Lemma timeless_eq {A : ofeT} (a b : A) : Timeless a → a ≡ b ⊣⊢ ⌜a ≡ b⌝.
+Lemma discrete_eq {A : ofeT} (a b : A) : Discrete a → a ≡ b ⊣⊢ ⌜a ≡ b⌝.
 Proof.
-  unseal=> ?. apply (anti_symm (⊢)); split=> n x ?; by apply (timeless_iff n).
+  unseal=> ?. apply (anti_symm (⊢)); split=> n x ?; by apply (discrete_iff n).
 Qed.
 
 (* Option *)

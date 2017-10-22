@@ -99,15 +99,13 @@ End ofe_mixin.
 
 Hint Extern 1 (_ ≡{_}≡ _) => apply equiv_dist; assumption.
 
-(** Discrete OFEs and Timeless elements *)
-(* TODO: On paper, We called these "discrete elements". I think that makes
-   more sense. *)
-Class Timeless {A : ofeT} (x : A) := timeless y : x ≡{0}≡ y → x ≡ y.
-Arguments timeless {_} _ {_} _ _.
-Hint Mode Timeless + ! : typeclass_instances.
-Instance: Params (@Timeless) 1.
+(** Discrete OFEs and discrete OFE elements *)
+Class Discrete {A : ofeT} (x : A) := discrete y : x ≡{0}≡ y → x ≡ y.
+Arguments discrete {_} _ {_} _ _.
+Hint Mode Discrete + ! : typeclass_instances.
+Instance: Params (@Discrete) 1.
 
-Class OFEDiscrete (A : ofeT) := ofe_discrete_timeless (x : A) :> Timeless x.
+Class OFEDiscrete (A : ofeT) := ofe_discrete_discrete (x : A) :> Discrete x.
 Hint Mode OFEDiscrete ! : typeclass_instances.
 
 (** OFEs with a completion *)
@@ -165,8 +163,8 @@ Section ofe.
   Qed.
   Global Instance dist_proper_2 n x : Proper ((≡) ==> iff) (dist n x).
   Proof. by apply dist_proper. Qed.
-  Global Instance Timeless_proper : Proper ((≡) ==> iff) (@Timeless A).
-  Proof. intros x y Hxy. rewrite /Timeless. by setoid_rewrite Hxy. Qed.
+  Global Instance Discrete_proper : Proper ((≡) ==> iff) (@Discrete A).
+  Proof. intros x y Hxy. rewrite /Discrete. by setoid_rewrite Hxy. Qed.
 
   Lemma dist_le n n' x y : x ≡{n}≡ y → n' ≤ n → x ≡{n'}≡ y.
   Proof. induction 2; eauto using dist_S. Qed.
@@ -188,13 +186,13 @@ Section ofe.
     apply chain_cauchy. omega.
   Qed.
 
-  Lemma timeless_iff n (x : A) `{!Timeless x} y : x ≡ y ↔ x ≡{n}≡ y.
+  Lemma discrete_iff n (x : A) `{!Discrete x} y : x ≡ y ↔ x ≡{n}≡ y.
   Proof.
-    split; intros; auto. apply (timeless _), dist_le with n; auto with lia.
+    split; intros; auto. apply (discrete _), dist_le with n; auto with lia.
   Qed.
-  Lemma timeless_iff_0 n (x : A) `{!Timeless x} y : x ≡{0}≡ y ↔ x ≡{n}≡ y.
+  Lemma discrete_iff_0 n (x : A) `{!Discrete x} y : x ≡{0}≡ y ↔ x ≡{n}≡ y.
   Proof.
-    split=> ?. by apply equiv_dist, (timeless _). eauto using dist_le with lia.
+    split=> ?. by apply equiv_dist, (discrete _). eauto using dist_le with lia.
   Qed.
 End ofe.
 
@@ -273,7 +271,7 @@ Section limit_preserving.
   Global Instance limit_preserving_const (P : Prop) : LimitPreserving (λ _, P).
   Proof. intros c HP. apply (HP 0). Qed.
 
-  Lemma limit_preserving_timeless (P : A → Prop) :
+  Lemma limit_preserving_discrete (P : A → Prop) :
     Proper (dist 0 ==> impl) P → LimitPreserving P.
   Proof. intros PH c Hc. by rewrite (conv_compl 0). Qed.
 
@@ -683,9 +681,9 @@ Section product.
     apply (conv_compl n (chain_map snd c)).
   Qed.
 
-  Global Instance prod_timeless (x : A * B) :
-    Timeless (x.1) → Timeless (x.2) → Timeless x.
-  Proof. by intros ???[??]; split; apply (timeless _). Qed.
+  Global Instance prod_discrete (x : A * B) :
+    Discrete (x.1) → Discrete (x.2) → Discrete x.
+  Proof. by intros ???[??]; split; apply (discrete _). Qed.
   Global Instance prod_ofe_discrete : OFEDiscrete A → OFEDiscrete B → OFEDiscrete prodC.
   Proof. intros ?? [??]; apply _. Qed.
 End product.
@@ -864,10 +862,10 @@ Section sum.
     - rewrite (conv_compl n (inr_chain c _)) /=. destruct (c n); naive_solver.
   Qed.
 
-  Global Instance inl_timeless (x : A) : Timeless x → Timeless (inl x).
-  Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
-  Global Instance inr_timeless (y : B) : Timeless y → Timeless (inr y).
-  Proof. inversion_clear 2; constructor; by apply (timeless _). Qed.
+  Global Instance inl_discrete (x : A) : Discrete x → Discrete (inl x).
+  Proof. inversion_clear 2; constructor; by apply (discrete _). Qed.
+  Global Instance inr_discrete (y : B) : Discrete y → Discrete (inr y).
+  Proof. inversion_clear 2; constructor; by apply (discrete _). Qed.
   Global Instance sum_ofe_discrete : OFEDiscrete A → OFEDiscrete B → OFEDiscrete sumC.
   Proof. intros ?? [?|?]; apply _. Qed.
 End sum.
@@ -993,7 +991,7 @@ Section option.
   Qed.
 
   Global Instance option_ofe_discrete : OFEDiscrete A → OFEDiscrete optionC.
-  Proof. destruct 2; constructor; by apply (timeless _). Qed.
+  Proof. destruct 2; constructor; by apply (discrete _). Qed.
 
   Global Instance Some_ne : NonExpansive (@Some A).
   Proof. by constructor. Qed.
@@ -1005,10 +1003,10 @@ Section option.
     Proper (dist n ==> R) f → Proper (R ==> dist n ==> R) (from_option f).
   Proof. destruct 3; simpl; auto. Qed.
 
-  Global Instance None_timeless : Timeless (@None A).
+  Global Instance None_discrete : Discrete (@None A).
   Proof. inversion_clear 1; constructor. Qed.
-  Global Instance Some_timeless x : Timeless x → Timeless (Some x).
-  Proof. by intros ?; inversion_clear 1; constructor; apply timeless. Qed.
+  Global Instance Some_discrete x : Discrete x → Discrete (Some x).
+  Proof. by intros ?; inversion_clear 1; constructor; apply discrete. Qed.
 
   Lemma dist_None n mx : mx ≡{n}≡ None ↔ mx = None.
   Proof. split; [by inversion_clear 1|by intros ->]. Qed.
@@ -1224,8 +1222,8 @@ Section sigma.
   Global Instance sig_cofe `{Cofe A, !LimitPreserving P} : Cofe sigC.
   Proof. apply (iso_cofe_subtype' P (exist P) proj1_sig)=> //. by intros []. Qed.
 
-  Global Instance sig_timeless (x : sig P) :  Timeless (`x) → Timeless x.
-  Proof. intros ? y. rewrite sig_dist_alt sig_equiv_alt. apply (timeless _). Qed.
+  Global Instance sig_discrete (x : sig P) :  Discrete (`x) → Discrete x.
+  Proof. intros ? y. rewrite sig_dist_alt sig_equiv_alt. apply (discrete _). Qed.
   Global Instance sig_ofe_discrete : OFEDiscrete A → OFEDiscrete sigC.
   Proof. intros ??. apply _. Qed.
 End sigma.

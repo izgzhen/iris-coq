@@ -38,7 +38,7 @@ Next Obligation.
 Qed.
 
 Global Instance gmap_ofe_discrete : OFEDiscrete A → OFEDiscrete gmapC.
-Proof. intros ? m m' ? i. by apply (timeless _). Qed.
+Proof. intros ? m m' ? i. by apply (discrete _). Qed.
 (* why doesn't this go automatic? *)
 Global Instance gmapC_leibniz: LeibnizEquiv A → LeibnizEquiv gmapC.
 Proof. intros; change (LeibnizEquiv (gmap K A)); apply _. Qed.
@@ -70,27 +70,27 @@ Proof.
     [by constructor|by apply lookup_ne].
 Qed.
 
-Global Instance gmap_empty_timeless : Timeless (∅ : gmap K A).
+Global Instance gmap_empty_discrete : Discrete (∅ : gmap K A).
 Proof.
   intros m Hm i; specialize (Hm i); rewrite lookup_empty in Hm |- *.
   inversion_clear Hm; constructor.
 Qed.
-Global Instance gmap_lookup_timeless m i : Timeless m → Timeless (m !! i).
+Global Instance gmap_lookup_discrete m i : Discrete m → Discrete (m !! i).
 Proof.
-  intros ? [x|] Hx; [|by symmetry; apply: timeless].
+  intros ? [x|] Hx; [|by symmetry; apply: discrete].
   assert (m ≡{0}≡ <[i:=x]> m)
     by (by symmetry in Hx; inversion Hx; ofe_subst; rewrite insert_id).
-  by rewrite (timeless m (<[i:=x]>m)) // lookup_insert.
+  by rewrite (discrete m (<[i:=x]>m)) // lookup_insert.
 Qed.
-Global Instance gmap_insert_timeless m i x :
-  Timeless x → Timeless m → Timeless (<[i:=x]>m).
+Global Instance gmap_insert_discrete m i x :
+  Discrete x → Discrete m → Discrete (<[i:=x]>m).
 Proof.
   intros ?? m' Hm j; destruct (decide (i = j)); simplify_map_eq.
-  { by apply: timeless; rewrite -Hm lookup_insert. }
-  by apply: timeless; rewrite -Hm lookup_insert_ne.
+  { by apply: discrete; rewrite -Hm lookup_insert. }
+  by apply: discrete; rewrite -Hm lookup_insert_ne.
 Qed.
-Global Instance gmap_singleton_timeless i x :
-  Timeless x → Timeless ({[ i := x ]} : gmap K A) := _.
+Global Instance gmap_singleton_discrete i x :
+  Discrete x → Discrete ({[ i := x ]} : gmap K A) := _.
 End cofe.
 
 Arguments gmapC _ {_ _} _.

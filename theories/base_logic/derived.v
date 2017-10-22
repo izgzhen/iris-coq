@@ -794,7 +794,7 @@ Proof.
   by rewrite -bupd_intro -or_intro_l.
 Qed.
 
-(* Timeless instances *)
+(* Discrete instances *)
 Global Instance TimelessP_proper : Proper ((≡) ==> iff) (@TimelessP M).
 Proof. solve_proper. Qed.
 Global Instance pure_timeless φ : TimelessP (⌜φ⌝ : uPred M)%I.
@@ -848,9 +848,9 @@ Proof. intros; rewrite /TimelessP except_0_always -always_later; auto. Qed.
 Global Instance always_if_timeless p P : TimelessP P → TimelessP (□?p P).
 Proof. destruct p; apply _. Qed.
 Global Instance eq_timeless {A : ofeT} (a b : A) :
-  Timeless a → TimelessP (a ≡ b : uPred M)%I.
-Proof. intros. rewrite /TimelessP !timeless_eq. apply (timelessP _). Qed.
-Global Instance ownM_timeless (a : M) : Timeless a → TimelessP (uPred_ownM a).
+  Discrete a → TimelessP (a ≡ b : uPred M)%I.
+Proof. intros. rewrite /TimelessP !discrete_eq. apply (timelessP _). Qed.
+Global Instance ownM_timeless (a : M) : Discrete a → TimelessP (uPred_ownM a).
 Proof.
   intros ?. rewrite /TimelessP later_ownM. apply exist_elim=> b.
   rewrite (timelessP (a≡b)) (except_0_intro (uPred_ownM b)) -except_0_and.

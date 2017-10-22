@@ -106,7 +106,7 @@ Proof. apply: uPred.always_entails_r. apply own_valid. Qed.
 Lemma own_valid_l γ a : own γ a ⊢ ✓ a ∗ own γ a.
 Proof. by rewrite comm -own_valid_r. Qed.
 
-Global Instance own_timeless γ a : Timeless a → TimelessP (own γ a).
+Global Instance own_timeless γ a : Discrete a → TimelessP (own γ a).
 Proof. rewrite !own_eq /own_def; apply _. Qed.
 Global Instance own_core_persistent γ a : Persistent a → PersistentP (own γ a).
 Proof. rewrite !own_eq /own_def; apply _. Qed.

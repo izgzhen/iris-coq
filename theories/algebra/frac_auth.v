@@ -34,10 +34,10 @@ Section frac_auth.
   Global Instance frac_auth_frag_proper q : Proper ((≡) ==> (≡)) (@frac_auth_frag A q).
   Proof. solve_proper. Qed.
 
-  Global Instance frac_auth_auth_timeless a : Timeless a → Timeless (●! a).
-  Proof. intros; apply Auth_timeless; apply _. Qed.
-  Global Instance frac_auth_frag_timeless a : Timeless a → Timeless (◯! a).
-  Proof. intros; apply Auth_timeless, Some_timeless; apply _. Qed.
+  Global Instance frac_auth_auth_discrete a : Discrete a → Discrete (●! a).
+  Proof. intros; apply Auth_discrete; apply _. Qed.
+  Global Instance frac_auth_frag_discrete a : Discrete a → Discrete (◯! a).
+  Proof. intros; apply Auth_discrete, Some_discrete; apply _. Qed.
 
   Lemma frac_auth_validN n a : ✓{n} a → ✓{n} (●! a ⋅ ◯! a).
   Proof. done. Qed.

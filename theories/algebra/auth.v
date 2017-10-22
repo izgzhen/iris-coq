@@ -49,9 +49,9 @@ Proof.
     (λ x, (authoritative x, auth_own x))); by repeat intro.
 Qed.
 
-Global Instance Auth_timeless a b :
-  Timeless a → Timeless b → Timeless (Auth a b).
-Proof. by intros ?? [??] [??]; split; apply: timeless. Qed.
+Global Instance Auth_discrete a b :
+  Discrete a → Discrete b → Discrete (Auth a b).
+Proof. by intros ?? [??] [??]; split; apply: discrete. Qed.
 Global Instance auth_ofe_discrete : OFEDiscrete A → OFEDiscrete authC.
 Proof. intros ? [??]; apply _. Qed.
 Global Instance auth_leibniz : LeibnizEquiv A → LeibnizEquiv (auth A).
