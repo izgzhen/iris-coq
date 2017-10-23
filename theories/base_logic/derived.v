@@ -960,7 +960,8 @@ Global Instance limit_preserving_Plain {A:ofeT} `{Cofe A} (Φ : A → uPred M) :
   NonExpansive Φ → LimitPreserving (λ x, Plain (Φ x)).
 Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 
-Global Instance Plain_Persistent P : Plain P → Persistent P.
+(* Not an instance, see the bottom of this file *)
+Lemma plain_persistent P : Plain P → Persistent P.
 Proof. rewrite /Plain /Persistent=> HP. by rewrite {1}HP plainly_elim'. Qed.
 
 Lemma plainly_plainly P `{!Plain P} : ■ P ⊣⊢ P.
@@ -1061,6 +1062,8 @@ Proof.
   rewrite /Persistent -impl_wand pure_impl_forall persistently_forall.
   auto using forall_mono.
 Qed.
+Global Instance plainly_persistent P : Persistent (■ P).
+Proof. by rewrite /Persistent persistently_plainly. Qed.
 Global Instance persistently_persistent P : Persistent (□ P).
 Proof. by intros; apply persistently_intro'. Qed.
 Global Instance and_persistent P Q :
@@ -1165,3 +1168,12 @@ Global Instance uPred_ownM_sep_homomorphism :
 Proof. split; [split; try apply _|]. apply ownM_op. apply ownM_unit'. Qed.
 End derived.
 End uPred.
+
+(* When declared as an actual instance, [plain_persistent] will give cause
+failing proof searches to take exponential time, as Coq will try to apply it
+the instance at any node in the proof search tree.
+
+To avoid that, we declare it using a [Hint Immediate], so that it will only be
+used at the leaves of the proof search tree, i.e. when the premise of the hint
+can be derived from just the current context. *)
+Hint Immediate uPred.plain_persistent : typeclass_instances.
