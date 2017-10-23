@@ -802,8 +802,10 @@ Local Tactic Notation "iExistDestruct" constr(H)
 (** * Always *)
 Tactic Notation "iAlways":=
   iStartProof;
-  apply tac_persistently_intro; env_cbv
-    || fail "iAlways: the goal is not an persistently modality".
+  eapply tac_always_intro;
+    [apply _ || fail "iAlways: the goal is not a persistence/plainness modality"
+    |env_cbv; apply _
+    |].
 
 (** * Later *)
 Tactic Notation "iNext" open_constr(n) :=
@@ -1715,6 +1717,7 @@ Hint Extern 1 (of_envs _ ⊢ _ ∧ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ _ ∗ _) => iSplit.
 Hint Extern 1 (of_envs _ ⊢ ▷ _) => iNext.
 Hint Extern 1 (of_envs _ ⊢ □ _) => iAlways.
+Hint Extern 1 (of_envs _ ⊢ ■ _) => iAlways.
 Hint Extern 1 (of_envs _ ⊢ ∃ _, _) => iExists _.
 Hint Extern 1 (of_envs _ ⊢ |==> _) => iModIntro.
 Hint Extern 1 (of_envs _ ⊢ ◇ _) => iModIntro.

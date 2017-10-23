@@ -473,12 +473,58 @@ Proof.
   by rewrite right_id persistently_and_sep_l wand_elim_r HQ.
 Qed.
 
-(** * Always *)
-Lemma tac_persistently_intro Δ Q :
-  (envs_clear_spatial Δ ⊢ Q) → Δ ⊢ □ Q.
+(** * Persistence and plainness modality *)
+Class IntoPlainEnv (Γ1 Γ2 : env (uPred M)) := {
+  into_plain_env_subenv : env_subenv Γ2 Γ1;
+  into_plain_env_plain : Plain ([∗] Γ2);
+}.
+Class IntoPersistentEnvs (p : bool) (Δ1 Δ2 : envs M) := {
+  into_persistent_envs_persistent :
+    if p then IntoPlainEnv (env_persistent Δ1) (env_persistent Δ2)
+    else env_persistent Δ1 = env_persistent Δ2;
+  into_persistent_envs_spatial : env_spatial Δ2 = Enil
+}.
+
+Global Instance into_plain_env_nil : IntoPlainEnv Enil Enil.
+Proof. constructor. constructor. simpl; apply _. Qed.
+Global Instance into_plain_env_snoc_plain Γ1 Γ2 i P :
+  Plain P → IntoPlainEnv Γ1 Γ2 →
+  IntoPlainEnv (Esnoc Γ1 i P) (Esnoc Γ2 i P) | 1.
+Proof. intros ? [??]; constructor. by constructor. simpl; apply _. Qed.
+Global Instance into_plain_env_snoc_skip Γ1 Γ2 i P :
+  IntoPlainEnv Γ1 Γ2 → IntoPlainEnv (Esnoc Γ1 i P) Γ2 | 2.
+Proof. intros [??]; constructor. by constructor. done. Qed.
+
+Global Instance into_persistent_envs_false Γp Γs :
+  IntoPersistentEnvs false (Envs Γp Γs) (Envs Γp Enil).
+Proof. by split. Qed.
+Global Instance into_persistent_envs_true Γp1 Γp2 Γs1 :
+  IntoPlainEnv Γp1 Γp2 →
+  IntoPersistentEnvs true (Envs Γp1 Γs1) (Envs Γp2 Enil).
+Proof. by split. Qed.
+
+Lemma into_persistent_envs_sound (p : bool) Δ1 Δ2 :
+  IntoPersistentEnvs p Δ1 Δ2 → Δ1 ⊢ (if p then ■ Δ2 else □ Δ2).
 Proof.
-  intros <-. rewrite envs_clear_spatial_sound sep_elim_l.
-  by apply (persistently_intro _ _).
+  rewrite /of_envs. destruct Δ1 as [Γp1 Γs1], Δ2 as [Γp2 Γs2]=> -[/= Hp ->].
+  apply pure_elim_sep_l=> Hwf. rewrite sep_elim_l. destruct p; simplify_eq/=.
+  - destruct Hp. rewrite right_id plainly_sep plainly_pure.
+    apply sep_intro_True_l; [apply pure_intro|].
+    + destruct Hwf; constructor; eauto using Enil_wf, env_subenv_wf.
+    + rewrite persistently_elim plainly_persistently plainly_plainly.
+      by apply big_sepL_submseteq, sublist_submseteq, env_to_list_subenv_proper.
+  - rewrite right_id persistently_sep persistently_pure.
+    apply sep_intro_True_l; [apply pure_intro|by rewrite persistent_persistently].
+    destruct Hwf; constructor; simpl; eauto using Enil_wf.
+Qed.
+
+Lemma tac_always_intro Δ Δ' p Q Q' :
+  FromAlways p Q' Q →
+  IntoPersistentEnvs p Δ Δ' →
+  (Δ' ⊢ Q) → Δ ⊢ Q'.
+Proof.
+  intros ?? HQ. rewrite into_persistent_envs_sound -(from_always _ Q').
+  destruct p; auto using persistently_mono, plainly_mono.
 Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :

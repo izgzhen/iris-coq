@@ -31,7 +31,7 @@ Context management
 - `iRevert (x1 ... xn) "selpat"` : revert the hypotheses given by the selection
   pattern `selpat` into wands, and the Coq level hypotheses/variables
   `x1 ... xn` into universal quantifiers. Persistent hypotheses are wrapped into
-  the always modality.
+  the persistence modality.
 - `iRename "H1" into "H2"` : rename the hypothesis `H1` into `H2`.
 - `iSpecialize pm_trm` : instantiate universal quantifiers and eliminate
   implications/wands of a hypothesis `pm_trm`. See proof mode terms below.
@@ -162,8 +162,8 @@ Miscellaneous
   introduces pure connectives.
 - The proof mode adds hints to the core `eauto` database so that `eauto`
   automatically introduces: conjunctions and disjunctions, universal and
-  existential quantifiers, implications and wand, always, later and update
-  modalities, and pure connectives.
+  existential quantifiers, implications and wand, plainness, persistence, later
+  and update modalities, and pure connectives.
 
 Selection patterns
 ==================
@@ -207,7 +207,9 @@ appear at the top level:
   Items of the selection pattern can be prefixed with `$`, which cause them to
   be framed instead of cleared.
 - `!%` : introduce a pure goal (and leave the proof mode).
-- `!#` : introduce an always modality and clear the spatial context.
+- `!#` : introduce an persistence or plainness modality and clear the spatial
+  context. In case of a plainness modality, it will prune all persistent
+  hypotheses that are not plain.
 - `!>` : introduce a modality.
 - `/=` : perform `simpl`.
 - `//` : perform `try done` on all goals.

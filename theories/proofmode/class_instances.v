@@ -152,6 +152,12 @@ Global Instance into_persistent_persistent P :
   Persistent P → IntoPersistent false P P | 100.
 Proof. done. Qed.
 
+(* FromAlways *)
+Global Instance from_always_persistently P : FromAlways false (□ P) P.
+Proof. by rewrite /FromAlways. Qed.
+Global Instance from_always_plainly P : FromAlways true (■ P) P.
+Proof. by rewrite /FromAlways. Qed.
+
 (* IntoLater *)
 Global Instance into_laterN_later n P Q :
   IntoLaterN n P Q → IntoLaterN' (S n) (▷ P) Q.

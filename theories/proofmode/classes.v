@@ -59,6 +59,11 @@ Class IntoPersistent {M} (p : bool) (P Q : uPred M) :=
 Arguments into_persistent {_} _ _ _ {_}.
 Hint Mode IntoPersistent + + ! - : typeclass_instances.
 
+Class FromAlways {M} (p : bool) (P Q : uPred M) :=
+  from_always : (if p then ■ Q else □ Q) ⊢ P.
+Arguments from_always {_} _ _ _ {_}.
+Hint Mode FromAlways + - ! - : typeclass_instances.
+
 (* The class [IntoLaterN] has only two instances:
 
 - The default instance [IntoLaterN n P P], i.e. [▷^n P -∗ P]
@@ -252,7 +257,7 @@ with the exception of:
 - [FromAssumption] used by [iAssumption]
 - [Frame] used by [iFrame]
 - [IntoLaterN] and [FromLaterN] used by [iNext]
-- [IntoPersistentP] used by [iPersistent]
+- [IntoPersistent] used by [iPersistent]
 *)
 Instance into_pure_tc_opaque {M} (P : uPred M) φ :
   IntoPure P φ → IntoPure (tc_opaque P) φ := id.
