@@ -480,6 +480,20 @@ Proof.
   by rewrite cmra_core_l cmra_core_idemp.
 Qed.
 
+Lemma persistently_impl_plainly P Q : (■ P → □ Q) ⊢ □ (■ P → Q).
+Proof.
+  unseal; split=> /= n x ? HPQ n' x' ????.
+  eapply uPred_mono with (core x), cmra_included_includedN; auto.
+  apply (HPQ n' x); eauto using cmra_validN_le.
+Qed.
+
+Lemma plainly_impl_plainly P Q : (■ P → ■ Q) ⊢ ■ (■ P → Q).
+Proof.
+  unseal; split=> /= n x ? HPQ n' x' ????.
+  eapply uPred_mono with ε, cmra_included_includedN; auto.
+  apply (HPQ n' x); eauto using cmra_validN_le.
+Qed.
+
 (* Later *)
 Lemma later_mono P Q : (P ⊢ Q) → ▷ P ⊢ ▷ Q.
 Proof.

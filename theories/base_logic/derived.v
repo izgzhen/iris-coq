@@ -1004,14 +1004,15 @@ Qed.
 (* Plain *)
 Global Instance pure_plain φ : Plain (⌜φ⌝ : uPred M)%I.
 Proof. by rewrite /Plain plainly_pure. Qed.
-Global Instance pure_impl_plain φ Q : Plain Q → Plain (⌜φ⌝ → Q)%I.
+Global Instance impl_plain P Q : Plain P → Plain Q → Plain (P → Q).
 Proof.
-  rewrite /Plain pure_impl_forall plainly_forall. auto using forall_mono.
+  rewrite /Plain=> HP HQ.
+  by rewrite {2}HP -plainly_impl_plainly -HQ plainly_elim.
 Qed.
-Global Instance pure_wand_plain φ Q : Plain Q → Plain (⌜φ⌝ -∗ Q)%I.
+Global Instance wand_plain P Q : Plain P → Plain Q → Plain (P -∗ Q)%I.
 Proof.
-  intros HQ. rewrite /Plain -persistently_pure -!impl_wand_persistently.
-  rewrite persistently_pure pure_impl_forall plainly_forall. auto using forall_mono.
+  rewrite /Plain=> HP HQ.
+  by rewrite {2}HP -{1}(plainly_elim P) !wand_impl_plainly -plainly_impl_plainly -HQ.
 Qed.
 Global Instance plainly_plain P : Plain (■ P).
 Proof. by intros; apply plainly_intro'. Qed.
@@ -1051,16 +1052,17 @@ Proof. destruct mx; apply _. Qed.
 (* Persistence *)
 Global Instance pure_persistent φ : Persistent (⌜φ⌝ : uPred M)%I.
 Proof. by rewrite /Persistent persistently_pure. Qed.
-Global Instance pure_impl_persistent φ Q :
-  Persistent Q → Persistent (⌜φ⌝ → Q)%I.
+Global Instance impl_persistent P Q :
+  Plain P → Persistent Q → Persistent (P → Q).
 Proof.
-  rewrite /Persistent pure_impl_forall persistently_forall. auto using forall_mono.
+  rewrite /Plain /Persistent=> HP HQ.
+  rewrite {2}HP -persistently_impl_plainly. by rewrite -HQ plainly_elim.
 Qed.
-Global Instance pure_wand_persistent φ Q :
-  Persistent Q → Persistent (⌜φ⌝ -∗ Q)%I.
+Global Instance wand_persistent P Q :
+  Plain P → Persistent Q → Persistent (P -∗ Q)%I.
 Proof.
-  rewrite /Persistent -impl_wand pure_impl_forall persistently_forall.
-  auto using forall_mono.
+  rewrite /Plain /Persistent=> HP HQ.
+  by rewrite {2}HP -{1}(plainly_elim P) !wand_impl_plainly -persistently_impl_plainly -HQ.
 Qed.
 Global Instance plainly_persistent P : Persistent (■ P).
 Proof. by rewrite /Persistent persistently_plainly. Qed.
