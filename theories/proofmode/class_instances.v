@@ -19,6 +19,9 @@ Global Instance from_assumption_persistently_r P Q :
   FromAssumption true P Q → FromAssumption true P (□ Q).
 Proof. rewrite /FromAssumption=><-. by rewrite persistent_persistently. Qed.
 
+Global Instance from_assumption_plainly_l p P Q :
+  FromAssumption p P Q → FromAssumption p (■ P) Q.
+Proof. rewrite /FromAssumption=><-. by rewrite plainly_elim. Qed.
 Global Instance from_assumption_persistently_l p P Q :
   FromAssumption p P Q → FromAssumption p (□ P) Q.
 Proof. rewrite /FromAssumption=><-. by rewrite persistently_elim. Qed.
@@ -48,6 +51,8 @@ Global Instance into_pure_cmra_valid `{CmraDiscrete A} (a : A) :
   @IntoPure M (✓ a) (✓ a).
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 
+Global Instance into_pure_plainly P φ : IntoPure P φ → IntoPure (■ P) φ.
+Proof. rewrite /IntoPure=> ->. by rewrite plainly_pure. Qed.
 Global Instance into_pure_persistently P φ : IntoPure P φ → IntoPure (□ P) φ.
 Proof. rewrite /IntoPure=> ->. by rewrite persistently_pure. Qed.
 
@@ -95,6 +100,8 @@ Proof.
   rewrite -cmra_valid_intro //. auto with I.
 Qed.
 
+Global Instance from_pure_plainly P φ : FromPure P φ → FromPure (■ P) φ.
+Proof. rewrite /FromPure=> <-. by rewrite plainly_pure. Qed.
 Global Instance from_pure_persistently P φ : FromPure P φ → FromPure (□ P) φ.
 Proof. rewrite /FromPure=> <-. by rewrite persistently_pure. Qed.
 Global Instance from_pure_later P φ : FromPure P φ → FromPure (▷ P) φ.
@@ -254,6 +261,9 @@ Global Instance from_later_sep n P1 P2 Q1 Q2 :
   FromLaterN n P1 Q1 → FromLaterN n P2 Q2 → FromLaterN n (P1 ∗ P2) (Q1 ∗ Q2).
 Proof. intros ??; red. by rewrite laterN_sep; apply sep_mono. Qed.
 
+Global Instance from_later_plainly n P Q :
+  FromLaterN n P Q → FromLaterN n (■ P) (■ Q).
+Proof. by rewrite /FromLaterN -plainly_laterN=> ->. Qed.
 Global Instance from_later_persistently n P Q :
   FromLaterN n P Q → FromLaterN n (□ P) (□ Q).
 Proof. by rewrite /FromLaterN -persistently_laterN=> ->. Qed.
@@ -306,6 +316,9 @@ Proof. rewrite /WandWeaken /IntoWand=> <-. apply and_elim_r', impl_wand_1. Qed.
 Global Instance into_wand_forall {A} p (Φ : A → uPred M) P Q x :
   IntoWand p (Φ x) P Q → IntoWand p (∀ x, Φ x) P Q.
 Proof. rewrite /IntoWand=> <-. apply forall_elim. Qed.
+Global Instance into_wand_plainly p R P Q :
+  IntoWand p R P Q → IntoWand p (■ R) P Q.
+Proof. rewrite /IntoWand=> ->. by rewrite plainly_elim. Qed.
 Global Instance into_wand_persistently p R P Q :
   IntoWand p R P Q → IntoWand p (□ R) P Q.
 Proof. rewrite /IntoWand=> ->. apply persistently_elim. Qed.
@@ -343,6 +356,12 @@ Proof. intros. by rewrite /FromAnd and_sep_r. Qed.
 
 Global Instance from_and_pure p φ ψ : @FromAnd M p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. apply mk_from_and_and. by rewrite pure_and. Qed.
+Global Instance from_and_plainly p P Q1 Q2 :
+  FromAnd false P Q1 Q2 → FromAnd p (■ P) (■ Q1) (■ Q2).
+Proof.
+  intros. apply mk_from_and_and.
+  by rewrite plainly_and_sep_l' -plainly_sep -(from_and _ P).
+Qed.
 Global Instance from_and_persistently p P Q1 Q2 :
   FromAnd false P Q1 Q2 → FromAnd p (□ P) (□ Q1) (□ Q2).
 Proof.
@@ -434,10 +453,14 @@ Proof. intros; by rewrite /IntoAnd /= and_sep_r. Qed.
 
 Global Instance into_and_pure p φ ψ : @IntoAnd M p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. apply mk_into_and_sep. by rewrite pure_and and_sep_r. Qed.
+Global Instance into_and_plainly p P Q1 Q2 :
+  IntoAnd true P Q1 Q2 → IntoAnd p (■ P) (■ Q1) (■ Q2).
+Proof. rewrite /IntoAnd=>->. destruct p; by rewrite ?plainly_and and_sep_r. Qed.
 Global Instance into_and_persistently p P Q1 Q2 :
   IntoAnd true P Q1 Q2 → IntoAnd p (□ P) (□ Q1) (□ Q2).
 Proof.
-  rewrite /IntoAnd=>->. destruct p; by rewrite ?persistently_and persistently_and_sep_r.
+  rewrite /IntoAnd=>->.
+  destruct p; by rewrite ?persistently_and persistently_and_sep_r.
 Qed.
 Global Instance into_and_later p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p (▷ P) (▷ Q1) (▷ Q2).
@@ -619,6 +642,9 @@ Global Instance from_or_bupd P Q1 Q2 :
 Proof. rewrite /FromOr=><-. apply or_elim; apply bupd_mono; auto with I. Qed.
 Global Instance from_or_pure φ ψ : @FromOr M ⌜φ ∨ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /FromOr pure_or. Qed.
+Global Instance from_or_plainly P Q1 Q2 :
+  FromOr P Q1 Q2 → FromOr (■ P) (■ Q1) (■ Q2).
+Proof. rewrite /FromOr=> <-. by rewrite plainly_or. Qed.
 Global Instance from_or_persistently P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /FromOr=> <-. by rewrite persistently_or. Qed.
@@ -637,6 +663,9 @@ Global Instance into_or_or P Q : IntoOr (P ∨ Q) P Q.
 Proof. done. Qed.
 Global Instance into_or_pure φ ψ : @IntoOr M ⌜φ ∨ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /IntoOr pure_or. Qed.
+Global Instance into_or_plainly P Q1 Q2 :
+  IntoOr P Q1 Q2 → IntoOr (■ P) (■ Q1) (■ Q2).
+Proof. rewrite /IntoOr=>->. by rewrite plainly_or. Qed.
 Global Instance into_or_persistently P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (□ P) (□ Q1) (□ Q2).
 Proof. rewrite /IntoOr=>->. by rewrite persistently_or. Qed.
@@ -661,6 +690,9 @@ Qed.
 Global Instance from_exist_pure {A} (φ : A → Prop) :
   @FromExist M A ⌜∃ x, φ x⌝ (λ a, ⌜φ a⌝)%I.
 Proof. by rewrite /FromExist pure_exist. Qed.
+Global Instance from_exist_plainly {A} P (Φ : A → uPred M) :
+  FromExist P Φ → FromExist (■ P) (λ a, ■ (Φ a))%I.
+Proof. rewrite /FromExist=> <-. by rewrite plainly_exist. Qed.
 Global Instance from_exist_persistently {A} P (Φ : A → uPred M) :
   FromExist P Φ → FromExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite persistently_exist. Qed.
@@ -698,6 +730,9 @@ Proof.
   apply pure_elim_sep_l=> Hφ. by rewrite -(exist_intro Hφ).
 Qed.
 
+Global Instance into_exist_plainly {A} P (Φ : A → uPred M) :
+  IntoExist P Φ → IntoExist (■ P) (λ a, ■ (Φ a))%I.
+Proof. rewrite /IntoExist=> HP. by rewrite HP plainly_exist. Qed.
 Global Instance into_exist_persistently {A} P (Φ : A → uPred M) :
   IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP persistently_exist. Qed.
@@ -714,6 +749,9 @@ Proof. rewrite /IntoExist=> HP ?. by rewrite HP except_0_exist. Qed.
 (* IntoForall *)
 Global Instance into_forall_forall {A} (Φ : A → uPred M) : IntoForall (∀ a, Φ a) Φ.
 Proof. done. Qed.
+Global Instance into_forall_plainly {A} P (Φ : A → uPred M) :
+  IntoForall P Φ → IntoForall (■ P) (λ a, ■ (Φ a))%I.
+Proof. rewrite /IntoForall=> HP. by rewrite HP plainly_forall. Qed.
 Global Instance into_forall_persistently {A} P (Φ : A → uPred M) :
   IntoForall P Φ → IntoForall (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP persistently_forall. Qed.
@@ -767,6 +805,9 @@ Global Instance forall_modal_wand {A} P P' (Φ Ψ : A → uPred M) :
 Proof.
   rewrite /ElimModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
 Qed.
+
+Global Instance elim_modal_plainly P Q : ElimModal (■ P) P Q Q.
+Proof. intros. by rewrite /ElimModal plainly_elim wand_elim_r. Qed.
 
 Global Instance elim_modal_persistently P Q : ElimModal (□ P) P Q Q.
 Proof. intros. by rewrite /ElimModal persistently_elim wand_elim_r. Qed.
