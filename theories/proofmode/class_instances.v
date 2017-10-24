@@ -17,7 +17,7 @@ Proof. destruct p; rewrite /FromAssumption /= ?persistently_pure; apply False_el
 
 Global Instance from_assumption_persistently_r P Q :
   FromAssumption true P Q → FromAssumption true P (□ Q).
-Proof. rewrite /FromAssumption=><-. by rewrite persistently_persistently. Qed.
+Proof. rewrite /FromAssumption=><-. by rewrite persistent_persistently. Qed.
 
 Global Instance from_assumption_persistently_l p P Q :
   FromAssumption p P Q → FromAssumption p (□ P) Q.
@@ -65,9 +65,7 @@ Global Instance into_pure_pure_impl (φ1 φ2 : Prop) P1 P2 :
 Proof. rewrite /FromPure /IntoPure pure_impl. by intros -> ->. Qed.
 Global Instance into_pure_pure_wand (φ1 φ2 : Prop) P1 P2 :
   FromPure P1 φ1 → IntoPure P2 φ2 → IntoPure (P1 -∗ P2) (φ1 → φ2).
-Proof.
-  rewrite /FromPure /IntoPure pure_impl persistently_impl_wand. by intros -> ->.
-Qed.
+Proof. rewrite /FromPure /IntoPure pure_impl impl_wand. by intros -> ->. Qed.
 
 Global Instance into_pure_exist {X : Type} (Φ : X → uPred M) (φ : X → Prop) :
   (∀ x, @IntoPure M (Φ x) (φ x)) → @IntoPure M (∃ x, Φ x) (∃ x, φ x).
@@ -113,7 +111,7 @@ Global Instance from_pure_pure_and (φ1 φ2 : Prop) P1 P2 :
 Proof. rewrite /FromPure pure_and. by intros -> ->. Qed.
 Global Instance from_pure_pure_sep (φ1 φ2 : Prop) P1 P2 :
   FromPure P1 φ1 → FromPure P2 φ2 → FromPure (P1 ∗ P2) (φ1 ∧ φ2).
-Proof. rewrite /FromPure pure_and persistently_and_sep_l. by intros -> ->. Qed.
+Proof. rewrite /FromPure pure_and and_sep_l. by intros -> ->. Qed.
 Global Instance from_pure_pure_or (φ1 φ2 : Prop) P1 P2 :
   FromPure P1 φ1 → FromPure P2 φ2 → FromPure (P1 ∨ P2) (φ1 ∨ φ2).
 Proof. rewrite /FromPure pure_or. by intros -> ->. Qed.
@@ -122,9 +120,7 @@ Global Instance from_pure_pure_impl (φ1 φ2 : Prop) P1 P2 :
 Proof. rewrite /FromPure /IntoPure pure_impl. by intros -> ->. Qed.
 Global Instance from_pure_pure_wand (φ1 φ2 : Prop) P1 P2 :
   IntoPure P1 φ1 → FromPure P2 φ2 → FromPure (P1 -∗ P2) (φ1 → φ2).
-Proof.
-  rewrite /FromPure /IntoPure pure_impl persistently_impl_wand. by intros -> ->.
-Qed.
+Proof. rewrite /FromPure /IntoPure pure_impl impl_wand. by intros -> ->. Qed.
 
 Global Instance from_pure_exist {X : Type} (Φ : X → uPred M) (φ : X → Prop) :
   (∀ x, @FromPure M (Φ x) (φ x)) → @FromPure M (∃ x, Φ x) (∃ x, φ x).
@@ -142,7 +138,7 @@ Qed.
 (* IntoPersistent *)
 Global Instance into_persistent_persistently_trans p P Q :
   IntoPersistent true P Q → IntoPersistent p (□ P) Q | 0.
-Proof. rewrite /IntoPersistent /==> ->. by rewrite persistently_if_persistently. Qed.
+Proof. rewrite /IntoPersistent /==> ->. by rewrite persistent_persistently_if. Qed.
 Global Instance into_persistent_persistently P : IntoPersistent true P P | 1.
 Proof. done. Qed.
 Global Instance into_persistent_persistent P :
@@ -298,14 +294,14 @@ Global Instance into_wand_wand p P P' Q Q' :
 Proof. done. Qed.
 Global Instance into_wand_impl p P P' Q Q' :
   WandWeaken p P Q P' Q' → IntoWand p (P → Q) P' Q'.
-Proof. rewrite /WandWeaken /IntoWand /= => <-. apply impl_wand. Qed.
+Proof. rewrite /WandWeaken /IntoWand /= => <-. apply impl_wand_1. Qed.
 
 Global Instance into_wand_iff_l p P P' Q Q' :
   WandWeaken p P Q P' Q' → IntoWand p (P ↔ Q) P' Q'.
-Proof. rewrite /WandWeaken /IntoWand=> <-. apply and_elim_l', impl_wand. Qed.
+Proof. rewrite /WandWeaken /IntoWand=> <-. apply and_elim_l', impl_wand_1. Qed.
 Global Instance into_wand_iff_r p P P' Q Q' :
   WandWeaken p Q P Q' P' → IntoWand p (P ↔ Q) Q' P'.
-Proof. rewrite /WandWeaken /IntoWand=> <-. apply and_elim_r', impl_wand. Qed.
+Proof. rewrite /WandWeaken /IntoWand=> <-. apply and_elim_r', impl_wand_1. Qed.
 
 Global Instance into_wand_forall {A} p (Φ : A → uPred M) P Q x :
   IntoWand p (Φ x) P Q → IntoWand p (∀ x, Φ x) P Q.
@@ -340,10 +336,10 @@ Global Instance from_and_sep P1 P2 : FromAnd false (P1 ∗ P2) P1 P2 | 100.
 Proof. done. Qed.
 Global Instance from_and_sep_persistent_l P1 P2 :
   Persistent P1 → FromAnd true (P1 ∗ P2) P1 P2 | 9.
-Proof. intros. by rewrite /FromAnd persistently_and_sep_l. Qed.
+Proof. intros. by rewrite /FromAnd and_sep_l. Qed.
 Global Instance from_and_sep_persistent_r P1 P2 :
   Persistent P2 → FromAnd true (P1 ∗ P2) P1 P2 | 10.
-Proof. intros. by rewrite /FromAnd persistently_and_sep_r. Qed.
+Proof. intros. by rewrite /FromAnd and_sep_r. Qed.
 
 Global Instance from_and_pure p φ ψ : @FromAnd M p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. apply mk_from_and_and. by rewrite pure_and. Qed.
@@ -351,7 +347,7 @@ Global Instance from_and_persistently p P Q1 Q2 :
   FromAnd false P Q1 Q2 → FromAnd p (□ P) (□ Q1) (□ Q2).
 Proof.
   intros. apply mk_from_and_and.
-  by rewrite persistently_and_sep_l' -persistently_sep -(from_and _ P).
+  by rewrite persistently_and_sep_l -persistently_sep -(from_and _ P).
 Qed.
 Global Instance from_and_later p P Q1 Q2 :
   FromAnd p P Q1 Q2 → FromAnd p (▷ P) (▷ Q1) (▷ Q2).
@@ -387,7 +383,7 @@ Proof. by rewrite /FromAnd big_sepL_cons. Qed.
 Global Instance from_and_big_sepL_cons_persistent {A} (Φ : nat → A → uPred M) x l :
   Persistent (Φ 0 x) →
   FromAnd true ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
-Proof. intros. by rewrite /FromAnd big_opL_cons persistently_and_sep_l. Qed.
+Proof. intros. by rewrite /FromAnd big_opL_cons and_sep_l. Qed.
 
 Global Instance from_and_big_sepL_app {A} (Φ : nat → A → uPred M) l1 l2 :
   FromAnd false ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
@@ -397,7 +393,7 @@ Global Instance from_sep_big_sepL_app_persistent {A} (Φ : nat → A → uPred M
   (∀ k y, Persistent (Φ k y)) →
   FromAnd true ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
-Proof. intros. by rewrite /FromAnd big_opL_app persistently_and_sep_l. Qed.
+Proof. intros. by rewrite /FromAnd big_opL_app and_sep_l. Qed.
 
 (* FromOp *)
 (* TODO: Worst case there could be a lot of backtracking on these instances,
@@ -431,13 +427,13 @@ Global Instance into_and_and P Q : IntoAnd true (P ∧ Q) P Q.
 Proof. done. Qed.
 Global Instance into_and_and_persistent_l P Q :
   Persistent P → IntoAnd false (P ∧ Q) P Q.
-Proof. intros; by rewrite /IntoAnd /= persistently_and_sep_l. Qed.
+Proof. intros; by rewrite /IntoAnd /= and_sep_l. Qed.
 Global Instance into_and_and_persistent_r P Q :
   Persistent Q → IntoAnd false (P ∧ Q) P Q.
-Proof. intros; by rewrite /IntoAnd /= persistently_and_sep_r. Qed.
+Proof. intros; by rewrite /IntoAnd /= and_sep_r. Qed.
 
 Global Instance into_and_pure p φ ψ : @IntoAnd M p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
-Proof. apply mk_into_and_sep. by rewrite pure_and persistently_and_sep_r. Qed.
+Proof. apply mk_into_and_sep. by rewrite pure_and and_sep_r. Qed.
 Global Instance into_and_persistently p P Q1 Q2 :
   IntoAnd true P Q1 Q2 → IntoAnd p (□ P) (□ Q1) (□ Q2).
 Proof.
@@ -488,7 +484,7 @@ Global Instance frame_sep_persistent_l R P1 P2 Q1 Q2 Q' :
   Frame true R (P1 ∗ P2) Q' | 9.
 Proof.
   rewrite /Frame /MaybeFrame /MakeSep /= => <- <- <-.
-  rewrite {1}(persistently_sep_dup (□ R)). solve_sep_entails.
+  rewrite {1}(sep_dup (□ R)). solve_sep_entails.
 Qed.
 Global Instance frame_sep_l R P1 P2 Q Q' :
   Frame false R P1 Q → MakeSep Q P2 Q' → Frame false R (P1 ∗ P2) Q' | 9.
@@ -589,7 +585,7 @@ Global Instance frame_persistently R P Q Q' :
   Frame true R P Q → MakePersistently Q Q' → Frame true R (□ P) Q'.
 Proof.
   rewrite /Frame /MakePersistently=> <- <-.
-  by rewrite persistently_sep /= persistently_persistently.
+  by rewrite persistently_sep /= persistent_persistently.
 Qed.
 
 Class MakeExcept0 (P Q : uPred M) := make_except_0 : ◇ P ⊣⊢ Q.
@@ -741,7 +737,7 @@ Global Instance from_forall_wand_pure P Q φ :
   IntoPureT P φ → FromForall (P -∗ Q) (λ _ : φ, Q)%I.
 Proof.
   intros (φ'&->&?). rewrite /FromForall -pure_impl_forall.
-  by rewrite persistently_impl_wand (into_pure P).
+  by rewrite impl_wand (into_pure P).
 Qed.
 
 Global Instance from_forall_persistently {A} P (Φ : A → uPred M) :

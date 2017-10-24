@@ -125,8 +125,8 @@ Lemma mk_from_and_persistent {M} (P Q1 Q2 : uPred M) :
   Or (Persistent Q1) (Persistent Q2) → (Q1 ∗ Q2 ⊢ P) → FromAnd true P Q1 Q2.
 Proof.
   intros [?|?] ?; rewrite /FromAnd.
-  - by rewrite persistently_and_sep_l.
-  - by rewrite persistently_and_sep_r.
+  - by rewrite and_sep_l.
+  - by rewrite and_sep_r.
 Qed.
 
 Class IntoAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=

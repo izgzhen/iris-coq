@@ -432,7 +432,7 @@ Qed.
 
 Lemma sep_and P Q : (P ∗ Q) ⊢ (P ∧ Q).
 Proof. auto. Qed.
-Lemma impl_wand P Q : (P → Q) ⊢ P -∗ Q.
+Lemma impl_wand_1 P Q : (P → Q) ⊢ P -∗ Q.
 Proof. apply wand_intro_r, impl_elim with P; auto. Qed.
 Lemma pure_elim_sep_l φ Q R : (φ → Q ⊢ R) → ⌜φ⌝ ∗ Q ⊢ R.
 Proof. intros; apply pure_elim with φ; eauto. Qed.
@@ -518,38 +518,38 @@ Proof.
   rewrite -(internal_eq_refl a) persistently_pure; auto.
 Qed.
 
-Lemma persistently_and_sep_l' P Q : □ P ∧ Q ⊣⊢ □ P ∗ Q.
+Lemma persistently_and_sep_l P Q : □ P ∧ Q ⊣⊢ □ P ∗ Q.
 Proof. apply (anti_symm (⊢)); auto using persistently_and_sep_l_1. Qed.
-Lemma persistently_and_sep_r' P Q : P ∧ □ Q ⊣⊢ P ∗ □ Q.
-Proof. by rewrite !(comm _ P) persistently_and_sep_l'. Qed.
-Lemma persistently_sep_dup' P : □ P ⊣⊢ □ P ∗ □ P.
-Proof. by rewrite -persistently_and_sep_l' idemp. Qed.
+Lemma persistently_and_sep_r P Q : P ∧ □ Q ⊣⊢ P ∗ □ Q.
+Proof. by rewrite !(comm _ P) persistently_and_sep_l. Qed.
+Lemma persistently_sep_dup P : □ P ⊣⊢ □ P ∗ □ P.
+Proof. by rewrite -persistently_and_sep_l idemp. Qed.
 
 Lemma persistently_and_sep P Q : □ (P ∧ Q) ⊣⊢ □ (P ∗ Q).
 Proof.
   apply (anti_symm (⊢)); auto.
-  rewrite -{1}persistently_idemp persistently_and persistently_and_sep_l'; auto.
+  rewrite -{1}persistently_idemp persistently_and persistently_and_sep_l; auto.
 Qed.
 Lemma persistently_sep P Q : □ (P ∗ Q) ⊣⊢ □ P ∗ □ Q.
-Proof. by rewrite -persistently_and_sep -persistently_and_sep_l' persistently_and. Qed.
+Proof. by rewrite -persistently_and_sep -persistently_and_sep_l persistently_and. Qed.
 
 Lemma persistently_wand P Q : □ (P -∗ Q) ⊢ □ P -∗ □ Q.
 Proof. by apply wand_intro_r; rewrite -persistently_sep wand_elim_l. Qed.
-Lemma persistently_wand_impl P Q : □ (P -∗ Q) ⊣⊢ □ (P → Q).
+Lemma persistently_impl_wand P Q : □ (P → Q) ⊣⊢ □ (P -∗ Q).
 Proof.
-  apply (anti_symm (⊢)); [|by rewrite -impl_wand].
+  apply (anti_symm (⊢)); [by rewrite -impl_wand_1|].
   apply persistently_intro', impl_intro_r.
-  by rewrite persistently_and_sep_l' persistently_elim wand_elim_l.
+  by rewrite persistently_and_sep_l persistently_elim wand_elim_l.
 Qed.
-Lemma wand_impl_persistently P Q : ((□ P) -∗ Q) ⊣⊢ ((□ P) → Q).
+Lemma impl_wand_persistently P Q : (□ P → Q) ⊣⊢ (□ P -∗ Q).
 Proof.
-  apply (anti_symm (⊢)); [|by rewrite -impl_wand].
-  apply impl_intro_l. by rewrite persistently_and_sep_l' wand_elim_r.
+  apply (anti_symm (⊢)); [by rewrite -impl_wand_1|].
+  apply impl_intro_l. by rewrite persistently_and_sep_l wand_elim_r.
 Qed.
-Lemma persistently_entails_l' P Q : (P ⊢ □ Q) → P ⊢ □ Q ∗ P.
-Proof. intros; rewrite -persistently_and_sep_l'; auto. Qed.
-Lemma persistently_entails_r' P Q : (P ⊢ □ Q) → P ⊢ P ∗ □ Q.
-Proof. intros; rewrite -persistently_and_sep_r'; auto. Qed.
+Lemma persistently_entails_l P Q : (P ⊢ □ Q) → P ⊢ □ Q ∗ P.
+Proof. intros; rewrite -persistently_and_sep_l; auto. Qed.
+Lemma persistently_entails_r P Q : (P ⊢ □ Q) → P ⊢ P ∗ □ Q.
+Proof. intros; rewrite -persistently_and_sep_r; auto. Qed.
 
 Lemma persistently_laterN n P : □ ▷^n P ⊣⊢ ▷^n □ P.
 Proof. induction n as [|n IH]; simpl; auto. by rewrite persistently_later IH. Qed.
@@ -560,7 +560,7 @@ Proof.
   - rewrite -(right_id True%I uPred_sep (P -∗ Q)%I) -(exist_intro (P -∗ Q)%I).
     apply sep_mono_r. rewrite -persistently_pure. apply persistently_mono, impl_intro_l.
     by rewrite wand_elim_r right_id.
-  - apply exist_elim=> R. apply wand_intro_l. rewrite assoc -persistently_and_sep_r'.
+  - apply exist_elim=> R. apply wand_intro_l. rewrite assoc -persistently_and_sep_r.
     by rewrite persistently_elim impl_elim_r.
 Qed.
 Lemma impl_alt P Q : (P → Q) ⊣⊢ ∃ R, R ∧ □ (P ∧ R -∗ Q).
@@ -569,7 +569,7 @@ Proof.
   - rewrite -(right_id True%I uPred_and (P → Q)%I) -(exist_intro (P → Q)%I).
     apply and_mono_r. rewrite -persistently_pure. apply persistently_mono, wand_intro_l.
     by rewrite impl_elim_r right_id.
-  - apply exist_elim=> R. apply impl_intro_l. rewrite assoc persistently_and_sep_r'.
+  - apply exist_elim=> R. apply impl_intro_l. rewrite assoc persistently_and_sep_r.
     by rewrite persistently_elim wand_elim_r.
 Qed.
 
@@ -727,7 +727,7 @@ Lemma except_0_sep P Q : ◇ (P ∗ Q) ⊣⊢ ◇ P ∗ ◇ Q.
 Proof.
   rewrite /uPred_except_0. apply (anti_symm _).
   - apply or_elim; last by auto.
-    by rewrite -!or_intro_l -persistently_pure -persistently_later -persistently_sep_dup'.
+    by rewrite -!or_intro_l -persistently_pure -persistently_later -persistently_sep_dup.
   - rewrite sep_or_r sep_elim_l sep_or_l; auto.
 Qed.
 Lemma except_0_forall {A} (Φ : A → uPred M) : ◇ (∀ a, Φ a) ⊢ ∀ a, ◇ Φ a.
@@ -823,8 +823,8 @@ Proof.
   apply or_mono, wand_intro_l; first done.
   rewrite -{2}(löb Q); apply impl_intro_l.
   rewrite HQ /uPred_except_0 !and_or_r. apply or_elim; last auto.
-  rewrite -(persistently_pure) -persistently_later persistently_and_sep_l'.
-  by rewrite assoc (comm _ _ P) -assoc -persistently_and_sep_l' impl_elim_r wand_elim_r.
+  rewrite -(persistently_pure) -persistently_later persistently_and_sep_l.
+  by rewrite assoc (comm _ _ P) -assoc -persistently_and_sep_l impl_elim_r wand_elim_r.
 Qed.
 Global Instance forall_timeless {A} (Ψ : A → uPred M) :
   (∀ x, Timeless (Ψ x)) → Timeless (∀ x, Ψ x).
@@ -867,26 +867,26 @@ Global Instance limit_preserving_Persistent {A:ofeT} `{Cofe A} (Φ : A → uPred
   NonExpansive Φ → LimitPreserving (λ x, Persistent (Φ x)).
 Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 
-Lemma persistently_persistently P `{!Persistent P} : □ P ⊣⊢ P.
+Lemma persistent_persistently P `{!Persistent P} : □ P ⊣⊢ P.
 Proof. apply (anti_symm (⊢)); auto using persistently_elim. Qed.
-Lemma persistently_if_persistently p P `{!Persistent P} : □?p P ⊣⊢ P.
-Proof. destruct p; simpl; auto using persistently_persistently. Qed.
+Lemma persistent_persistently_if p P `{!Persistent P} : □?p P ⊣⊢ P.
+Proof. destruct p; simpl; auto using persistent_persistently. Qed.
 Lemma persistently_intro P Q `{!Persistent P} : (P ⊢ Q) → P ⊢ □ Q.
-Proof. rewrite -(persistently_persistently P); apply persistently_intro'. Qed.
-Lemma persistently_and_sep_l P Q `{!Persistent P} : P ∧ Q ⊣⊢ P ∗ Q.
-Proof. by rewrite -(persistently_persistently P) persistently_and_sep_l'. Qed.
-Lemma persistently_and_sep_r P Q `{!Persistent Q} : P ∧ Q ⊣⊢ P ∗ Q.
-Proof. by rewrite -(persistently_persistently Q) persistently_and_sep_r'. Qed.
-Lemma persistently_sep_dup P `{!Persistent P} : P ⊣⊢ P ∗ P.
-Proof. by rewrite -(persistently_persistently P) -persistently_sep_dup'. Qed.
-Lemma persistently_entails_l P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ Q ∗ P.
-Proof. by rewrite -(persistently_persistently Q); apply persistently_entails_l'. Qed.
-Lemma persistently_entails_r P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
-Proof. by rewrite -(persistently_persistently Q); apply persistently_entails_r'. Qed.
-Lemma persistently_impl_wand P `{!Persistent P} Q : (P → Q) ⊣⊢ (P -∗ Q).
+Proof. rewrite -(persistent_persistently P); apply persistently_intro'. Qed.
+Lemma and_sep_l P Q `{!Persistent P} : P ∧ Q ⊣⊢ P ∗ Q.
+Proof. by rewrite -(persistent_persistently P) persistently_and_sep_l. Qed.
+Lemma and_sep_r P Q `{!Persistent Q} : P ∧ Q ⊣⊢ P ∗ Q.
+Proof. by rewrite -(persistent_persistently Q) persistently_and_sep_r. Qed.
+Lemma sep_dup P `{!Persistent P} : P ⊣⊢ P ∗ P.
+Proof. by rewrite -(persistent_persistently P) -persistently_sep_dup. Qed.
+Lemma sep_entails_l P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ Q ∗ P.
+Proof. by rewrite -(persistent_persistently Q); apply persistently_entails_l. Qed.
+Lemma sep_entails_r P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
+Proof. by rewrite -(persistent_persistently Q); apply persistently_entails_r. Qed.
+Lemma impl_wand P `{!Persistent P} Q : (P → Q) ⊣⊢ (P -∗ Q).
 Proof.
-  apply (anti_symm _); auto using impl_wand.
-  apply impl_intro_l. by rewrite persistently_and_sep_l wand_elim_r.
+  apply (anti_symm _); auto using impl_wand_1.
+  apply impl_intro_l. by rewrite and_sep_l wand_elim_r.
 Qed.
 
 (* Persistence *)
@@ -900,7 +900,7 @@ Qed.
 Global Instance pure_wand_persistent φ Q :
   Persistent Q → Persistent (⌜φ⌝ -∗ Q)%I.
 Proof.
-  rewrite /Persistent -persistently_impl_wand pure_impl_forall persistently_forall.
+  rewrite /Persistent -impl_wand pure_impl_forall persistently_forall.
   auto using forall_mono.
 Qed.
 Global Instance persistently_persistent P : Persistent (□ P).

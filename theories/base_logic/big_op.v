@@ -134,7 +134,7 @@ Section list.
       apply impl_intro_l, pure_elim_l=> ?; by apply big_sepL_lookup. }
     revert Φ HΦ. induction l as [|x l IH]=> Φ HΦ.
     { rewrite big_sepL_nil; auto with I. }
-    rewrite big_sepL_cons. rewrite -persistently_and_sep_l; apply and_intro.
+    rewrite big_sepL_cons. rewrite -and_sep_l; apply and_intro.
     - by rewrite (forall_elim 0) (forall_elim x) pure_True // True_impl.
     - rewrite -IH. apply forall_intro=> k; by rewrite (forall_elim (S k)).
   Qed.
@@ -146,7 +146,7 @@ Section list.
     rewrite persistently_and_sep_l. do 2 setoid_rewrite persistently_forall.
     setoid_rewrite persistently_impl; setoid_rewrite persistently_pure.
     rewrite -big_sepL_forall -big_sepL_sepL. apply big_sepL_mono; auto=> k x ?.
-    by rewrite -persistently_wand_impl persistently_elim wand_elim_l.
+    by rewrite persistently_impl_wand persistently_elim wand_elim_l.
   Qed.
 
   Global Instance big_sepL_nil_persistent Φ :
@@ -323,7 +323,7 @@ Section gmap.
     { apply forall_intro=> k; apply forall_intro=> x.
       apply impl_intro_l, pure_elim_l=> ?; by apply big_sepM_lookup. }
     induction m as [|i x m ? IH] using map_ind; [rewrite ?big_sepM_empty; auto|].
-    rewrite big_sepM_insert // -persistently_and_sep_l. apply and_intro.
+    rewrite big_sepM_insert // -and_sep_l. apply and_intro.
     - rewrite (forall_elim i) (forall_elim x) lookup_insert.
       by rewrite pure_True // True_impl.
     - rewrite -IH. apply forall_mono=> k; apply forall_mono=> y.
@@ -339,7 +339,7 @@ Section gmap.
     rewrite persistently_and_sep_l. do 2 setoid_rewrite persistently_forall.
     setoid_rewrite persistently_impl; setoid_rewrite persistently_pure.
     rewrite -big_sepM_forall -big_sepM_sepM. apply big_sepM_mono; auto=> k x ?.
-    by rewrite -persistently_wand_impl persistently_elim wand_elim_l.
+    by rewrite persistently_impl_wand persistently_elim wand_elim_l.
   Qed.
 
   Global Instance big_sepM_empty_persistent Φ :
@@ -475,7 +475,7 @@ Section gset.
       apply impl_intro_l, pure_elim_l=> ?; by apply big_sepS_elem_of. }
     induction X as [|x X ? IH] using collection_ind_L.
     { rewrite big_sepS_empty; auto. }
-    rewrite big_sepS_insert // -persistently_and_sep_l. apply and_intro.
+    rewrite big_sepS_insert // -and_sep_l. apply and_intro.
     - by rewrite (forall_elim x) pure_True ?True_impl; last set_solver.
     - rewrite -IH. apply forall_mono=> y. apply impl_intro_l, pure_elim_l=> ?.
       by rewrite pure_True ?True_impl; last set_solver.
@@ -487,7 +487,7 @@ Section gset.
     rewrite persistently_and_sep_l persistently_forall.
     setoid_rewrite persistently_impl; setoid_rewrite persistently_pure.
     rewrite -big_sepS_forall -big_sepS_sepS. apply big_sepS_mono; auto=> x ?.
-    by rewrite -persistently_wand_impl persistently_elim wand_elim_l.
+    by rewrite persistently_impl_wand persistently_elim wand_elim_l.
   Qed.
 
   Global Instance big_sepS_empty_persistent Φ : Persistent ([∗ set] x ∈ ∅, Φ x).
