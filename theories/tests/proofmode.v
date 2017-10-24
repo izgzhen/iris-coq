@@ -221,6 +221,14 @@ Qed.
 Lemma test_iIntros_let P :
   ∀ Q, let R := True%I in P -∗ R -∗ Q -∗ P ∗ Q.
 Proof. iIntros (Q R) "$ HR $". Qed.
+
+Lemma test_iIntros_modalities P :
+  (□ ▷ ∀ x : nat, ⌜ x = 0 ⌝ -∗ ⌜ x = 0 ⌝ → False -∗ P -∗ P)%I.
+Proof.
+  iIntros (x ??).
+  iIntros "* **". (* Test that fast intros do not work under modalities *)
+  iIntros ([]).
+Qed.
 End tests.
 
 Section more_tests.

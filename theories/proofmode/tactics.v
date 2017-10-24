@@ -284,21 +284,15 @@ Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
 (** * Basic introduction tactics *)
 Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
   try iStartProof;
-  try first
-    [(* (∀ _, _) *) apply tac_forall_intro
-    |(* (?P → _) *) eapply tac_impl_intro_pure;
+  lazymatch goal with
+  | |- _ ⊢ _ =>
+    eapply tac_forall_intro;
       [apply _ ||
-       let P := match goal with |- IntoPure ?P _ => P end in
-       fail "iIntro:" P "not pure"
-      |]
-    |(* (?P -∗ _) *) eapply tac_wand_intro_pure;
-      [apply _ ||
-       let P := match goal with |- IntoPure ?P _ => P end in
-       fail "iIntro:" P "not pure"
-      |]
-    |(* ⌜∀ _, _⌝ *) apply tac_pure_forall_intro
-    |(* ⌜_ → _⌝ *) apply tac_pure_impl_intro];
-  intros x.
+       let P := match goal with |- FromForall ?P _ => P end in
+       fail "iIntro: cannot turn" P "into a universal quantifier"
+      |lazy beta; intros x]
+  | |- _ => intros x
+  end.
 
 Local Tactic Notation "iIntro" constr(H) :=
   iStartProof;

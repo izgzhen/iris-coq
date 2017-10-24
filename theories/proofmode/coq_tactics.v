@@ -512,13 +512,7 @@ Proof.
   rewrite (_ : P = □?false P) // (into_persistentP false P).
   by rewrite right_id always_and_sep_l wand_elim_r.
 Qed.
-Lemma tac_pure_impl_intro Δ (φ ψ : Prop) :
-  (φ → Δ ⊢ ⌜ψ⌝) → Δ ⊢ ⌜φ → ψ⌝.
-Proof. intros. rewrite pure_impl. by apply impl_intro_l, pure_elim_l. Qed.
-Lemma tac_impl_intro_pure Δ P φ Q : IntoPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P → Q.
-Proof.
-  intros. by apply impl_intro_l; rewrite (into_pure P); apply pure_elim_l.
-Qed.
+
 Lemma tac_impl_intro_drop Δ P Q : (Δ ⊢ Q) → Δ ⊢ P → Q.
 Proof. intros. apply impl_intro_l. by rewrite and_elim_r. Qed.
 
@@ -863,12 +857,11 @@ Proof.
 Qed.
 
 (** * Forall *)
-Lemma tac_forall_intro {A} Δ (Φ : A → uPred M) : (∀ a, Δ ⊢ Φ a) → Δ ⊢ ∀ a, Φ a.
-Proof. apply forall_intro. Qed.
-
-Lemma tac_pure_forall_intro {A} Δ (φ : A → Prop) :
-  (∀ a, Δ ⊢ ⌜φ a⌝) → Δ ⊢ ⌜∀ a, φ a⌝.
-Proof. intros. rewrite pure_forall. by apply forall_intro. Qed.
+Lemma tac_forall_intro {A} Δ (Φ : A → uPred M) Q :
+  FromForall Q Φ →
+  (∀ a, Δ ⊢ Φ a) →
+  Δ ⊢ Q.
+Proof. rewrite /FromForall=> <-. apply forall_intro. Qed.
 
 Lemma tac_forall_specialize {A} Δ Δ' i p P (Φ : A → uPred M) Q :
   envs_lookup i Δ = Some (p, P) → IntoForall P Φ →

@@ -24,7 +24,7 @@ Section core.
   Implicit Types P Q : uPred M.
 
   Lemma coreP_intro P : P -∗ coreP P.
-  Proof. iIntros "HP". by iIntros (Q HQ ->). Qed.
+  Proof. rewrite /coreP. iIntros "HP". by iIntros (Q HQ ->). Qed.
 
   Global Instance coreP_persistent P : PersistentP (coreP P).
   Proof. rewrite /coreP. apply _. Qed.

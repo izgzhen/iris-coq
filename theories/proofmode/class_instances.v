@@ -721,6 +721,32 @@ Global Instance into_forall_always {A} P (Φ : A → uPred M) :
   IntoForall P Φ → IntoForall (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP always_forall. Qed.
 
+(* FromForall *)
+Global Instance from_forall_forall {A} (Φ : A → uPred M) :
+  FromForall (∀ x, Φ x) Φ.
+Proof. done. Qed.
+Global Instance from_forall_pure {A} (φ : A → Prop) :
+  @FromForall M A (⌜∀ a : A, φ a⌝) (λ a, ⌜ φ a ⌝)%I.
+Proof. by rewrite /FromForall pure_forall. Qed.
+Global Instance from_forall_impl_pure P Q φ :
+  IntoPureT P φ → FromForall (P → Q) (λ _ : φ, Q)%I.
+Proof.
+  intros (φ'&->&?). by rewrite /FromForall -pure_impl_forall (into_pure P).
+Qed.
+Global Instance from_forall_wand_pure P Q φ :
+  IntoPureT P φ → FromForall (P -∗ Q) (λ _ : φ, Q)%I.
+Proof.
+  intros (φ'&->&?). rewrite /FromForall -pure_impl_forall.
+  by rewrite always_impl_wand (into_pure P).
+Qed.
+
+Global Instance from_forall_always {A} P (Φ : A → uPred M) :
+  FromForall P Φ → FromForall (□ P) (λ a, □ (Φ a))%I.
+Proof. rewrite /FromForall=> <-. by rewrite always_forall. Qed.
+Global Instance from_forall_later {A} P (Φ : A → uPred M) :
+  FromForall P Φ → FromForall (▷ P) (λ a, ▷ (Φ a))%I.
+Proof. rewrite /FromForall=> <-. by rewrite later_forall. Qed.
+
 (* FromModal *)
 Global Instance from_modal_later P : FromModal (▷ P) P.
 Proof. apply later_intro. Qed.
