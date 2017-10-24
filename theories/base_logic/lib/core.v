@@ -5,7 +5,7 @@ Import uPred.
 
 (** The "core" of an assertion is its maximal persistent part. *)
 Definition coreP {M : ucmraT} (P : uPred M) : uPred M :=
-  (∀ `(!Persistent Q), ■ (P → Q) → Q)%I.
+  (∀ Q, ■ (Q → □ Q) → ■ (P → Q) → Q)%I.
 Instance: Params (@coreP) 1.
 Typeclasses Opaque coreP.
 
@@ -14,10 +14,15 @@ Section core.
   Implicit Types P Q : uPred M.
 
   Lemma coreP_intro P : P -∗ coreP P.
-  Proof. rewrite /coreP. iIntros "HP". iIntros (Q HQ) "HPQ". by iApply "HPQ". Qed.
+  Proof. rewrite /coreP. iIntros "HP" (Q) "_ HPQ". by iApply "HPQ". Qed.
 
   Global Instance coreP_persistent P : Persistent (coreP P).
-  Proof. rewrite /coreP. apply _. Qed.
+  Proof.
+    rewrite /coreP /Persistent. iIntros "HC" (Q).
+    iApply persistently_impl_plainly. iIntros "#HQ".
+    iApply persistently_impl_plainly. iIntros "#HPQ".
+    iApply "HQ". by iApply "HC".
+  Qed.
 
   Global Instance coreP_ne : NonExpansive (@coreP M).
   Proof. solve_proper. Qed.
@@ -26,8 +31,8 @@ Section core.
 
   Global Instance coreP_mono : Proper ((⊢) ==> (⊢)) (@coreP M).
   Proof.
-    rewrite /coreP. iIntros (P P' HP) "H"; iIntros (Q ?) "#HPQ".
-    iApply ("H" $! Q with "[]"). by rewrite HP.
+    rewrite /coreP. iIntros (P P' HP) "H"; iIntros (Q) "#HQ #HPQ".
+    iApply ("H" $! Q with "[]"); first done. by rewrite HP.
   Qed.
 
   Lemma coreP_elim P : Persistent P → coreP P -∗ P.
