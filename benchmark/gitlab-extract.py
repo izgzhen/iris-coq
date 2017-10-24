@@ -16,7 +16,9 @@ def first(it):
 
 def req(path):
     url = '%s/api/v3/%s' % (args.server, path)
-    return requests.get(url, headers={'PRIVATE-TOKEN': args.private_token})
+    r = requests.get(url, headers={'PRIVATE-TOKEN': args.private_token})
+    r.raise_for_status()
+    return r
 
 # read command-line arguments
 parser = argparse.ArgumentParser(description='Extract iris-coq build logs from GitLab')
@@ -45,7 +47,7 @@ log_file = sys.stdout if args.file == "-" else open(args.file, "a")
 if args.commits is None:
     if args.file == "-":
         raise Exception("If you do not give explicit commits, you have to give a logfile so that we can determine the missing commits.")
-    last_result = last(parse_log.parse(open(args.file, "r"), parse_times = False))
+    last_result = last(parse_log.parse(open(args.file, "r"), parse_times = parse_log.PARSE_NOT))
     args.commits = "{}..origin/master".format(last_result.commit)
 
 projects = req("projects?per_page=512")

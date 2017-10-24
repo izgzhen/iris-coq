@@ -20,7 +20,7 @@ args = parser.parse_args()
 pp = pprint.PrettyPrinter()
 log_file = sys.stdin if args.file == "-" else open(args.file, "r")
 
-results = parse_log.parse(log_file, parse_times = True)
+results = parse_log.parse(log_file, parse_times = parse_log.PARSE_FULL)
 if args.commits:
     commits = set(parse_log.parse_git_commits(args.commits))
     results = filter(lambda r: r.commit in commits, results)
