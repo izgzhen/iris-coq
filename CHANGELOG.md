@@ -3,9 +3,32 @@ way the logic is used on paper.  We also mention some significant changes in the
 Coq development, but not every API-breaking change is listed.  Changes marked
 `[#]` still need to be ported to the Iris Documentation LaTeX file(s).
 
-## Iris 3.x.y
+## Iris 3.1.0 (unfinished)
 
-* [#] CMRA morphisms now have to be homomorphisms, not just monotone functions.
+Changes in and extensions of the theory:
+
+* [#] CMRA morphisms have to be homomorphisms, not just monotone functions.
+* [#] Show that f has a fixed point if f^k is contractive.
+* Provide least and greatest fixed point (defined in the logic of Iris).
+* Prove the inverse of wp_bind.
+
+Changes in Coq:
+
+* Some things got renamed and notation changed:
+  - The unit of a CMRA: empty -> unit, ∅ -> ε
+  - IntoOp -> IsOp
+* Fix a bunch of consistency issues in the proof mode, and make it overall more
+  usable.  In particular:
+  - All proof mode tactics start the proof mode if necessary; iStartProof is no
+    longer needed.
+  - Change in the grammar of specialization patterns: >[...] -> [> ...]
+  - ? More stuff ?
+* Redefine bigops to get more definitional equalities.
+* Improve solve_ndisj.
+* Improve handling of pure (non-state-dependent) reductions in heap_lang.
+* Use Hint Mode to prevent Coq from making arbitrary guesses in the presence of
+  evars.  There are a few places where type annotations are now needed.
+* The prelude folder has been moved to its own project: std++
 
 ## Iris 3.0.0 (released 2017-01-11)
 
