@@ -32,7 +32,7 @@ Typeclasses Opaque na_own na_inv.
 Section proofs.
   Context `{invG Σ, na_invG Σ}.
 
-  Global Instance na_own_timeless p E : TimelessP (na_own p E).
+  Global Instance na_own_timeless p E : Timeless (na_own p E).
   Proof. rewrite /na_own; apply _. Qed.
 
   Global Instance na_inv_ne p N : NonExpansive (na_inv p N).
@@ -40,7 +40,7 @@ Section proofs.
   Global Instance na_inv_proper p N : Proper ((≡) ==> (≡)) (na_inv p N).
   Proof. apply (ne_proper _). Qed.
 
-  Global Instance na_inv_persistent p N P : PersistentP (na_inv p N P).
+  Global Instance na_inv_persistent p N P : Persistent (na_inv p N P).
   Proof. rewrite /na_inv; apply _. Qed.
 
   Lemma na_alloc : (|==> ∃ p, na_own p ⊤)%I.

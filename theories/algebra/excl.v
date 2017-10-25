@@ -59,14 +59,14 @@ Proof.
   - by intros []; constructor.
 Qed.
 
-Global Instance excl_discrete : Discrete A → Discrete exclC.
-Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
+Global Instance excl_ofe_discrete : OfeDiscrete A → OfeDiscrete exclC.
+Proof. by inversion_clear 2; constructor; apply (discrete _). Qed.
 Global Instance excl_leibniz : LeibnizEquiv A → LeibnizEquiv (excl A).
 Proof. by destruct 2; f_equal; apply leibniz_equiv. Qed.
 
-Global Instance Excl_timeless a : Timeless a → Timeless (Excl a).
-Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
-Global Instance ExclBot_timeless : Timeless (@ExclBot A).
+Global Instance Excl_discrete a : Discrete a → Discrete (Excl a).
+Proof. by inversion_clear 2; constructor; apply (discrete _). Qed.
+Global Instance ExclBot_discrete : Discrete (@ExclBot A).
 Proof. by inversion_clear 1; constructor. Qed.
 
 (* CMRA *)
@@ -77,7 +77,7 @@ Instance excl_validN : ValidN (excl A) := λ n x,
 Instance excl_pcore : PCore (excl A) := λ _, None.
 Instance excl_op : Op (excl A) := λ x y, ExclBot.
 
-Lemma excl_cmra_mixin : CMRAMixin (excl A).
+Lemma excl_cmra_mixin : CmraMixin (excl A).
 Proof.
   split; try discriminate.
   - by intros n []; destruct 1; constructor.
@@ -89,9 +89,9 @@ Proof.
   - by intros n [?|] [?|].
   - intros n x [?|] [?|] ?; inversion_clear 1; eauto.
 Qed.
-Canonical Structure exclR := CMRAT (excl A) excl_cmra_mixin.
+Canonical Structure exclR := CmraT (excl A) excl_cmra_mixin.
 
-Global Instance excl_cmra_discrete : Discrete A → CMRADiscrete exclR.
+Global Instance excl_cmra_discrete : OfeDiscrete A → CmraDiscrete exclR.
 Proof. split. apply _. by intros []. Qed.
 
 (** Internalized properties *)
@@ -142,7 +142,7 @@ Instance excl_map_ne {A B : ofeT} n :
   Proper ((dist n ==> dist n) ==> dist n ==> dist n) (@excl_map A B).
 Proof. by intros f f' Hf; destruct 1; constructor; apply Hf. Qed.
 Instance excl_map_cmra_morphism {A B : ofeT} (f : A → B) :
-  NonExpansive f → CMRAMorphism (excl_map f).
+  NonExpansive f → CmraMorphism (excl_map f).
 Proof. split; try done; try apply _. by intros n [a|]. Qed.
 Definition exclC_map {A B} (f : A -n> B) : exclC A -n> exclC B :=
   CofeMor (excl_map f).

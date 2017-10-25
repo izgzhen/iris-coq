@@ -1,7 +1,7 @@
 From iris.algebra Require Export cmra updates.
 Set Default Proof Using "Type".
 
-Record DRAMixin A `{Equiv A, Core A, Disjoint A, Op A, Valid A} := {
+Record DraMixin A `{Equiv A, Core A, Disjoint A, Op A, Valid A} := {
   (* setoids *)
   mixin_dra_equivalence : Equivalence ((≡) : relation A);
   mixin_dra_op_proper : Proper ((≡) ==> (≡) ==> (≡)) (⋅);
@@ -24,16 +24,16 @@ Record DRAMixin A `{Equiv A, Core A, Disjoint A, Op A, Valid A} := {
   mixin_dra_core_mono x y : 
     ∃ z, ✓ x → ✓ y → x ⊥ y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ⊥ z
 }.
-Structure draT := DRAT {
+Structure draT := DraT {
   dra_car :> Type;
   dra_equiv : Equiv dra_car;
   dra_core : Core dra_car;
   dra_disjoint : Disjoint dra_car;
   dra_op : Op dra_car;
   dra_valid : Valid dra_car;
-  dra_mixin : DRAMixin dra_car
+  dra_mixin : DraMixin dra_car
 }.
-Arguments DRAT _ {_ _ _ _ _} _.
+Arguments DraT _ {_ _ _ _ _} _.
 Arguments dra_car : simpl never.
 Arguments dra_equiv : simpl never.
 Arguments dra_core : simpl never.
@@ -177,10 +177,10 @@ Qed.
 Canonical Structure validityR : cmraT :=
   discreteR (validity A) validity_ra_mixin.
 
-Global Instance validity_cmra_disrete : CMRADiscrete validityR.
+Global Instance validity_disrete_cmra : CmraDiscrete validityR.
 Proof. apply discrete_cmra_discrete. Qed.
-Global Instance validity_cmra_total : CMRATotal validityR.
-Proof. rewrite /CMRATotal; eauto. Qed.
+Global Instance validity_cmra_total : CmraTotal validityR.
+Proof. rewrite /CmraTotal; eauto. Qed.
 
 Lemma validity_update x y :
   (∀ c, ✓ x → ✓ c → validity_car x ⊥ c → ✓ y ∧ validity_car y ⊥ c) → x ~~> y.

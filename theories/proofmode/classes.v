@@ -15,7 +15,7 @@ Existing Instance Or_r | 10.
 Class FromAssumption {M} (p : bool) (P Q : uPred M) :=
   from_assumption : □?p P ⊢ Q.
 Arguments from_assumption {_} _ _ _ {_}.
-(* No need to restrict Hint Mode, we have a default instance that will always
+(* No need to restrict Hint Mode, we have a default instance that will persistently
 be used in case of evars *)
 Hint Mode FromAssumption + + - - : typeclass_instances.
 
@@ -54,10 +54,10 @@ Class FromPure {M} (P : uPred M) (φ : Prop) := from_pure : ⌜φ⌝ ⊢ P.
 Arguments from_pure {_} _ _ {_}.
 Hint Mode FromPure + ! - : typeclass_instances.
 
-Class IntoPersistentP {M} (p : bool) (P Q : uPred M) :=
-  into_persistentP : □?p P ⊢ □ Q.
-Arguments into_persistentP {_} _ _ _ {_}.
-Hint Mode IntoPersistentP + + ! - : typeclass_instances.
+Class IntoPersistent {M} (p : bool) (P Q : uPred M) :=
+  into_persistent : □?p P ⊢ □ Q.
+Arguments into_persistent {_} _ _ _ {_}.
+Hint Mode IntoPersistent + + ! - : typeclass_instances.
 
 (* The class [IntoLaterN] has only two instances:
 
@@ -122,11 +122,11 @@ Lemma mk_from_and_and {M} p (P Q1 Q2 : uPred M) :
   (Q1 ∧ Q2 ⊢ P) → FromAnd p P Q1 Q2.
 Proof. rewrite /FromAnd=><-. destruct p; auto using sep_and. Qed.
 Lemma mk_from_and_persistent {M} (P Q1 Q2 : uPred M) :
-  Or (PersistentP Q1) (PersistentP Q2) → (Q1 ∗ Q2 ⊢ P) → FromAnd true P Q1 Q2.
+  Or (Persistent Q1) (Persistent Q2) → (Q1 ∗ Q2 ⊢ P) → FromAnd true P Q1 Q2.
 Proof.
   intros [?|?] ?; rewrite /FromAnd.
-  - by rewrite always_and_sep_l.
-  - by rewrite always_and_sep_r.
+  - by rewrite and_sep_l.
+  - by rewrite and_sep_r.
 Qed.
 
 Class IntoAnd {M} (p : bool) (P Q1 Q2 : uPred M) :=

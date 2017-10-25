@@ -152,17 +152,17 @@ Section M.
   Qed.
   Canonical Structure M_R : cmraT := discreteR M M_ra_mixin.
 
-  Global Instance M_cmra_discrete : CMRADiscrete M_R.
+  Global Instance M_discrete : CmraDiscrete M_R.
   Proof. apply discrete_cmra_discrete. Qed.
 
-  Definition M_ucmra_mixin : UCMRAMixin M.
+  Definition M_ucmra_mixin : UcmraMixin M.
   Proof.
     split; try (done || apply _).
     intros [?|?|]; simpl; try case_decide; f_equal/=; lia.
   Qed.
-  Canonical Structure M_UR : ucmraT := UCMRAT M M_ucmra_mixin.
+  Canonical Structure M_UR : ucmraT := UcmraT M M_ucmra_mixin.
 
-  Global Instance frag_persistent n : Persistent (Frag n).
+  Global Instance frag_core_id n : CoreId (Frag n).
   Proof. by constructor. Qed.
   Lemma auth_frag_valid j n : ✓ (Auth n ⋅ Frag j) → (j ≤ n)%nat.
   Proof. simpl. case_decide. done. by intros []. Qed.
@@ -191,7 +191,7 @@ Section counter_proof.
     (∃ N γ, inv N (I γ l) ∧ own γ (Frag n))%I.
 
   (** The main proofs. *)
-  Global Instance C_persistent l n : PersistentP (C l n).
+  Global Instance C_persistent l n : Persistent (C l n).
   Proof. apply _. Qed.
 
   Lemma newcounter_spec :

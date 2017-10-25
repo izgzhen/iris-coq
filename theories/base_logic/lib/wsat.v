@@ -49,7 +49,7 @@ Instance invariant_unfold_contractive : Contractive (@invariant_unfold Σ).
 Proof. solve_contractive. Qed.
 Global Instance ownI_contractive i : Contractive (@ownI Σ _ i).
 Proof. solve_contractive. Qed.
-Global Instance ownI_persistent i P : PersistentP (ownI i P).
+Global Instance ownI_persistent i P : Persistent (ownI i P).
 Proof. rewrite /ownI. apply _. Qed.
 
 Lemma ownE_empty : (|==> ownE ∅)%I.

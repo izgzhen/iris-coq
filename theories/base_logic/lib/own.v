@@ -102,13 +102,13 @@ Proof. apply wand_intro_r. by rewrite -own_op own_valid. Qed.
 Lemma own_valid_3 γ a1 a2 a3 : own γ a1 -∗ own γ a2 -∗ own γ a3 -∗ ✓ (a1 ⋅ a2 ⋅ a3).
 Proof. do 2 apply wand_intro_r. by rewrite -!own_op own_valid. Qed.
 Lemma own_valid_r γ a : own γ a ⊢ own γ a ∗ ✓ a.
-Proof. apply: uPred.always_entails_r. apply own_valid. Qed.
+Proof. apply: uPred.sep_entails_r. apply own_valid. Qed.
 Lemma own_valid_l γ a : own γ a ⊢ ✓ a ∗ own γ a.
 Proof. by rewrite comm -own_valid_r. Qed.
 
-Global Instance own_timeless γ a : Timeless a → TimelessP (own γ a).
+Global Instance own_timeless γ a : Discrete a → Timeless (own γ a).
 Proof. rewrite !own_eq /own_def; apply _. Qed.
-Global Instance own_core_persistent γ a : Persistent a → PersistentP (own γ a).
+Global Instance own_core_persistent γ a : CoreId a → Persistent (own γ a).
 Proof. rewrite !own_eq /own_def; apply _. Qed.
 
 (** ** Allocation *)
@@ -193,7 +193,7 @@ Section proofmode_classes.
     IsOp a b1 b2 → FromAnd false (own γ a) (own γ b1) (own γ b2).
   Proof. intros. by rewrite /FromAnd -own_op -is_op. Qed.
   Global Instance from_and_own_persistent γ a b1 b2 :
-    IsOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
+    IsOp a b1 b2 → Or (CoreId b1) (CoreId b2) →
     FromAnd true (own γ a) (own γ b1) (own γ b2).
   Proof.
     intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].

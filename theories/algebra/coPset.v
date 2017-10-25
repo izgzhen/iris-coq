@@ -39,12 +39,12 @@ Section coPset.
   Qed.
   Canonical Structure coPsetR := discreteR coPset coPset_ra_mixin.
 
-  Global Instance coPset_cmra_discrete : CMRADiscrete coPsetR.
+  Global Instance coPset_cmra_discrete : CmraDiscrete coPsetR.
   Proof. apply discrete_cmra_discrete. Qed.
 
-  Lemma coPset_ucmra_mixin : UCMRAMixin coPset.
+  Lemma coPset_ucmra_mixin : UcmraMixin coPset.
   Proof. split. done. intros X. by rewrite coPset_op_union left_id_L. done. Qed.
-  Canonical Structure coPsetUR := UCMRAT coPset coPset_ucmra_mixin.
+  Canonical Structure coPsetUR := UcmraT coPset coPset_ucmra_mixin.
 
   Lemma coPset_opM X mY : X ⋅? mY = X ∪ from_option id ∅ mY.
   Proof. destruct mY; by rewrite /= ?right_id_L. Qed.
@@ -112,10 +112,10 @@ Section coPset_disj.
   Qed.
   Canonical Structure coPset_disjR := discreteR coPset_disj coPset_disj_ra_mixin.
 
-  Global Instance coPset_disj_cmra_discrete : CMRADiscrete coPset_disjR.
+  Global Instance coPset_disj_cmra_discrete : CmraDiscrete coPset_disjR.
   Proof. apply discrete_cmra_discrete. Qed.
 
-  Lemma coPset_disj_ucmra_mixin : UCMRAMixin coPset_disj.
+  Lemma coPset_disj_ucmra_mixin : UcmraMixin coPset_disj.
   Proof. split; try apply _ || done. intros [X|]; coPset_disj_solve. Qed.
-  Canonical Structure coPset_disjUR := UCMRAT coPset_disj coPset_disj_ucmra_mixin.
+  Canonical Structure coPset_disjUR := UcmraT coPset_disj coPset_disj_ucmra_mixin.
 End coPset_disj.

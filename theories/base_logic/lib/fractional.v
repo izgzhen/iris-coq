@@ -50,8 +50,8 @@ Section fractional.
 
   (** Fractional and logical connectives *)
   Global Instance persistent_fractional P :
-    PersistentP P → Fractional (λ _, P).
-  Proof. intros HP q q'. by apply uPred.always_sep_dup. Qed.
+    Persistent P → Fractional (λ _, P).
+  Proof. intros HP q q'. by apply uPred.sep_dup. Qed.
 
   Global Instance fractional_sep Φ Ψ :
     Fractional Φ → Fractional Ψ → Fractional (λ q, Φ q ∗ Ψ q)%I.
@@ -134,7 +134,7 @@ Section fractional.
     AsFractional P Φ (q1 + q2) → AsFractional P1 Φ q1 → AsFractional P2 Φ q2 →
     IntoAnd p P P1 P2.
   Proof.
-    (* TODO: We need a better way to handle this boolean here; always
+    (* TODO: We need a better way to handle this boolean here; persistently
        applying mk_into_and_sep (which only works after introducing all
        assumptions) is rather annoying.
        Ideally, it'd not even be possible to make the mistake that
@@ -148,7 +148,7 @@ Section fractional.
   Proof. intros. apply mk_into_and_sep. rewrite [P]fractional_half //. Qed.
 
   (* The instance [frame_fractional] can be tried at all the nodes of
-     the proof search. The proof search then fails almost always on
+     the proof search. The proof search then fails almost persistently on
      [AsFractional R Φ r], but the slowdown is still noticeable.  For
      that reason, we factorize the three instances that could have been
      defined for that purpose into one. *)
@@ -179,6 +179,6 @@ Section fractional.
     - rewrite fractional=><-<-. by rewrite assoc.
     - rewrite fractional=><-<-=>_.
       by rewrite (comm _ Q (Φ q0)) !assoc (comm _ (Φ _)).
-    - move=>-[-> _]->. by rewrite uPred.always_if_elim -fractional Qp_div_2.
+    - move=>-[-> _]->. by rewrite uPred.persistently_if_elim -fractional Qp_div_2.
   Qed.
 End fractional.

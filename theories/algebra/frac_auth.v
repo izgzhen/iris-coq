@@ -34,10 +34,10 @@ Section frac_auth.
   Global Instance frac_auth_frag_proper q : Proper ((≡) ==> (≡)) (@frac_auth_frag A q).
   Proof. solve_proper. Qed.
 
-  Global Instance frac_auth_auth_timeless a : Timeless a → Timeless (●! a).
-  Proof. intros; apply Auth_timeless; apply _. Qed.
-  Global Instance frac_auth_frag_timeless a : Timeless a → Timeless (◯! a).
-  Proof. intros; apply Auth_timeless, Some_timeless; apply _. Qed.
+  Global Instance frac_auth_auth_discrete a : Discrete a → Discrete (●! a).
+  Proof. intros; apply Auth_discrete; apply _. Qed.
+  Global Instance frac_auth_frag_discrete a : Discrete a → Discrete (◯! a).
+  Proof. intros; apply Auth_discrete, Some_discrete; apply _. Qed.
 
   Lemma frac_auth_validN n a : ✓{n} a → ✓{n} (●! a ⋅ ◯! a).
   Proof. done. Qed.
@@ -58,13 +58,13 @@ Section frac_auth.
 
   Lemma frac_auth_includedN n q a b : ✓{n} (●! a ⋅ ◯!{q} b) → Some b ≼{n} Some a.
   Proof. by rewrite auth_validN_eq /= => -[/Some_pair_includedN [_ ?] _]. Qed.
-  Lemma frac_auth_included `{CMRADiscrete A} q a b :
+  Lemma frac_auth_included `{CmraDiscrete A} q a b :
     ✓ (●! a ⋅ ◯!{q} b) → Some b ≼ Some a.
   Proof. by rewrite auth_valid_discrete /= => -[/Some_pair_included [_ ?] _]. Qed.
-  Lemma frac_auth_includedN_total `{CMRATotal A} n q a b :
+  Lemma frac_auth_includedN_total `{CmraTotal A} n q a b :
     ✓{n} (●! a ⋅ ◯!{q} b) → b ≼{n} a.
   Proof. intros. by eapply Some_includedN_total, frac_auth_includedN. Qed.
-  Lemma frac_auth_included_total `{CMRADiscrete A, CMRATotal A} q a b :
+  Lemma frac_auth_included_total `{CmraDiscrete A, CmraTotal A} q a b :
     ✓ (●! a ⋅ ◯!{q} b) → b ≼ a.
   Proof. intros. by eapply Some_included_total, frac_auth_included. Qed.
 
@@ -94,10 +94,10 @@ Section frac_auth.
   Proof. by rewrite /IsOp' /IsOp=> /leibniz_equiv_iff -> ->. Qed.
 
   Global Instance is_op_frac_auth_persistent (q q1 q2 : frac) (a  : A) :
-    Persistent a → IsOp q q1 q2 → IsOp' (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
+    CoreId a → IsOp q q1 q2 → IsOp' (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
   Proof.
     rewrite /IsOp' /IsOp=> ? /leibniz_equiv_iff ->.
-    by rewrite -frag_auth_op -persistent_dup.
+    by rewrite -frag_auth_op -core_id_dup.
   Qed.
 
   Lemma frac_auth_update q a b a' b' :

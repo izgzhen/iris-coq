@@ -37,8 +37,8 @@ Next Obligation.
   by rewrite conv_compl /=; apply reflexive_eq.
 Qed.
 
-Global Instance gmap_discrete : Discrete A → Discrete gmapC.
-Proof. intros ? m m' ? i. by apply (timeless _). Qed.
+Global Instance gmap_ofe_discrete : OfeDiscrete A → OfeDiscrete gmapC.
+Proof. intros ? m m' ? i. by apply (discrete _). Qed.
 (* why doesn't this go automatic? *)
 Global Instance gmapC_leibniz: LeibnizEquiv A → LeibnizEquiv gmapC.
 Proof. intros; change (LeibnizEquiv (gmap K A)); apply _. Qed.
@@ -70,27 +70,27 @@ Proof.
     [by constructor|by apply lookup_ne].
 Qed.
 
-Global Instance gmap_empty_timeless : Timeless (∅ : gmap K A).
+Global Instance gmap_empty_discrete : Discrete (∅ : gmap K A).
 Proof.
   intros m Hm i; specialize (Hm i); rewrite lookup_empty in Hm |- *.
   inversion_clear Hm; constructor.
 Qed.
-Global Instance gmap_lookup_timeless m i : Timeless m → Timeless (m !! i).
+Global Instance gmap_lookup_discrete m i : Discrete m → Discrete (m !! i).
 Proof.
-  intros ? [x|] Hx; [|by symmetry; apply: timeless].
+  intros ? [x|] Hx; [|by symmetry; apply: discrete].
   assert (m ≡{0}≡ <[i:=x]> m)
     by (by symmetry in Hx; inversion Hx; ofe_subst; rewrite insert_id).
-  by rewrite (timeless m (<[i:=x]>m)) // lookup_insert.
+  by rewrite (discrete m (<[i:=x]>m)) // lookup_insert.
 Qed.
-Global Instance gmap_insert_timeless m i x :
-  Timeless x → Timeless m → Timeless (<[i:=x]>m).
+Global Instance gmap_insert_discrete m i x :
+  Discrete x → Discrete m → Discrete (<[i:=x]>m).
 Proof.
   intros ?? m' Hm j; destruct (decide (i = j)); simplify_map_eq.
-  { by apply: timeless; rewrite -Hm lookup_insert. }
-  by apply: timeless; rewrite -Hm lookup_insert_ne.
+  { by apply: discrete; rewrite -Hm lookup_insert. }
+  by apply: discrete; rewrite -Hm lookup_insert_ne.
 Qed.
-Global Instance gmap_singleton_timeless i x :
-  Timeless x → Timeless ({[ i := x ]} : gmap K A) := _.
+Global Instance gmap_singleton_discrete i x :
+  Discrete x → Discrete ({[ i := x ]} : gmap K A) := _.
 End cofe.
 
 Arguments gmapC _ {_ _} _.
@@ -127,7 +127,7 @@ Proof.
       lookup_insert_ne // lookup_partial_alter_ne.
 Qed.
 
-Lemma gmap_cmra_mixin : CMRAMixin (gmap K A).
+Lemma gmap_cmra_mixin : CmraMixin (gmap K A).
 Proof.
   apply cmra_total_mixin.
   - eauto.
@@ -171,19 +171,19 @@ Proof.
       * by rewrite lookup_partial_alter.
       * by rewrite lookup_partial_alter_ne // Hm2' lookup_delete_ne.
 Qed.
-Canonical Structure gmapR := CMRAT (gmap K A) gmap_cmra_mixin.
+Canonical Structure gmapR := CmraT (gmap K A) gmap_cmra_mixin.
 
-Global Instance gmap_cmra_discrete : CMRADiscrete A → CMRADiscrete gmapR.
+Global Instance gmap_cmra_discrete : CmraDiscrete A → CmraDiscrete gmapR.
 Proof. split; [apply _|]. intros m ? i. by apply: cmra_discrete_valid. Qed.
 
-Lemma gmap_ucmra_mixin : UCMRAMixin (gmap K A).
+Lemma gmap_ucmra_mixin : UcmraMixin (gmap K A).
 Proof.
   split.
   - by intros i; rewrite lookup_empty.
   - by intros m i; rewrite /= lookup_op lookup_empty (left_id_L None _).
   - constructor=> i. by rewrite lookup_omap lookup_empty.
 Qed.
-Canonical Structure gmapUR := UCMRAT (gmap K A) gmap_ucmra_mixin.
+Canonical Structure gmapUR := UcmraT (gmap K A) gmap_ucmra_mixin.
 
 (** Internalized properties *)
 Lemma gmap_equivI {M} m1 m2 : m1 ≡ m2 ⊣⊢ (∀ i, m1 !! i ≡ m2 !! i : uPred M).
@@ -250,14 +250,14 @@ Lemma op_singleton (i : K) (x y : A) :
   {[ i := x ]} ⋅ {[ i := y ]} = ({[ i := x ⋅ y ]} : gmap K A).
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
 
-Global Instance gmap_persistent m : (∀ x : A, Persistent x) → Persistent m.
+Global Instance gmap_core_id m : (∀ x : A, CoreId x) → CoreId m.
 Proof.
-  intros; apply persistent_total=> i.
-  rewrite lookup_core. apply (persistent_core _).
+  intros; apply core_id_total=> i.
+  rewrite lookup_core. apply (core_id_core _).
 Qed.
-Global Instance gmap_singleton_persistent i (x : A) :
-  Persistent x → Persistent {[ i := x ]}.
-Proof. intros. by apply persistent_total, core_singleton'. Qed.
+Global Instance gmap_singleton_core_id i (x : A) :
+  CoreId x → CoreId {[ i := x ]}.
+Proof. intros. by apply core_id_total, core_singleton'. Qed.
 
 Lemma singleton_includedN n m i x :
   {[ i := x ]} ≼{n} m ↔ ∃ y, m !! i ≡{n}≡ Some y ∧ Some x ≼{n} Some y.
@@ -477,7 +477,7 @@ Instance gmap_fmap_ne `{Countable K} {A B : ofeT} (f : A → B) n :
   Proper (dist n ==> dist n) f → Proper (dist n ==>dist n) (fmap (M:=gmap K) f).
 Proof. by intros ? m m' Hm k; rewrite !lookup_fmap; apply option_fmap_ne. Qed.
 Instance gmap_fmap_cmra_morphism `{Countable K} {A B : cmraT} (f : A → B)
-  `{!CMRAMorphism f} : CMRAMorphism (fmap f : gmap K A → gmap K B).
+  `{!CmraMorphism f} : CmraMorphism (fmap f : gmap K A → gmap K B).
 Proof.
   split; try apply _.
   - by intros n m ? i; rewrite lookup_fmap; apply (cmra_morphism_validN _).

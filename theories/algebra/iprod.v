@@ -61,22 +61,22 @@ Section iprod_cofe.
     x ≠ x' → (iprod_insert x y f) x' = f x'.
   Proof. by rewrite /iprod_insert; destruct (decide _). Qed.
 
-  Global Instance iprod_lookup_timeless f x : Timeless f → Timeless (f x).
+  Global Instance iprod_lookup_discrete f x : Discrete f → Discrete (f x).
   Proof.
     intros ? y ?.
     cut (f ≡ iprod_insert x y f).
     { by move=> /(_ x)->; rewrite iprod_lookup_insert. }
-    apply (timeless _)=> x'; destruct (decide (x = x')) as [->|];
+    apply (discrete _)=> x'; destruct (decide (x = x')) as [->|];
       by rewrite ?iprod_lookup_insert ?iprod_lookup_insert_ne.
   Qed.
-  Global Instance iprod_insert_timeless f x y :
-    Timeless f → Timeless y → Timeless (iprod_insert x y f).
+  Global Instance iprod_insert_discrete f x y :
+    Discrete f → Discrete y → Discrete (iprod_insert x y f).
   Proof.
     intros ?? g Heq x'; destruct (decide (x = x')) as [->|].
     - rewrite iprod_lookup_insert.
-      apply: timeless. by rewrite -(Heq x') iprod_lookup_insert.
+      apply: discrete. by rewrite -(Heq x') iprod_lookup_insert.
     - rewrite iprod_lookup_insert_ne //.
-      apply: timeless. by rewrite -(Heq x') iprod_lookup_insert_ne.
+      apply: discrete. by rewrite -(Heq x') iprod_lookup_insert_ne.
   Qed.
 End iprod_cofe.
 
@@ -100,7 +100,7 @@ Section iprod_cmra.
     intros [h ?]%finite_choice. by exists h.
   Qed.
 
-  Lemma iprod_cmra_mixin : CMRAMixin (iprod B).
+  Lemma iprod_cmra_mixin : CmraMixin (iprod B).
   Proof.
     apply cmra_total_mixin.
     - eauto.
@@ -126,23 +126,23 @@ Section iprod_cmra.
         exists (y1,y2); eauto. }
       exists (λ x, gg x.1), (λ x, gg x.2). split_and!=> -?; naive_solver.
   Qed.
-  Canonical Structure iprodR := CMRAT (iprod B) iprod_cmra_mixin.
+  Canonical Structure iprodR := CmraT (iprod B) iprod_cmra_mixin.
 
   Instance iprod_unit : Unit (iprod B) := λ x, ε.
   Definition iprod_lookup_empty x : ε x = ε := eq_refl.
 
-  Lemma iprod_ucmra_mixin : UCMRAMixin (iprod B).
+  Lemma iprod_ucmra_mixin : UcmraMixin (iprod B).
   Proof.
     split.
     - intros x; apply ucmra_unit_valid.
     - by intros f x; rewrite iprod_lookup_op left_id.
-    - constructor=> x. apply persistent_core, _.
+    - constructor=> x. apply core_id_core, _.
   Qed.
-  Canonical Structure iprodUR := UCMRAT (iprod B) iprod_ucmra_mixin.
+  Canonical Structure iprodUR := UcmraT (iprod B) iprod_ucmra_mixin.
 
-  Global Instance iprod_empty_timeless :
-    (∀ i, Timeless (ε : B i)) → Timeless (ε : iprod B).
-  Proof. intros ? f Hf x. by apply: timeless. Qed.
+  Global Instance iprod_unit_discrete :
+    (∀ i, Discrete (ε : B i)) → Discrete (ε : iprod B).
+  Proof. intros ? f Hf x. by apply: discrete. Qed.
 
   (** Internalized properties *)
   Lemma iprod_equivI {M} g1 g2 : g1 ≡ g2 ⊣⊢ (∀ i, g1 i ≡ g2 i : uPred M).
@@ -198,8 +198,8 @@ Section iprod_singleton.
     x ≠ x' → (iprod_singleton x y) x' = ε.
   Proof. intros; by rewrite /iprod_singleton iprod_lookup_insert_ne. Qed.
 
-  Global Instance iprod_singleton_timeless x (y : B x) :
-    (∀ i, Timeless (ε : B i)) →  Timeless y → Timeless (iprod_singleton x y).
+  Global Instance iprod_singleton_discrete x (y : B x) :
+    (∀ i, Discrete (ε : B i)) →  Discrete y → Discrete (iprod_singleton x y).
   Proof. apply _. Qed.
 
   Lemma iprod_singleton_validN n x (y : B x) : ✓{n} iprod_singleton x y ↔ ✓{n} y.
@@ -215,12 +215,12 @@ Section iprod_singleton.
   Proof.
     move=>x'; destruct (decide (x = x')) as [->|];
       by rewrite iprod_lookup_core ?iprod_lookup_singleton
-      ?iprod_lookup_singleton_ne // (persistent_core ∅).
+      ?iprod_lookup_singleton_ne // (core_id_core ∅).
   Qed.
 
-  Global Instance iprod_singleton_persistent x (y : B x) :
-    Persistent y → Persistent (iprod_singleton x y).
-  Proof. by rewrite !persistent_total iprod_core_singleton=> ->. Qed.
+  Global Instance iprod_singleton_core_id x (y : B x) :
+    CoreId y → CoreId (iprod_singleton x y).
+  Proof. by rewrite !core_id_total iprod_core_singleton=> ->. Qed.
 
   Lemma iprod_op_singleton (x : A) (y1 y2 : B x) :
     iprod_singleton x y1 ⋅ iprod_singleton x y2 ≡ iprod_singleton x (y1 ⋅ y2).
@@ -284,7 +284,7 @@ Instance iprod_map_ne `{Finite A} {B1 B2 : A → ofeT} (f : ∀ x, B1 x → B2 x
 Proof. by intros ? y1 y2 Hy x; rewrite /iprod_map (Hy x). Qed.
 Instance iprod_map_cmra_morphism
     `{Finite A} {B1 B2 : A → ucmraT} (f : ∀ x, B1 x → B2 x) :
-  (∀ x, CMRAMorphism (f x)) → CMRAMorphism (iprod_map f).
+  (∀ x, CmraMorphism (f x)) → CmraMorphism (iprod_map f).
 Proof.
   split; first apply _.
   - intros n g Hg x; rewrite /iprod_map; apply (cmra_morphism_validN (f _)), Hg.

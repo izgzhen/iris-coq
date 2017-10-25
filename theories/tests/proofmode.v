@@ -78,7 +78,7 @@ Proof.
   done.
 Qed.
 
-Lemma test_iIntros_persistent P Q `{!PersistentP Q} : (P → Q → P ∗ Q)%I.
+Lemma test_iIntros_persistent P Q `{!Persistent Q} : (P → Q → P ∗ Q)%I.
 Proof. iIntros "H1 H2". by iFrame. Qed.
 
 Lemma test_iIntros_pure (ψ φ : Prop) P : ψ → (⌜ φ ⌝ → P → ⌜ φ ∧ ψ ⌝ ∧ P)%I.
@@ -142,11 +142,11 @@ Proof.
   iSpecialize ("H" $! _ [#10]). done.
 Qed.
 
-Lemma test_eauto_iFramE P Q R `{!PersistentP R} :
+Lemma test_eauto_iFramE P Q R `{!Persistent R} :
   P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.
 Proof. eauto with iFrame. Qed.
 
-Lemma test_iCombine_persistent P Q R `{!PersistentP R} :
+Lemma test_iCombine_persistent P Q R `{!Persistent R} :
   P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.
 Proof. iIntros "HP HQ #HR". iCombine "HR HQ HP HR" as "H". auto. Qed.
 
@@ -177,7 +177,7 @@ Lemma test_iFrame_persistent (P Q : uPred M) :
   □ P -∗ Q -∗ □ (P ∗ P) ∗ (P ∧ Q ∨ Q).
 Proof. iIntros "#HP". iFrame "HP". iIntros "$". Qed.
 
-Lemma test_iSplit_always P Q : □ P -∗ □ (P ∗ P).
+Lemma test_iSplit_persistently P Q : □ P -∗ □ (P ∗ P).
 Proof. iIntros "#?". by iSplit. Qed.
 
 Lemma test_iSpecialize_persistent P Q :

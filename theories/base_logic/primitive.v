@@ -97,16 +97,16 @@ Definition uPred_wand {M} := unseal uPred_wand_aux M.
 Definition uPred_wand_eq :
   @uPred_wand = @uPred_wand_def := seal_eq uPred_wand_aux.
 
-Program Definition uPred_always_def {M} (P : uPred M) : uPred M :=
+Program Definition uPred_persistently_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n (core x) |}.
 Next Obligation.
   intros M; naive_solver eauto using uPred_mono, @cmra_core_monoN.
 Qed.
 Next Obligation. naive_solver eauto using uPred_closed, @cmra_core_validN. Qed.
-Definition uPred_always_aux : seal (@uPred_always_def). by eexists. Qed.
-Definition uPred_always {M} := unseal uPred_always_aux M.
-Definition uPred_always_eq :
-  @uPred_always = @uPred_always_def := seal_eq uPred_always_aux.
+Definition uPred_persistently_aux : seal (@uPred_persistently_def). by eexists. Qed.
+Definition uPred_persistently {M} := unseal uPred_persistently_aux M.
+Definition uPred_persistently_eq :
+  @uPred_persistently = @uPred_persistently_def := seal_eq uPred_persistently_aux.
 
 Program Definition uPred_later_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := match n return _ with 0 => True | S n' => P n' x end |}.
@@ -176,7 +176,7 @@ Notation "∀ x .. y , P" :=
 Notation "∃ x .. y , P" :=
   (uPred_exist (λ x, .. (uPred_exist (λ y, P)) ..)%I)
   (at level 200, x binder, y binder, right associativity) : uPred_scope.
-Notation "□ P" := (uPred_always P)
+Notation "□ P" := (uPred_persistently P)
   (at level 20, right associativity) : uPred_scope.
 Notation "▷ P" := (uPred_later P)
   (at level 20, right associativity) : uPred_scope.
@@ -198,7 +198,7 @@ Notation "P -∗ Q" := (P ⊢ Q)
 Module uPred.
 Definition unseal_eqs :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
-  uPred_exist_eq, uPred_internal_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_always_eq,
+  uPred_exist_eq, uPred_internal_eq_eq, uPred_sep_eq, uPred_wand_eq, uPred_persistently_eq,
   uPred_later_eq, uPred_ownM_eq, uPred_cmra_valid_eq, uPred_bupd_eq).
 Ltac unseal := rewrite !unseal_eqs /=.
 
@@ -295,13 +295,13 @@ Proof.
 Qed.
 Global Instance later_proper' :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_later M) := ne_proper _.
-Global Instance always_ne : NonExpansive (@uPred_always M).
+Global Instance persistently_ne : NonExpansive (@uPred_persistently M).
 Proof.
   intros n P1 P2 HP.
   unseal; split=> n' x; split; apply HP; eauto using @cmra_core_validN.
 Qed.
-Global Instance always_proper :
-  Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_always M) := ne_proper _.
+Global Instance persistently_proper :
+  Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_persistently M) := ne_proper _.
 Global Instance ownM_ne : NonExpansive (@uPred_ownM M).
 Proof.
   intros n a b Ha.
@@ -422,22 +422,22 @@ Proof.
 Qed.
 
 (* Always *)
-Lemma always_mono P Q : (P ⊢ Q) → □ P ⊢ □ Q.
+Lemma persistently_mono P Q : (P ⊢ Q) → □ P ⊢ □ Q.
 Proof. intros HP; unseal; split=> n x ? /=. by apply HP, cmra_core_validN. Qed.
-Lemma always_elim P : □ P ⊢ P.
+Lemma persistently_elim P : □ P ⊢ P.
 Proof.
   unseal; split=> n x ? /=.
   eauto using uPred_mono, @cmra_included_core, cmra_included_includedN.
 Qed.
-Lemma always_idemp_2 P : □ P ⊢ □ □ P.
+Lemma persistently_idemp_2 P : □ P ⊢ □ □ P.
 Proof. unseal; split=> n x ?? /=. by rewrite cmra_core_idemp. Qed.
 
-Lemma always_forall_2 {A} (Ψ : A → uPred M) : (∀ a, □ Ψ a) ⊢ (□ ∀ a, Ψ a).
+Lemma persistently_forall_2 {A} (Ψ : A → uPred M) : (∀ a, □ Ψ a) ⊢ (□ ∀ a, Ψ a).
 Proof. by unseal. Qed.
-Lemma always_exist_1 {A} (Ψ : A → uPred M) : (□ ∃ a, Ψ a) ⊢ (∃ a, □ Ψ a).
+Lemma persistently_exist_1 {A} (Ψ : A → uPred M) : (□ ∃ a, Ψ a) ⊢ (∃ a, □ Ψ a).
 Proof. by unseal. Qed.
 
-Lemma always_and_sep_l_1 P Q : □ P ∧ Q ⊢ □ P ∗ Q.
+Lemma persistently_and_sep_l_1 P Q : □ P ∧ Q ⊢ □ P ∗ Q.
 Proof.
   unseal; split=> n x ? [??]; exists (core x), x; simpl in *.
   by rewrite cmra_core_l cmra_core_idemp.
@@ -475,7 +475,7 @@ Proof.
   intros [|n'] x' ????; [|done].
   eauto using uPred_closed, uPred_mono, cmra_included_includedN.
 Qed.
-Lemma always_later P : □ ▷ P ⊣⊢ ▷ □ P.
+Lemma persistently_later P : □ ▷ P ⊣⊢ ▷ □ P.
 Proof. by unseal. Qed.
 
 (* Own *)
@@ -489,7 +489,7 @@ Proof.
     by rewrite (assoc op _ z1) -(comm op z1) (assoc op z1)
       -(assoc op _ a2) (comm op z1) -Hy1 -Hy2.
 Qed.
-Lemma always_ownM_core (a : M) : uPred_ownM a ⊢ □ uPred_ownM (core a).
+Lemma persistently_ownM_core (a : M) : uPred_ownM a ⊢ □ uPred_ownM (core a).
 Proof.
   split=> n x /=; unseal; intros Hx. simpl. by apply cmra_core_monoN.
 Qed.
@@ -512,7 +512,7 @@ Lemma cmra_valid_intro {A : cmraT} (a : A) : ✓ a → uPred_valid (M:=M) (✓ a
 Proof. unseal=> ?; split=> n x ? _ /=; by apply cmra_valid_validN. Qed.
 Lemma cmra_valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊢ False.
 Proof. unseal=> Ha; split=> n x ??; apply Ha, cmra_validN_le with n; auto. Qed.
-Lemma always_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ □ ✓ a.
+Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ □ ✓ a.
 Proof. by unseal. Qed.
 Lemma cmra_valid_weaken {A : cmraT} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
 Proof. unseal; split=> n x _; apply cmra_validN_op_l. Qed.
@@ -561,11 +561,11 @@ Lemma later_equivI {A : ofeT} (x y : A) : Next x ≡ Next y ⊣⊢ ▷ (x ≡ y)
 Proof. by unseal. Qed.
 
 (* Discrete *)
-Lemma discrete_valid {A : cmraT} `{!CMRADiscrete A} (a : A) : ✓ a ⊣⊢ ⌜✓ a⌝.
+Lemma discrete_valid {A : cmraT} `{!CmraDiscrete A} (a : A) : ✓ a ⊣⊢ ⌜✓ a⌝.
 Proof. unseal; split=> n x _. by rewrite /= -cmra_discrete_valid_iff. Qed.
-Lemma timeless_eq {A : ofeT} (a b : A) : Timeless a → a ≡ b ⊣⊢ ⌜a ≡ b⌝.
+Lemma discrete_eq {A : ofeT} (a b : A) : Discrete a → a ≡ b ⊣⊢ ⌜a ≡ b⌝.
 Proof.
-  unseal=> ?. apply (anti_symm (⊢)); split=> n x ?; by apply (timeless_iff n).
+  unseal=> ?. apply (anti_symm (⊢)); split=> n x ?; by apply (discrete_iff n).
 Qed.
 
 (* Option *)

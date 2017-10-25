@@ -96,16 +96,17 @@ Next Obligation.
   + rewrite (conv_compl n (csum_chain_r c b')) /=. destruct (c n); naive_solver.
 Qed.
 
-Global Instance csum_discrete : Discrete A → Discrete B → Discrete csumC.
-Proof. by inversion_clear 3; constructor; apply (timeless _). Qed.
+Global Instance csum_ofe_discrete :
+  OfeDiscrete A → OfeDiscrete B → OfeDiscrete csumC.
+Proof. by inversion_clear 3; constructor; apply (discrete _). Qed.
 Global Instance csum_leibniz :
   LeibnizEquiv A → LeibnizEquiv B → LeibnizEquiv (csumC A B).
 Proof. by destruct 3; f_equal; apply leibniz_equiv. Qed.
 
-Global Instance Cinl_timeless a : Timeless a → Timeless (Cinl a).
-Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
-Global Instance Cinr_timeless b : Timeless b → Timeless (Cinr b).
-Proof. by inversion_clear 2; constructor; apply (timeless _). Qed.
+Global Instance Cinl_discrete a : Discrete a → Discrete (Cinl a).
+Proof. by inversion_clear 2; constructor; apply (discrete _). Qed.
+Global Instance Cinr_discrete b : Discrete b → Discrete (Cinr b).
+Proof. by inversion_clear 2; constructor; apply (discrete _). Qed.
 End cofe.
 
 Arguments csumC : clear implicits.
@@ -202,7 +203,7 @@ Proof.
     + exists (Cinr c); by constructor.
 Qed.
 
-Lemma csum_cmra_mixin : CMRAMixin (csum A B).
+Lemma csum_cmra_mixin : CmraMixin (csum A B).
 Proof.
   split.
   - intros [] n; destruct 1; constructor; by ofe_subst.
@@ -246,19 +247,19 @@ Proof.
       exists (Cinr z1), (Cinr z2). by repeat constructor.
     + by exists CsumBot, CsumBot; destruct y1, y2; inversion_clear Hx'.
 Qed.
-Canonical Structure csumR := CMRAT (csum A B) csum_cmra_mixin.
+Canonical Structure csumR := CmraT (csum A B) csum_cmra_mixin.
 
 Global Instance csum_cmra_discrete :
-  CMRADiscrete A → CMRADiscrete B → CMRADiscrete csumR.
+  CmraDiscrete A → CmraDiscrete B → CmraDiscrete csumR.
 Proof.
   split; first apply _.
   by move=>[a|b|] HH /=; try apply cmra_discrete_valid.
 Qed.
 
-Global Instance Cinl_persistent a : Persistent a → Persistent (Cinl a).
-Proof. rewrite /Persistent /=. inversion_clear 1; by repeat constructor. Qed.
-Global Instance Cinr_persistent b : Persistent b → Persistent (Cinr b).
-Proof. rewrite /Persistent /=. inversion_clear 1; by repeat constructor. Qed.
+Global Instance Cinl_core_id a : CoreId a → CoreId (Cinl a).
+Proof. rewrite /CoreId /=. inversion_clear 1; by repeat constructor. Qed.
+Global Instance Cinr_core_id b : CoreId b → CoreId (Cinr b).
+Proof. rewrite /CoreId /=. inversion_clear 1; by repeat constructor. Qed.
 
 Global Instance Cinl_exclusive a : Exclusive a → Exclusive (Cinl a).
 Proof. by move=> H[]? =>[/H||]. Qed.
@@ -357,7 +358,7 @@ Arguments csumR : clear implicits.
 
 (* Functor *)
 Instance csum_map_cmra_morphism {A A' B B' : cmraT} (f : A → A') (g : B → B') :
-  CMRAMorphism f → CMRAMorphism g → CMRAMorphism (csum_map f g).
+  CmraMorphism f → CmraMorphism g → CmraMorphism (csum_map f g).
 Proof.
   split; try apply _.
   - intros n [a|b|]; simpl; auto using cmra_morphism_validN.

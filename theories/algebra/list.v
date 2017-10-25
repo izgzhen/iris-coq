@@ -77,13 +77,13 @@ Next Obligation.
   by rewrite Hcn.
 Qed.
 
-Global Instance list_discrete : Discrete A → Discrete listC.
-Proof. induction 2; constructor; try apply (timeless _); auto. Qed.
+Global Instance list_ofe_discrete : OfeDiscrete A → OfeDiscrete listC.
+Proof. induction 2; constructor; try apply (discrete _); auto. Qed.
 
-Global Instance nil_timeless : Timeless (@nil A).
+Global Instance nil_discrete : Discrete (@nil A).
 Proof. inversion_clear 1; constructor. Qed.
-Global Instance cons_timeless x l : Timeless x → Timeless l → Timeless (x :: l).
-Proof. intros ??; inversion_clear 1; constructor; by apply timeless. Qed.
+Global Instance cons_discrete x l : Discrete x → Discrete l → Discrete (x :: l).
+Proof. intros ??; inversion_clear 1; constructor; by apply discrete. Qed.
 End cofe.
 
 Arguments listC : clear implicits.
@@ -186,7 +186,7 @@ Section cmra.
       + exists (core x :: l3); constructor; by rewrite ?cmra_core_r.
   Qed.
 
-  Definition list_cmra_mixin : CMRAMixin (list A).
+  Definition list_cmra_mixin : CmraMixin (list A).
   Proof.
     apply cmra_total_mixin.
     - eauto.
@@ -219,28 +219,28 @@ Section cmra.
           (cmra_extend n x y1 y2) as (y1'&y2'&?&?&?); simplify_eq/=; auto.
         exists (y1' :: l1'), (y2' :: l2'); repeat constructor; auto.
   Qed.
-  Canonical Structure listR := CMRAT (list A) list_cmra_mixin.
+  Canonical Structure listR := CmraT (list A) list_cmra_mixin.
 
   Global Instance list_unit : Unit (list A) := [].
-  Definition list_ucmra_mixin : UCMRAMixin (list A).
+  Definition list_ucmra_mixin : UcmraMixin (list A).
   Proof.
     split.
     - constructor.
     - by intros l.
     - by constructor.
   Qed.
-  Canonical Structure listUR := UCMRAT (list A) list_ucmra_mixin.
+  Canonical Structure listUR := UcmraT (list A) list_ucmra_mixin.
 
-  Global Instance list_cmra_discrete : CMRADiscrete A → CMRADiscrete listR.
+  Global Instance list_cmra_discrete : CmraDiscrete A → CmraDiscrete listR.
   Proof.
     split; [apply _|]=> l; rewrite list_lookup_valid list_lookup_validN=> Hl i.
     by apply cmra_discrete_valid.
   Qed.
 
-  Global Instance list_persistent l : (∀ x : A, Persistent x) → Persistent l.
+  Global Instance list_core_id l : (∀ x : A, CoreId x) → CoreId l.
   Proof.
     intros ?; constructor; apply list_equiv_lookup=> i.
-    by rewrite list_lookup_core (persistent_core (l !! i)).
+    by rewrite list_lookup_core (core_id_core (l !! i)).
   Qed.
 
   (** Internalized properties *)
@@ -329,7 +329,7 @@ Section properties.
   Lemma list_core_singletonM i (x : A) : core {[ i := x ]} ≡ {[ i := core x ]}.
   Proof.
     rewrite /singletonM /list_singletonM.
-    by rewrite {1}/core /= fmap_app fmap_replicate (persistent_core ∅).
+    by rewrite {1}/core /= fmap_app fmap_replicate (core_id_core ∅).
   Qed.
   Lemma list_op_singletonM i (x y : A) :
     {[ i := x ]} ⋅ {[ i := y ]} ≡ {[ i := x ⋅ y ]}.
@@ -342,9 +342,9 @@ Section properties.
   Proof.
     rewrite /singletonM /list_singletonM /=. induction i; f_equal/=; auto.
   Qed.
-  Global Instance list_singleton_persistent i (x : A) :
-    Persistent x → Persistent {[ i := x ]}.
-  Proof. by rewrite !persistent_total list_core_singletonM=> ->. Qed.
+  Global Instance list_singleton_core_id i (x : A) :
+    CoreId x → CoreId {[ i := x ]}.
+  Proof. by rewrite !core_id_total list_core_singletonM=> ->. Qed.
 
   (* Update *)
   Lemma list_singleton_updateP (P : A → Prop) (Q : list A → Prop) x :
@@ -436,7 +436,7 @@ End properties.
 
 (** Functor *)
 Instance list_fmap_cmra_morphism {A B : ucmraT} (f : A → B)
-  `{!CMRAMorphism f} : CMRAMorphism (fmap f : list A → list B).
+  `{!CmraMorphism f} : CmraMorphism (fmap f : list A → list B).
 Proof.
   split; try apply _.
   - intros n l. rewrite !list_lookup_validN=> Hl i. rewrite list_lookup_fmap.

@@ -50,13 +50,13 @@ Qed.
 Canonical Structure dec_agreeR : cmraT :=
   discreteR (dec_agree A) dec_agree_ra_mixin.
 
-Global Instance dec_agree_cmra_discrete : CMRADiscrete dec_agreeR.
+Global Instance dec_agree_cmra_discrete : CmraDiscrete dec_agreeR.
 Proof. apply discrete_cmra_discrete. Qed.
-Global Instance dec_agree_total : CMRATotal dec_agreeR.
+Global Instance dec_agree_cmra_total : CmraTotal dec_agreeR.
 Proof. intros x. by exists x. Qed.
 
 (* Some properties of this CMRA *)
-Global Instance dec_agree_persistent (x : dec_agreeR) : Persistent x.
+Global Instance dec_agree_core_id (x : dec_agreeR) : CoreId x.
 Proof. by constructor. Qed.
 
 Lemma dec_agree_ne a b : a ≠ b → DecAgree a ⋅ DecAgree b = DecAgreeBot.

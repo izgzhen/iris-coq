@@ -82,7 +82,7 @@ Section gen_heap.
   Implicit Types v : V.
 
   (** General properties of mapsto *)
-  Global Instance mapsto_timeless l q v : TimelessP (l ↦{q} v).
+  Global Instance mapsto_timeless l q v : Timeless (l ↦{q} v).
   Proof. rewrite mapsto_eq /mapsto_def. apply _. Qed.
   Global Instance mapsto_fractional l v : Fractional (λ q, l ↦{q} v)%I.
   Proof.

@@ -166,7 +166,7 @@ Local Tactic Notation "iPersistent" constr(H) :=
   eapply tac_persistent with _ H _ _ _; (* (i:=H) *)
     [env_reflexivity || fail "iPersistent:" H "not found"
     |apply _ ||
-     let Q := match goal with |- IntoPersistentP _ ?Q _ => Q end in
+     let Q := match goal with |- IntoPersistent _ ?Q _ => Q end in
      fail "iPersistent:" Q "not persistent"
     |env_reflexivity|].
 
@@ -300,7 +300,7 @@ Local Tactic Notation "iIntro" constr(H) :=
   [ (* (?Q → _) *)
     eapply tac_impl_intro with _ H; (* (i:=H) *)
       [env_cbv; apply _ ||
-       let P := lazymatch goal with |- PersistentP ?P => P end in
+       let P := lazymatch goal with |- Persistent ?P => P end in
        fail 1 "iIntro: introducing non-persistent" H ":" P
               "into non-empty spatial context"
       |env_reflexivity || fail "iIntro:" H "not fresh"
@@ -317,14 +317,14 @@ Local Tactic Notation "iIntro" "#" constr(H) :=
   [ (* (?P → _) *)
     eapply tac_impl_intro_persistent with _ H _; (* (i:=H) *)
       [apply _ || 
-       let P := match goal with |- IntoPersistentP _ ?P _ => P end in
+       let P := match goal with |- IntoPersistent _ ?P _ => P end in
        fail 1 "iIntro: " P " not persistent"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
   | (* (?P -∗ _) *)
     eapply tac_wand_intro_persistent with _ H _; (* (i:=H) *)
       [apply _ || 
-       let P := match goal with |- IntoPersistentP _ ?P _ => P end in
+       let P := match goal with |- IntoPersistent _ ?P _ => P end in
        fail 1 "iIntro: " P " not persistent"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
@@ -426,7 +426,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |apply _ ||
-          let Q := match goal with |- PersistentP ?Q => Q end in
+          let Q := match goal with |- Persistent ?Q => Q end in
           fail "iSpecialize:" Q "not persistent"
          |env_reflexivity
          |iFrame Hs_frame; done_if d (*goal*)
@@ -452,7 +452,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |apply _ ||
-          let Q := match goal with |- PersistentP ?Q => Q end in
+          let Q := match goal with |- Persistent ?Q => Q end in
           fail "iSpecialize:" Q "not persistent"
          |env_reflexivity
          |solve [iFrame "∗ #"]
@@ -501,7 +501,7 @@ Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
            [env_reflexivity || fail "iSpecialize:" H "not found"
            |iSpecializeArgs H xs; iSpecializePat H pat; last (iExact H)
            |apply _ ||
-            let Q := match goal with |- PersistentP ?Q => Q end in
+            let Q := match goal with |- Persistent ?Q => Q end in
             fail "iSpecialize:" Q "not persistent"
            |env_reflexivity|(* goal *)]
       | false => iSpecializeArgs H xs; iSpecializePat H pat
@@ -802,8 +802,8 @@ Local Tactic Notation "iExistDestruct" constr(H)
 (** * Always *)
 Tactic Notation "iAlways":=
   iStartProof;
-  apply tac_always_intro; env_cbv
-    || fail "iAlways: the goal is not an always modality".
+  apply tac_persistently_intro; env_cbv
+    || fail "iAlways: the goal is not an persistently modality".
 
 (** * Later *)
 Tactic Notation "iNext" open_constr(n) :=
@@ -1217,7 +1217,7 @@ Instance copy_destruct_impl {M} (P Q : uPred M) :
   CopyDestruct Q → CopyDestruct (P → Q).
 Instance copy_destruct_wand {M} (P Q : uPred M) :
   CopyDestruct Q → CopyDestruct (P -∗ Q).
-Instance copy_destruct_always {M} (P : uPred M) :
+Instance copy_destruct_persistently {M} (P : uPred M) :
   CopyDestruct P → CopyDestruct (□ P).
 
 Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=

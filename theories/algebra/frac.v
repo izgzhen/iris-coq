@@ -26,7 +26,7 @@ Proof.
 Qed.
 Canonical Structure fracR := discreteR frac frac_ra_mixin.
 
-Global Instance frac_cmra_discrete : CMRADiscrete fracR.
+Global Instance frac_cmra_discrete : CmraDiscrete fracR.
 Proof. apply discrete_cmra_discrete. Qed.
 End frac.
 

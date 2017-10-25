@@ -49,10 +49,10 @@ Proof.
     (λ x, (authoritative x, auth_own x))); by repeat intro.
 Qed.
 
-Global Instance Auth_timeless a b :
-  Timeless a → Timeless b → Timeless (Auth a b).
-Proof. by intros ?? [??] [??]; split; apply: timeless. Qed.
-Global Instance auth_discrete : Discrete A → Discrete authC.
+Global Instance Auth_discrete a b :
+  Discrete a → Discrete b → Discrete (Auth a b).
+Proof. by intros ?? [??] [??]; split; apply: discrete. Qed.
+Global Instance auth_ofe_discrete : OfeDiscrete A → OfeDiscrete authC.
 Proof. intros ? [??]; apply _. Qed.
 Global Instance auth_leibniz : LeibnizEquiv A → LeibnizEquiv (auth A).
 Proof. by intros ? [??] [??] [??]; f_equal/=; apply leibniz_equiv. Qed.
@@ -113,7 +113,7 @@ Proof.
   destruct x as [[[]|]]; naive_solver eauto using cmra_validN_includedN.
 Qed.
 
-Lemma auth_valid_discrete `{CMRADiscrete A} x :
+Lemma auth_valid_discrete `{CmraDiscrete A} x :
   ✓ x ↔ match authoritative x with
         | Excl' a => auth_own x ≼ a ∧ ✓ a
         | None => ✓ auth_own x
@@ -125,18 +125,18 @@ Proof.
 Qed.
 Lemma auth_validN_2 n a b : ✓{n} (● a ⋅ ◯ b) ↔ b ≼{n} a ∧ ✓{n} a.
 Proof. by rewrite auth_validN_eq /= left_id. Qed.
-Lemma auth_valid_discrete_2 `{CMRADiscrete A} a b : ✓ (● a ⋅ ◯ b) ↔ b ≼ a ∧ ✓ a.
+Lemma auth_valid_discrete_2 `{CmraDiscrete A} a b : ✓ (● a ⋅ ◯ b) ↔ b ≼ a ∧ ✓ a.
 Proof. by rewrite auth_valid_discrete /= left_id. Qed.
 
 Lemma authoritative_valid  x : ✓ x → ✓ authoritative x.
 Proof. by destruct x as [[[]|]]. Qed.
-Lemma auth_own_valid `{CMRADiscrete A} x : ✓ x → ✓ auth_own x.
+Lemma auth_own_valid `{CmraDiscrete A} x : ✓ x → ✓ auth_own x.
 Proof.
   rewrite auth_valid_discrete.
   destruct x as [[[]|]]; naive_solver eauto using cmra_valid_included.
 Qed.
 
-Lemma auth_cmra_mixin : CMRAMixin (auth A).
+Lemma auth_cmra_mixin : CmraMixin (auth A).
 Proof.
   apply cmra_total_mixin.
   - eauto.
@@ -166,9 +166,9 @@ Proof.
       as (b1&b2&?&?&?); auto using auth_own_validN.
     by exists (Auth ea1 b1), (Auth ea2 b2).
 Qed.
-Canonical Structure authR := CMRAT (auth A) auth_cmra_mixin.
+Canonical Structure authR := CmraT (auth A) auth_cmra_mixin.
 
-Global Instance auth_cmra_discrete : CMRADiscrete A → CMRADiscrete authR.
+Global Instance auth_cmra_discrete : CmraDiscrete A → CmraDiscrete authR.
 Proof.
   split; first apply _.
   intros [[[?|]|] ?]; rewrite auth_valid_eq auth_validN_eq /=; auto.
@@ -178,17 +178,17 @@ Proof.
 Qed.
 
 Instance auth_empty : Unit (auth A) := Auth ε ε.
-Lemma auth_ucmra_mixin : UCMRAMixin (auth A).
+Lemma auth_ucmra_mixin : UcmraMixin (auth A).
 Proof.
   split; simpl.
   - rewrite auth_valid_eq /=. apply ucmra_unit_valid.
   - by intros x; constructor; rewrite /= left_id.
-  - do 2 constructor; simpl; apply (persistent_core _).
+  - do 2 constructor; simpl; apply (core_id_core _).
 Qed.
-Canonical Structure authUR := UCMRAT (auth A) auth_ucmra_mixin.
+Canonical Structure authUR := UcmraT (auth A) auth_ucmra_mixin.
 
-Global Instance auth_frag_persistent a : Persistent a → Persistent (◯ a).
-Proof. do 2 constructor; simpl; auto. by apply persistent_core. Qed.
+Global Instance auth_frag_core_id a : CoreId a → CoreId (◯ a).
+Proof. do 2 constructor; simpl; auto. by apply core_id_core. Qed.
 
 (** Internalized properties *)
 Lemma auth_equivI {M} (x y : auth A) :
@@ -274,7 +274,7 @@ Proof.
   apply option_fmap_ne; [|done]=> x y ?; by apply excl_map_ne.
 Qed.
 Instance auth_map_cmra_morphism {A B : ucmraT} (f : A → B) :
-  CMRAMorphism f → CMRAMorphism (auth_map f).
+  CmraMorphism f → CmraMorphism (auth_map f).
 Proof.
   split; try apply _.
   - intros n [[[a|]|] b]; rewrite !auth_validN_eq; try

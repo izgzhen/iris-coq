@@ -41,7 +41,7 @@ Proof. solve_proper. Qed.
 
 Lemma vs_false_elim E1 E2 P : False ={E1,E2}=> P.
 Proof. iIntros "!# []". Qed.
-Lemma vs_timeless E P : TimelessP P → ▷ P ={E}=> P.
+Lemma vs_timeless E P : Timeless P → ▷ P ={E}=> P.
 Proof. by iIntros (?) "!# > ?". Qed.
 
 Lemma vs_transitive E1 E2 E3 P Q R :
@@ -81,5 +81,5 @@ Lemma vs_alloc N P : ▷ P ={↑N}=> inv N P.
 Proof. iIntros "!# HP". by iApply inv_alloc. Qed.
 
 Lemma wand_fupd_alt E1 E2 P Q : (P ={E1,E2}=∗ Q) ⊣⊢ ∃ R, R ∗ (P ∗ R ={E1,E2}=> Q).
-Proof. rewrite uPred.wand_alt. by setoid_rewrite <-uPred.always_wand_impl. Qed.
+Proof. rewrite uPred.wand_alt. by setoid_rewrite uPred.persistently_impl_wand. Qed.
 End vs.

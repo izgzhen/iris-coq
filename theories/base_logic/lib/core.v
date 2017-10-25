@@ -15,7 +15,7 @@ Import uPred.
 *)
 
 Definition coreP {M : ucmraT} (P : uPred M) : uPred M :=
-  (∀ `(!PersistentP Q), ⌜P ⊢ Q⌝ → Q)%I.
+  (∀ `(!Persistent Q), ⌜P ⊢ Q⌝ → Q)%I.
 Instance: Params (@coreP) 1.
 Typeclasses Opaque coreP.
 
@@ -26,7 +26,7 @@ Section core.
   Lemma coreP_intro P : P -∗ coreP P.
   Proof. rewrite /coreP. iIntros "HP". by iIntros (Q HQ ->). Qed.
 
-  Global Instance coreP_persistent P : PersistentP (coreP P).
+  Global Instance coreP_persistent P : Persistent (coreP P).
   Proof. rewrite /coreP. apply _. Qed.
 
   Global Instance coreP_mono : Proper ((⊢) ==> (⊢)) (@coreP M).
@@ -38,7 +38,7 @@ Section core.
   Global Instance coreP_proper : Proper ((⊣⊢) ==> (⊣⊢)) (@coreP M).
   Proof. intros P Q. rewrite !equiv_spec=>-[??]. by split; apply coreP_mono. Qed.
 
-  Lemma coreP_elim P : PersistentP P → coreP P -∗ P.
+  Lemma coreP_elim P : Persistent P → coreP P -∗ P.
   Proof. rewrite /coreP. iIntros (?) "HCP". unshelve iApply ("HCP" $! P); auto. Qed.
 
   Lemma coreP_wand P Q :

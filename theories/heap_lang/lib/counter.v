@@ -29,7 +29,7 @@ Section mono_proof.
     (∃ γ, inv N (mcounter_inv γ l) ∧ own γ (◯ (n : mnat)))%I.
 
   (** The main proofs. *)
-  Global Instance mcounter_persistent l n : PersistentP (mcounter l n).
+  Global Instance mcounter_persistent l n : Persistent (mcounter l n).
   Proof. apply _. Qed.
 
   Lemma newcounter_mono_spec :

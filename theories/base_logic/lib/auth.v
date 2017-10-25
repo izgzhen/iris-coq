@@ -9,11 +9,11 @@ Import uPred.
 (* The CMRA we need. *)
 Class authG Σ (A : ucmraT) := AuthG {
   auth_inG :> inG Σ (authR A);
-  auth_discrete :> CMRADiscrete A;
+  auth_cmra_discrete :> CmraDiscrete A;
 }.
 Definition authΣ (A : ucmraT) : gFunctors := #[ GFunctor (authR A) ].
 
-Instance subG_authΣ Σ A : subG (authΣ A) Σ → CMRADiscrete A → authG Σ A.
+Instance subG_authΣ Σ A : subG (authΣ A) Σ → CmraDiscrete A → authG Σ A.
 Proof. solve_inG. Qed.
 
 Section definitions.
@@ -30,9 +30,9 @@ Section definitions.
   Proof. solve_proper. Qed.
   Global Instance auth_own_proper : Proper ((≡) ==> (⊣⊢)) auth_own.
   Proof. solve_proper. Qed.
-  Global Instance auth_own_timeless a : TimelessP (auth_own a).
+  Global Instance auth_own_timeless a : Timeless (auth_own a).
   Proof. apply _. Qed.
-  Global Instance auth_own_persistent a : Persistent a → PersistentP (auth_own a).
+  Global Instance auth_own_core_id a : CoreId a → Persistent (auth_own a).
   Proof. apply _. Qed.
 
   Global Instance auth_inv_ne n :
@@ -51,7 +51,7 @@ Section definitions.
     Proper (pointwise_relation T (≡) ==>
             pointwise_relation T (⊣⊢) ==> (⊣⊢)) (auth_ctx N).
   Proof. solve_proper. Qed.
-  Global Instance auth_ctx_persistent N f φ : PersistentP (auth_ctx N f φ).
+  Global Instance auth_ctx_persistent N f φ : Persistent (auth_ctx N f φ).
   Proof. apply _. Qed.
 End definitions.
 
@@ -78,7 +78,7 @@ Section auth.
     FromAnd false (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 90.
   Proof. rewrite /IsOp /FromAnd=> ->. by rewrite auth_own_op. Qed.
   Global Instance from_and_auth_own_persistent γ a b1 b2 :
-    IsOp a b1 b2 → Or (Persistent b1) (Persistent b2) →
+    IsOp a b1 b2 → Or (CoreId b1) (CoreId b2) →
     FromAnd true (auth_own γ a) (auth_own γ b1) (auth_own γ b2) | 91.
   Proof.
     intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].

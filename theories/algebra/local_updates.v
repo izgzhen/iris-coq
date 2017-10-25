@@ -31,7 +31,7 @@ Section updates.
     intros Hv n mz Hxv Hx; simpl in *; split; [by auto|].
     by rewrite Hx -cmra_opM_assoc.
   Qed.
-  Lemma op_local_update_discrete `{!CMRADiscrete A} x y z :
+  Lemma op_local_update_discrete `{!CmraDiscrete A} x y z :
     (✓ x → ✓ (z ⋅ x)) → (x,y) ~l~> (z ⋅ x, z ⋅ y).
   Proof.
     intros; apply op_local_update=> n. by rewrite -!(cmra_discrete_valid_iff n).
@@ -52,12 +52,12 @@ Section updates.
     apply (cancelableN x); first done. by rewrite -cmra_opM_assoc.
   Qed.
 
-  Lemma local_update_discrete `{!CMRADiscrete A} (x y x' y' : A) :
+  Lemma local_update_discrete `{!CmraDiscrete A} (x y x' y' : A) :
     (x,y) ~l~> (x',y') ↔ ∀ mz, ✓ x → x ≡ y ⋅? mz → ✓ x' ∧ x' ≡ y' ⋅? mz.
   Proof.
     rewrite /local_update /=. setoid_rewrite <-cmra_discrete_valid_iff.
-    setoid_rewrite <-(λ n, timeless_iff n x).
-    setoid_rewrite <-(λ n, timeless_iff n x'). naive_solver eauto using 0.
+    setoid_rewrite <-(λ n, discrete_iff n x).
+    setoid_rewrite <-(λ n, discrete_iff n x'). naive_solver eauto using 0.
   Qed.
 
   Lemma local_update_valid0 x y x' y' :
@@ -72,21 +72,21 @@ Section updates.
       + right. exists z. apply dist_le with n; auto with lia.
       + left. apply dist_le with n; auto with lia.
   Qed.
-  Lemma local_update_valid `{!CMRADiscrete A} x y x' y' :
+  Lemma local_update_valid `{!CmraDiscrete A} x y x' y' :
     (✓ x → ✓ y → x ≡ y ∨ y ≼ x → (x,y) ~l~> (x',y')) → (x,y) ~l~> (x',y').
   Proof.
     rewrite !(cmra_discrete_valid_iff 0)
-      (cmra_discrete_included_iff 0) (timeless_iff 0).
+      (cmra_discrete_included_iff 0) (discrete_iff 0).
     apply local_update_valid0.
   Qed.
 
-  Lemma local_update_total_valid0 `{!CMRATotal A} x y x' y' :
+  Lemma local_update_total_valid0 `{!CmraTotal A} x y x' y' :
     (✓{0} x → ✓{0} y → y ≼{0} x → (x,y) ~l~> (x',y')) → (x,y) ~l~> (x',y').
   Proof.
     intros Hup. apply local_update_valid0=> ?? [Hx|?]; apply Hup; auto.
     by rewrite Hx.
   Qed.
-  Lemma local_update_total_valid `{!CMRATotal A, !CMRADiscrete A} x y x' y' :
+  Lemma local_update_total_valid `{!CmraTotal A, !CmraDiscrete A} x y x' y' :
     (✓ x → ✓ y → y ≼ x → (x,y) ~l~> (x',y')) → (x,y) ~l~> (x',y').
   Proof.
     rewrite !(cmra_discrete_valid_iff 0) (cmra_discrete_included_iff 0).
@@ -108,7 +108,7 @@ Section updates_unital.
       rewrite -(right_id ε op y) -(right_id ε op y'). auto.
   Qed.
 
-  Lemma local_update_unital_discrete `{!CMRADiscrete A} (x y x' y' : A) :
+  Lemma local_update_unital_discrete `{!CmraDiscrete A} (x y x' y' : A) :
     (x,y) ~l~> (x',y') ↔ ∀ z, ✓ x → x ≡ y ⋅ z → ✓ x' ∧ x' ≡ y' ⋅ z.
   Proof.
     rewrite local_update_discrete. split.

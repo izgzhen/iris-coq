@@ -59,9 +59,9 @@ Section proof.
   Proof. solve_proper. Qed.
   Global Instance is_lock_ne γ lk : NonExpansive (is_lock γ lk).
   Proof. solve_proper. Qed.
-  Global Instance is_lock_persistent γ lk R : PersistentP (is_lock γ lk R).
+  Global Instance is_lock_persistent γ lk R : Persistent (is_lock γ lk R).
   Proof. apply _. Qed.
-  Global Instance locked_timeless γ : TimelessP (locked γ).
+  Global Instance locked_timeless γ : Timeless (locked γ).
   Proof. apply _. Qed.
 
   Lemma locked_exclusive (γ : gname) : locked γ -∗ locked γ -∗ False.
