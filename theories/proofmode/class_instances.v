@@ -720,6 +720,9 @@ Proof. done. Qed.
 Global Instance into_forall_always {A} P (Φ : A → uPred M) :
   IntoForall P Φ → IntoForall (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP always_forall. Qed.
+Global Instance into_forall_later {A} P (Φ : A → uPred M) :
+  IntoForall P Φ → IntoForall (▷ P) (λ a, ▷ (Φ a))%I.
+Proof. rewrite /IntoForall=> HP. by rewrite HP later_forall. Qed.
 
 (* FromForall *)
 Global Instance from_forall_forall {A} (Φ : A → uPred M) :
