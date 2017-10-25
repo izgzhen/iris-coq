@@ -688,6 +688,19 @@ Proof. done. Qed.
 Global Instance into_exist_pure {A} (φ : A → Prop) :
   @IntoExist M A ⌜∃ x, φ x⌝ (λ a, ⌜φ a⌝)%I.
 Proof. by rewrite /IntoExist pure_exist. Qed.
+Global Instance into_exist_and_pure P Q φ :
+  IntoPureT P φ → IntoExist (P ∧ Q) (λ _ : φ, Q).
+Proof.
+  intros (φ'&->&?). rewrite /IntoExist (into_pure P).
+  apply pure_elim_l=> Hφ. by rewrite -(exist_intro Hφ).
+Qed.
+Global Instance into_exist_sep_pure P Q φ :
+  IntoPureT P φ → IntoExist (P ∗ Q) (λ _ : φ, Q).
+Proof.
+  intros (φ'&->&?). rewrite /IntoExist (into_pure P).
+  apply pure_elim_sep_l=> Hφ. by rewrite -(exist_intro Hφ).
+Qed.
+
 Global Instance into_exist_always {A} P (Φ : A → uPred M) :
   IntoExist P Φ → IntoExist (□ P) (λ a, □ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP always_exist. Qed.

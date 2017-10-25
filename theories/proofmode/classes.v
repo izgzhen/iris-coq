@@ -23,6 +23,33 @@ Class IntoPure {M} (P : uPred M) (φ : Prop) := into_pure : P ⊢ ⌜φ⌝.
 Arguments into_pure {_} _ _ {_}.
 Hint Mode IntoPure + ! - : typeclass_instances.
 
+(* [IntoPureT] is a variant of [IntoPure] with the argument in [Type] to avoid
+some shortcoming of unification in Coq's type class search. An example where we
+use this workaround is to repair the following instance:
+
+  Global Instance into_exist_and_pure P Q (φ : Prop) :
+    IntoPure P φ → IntoExist (P ∧ Q) (λ _ : φ, Q).
+
+Coq is unable to use this instance: [class_apply] -- which is used by type class
+search -- fails with the error that it cannot unify [Prop] and [Type]. This is
+probably caused because [class_apply] uses an ancient unification algorith. The
+[refine] tactic -- which uses a better unification algorithm -- succeeds to
+apply the above instance.
+
+Since we do not want to define [Hint Extern] declarations using [refine] for
+any instance like [into_exist_and_pure], we factor this out in the class
+[IntoPureT]. This way, we only have to declare a [Hint Extern] using [refine]
+once, and use [IntoPureT] in any instance like [into_exist_and_pure].
+
+TODO: Report this as a Coq bug, or wait for https://github.com/coq/coq/pull/991
+to be finished and merged someday. *)
+Class IntoPureT {M} (P : uPred M) (φ : Type) :=
+  into_pureT : ∃ ψ : Prop, φ = ψ ∧ IntoPure P ψ.
+Lemma into_pureT_hint {M} (P : uPred M) (φ : Prop) : IntoPure P φ → IntoPureT P φ.
+Proof. by exists φ. Qed.
+Hint Extern 0 (IntoPureT _ _) =>
+  notypeclasses refine (into_pureT_hint _ _ _) : typeclass_instances.
+
 Class FromPure {M} (P : uPred M) (φ : Prop) := from_pure : ⌜φ⌝ ⊢ P.
 Arguments from_pure {_} _ _ {_}.
 Hint Mode FromPure + ! - : typeclass_instances.

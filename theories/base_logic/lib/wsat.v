@@ -105,7 +105,7 @@ Lemma ownI_open i P : wsat ∗ ownI i P ∗ ownE {[i]} ⊢ wsat ∗ ▷ P ∗ ow
 Proof.
   rewrite /ownI /wsat -!lock.
   iIntros "(Hw & Hi & HiE)". iDestruct "Hw" as (I) "[? HI]".
-  iDestruct (invariant_lookup I i P with "[$]") as (Q) "[% #HPQ]".
+  iDestruct (invariant_lookup I i P with "[$]") as (Q ?) "#HPQ".
   iDestruct (big_opM_delete _ _ i with "HI") as "[[[HQ $]|HiE'] HI]"; eauto.
   - iSplitR "HQ"; last by iNext; iRewrite -"HPQ".
     iExists I. iFrame "Hw". iApply (big_opM_delete _ _ i); eauto.
@@ -116,7 +116,7 @@ Lemma ownI_close i P : wsat ∗ ownI i P ∗ ▷ P ∗ ownD {[i]} ⊢ wsat ∗ o
 Proof.
   rewrite /ownI /wsat -!lock.
   iIntros "(Hw & Hi & HP & HiD)". iDestruct "Hw" as (I) "[? HI]".
-  iDestruct (invariant_lookup with "[$]") as (Q) "[% #HPQ]".
+  iDestruct (invariant_lookup with "[$]") as (Q ?) "#HPQ".
   iDestruct (big_opM_delete _ _ i with "HI") as "[[[HQ ?]|$] HI]"; eauto.
   - iDestruct (ownD_singleton_twice with "[$]") as %[].
   - iExists I. iFrame "Hw". iApply (big_opM_delete _ _ i); eauto.

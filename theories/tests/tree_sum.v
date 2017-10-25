@@ -45,7 +45,7 @@ Proof.
   - iDestruct "Ht" as "%"; subst.
     wp_match. wp_load. wp_op. wp_store.
     by iApply ("HΦ" with "[$Hl]").
-  - iDestruct "Ht" as (ll lr vl vr) "(% & Hll & Htl & Hlr & Htr)"; subst.
+  - iDestruct "Ht" as (ll lr vl vr ->) "(Hll & Htl & Hlr & Htr)".
     wp_match. wp_proj. wp_load.
     wp_apply ("IH" with "Hl Htl"). iIntros "[Hl Htl]".
     wp_seq. wp_proj. wp_load.

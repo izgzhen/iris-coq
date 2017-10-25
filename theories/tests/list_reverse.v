@@ -35,7 +35,7 @@ Proof.
   iLöb as "IH" forall (hd acc xs ys Φ). wp_rec. wp_let.
   destruct xs as [|x xs]; iSimplifyEq.
   - wp_match. by iApply "HΦ".
-  - iDestruct "Hxs" as (l hd') "(% & Hx & Hxs)"; iSimplifyEq.
+  - iDestruct "Hxs" as (l hd' ->) "[Hx Hxs]".
     wp_match. wp_load. wp_proj. wp_let. wp_load. wp_proj. wp_let. wp_store.
     iApply ("IH" $! hd' (SOMEV #l) xs (x :: ys) with "Hxs [Hx Hys]"); simpl.
     { iExists l, acc; by iFrame. }

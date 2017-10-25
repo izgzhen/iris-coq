@@ -67,7 +67,7 @@ Proof.
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
   - iMod ("Hclose" with "[Hl]"); [iNext; iExists _; iFrame; eauto|].
     iModIntro. wp_match. iApply ("IH" with "Hγ [HΦ]"). auto.
-  - iDestruct "Hinv" as (v') "[% [HΨ|Hγ']]"; simplify_eq/=.
+  - iDestruct "Hinv" as (v' ->) "[HΨ|Hγ']".
     + iMod ("Hclose" with "[Hl Hγ]"); [iNext; iExists _; iFrame; eauto|].
       iModIntro. wp_match. by iApply "HΦ".
     + iDestruct (own_valid_2 with "Hγ Hγ'") as %[].

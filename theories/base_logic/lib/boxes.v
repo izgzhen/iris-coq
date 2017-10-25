@@ -185,7 +185,7 @@ Lemma slice_insert_full E q f P Q :
     slice N γ Q ∗ ▷?q box N (<[γ:=true]> f) (Q ∗ P).
 Proof.
   iIntros (?) "HQ Hbox".
-  iMod (slice_insert_empty with "Hbox") as (γ) "(% & #Hslice & Hbox)".
+  iMod (slice_insert_empty with "Hbox") as (γ ?) "[#Hslice Hbox]".
   iExists γ. iFrame "%#". iMod (slice_fill with "Hslice HQ Hbox"); first done.
   by apply lookup_insert. by rewrite insert_insert.
 Qed.
@@ -251,11 +251,11 @@ Proof.
   iIntros (??) "#HQQ' #Hs Hb". destruct b.
   - iMod (slice_delete_full with "Hs Hb") as (P') "(HQ & Heq & Hb)"; try done.
     iDestruct ("HQQ'" with "HQ") as "HQ'".
-    iMod (slice_insert_full with "HQ' Hb") as (γ') "(% & #Hs' & Hb)"; try done.
+    iMod (slice_insert_full with "HQ' Hb") as (γ' ?) "[#Hs' Hb]"; try done.
     iExists γ', _. iIntros "{$∗ $# $%} !>". do 2 iNext. iRewrite "Heq".
     iAlways. by iSplit; iIntros "[? $]"; iApply "HQQ'".
   - iMod (slice_delete_empty with "Hs Hb") as (P') "(Heq & Hb)"; try done.
-    iMod (slice_insert_empty with "Hb") as (γ') "(% & #Hs' & Hb)"; try done.
+    iMod (slice_insert_empty with "Hb") as (γ' ?) "[#Hs' Hb]"; try done.
     iExists γ', _. iIntros "{$∗ $# $%} !>". do 2 iNext. iRewrite "Heq".
     iAlways. by iSplit; iIntros "[? $]"; iApply "HQQ'".
 Qed.
@@ -268,16 +268,16 @@ Lemma slice_split E q f P Q1 Q2 γ b :
 Proof.
   iIntros (??) "#Hslice Hbox". destruct b.
   - iMod (slice_delete_full with "Hslice Hbox") as (P') "([HQ1 HQ2] & Heq & Hbox)"; try done.
-    iMod (slice_insert_full with "HQ1 Hbox") as (γ1) "(% & #Hslice1 & Hbox)"; first done.
-    iMod (slice_insert_full with "HQ2 Hbox") as (γ2) "(% & #Hslice2 & Hbox)"; first done.
+    iMod (slice_insert_full with "HQ1 Hbox") as (γ1 ?) "[#Hslice1 Hbox]"; first done.
+    iMod (slice_insert_full with "HQ2 Hbox") as (γ2 ?) "[#Hslice2 Hbox]"; first done.
     iExists γ1, γ2. iIntros "{$% $#} !>". iSplit; last iSplit; try iPureIntro.
     { by eapply lookup_insert_None. }
     { by apply (lookup_insert_None (delete γ f) γ1 γ2 true). }
     iNext. eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
     iNext. iRewrite "Heq". iPureIntro. by rewrite assoc (comm _ Q2).
   - iMod (slice_delete_empty with "Hslice Hbox") as (P') "[Heq Hbox]"; try done.
-    iMod (slice_insert_empty with "Hbox") as (γ1) "(% & #Hslice1 & Hbox)".
-    iMod (slice_insert_empty with "Hbox") as (γ2) "(% & #Hslice2 & Hbox)".
+    iMod (slice_insert_empty with "Hbox") as (γ1 ?) "[#Hslice1 Hbox]".
+    iMod (slice_insert_empty with "Hbox") as (γ2 ?) "[#Hslice2 Hbox]".
     iExists γ1, γ2. iIntros "{$% $#} !>". iSplit; last iSplit; try iPureIntro.
     { by eapply lookup_insert_None. }
     { by apply (lookup_insert_None (delete γ f) γ1 γ2 false). }
@@ -296,14 +296,14 @@ Proof.
     iMod (slice_delete_full with "Hslice2 Hbox") as (P2) "(HQ2 & Heq2 & Hbox)"; first done.
     { by simplify_map_eq. }
     iMod (slice_insert_full _ _ _ _ (Q1 ∗ Q2)%I with "[$HQ1 $HQ2] Hbox")
-      as (γ) "(% & #Hslice & Hbox)"; first done.
+      as (γ ?) "[#Hslice Hbox]"; first done.
     iExists γ. iIntros "{$% $#} !>". iNext.
     eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
     iNext. iRewrite "Heq1". iRewrite "Heq2". by rewrite assoc.
   - iMod (slice_delete_empty with "Hslice1 Hbox") as (P1) "(Heq1 & Hbox)"; try done.
     iMod (slice_delete_empty with "Hslice2 Hbox") as (P2) "(Heq2 & Hbox)"; first done.
     { by simplify_map_eq. }
-    iMod (slice_insert_empty with "Hbox") as (γ) "(% & #Hslice & Hbox)".
+    iMod (slice_insert_empty with "Hbox") as (γ ?) "[#Hslice Hbox]".
     iExists γ. iIntros "{$% $#} !>". iNext.
     eapply internal_eq_rewrite_contractive; [by apply _| |by eauto].
     iNext. iRewrite "Heq1". iRewrite "Heq2". by rewrite assoc.

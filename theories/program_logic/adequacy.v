@@ -123,7 +123,7 @@ Lemma wptp_result n e1 t1 v2 t2 σ1 σ2 φ :
 Proof.
   intros. rewrite wptp_steps //.
   rewrite (Nat_iter_S_r (S n)). apply bupd_iter_mono.
-  iDestruct 1 as (e2 t2') "(% & (Hw & HE & _) & H & _)"; simplify_eq.
+  iDestruct 1 as (e2 t2' ?) "((Hw & HE & _) & H & _)"; simplify_eq.
   iDestruct (wp_value_inv with "H") as "H". rewrite fupd_eq /fupd_def.
   iMod ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
 Qed.
@@ -143,7 +143,7 @@ Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :
   Nat.iter (S (S n)) (λ P, |==> ▷ P) ⌜is_Some (to_val e2) ∨ reducible e2 σ2⌝.
 Proof.
   intros ? He2. rewrite wptp_steps //; rewrite (Nat_iter_S_r (S n)). apply bupd_iter_mono.
-  iDestruct 1 as (e2' t2') "(% & Hw & H & Htp)"; simplify_eq.
+  iDestruct 1 as (e2' t2' ?) "(Hw & H & Htp)"; simplify_eq.
   apply elem_of_cons in He2 as [<-|?]; first (iApply wp_safe; by iFrame "Hw H").
   iApply wp_safe. iFrame "Hw". by iApply (big_sepL_elem_of with "Htp").
 Qed.
@@ -155,8 +155,7 @@ Lemma wptp_invariance n e1 e2 t1 t2 σ1 σ2 φ Φ :
 Proof.
   intros ?. rewrite wptp_steps //.
   rewrite (Nat_iter_S_r (S n)) !bupd_iter_frame_l. apply bupd_iter_mono.
-  iIntros "[Hback H]".
-  iDestruct "H" as (e2' t2') "(% & (Hw&HE&Hσ) & _)"; subst.
+  iIntros "[Hback H]". iDestruct "H" as (e2' t2' ->) "[(Hw&HE&Hσ) _]".
   rewrite fupd_eq.
   iMod ("Hback" with "Hσ [$Hw $HE]") as "> (_ & _ & $)"; auto.
 Qed.

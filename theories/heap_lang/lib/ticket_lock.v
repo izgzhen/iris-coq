@@ -86,7 +86,7 @@ Section proof.
   Lemma wait_loop_spec γ lk x R :
     {{{ is_lock γ lk R ∗ issued γ x }}} wait_loop #x lk {{{ RET #(); locked γ ∗ R }}}.
   Proof.
-    iIntros (Φ) "[Hl Ht] HΦ". iDestruct "Hl" as (lo ln) "(% & #?)".
+    iIntros (Φ) "[Hl Ht] HΦ". iDestruct "Hl" as (lo ln ->) "#Hinv".
     iLöb as "IH". wp_rec. subst. wp_let. wp_proj. wp_bind (! _)%E.
     iInv N as (o n) "(Hlo & Hln & Ha)" "Hclose".
     wp_load. destruct (decide (x = o)) as [->|Hneq].
@@ -108,7 +108,7 @@ Section proof.
   Lemma acquire_spec γ lk R :
     {{{ is_lock γ lk R }}} acquire lk {{{ RET #(); locked γ ∗ R }}}.
   Proof.
-    iIntros (ϕ) "Hl HΦ". iDestruct "Hl" as (lo ln) "[% #?]".
+    iIntros (ϕ) "Hl HΦ". iDestruct "Hl" as (lo ln ->) "#Hinv".
     iLöb as "IH". wp_rec. wp_bind (! _)%E. simplify_eq/=. wp_proj.
     iInv N as (o n) "[Hlo [Hln Ha]]" "Hclose".
     wp_load. iMod ("Hclose" with "[Hlo Hln Ha]") as "_".
@@ -139,7 +139,7 @@ Section proof.
   Lemma release_spec γ lk R :
     {{{ is_lock γ lk R ∗ locked γ ∗ R }}} release lk {{{ RET #(); True }}}.
   Proof.
-    iIntros (Φ) "(Hl & Hγ & HR) HΦ". iDestruct "Hl" as (lo ln) "[% #?]"; subst.
+    iIntros (Φ) "(Hl & Hγ & HR) HΦ". iDestruct "Hl" as (lo ln ->) "#Hinv".
     iDestruct "Hγ" as (o) "Hγo".
     wp_let. wp_proj. wp_proj. wp_bind (! _)%E.
     iInv N as (o' n) "(>Hlo & >Hln & >Hauth & Haown)" "Hclose".

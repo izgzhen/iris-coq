@@ -47,7 +47,7 @@ Lemma inv_alloc N E P : ▷ P ={E}=∗ inv N P.
 Proof.
   rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros "HP [Hw $]".
   iMod (ownI_alloc (∈ (↑N : coPset)) P with "[$HP $Hw]")
-    as (i) "(% & $ & ?)"; auto using fresh_inv_name.
+    as (i ?) "[$ ?]"; auto using fresh_inv_name.
 Qed.
 
 Lemma inv_alloc_open N E P :
@@ -55,7 +55,7 @@ Lemma inv_alloc_open N E P :
 Proof.
   rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros (Sub) "[Hw HE]".
   iMod (ownI_alloc_open (∈ (↑N : coPset)) P with "Hw")
-    as (i) "(% & Hw & #Hi & HD)"; auto using fresh_inv_name.
+    as (i ?) "(Hw & #Hi & HD)"; auto using fresh_inv_name.
   iAssert (ownE {[i]} ∗ ownE (↑ N ∖ {[i]}) ∗ ownE (E ∖ ↑ N))%I
     with "[HE]" as "(HEi & HEN\i & HE\N)".
   { rewrite -?ownE_op; [|set_solver..].
