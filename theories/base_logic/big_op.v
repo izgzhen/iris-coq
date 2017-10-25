@@ -149,6 +149,14 @@ Section list.
     by rewrite persistently_impl_wand persistently_elim wand_elim_l.
   Qed.
 
+  Global Instance big_sepL_nil_plain Φ : Plain ([∗ list] k↦x ∈ [], Φ k x).
+  Proof. simpl; apply _. Qed.
+  Global Instance big_sepL_plain Φ l :
+    (∀ k x, Plain (Φ k x)) → Plain ([∗ list] k↦x ∈ l, Φ k x).
+  Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
+  Global Instance big_sepL_plain_id Ps : TCForall Plain Ps → Plain ([∗] Ps).
+  Proof. induction 1; simpl; apply _. Qed.
+
   Global Instance big_sepL_nil_persistent Φ :
     Persistent ([∗ list] k↦x ∈ [], Φ k x).
   Proof. simpl; apply _. Qed.
@@ -342,12 +350,19 @@ Section gmap.
     by rewrite persistently_impl_wand persistently_elim wand_elim_l.
   Qed.
 
+  Global Instance big_sepM_empty_plain Φ : Plain ([∗ map] k↦x ∈ ∅, Φ k x).
+  Proof. rewrite /big_opM map_to_list_empty. apply _. Qed.
+  Global Instance big_sepM_plain Φ m :
+    (∀ k x, Plain (Φ k x)) → Plain ([∗ map] k↦x ∈ m, Φ k x).
+  Proof. intros. apply big_sepL_plain=> _ [??]; apply _. Qed.
+
   Global Instance big_sepM_empty_persistent Φ :
     Persistent ([∗ map] k↦x ∈ ∅, Φ k x).
   Proof. rewrite /big_opM map_to_list_empty. apply _. Qed.
   Global Instance big_sepM_persistent Φ m :
     (∀ k x, Persistent (Φ k x)) → Persistent ([∗ map] k↦x ∈ m, Φ k x).
   Proof. intros. apply big_sepL_persistent=> _ [??]; apply _. Qed.
+
   Global Instance big_sepM_nil_timeless Φ :
     Timeless ([∗ map] k↦x ∈ ∅, Φ k x).
   Proof. rewrite /big_opM map_to_list_empty. apply _. Qed.
@@ -490,11 +505,18 @@ Section gset.
     by rewrite persistently_impl_wand persistently_elim wand_elim_l.
   Qed.
 
+  Global Instance big_sepS_empty_plain Φ : Plain ([∗ set] x ∈ ∅, Φ x).
+  Proof. rewrite /big_opS elements_empty. apply _. Qed.
+  Global Instance big_sepS_plain Φ X :
+    (∀ x, Plain (Φ x)) → Plain ([∗ set] x ∈ X, Φ x).
+  Proof. rewrite /big_opS. apply _. Qed.
+
   Global Instance big_sepS_empty_persistent Φ : Persistent ([∗ set] x ∈ ∅, Φ x).
   Proof. rewrite /big_opS elements_empty. apply _. Qed.
   Global Instance big_sepS_persistent Φ X :
     (∀ x, Persistent (Φ x)) → Persistent ([∗ set] x ∈ X, Φ x).
   Proof. rewrite /big_opS. apply _. Qed.
+
   Global Instance big_sepS_nil_timeless Φ : Timeless ([∗ set] x ∈ ∅, Φ x).
   Proof. rewrite /big_opS elements_empty. apply _. Qed.
   Global Instance big_sepS_timeless Φ X :
@@ -578,11 +600,18 @@ Section gmultiset.
     □?q ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, □?q Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 
+  Global Instance big_sepMS_empty_plain Φ : Plain ([∗ mset] x ∈ ∅, Φ x).
+  Proof. rewrite /big_opMS gmultiset_elements_empty. apply _. Qed.
+  Global Instance big_sepMS_plain Φ X :
+    (∀ x, Plain (Φ x)) → Plain ([∗ mset] x ∈ X, Φ x).
+  Proof. rewrite /big_opMS. apply _. Qed.
+
   Global Instance big_sepMS_empty_persistent Φ : Persistent ([∗ mset] x ∈ ∅, Φ x).
   Proof. rewrite /big_opMS gmultiset_elements_empty. apply _. Qed.
   Global Instance big_sepMS_persistent Φ X :
     (∀ x, Persistent (Φ x)) → Persistent ([∗ mset] x ∈ X, Φ x).
   Proof. rewrite /big_opMS. apply _. Qed.
+
   Global Instance big_sepMS_nil_timeless Φ : Timeless ([∗ mset] x ∈ ∅, Φ x).
   Proof. rewrite /big_opMS gmultiset_elements_empty. apply _. Qed.
   Global Instance big_sepMS_timeless Φ X :
