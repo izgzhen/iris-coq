@@ -16,7 +16,18 @@ Changes in Coq:
 
 * Some things got renamed and notation changed:
   - The unit of a CMRA: empty -> unit, ∅ -> ε
-  - IntoOp -> IsOp
+  - ?: IntoOp -> IsOp
+  - OFEs with all elements being discrete: Discrete -> OfeDiscrete
+  - OFE elements whose equality is discrete: Timeless -> Discrete
+  - Timeless propositions: TimelessP -> Timeless
+  - Camera elements such that `core x = x`: Persistent -> CoreId
+  - Persistent propositions: PersistentP -> Persistent
+  - The persistent modality: always -> persistently
+  - Consistently SnakeCase identifiers: CMRAMixin -> CmraMixin, CMRAT -> CmraT,
+    CMRATotal -> CmraTotal, CMRAMorphism -> CmraMorphism,
+    UCMRAMixin -> UcmraMixin, UCMRAT -> UcmraT, DRAMixin -> DraMixin,
+    DRAT -> DraT, STS -> Sts
+  - ? more
 * Fix a bunch of consistency issues in the proof mode, and make it overall more
   usable.  In particular:
   - All proof mode tactics start the proof mode if necessary; iStartProof is no
