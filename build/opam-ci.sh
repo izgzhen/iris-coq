@@ -19,13 +19,8 @@ eval `opam conf env`
 run_and_print make build-dep/opam
 
 # Update repositories
-if test $(find "$OPAMROOT/repo/package-index" -mtime +0); then
-    # last update was more than a day ago
-    run_and_print opam update
-else
-    # only update iris-dev, and only if it already exists
-    if test -d "$OPAMROOT/repo/iris-dev"; then run_and_print opam update iris-dev; fi
-fi
+run_and_print opam update
+
 # Make sure we got the right set of repositories registered
 if echo "$@" | fgrep "dev"; then
     # We are compiling against a dev version of something.  Get ourselves the dev repositories.
