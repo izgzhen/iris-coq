@@ -244,7 +244,7 @@ Proof.
       match goal with H : closed _ _ |- _ => destruct H end; set_solver.
   - intros []; naive_solver eauto using closed_up, closed_up_set,
       elem_of_up, elem_of_up_set with sts.
-  - intros [] [] []; constructor; rewrite ?assoc; auto with sts.
+  - intros [] [] [] _ _ _ _ _; constructor; rewrite ?assoc; auto with sts.
   - destruct 4; inversion_clear 1; constructor; auto with sts.
   - destruct 4; inversion_clear 1; constructor; auto with sts.
   - destruct 1; constructor; auto with sts.

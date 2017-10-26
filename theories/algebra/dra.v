@@ -12,7 +12,8 @@ Record DraMixin A `{Equiv A, Core A, Disjoint A, Op A, Valid A} := {
   mixin_dra_op_valid x y : ✓ x → ✓ y → x ⊥ y → ✓ (x ⋅ y);
   mixin_dra_core_valid x : ✓ x → ✓ core x;
   (* monoid *)
-  mixin_dra_assoc : Assoc (≡) (⋅);
+  mixin_dra_assoc x y z :
+    ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⋅ (y ⋅ z) ≡ (x ⋅ y) ⋅ z;
   mixin_dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ z;
   mixin_dra_disjoint_move_l x y z :
     ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ y ⋅ z;
@@ -62,7 +63,8 @@ Section dra_mixin.
   Proof. apply (mixin_dra_op_valid _ (dra_mixin A)). Qed.
   Lemma dra_core_valid x : ✓ x → ✓ core x.
   Proof. apply (mixin_dra_core_valid _ (dra_mixin A)). Qed.
-  Global Instance dra_assoc : Assoc (≡) (@op A _).
+  Lemma dra_assoc x y z :
+    ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⋅ (y ⋅ z) ≡ (x ⋅ y) ⋅ z.
   Proof. apply (mixin_dra_assoc _ (dra_mixin A)). Qed.
   Lemma dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ z.
   Proof. apply (mixin_dra_disjoint_ll _ (dra_mixin A)). Qed.
@@ -161,7 +163,7 @@ Proof.
   - intros ?? [??]; naive_solver.
   - intros [x px ?] [y py ?] [z pz ?]; split; simpl;
       [intuition eauto 2 using dra_disjoint_lr, dra_disjoint_rl
-      |intros; by rewrite assoc].
+      |intuition eauto using dra_assoc, dra_disjoint_rl].
   - intros [x px ?] [y py ?]; split; naive_solver eauto using dra_comm.
   - intros [x px ?]; split;
       naive_solver eauto using dra_core_l, dra_core_disjoint_l.
