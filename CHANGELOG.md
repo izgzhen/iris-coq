@@ -15,7 +15,7 @@ Changes in and extensions of the theory:
 Changes in Coq:
 
 * Some things got renamed and notation changed:
-  - The unit of a CMRA: empty -> unit, ∅ -> ε
+  - The unit of a camera: empty -> unit, ∅ -> ε
   - ?: IntoOp -> IsOp
   - OFEs with all elements being discrete: Discrete -> OfeDiscrete
   - OFE elements whose equality is discrete: Timeless -> Discrete
@@ -23,11 +23,28 @@ Changes in Coq:
   - Camera elements such that `core x = x`: Persistent -> CoreId
   - Persistent propositions: PersistentP -> Persistent
   - The persistent modality: always -> persistently
-  - Consistently SnakeCase identifiers: CMRAMixin -> CmraMixin, CMRAT -> CmraT,
-    CMRATotal -> CmraTotal, CMRAMorphism -> CmraMorphism,
-    UCMRAMixin -> UcmraMixin, UCMRAT -> UcmraT, DRAMixin -> DraMixin,
-    DRAT -> DraT, STS -> Sts
+  - Consistently SnakeCase identifiers:
+    + CMRAMixin -> CmraMixin
+    + CMRAT -> CmraT,
+    + CMRATotal -> CmraTotal
+    + CMRAMorphism -> CmraMorphism
+    + CMRADiscrete -> CmraDiscrete
+    + UCMRAMixin -> UcmraMixin
+    + UCMRAT -> UcmraT
+    + DRAMixin -> DraMixin
+    + DRAT -> DraT
+    + STS -> Sts
+  - Many lemmas also changed their name.  A partial list:
+    + always_and_sep_l -> and_sep_l
+    + wand_impl_always -> impl_wand_persistently (additionally, the direction of
+      this equivalence got swapped)
+    + always_wand_impl -> persistently_impl_wand (additionally, the direction of
+      this equivalence got swapped)
   - ? more
+  The following sed snippet should get you most of the way:
+```
+sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscrete\b/CmraDiscrete/g; s/\bSTS\b/Sts/g' -i $(find -name "*.v")
+```
 * Fix a bunch of consistency issues in the proof mode, and make it overall more
   usable.  In particular:
   - All proof mode tactics start the proof mode if necessary; iStartProof is no
