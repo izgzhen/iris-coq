@@ -529,10 +529,6 @@ Proof.
   intros. rewrite envs_app_sound //; simpl.
   rewrite right_id. by apply wand_mono.
 Qed.
-Lemma tac_wand_intro_pure Δ P φ Q : IntoPure P φ → (φ → Δ ⊢ Q) → Δ ⊢ P -∗ Q.
-Proof.
-  intros. by apply wand_intro_l; rewrite (into_pure P); apply pure_elim_sep_l.
-Qed.
 Lemma tac_wand_intro_drop Δ P Q : (Δ ⊢ Q) → Δ ⊢ P -∗ Q.
 Proof. intros. apply wand_intro_l. by rewrite sep_elim_r. Qed.
 
