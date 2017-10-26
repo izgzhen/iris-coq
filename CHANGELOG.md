@@ -7,56 +7,76 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 Changes in and extensions of the theory:
 
-* [#] CMRA morphisms have to be homomorphisms, not just monotone functions.
-* [#] Show that f has a fixed point if f^k is contractive.
-* Provide least and greatest fixed point (defined in the logic of Iris).
-* Prove the inverse of wp_bind.
+* [#] Camera morphisms have to be homomorphisms, not just monotone functions.
+* [#] A proof that `f` has a fixed point if `f^k` is contractive.
+* Constructions for least and greatest fixed points over monotone predicates
+  (defined in the logic of Iris using impredicative quantification).
+* A proof of the inverse of `wp_bind`.
 
 Changes in Coq:
 
 * Some things got renamed and notation changed:
-  - The unit of a camera: empty -> unit, ∅ -> ε
-  - ?: IntoOp -> IsOp
-  - OFEs with all elements being discrete: Discrete -> OfeDiscrete
-  - OFE elements whose equality is discrete: Timeless -> Discrete
-  - Timeless propositions: TimelessP -> Timeless
-  - Camera elements such that `core x = x`: Persistent -> CoreId
-  - Persistent propositions: PersistentP -> Persistent
-  - The persistent modality: always -> persistently
+  - The unit of a camera: `empty` -> `unit`, `∅` -> `ε`
+  - The proof mode type class `IntoOp` -> `IsOp`
+  - OFEs with all elements being discrete: `Discrete` -> `OfeDiscrete`
+  - OFE elements whose equality is discrete: `Timeless` -> `Discrete`
+  - Timeless propositions: `TimelessP` -> `Timeless`
+  - Camera elements such that `core x = x`: `Persistent` -> `CoreId`
+  - Persistent propositions: `PersistentP` -> `Persistent`
+  - The persistent modality: `always` -> `persistently`
   - Consistently SnakeCase identifiers:
-    + CMRAMixin -> CmraMixin
-    + CMRAT -> CmraT,
-    + CMRATotal -> CmraTotal
-    + CMRAMorphism -> CmraMorphism
-    + CMRADiscrete -> CmraDiscrete
-    + UCMRAMixin -> UcmraMixin
-    + UCMRAT -> UcmraT
-    + DRAMixin -> DraMixin
-    + DRAT -> DraT
-    + STS -> Sts
+    + `CMRAMixin` -> `CmraMixin`
+    + `CMRAT` -> `CmraT`
+    + `CMRATotal` -> `CmraTotal`
+    + `CMRAMorphism` -> `CmraMorphism`
+    + `CMRADiscrete` -> `CmraDiscrete`
+    + `UCMRAMixin` -> `UcmraMixin`
+    + `UCMRAT` -> `UcmraT`
+    + `DRAMixin` -> `DraMixin`
+    + `DRAT` -> `DraT`
+    + `STS` -> `Sts`
   - Many lemmas also changed their name.  A partial list:
-    + always_and_sep_l -> and_sep_l
-    + wand_impl_always -> impl_wand_persistently (additionally, the direction of
-      this equivalence got swapped)
-    + always_wand_impl -> persistently_impl_wand (additionally, the direction of
-      this equivalence got swapped)
-  - ? more
-  The following sed snippet should get you most of the way:
+    + `impl_wand` -> `impl_wand_1` (it only involves one direction of the
+      equivalent)
+    + `always_impl_wand` -> `impl_wand`
+    + `always_and_sep_l` -> `and_sep_l`
+    + `always_and_sep_r` -> `and_sep_r`
+    + `always_sep_dup` -> `sep_dup`
+    + `wand_impl_always` -> `impl_wand_persistently` (additionally,
+      the direction of this equivalence got swapped for consistency's sake)
+    + `always_wand_impl` -> `persistently_impl_wand` (additionally, the
+      direction of this equivalence got swapped for consistency's sake)
+  The following `sed` snippet should get you most of the way:
 ```
 sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscrete\b/CmraDiscrete/g; s/\bSTS\b/Sts/g' -i $(find -name "*.v")
 ```
 * Fix a bunch of consistency issues in the proof mode, and make it overall more
   usable.  In particular:
-  - All proof mode tactics start the proof mode if necessary; iStartProof is no
-    longer needed.
-  - Change in the grammar of specialization patterns: >[...] -> [> ...]
-  - ? More stuff ?
-* Redefine bigops to get more definitional equalities.
-* Improve solve_ndisj.
+  - All proof mode tactics start the proof mode if necessary; `iStartProof` is
+    no longer needed and should only be used for building custom proof mode
+    tactics.
+  - Change in the grammar of specialization patterns: `>[...]` -> `[> ...]`
+  - Various new specification patterns for `done` and framing.
+  - There is common machinery for symbolic execution of pure reductions. This
+    is provided by the type classes `PureExec` and `IntoVal`.
+  - There is a new connective `tc_opaque`, which can be used to make definitions
+    opaque for type classes, and thus opaque for most tactics of the proof
+    mode.
+  - Many missing type class instances for distributing connectives have been
+    defined.
+* The generic `fill` operation of the `ectxi_language` construct has been
+  defined in terms of a left fold instead of a right fold. This gives rise to
+  more definitional equalities.
+* The big operators have been improved:
+  + They are no longer tied to cameras, but work on any monoid
+  + The version of big operations over lists was redefined so that it enjoy more
+    definitional equalities.
+* Various improvements to `solve_ndisj`.
 * Improve handling of pure (non-state-dependent) reductions in heap_lang.
-* Use Hint Mode to prevent Coq from making arbitrary guesses in the presence of
-  evars.  There are a few places where type annotations are now needed.
-* The prelude folder has been moved to its own project: std++
+* Use `Hint Mode` to prevent Coq from making arbitrary guesses in the presence
+  of evars, which often led to divergence. There are a few places where type
+  annotations are now needed.
+* The `prelude` folder has been moved to its own project: std++
 
 ## Iris 3.0.0 (released 2017-01-11)
 
