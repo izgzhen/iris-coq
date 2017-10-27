@@ -97,6 +97,9 @@ Definition uPred_wand {M} := unseal uPred_wand_aux M.
 Definition uPred_wand_eq :
   @uPred_wand = @uPred_wand_def := seal_eq uPred_wand_aux.
 
+(* Equivalently, this could be `∀ y, P n y`.  That's closer to the intuition
+   of "embedding the step-indexed logic in Iris", but the two are equivalent
+   because Iris is afine.  The following is easier to work with. *)
 Program Definition uPred_plainly_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n ε |}.
 Solve Obligations with naive_solver eauto using uPred_closed, ucmra_unit_validN.
@@ -480,6 +483,8 @@ Proof.
   by rewrite cmra_core_l cmra_core_idemp.
 Qed.
 
+(* The following two laws are very similar, and indeed they hold not just for □
+   and ■, but for any modality defined as `M P n x := ∀ y, R x y → P n y`. *)
 Lemma persistently_impl_plainly P Q : (■ P → □ Q) ⊢ □ (■ P → Q).
 Proof.
   unseal; split=> /= n x ? HPQ n' x' ????.
