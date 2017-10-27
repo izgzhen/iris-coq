@@ -121,6 +121,11 @@ Modalities
   an instance of the `ElimModal` type class. Instances include: later, except 0,
   basic update and fancy update.
 
+The persistence modality
+------------------------
+
+- `iAlways` is a synonym for `iIntros "!#"`.
+
 The later modality
 ------------------
 
