@@ -46,14 +46,14 @@ Section proofs.
   Lemma na_alloc : (|==> ∃ p, na_own p ⊤)%I.
   Proof. by apply own_alloc. Qed.
 
-  Lemma na_own_disjoint p E1 E2 : na_own p E1 -∗ na_own p E2 -∗ ⌜E1 ⊥ E2⌝.
+  Lemma na_own_disjoint p E1 E2 : na_own p E1 -∗ na_own p E2 -∗ ⌜E1 ## E2⌝.
   Proof.
     apply wand_intro_r.
     rewrite /na_own -own_op own_valid -coPset_disj_valid_op. by iIntros ([? _]).
   Qed.
 
   Lemma na_own_union p E1 E2 :
-    E1 ⊥ E2 → na_own p (E1 ∪ E2) ⊣⊢ na_own p E1 ∗ na_own p E2.
+    E1 ## E2 → na_own p (E1 ∪ E2) ⊣⊢ na_own p E1 ∗ na_own p E2.
   Proof.
     intros ?. by rewrite /na_own -own_op pair_op left_id coPset_disj_union.
   Qed.

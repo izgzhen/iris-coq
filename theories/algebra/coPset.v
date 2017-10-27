@@ -74,7 +74,7 @@ Section coPset_disj.
   Instance coPset_disj_unit : Unit coPset_disj := CoPset ∅.
   Instance coPset_disj_op : Op coPset_disj := λ X Y,
     match X, Y with
-    | CoPset X, CoPset Y => if decide (X ⊥ Y) then CoPset (X ∪ Y) else CoPsetBot
+    | CoPset X, CoPset Y => if decide (X ## Y) then CoPset (X ∪ Y) else CoPsetBot
     | _, _ => CoPsetBot
     end.
   Instance coPset_disj_pcore : PCore coPset_disj := λ _, Some ε.
@@ -91,11 +91,11 @@ Section coPset_disj.
       exists (CoPset Z). coPset_disj_solve.
   Qed.
   Lemma coPset_disj_valid_inv_l X Y :
-    ✓ (CoPset X ⋅ Y) → ∃ Y', Y = CoPset Y' ∧ X ⊥ Y'.
+    ✓ (CoPset X ⋅ Y) → ∃ Y', Y = CoPset Y' ∧ X ## Y'.
   Proof. destruct Y; repeat (simpl || case_decide); by eauto. Qed.
-  Lemma coPset_disj_union X Y : X ⊥ Y → CoPset X ⋅ CoPset Y = CoPset (X ∪ Y).
+  Lemma coPset_disj_union X Y : X ## Y → CoPset X ⋅ CoPset Y = CoPset (X ∪ Y).
   Proof. intros. by rewrite /= decide_True. Qed.
-  Lemma coPset_disj_valid_op X Y : ✓ (CoPset X ⋅ CoPset Y) ↔ X ⊥ Y.
+  Lemma coPset_disj_valid_op X Y : ✓ (CoPset X ⋅ CoPset Y) ↔ X ## Y.
   Proof. simpl. case_decide; by split. Qed.
 
   Lemma coPset_disj_ra_mixin : RAMixin coPset_disj.

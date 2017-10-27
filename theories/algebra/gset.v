@@ -86,7 +86,7 @@ Section gset_disj.
   Instance gset_disj_unit : Unit (gset_disj K) := GSet ∅.
   Instance gset_disj_op : Op (gset_disj K) := λ X Y,
     match X, Y with
-    | GSet X, GSet Y => if decide (X ⊥ Y) then GSet (X ∪ Y) else GSetBot
+    | GSet X, GSet Y => if decide (X ## Y) then GSet (X ∪ Y) else GSetBot
     | _, _ => GSetBot
     end.
   Instance gset_disj_pcore : PCore (gset_disj K) := λ _, Some ε.
@@ -102,11 +102,11 @@ Section gset_disj.
     - intros (Z&->&?)%subseteq_disjoint_union_L.
       exists (GSet Z). gset_disj_solve.
   Qed.
-  Lemma gset_disj_valid_inv_l X Y : ✓ (GSet X ⋅ Y) → ∃ Y', Y = GSet Y' ∧ X ⊥ Y'.
+  Lemma gset_disj_valid_inv_l X Y : ✓ (GSet X ⋅ Y) → ∃ Y', Y = GSet Y' ∧ X ## Y'.
   Proof. destruct Y; repeat (simpl || case_decide); by eauto. Qed.
-  Lemma gset_disj_union X Y : X ⊥ Y → GSet X ⋅ GSet Y = GSet (X ∪ Y).
+  Lemma gset_disj_union X Y : X ## Y → GSet X ⋅ GSet Y = GSet (X ∪ Y).
   Proof. intros. by rewrite /= decide_True. Qed.
-  Lemma gset_disj_valid_op X Y : ✓ (GSet X ⋅ GSet Y) ↔ X ⊥ Y.
+  Lemma gset_disj_valid_op X Y : ✓ (GSet X ⋅ GSet Y) ↔ X ## Y.
   Proof. simpl. case_decide; by split. Qed.
 
   Lemma gset_disj_ra_mixin : RAMixin (gset_disj K).
@@ -207,19 +207,19 @@ Section gset_disj.
   Qed.
 
   Lemma gset_disj_alloc_op_local_update X Y Z :
-    Z ⊥ X → (GSet X,GSet Y) ~l~> (GSet Z ⋅ GSet X, GSet Z ⋅ GSet Y).
+    Z ## X → (GSet X,GSet Y) ~l~> (GSet Z ⋅ GSet X, GSet Z ⋅ GSet Y).
   Proof.
     intros. apply op_local_update_discrete. by rewrite gset_disj_valid_op.
   Qed.
   Lemma gset_disj_alloc_local_update X Y Z :
-    Z ⊥ X → (GSet X,GSet Y) ~l~> (GSet (Z ∪ X), GSet (Z ∪ Y)).
+    Z ## X → (GSet X,GSet Y) ~l~> (GSet (Z ∪ X), GSet (Z ∪ Y)).
   Proof.
     intros. apply local_update_total_valid=> _ _ /gset_disj_included ?.
     rewrite -!gset_disj_union //; last set_solver.
     auto using gset_disj_alloc_op_local_update.
   Qed.
   Lemma gset_disj_alloc_empty_local_update X Z :
-    Z ⊥ X → (GSet X, GSet ∅) ~l~> (GSet (Z ∪ X), GSet Z).
+    Z ## X → (GSet X, GSet ∅) ~l~> (GSet (Z ∪ X), GSet Z).
   Proof.
     intros. rewrite -{2}(right_id_L _ union Z).
     apply gset_disj_alloc_local_update; set_solver.

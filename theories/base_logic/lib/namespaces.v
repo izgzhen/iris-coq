@@ -24,7 +24,7 @@ Notation "N .@ x" := (ndot N x)
   (at level 19, left associativity, format "N .@ x") : C_scope.
 Notation "(.@)" := ndot (only parsing) : C_scope.
 
-Instance ndisjoint : Disjoint namespace := λ N1 N2, nclose N1 ⊥ nclose N2.
+Instance ndisjoint : Disjoint namespace := λ N1 N2, nclose N1 ## nclose N2.
 
 Section namespace.
   Context `{Countable A}.
@@ -59,37 +59,37 @@ Section namespace.
   Lemma nclose_infinite N : ¬set_finite (↑ N : coPset).
   Proof. rewrite nclose_eq. apply coPset_suffixes_infinite. Qed.
 
-  Lemma ndot_ne_disjoint N x y : x ≠ y → N.@x ⊥ N.@y.
+  Lemma ndot_ne_disjoint N x y : x ≠ y → N.@x ## N.@y.
   Proof.
     intros Hxy a. rewrite !nclose_eq !elem_coPset_suffixes !ndot_eq.
     intros [qx ->] [qy Hqy].
     revert Hqy. by intros [= ?%encode_inj]%list_encode_suffix_eq.
   Qed.
 
-  Lemma ndot_preserve_disjoint_l N E x : ↑N ⊥ E → ↑N.@x ⊥ E.
+  Lemma ndot_preserve_disjoint_l N E x : ↑N ## E → ↑N.@x ## E.
   Proof. intros. pose proof (nclose_subseteq N x). set_solver. Qed.
 
-  Lemma ndot_preserve_disjoint_r N E x : E ⊥ ↑N → E ⊥ ↑N.@x.
+  Lemma ndot_preserve_disjoint_r N E x : E ## ↑N → E ## ↑N.@x.
   Proof. intros. by apply symmetry, ndot_preserve_disjoint_l. Qed.
 
-  Lemma ndisj_subseteq_difference N E F : E ⊥ ↑N → E ⊆ F → E ⊆ F ∖ ↑N.
+  Lemma ndisj_subseteq_difference N E F : E ## ↑N → E ⊆ F → E ⊆ F ∖ ↑N.
   Proof. set_solver. Qed.
 
   Lemma namespace_subseteq_difference_l E1 E2 E3 : E1 ⊆ E3 → E1 ∖ E2 ⊆ E3.
   Proof. set_solver. Qed.
 
-  Lemma ndisj_difference_l E N1 N2 : ↑N2 ⊆ (↑N1 : coPset) → E ∖ ↑N1 ⊥ ↑N2.
+  Lemma ndisj_difference_l E N1 N2 : ↑N2 ⊆ (↑N1 : coPset) → E ∖ ↑N1 ## ↑N2.
   Proof. set_solver. Qed.
 End namespace.
 
 (* The hope is that registering these will suffice to solve most goals
 of the forms:
-- [N1 ⊥ N2] 
+- [N1 ## N2] 
 - [↑N1 ⊆ E ∖ ↑N2 ∖ .. ∖ ↑Nn]
 - [E1 ∖ ↑N1 ⊆ E2 ∖ ↑N2 ∖ .. ∖ ↑Nn] *)
 Create HintDb ndisj.
 Hint Resolve ndisj_subseteq_difference : ndisj.
-Hint Extern 0 (_ ⊥ _) => apply ndot_ne_disjoint; congruence : ndisj.
+Hint Extern 0 (_ ## _) => apply ndot_ne_disjoint; congruence : ndisj.
 Hint Resolve ndot_preserve_disjoint_l ndot_preserve_disjoint_r : ndisj.
 Hint Resolve nclose_subseteq' ndisj_difference_l : ndisj.
 Hint Resolve namespace_subseteq_difference_l | 100 : ndisj.

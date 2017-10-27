@@ -299,7 +299,7 @@ Section gset.
   Proof. apply (big_opS_fn_insert (λ y, id)). Qed.
 
   Lemma big_opS_union f X Y :
-    X ⊥ Y →
+    X ## Y →
     ([^o set] y ∈ X ∪ Y, f y) ≡ ([^o set] y ∈ X, f y) `o` ([^o set] y ∈ Y, f y).
   Proof.
     intros. induction X as [|x X ? IH] using collection_ind_L.
