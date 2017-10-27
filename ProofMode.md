@@ -121,10 +121,12 @@ Modalities
   an instance of the `ElimModal` type class. Instances include: later, except 0,
   basic update and fancy update.
 
-The persistence modality
-------------------------
+The persistence and plainness modalities
+----------------------------------------
 
-- `iAlways` is a synonym for `iIntros "!#"`.
+- `iAlways` : introduce a persistence or plainness modality and the spatial
+  context. In case of a plainness modality, the tactic will prune all persistent
+  hypotheses that are not plain.
 
 The later modality
 ------------------
@@ -213,10 +215,8 @@ appear at the top level:
   Items of the selection pattern can be prefixed with `$`, which cause them to
   be framed instead of cleared.
 - `!%` : introduce a pure goal (and leave the proof mode).
-- `!#` : introduce an persistence or plainness modality and clear the spatial
-  context. In case of a plainness modality, it will prune all persistent
-  hypotheses that are not plain.
-- `!>` : introduce a modality.
+- `!#` : introduce an persistence or plainness modality (by calling `iAlways`).
+- `!>` : introduce a modality (by calling `iModIntro`).
 - `/=` : perform `simpl`.
 - `//` : perform `try done` on all goals.
 - `//=` : syntactic sugar for `/= //`
