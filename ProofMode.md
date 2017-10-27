@@ -202,6 +202,7 @@ _introduction patterns_:
 - `[ipat1|ipat2]` : disjunction elimination.
 - `[]` : false elimination.
 - `%` : move the hypothesis to the pure Coq context (anonymously).
+- `->` and `<-` : rewrite using a pure Coq equality
 - `# ipat` : move the hypothesis to the persistent context.
 - `> ipat` : eliminate a modality (if the goal permits).
 

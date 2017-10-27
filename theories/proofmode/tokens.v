@@ -1,6 +1,9 @@
 From stdpp Require Export strings.
 Set Default Proof Using "Type".
 
+(* TODO: Move elsewhere *)
+Inductive direction := Left | Right.
+
 Inductive token :=
   | TName : string → token
   | TNat : nat → token
@@ -25,7 +28,8 @@ Inductive token :=
   | TForall : token
   | TAll : token
   | TMinus : token
-  | TSep : token.
+  | TSep : token
+  | TArrow : direction → token.
 
 Inductive state :=
   | SName : string → state
@@ -64,6 +68,8 @@ Fixpoint tokenize_go (s : string) (k : list token) (kn : state) : list token :=
   | String "/" (String "=" s) => tokenize_go s (TSimpl :: cons_state kn k) SNone
   | String "*" (String "*" s) => tokenize_go s (TAll :: cons_state kn k) SNone
   | String "*" s => tokenize_go s (TForall :: cons_state kn k) SNone
+  | String "-" (String ">" s) => tokenize_go s (TArrow Right :: cons_state kn k) SNone
+  | String "<" (String "-" s) => tokenize_go s (TArrow Left :: cons_state kn k) SNone
   | String "-" s => tokenize_go s (TMinus :: cons_state kn k) SNone
   | String (Ascii.Ascii false true false false false true true true) (* unicode ∗ *)
       (String (Ascii.Ascii false false false true false false false true)

@@ -229,6 +229,10 @@ Proof.
   iIntros "* **". (* Test that fast intros do not work under modalities *)
   iIntros ([]).
 Qed.
+
+Lemma test_iIntros_rewrite P (x1 x2 x3 x4 : nat) :
+  x1 = x2 → (⌜ x2 = x3 ⌝ ∗ ⌜ x3 ≡ x4 ⌝ ∗ P) -∗ ⌜ x1 = x4 ⌝ ∗ P.
+Proof. iIntros (?) "(-> & -> & $)"; auto. Qed.
 End tests.
 
 Section more_tests.
