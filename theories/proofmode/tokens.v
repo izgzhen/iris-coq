@@ -1,8 +1,5 @@
-From stdpp Require Export strings.
+From iris.proofmode Require Import base.
 Set Default Proof Using "Type".
-
-(* TODO: Move elsewhere *)
-Inductive direction := Left | Right.
 
 Inductive token :=
   | TName : string → token

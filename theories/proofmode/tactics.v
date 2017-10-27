@@ -1,10 +1,9 @@
 From iris.proofmode Require Import coq_tactics.
-From iris.proofmode Require Import intro_patterns spec_patterns sel_patterns.
+From iris.proofmode Require Import base intro_patterns spec_patterns sel_patterns.
 From iris.base_logic Require Export base_logic.
 From iris.proofmode Require Export classes notation.
 From iris.proofmode Require Import class_instances.
 From stdpp Require Import stringmap hlist.
-From iris.proofmode Require Import strings.
 Set Default Proof Using "Type".
 
 Declare Reduction env_cbv := cbv [
@@ -704,7 +703,7 @@ Tactic Notation "iSplit" :=
 Tactic Notation "iSplitL" constr(Hs) :=
   iStartProof;
   let Hs := words Hs in
-  eapply tac_sep_split with _ _ false Hs _ _; (* (js:=Hs) *)
+  eapply tac_sep_split with _ _ Left Hs _ _; (* (js:=Hs) *)
     [apply _ ||
      let P := match goal with |- FromAnd _ ?P _ _ => P end in
      fail "iSplitL:" P "not a separating conjunction"
@@ -716,7 +715,7 @@ Tactic Notation "iSplitL" constr(Hs) :=
 Tactic Notation "iSplitR" constr(Hs) :=
   iStartProof;
   let Hs := words Hs in
-  eapply tac_sep_split with _ _ true Hs _ _; (* (js:=Hs) *)
+  eapply tac_sep_split with _ _ Right Hs _ _; (* (js:=Hs) *)
     [apply _ ||
      let P := match goal with |- FromAnd _ ?P _ _ => P end in
      fail "iSplitR:" P "not a separating conjunction"
@@ -736,8 +735,8 @@ Local Tactic Notation "iAndDestruct" constr(H) "as" constr(H1) constr(H2) :=
      fail "iAndDestruct: cannot destruct" P
     |env_reflexivity || fail "iAndDestruct:" H1 "or" H2 " not fresh"|].
 
-Local Tactic Notation "iAndDestructChoice" constr(H) "as" constr(lr) constr(H') :=
-  eapply tac_and_destruct_choice with _ H _ lr H' _ _ _;
+Local Tactic Notation "iAndDestructChoice" constr(H) "as" constr(d) constr(H') :=
+  eapply tac_and_destruct_choice with _ H _ d H' _ _ _;
     [env_reflexivity || fail "iAndDestructChoice:" H "not found"
     |apply _ ||
      let P := match goal with |- IntoAnd _ ?P _ _ => P end in
@@ -848,14 +847,14 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     | IFrame => iFrame Hz
     | IName ?y => iRename Hz into y
     | IList [[]] => iExFalso; iExact Hz
-    | IList [[?pat1; IDrop]] => iAndDestructChoice Hz as true Hz; go Hz pat1
-    | IList [[IDrop; ?pat2]] => iAndDestructChoice Hz as false Hz; go Hz pat2
+    | IList [[?pat1; IDrop]] => iAndDestructChoice Hz as Left Hz; go Hz pat1
+    | IList [[IDrop; ?pat2]] => iAndDestructChoice Hz as Right Hz; go Hz pat2
     | IList [[?pat1; ?pat2]] =>
        let Hy := iFresh in iAndDestruct Hz as Hz Hy; go Hz pat1; go Hy pat2
     | IList [[?pat1];[?pat2]] => iOrDestruct Hz as Hz Hz; [go Hz pat1|go Hz pat2]
     | IPureElim => iPure Hz as ?
-    | IRewrite tokens.Right => iPure Hz as ->
-    | IRewrite tokens.Left => iPure Hz as <-
+    | IRewrite Right => iPure Hz as ->
+    | IRewrite Left => iPure Hz as <-
     | IAlwaysElim ?pat => iPersistent Hz; go Hz pat
     | IModalElim ?pat => iModCore Hz; go Hz pat
     | _ => fail "iDestruct:" pat "invalid"
@@ -1637,8 +1636,8 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) :=
       |iRewriteFindPred
       |intros ??? ->; reflexivity|lazy beta; iClear Heq]).
 
-Tactic Notation "iRewrite" open_constr(lem) := iRewriteCore false lem.
-Tactic Notation "iRewrite" "-" open_constr(lem) := iRewriteCore true lem.
+Tactic Notation "iRewrite" open_constr(lem) := iRewriteCore Right lem.
+Tactic Notation "iRewrite" "-" open_constr(lem) := iRewriteCore Left lem.
 
 Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) "in" constr(H) :=
   iPoseProofCore lem as true true (fun Heq =>
@@ -1653,9 +1652,9 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) "in" constr(H) 
       |env_reflexivity|lazy beta; iClear Heq]).
 
 Tactic Notation "iRewrite" open_constr(lem) "in" constr(H) :=
-  iRewriteCore false lem in H.
+  iRewriteCore Right lem in H.
 Tactic Notation "iRewrite" "-" open_constr(lem) "in" constr(H) :=
-  iRewriteCore true lem in H.
+  iRewriteCore Left lem in H.
 
 Ltac iSimplifyEq := repeat (
   iMatchHyp (fun H P => match P with ⌜_ = _⌝%I => iDestruct H as %? end)

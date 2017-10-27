@@ -75,7 +75,7 @@ theories/heap_lang/lib/ticket_lock.v
 theories/heap_lang/lib/counter.v
 theories/heap_lang/proofmode.v
 theories/heap_lang/adequacy.v
-theories/proofmode/strings.v
+theories/proofmode/base.v
 theories/proofmode/tokens.v
 theories/proofmode/coq_tactics.v
 theories/proofmode/environments.v

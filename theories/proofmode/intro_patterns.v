@@ -1,5 +1,5 @@
 From stdpp Require Export strings.
-From iris.proofmode Require Import tokens sel_patterns.
+From iris.proofmode Require Import base tokens sel_patterns.
 Set Default Proof Using "Type".
 
 Inductive intro_pat :=
@@ -11,7 +11,7 @@ Inductive intro_pat :=
   | IPureElim : intro_pat
   | IAlwaysElim : intro_pat → intro_pat
   | IModalElim : intro_pat → intro_pat
-  | IRewrite : direction → intro_pat (* true = ->, false = <- *)
+  | IRewrite : direction → intro_pat
   | IPureIntro : intro_pat
   | IAlwaysIntro : intro_pat
   | IModalIntro : intro_pat

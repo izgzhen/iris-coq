@@ -1,8 +1,14 @@
-From stdpp Require Import strings.
-From iris.algebra Require Import base.
+From stdpp Require Export strings.
+From iris.algebra Require Export base.
 From Coq Require Import Ascii.
 Set Default Proof Using "Type".
 
+(* Directions of rewrites *)
+Inductive direction := Left | Right.
+
+(* Some specific versions of operations on strings for the proof mode. We need
+those so that we can make [cbv] unfold just them, but not the actual operations
+that may appear in users' proofs. *)
 Local Notation "b1 && b2" := (if b1 then b2 else false) : bool_scope.
 
 Lemma lazy_andb_true (b1 b2 : bool) : b1 && b2 = true ↔ b1 = true ∧ b2 = true.

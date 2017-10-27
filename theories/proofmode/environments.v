@@ -1,5 +1,5 @@
 From stdpp Require Export strings.
-From iris.proofmode Require Import strings.
+From iris.proofmode Require Import base.
 From iris.algebra Require Export base.
 From stdpp Require Import stringmap.
 Set Default Proof Using "Type".

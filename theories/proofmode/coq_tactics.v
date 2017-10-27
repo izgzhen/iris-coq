@@ -1,6 +1,6 @@
 From iris.base_logic Require Export base_logic.
 From iris.base_logic Require Import big_op tactics.
-From iris.proofmode Require Export environments classes.
+From iris.proofmode Require Export base environments classes.
 From stdpp Require Import stringmap hlist.
 Set Default Proof Using "Type".
 Import uPred.
@@ -108,12 +108,12 @@ Fixpoint envs_split_go {M}
      if p then envs_split_go js Δ1 Δ2 else
      envs_split_go js Δ1' (envs_snoc Δ2 false j P)
   end.
-(* if [lr = true] then [result = (remaining hyps, hyps named js)] and
-   if [lr = false] then [result = (hyps named js, remaining hyps)] *)
-Definition envs_split {M} (lr : bool)
+(* if [d = Right] then [result = (remaining hyps, hyps named js)] and
+   if [d = Left] then [result = (hyps named js, remaining hyps)] *)
+Definition envs_split {M} (d : direction)
     (js : list string) (Δ : envs M) : option (envs M * envs M) :=
   '(Δ1,Δ2) ← envs_split_go js Δ (envs_clear_spatial Δ);
-  if lr then Some (Δ1,Δ2) else Some (Δ2,Δ1).
+  if d is Right then Some (Δ1,Δ2) else Some (Δ2,Δ1).
 
 (* Coq versions of the tactics *)
 Section tactics.
@@ -215,11 +215,11 @@ Proof.
   apply wand_intro_l; destruct p; simpl.
   - apply sep_intro_True_l; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
-      intros j; destruct (strings.string_beq_reflect j i); naive_solver.
+      intros j; destruct (string_beq_reflect j i); naive_solver.
     + by rewrite persistently_sep assoc.
   - apply sep_intro_True_l; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
-      intros j; destruct (strings.string_beq_reflect j i); naive_solver.
+      intros j; destruct (string_beq_reflect j i); naive_solver.
     + solve_sep_entails.
 Qed.
 
@@ -341,15 +341,15 @@ Proof.
     - rewrite envs_lookup_envs_delete_ne // envs_lookup_snoc_ne //. eauto. }
   rewrite (envs_snoc_sound Δ2 false j P) /= ?wand_elim_r; eauto.
 Qed.
-Lemma envs_split_sound Δ lr js Δ1 Δ2 :
-  envs_split lr js Δ = Some (Δ1,Δ2) → Δ ⊢ Δ1 ∗ Δ2.
+Lemma envs_split_sound Δ d js Δ1 Δ2 :
+  envs_split d js Δ = Some (Δ1,Δ2) → Δ ⊢ Δ1 ∗ Δ2.
 Proof.
   rewrite /envs_split=> ?. rewrite -(idemp uPred_and Δ).
   rewrite {2}envs_clear_spatial_sound sep_elim_l and_sep_r.
   destruct (envs_split_go _ _) as [[Δ1' Δ2']|] eqn:HΔ; [|done].
   apply envs_split_go_sound in HΔ as ->; last first.
   { intros j P. by rewrite envs_lookup_envs_clear_spatial=> ->. }
-  destruct lr; simplify_eq; solve_sep_entails.
+  destruct d; simplify_eq; solve_sep_entails.
 Qed.
 
 Global Instance envs_Forall2_refl (R : relation (uPred M)) :
@@ -601,10 +601,10 @@ Proof.
     by rewrite right_id assoc (into_wand _ R) persistently_if_elim wand_elim_r wand_elim_r.
 Qed.
 
-Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q lr js R P1 P2 P1' Q :
+Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q neg js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
   IntoWand false R P1 P2 → ElimModal P1' P1 Q Q →
-  ('(Δ1,Δ2) ← envs_split lr js Δ';
+  ('(Δ1,Δ2) ← envs_split (if neg is true then Right else Left) js Δ';
     Δ2' ← envs_app false (Esnoc Enil j P2) Δ2;
     Some (Δ1,Δ2')) = Some (Δ1,Δ2') → (* does not preserve position of [j] *)
   (Δ1 ⊢ P1') → (Δ2' ⊢ Q) → Δ ⊢ Q.
@@ -704,9 +704,9 @@ Proof.
   by rewrite -(idemp uPred_and Δ) {1}(persistent Δ) {1}HP // HPQ impl_elim_r.
 Qed.
 
-Lemma tac_assert Δ Δ1 Δ2 Δ2' lr js j P P' Q :
+Lemma tac_assert Δ Δ1 Δ2 Δ2' neg js j P P' Q :
   ElimModal P' P Q Q →
-  envs_split lr js Δ = Some (Δ1,Δ2) →
+  envs_split (if neg is true then Right else Left) js Δ = Some (Δ1,Δ2) →
   envs_app false (Esnoc Enil j P) Δ2 = Some Δ2' →
   (Δ1 ⊢ P') → (Δ2' ⊢ Q) → Δ ⊢ Q.
 Proof.
@@ -715,8 +715,8 @@ Proof.
   by rewrite right_id HP HQ.
 Qed.
 
-Lemma tac_assert_persistent Δ Δ1 Δ2 Δ' lr js j P Q :
-  envs_split lr js Δ = Some (Δ1,Δ2) →
+Lemma tac_assert_persistent Δ Δ1 Δ2 Δ' neg js j P Q :
+  envs_split (if neg is true then Right else Left) js Δ = Some (Δ1,Δ2) →
   envs_app false (Esnoc Enil j P) Δ = Some Δ' →
   Persistent P →
   (Δ1 ⊢ P) → (Δ' ⊢ Q) → Δ ⊢ Q.
@@ -765,34 +765,34 @@ Proof.
 Qed.
 
 (** * Rewriting *)
-Lemma tac_rewrite Δ i p Pxy (lr : bool) Q :
+Lemma tac_rewrite Δ i p Pxy d Q :
   envs_lookup i Δ = Some (p, Pxy) →
   ∀ {A : ofeT} (x y : A) (Φ : A → uPred M),
     (Pxy ⊢ x ≡ y) →
-    (Q ⊣⊢ Φ (if lr then y else x)) →
+    (Q ⊣⊢ Φ (if d is Left then y else x)) →
     (NonExpansive Φ) →
-    (Δ ⊢ Φ (if lr then x else y)) → Δ ⊢ Q.
+    (Δ ⊢ Φ (if d is Left then x else y)) → Δ ⊢ Q.
 Proof.
   intros ? A x y ? HPxy -> ?; apply internal_eq_rewrite; auto.
   rewrite {1}envs_lookup_sound' //; rewrite sep_elim_l HPxy.
-  destruct lr; auto using internal_eq_sym.
+  destruct d; auto using internal_eq_sym.
 Qed.
 
-Lemma tac_rewrite_in Δ i p Pxy j q P (lr : bool) Q :
+Lemma tac_rewrite_in Δ i p Pxy j q P d Q :
   envs_lookup i Δ = Some (p, Pxy) →
   envs_lookup j Δ = Some (q, P) →
   ∀ {A : ofeT} Δ' x y (Φ : A → uPred M),
     (Pxy ⊢ x ≡ y) →
-    (P ⊣⊢ Φ (if lr then y else x)) →
+    (P ⊣⊢ Φ (if d is Left then y else x)) →
     (NonExpansive Φ) →
-    envs_simple_replace j q (Esnoc Enil j (Φ (if lr then x else y))) Δ = Some Δ' →
+    envs_simple_replace j q (Esnoc Enil j (Φ (if d is Left then x else y))) Δ = Some Δ' →
     (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ?? A Δ' x y Φ HPxy HP ?? <-.
   rewrite -(idemp uPred_and Δ) {2}(envs_lookup_sound' _ i) //.
   rewrite sep_elim_l HPxy and_sep_r.
   rewrite (envs_simple_replace_sound _ _ j) //; simpl.
-  rewrite HP right_id -assoc; apply wand_elim_r'. destruct lr.
+  rewrite HP right_id -assoc; apply wand_elim_r'. destruct d.
   - apply (internal_eq_rewrite x y (λ y, □?q Φ y -∗ Δ')%I);
       eauto with I. solve_proper.
   - apply (internal_eq_rewrite y x (λ y, □?q Φ y -∗ Δ')%I);
@@ -806,9 +806,9 @@ Lemma tac_and_split Δ P Q1 Q2 :
 Proof. intros. rewrite -(from_and true P). by apply and_intro. Qed.
 
 (** * Separating conjunction splitting *)
-Lemma tac_sep_split Δ Δ1 Δ2 lr js P Q1 Q2 :
+Lemma tac_sep_split Δ Δ1 Δ2 d js P Q1 Q2 :
   FromAnd false P Q1 Q2 →
-  envs_split lr js Δ = Some (Δ1,Δ2) →
+  envs_split d js Δ = Some (Δ1,Δ2) →
   (Δ1 ⊢ Q1) → (Δ2 ⊢ Q2) → Δ ⊢ P.
 Proof.
   intros. rewrite envs_split_sound // -(from_and false P). by apply sep_mono.
@@ -851,13 +851,13 @@ Qed.
 (* Using this tactic, one can destruct a (non-separating) conjunction in the
 spatial context as long as one of the conjuncts is thrown away. It corresponds
 to the principle of "external choice" in linear logic. *)
-Lemma tac_and_destruct_choice Δ Δ' i p (lr : bool) j P P1 P2 Q :
+Lemma tac_and_destruct_choice Δ Δ' i p d j P P1 P2 Q :
   envs_lookup i Δ = Some (p, P) → IntoAnd true P P1 P2 →
-  envs_simple_replace i p (Esnoc Enil j (if lr then P1 else P2)) Δ = Some Δ' →
+  envs_simple_replace i p (Esnoc Enil j (if d is Left then P1 else P2)) Δ = Some Δ' →
   (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros. rewrite envs_simple_replace_sound //; simpl.
-  rewrite right_id (into_and true P). destruct lr.
+  rewrite right_id (into_and true P). destruct d.
   - by rewrite and_elim_l wand_elim_r.
   - by rewrite and_elim_r wand_elim_r.
 Qed.
