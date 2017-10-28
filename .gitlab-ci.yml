@@ -25,43 +25,25 @@ variables:
     paths:
     - opamroot/
   only:
-  - master
+  - gen_proofmode
   - /^ci/
 
 opam:
   stage: deploy
   script:
   # Send a trigger to the repository doing the work
-  - curl --fail -X POST -F "token=$OPAM_UPDATE_SECRET" -F "ref=master" -F "variables[REPO]=$CI_PROJECT_URL.git" -F "variables[REF]=$CI_COMMIT_REF_NAME" -F "variables[SHA]=$CI_COMMIT_SHA" -F "variables[NAME]=$OPAM_PKG" https://gitlab.mpi-sws.org/api/v4/projects/581/trigger/pipeline
+  - curl --fail -X POST -F "token=$OPAM_UPDATE_SECRET" -F "ref=master" -F "variables[REPO]=$CI_PROJECT_URL.git" -F "variables[REF]=$CI_COMMIT_REF_NAME" -F "variables[SHA]=$CI_COMMIT_SHA" -F "variables[NAME]=$OPAM_PKG" -F "variables[OPAM_PREFIX]=branch.gen_proofmode" https://gitlab.mpi-sws.org/api/v4/projects/581/trigger/pipeline
   variables:
     OPAM_PKG: "coq-iris"
   only:
-  - master
+  - gen_proofmode
   except:
   - triggers
 
-reverse-deps:
-  stage: deploy
-  script:
-  # Send a trigger to reverse dependencies to have them tested
-  - curl --fail -X POST -F "token=$IRIS_EXAMPLES_SECRET" -F "ref=master" -F "variables[IRIS_REV]=$CI_COMMIT_SHA" https://gitlab.mpi-sws.org/api/v4/projects/615/trigger/pipeline
-  only:
-  - master
-  except:
-  - triggers
-
-build-coq.8.7:
+build-coq.8.7.dev:
   <<: *template
   variables:
     OPAM_PINS: "coq version 8.7.dev   coq-mathcomp-ssreflect version dev"
-  except:
-  - triggers
-
-build-coq.8.6.1:
-  <<: *template
-  variables:
-    OPAM_PINS: "coq version 8.6.1   coq-mathcomp-ssreflect version 1.6.1"
-    VALIDATE: "1"
   artifacts:
     paths:
     - build-time.txt
