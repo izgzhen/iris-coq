@@ -65,6 +65,12 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
     mode.
   - Many missing type class instances for distributing connectives have been
     defined.
+  - The tactics `iIntros (?)` and `iIntros "!#"` (i.e. `iAlways`) are now
+    implemented using type classes. That way, they are more generic, e.g.
+    `iIntros (?)` also works when the universal quantifier is below a modality,
+    and `iAlways` also works for the plainness modality. A breaking change,
+    however, is that these tactics now no longer work when the universal
+    quantifier or modality is behind a type class opaque definition.
 * The generic `fill` operation of the `ectxi_language` construct has been
   defined in terms of a left fold instead of a right fold. This gives rise to
   more definitional equalities.
