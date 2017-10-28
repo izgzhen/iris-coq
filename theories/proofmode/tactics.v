@@ -1628,11 +1628,9 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) :=
   iPoseProofCore lem as true true (fun Heq =>
     eapply (tac_rewrite _ Heq _ _ lr);
       [env_reflexivity || fail "iRewrite:" Heq "not found"
-      |let P := match goal with |- ?P ⊢ _ => P end in
-       (* use ssreflect apply: which is better at dealing with unification
-       involving canonical structures. This is useful for the COFE canonical
-       structure in uPred_eq that it may have to infer. *)
-       apply: reflexivity || fail "iRewrite:" P "not an equality"
+      |apply _ ||
+       let P := match goal with |- IntoInternalEq ?P _ _ ⊢ _ => P end in
+       fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
       |intros ??? ->; reflexivity|lazy beta; iClear Heq]).
 
@@ -1644,8 +1642,8 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) "in" constr(H) 
     eapply (tac_rewrite_in _ Heq _ _ H _ _ lr);
       [env_reflexivity || fail "iRewrite:" Heq "not found"
       |env_reflexivity || fail "iRewrite:" H "not found"
-      |apply: reflexivity ||
-       let P := match goal with |- ?P ⊢ _ => P end in
+      |apply _ ||
+       let P := match goal with |- IntoInternalEq ?P _ _ ⊢ _ => P end in
        fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
       |intros ??? ->; reflexivity

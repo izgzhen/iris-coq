@@ -54,6 +54,11 @@ Class FromPure {M} (P : uPred M) (φ : Prop) := from_pure : ⌜φ⌝ ⊢ P.
 Arguments from_pure {_} _ _ {_}.
 Hint Mode FromPure + ! - : typeclass_instances.
 
+Class IntoInternalEq {M} {A : ofeT} (P : uPred M) (x y : A) :=
+  into_internal_eq : P ⊢ x ≡ y.
+Arguments into_internal_eq {_ _} _ _ _ {_}.
+Hint Mode IntoInternalEq + - ! - - : typeclass_instances.
+
 Class IntoPersistent {M} (p : bool) (P Q : uPred M) :=
   into_persistent : □?p P ⊢ □ Q.
 Arguments into_persistent {_} _ _ _ {_}.

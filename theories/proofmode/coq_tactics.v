@@ -768,7 +768,7 @@ Qed.
 Lemma tac_rewrite Δ i p Pxy d Q :
   envs_lookup i Δ = Some (p, Pxy) →
   ∀ {A : ofeT} (x y : A) (Φ : A → uPred M),
-    (Pxy ⊢ x ≡ y) →
+    IntoInternalEq Pxy x y →
     (Q ⊣⊢ Φ (if d is Left then y else x)) →
     NonExpansive Φ →
     (Δ ⊢ Φ (if d is Left then x else y)) → Δ ⊢ Q.
@@ -784,7 +784,7 @@ Lemma tac_rewrite_in Δ i p Pxy j q P d Q :
   envs_lookup i Δ = Some (p, Pxy) →
   envs_lookup j Δ = Some (q, P) →
   ∀ {A : ofeT} Δ' x y (Φ : A → uPred M),
-    (Pxy ⊢ x ≡ y) →
+    IntoInternalEq Pxy x y →
     (P ⊣⊢ Φ (if d is Left then y else x)) →
     NonExpansive Φ →
     envs_simple_replace j q (Esnoc Enil j (Φ (if d is Left then x else y))) Δ = Some Δ' →

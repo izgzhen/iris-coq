@@ -142,6 +142,14 @@ Proof.
   rewrite -Hx. apply pure_intro. done.
 Qed.
 
+(* IntoInternalEq *)
+Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
+  @IntoInternalEq PROP A (x ≡ y) x y.
+Proof. by rewrite /IntoInternalEq. Qed.
+Global Instance into_internal_eq_persistently {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (□ P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite persistently_elim. Qed.
+
 (* IntoPersistent *)
 Global Instance into_persistent_persistently_trans p P Q :
   IntoPersistent true P Q → IntoPersistent p (□ P) Q | 0.
