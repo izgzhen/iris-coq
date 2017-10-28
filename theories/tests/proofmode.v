@@ -233,6 +233,13 @@ Qed.
 Lemma test_iIntros_rewrite P (x1 x2 x3 x4 : nat) :
   x1 = x2 → (⌜ x2 = x3 ⌝ ∗ ⌜ x3 ≡ x4 ⌝ ∗ P) -∗ ⌜ x1 = x4 ⌝ ∗ P.
 Proof. iIntros (?) "(-> & -> & $)"; auto. Qed.
+
+(* TODO: This test is broken in Coq 8.6. Should be restored once we drop Coq
+8.6 support. See also issue #108. *)
+(*
+Lemma test_iIntros_pure : (⌜ ¬False ⌝ : uPred M)%I.
+Proof. by iIntros (?). Qed.
+*)
 End tests.
 
 Section more_tests.
