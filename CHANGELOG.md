@@ -9,10 +9,10 @@ Changes in and extensions of the theory:
 
 * [#] Add new modality: ■ ("plainly").
 * [#] Camera morphisms have to be homomorphisms, not just monotone functions.
-* [#] Add a proof that `f` has a fixed point if `f^k` is contractive.
+* Add a proof that `f` has a fixed point if `f^k` is contractive.
 * Constructions for least and greatest fixed points over monotone predicates
   (defined in the logic of Iris using impredicative quantification).
-* A proof of the inverse of `wp_bind`.
+* Add a proof of the inverse of `wp_bind`.
 
 Changes in Coq:
 
