@@ -54,11 +54,11 @@ Proof. rewrite /ownI. apply _. Qed.
 
 Lemma ownE_empty : (|==> ownE ∅)%I.
 Proof. by rewrite /uPred_valid (own_unit (coPset_disjUR) enabled_name). Qed.
-Lemma ownE_op E1 E2 : E1 ⊥ E2 → ownE (E1 ∪ E2) ⊣⊢ ownE E1 ∗ ownE E2.
+Lemma ownE_op E1 E2 : E1 ## E2 → ownE (E1 ∪ E2) ⊣⊢ ownE E1 ∗ ownE E2.
 Proof. intros. by rewrite /ownE -own_op coPset_disj_union. Qed.
-Lemma ownE_disjoint E1 E2 : ownE E1 ∗ ownE E2 ⊢ ⌜E1 ⊥ E2⌝.
+Lemma ownE_disjoint E1 E2 : ownE E1 ∗ ownE E2 ⊢ ⌜E1 ## E2⌝.
 Proof. rewrite /ownE -own_op own_valid. by iIntros (?%coPset_disj_valid_op). Qed.
-Lemma ownE_op' E1 E2 : ⌜E1 ⊥ E2⌝ ∧ ownE (E1 ∪ E2) ⊣⊢ ownE E1 ∗ ownE E2.
+Lemma ownE_op' E1 E2 : ⌜E1 ## E2⌝ ∧ ownE (E1 ∪ E2) ⊣⊢ ownE E1 ∗ ownE E2.
 Proof.
   iSplit; [iIntros "[% ?]"; by iApply ownE_op|].
   iIntros "HE". iDestruct (ownE_disjoint with "HE") as %?.
@@ -69,11 +69,11 @@ Proof. rewrite ownE_disjoint. iIntros (?); set_solver. Qed.
 
 Lemma ownD_empty : (|==> ownD ∅)%I.
 Proof. by rewrite /uPred_valid (own_unit (gset_disjUR positive) disabled_name). Qed.
-Lemma ownD_op E1 E2 : E1 ⊥ E2 → ownD (E1 ∪ E2) ⊣⊢ ownD E1 ∗ ownD E2.
+Lemma ownD_op E1 E2 : E1 ## E2 → ownD (E1 ∪ E2) ⊣⊢ ownD E1 ∗ ownD E2.
 Proof. intros. by rewrite /ownD -own_op gset_disj_union. Qed.
-Lemma ownD_disjoint E1 E2 : ownD E1 ∗ ownD E2 ⊢ ⌜E1 ⊥ E2⌝.
+Lemma ownD_disjoint E1 E2 : ownD E1 ∗ ownD E2 ⊢ ⌜E1 ## E2⌝.
 Proof. rewrite /ownD -own_op own_valid. by iIntros (?%gset_disj_valid_op). Qed.
-Lemma ownD_op' E1 E2 : ⌜E1 ⊥ E2⌝ ∧ ownD (E1 ∪ E2) ⊣⊢ ownD E1 ∗ ownD E2.
+Lemma ownD_op' E1 E2 : ⌜E1 ## E2⌝ ∧ ownD (E1 ∪ E2) ⊣⊢ ownD E1 ∗ ownD E2.
 Proof.
   iSplit; [iIntros "[% ?]"; by iApply ownD_op|].
   iIntros "HE". iDestruct (ownD_disjoint with "HE") as %?.

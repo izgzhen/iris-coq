@@ -415,7 +415,7 @@ Section gset.
   Proof. apply big_opS_fn_insert'. Qed.
 
   Lemma big_sepS_union Φ X Y :
-    X ⊥ Y →
+    X ## Y →
     ([∗ set] y ∈ X ∪ Y, Φ y) ⊣⊢ ([∗ set] y ∈ X, Φ y) ∗ ([∗ set] y ∈ Y, Φ y).
   Proof. apply big_opS_union. Qed.
 

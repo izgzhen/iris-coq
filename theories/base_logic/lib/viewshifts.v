@@ -64,7 +64,7 @@ Lemma vs_frame_r E1 E2 P Q R : (P ={E1,E2}=> Q) ⊢ P ∗ R ={E1,E2}=> Q ∗ R.
 Proof. iIntros "#Hvs !# [HP $]". by iApply "Hvs". Qed.
 
 Lemma vs_mask_frame_r E1 E2 Ef P Q :
-  E1 ⊥ Ef → (P ={E1,E2}=> Q) ⊢ P ={E1 ∪ Ef,E2 ∪ Ef}=> Q.
+  E1 ## Ef → (P ={E1,E2}=> Q) ⊢ P ={E1 ∪ Ef,E2 ∪ Ef}=> Q.
 Proof.
   iIntros (?) "#Hvs !# HP". iApply fupd_mask_frame_r; auto. by iApply "Hvs".
 Qed.

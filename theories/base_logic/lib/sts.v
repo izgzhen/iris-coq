@@ -78,7 +78,7 @@ Section sts.
   Proof. intros ???. by apply own_update, sts_update_frag_up. Qed.
 
   Lemma sts_own_weaken_state γ s1 s2 T :
-    sts.frame_steps T s2 s1 → sts.tok s2 ⊥ T →
+    sts.frame_steps T s2 s1 → sts.tok s2 ## T →
     sts_own γ s1 T ==∗ sts_own γ s2 T.
   Proof.
     intros ??. apply own_update, sts_update_frag_up; [|done..].
@@ -94,12 +94,12 @@ Section sts.
   Qed.
 
   Lemma sts_ownS_op γ S1 S2 T1 T2 :
-    T1 ⊥ T2 → sts.closed S1 T1 → sts.closed S2 T2 →
+    T1 ## T2 → sts.closed S1 T1 → sts.closed S2 T2 →
     sts_ownS γ (S1 ∩ S2) (T1 ∪ T2) ⊣⊢ (sts_ownS γ S1 T1 ∗ sts_ownS γ S2 T2).
   Proof. intros. by rewrite /sts_ownS -own_op sts_op_frag. Qed.
 
   Lemma sts_own_op γ s T1 T2 :
-    T1 ⊥ T2 → sts_own γ s (T1 ∪ T2) ==∗ sts_own γ s T1 ∗ sts_own γ s T2.
+    T1 ## T2 → sts_own γ s (T1 ∪ T2) ==∗ sts_own γ s T1 ∗ sts_own γ s T2.
     (* The other direction does not hold -- see sts.up_op. *)
   Proof.
     intros. rewrite /sts_own -own_op. iIntros "Hown".
