@@ -233,6 +233,9 @@ Qed.
 Lemma test_iIntros_rewrite P (x1 x2 x3 x4 : nat) :
   x1 = x2 → (⌜ x2 = x3 ⌝ ∗ ⌜ x3 ≡ x4 ⌝ ∗ P) -∗ ⌜ x1 = x4 ⌝ ∗ P.
 Proof. iIntros (?) "(-> & -> & $)"; auto. Qed.
+
+Lemma test_iItros_pure : (⌜ ¬False ⌝ : uPred M)%I.
+Proof. by iIntros (?). Qed.
 End tests.
 
 Section more_tests.
