@@ -770,12 +770,14 @@ Lemma tac_rewrite Δ i p Pxy d Q :
   ∀ {A : ofeT} (x y : A) (Φ : A → uPred M),
     (Pxy ⊢ x ≡ y) →
     (Q ⊣⊢ Φ (if d is Left then y else x)) →
-    (NonExpansive Φ) →
+    NonExpansive Φ →
     (Δ ⊢ Φ (if d is Left then x else y)) → Δ ⊢ Q.
 Proof.
-  intros ? A x y ? HPxy -> ?; apply internal_eq_rewrite; auto.
-  rewrite {1}envs_lookup_sound' //; rewrite sep_elim_l HPxy.
-  destruct d; auto using internal_eq_sym.
+  intros ? A x y Φ HPxy -> ? HΔ.
+  rewrite -(idemp (∧)%I (of_envs Δ)) {1}envs_lookup_sound' //.
+  rewrite sep_elim_l HPxy HΔ. apply impl_elim_l'. destruct d.
+  - by apply internal_eq_rewrite.
+  - rewrite internal_eq_sym. by apply internal_eq_rewrite.
 Qed.
 
 Lemma tac_rewrite_in Δ i p Pxy j q P d Q :
@@ -784,20 +786,19 @@ Lemma tac_rewrite_in Δ i p Pxy j q P d Q :
   ∀ {A : ofeT} Δ' x y (Φ : A → uPred M),
     (Pxy ⊢ x ≡ y) →
     (P ⊣⊢ Φ (if d is Left then y else x)) →
-    (NonExpansive Φ) →
+    NonExpansive Φ →
     envs_simple_replace j q (Esnoc Enil j (Φ (if d is Left then x else y))) Δ = Some Δ' →
     (Δ' ⊢ Q) → Δ ⊢ Q.
 Proof.
   intros ?? A Δ' x y Φ HPxy HP ?? <-.
-  rewrite -(idemp uPred_and Δ) {2}(envs_lookup_sound' _ i) //.
+  rewrite -(idemp uPred_and (of_envs Δ)) {2}(envs_lookup_sound' _ i) //.
   rewrite sep_elim_l HPxy and_sep_r.
   rewrite (envs_simple_replace_sound _ _ j) //; simpl.
-  rewrite HP right_id -assoc; apply wand_elim_r'. destruct d.
-  - apply (internal_eq_rewrite x y (λ y, □?q Φ y -∗ Δ')%I);
-      eauto with I. solve_proper.
-  - apply (internal_eq_rewrite y x (λ y, □?q Φ y -∗ Δ')%I);
-      eauto using internal_eq_sym with I.
-    solve_proper.
+  rewrite HP right_id -assoc (sep_and _ (_ ≡ _)).
+  apply wand_elim_r', impl_elim_r'. destruct d.
+  - apply (internal_eq_rewrite _ _ (λ y, □?q Φ y -∗ _)%I). solve_proper.
+  - rewrite internal_eq_sym.
+    apply (internal_eq_rewrite _ _ (λ y, □?q Φ y -∗ _)%I). solve_proper.
 Qed.
 
 (** * Conjunction splitting *)

@@ -298,13 +298,19 @@ Hint Resolve internal_eq_refl'.
 Lemma equiv_internal_eq {A : ofeT} P (a b : A) : a ≡ b → P ⊢ a ≡ b.
 Proof. by intros ->. Qed.
 Lemma internal_eq_sym {A : ofeT} (a b : A) : a ≡ b ⊢ b ≡ a.
-Proof. apply (internal_eq_rewrite a b (λ b, b ≡ a)%I); auto. solve_proper. Qed.
-Lemma internal_eq_rewrite_contractive {A : ofeT} a b (Ψ : A → uPred M) P
-  {HΨ : Contractive Ψ} : (P ⊢ ▷ (a ≡ b)) → (P ⊢ Ψ a) → P ⊢ Ψ b.
 Proof.
-  move: HΨ=> /contractiveI HΨ Heq ?.
-  apply (internal_eq_rewrite (Ψ a) (Ψ b) id _)=>//=. by rewrite -HΨ.
+  rewrite (internal_eq_rewrite a b (λ b, b ≡ a)%I ltac:(solve_proper)).
+  by rewrite -internal_eq_refl True_impl.
 Qed.
+Lemma f_equiv {A B : ofeT} (f : A → B) `{!NonExpansive f} x y :
+  x ≡ y ⊢ f x ≡ f y.
+Proof.
+  rewrite (internal_eq_rewrite x y (λ y, f x ≡ f y)%I ltac:(solve_proper)).
+  by rewrite -internal_eq_refl True_impl.
+Qed.
+Lemma internal_eq_rewrite_contractive {A : ofeT} a b (Ψ : A → uPred M)
+  {HΨ : Contractive Ψ} : ▷ (a ≡ b) ⊢ Ψ a → Ψ b.
+Proof. move: HΨ=> /contractiveI ->. by rewrite (internal_eq_rewrite _ _ id). Qed.
 
 Lemma pure_impl_forall φ P : (⌜φ⌝ → P) ⊣⊢ (∀ _ : φ, P).
 Proof.
@@ -345,8 +351,8 @@ Lemma equiv_iff P Q : (P ⊣⊢ Q) → (P ↔ Q)%I.
 Proof. intros ->; apply iff_refl. Qed.
 Lemma internal_eq_iff P Q : P ≡ Q ⊢ P ↔ Q.
 Proof.
-  apply (internal_eq_rewrite P Q (λ Q, P ↔ Q))%I;
-    first solve_proper; auto using iff_refl.
+  rewrite (internal_eq_rewrite P Q (λ Q, P ↔ Q)%I ltac:(solve_proper)).
+  by rewrite -(iff_refl True) True_impl.
 Qed.
 
 (* Derived BI Stuff *)
@@ -531,9 +537,8 @@ Qed.
 Lemma plainly_internal_eq {A:ofeT} (a b : A) : ■ (a ≡ b) ⊣⊢ a ≡ b.
 Proof.
   apply (anti_symm (⊢)); auto using persistently_elim.
-  apply (internal_eq_rewrite a b (λ b, ■ (a ≡ b))%I); auto.
-  { intros n; solve_proper. }
-  rewrite -(internal_eq_refl a) plainly_pure; auto.
+  rewrite {1}(internal_eq_rewrite a b (λ b, ■ (a ≡ b))%I ltac:(solve_proper)).
+  by rewrite -internal_eq_refl plainly_pure True_impl.
 Qed.
 
 Lemma plainly_and_sep_l_1 P Q : ■ P ∧ Q ⊢ ■ P ∗ Q.
@@ -946,8 +951,8 @@ Global Instance ownM_timeless (a : M) : Discrete a → Timeless (uPred_ownM a).
 Proof.
   intros ?. rewrite /Timeless later_ownM. apply exist_elim=> b.
   rewrite (timelessP (a≡b)) (except_0_intro (uPred_ownM b)) -except_0_and.
-  apply except_0_mono. rewrite internal_eq_sym.
-  apply (internal_eq_rewrite b a (uPred_ownM)); first apply _; auto.
+  apply except_0_mono. rewrite internal_eq_sym. apply impl_elim_r'.
+  apply: internal_eq_rewrite.
 Qed.
 Global Instance from_option_timeless {A} P (Ψ : A → uPred M) (mx : option A) :
   (∀ x, Timeless (Ψ x)) → Timeless P → Timeless (from_option Ψ P mx).

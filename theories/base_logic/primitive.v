@@ -395,13 +395,9 @@ Proof. unseal; intros HΦΨ; split=> n x ? [a ?]; by apply HΦΨ with a. Qed.
 
 Lemma internal_eq_refl {A : ofeT} (a : A) : uPred_valid (M:=M) (a ≡ a).
 Proof. unseal; by split=> n x ??; simpl. Qed.
-Lemma internal_eq_rewrite {A : ofeT} a b (Ψ : A → uPred M) P
-  {HΨ : NonExpansive Ψ} : (P ⊢ a ≡ b) → (P ⊢ Ψ a) → P ⊢ Ψ b.
-Proof.
-  unseal; intros Hab Ha; split=> n x ??. apply HΨ with n a; auto.
-  - by symmetry; apply Hab with x.
-  - by apply Ha.
-Qed.
+Lemma internal_eq_rewrite {A : ofeT} a b (Ψ : A → uPred M) :
+  NonExpansive Ψ → a ≡ b ⊢ Ψ a → Ψ b.
+Proof. intros HΨ. unseal; split=> n x ?? n' x' ??? Ha. by apply HΨ with n a. Qed.
 
 (* BI connectives *)
 Lemma sep_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ∗ P' ⊢ Q ∗ Q'.

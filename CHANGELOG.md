@@ -85,6 +85,8 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
   of evars, which often led to divergence. There are a few places where type
   annotations are now needed.
 * Move the `prelude` folder to its own project: std++
+* The rules `internal_eq_rewrite` and `internal_eq_rewrite_contractive` are now
+  stated in the logic, i.e. they are `iApply` friendly.
 
 ## Iris 3.0.0 (released 2017-01-11)
 
