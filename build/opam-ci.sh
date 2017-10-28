@@ -22,7 +22,7 @@ run_and_print make build-dep/opam
 run_and_print opam update
 
 # Make sure we got the right set of repositories registered
-if echo "$@" | fgrep "dev"; then
+if echo "$@" | fgrep "dev" > /dev/null; then
     # We are compiling against a dev version of something.  Get ourselves the dev repositories.
     test -d "$OPAMROOT/repo/coq-extra-dev" || run_and_print opam repo add coq-extra-dev https://coq.inria.fr/opam/extra-dev -p 0
     test -d "$OPAMROOT/repo/coq-core-dev" || run_and_print opam repo add coq-core-dev https://coq.inria.fr/opam/core-dev -p 5
