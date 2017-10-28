@@ -36,7 +36,8 @@ Changes in Coq:
     + `DRAMixin` -> `DraMixin`
     + `DRAT` -> `DraT`
     + `STS` -> `Sts`
-  - Many lemmas also changed their name.  A partial list:
+  - Many lemmas also changed their name.  `always_*` became `persistently_*`,
+    and furthermore: (the following list is not complete)
     + `impl_wand` -> `impl_wand_1` (it only involves one direction of the
       equivalent)
     + `always_impl_wand` -> `impl_wand`
@@ -49,7 +50,7 @@ Changes in Coq:
       direction of this equivalence got swapped for consistency's sake)
   The following `sed` snippet should get you most of the way:
 ```
-sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscrete\b/CmraDiscrete/g; s/\bSTS\b/Sts/g' -i $(find -name "*.v")
+sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscrete\b/CmraDiscrete/g; s/\bCMRAT\b/CmraT/g; s/\bCMRAMixin\b/CmraMixin/g; s/\bUCMRAT\b/UcmraT/g; s/\bUCMRAMixin\b/UcmraMixin/g; s/\bSTS\b/Sts/g' -i $(find -name "*.v")
 ```
 * Fix a bunch of consistency issues in the proof mode, and make it overall more
   usable.  In particular:
@@ -71,6 +72,8 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
     and `iAlways` also works for the plainness modality. A breaking change,
     however, is that these tactics now no longer work when the universal
     quantifier or modality is behind a type class opaque definition.
+    Furthermore, this can change the name of anonymous identifiers introduced
+    with the "%" pattern.
 * The generic `fill` operation of the `ectxi_language` construct has been
   defined in terms of a left fold instead of a right fold. This gives rise to
   more definitional equalities.
