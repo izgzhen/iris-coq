@@ -52,8 +52,14 @@ Section language.
   Definition irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ e' σ' efs, ¬prim_step e σ e' σ' efs.
 
+  (* This (weak) form of atomicity is enough to open invariants when WP is safe,
+     i.e., programs never can get stuck. *)
   Definition atomic (e : expr Λ) : Prop :=
     ∀ σ e' σ' efs, prim_step e σ e' σ' efs → irreducible e' σ'.
+
+  (* To open invariants with unsafe WP, we need a stronger form of atomicity. *)
+  Definition strongly_atomic (e : expr Λ) : Prop :=
+    ∀ σ e' σ' efs, prim_step e σ e' σ' efs → is_Some (to_val e').
 
   Inductive step (ρ1 ρ2 : cfg Λ) : Prop :=
     | step_atomic e1 σ1 e2 σ2 efs t1 t2 :
@@ -73,6 +79,10 @@ Section language.
   Proof. intros [??] ??? ?%val_stuck. by destruct (to_val e). Qed.
   Global Instance of_val_inj : Inj (=) (=) (@of_val Λ).
   Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
+
+  Lemma strongly_atomic_atomic e :
+    strongly_atomic e → atomic e.
+  Proof. unfold strongly_atomic, atomic. eauto using val_irreducible. Qed.
 
   Lemma reducible_fill `{LanguageCtx Λ K} e σ :
     to_val e = None → reducible (K e) σ → reducible e σ.
