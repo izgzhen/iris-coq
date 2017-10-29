@@ -52,12 +52,19 @@ Section language.
   Definition irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ e' σ' efs, ¬prim_step e σ e' σ' efs.
 
-  (* This (weak) form of atomicity is enough to open invariants when WP is safe,
-     i.e., programs never can get stuck. *)
+  (* This (weak) form of atomicity is enough to open invariants when WP ensures
+     safety, i.e., programs never can get stuck.  We have an example in
+     lambdaRust of an expression that is atomic in this sense, but not in the
+     stronger sense defined below, and we have to be able to open invariants
+     around that expression.  See `CasStuckS` in
+     [lambdaRust](https://gitlab.mpi-sws.org/FP/LambdaRust-coq/blob/master/theories/lang/lang.v). *)
   Definition atomic (e : expr Λ) : Prop :=
     ∀ σ e' σ' efs, prim_step e σ e' σ' efs → irreducible e' σ'.
 
-  (* To open invariants with unsafe WP, we need a stronger form of atomicity. *)
+  (* To open invariants with a WP that does not ensure safety, we need a
+     stronger form of atomicity.  With the above definition, in case `e` reduces
+     to a stuck non-value, there is no proof that the invariants have been
+     established again. *)
   Definition strongly_atomic (e : expr Λ) : Prop :=
     ∀ σ e' σ' efs, prim_step e σ e' σ' efs → is_Some (to_val e').
 
