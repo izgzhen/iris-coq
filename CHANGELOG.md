@@ -18,6 +18,7 @@ Changes in Coq:
 
 * Rename some things and change notation:
   - The unit of a camera: `empty` -> `unit`, `∅` -> `ε`
+  - Disjointness: `⊥` -> `##`
   - A proof mode type class `IntoOp` -> `IsOp`
   - OFEs with all elements being discrete: `Discrete` -> `OfeDiscrete`
   - OFE elements whose equality is discrete: `Timeless` -> `Discrete`
