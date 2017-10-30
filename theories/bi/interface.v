@@ -58,7 +58,7 @@ Section bi_mixin.
     bi_mixin_sep_ne : NonExpansive2 bi_sep;
     bi_mixin_wand_ne : NonExpansive2 bi_wand;
     bi_mixin_persistently_ne : NonExpansive bi_persistently;
-    sbi_mixin_internal_eq_ne (A : ofeT) : NonExpansive2 (bi_internal_eq A);
+    bi_mixin_internal_eq_ne (A : ofeT) : NonExpansive2 (bi_internal_eq A);
 
     (* Higher-order logic *)
     bi_mixin_pure_intro P (φ : Prop) : φ → P ⊢ ⌜ φ ⌝;
@@ -365,9 +365,8 @@ Lemma exist_elim {A} (Φ : A → PROP) Q : (∀ a, Φ a ⊢ Q) → (∃ a, Φ a)
 Proof. eapply bi_mixin_exist_elim, bi_bi_mixin. Qed.
 
 (* Equality *)
-Global Instance internal_eq_ne (A : ofeT) :
-  NonExpansive2 (@bi_internal_eq PROP A).
-Proof. eapply sbi_mixin_internal_eq_ne, bi_bi_mixin. Qed.
+Global Instance internal_eq_ne (A : ofeT) : NonExpansive2 (@bi_internal_eq PROP A).
+Proof. eapply bi_mixin_internal_eq_ne, bi_bi_mixin. Qed.
 
 Lemma internal_eq_refl {A : ofeT} P (a : A) : P ⊢ a ≡ a.
 Proof. eapply bi_mixin_internal_eq_refl, bi_bi_mixin. Qed.
