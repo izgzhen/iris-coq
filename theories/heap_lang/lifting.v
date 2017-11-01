@@ -83,14 +83,21 @@ Qed.
 Local Ltac solve_exec_safe := intros; subst; do 3 eexists; econstructor; eauto.
 Local Ltac solve_exec_puredet := simpl; intros; by inv_head_step.
 Local Ltac solve_pure_exec :=
-  unfold AsRec, IntoVal, AsVal in *; subst;
+  unfold IntoVal, AsVal in *; subst;
   repeat match goal with H : is_Some _ |- _ => destruct H as [??] end;
   apply det_head_step_pure_exec; [ solve_exec_safe | solve_exec_puredet ].
+
+Class AsRec (e : expr) (f x : binder) (erec : expr) :=
+  as_rec : e = Rec f x erec.
+Global Instance AsRec_rec f x e : AsRec (Rec f x e) f x e := eq_refl.
+Global Instance AsRec_rec_locked_val v f x e :
+  AsRec (of_val v) f x e → AsRec (of_val (locked v)) f x e.
+Proof. by unlock. Qed.
 
 Global Instance pure_rec f x (erec e1 e2 : expr)
     `{!AsVal e2, AsRec e1 f x erec, Closed (f :b: x :b: []) erec} :
   PureExec True (App e1 e2) (subst' x e2 (subst' f e1 erec)).
-Proof. solve_pure_exec. Qed.
+Proof. unfold AsRec in *; solve_pure_exec. Qed.
 
 Global Instance pure_unop op e v v' `{!IntoVal e v} :
   PureExec (un_op_eval op v = Some v') (UnOp op e) (of_val v').

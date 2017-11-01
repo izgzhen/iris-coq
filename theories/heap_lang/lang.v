@@ -109,14 +109,6 @@ Fixpoint to_val (e : expr) : option val :=
   | _ => None
   end.
 
-Class AsRec (e : expr) (f x : binder) (erec : expr) :=
-  as_rec : e = Rec f x erec.
-
-Instance AsRec_rec f x e : AsRec (Rec f x e) f x e := eq_refl.
-Instance AsRec_rec_locked_val v f x e :
-  AsRec (of_val v) f x e → AsRec (of_val (locked v)) f x e.
-Proof. by unlock. Qed.
-
 (** The state: heaps of vals. *)
 Definition state := gmap loc val.
 
