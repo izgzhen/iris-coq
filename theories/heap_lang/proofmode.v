@@ -108,8 +108,8 @@ Proof.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_cas_fail Δ Δ' E i K l q v e1 v1 e2 v2 Φ :
-  IntoVal e1 v1 → IntoVal e2 v2 →
+Lemma tac_wp_cas_fail Δ Δ' E i K l q v e1 v1 e2 Φ :
+  IntoVal e1 v1 → AsVal e2 →
   IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
   (Δ' ⊢ WP fill K (Lit (LitBool false)) @ E {{ Φ }}) →

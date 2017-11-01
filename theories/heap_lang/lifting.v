@@ -83,14 +83,12 @@ Qed.
 Local Ltac solve_exec_safe := intros; subst; do 3 eexists; econstructor; eauto.
 Local Ltac solve_exec_puredet := simpl; intros; by inv_head_step.
 Local Ltac solve_pure_exec :=
-  repeat lazymatch goal with
-  | H: IntoVal ?e _ |- _ => rewrite -(of_to_val e _ into_val); clear H
-  | H: AsRec _ _ _ _ |- _ => rewrite H; clear H
-  end;
+  unfold AsRec, IntoVal, AsVal in *; subst;
+  repeat match goal with H : is_Some _ |- _ => destruct H as [??] end;
   apply det_head_step_pure_exec; [ solve_exec_safe | solve_exec_puredet ].
 
-Global Instance pure_rec f x (erec e1 e2 : expr) (v2 : val)
-    `{!IntoVal e2 v2, AsRec e1 f x erec, Closed (f :b: x :b: []) erec} :
+Global Instance pure_rec f x (erec e1 e2 : expr)
+    `{!AsVal e2, AsRec e1 f x erec, Closed (f :b: x :b: []) erec} :
   PureExec True (App e1 e2) (subst' x e2 (subst' f e1 erec)).
 Proof. solve_pure_exec. Qed.
 
@@ -110,11 +108,11 @@ Global Instance pure_if_false e1 e2 :
   PureExec True (If (Lit (LitBool false)) e1 e2) e2.
 Proof. solve_pure_exec. Qed.
 
-Global Instance pure_fst e1 e2 v1 v2 `{!IntoVal e1 v1, !IntoVal e2 v2} :
+Global Instance pure_fst e1 e2 v1 `{!IntoVal e1 v1, !AsVal e2} :
   PureExec True (Fst (Pair e1 e2)) e1.
 Proof. solve_pure_exec. Qed.
 
-Global Instance pure_snd e1 e2 v1 v2 `{!IntoVal e1 v1, !IntoVal e2 v2} :
+Global Instance pure_snd e1 e2 v2 `{!AsVal e1, !IntoVal e2 v2} :
   PureExec True (Snd (Pair e1 e2)) e2.
 Proof. solve_pure_exec. Qed.
 
@@ -128,7 +126,7 @@ Proof. solve_pure_exec. Qed.
 
 (** Heap *)
 Lemma wp_alloc E e v :
-  to_val e = Some v →
+  IntoVal e v →
   {{{ True }}} Alloc e @ E {{{ l, RET LitV (LitLoc l); l ↦ v }}}.
 Proof.
   iIntros (<-%of_to_val Φ) "_ HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
@@ -149,7 +147,7 @@ Proof.
 Qed.
 
 Lemma wp_store E l v' e v :
-  to_val e = Some v →
+  IntoVal e v →
   {{{ ▷ l ↦ v' }}} Store (Lit (LitLoc l)) e @ E {{{ RET LitV LitUnit; l ↦ v }}}.
 Proof.
   iIntros (<-%of_to_val Φ) ">Hl HΦ".
@@ -160,12 +158,12 @@ Proof.
   iModIntro. iSplit=>//. by iApply "HΦ".
 Qed.
 
-Lemma wp_cas_fail E l q v' e1 v1 e2 v2 :
-  to_val e1 = Some v1 → to_val e2 = Some v2 → v' ≠ v1 →
+Lemma wp_cas_fail E l q v' e1 v1 e2 :
+  IntoVal e1 v1 → AsVal e2 → v' ≠ v1 →
   {{{ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ E
   {{{ RET LitV (LitBool false); l ↦{q} v' }}}.
 Proof.
-  iIntros (<-%of_to_val <-%of_to_val ? Φ) ">Hl HΦ".
+  iIntros (<-%of_to_val [v2 <-%of_to_val] ? Φ) ">Hl HΦ".
   iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
@@ -173,7 +171,7 @@ Proof.
 Qed.
 
 Lemma wp_cas_suc E l e1 v1 e2 v2 :
-  to_val e1 = Some v1 → to_val e2 = Some v2 →
+  IntoVal e1 v1 → IntoVal e2 v2 →
   {{{ ▷ l ↦ v1 }}} CAS (Lit (LitLoc l)) e1 e2 @ E
   {{{ RET LitV (LitBool true); l ↦ v2 }}}.
 Proof.

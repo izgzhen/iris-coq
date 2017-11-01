@@ -420,7 +420,7 @@ Lemma is_closed_of_val X v : is_closed X (of_val v).
 Proof. apply is_closed_weaken_nil. induction v; simpl; auto. Qed.
 
 Lemma is_closed_to_val X e v : to_val e = Some v → is_closed X e.
-Proof. intros Hev; rewrite -(of_to_val e v Hev); apply is_closed_of_val. Qed.
+Proof. intros <-%of_to_val. apply is_closed_of_val. Qed.
 
 Lemma is_closed_subst X e x es :
   is_closed [] es → is_closed (x :: X) e → is_closed X (subst x es e).

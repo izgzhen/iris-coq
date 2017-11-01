@@ -126,4 +126,13 @@ Section language.
   (* This is a family of frequent assumptions for PureExec *)
   Class IntoVal (e : expr Λ) (v : val Λ) :=
     into_val : to_val e = Some v.
+
+  Class AsVal (e : expr Λ) := as_val : is_Some (to_val e).
+  (* There is no instance [IntoVal → AsVal] as often one can solve [AsVal] more
+  efficiently since no witness has to be computed. *)
+  Global Instance as_vals_of_val vs : TCForall AsVal (of_val <$> vs).
+  Proof.
+    apply TCForall_Forall, Forall_fmap, Forall_true=> v.
+    rewrite /AsVal /= to_of_val; eauto.
+  Qed.
 End language.
