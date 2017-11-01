@@ -114,7 +114,7 @@ Fixpoint is_closed (X : list string) (e : expr) : bool :=
 Lemma is_closed_correct X e : is_closed X e → heap_lang.is_closed X (to_expr e).
 Proof.
   revert X.
-  induction e; naive_solver eauto using is_closed_of_val, is_closed_to_val, is_closed_weaken_nil.
+  induction e; naive_solver eauto using is_closed_to_val, is_closed_weaken_nil.
 Qed.
 
 (* We define [to_val (ClosedExpr _)] to be [None] since [ClosedExpr]
@@ -172,7 +172,7 @@ Lemma to_expr_subst x er e :
   to_expr (subst x er e) = heap_lang.subst x (to_expr er) (to_expr e).
 Proof.
   induction e; simpl; repeat case_decide;
-    f_equal; eauto using subst_is_closed_nil, is_closed_of_val, is_closed_to_val, eq_sym.
+    f_equal; eauto using subst_is_closed_nil, is_closed_to_val, eq_sym.
 Qed.
 
 Definition atomic (e : expr) :=
