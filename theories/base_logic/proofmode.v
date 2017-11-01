@@ -31,14 +31,14 @@ Qed.
 Global Instance into_wand_bupd p q R P Q :
   IntoWand false false R P Q → IntoWand p q (|==> R) (|==> P) (|==> Q).
 Proof.
-  rewrite /IntoWand /= => HR. rewrite !bare_persistently_if_elim HR.
+  rewrite /IntoWand /= => HR. rewrite !affinely_persistently_if_elim HR.
   apply wand_intro_l. by rewrite bupd_sep wand_elim_r.
 Qed.
 
 Global Instance into_wand_bupd_persistent p q R P Q :
   IntoWand false q R P Q → IntoWand p q (|==> R) P (|==> Q).
 Proof.
-  rewrite /IntoWand /= => HR. rewrite bare_persistently_if_elim HR.
+  rewrite /IntoWand /= => HR. rewrite affinely_persistently_if_elim HR.
   apply wand_intro_l. by rewrite bupd_frame_l wand_elim_r.
 Qed.
 
@@ -46,7 +46,7 @@ Global Instance into_wand_bupd_args p q R P Q :
   IntoWand p false R P Q → IntoWand' p q R (|==> P) (|==> Q).
 Proof.
   rewrite /IntoWand' /IntoWand /= => ->.
-  apply wand_intro_l. by rewrite bare_persistently_if_elim bupd_wand_r.
+  apply wand_intro_l. by rewrite affinely_persistently_if_elim bupd_wand_r.
 Qed.
 
 (* FromOp *)
@@ -85,7 +85,7 @@ Qed.
 Global Instance into_and_ownM p (a b1 b2 : M) :
   IsOp a b1 b2 → IntoAnd p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof.
-  intros. apply bare_persistently_if_mono. by rewrite (is_op a) ownM_op sep_and.
+  intros. apply affinely_persistently_if_mono. by rewrite (is_op a) ownM_op sep_and.
 Qed.
 
 Global Instance into_sep_ownM (a b1 b2 : M) :

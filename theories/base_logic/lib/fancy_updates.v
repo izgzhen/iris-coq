@@ -157,14 +157,14 @@ Section proofmode_classes.
     IntoWand false false R P Q →
     IntoWand p q (|={E}=> R) (|={E}=> P) (|={E}=> Q).
   Proof.
-    rewrite /IntoWand /= => HR. rewrite !bare_persistently_if_elim HR.
+    rewrite /IntoWand /= => HR. rewrite !affinely_persistently_if_elim HR.
     apply wand_intro_l. by rewrite fupd_sep wand_elim_r.
   Qed.
 
   Global Instance into_wand_fupd_persistent E1 E2 p q R P Q :
     IntoWand false q R P Q → IntoWand p q (|={E1,E2}=> R) P (|={E1,E2}=> Q).
   Proof.
-    rewrite /IntoWand /= => HR. rewrite bare_persistently_if_elim HR.
+    rewrite /IntoWand /= => HR. rewrite affinely_persistently_if_elim HR.
     apply wand_intro_l. by rewrite fupd_frame_l wand_elim_r.
   Qed.
 
@@ -172,7 +172,7 @@ Section proofmode_classes.
     IntoWand p false R P Q → IntoWand' p q R (|={E1,E2}=> P) (|={E1,E2}=> Q).
   Proof.
     rewrite /IntoWand' /IntoWand /= => ->.
-    apply wand_intro_l. by rewrite bare_persistently_if_elim fupd_wand_r.
+    apply wand_intro_l. by rewrite affinely_persistently_if_elim fupd_wand_r.
   Qed.
 
   Global Instance from_sep_fupd E P Q1 Q2 :

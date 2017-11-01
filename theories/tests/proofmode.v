@@ -44,7 +44,7 @@ Lemma test_unfold_constants : bar.
 Proof. iIntros (P) "HP //". Qed.
 
 Lemma test_iRewrite {A : ofeT} (x y : A) P :
-  □ (∀ z, P -∗ bi_bare (z ≡ y)) -∗ (P -∗ P ∧ (x,x) ≡ (y,x)).
+  □ (∀ z, P -∗ bi_affinely (z ≡ y)) -∗ (P -∗ P ∧ (x,x) ≡ (y,x)).
 Proof.
   iIntros "#H1 H2".
   iRewrite (bi.internal_eq_sym x x with "[# //]").
@@ -53,7 +53,7 @@ Proof.
 Qed.
 
 Lemma test_iDestruct_and_emp P Q `{!Persistent P, !Persistent Q} :
-  P ∧ emp -∗ emp ∧ Q -∗ bi_bare (P ∗ Q).
+  P ∧ emp -∗ emp ∧ Q -∗ bi_affinely (P ∗ Q).
 Proof. iIntros "[#? _] [_ #?]". auto. Qed.
 
 Lemma test_iIntros_persistent P Q `{!Persistent Q} : (P → Q → P ∧ Q)%I.
@@ -110,17 +110,18 @@ Lemma test_iSpecialize_tc P : (∀ x y z : gset positive, P) -∗ P.
 Proof. iIntros "H". iSpecialize ("H" $! ∅ {[ 1%positive ]} ∅). done. Qed.
 
 Lemma test_iFrame_pure {A : ofeT} (φ : Prop) (y z : A) :
-  φ → bi_bare ⌜y ≡ z⌝ -∗ (⌜ φ ⌝ ∧ ⌜ φ ⌝ ∧ y ≡ z : PROP).
+  φ → bi_affinely ⌜y ≡ z⌝ -∗ (⌜ φ ⌝ ∧ ⌜ φ ⌝ ∧ y ≡ z : PROP).
 Proof. iIntros (Hv) "#Hxy". iFrame (Hv) "Hxy". Qed.
 
 Lemma test_iAssert_modality P : ◇ False -∗ ▷ P.
 Proof.
   iIntros "HF".
-  iAssert (bi_bare False)%I with "[> -]" as %[].
+  iAssert (bi_affinely False)%I with "[> -]" as %[].
   by iMod "HF".
 Qed.
 
-Lemma test_iMod_bare_timeless P `{!Timeless P} : bi_bare (▷ P) -∗ ◇ bi_bare P.
+Lemma test_iMod_affinely_timeless P `{!Timeless P} :
+  bi_affinely (▷ P) -∗ ◇ bi_affinely P.
 Proof. iIntros "H". iMod "H". done. Qed.
 
 Lemma test_iAssumption_False P : False -∗ P.
@@ -220,7 +221,8 @@ Lemma test_iIntros_let P :
   ∀ Q, let R := emp%I in P -∗ R -∗ Q -∗ P ∗ Q.
 Proof. iIntros (Q R) "$ _ $". Qed.
 
-Lemma test_foo P Q : bi_bare (▷ (Q ≡ P)) -∗ bi_bare (▷ Q) -∗ bi_bare (▷ P).
+Lemma test_foo P Q :
+  bi_affinely (▷ (Q ≡ P)) -∗ bi_affinely (▷ Q) -∗ bi_affinely (▷ P).
 Proof.
   iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ".
 Qed.
@@ -234,10 +236,10 @@ Proof.
 Qed.
 
 Lemma test_iNext_affine P Q :
-  bi_bare (▷ (Q ≡ P)) -∗ bi_bare (▷ Q) -∗ bi_bare (▷ P).
+  bi_affinely (▷ (Q ≡ P)) -∗ bi_affinely (▷ Q) -∗ bi_affinely (▷ P).
 Proof. iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ". Qed.
 
 Lemma test_iAlways P Q R :
-  □ P -∗ bi_persistently Q → R -∗ bi_persistently (bi_bare (bi_bare P)) ∗ □ Q.
+  □ P -∗ bi_persistently Q → R -∗ bi_persistently (bi_affinely (bi_affinely P)) ∗ □ Q.
 Proof. iIntros "#HP #HQ HR". iSplitL. iAlways. done. iAlways. done. Qed.
 End tests.

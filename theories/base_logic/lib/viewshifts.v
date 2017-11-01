@@ -82,7 +82,7 @@ Proof. iIntros "!# HP". by iApply inv_alloc. Qed.
 
 Lemma wand_fupd_alt E1 E2 P Q : (P ={E1,E2}=∗ Q) ⊣⊢ ∃ R, R ∗ (P ∗ R ={E1,E2}=> Q).
 Proof.
-  rewrite bi.wand_alt. do 2 f_equiv. setoid_rewrite bi.affine_bare; last apply _.
+  rewrite bi.wand_alt. do 2 f_equiv. setoid_rewrite bi.affine_affinely; last apply _.
   by rewrite bi.persistently_impl_wand.
 Qed.
 End vs.

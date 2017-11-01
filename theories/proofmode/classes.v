@@ -56,23 +56,23 @@ Arguments into_persistent {_} _ _%I _%I {_}.
 Hint Mode IntoPersistent + + ! - : typeclass_instances.
 
 Class FromPersistent {PROP : bi} (a p : bool) (P Q : PROP) :=
-  from_persistent : bi_bare_if a (bi_persistently_if p Q) ⊢ P.
+  from_persistent : bi_affinely_if a (bi_persistently_if p Q) ⊢ P.
 Arguments FromPersistent {_} _ _ _%I _%I : simpl never.
 Arguments from_persistent {_} _ _ _%I _%I {_}.
 Hint Mode FromPersistent + - - ! - : typeclass_instances.
 
-Class FromBare {PROP : bi} (P Q : PROP) :=
-  from_bare : bi_bare Q ⊢ P.
-Arguments FromBare {_} _%I _%type_scope : simpl never.
-Arguments from_bare {_} _%I _%type_scope {_}.
-Hint Mode FromBare + ! - : typeclass_instances.
-Hint Mode FromBare + - ! : typeclass_instances.
+Class FromAffinely {PROP : bi} (P Q : PROP) :=
+  from_affinely : bi_affinely Q ⊢ P.
+Arguments FromAffinely {_} _%I _%type_scope : simpl never.
+Arguments from_affinely {_} _%I _%type_scope {_}.
+Hint Mode FromAffinely + ! - : typeclass_instances.
+Hint Mode FromAffinely + - ! : typeclass_instances.
 
-Class IntoSink {PROP : bi} (P Q : PROP) := into_sink : P ⊢ ▲ Q.
-Arguments IntoSink {_} _%I _%I.
-Arguments into_sink {_} _%I _%I {_}.
-Hint Mode IntoSink + ! -  : typeclass_instances.
-Hint Mode IntoSink + - ! : typeclass_instances.
+Class IntoAbsorbingly {PROP : bi} (P Q : PROP) := into_absorbingly : P ⊢ ▲ Q.
+Arguments IntoAbsorbingly {_} _%I _%I.
+Arguments into_absorbingly {_} _%I _%I {_}.
+Hint Mode IntoAbsorbingly + ! -  : typeclass_instances.
+Hint Mode IntoAbsorbingly + - ! : typeclass_instances.
 
 Class IntoInternalEq {PROP : bi} {A : ofeT} (P : PROP) (x y : A) :=
   into_internal_eq : P ⊢ x ≡ y.
