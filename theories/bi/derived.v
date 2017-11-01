@@ -13,7 +13,7 @@ Arguments bi_wand_iff {_} _%I _%I : simpl never.
 Instance: Params (@bi_wand_iff) 1.
 Infix "∗-∗" := bi_wand_iff (at level 95, no associativity) : bi_scope.
 
-Class Persistent {PROP : bi} (P : PROP) := persistent : P ⊢ □ P.
+Class Persistent {PROP : bi} (P : PROP) := persistent : P ⊢ bi_persistently P.
 Arguments Persistent {_} _%I : simpl never.
 Arguments persistent {_} _%I {_}.
 Hint Mode Persistent + ! : typeclass_instances.
@@ -23,8 +23,8 @@ Definition bi_bare {PROP : bi} (P : PROP) : PROP := (emp ∧ P)%I.
 Arguments bi_bare {_} _%I : simpl never.
 Instance: Params (@bi_bare) 1.
 Typeclasses Opaque bi_bare.
-Notation "■ P" := (bi_bare P) (at level 20, right associativity) : bi_scope.
-Notation "⬕ P" := (■ □ P)%I (at level 20, right associativity) : bi_scope.
+Notation "□ P" := (bi_bare (bi_persistently P))%I
+  (at level 20, right associativity) : bi_scope.
 
 Class Affine {PROP : bi} (Q : PROP) := affine : Q ⊢ emp.
 Arguments Affine {_} _%I : simpl never.
@@ -35,7 +35,7 @@ Class AffineBI (PROP : bi) := absorbing_bi (Q : PROP) : Affine Q.
 Existing Instance absorbing_bi | 0.
 
 Class PositiveBI (PROP : bi) :=
-  positive_bi (P Q : PROP) : ■ (P ∗ Q) ⊢ ■ P ∗ Q.
+  positive_bi (P Q : PROP) : bi_bare (P ∗ Q) ⊢ bi_bare P ∗ Q.
 
 Definition bi_sink {PROP : bi} (P : PROP) : PROP := (True ∗ P)%I.
 Arguments bi_sink {_} _%I : simpl never.
@@ -48,25 +48,19 @@ Arguments Absorbing {_} _%I : simpl never.
 Arguments absorbing {_} _%I.
 
 Definition bi_persistently_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
-  (if p then □ P else P)%I.
+  (if p then bi_persistently P else P)%I.
 Arguments bi_persistently_if {_} !_ _%I /.
 Instance: Params (@bi_persistently_if) 2.
 Typeclasses Opaque bi_persistently_if.
-Notation "□? p P" := (bi_persistently_if p P)
-  (at level 20, p at level 9, P at level 20,
-   right associativity, format "□? p  P") : bi_scope.
 
 Definition bi_bare_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
-  (if p then ■ P else P)%I.
+  (if p then bi_bare P else P)%I.
 Arguments bi_bare_if {_} !_ _%I /.
 Instance: Params (@bi_bare_if) 2.
 Typeclasses Opaque bi_bare_if.
-Notation "■? p P" := (bi_bare_if p P)
+Notation "□? p P" := (bi_bare_if p (bi_persistently_if p P))%I
   (at level 20, p at level 9, P at level 20,
-   right associativity, format "■? p  P") : bi_scope.
-Notation "⬕? p P" := (■?p □?p P)%I
-  (at level 20, p at level 9, P at level 20,
-   right associativity, format "⬕? p  P") : bi_scope.
+   right associativity, format "□? p  P") : bi_scope.
 
 Fixpoint bi_hexist {PROP : bi} {As} : himpl As PROP → PROP :=
   match As return himpl As PROP → PROP with
@@ -691,53 +685,53 @@ Global Instance bare_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@bi_bare PROP).
 Proof. solve_proper. Qed.
 
-Lemma bare_elim_emp P : ■ P ⊢ emp.
+Lemma bare_elim_emp P : bi_bare P ⊢ emp.
 Proof. rewrite /bi_bare; auto. Qed.
-Lemma bare_elim P : ■ P ⊢ P.
+Lemma bare_elim P : bi_bare P ⊢ P.
 Proof. rewrite /bi_bare; auto. Qed.
-Lemma bare_mono P Q : (P ⊢ Q) → ■ P ⊢ ■ Q.
+Lemma bare_mono P Q : (P ⊢ Q) → bi_bare P ⊢ bi_bare Q.
 Proof. by intros ->. Qed.
-Lemma bare_idemp P : ■ ■ P ⊣⊢ ■ P.
+Lemma bare_idemp P : bi_bare (bi_bare P) ⊣⊢ bi_bare P.
 Proof. by rewrite /bi_bare assoc idemp. Qed.
 
-Lemma bare_intro' P Q : (■ P ⊢ Q) → ■ P ⊢ ■ Q.
+Lemma bare_intro' P Q : (bi_bare P ⊢ Q) → bi_bare P ⊢ bi_bare Q.
 Proof. intros <-. by rewrite bare_idemp. Qed.
 
-Lemma bare_False : ■ False ⊣⊢ False.
+Lemma bare_False : bi_bare False ⊣⊢ False.
 Proof. by rewrite /bi_bare right_absorb. Qed.
-Lemma bare_emp : ■ emp ⊣⊢ emp.
+Lemma bare_emp : bi_bare emp ⊣⊢ emp.
 Proof. by rewrite /bi_bare (idemp bi_and). Qed.
-Lemma bare_or P Q : ■ (P ∨ Q) ⊣⊢ ■ P ∨ ■ Q.
+Lemma bare_or P Q : bi_bare (P ∨ Q) ⊣⊢ bi_bare P ∨ bi_bare Q.
 Proof. by rewrite /bi_bare and_or_l. Qed.
-Lemma bare_and P Q : ■ (P ∧ Q) ⊣⊢ ■ P ∧ ■ Q.
+Lemma bare_and P Q : bi_bare (P ∧ Q) ⊣⊢ bi_bare P ∧ bi_bare Q.
 Proof.
   rewrite /bi_bare -(comm _ P) (assoc _ (_ ∧ _)%I) -!(assoc _ P).
   by rewrite idemp !assoc (comm _ P).
 Qed.
-Lemma bare_sep_2 P Q : ■ P ∗ ■ Q ⊢ ■ (P ∗ Q).
+Lemma bare_sep_2 P Q : bi_bare P ∗ bi_bare Q ⊢ bi_bare (P ∗ Q).
 Proof.
   rewrite /bi_bare. apply and_intro.
   - by rewrite !and_elim_l right_id.
   - by rewrite !and_elim_r.
 Qed.
-Lemma bare_sep `{PositiveBI PROP} P Q : ■ (P ∗ Q) ⊣⊢ ■ P ∗ ■ Q.
+Lemma bare_sep `{PositiveBI PROP} P Q : bi_bare (P ∗ Q) ⊣⊢ bi_bare P ∗ bi_bare Q.
 Proof.
   apply (anti_symm _), bare_sep_2.
-  by rewrite -{1}bare_idemp positive_bi !(comm _ (■ P)%I) positive_bi.
+  by rewrite -{1}bare_idemp positive_bi !(comm _ (bi_bare P)%I) positive_bi.
 Qed.
-Lemma bare_forall {A} (Φ : A → PROP) : ■ (∀ a, Φ a) ⊢ ∀ a, ■ Φ a.
+Lemma bare_forall {A} (Φ : A → PROP) : bi_bare (∀ a, Φ a) ⊢ ∀ a, bi_bare (Φ a).
 Proof. apply forall_intro=> a. by rewrite (forall_elim a). Qed.
-Lemma bare_exist {A} (Φ : A → PROP) : ■ (∃ a, Φ a) ⊣⊢ ∃ a, ■ Φ a.
+Lemma bare_exist {A} (Φ : A → PROP) : bi_bare (∃ a, Φ a) ⊣⊢ ∃ a, bi_bare (Φ a).
 Proof. by rewrite /bi_bare and_exist_l. Qed.
 
-Lemma bare_True_emp : ■ True ⊣⊢ ■ emp.
+Lemma bare_True_emp : bi_bare True ⊣⊢ bi_bare emp.
 Proof. apply (anti_symm _); rewrite /bi_bare; auto. Qed.
 
-Lemma bare_and_l P Q : ■ P ∧ Q ⊣⊢ ■ (P ∧ Q).
+Lemma bare_and_l P Q : bi_bare P ∧ Q ⊣⊢ bi_bare (P ∧ Q).
 Proof. by rewrite /bi_bare assoc. Qed.
-Lemma bare_and_r P Q : P ∧ ■ Q ⊣⊢ ■ (P ∧ Q).
+Lemma bare_and_r P Q : P ∧ bi_bare Q ⊣⊢ bi_bare (P ∧ Q).
 Proof. by rewrite /bi_bare !assoc (comm _ P). Qed.
-Lemma bare_and_lr P Q : ■ P ∧ Q ⊣⊢ P ∧ ■ Q.
+Lemma bare_and_lr P Q : bi_bare P ∧ Q ⊣⊢ P ∧ bi_bare Q.
 Proof. by rewrite bare_and_l bare_and_r. Qed.
 
 (* Properties of the sink modality *)
@@ -796,7 +790,7 @@ Proof. by rewrite /bi_sink !assoc (comm _ P). Qed.
 Lemma sink_sep_lr P Q : ▲ P ∗ Q ⊣⊢ P ∗ ▲ Q.
 Proof. by rewrite sink_sep_l sink_sep_r. Qed.
 
-Lemma bare_sink `{!PositiveBI PROP} P : ■ ▲ P ⊣⊢ ■ P.
+Lemma bare_sink `{!PositiveBI PROP} P : bi_bare (▲ P) ⊣⊢ bi_bare P.
 Proof.
   apply (anti_symm _), bare_mono, sink_intro.
   by rewrite /bi_sink bare_sep bare_True_emp bare_emp left_id.
@@ -823,7 +817,7 @@ Proof. rewrite /Affine=> H. apply exist_elim=> a. by rewrite H. Qed.
 
 Global Instance sep_affine P Q : Affine P → Affine Q → Affine (P ∗ Q).
 Proof. rewrite /Affine=>-> ->. by rewrite left_id. Qed.
-Global Instance bare_affine P : Affine (■ P).
+Global Instance bare_affine P : Affine (bi_bare P).
 Proof. rewrite /bi_bare. apply _. Qed.
 
 (* Absorbing propositions *)
@@ -859,7 +853,7 @@ Global Instance sink_absorbing P : Absorbing (▲ P).
 Proof. rewrite /bi_sink. apply _. Qed.
 
 (* Properties of affine and absorbing propositions *)
-Lemma affine_bare P `{!Affine P} : ■ P ⊣⊢ P.
+Lemma affine_bare P `{!Affine P} : bi_bare P ⊣⊢ P.
 Proof. rewrite /bi_bare. apply (anti_symm _); auto. Qed.
 Lemma absorbing_sink P `{!Absorbing P} : ▲ P ⊣⊢ P.
 Proof. by apply (anti_symm _), sink_intro. Qed.
@@ -890,7 +884,7 @@ Proof.
 Qed.
 
 
-Lemma bare_intro P Q `{!Affine P} : (P ⊢ Q) → P ⊢ ■ Q.
+Lemma bare_intro P Q `{!Affine P} : (P ⊢ Q) → P ⊢ bi_bare Q.
 Proof. intros <-. by rewrite affine_bare. Qed.
 
 Lemma emp_and P `{!Affine P} : emp ∧ P ⊣⊢ P.
@@ -948,14 +942,15 @@ Global Instance persistently_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@bi_persistently PROP).
 Proof. intros P Q; apply persistently_mono. Qed.
 
-Lemma sink_persistently P : ▲ □ P ⊣⊢ □ P.
+Lemma sink_persistently P : ▲ bi_persistently P ⊣⊢ bi_persistently P.
 Proof.
   apply (anti_symm _), sink_intro. by rewrite /bi_sink comm persistently_absorbing.
 Qed.
-Global Instance persistently_absorbing P : Absorbing (□ P).
+Global Instance persistently_absorbing P : Absorbing (bi_persistently P).
 Proof. by rewrite /Absorbing sink_persistently. Qed.
 
-Lemma persistently_and_sep_assoc P Q R : □ P ∧ (Q ∗ R) ⊣⊢ (□ P ∧ Q) ∗ R.
+Lemma persistently_and_sep_assoc P Q R :
+  bi_persistently P ∧ (Q ∗ R) ⊣⊢ (bi_persistently P ∧ Q) ∗ R.
 Proof.
   apply (anti_symm (⊢)).
   - rewrite {1}persistently_idemp_2 persistently_and_sep_elim assoc.
@@ -966,111 +961,129 @@ Proof.
     + by rewrite and_elim_l sep_elim_l.
     + by rewrite and_elim_r.
 Qed.
-Lemma persistently_and_emp_elim P : emp ∧ □ P ⊢ P.
+Lemma persistently_and_emp_elim P : emp ∧ bi_persistently P ⊢ P.
 Proof. by rewrite comm persistently_and_sep_elim right_id and_elim_r. Qed.
-Lemma persistently_elim_sink P : □ P ⊢ ▲ P.
+Lemma persistently_elim_sink P : bi_persistently P ⊢ ▲ P.
 Proof.
-  rewrite -(right_id True%I _ (□ _)%I) -{1}(left_id emp%I _ True%I).
+  rewrite -(right_id True%I _ (bi_persistently _)%I) -{1}(left_id emp%I _ True%I).
   by rewrite persistently_and_sep_assoc (comm bi_and) persistently_and_emp_elim comm.
 Qed.
-Lemma persistently_elim P `{!Absorbing P} : □ P ⊢ P.
+Lemma persistently_elim P `{!Absorbing P} : bi_persistently P ⊢ P.
 Proof. by rewrite persistently_elim_sink absorbing_sink. Qed.
 
-Lemma persistently_idemp_1 P : □ □ P ⊢ □ P.
+Lemma persistently_idemp_1 P :
+  bi_persistently (bi_persistently P) ⊢ bi_persistently P.
 Proof. by rewrite persistently_elim_sink sink_persistently. Qed.
-Lemma persistently_idemp P : □ □ P ⊣⊢ □ P.
+Lemma persistently_idemp P :
+  bi_persistently (bi_persistently P) ⊣⊢ bi_persistently P.
 Proof. apply (anti_symm _); auto using persistently_idemp_1, persistently_idemp_2. Qed.
 
-Lemma persistently_intro' P Q : (□ P ⊢ Q) → □ P ⊢ □ Q.
+Lemma persistently_intro' P Q :
+  (bi_persistently P ⊢ Q) → bi_persistently P ⊢ bi_persistently Q.
 Proof. intros <-. apply persistently_idemp_2. Qed.
 
-Lemma persistently_pure φ : □ ⌜φ⌝ ⊣⊢ ⌜φ⌝.
+Lemma persistently_pure φ : bi_persistently ⌜φ⌝ ⊣⊢ ⌜φ⌝.
 Proof.
   apply (anti_symm _); first by rewrite persistently_elim.
   apply pure_elim'=> Hφ.
-  trans (∀ x : False, □ True : PROP)%I; [by apply forall_intro|].
+  trans (∀ x : False, bi_persistently True : PROP)%I; [by apply forall_intro|].
   rewrite persistently_forall_2. auto using persistently_mono, pure_intro.
 Qed.
-Lemma persistently_forall {A} (Ψ : A → PROP) : (□ ∀ a, Ψ a) ⊣⊢ (∀ a, □ Ψ a).
+Lemma persistently_forall {A} (Ψ : A → PROP) :
+  bi_persistently (∀ a, Ψ a) ⊣⊢ ∀ a, bi_persistently (Ψ a).
 Proof.
   apply (anti_symm _); auto using persistently_forall_2.
   apply forall_intro=> x. by rewrite (forall_elim x).
 Qed.
-Lemma persistently_exist {A} (Ψ : A → PROP) : (□ ∃ a, Ψ a) ⊣⊢ (∃ a, □ Ψ a).
+Lemma persistently_exist {A} (Ψ : A → PROP) :
+  bi_persistently (∃ a, Ψ a) ⊣⊢ ∃ a, bi_persistently (Ψ a).
 Proof.
   apply (anti_symm _); auto using persistently_exist_1.
   apply exist_elim=> x. by rewrite (exist_intro x).
 Qed.
-Lemma persistently_and P Q : □ (P ∧ Q) ⊣⊢ □ P ∧ □ Q.
+Lemma persistently_and P Q :
+  bi_persistently (P ∧ Q) ⊣⊢ bi_persistently P ∧ bi_persistently Q.
 Proof. rewrite !and_alt persistently_forall. by apply forall_proper=> -[]. Qed.
-Lemma persistently_or P Q : □ (P ∨ Q) ⊣⊢ □ P ∨ □ Q.
+Lemma persistently_or P Q :
+  bi_persistently (P ∨ Q) ⊣⊢ bi_persistently P ∨ bi_persistently Q.
 Proof. rewrite !or_alt persistently_exist. by apply exist_proper=> -[]. Qed.
-Lemma persistently_impl P Q : □ (P → Q) ⊢ □ P → □ Q.
+Lemma persistently_impl P Q :
+  bi_persistently (P → Q) ⊢ bi_persistently P → bi_persistently Q.
 Proof.
   apply impl_intro_l; rewrite -persistently_and.
   apply persistently_mono, impl_elim with P; auto.
 Qed.
 
-Lemma persistently_internal_eq {A : ofeT} (a b : A) : □ (a ≡ b) ⊣⊢ a ≡ b.
+Lemma persistently_internal_eq {A : ofeT} (a b : A) :
+  bi_persistently (a ≡ b) ⊣⊢ a ≡ b.
 Proof.
   apply (anti_symm (⊢)); first by rewrite persistently_elim.
-  apply (internal_eq_rewrite' a b (λ b, □ (a ≡ b))%I); auto.
+  apply (internal_eq_rewrite' a b (λ b, bi_persistently (a ≡ b))%I); auto.
   rewrite -(internal_eq_refl emp%I a). apply persistently_emp_intro.
 Qed.
 
-Lemma persistently_sep_dup P : □ P ⊣⊢ □ P ∗ □ P.
+Lemma persistently_sep_dup P :
+  bi_persistently P ⊣⊢ bi_persistently P ∗ bi_persistently P.
 Proof.
   apply (anti_symm _); last by eauto using sep_elim_l with typeclass_instances.
-  rewrite -{1}(idemp bi_and (□ _)%I) -{2}(left_id emp%I _ (□ _)%I).
-  by rewrite persistently_and_sep_assoc and_elim_l.
+  by rewrite -{1}(idemp bi_and (bi_persistently _)%I)
+             -{2}(left_id emp%I _ (bi_persistently _)%I)
+                 persistently_and_sep_assoc and_elim_l.
 Qed.
 
-Lemma persistently_and_sep_l_1 P Q : □ P ∧ Q ⊢ □ P ∗ Q.
+Lemma persistently_and_sep_l_1 P Q : bi_persistently P ∧ Q ⊢ bi_persistently P ∗ Q.
 Proof.
   by rewrite -{1}(left_id emp%I _ Q%I) persistently_and_sep_assoc and_elim_l.
 Qed.
-Lemma persistently_and_sep_r_1 P Q : P ∧ □ Q ⊢ P ∗ □ Q.
+Lemma persistently_and_sep_r_1 P Q : P ∧ bi_persistently Q ⊢ P ∗ bi_persistently Q.
 Proof. by rewrite !(comm _ P) persistently_and_sep_l_1. Qed.
 
-Lemma persistently_True_emp : □ True ⊣⊢ □ emp.
+Lemma persistently_True_emp : bi_persistently True ⊣⊢ bi_persistently emp.
 Proof. apply (anti_symm _); auto using persistently_emp_intro. Qed.
-Lemma persistently_and_sep P Q : □ (P ∧ Q) ⊢ □ (P ∗ Q).
+Lemma persistently_and_sep P Q : bi_persistently (P ∧ Q) ⊢ bi_persistently (P ∗ Q).
 Proof.
   rewrite persistently_and.
   rewrite -{1}persistently_idemp -persistently_and -{1}(left_id emp%I _ Q%I).
   by rewrite persistently_and_sep_assoc (comm bi_and) persistently_and_emp_elim.
 Qed.
 
-Lemma persistently_bare P : □ ■ P ⊣⊢ □ P.
+Lemma persistently_bare P : bi_persistently (bi_bare P) ⊣⊢ bi_persistently P.
 Proof.
   by rewrite /bi_bare persistently_and -persistently_True_emp
              persistently_pure left_id.
 Qed.
 
-Lemma and_sep_persistently P Q : □ P ∧ □ Q ⊣⊢ □ P ∗ □ Q.
+Lemma and_sep_persistently P Q :
+  bi_persistently P ∧ bi_persistently Q ⊣⊢ bi_persistently P ∗ bi_persistently Q.
 Proof.
   apply (anti_symm _).
   - auto using persistently_and_sep_l_1.
   - eauto 10 using sep_elim_l, sep_elim_r with typeclass_instances.
 Qed.
-Lemma persistently_sep_2 P Q : □ P ∗ □ Q ⊢ □ (P ∗ Q).
+Lemma persistently_sep_2 P Q :
+  bi_persistently P ∗ bi_persistently Q ⊢ bi_persistently (P ∗ Q).
 Proof. by rewrite -persistently_and_sep persistently_and -and_sep_persistently. Qed.
-Lemma persistently_sep `{PositiveBI PROP} P Q : □ (P ∗ Q) ⊣⊢ □ P ∗ □ Q.
+Lemma persistently_sep `{PositiveBI PROP} P Q :
+  bi_persistently (P ∗ Q) ⊣⊢ bi_persistently P ∗ bi_persistently Q.
 Proof.
   apply (anti_symm _); auto using persistently_sep_2.
   by rewrite -persistently_bare bare_sep sep_and !bare_elim persistently_and
              and_sep_persistently.
 Qed.
 
-Lemma persistently_wand P Q : □ (P -∗ Q) ⊢ □ P -∗ □ Q.
+Lemma persistently_wand P Q :
+  bi_persistently (P -∗ Q) ⊢ bi_persistently P -∗ bi_persistently Q.
 Proof. apply wand_intro_r. by rewrite persistently_sep_2 wand_elim_l. Qed.
 
-Lemma persistently_entails_l P Q : (P ⊢ □ Q) → P ⊢ □ Q ∗ P.
+Lemma persistently_entails_l P Q :
+  (P ⊢ bi_persistently Q) → P ⊢ bi_persistently Q ∗ P.
 Proof. intros; rewrite -persistently_and_sep_l_1; auto. Qed.
-Lemma persistently_entails_r P Q : (P ⊢ □ Q) → P ⊢ P ∗ □ Q.
+Lemma persistently_entails_r P Q :
+  (P ⊢ bi_persistently Q) → P ⊢ P ∗ bi_persistently Q.
 Proof. intros; rewrite -persistently_and_sep_r_1; auto. Qed.
 
-Lemma persistently_impl_wand_2 P Q : □ (P -∗ Q) ⊢ □ (P → Q).
+Lemma persistently_impl_wand_2 P Q :
+  bi_persistently (P -∗ Q) ⊢ bi_persistently (P → Q).
 Proof.
   apply persistently_intro', impl_intro_r.
   rewrite -{2}(left_id emp%I _ P%I) persistently_and_sep_assoc.
@@ -1080,25 +1093,27 @@ Qed.
 Section persistently_bare_bi.
   Context `{AffineBI PROP}.
 
-  Lemma persistently_emp : □ emp ⊣⊢ emp.
+  Lemma persistently_emp : bi_persistently emp ⊣⊢ emp.
   Proof. by rewrite -!True_emp persistently_pure. Qed.
 
-  Lemma persistently_and_sep_l P Q : □ P ∧ Q ⊣⊢ □ P ∗ Q.
+  Lemma persistently_and_sep_l P Q :
+    bi_persistently P ∧ Q ⊣⊢ bi_persistently P ∗ Q.
   Proof.
     apply (anti_symm (⊢));
       eauto using persistently_and_sep_l_1, sep_and with typeclass_instances.
   Qed.
-  Lemma persistently_and_sep_r P Q : P ∧ □ Q ⊣⊢ P ∗ □ Q.
+  Lemma persistently_and_sep_r P Q : P ∧ bi_persistently Q ⊣⊢ P ∗ bi_persistently Q.
   Proof. by rewrite !(comm _ P) persistently_and_sep_l. Qed.
 
-  Lemma persistently_impl_wand P Q : □ (P → Q) ⊣⊢ □ (P -∗ Q).
+  Lemma persistently_impl_wand P Q :
+    bi_persistently (P → Q) ⊣⊢ bi_persistently (P -∗ Q).
   Proof.
     apply (anti_symm (⊢)); auto using persistently_impl_wand_2.
     apply persistently_intro', wand_intro_l.
     by rewrite -persistently_and_sep_r persistently_elim impl_elim_r.
   Qed.
 
-  Lemma wand_alt P Q : (P -∗ Q) ⊣⊢ ∃ R, R ∗ □ (P ∗ R → Q).
+  Lemma wand_alt P Q : (P -∗ Q) ⊣⊢ ∃ R, R ∗ bi_persistently (P ∗ R → Q).
   Proof.
     apply (anti_symm (⊢)).
     - rewrite -(right_id True%I bi_sep (P -∗ Q)%I) -(exist_intro (P -∗ Q)%I).
@@ -1109,53 +1124,54 @@ Section persistently_bare_bi.
       rewrite assoc -persistently_and_sep_r.
       by rewrite persistently_elim impl_elim_r.
   Qed.
-  Lemma impl_alt P Q : (P → Q) ⊣⊢ ∃ R, R ∧ □ (P ∧ R -∗ Q).
+  Lemma impl_alt P Q : (P → Q) ⊣⊢ ∃ R, R ∧ bi_persistently (P ∧ R -∗ Q).
   Proof.
     apply (anti_symm (⊢)).
     - rewrite -(right_id True%I bi_and (P → Q)%I) -(exist_intro (P → Q)%I).
       apply and_mono_r. rewrite -persistently_pure.
       apply persistently_intro', wand_intro_l.
       by rewrite impl_elim_r persistently_pure right_id.
-    - apply exist_elim=> R. apply impl_intro_l. rewrite assoc persistently_and_sep_r.
-      by rewrite persistently_elim wand_elim_r.
+    - apply exist_elim=> R. apply impl_intro_l.
+      by rewrite assoc persistently_and_sep_r persistently_elim wand_elim_r.
   Qed.
 End persistently_bare_bi.
 
 
 (* The combined bare persistently modality *)
-Lemma bare_persistently_elim P : ⬕ P ⊢ P.
+Lemma bare_persistently_elim P : □ P ⊢ P.
 Proof. apply persistently_and_emp_elim. Qed.
-Lemma bare_persistently_intro' P Q : (⬕ P ⊢ Q) → ⬕ P ⊢ ⬕ Q.
+Lemma bare_persistently_intro' P Q : (□ P ⊢ Q) → □ P ⊢ □ Q.
 Proof. intros <-. by rewrite persistently_bare persistently_idemp. Qed.
 
-Lemma bare_persistently_emp : ⬕ emp ⊣⊢ emp.
+Lemma bare_persistently_emp : □ emp ⊣⊢ emp.
 Proof. by rewrite -persistently_True_emp persistently_pure bare_True_emp bare_emp. Qed.
-Lemma bare_persistently_and P Q : ⬕ (P ∧ Q) ⊣⊢ ⬕ P ∧ ⬕ Q.
+Lemma bare_persistently_and P Q : □ (P ∧ Q) ⊣⊢ □ P ∧ □ Q.
 Proof. by rewrite persistently_and bare_and. Qed.
-Lemma bare_persistently_or P Q : ⬕ (P ∨ Q) ⊣⊢ ⬕ P ∨ ⬕ Q.
+Lemma bare_persistently_or P Q : □ (P ∨ Q) ⊣⊢ □ P ∨ □ Q.
 Proof. by rewrite persistently_or bare_or. Qed.
-Lemma bare_persistently_exist {A} (Φ : A → PROP) : ⬕ (∃ x, Φ x) ⊣⊢ ∃ x, ⬕ Φ x.
+Lemma bare_persistently_exist {A} (Φ : A → PROP) : □ (∃ x, Φ x) ⊣⊢ ∃ x, □ Φ x.
 Proof. by rewrite persistently_exist bare_exist. Qed.
-Lemma bare_persistently_sep_2 P Q : ⬕ P ∗ ⬕ Q ⊢ ⬕ (P ∗ Q).
+Lemma bare_persistently_sep_2 P Q : □ P ∗ □ Q ⊢ □ (P ∗ Q).
 Proof. by rewrite bare_sep_2 persistently_sep_2. Qed.
-Lemma bare_persistently_sep `{PositiveBI PROP} P Q : ⬕ (P ∗ Q) ⊣⊢ ⬕ P ∗ ⬕ Q.
+Lemma bare_persistently_sep `{PositiveBI PROP} P Q : □ (P ∗ Q) ⊣⊢ □ P ∗ □ Q.
 Proof. by rewrite -bare_sep -persistently_sep. Qed.
 
-Lemma bare_persistently_idemp P : ⬕ ⬕ P ⊣⊢ ⬕ P.
+Lemma bare_persistently_idemp P : □ □ P ⊣⊢ □ P.
 Proof. by rewrite persistently_bare persistently_idemp. Qed.
 
-Lemma persistently_and_bare_sep_l P Q : □ P ∧ Q ⊣⊢ ⬕ P ∗ Q.
+Lemma persistently_and_bare_sep_l P Q : bi_persistently P ∧ Q ⊣⊢ □ P ∗ Q.
 Proof.
   apply (anti_symm _).
-  - by rewrite /bi_bare -(comm bi_and (□ P)%I) -persistently_and_sep_assoc left_id.
+  - by rewrite /bi_bare -(comm bi_and (bi_persistently P)%I)
+               -persistently_and_sep_assoc left_id.
   - apply and_intro. by rewrite bare_elim sep_elim_l. by rewrite sep_elim_r.
 Qed.
-Lemma persistently_and_bare_sep_r P Q : P ∧ □ Q ⊣⊢ P ∗ ⬕ Q.
+Lemma persistently_and_bare_sep_r P Q : P ∧ bi_persistently Q ⊣⊢ P ∗ □ Q.
 Proof. by rewrite !(comm _ P) persistently_and_bare_sep_l. Qed.
-Lemma and_sep_bare_persistently P Q : ⬕ P ∧ ⬕ Q ⊣⊢ ⬕ P ∗ ⬕ Q.
+Lemma and_sep_bare_persistently P Q : □ P ∧ □ Q ⊣⊢ □ P ∗ □ Q.
 Proof. by rewrite -persistently_and_bare_sep_l -bare_and bare_and_r. Qed.
 
-Lemma bare_persistently_sep_dup P : ⬕ P ⊣⊢ ⬕ P ∗ ⬕ P.
+Lemma bare_persistently_sep_dup P : □ P ⊣⊢ □ P ∗ □ P.
 Proof. by rewrite -persistently_and_bare_sep_l bare_and_r bare_and idemp. Qed.
 
 (* Conditional bare modality *)
@@ -1169,30 +1185,34 @@ Global Instance bare_if_flip_mono' p :
   Proper (flip (⊢) ==> flip (⊢)) (@bi_bare_if PROP p).
 Proof. solve_proper. Qed.
 
-Lemma bare_if_mono p P Q : (P ⊢ Q) → ■?p P ⊢ ■?p Q.
+Lemma bare_if_mono p P Q : (P ⊢ Q) → bi_bare_if p P ⊢ bi_bare_if p Q.
 Proof. by intros ->. Qed.
 
-Lemma bare_if_elim p P : ■?p P ⊢ P.
+Lemma bare_if_elim p P : bi_bare_if p P ⊢ P.
 Proof. destruct p; simpl; auto using bare_elim. Qed.
-Lemma bare_bare_if p P : ■ P ⊢ ■?p P.
+Lemma bare_bare_if p P : bi_bare P ⊢ bi_bare_if p P.
 Proof. destruct p; simpl; auto using bare_elim. Qed.
-Lemma bare_if_intro' p P Q : (■?p P ⊢ Q) → ■?p P ⊢ ■?p Q.
+Lemma bare_if_intro' p P Q :
+  (bi_bare_if p P ⊢ Q) → bi_bare_if p P ⊢ bi_bare_if p Q.
 Proof. destruct p; simpl; auto using bare_intro'. Qed.
 
-Lemma bare_if_emp p : ■?p emp ⊣⊢ emp.
+Lemma bare_if_emp p : bi_bare_if p emp ⊣⊢ emp.
 Proof. destruct p; simpl; auto using bare_emp. Qed.
-Lemma bare_if_and p P Q : ■?p (P ∧ Q) ⊣⊢ ■?p P ∧ ■?p Q.
+Lemma bare_if_and p P Q : bi_bare_if p (P ∧ Q) ⊣⊢ bi_bare_if p P ∧ bi_bare_if p Q.
 Proof. destruct p; simpl; auto using bare_and. Qed.
-Lemma bare_if_or p P Q : ■?p (P ∨ Q) ⊣⊢ ■?p P ∨ ■?p Q.
+Lemma bare_if_or p P Q : bi_bare_if p (P ∨ Q) ⊣⊢ bi_bare_if p P ∨ bi_bare_if p Q.
 Proof. destruct p; simpl; auto using bare_or. Qed.
-Lemma bare_if_exist {A} p (Ψ : A → PROP) : (■?p ∃ a, Ψ a) ⊣⊢ ∃ a, ■?p Ψ a.
+Lemma bare_if_exist {A} p (Ψ : A → PROP) :
+  bi_bare_if p (∃ a, Ψ a) ⊣⊢ ∃ a, bi_bare_if p (Ψ a).
 Proof. destruct p; simpl; auto using bare_exist. Qed.
-Lemma bare_if_sep_2 p P Q : ■?p P ∗ ■?p Q ⊢ ■?p (P ∗ Q).
+Lemma bare_if_sep_2 p P Q :
+  bi_bare_if p P ∗ bi_bare_if p Q ⊢ bi_bare_if p (P ∗ Q).
 Proof. destruct p; simpl; auto using bare_sep_2. Qed.
-Lemma bare_if_sep `{PositiveBI PROP} p P Q : ■?p (P ∗ Q) ⊣⊢ ■?p P ∗ ■?p Q.
+Lemma bare_if_sep `{PositiveBI PROP} p P Q :
+  bi_bare_if p (P ∗ Q) ⊣⊢ bi_bare_if p P ∗ bi_bare_if p Q.
 Proof. destruct p; simpl; auto using bare_sep. Qed.
 
-Lemma bare_if_idemp p P : ■?p ■?p P ⊣⊢ ■?p P.
+Lemma bare_if_idemp p P : bi_bare_if p (bi_bare_if p P) ⊣⊢ bi_bare_if p P.
 Proof. destruct p; simpl; auto using bare_idemp. Qed.
 
 (* Conditional persistently *)
@@ -1208,50 +1228,59 @@ Global Instance persistently_if_flip_mono' p :
   Proper (flip (⊢) ==> flip (⊢)) (@bi_persistently_if PROP p).
 Proof. solve_proper. Qed.
 
-Lemma persistently_if_mono p P Q : (P ⊢ Q) → ⬕?p P ⊢ ⬕?p Q.
+Lemma persistently_if_mono p P Q :
+  (P ⊢ Q) → bi_persistently_if p P ⊢ bi_persistently_if p Q.
 Proof. by intros ->. Qed.
 
-Lemma persistently_if_pure p φ : □?p ⌜φ⌝ ⊣⊢ ⌜φ⌝.
+Lemma persistently_if_pure p φ : bi_persistently_if p ⌜φ⌝ ⊣⊢ ⌜φ⌝.
 Proof. destruct p; simpl; auto using persistently_pure. Qed.
-Lemma persistently_if_and p P Q : □?p (P ∧ Q) ⊣⊢ □?p P ∧ □?p Q.
+Lemma persistently_if_and p P Q :
+  bi_persistently_if p (P ∧ Q) ⊣⊢ bi_persistently_if p P ∧ bi_persistently_if p Q.
 Proof. destruct p; simpl; auto using persistently_and. Qed.
-Lemma persistently_if_or p P Q : □?p (P ∨ Q) ⊣⊢ □?p P ∨ □?p Q.
+Lemma persistently_if_or p P Q :
+  bi_persistently_if p (P ∨ Q) ⊣⊢ bi_persistently_if p P ∨ bi_persistently_if p Q.
 Proof. destruct p; simpl; auto using persistently_or. Qed.
-Lemma persistently_if_exist {A} p (Ψ : A → PROP) : (□?p ∃ a, Ψ a) ⊣⊢ ∃ a, □?p Ψ a.
+Lemma persistently_if_exist {A} p (Ψ : A → PROP) :
+  (bi_persistently_if p (∃ a, Ψ a)) ⊣⊢ ∃ a, bi_persistently_if p (Ψ a).
 Proof. destruct p; simpl; auto using persistently_exist. Qed.
-Lemma persistently_if_sep_2 p P Q : □?p P ∗ □?p Q ⊢ □?p (P ∗ Q).
+Lemma persistently_if_sep_2 p P Q :
+  bi_persistently_if p P ∗ bi_persistently_if p Q ⊢ bi_persistently_if p (P ∗ Q).
 Proof. destruct p; simpl; auto using persistently_sep_2. Qed.
-Lemma persistently_if_sep `{PositiveBI PROP} p P Q : □?p (P ∗ Q) ⊣⊢ □?p P ∗ □?p Q.
+Lemma persistently_if_sep `{PositiveBI PROP} p P Q :
+  bi_persistently_if p (P ∗ Q) ⊣⊢ bi_persistently_if p P ∗ bi_persistently_if p Q.
 Proof. destruct p; simpl; auto using persistently_sep. Qed.
 
-Lemma persistently_if_idemp p P : □?p □?p P ⊣⊢ □?p P.
+Lemma persistently_if_idemp p P :
+  bi_persistently_if p (bi_persistently_if p P) ⊣⊢ bi_persistently_if p P.
 Proof. destruct p; simpl; auto using persistently_idemp. Qed.
 
 (* Conditional bare persistently *)
-Lemma bare_persistently_if_mono p P Q : (P ⊢ Q) → ⬕?p P ⊢ ⬕?p Q.
+Lemma bare_persistently_if_mono p P Q : (P ⊢ Q) → □?p P ⊢ □?p Q.
 Proof. by intros ->. Qed.
 
-Lemma bare_persistently_if_elim p P : ⬕?p P ⊢ P.
+Lemma bare_persistently_if_elim p P : □?p P ⊢ P.
 Proof. destruct p; simpl; auto using bare_persistently_elim. Qed.
-Lemma bare_persistently_bare_persistently_if p P : ⬕ P ⊢ ⬕?p P.
+Lemma bare_persistently_bare_persistently_if p P : □ P ⊢ □?p P.
 Proof. destruct p; simpl; auto using bare_persistently_elim. Qed.
-Lemma bare_persistently_if_intro' p P Q : (⬕?p P ⊢ Q) → ⬕?p P ⊢ ⬕?p Q.
+Lemma bare_persistently_if_intro' p P Q : (□?p P ⊢ Q) → □?p P ⊢ □?p Q.
 Proof. destruct p; simpl; auto using bare_persistently_intro'. Qed.
 
-Lemma bare_persistently_if_emp p : ⬕?p emp ⊣⊢ emp.
+Lemma bare_persistently_if_emp p : □?p emp ⊣⊢ emp.
 Proof. destruct p; simpl; auto using bare_persistently_emp. Qed.
-Lemma bare_persistently_if_and p P Q : ⬕?p (P ∧ Q) ⊣⊢ ⬕?p P ∧ ⬕?p Q.
+Lemma bare_persistently_if_and p P Q : □?p (P ∧ Q) ⊣⊢ □?p P ∧ □?p Q.
 Proof. destruct p; simpl; auto using bare_persistently_and. Qed.
-Lemma bare_persistently_if_or p P Q : ⬕?p (P ∨ Q) ⊣⊢ ⬕?p P ∨ ⬕?p Q.
+Lemma bare_persistently_if_or p P Q : □?p (P ∨ Q) ⊣⊢ □?p P ∨ □?p Q.
 Proof. destruct p; simpl; auto using bare_persistently_or. Qed.
-Lemma bare_persistently_if_exist {A} p (Ψ : A → PROP) : (⬕?p ∃ a, Ψ a) ⊣⊢ ∃ a, ⬕?p Ψ a.
+Lemma bare_persistently_if_exist {A} p (Ψ : A → PROP) :
+  (□?p ∃ a, Ψ a) ⊣⊢ ∃ a, □?p Ψ a.
 Proof. destruct p; simpl; auto using bare_persistently_exist. Qed.
-Lemma bare_persistently_if_sep_2 p P Q : ⬕?p P ∗ ⬕?p Q ⊢ ⬕?p (P ∗ Q).
+Lemma bare_persistently_if_sep_2 p P Q : □?p P ∗ □?p Q ⊢ □?p (P ∗ Q).
 Proof. destruct p; simpl; auto using bare_persistently_sep_2. Qed.
-Lemma bare_persistently_if_sep `{PositiveBI PROP} p P Q : ⬕?p (P ∗ Q) ⊣⊢ ⬕?p P ∗ ⬕?p Q.
+Lemma bare_persistently_if_sep `{PositiveBI PROP} p P Q :
+  □?p (P ∗ Q) ⊣⊢ □?p P ∗ □?p Q.
 Proof. destruct p; simpl; auto using bare_persistently_sep. Qed.
 
-Lemma bare_persistently_if_idemp p P : ⬕?p ⬕?p P ⊣⊢ ⬕?p P.
+Lemma bare_persistently_if_idemp p P : □?p □?p P ⊣⊢ □?p P.
 Proof. destruct p; simpl; auto using bare_persistently_idemp. Qed.
 
 (* Persistence *)
@@ -1295,9 +1324,9 @@ Global Instance sep_persistent P Q :
   Persistent P → Persistent Q → Persistent (P ∗ Q).
 Proof. intros. by rewrite /Persistent -persistently_sep_2 -!persistent. Qed.
 
-Global Instance persistently_persistent P : Persistent (□ P).
+Global Instance persistently_persistent P : Persistent (bi_persistently P).
 Proof. by rewrite /Persistent persistently_idemp. Qed.
-Global Instance bare_persistent P : Persistent P → Persistent (■ P).
+Global Instance bare_persistent P : Persistent P → Persistent (bi_bare P).
 Proof. rewrite /bi_bare. apply _. Qed.
 Global Instance sink_persistent P : Persistent P → Persistent (▲ P).
 Proof. rewrite /bi_sink. apply _. Qed.
@@ -1307,26 +1336,29 @@ Global Instance from_option_persistent {A} P (Ψ : A → PROP) (mx : option A) :
 Proof. destruct mx; apply _. Qed.
 
 (* Properties of persistent propositions *)
-Lemma persistent_persistently_2 P `{!Persistent P} : P ⊢ □ P.
+Lemma persistent_persistently_2 P `{!Persistent P} : P ⊢ bi_persistently P.
 Proof. done. Qed.
-Lemma persistent_persistently P `{!Persistent P, !Absorbing P} : □ P ⊣⊢ P.
-Proof. apply (anti_symm _); auto using persistent_persistently_2, persistently_elim. Qed.
+Lemma persistent_persistently P `{!Persistent P, !Absorbing P} :
+  bi_persistently P ⊣⊢ P.
+Proof.
+  apply (anti_symm _); auto using persistent_persistently_2, persistently_elim.
+Qed.
 
-Lemma persistently_intro P Q `{!Persistent P} : (P ⊢ Q) → P ⊢ □ Q.
+Lemma persistently_intro P Q `{!Persistent P} : (P ⊢ Q) → P ⊢ bi_persistently Q.
 Proof. intros HP. by rewrite (persistent P) HP. Qed.
-Lemma persistent_and_bare_sep_l_1 P Q `{!Persistent P} : P ∧ Q ⊢ ■ P ∗ Q.
+Lemma persistent_and_bare_sep_l_1 P Q `{!Persistent P} : P ∧ Q ⊢ bi_bare P ∗ Q.
 Proof.
   rewrite {1}(persistent_persistently_2 P) persistently_and_bare_sep_l.
   by rewrite -bare_idemp bare_persistently_elim.
 Qed.
-Lemma persistent_and_bare_sep_r_1 P Q `{!Persistent Q} : P ∧ Q ⊢ P ∗ ■ Q.
+Lemma persistent_and_bare_sep_r_1 P Q `{!Persistent Q} : P ∧ Q ⊢ P ∗ bi_bare Q.
 Proof. by rewrite !(comm _ P) persistent_and_bare_sep_l_1. Qed.
 
 Lemma persistent_and_bare_sep_l P Q `{!Persistent P, !Absorbing P} :
-  P ∧ Q ⊣⊢ ■ P ∗ Q.
+  P ∧ Q ⊣⊢ bi_bare P ∗ Q.
 Proof. by rewrite -(persistent_persistently P) persistently_and_bare_sep_l. Qed.
 Lemma persistent_and_bare_sep_r P Q `{!Persistent Q, !Absorbing Q} :
-  P ∧ Q ⊣⊢ P ∗ ■ Q.
+  P ∧ Q ⊣⊢ P ∗ bi_bare Q.
 Proof. by rewrite -(persistent_persistently Q) persistently_and_bare_sep_r. Qed.
 
 Lemma persistent_and_sep_1 P Q `{HPQ : !TCOr (Persistent P) (Persistent Q)} :
@@ -1345,7 +1377,7 @@ Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
 Lemma persistent_entails_r P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
 Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
 
-Lemma persistent_sink_bare P `{!Persistent P} : P ⊢ ▲ ■ P.
+Lemma persistent_sink_bare P `{!Persistent P} : P ⊢ ▲ bi_bare P.
 Proof.
   by rewrite {1}(persistent_persistently_2 P) -persistently_bare
              persistently_elim_sink.
@@ -1383,11 +1415,15 @@ Global Instance bi_sep_monoid : Monoid (@bi_sep PROP) :=
 
 Global Instance bi_persistently_and_homomorphism :
   MonoidHomomorphism bi_and bi_and (≡) (@bi_persistently PROP).
-Proof. split; [split|]; try apply _. apply persistently_and. apply persistently_pure. Qed.
+Proof.
+  split; [split|]; try apply _. apply persistently_and. apply persistently_pure.
+Qed.
 
 Global Instance bi_persistently_or_homomorphism :
   MonoidHomomorphism bi_or bi_or (≡) (@bi_persistently PROP).
-Proof. split; [split|]; try apply _. apply persistently_or. apply persistently_pure. Qed.
+Proof.
+  split; [split|]; try apply _. apply persistently_or. apply persistently_pure.
+Qed.
 
 Global Instance bi_persistently_sep_weak_homomorphism `{PositiveBI PROP} :
   WeakMonoidHomomorphism bi_sep bi_sep (≡) (@bi_persistently PROP).
@@ -1504,13 +1540,13 @@ Lemma later_wand P Q : ▷ (P -∗ Q) ⊢ ▷ P -∗ ▷ Q.
 Proof. apply wand_intro_l. by rewrite -later_sep wand_elim_r. Qed.
 Lemma later_iff P Q : ▷ (P ↔ Q) ⊢ ▷ P ↔ ▷ Q.
 Proof. by rewrite /bi_iff later_and !later_impl. Qed.
-Lemma later_persistently P : ▷ □ P ⊣⊢ □ ▷ P.
+Lemma later_persistently P : ▷ bi_persistently P ⊣⊢ bi_persistently (▷ P).
 Proof. apply (anti_symm _); auto using later_persistently_1, later_persistently_2. Qed.
-Lemma later_bare_2 P : ■ ▷ P ⊢ ▷ ■ P.
+Lemma later_bare_2 P : bi_bare (▷ P) ⊢ ▷ bi_bare P.
 Proof. rewrite /bi_bare later_and. auto using later_intro. Qed.
-Lemma later_bare_persistently_2 P : ⬕ ▷ P ⊢ ▷ ⬕ P.
+Lemma later_bare_persistently_2 P : □ ▷ P ⊢ ▷ □ P.
 Proof. by rewrite -later_persistently later_bare_2. Qed.
-Lemma later_bare_persistently_if_2 p P : ⬕?p ▷ P ⊢ ▷ ⬕?p P.
+Lemma later_bare_persistently_if_2 p P : □?p ▷ P ⊢ ▷ □?p P.
 Proof. destruct p; simpl; auto using later_bare_persistently_2. Qed.
 Lemma later_sink P : ▷ ▲ P ⊣⊢ ▲ ▷ P.
 Proof. by rewrite /bi_sink later_sep later_True. Qed.
@@ -1574,13 +1610,14 @@ Lemma laterN_wand n P Q : ▷^n (P -∗ Q) ⊢ ▷^n P -∗ ▷^n Q.
 Proof. apply wand_intro_l. by rewrite -laterN_sep wand_elim_r. Qed.
 Lemma laterN_iff n P Q : ▷^n (P ↔ Q) ⊢ ▷^n P ↔ ▷^n Q.
 Proof. by rewrite /bi_iff laterN_and !laterN_impl. Qed.
-Lemma laterN_persistently n P : ▷^n □ P ⊣⊢ □ ▷^n P.
+Lemma laterN_persistently n P :
+  ▷^n bi_persistently P ⊣⊢ bi_persistently (▷^n P).
 Proof. induction n as [|n IH]; simpl; auto. by rewrite IH later_persistently. Qed.
-Lemma laterN_bare_2 n P : ■ ▷^n P ⊢ ▷^n ■ P.
+Lemma laterN_bare_2 n P : bi_bare (▷^n P) ⊢ ▷^n bi_bare P.
 Proof. rewrite /bi_bare laterN_and. auto using laterN_intro. Qed.
-Lemma laterN_bare_persistently_2 n P : ⬕ ▷^n P ⊢ ▷^n ⬕ P.
+Lemma laterN_bare_persistently_2 n P : □ ▷^n P ⊢ ▷^n □ P.
 Proof. by rewrite -laterN_persistently laterN_bare_2. Qed.
-Lemma laterN_bare_persistently_if_2 n p P : ⬕?p ▷^n P ⊢ ▷^n ⬕?p P.
+Lemma laterN_bare_persistently_if_2 n p P : □?p ▷^n P ⊢ ▷^n □?p P.
 Proof. destruct p; simpl; auto using laterN_bare_persistently_2. Qed.
 Lemma laterN_sink n P : ▷^n ▲ P ⊣⊢ ▲ ▷^n P.
 Proof. by rewrite /bi_sink laterN_sep laterN_True. Qed.
@@ -1637,13 +1674,15 @@ Proof.
 Qed.
 Lemma except_0_later P : ◇ ▷ P ⊢ ▷ P.
 Proof. by rewrite /bi_except_0 -later_or False_or. Qed.
-Lemma except_0_persistently P : ◇ □ P ⊣⊢ □ ◇ P.
-Proof. by rewrite /bi_except_0 persistently_or -later_persistently persistently_pure. Qed.
-Lemma except_0_bare_2 P : ■ ◇ P ⊢ ◇ ■ P.
+Lemma except_0_persistently P : ◇ bi_persistently P ⊣⊢ bi_persistently (◇ P).
+Proof.
+  by rewrite /bi_except_0 persistently_or -later_persistently persistently_pure.
+Qed.
+Lemma except_0_bare_2 P : bi_bare (◇ P) ⊢ ◇ bi_bare P.
 Proof. rewrite /bi_bare except_0_and. auto using except_0_intro. Qed.
-Lemma except_0_bare_persistently_2 P : ⬕ ◇ P ⊢ ◇ ⬕ P.
+Lemma except_0_bare_persistently_2 P : □ ◇ P ⊢ ◇ □ P.
 Proof. by rewrite -except_0_persistently except_0_bare_2. Qed.
-Lemma except_0_bare_persistently_if_2 p P : ⬕?p ◇ P ⊢ ◇ ⬕?p P.
+Lemma except_0_bare_persistently_if_2 p P : □?p ◇ P ⊢ ◇ □?p P.
 Proof. destruct p; simpl; auto using except_0_bare_persistently_2. Qed.
 Lemma except_0_sink P : ◇ ▲ P ⊣⊢ ▲ ◇ P.
 Proof. by rewrite /bi_sink except_0_sep except_0_True. Qed.
@@ -1653,7 +1692,7 @@ Proof. by rewrite {1}(except_0_intro P) except_0_sep. Qed.
 Lemma except_0_frame_r P Q : ◇ P ∗ Q ⊢ ◇ (P ∗ Q).
 Proof. by rewrite {1}(except_0_intro Q) except_0_sep. Qed.
 
-Lemma later_bare_1 `{!Timeless (emp%I : PROP)} P : ▷ ■ P ⊢ ◇ ■ ▷ P.
+Lemma later_bare_1 `{!Timeless (emp%I : PROP)} P : ▷ bi_bare P ⊢ ◇ bi_bare (▷ P).
 Proof.
   rewrite /bi_bare later_and (timeless emp%I) except_0_and.
   by apply and_mono, except_0_intro.
@@ -1713,14 +1752,14 @@ Proof.
   - rewrite /bi_except_0; auto.
   - apply exist_elim=> x. rewrite -(exist_intro x); auto.
 Qed.
-Global Instance persistently_timeless P : Timeless P → Timeless (□ P).
+Global Instance persistently_timeless P : Timeless P → Timeless (bi_persistently P).
 Proof.
   intros. rewrite /Timeless /bi_except_0 later_persistently_1.
   by rewrite (timeless P) /bi_except_0 persistently_or {1}persistently_elim.
 Qed.
 
 Global Instance bare_timeless P :
-  Timeless (emp%I : PROP) → Timeless P → Timeless (■ P).
+  Timeless (emp%I : PROP) → Timeless P → Timeless (bi_bare P).
 Proof. rewrite /bi_bare; apply _. Qed.
 Global Instance sink_timeless P : Timeless P → Timeless (▲ P).
 Proof. rewrite /bi_sink; apply _. Qed.

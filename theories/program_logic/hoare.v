@@ -37,7 +37,7 @@ Global Instance ht_proper E :
 Proof. solve_proper. Qed.
 Lemma ht_mono E P P' Φ Φ' e :
   (P ⊢ P') → (∀ v, Φ' v ⊢ Φ v) → {{ P' }} e @ E {{ Φ' }} ⊢ {{ P }} e @ E {{ Φ }}.
-Proof. by intros; apply persistently_mono, wand_mono, wp_mono. Qed.
+Proof. intros. by apply bare_mono, persistently_mono, wand_mono, wp_mono. Qed.
 Global Instance ht_mono' E :
   Proper (flip (⊢) ==> eq ==> pointwise_relation _ (⊢) ==> (⊢)) (ht E).
 Proof. solve_proper. Qed.

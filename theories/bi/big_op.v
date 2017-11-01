@@ -126,7 +126,8 @@ Section sep_list.
   Proof. auto using and_intro, big_sepL_mono, and_elim_l, and_elim_r. Qed.
 
   Lemma big_sepL_persistently `{AffineBI PROP} Φ l :
-    (□ [∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, □ Φ k x).
+    (bi_persistently ([∗ list] k↦x ∈ l, Φ k x)) ⊣⊢
+    ([∗ list] k↦x ∈ l, bi_persistently (Φ k x)).
   Proof. apply (big_opL_commute _). Qed.
 
   Lemma big_sepL_forall `{AffineBI PROP} Φ l :
@@ -144,12 +145,12 @@ Section sep_list.
 
   Lemma big_sepL_impl Φ Ψ l :
     ([∗ list] k↦x ∈ l, Φ k x) -∗
-    ⬕ (∀ k x, ⌜l !! k = Some x⌝ → Φ k x -∗ Ψ k x) -∗
+    □ (∀ k x, ⌜l !! k = Some x⌝ → Φ k x -∗ Ψ k x) -∗
     [∗ list] k↦x ∈ l, Ψ k x.
   Proof.
     apply wand_intro_l. revert Φ Ψ. induction l as [|x l IH]=> Φ Ψ /=.
     { by rewrite sep_elim_r. }
-    rewrite bare_persistently_sep_dup -assoc [(⬕ _ ∗ _)%I]comm -!assoc assoc.
+    rewrite bare_persistently_sep_dup -assoc [(□ _ ∗ _)%I]comm -!assoc assoc.
     apply sep_mono.
     - rewrite (forall_elim 0) (forall_elim x) pure_True // True_impl.
       by rewrite bare_persistently_elim wand_elim_l.
@@ -264,7 +265,8 @@ Section and_list.
   Proof. auto using and_intro, big_andL_mono, and_elim_l, and_elim_r. Qed.
 
   Lemma big_andL_persistently Φ l :
-    (□ [∧ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∧ list] k↦x ∈ l, □ Φ k x).
+    (bi_persistently ([∧ list] k↦x ∈ l, Φ k x)) ⊣⊢
+    ([∧ list] k↦x ∈ l, bi_persistently (Φ k x)).
   Proof. apply (big_opL_commute _). Qed.
 
   Lemma big_andL_forall `{AffineBI PROP} Φ l :
@@ -394,7 +396,8 @@ Section gmap.
   Proof. auto using and_intro, big_sepM_mono, and_elim_l, and_elim_r. Qed.
 
   Lemma big_sepM_persistently `{AffineBI PROP} Φ m :
-    (□ [∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, □ Φ k x).
+    (bi_persistently ([∗ map] k↦x ∈ m, Φ k x)) ⊣⊢
+      ([∗ map] k↦x ∈ m, bi_persistently (Φ k x)).
   Proof. apply (big_opM_commute _). Qed.
 
   Lemma big_sepM_forall `{AffineBI PROP} Φ m :
@@ -416,13 +419,13 @@ Section gmap.
 
   Lemma big_sepM_impl Φ Ψ m :
     ([∗ map] k↦x ∈ m, Φ k x) -∗
-    ⬕ (∀ k x, ⌜m !! k = Some x⌝ → Φ k x -∗ Ψ k x) -∗
+    □ (∀ k x, ⌜m !! k = Some x⌝ → Φ k x -∗ Ψ k x) -∗
     [∗ map] k↦x ∈ m, Ψ k x.
   Proof.
     apply wand_intro_l. induction m as [|i x m ? IH] using map_ind.
     { by rewrite sep_elim_r. }
     rewrite !big_sepM_insert // bare_persistently_sep_dup.
-    rewrite -assoc [(⬕ _ ∗ _)%I]comm -!assoc assoc. apply sep_mono.
+    rewrite -assoc [(□ _ ∗ _)%I]comm -!assoc assoc. apply sep_mono.
     - rewrite (forall_elim i) (forall_elim x) pure_True ?lookup_insert //.
       by rewrite True_impl bare_persistently_elim wand_elim_l.
     - rewrite comm -IH /=.
@@ -559,7 +562,7 @@ Section gset.
   Proof. auto using and_intro, big_sepS_mono, and_elim_l, and_elim_r. Qed.
 
   Lemma big_sepS_persistently `{AffineBI PROP} Φ X :
-    □ ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, □ Φ y).
+    bi_persistently ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, bi_persistently (Φ y)).
   Proof. apply (big_opS_commute _). Qed.
 
   Lemma big_sepS_forall `{AffineBI PROP} Φ X :
@@ -577,13 +580,13 @@ Section gset.
 
   Lemma big_sepS_impl Φ Ψ X :
     ([∗ set] x ∈ X, Φ x) -∗
-    ⬕ (∀ x, ⌜x ∈ X⌝ → Φ x -∗ Ψ x) -∗
+    □ (∀ x, ⌜x ∈ X⌝ → Φ x -∗ Ψ x) -∗
     [∗ set] x ∈ X, Ψ x.
   Proof.
     apply wand_intro_l. induction X as [|x X ? IH] using collection_ind_L.
     { by rewrite sep_elim_r. }
     rewrite !big_sepS_insert // bare_persistently_sep_dup.
-    rewrite -assoc [(⬕ _ ∗ _)%I]comm -!assoc assoc. apply sep_mono.
+    rewrite -assoc [(□ _ ∗ _)%I]comm -!assoc assoc. apply sep_mono.
     - rewrite (forall_elim x) pure_True; last set_solver.
       by rewrite True_impl bare_persistently_elim wand_elim_l.
     - rewrite comm -IH /=. apply sep_mono_l, bare_mono, persistently_mono.
@@ -667,7 +670,8 @@ Section gmultiset.
   Proof. auto using and_intro, big_sepMS_mono, and_elim_l, and_elim_r. Qed.
 
   Lemma big_sepMS_persistently `{AffineBI PROP} Φ X :
-    □ ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, □ Φ y).
+    bi_persistently ([∗ mset] y ∈ X, Φ y) ⊣⊢
+      ([∗ mset] y ∈ X, bi_persistently (Φ y)).
   Proof. apply (big_opMS_commute _). Qed.
 
   Global Instance big_sepMS_empty_persistent Φ :

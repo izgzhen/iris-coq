@@ -36,9 +36,9 @@ Global Instance uPred_affine : AffineBI (uPredI M) | 0.
 Proof. intros P. rewrite /Affine. by apply bi.pure_intro. Qed.
 
 (* Own and valid derived *)
-Lemma persistently_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
+Lemma bare_persistently_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
-  intros; apply (anti_symm _); first by rewrite persistently_elim.
+  rewrite affine_bare=>?; apply (anti_symm _); [by rewrite persistently_elim|].
   by rewrite {1}persistently_ownM_core core_id_core.
 Qed.
 Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊢ False.
@@ -47,9 +47,9 @@ Global Instance ownM_mono : Proper (flip (≼) ==> (⊢)) (@uPred_ownM M).
 Proof. intros a b [b' ->]. by rewrite ownM_op sep_elim_l. Qed.
 Lemma ownM_unit' : uPred_ownM ε ⊣⊢ True.
 Proof. apply (anti_symm _); first by apply pure_intro. apply ownM_empty. Qed.
-Lemma persistently_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
+Lemma bare_persistently_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
 Proof.
-  intros; apply (anti_symm _); first by rewrite persistently_elim.
+  rewrite affine_bare. intros; apply (anti_symm _); first by rewrite persistently_elim.
   apply:persistently_cmra_valid_1.
 Qed.
 
@@ -98,9 +98,11 @@ Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 (* Persistence *)
 Global Instance cmra_valid_persistent {A : cmraT} (a : A) :
   Persistent (✓ a : uPred M)%I.
-Proof. by intros; rewrite /Persistent persistently_cmra_valid. Qed.
-Global Instance ownM_persistent : CoreId a → Persistent (@uPred_ownM M a).
-Proof. intros. by rewrite /Persistent persistently_ownM. Qed.
+Proof. rewrite /Persistent. apply persistently_cmra_valid_1. Qed.
+Global Instance ownM_persistent a : CoreId a → Persistent (@uPred_ownM M a).
+Proof.
+  intros. rewrite /Persistent -{2}(core_id_core a). apply persistently_ownM_core.
+Qed.
 
 (* For big ops *)
 Global Instance uPred_ownM_sep_homomorphism :

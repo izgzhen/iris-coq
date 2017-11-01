@@ -3,7 +3,7 @@ Set Default Proof Using "Type".
 Import bi.
 
 Class FromAssumption {PROP : bi} (p : bool) (P Q : PROP) :=
-  from_assumption : ⬕?p P ⊢ Q.
+  from_assumption : □?p P ⊢ Q.
 Arguments FromAssumption {_} _ _%I _%I : simpl never.
 Arguments from_assumption {_} _ _%I _%I {_}.
 (* No need to restrict Hint Mode, we have a default instance that will always
@@ -50,19 +50,19 @@ Arguments from_pure {_} _%I _%type_scope {_}.
 Hint Mode FromPure + ! - : typeclass_instances.
 
 Class IntoPersistent {PROP : bi} (p : bool) (P Q : PROP) :=
-  into_persistent : □?p P ⊢ □ Q.
+  into_persistent : bi_persistently_if p P ⊢ bi_persistently Q.
 Arguments IntoPersistent {_} _ _%I _%I : simpl never.
 Arguments into_persistent {_} _ _%I _%I {_}.
 Hint Mode IntoPersistent + + ! - : typeclass_instances.
 
 Class FromPersistent {PROP : bi} (a p : bool) (P Q : PROP) :=
-  from_persistent : ■?a □?p Q ⊢ P.
+  from_persistent : bi_bare_if a (bi_persistently_if p Q) ⊢ P.
 Arguments FromPersistent {_} _ _ _%I _%I : simpl never.
 Arguments from_persistent {_} _ _ _%I _%I {_}.
 Hint Mode FromPersistent + - - ! - : typeclass_instances.
 
 Class FromBare {PROP : bi} (P Q : PROP) :=
-  from_bare : ■ Q ⊢ P.
+  from_bare : bi_bare Q ⊢ P.
 Arguments FromBare {_} _%I _%type_scope : simpl never.
 Arguments from_bare {_} _%I _%type_scope {_}.
 Hint Mode FromBare + ! - : typeclass_instances.
@@ -91,7 +91,7 @@ Converting an assumption [R] into a wand [P -∗ Q] is done in three stages:
 - Instantiate the premise of the wand or implication.
 *)
 Class IntoWand {PROP : bi} (p q : bool) (R P Q : PROP) :=
-  into_wand : ⬕?p R ⊢ ⬕?q P -∗ Q.
+  into_wand : □?p R ⊢ □?q P -∗ Q.
 Arguments IntoWand {_} _ _ _%I _%I _%I : simpl never.
 Arguments into_wand {_} _ _ _%I _%I _%I {_}.
 Hint Mode IntoWand + + + ! - - : typeclass_instances.
@@ -122,7 +122,7 @@ Hint Mode FromAnd + ! - - : typeclass_instances.
 Hint Mode FromAnd + - ! ! : typeclass_instances. (* For iCombine *)
 
 Class IntoAnd {PROP : bi} (p : bool) (P Q1 Q2 : PROP) :=
-  into_and : ⬕?p P ⊢ ⬕?p (Q1 ∧ Q2).
+  into_and : □?p P ⊢ □?p (Q1 ∧ Q2).
 Arguments IntoAnd {_} _ _%I _%I _%I : simpl never.
 Arguments into_and {_} _ _%I _%I _%I {_}.
 Hint Mode IntoAnd + + ! - - : typeclass_instances.
@@ -196,13 +196,13 @@ Proof. done. Qed.
 Instance is_app_app {A} (l1 l2 : list A) : IsApp (l1 ++ l2) l1 l2.
 Proof. done. Qed.
 
-Class Frame {PROP : bi} (p : bool) (R P Q : PROP) := frame : ⬕?p R ∗ Q ⊢ P.
+Class Frame {PROP : bi} (p : bool) (R P Q : PROP) := frame : □?p R ∗ Q ⊢ P.
 Arguments Frame {_} _ _%I _%I _%I.
 Arguments frame {_ _} _%I _%I _%I {_}.
 Hint Mode Frame + + ! ! - : typeclass_instances.
 
 Class MaybeFrame {PROP : bi} (p : bool) (R P Q : PROP) :=
-  maybe_frame : ⬕?p R ∗ Q ⊢ P.
+  maybe_frame : □?p R ∗ Q ⊢ P.
 Arguments MaybeFrame {_} _ _%I _%I _%I.
 Arguments maybe_frame {_} _%I _%I _%I {_}.
 Hint Mode MaybeFrame + + ! ! - : typeclass_instances.

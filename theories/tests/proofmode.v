@@ -6,7 +6,7 @@ Section tests.
 Context {PROP : sbi}.
 Implicit Types P Q R : PROP.
 
-Lemma demo_0 P Q : ⬕ (P ∨ Q) -∗ (∀ x, ⌜x = 0⌝ ∨ ⌜x = 1⌝) → (Q ∨ P).
+Lemma demo_0 P Q : □ (P ∨ Q) -∗ (∀ x, ⌜x = 0⌝ ∨ ⌜x = 1⌝) → (Q ∨ P).
 Proof.
   iIntros "H #H2". iDestruct "H" as "###H".
   (* should remove the disjunction "H" *)
@@ -44,7 +44,7 @@ Lemma test_unfold_constants : bar.
 Proof. iIntros (P) "HP //". Qed.
 
 Lemma test_iRewrite {A : ofeT} (x y : A) P :
-  ⬕ (∀ z, P -∗ ■ (z ≡ y)) -∗ (P -∗ P ∧ (x,x) ≡ (y,x)).
+  □ (∀ z, P -∗ bi_bare (z ≡ y)) -∗ (P -∗ P ∧ (x,x) ≡ (y,x)).
 Proof.
   iIntros "#H1 H2".
   iRewrite (bi.internal_eq_sym x x with "[# //]").
@@ -53,7 +53,7 @@ Proof.
 Qed.
 
 Lemma test_iDestruct_and_emp P Q `{!Persistent P, !Persistent Q} :
-  P ∧ emp -∗ emp ∧ Q -∗ ■ (P ∗ Q).
+  P ∧ emp -∗ emp ∧ Q -∗ bi_bare (P ∗ Q).
 Proof. iIntros "[#? _] [_ #?]". auto. Qed.
 
 Lemma test_iIntros_persistent P Q `{!Persistent Q} : (P → Q → P ∧ Q)%I.
@@ -110,17 +110,17 @@ Lemma test_iSpecialize_tc P : (∀ x y z : gset positive, P) -∗ P.
 Proof. iIntros "H". iSpecialize ("H" $! ∅ {[ 1%positive ]} ∅). done. Qed.
 
 Lemma test_iFrame_pure {A : ofeT} (φ : Prop) (y z : A) :
-  φ → ■ ⌜y ≡ z⌝ -∗ (⌜ φ ⌝ ∧ ⌜ φ ⌝ ∧ y ≡ z : PROP).
+  φ → bi_bare ⌜y ≡ z⌝ -∗ (⌜ φ ⌝ ∧ ⌜ φ ⌝ ∧ y ≡ z : PROP).
 Proof. iIntros (Hv) "#Hxy". iFrame (Hv) "Hxy". Qed.
 
 Lemma test_iAssert_modality P : ◇ False -∗ ▷ P.
 Proof.
   iIntros "HF".
-  iAssert (■ False)%I with "[> -]" as %[].
+  iAssert (bi_bare False)%I with "[> -]" as %[].
   by iMod "HF".
 Qed.
 
-Lemma test_iMod_bare_timeless P `{!Timeless P} : ■ ▷ P -∗ ◇ ■ P.
+Lemma test_iMod_bare_timeless P `{!Timeless P} : bi_bare (▷ P) -∗ ◇ bi_bare P.
 Proof. iIntros "H". iMod "H". done. Qed.
 
 Lemma test_iAssumption_False P : False -∗ P.
@@ -166,17 +166,17 @@ Lemma test_iNext_quantifier {A} (Φ : A → A → PROP) :
 Proof. iIntros "H". iNext. done. Qed.
 
 Lemma test_iFrame_persistent (P Q : PROP) :
-  ⬕ P -∗ Q -∗ □ (P ∗ P) ∗ (P ∗ Q ∨ Q).
+  □ P -∗ Q -∗ bi_persistently (P ∗ P) ∗ (P ∗ Q ∨ Q).
 Proof. iIntros "#HP". iFrame "HP". iIntros "$". Qed.
 
-Lemma test_iSplit_persistently P Q : ⬕ P -∗ □ (P ∗ P).
+Lemma test_iSplit_persistently P Q : □ P -∗ bi_persistently (P ∗ P).
 Proof. iIntros "#?". by iSplit. Qed.
 
-Lemma test_iSpecialize_persistent P Q : ⬕ P -∗ (□ P → Q) -∗ Q.
+Lemma test_iSpecialize_persistent P Q : □ P -∗ (bi_persistently P → Q) -∗ Q.
 Proof. iIntros "#HP HPQ". by iSpecialize ("HPQ" with "HP"). Qed.
 
 Lemma test_iDestruct_persistent P (Φ : nat → PROP) `{!∀ x, Persistent (Φ x)}:
-  ⬕ (P -∗ ∃ x, Φ x) -∗
+  □ (P -∗ ∃ x, Φ x) -∗
   P -∗ ∃ x, Φ x ∗ P.
 Proof.
   iIntros "#H HP". iDestruct ("H" with "HP") as (x) "#H2". eauto with iFrame.
@@ -189,7 +189,7 @@ Proof.
 Qed.
 
 Lemma test_iInduction_wf (x : nat) P Q :
-  ⬕ P -∗ Q -∗ ⌜ (x + 0 = x)%nat ⌝.
+  □ P -∗ Q -∗ ⌜ (x + 0 = x)%nat ⌝.
 Proof.
   iIntros "#HP HQ".
   iInduction (lt_wf x) as [[|x] _] "IH"; simpl; first done.
@@ -220,22 +220,24 @@ Lemma test_iIntros_let P :
   ∀ Q, let R := emp%I in P -∗ R -∗ Q -∗ P ∗ Q.
 Proof. iIntros (Q R) "$ _ $". Qed.
 
-Lemma test_foo P Q : ■ ▷ (Q ≡ P) -∗ ■ ▷ Q -∗ ■ ▷ P.
+Lemma test_foo P Q : bi_bare (▷ (Q ≡ P)) -∗ bi_bare (▷ Q) -∗ bi_bare (▷ P).
 Proof.
   iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ".
 Qed.
 
 Lemma test_iIntros_modalities `(!Absorbing P) :
-  (□ ▷ ∀  x : nat, ⌜ x = 0 ⌝ → ⌜ x = 0 ⌝ -∗ False -∗ P -∗ P)%I.
+  (bi_persistently (▷ ∀  x : nat, ⌜ x = 0 ⌝ → ⌜ x = 0 ⌝ -∗ False -∗ P -∗ P))%I.
 Proof.
   iIntros (x ??).
   iIntros "* **". (* Test that fast intros do not work under modalities *)
   iIntros ([]).
 Qed.
 
-Lemma test_iNext_affine P Q : ■ ▷ (Q ≡ P) -∗ ■ ▷ Q -∗ ■ ▷ P.
+Lemma test_iNext_affine P Q :
+  bi_bare (▷ (Q ≡ P)) -∗ bi_bare (▷ Q) -∗ bi_bare (▷ P).
 Proof. iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ". Qed.
 
-Lemma test_iAlways P Q R : ⬕ P -∗ □ Q → R -∗ □ ■ ■ P ∗ ■ □ Q.
+Lemma test_iAlways P Q R :
+  □ P -∗ bi_persistently Q → R -∗ bi_persistently (bi_bare (bi_bare P)) ∗ □ Q.
 Proof. iIntros "#HP #HQ HR". iSplitL. iAlways. done. iAlways. done. Qed.
 End tests.

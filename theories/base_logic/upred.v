@@ -438,21 +438,21 @@ Proof.
   - (* (P ⊢ Q -∗ R) → P ∗ Q ⊢ R *)
     intros P Q R. unseal=> HPQR. split; intros n x ? (?&?&?&?&?). ofe_subst.
     eapply HPQR; eauto using cmra_validN_op_l.
-  - (* (P ⊢ Q) → □ P ⊢ □ Q *)
+  - (* (P ⊢ Q) → bi_persistently P ⊢ bi_persistently Q *)
     intros P QR HP. unseal; split=> n x ? /=. by apply HP, cmra_core_validN.
-  - (* □ P ⊢ □ □ P *)
+  - (* bi_persistently P ⊢ bi_persistently (bi_persistently P) *)
     intros P. unseal; split=> n x ?? /=. by rewrite cmra_core_idemp.
-  - (* (∀ a, □ Ψ a) ⊢ □ ∀ a, Ψ a *)
+  - (* (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a) *)
     by unseal.
-  - (* □ (∃ a, Ψ a) ⊢ ∃ a, □ Ψ a *)
+  - (* bi_persistently (∃ a, Ψ a) ⊢ ∃ a, bi_persistently (Ψ a) *)
     by unseal.
-  - (* P ⊢ □ emp (ADMISSIBLE) *)
+  - (* P ⊢ bi_persistently emp (ADMISSIBLE) *)
     intros P. unfold uPred_emp; unseal; by split=> n x ? _.
-  - (* □ P ∗ Q ⊢ □ P (ADMISSIBLE) *)
+  - (* bi_persistently P ∗ Q ⊢ bi_persistently P (ADMISSIBLE) *)
     intros P Q. move: (uPred_persistently P)=> P'.
     unseal; split; intros n x ? (x1&x2&?&?&_); ofe_subst;
       eauto using uPred_mono, cmra_includedN_l.
-  - (* □ P ∧ Q ⊢ (emp ∧ P) ∗ Q *)
+  - (* bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q *)
     intros P Q. unseal; split=> n x ? [??]; simpl in *.
     exists (core x), x; rewrite ?cmra_core_l; auto.
 Qed.
@@ -489,9 +489,9 @@ Proof.
   - (* ▷ P ∗ ▷ Q ⊢ ▷ (P ∗ Q) *)
     intros P Q. unseal; split=> -[|n] x ? /=; [done|intros (x1&x2&Hx&?&?)].
     exists x1, x2; eauto using dist_S.
-  - (* ▷ □ P ⊢ □ ▷ P *)
+  - (* ▷ bi_persistently P ⊢ bi_persistently (▷ P) *)
     by unseal.
-  - (* □ ▷ P ⊢ ▷ □ P *)
+  - (* bi_persistently (▷ P) ⊢ ▷ bi_persistently P *)
     by unseal.
   - (* ▷ P ⊢ ▷ False ∨ (▷ False → P) *)
     intros P. unseal; split=> -[|n] x ? /= HP; [by left|right].
@@ -570,7 +570,8 @@ Proof.
     by rewrite (assoc op _ z1) -(comm op z1) (assoc op z1)
       -(assoc op _ a2) (comm op z1) -Hy1 -Hy2.
 Qed.
-Lemma persistently_ownM_core (a : M) : uPred_ownM a ⊢ □ uPred_ownM (core a).
+Lemma persistently_ownM_core (a : M) :
+  uPred_ownM a ⊢ bi_persistently (uPred_ownM (core a)).
 Proof.
   rewrite /bi_persistently /=. unseal.
   split=> n x Hx /=. by apply cmra_core_monoN.
@@ -601,7 +602,8 @@ Lemma cmra_valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊢ (False : u
 Proof.
   intros Ha. unseal. split=> n x ??; apply Ha, cmra_validN_le with n; auto.
 Qed.
-Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ □ (✓ a : uPred M).
+Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) :
+  ✓ a ⊢ bi_persistently (✓ a : uPred M).
 Proof. by unseal. Qed.
 Lemma cmra_valid_weaken {A : cmraT} (a b : A) : ✓ (a ⋅ b) ⊢ (✓ a : uPred M).
 Proof. unseal; split=> n x _; apply cmra_validN_op_l. Qed.

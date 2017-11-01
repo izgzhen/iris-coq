@@ -6,7 +6,7 @@ Import bi.
 (** Least and greatest fixpoint of a monotone function, defined entirely inside
     the logic.  *)
 Class BIMonoPred {PROP : bi} {A : ofeT} (F : (A → PROP) → (A → PROP)) := {
-  bi_mono_pred Φ Ψ : ((□ ∀ x, Φ x -∗ Ψ x) → ∀ x, F Φ x -∗ F Ψ x)%I;
+  bi_mono_pred Φ Ψ : ((bi_persistently (∀ x, Φ x -∗ Ψ x)) → ∀ x, F Φ x -∗ F Ψ x)%I;
   bi_mono_pred_ne Φ : NonExpansive Φ → NonExpansive (F Φ)
 }.
 Arguments bi_mono_pred {_ _ _ _} _ _.
@@ -14,11 +14,11 @@ Local Existing Instance bi_mono_pred_ne.
 
 Definition bi_least_fixpoint {PROP : bi} {A : ofeT}
     (F : (A → PROP) → (A → PROP)) (x : A) : PROP :=
-  (∀ Φ : A -n> PROP, □ (∀ x, F Φ x -∗ Φ x) → Φ x)%I.
+  (∀ Φ : A -n> PROP, bi_persistently (∀ x, F Φ x -∗ Φ x) → Φ x)%I.
 
 Definition bi_greatest_fixpoint {PROP : bi} {A : ofeT}
     (F : (A → PROP) → (A → PROP)) (x : A) : PROP :=
-  (∃ Φ : A -n> PROP, □ (∀ x, Φ x -∗ F Φ x) ∧ Φ x)%I.
+  (∃ Φ : A -n> PROP, bi_persistently (∀ x, Φ x -∗ F Φ x) ∧ Φ x)%I.
 
 Section least.
   Context {PROP : bi} {A : ofeT} (F : (A → PROP) → (A → PROP)) `{!BIMonoPred F}.
@@ -48,13 +48,13 @@ Section least.
   Qed.
 
   Lemma least_fixpoint_ind (Φ : A → PROP) `{!NonExpansive Φ} :
-    ⬕ (∀ y, F Φ y -∗ Φ y) -∗ ∀ x, bi_least_fixpoint F x -∗ Φ x.
+    □ (∀ y, F Φ y -∗ Φ y) -∗ ∀ x, bi_least_fixpoint F x -∗ Φ x.
   Proof.
     iIntros "#HΦ" (x) "HF". by iApply ("HF" $! (CofeMor Φ) with "[#]").
   Qed.
 
   Lemma least_fixpoint_strong_ind (Φ : A → PROP) `{!NonExpansive Φ} :
-    ⬕ (∀ y, F (λ x, Φ x ∧ bi_least_fixpoint F x) y -∗ Φ y) -∗
+    □ (∀ y, F (λ x, Φ x ∧ bi_least_fixpoint F x) y -∗ Φ y) -∗
     ∀ x, bi_least_fixpoint F x -∗ Φ x.
   Proof.
     trans (∀ x, bi_least_fixpoint F x -∗ Φ x ∧ bi_least_fixpoint F x)%I.
@@ -96,6 +96,6 @@ Section greatest.
   Qed.
 
   Lemma greatest_fixpoint_coind (Φ : A → PROP) `{!NonExpansive Φ} :
-    ⬕ (∀ y, Φ y -∗ F Φ y) -∗ ∀ x, Φ x -∗ bi_greatest_fixpoint F x.
+    □ (∀ y, Φ y -∗ F Φ y) -∗ ∀ x, Φ x -∗ bi_greatest_fixpoint F x.
   Proof. iIntros "#HΦ" (x) "Hx". iExists (CofeMor Φ). auto. Qed.
 End greatest.

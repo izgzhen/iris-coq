@@ -5,7 +5,6 @@ Reserved Notation "'emp'".
 Reserved Notation "'⌜' φ '⌝'" (at level 1, φ at level 200, format "⌜ φ ⌝").
 Reserved Notation "P ∗ Q" (at level 80, right associativity).
 Reserved Notation "P -∗ Q" (at level 99, Q at level 200, right associativity).
-Reserved Notation "□ P" (at level 20, right associativity).
 Reserved Notation "▷ P" (at level 20, right associativity).
 
 Section bi_mixin.
@@ -39,7 +38,6 @@ Section bi_mixin.
   Local Notation "x ≡ y" := (bi_internal_eq _ x y).
   Local Infix "∗" := bi_sep.
   Local Infix "-∗" := bi_wand.
-  Local Notation "□ P" := (bi_persistently P).
   Local Notation "▷ P" := (bi_later P).
 
   Record BIMixin := {
@@ -100,17 +98,21 @@ Section bi_mixin.
     bi_mixin_wand_elim_l' P Q R : (P ⊢ Q -∗ R) → P ∗ Q ⊢ R;
 
     (* Persistently *)
-    bi_mixin_persistently_mono P Q : (P ⊢ Q) → □ P ⊢ □ Q;
-    bi_mixin_persistently_idemp_2 P : □ P ⊢ □ □ P;
+    bi_mixin_persistently_mono P Q :
+      (P ⊢ Q) → bi_persistently P ⊢ bi_persistently Q;
+    bi_mixin_persistently_idemp_2 P :
+      bi_persistently P ⊢ bi_persistently (bi_persistently P);
 
     bi_mixin_persistently_forall_2 {A} (Ψ : A → PROP) :
-      (∀ a, □ Ψ a) ⊢ □ ∀ a, Ψ a;
+      (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a);
     bi_mixin_persistently_exist_1 {A} (Ψ : A → PROP) :
-      □ (∃ a, Ψ a) ⊢ ∃ a, □ Ψ a;
+      bi_persistently (∃ a, Ψ a) ⊢ ∃ a, bi_persistently (Ψ a);
 
-    bi_mixin_persistently_emp_intro P : P ⊢ □ emp;
-    bi_mixin_persistently_absorbing P Q : □ P ∗ Q ⊢ □ P;
-    bi_mixin_persistently_and_sep_elim P Q : □ P ∧ Q ⊢ (emp ∧ P) ∗ Q;
+    bi_mixin_persistently_emp_intro P : P ⊢ bi_persistently emp;
+    bi_mixin_persistently_absorbing P Q :
+      bi_persistently P ∗ Q ⊢ bi_persistently P;
+    bi_mixin_persistently_and_sep_elim P Q :
+      bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q;
   }.
 
   Record SBIMixin := {
@@ -127,8 +129,10 @@ Section bi_mixin.
       (▷ ∃ a, Φ a) ⊢ ▷ False ∨ (∃ a, ▷ Φ a);
     sbi_mixin_later_sep_1 P Q : ▷ (P ∗ Q) ⊢ ▷ P ∗ ▷ Q;
     sbi_mixin_later_sep_2 P Q : ▷ P ∗ ▷ Q ⊢ ▷ (P ∗ Q);
-    sbi_mixin_later_persistently_1 P : ▷ □ P ⊢ □ ▷ P;
-    sbi_mixin_later_persistently_2 P : □ ▷ P ⊢ ▷ □ P;
+    sbi_mixin_later_persistently_1 P :
+      ▷ bi_persistently P ⊢ bi_persistently (▷ P);
+    sbi_mixin_later_persistently_2 P :
+      bi_persistently (▷ P) ⊢ ▷ bi_persistently P;
 
     sbi_mixin_later_false_em P : ▷ P ⊢ ▷ False ∨ (▷ False → P);
   }.
@@ -281,7 +285,6 @@ Notation "∀ x .. y , P" :=
   (bi_forall (λ x, .. (bi_forall (λ y, P)) ..)%I) : bi_scope.
 Notation "∃ x .. y , P" :=
   (bi_exist (λ x, .. (bi_exist (λ y, P)) ..)%I) : bi_scope.
-Notation "□ P" := (bi_persistently P) : bi_scope.
 
 Infix "≡" := bi_internal_eq : bi_scope.
 Notation "▷ P" := (bi_later P) : bi_scope.
@@ -399,21 +402,24 @@ Lemma wand_elim_l' P Q R : (P ⊢ Q -∗ R) → P ∗ Q ⊢ R.
 Proof. eapply bi_mixin_wand_elim_l', bi_bi_mixin. Qed.
 
 (* Persistently *)
-Lemma persistently_mono P Q : (P ⊢ Q) → □ P ⊢ □ Q.
+Lemma persistently_mono P Q : (P ⊢ Q) → bi_persistently P ⊢ bi_persistently Q.
 Proof. eapply bi_mixin_persistently_mono, bi_bi_mixin. Qed.
-Lemma persistently_idemp_2 P : □ P ⊢ □ □ P.
+Lemma persistently_idemp_2 P :
+  bi_persistently P ⊢ bi_persistently (bi_persistently P).
 Proof. eapply bi_mixin_persistently_idemp_2, bi_bi_mixin. Qed.
 
-Lemma persistently_forall_2 {A} (Ψ : A → PROP) : (∀ a, □ Ψ a) ⊢ □ ∀ a, Ψ a.
+Lemma persistently_forall_2 {A} (Ψ : A → PROP) :
+  (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a).
 Proof. eapply bi_mixin_persistently_forall_2, bi_bi_mixin. Qed.
-Lemma persistently_exist_1 {A} (Ψ : A → PROP) : □ (∃ a, Ψ a) ⊢ ∃ a, □ Ψ a.
+Lemma persistently_exist_1 {A} (Ψ : A → PROP) :
+  bi_persistently (∃ a, Ψ a) ⊢ ∃ a, bi_persistently (Ψ a).
 Proof. eapply bi_mixin_persistently_exist_1, bi_bi_mixin. Qed.
 
-Lemma persistently_emp_intro P : P ⊢ □ emp.
+Lemma persistently_emp_intro P : P ⊢ bi_persistently emp.
 Proof. eapply bi_mixin_persistently_emp_intro, bi_bi_mixin. Qed.
-Lemma persistently_absorbing P Q : □ P ∗ Q ⊢ □ P.
+Lemma persistently_absorbing P Q : bi_persistently P ∗ Q ⊢ bi_persistently P.
 Proof. eapply (bi_mixin_persistently_absorbing bi_entails), bi_bi_mixin. Qed.
-Lemma persistently_and_sep_elim P Q : □ P ∧ Q ⊢ (emp ∧ P) ∗ Q.
+Lemma persistently_and_sep_elim P Q : bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q.
 Proof. eapply bi_mixin_persistently_and_sep_elim, bi_bi_mixin. Qed.
 End bi_laws.
 
@@ -444,9 +450,9 @@ Lemma later_sep_1 P Q : ▷ (P ∗ Q) ⊢ ▷ P ∗ ▷ Q.
 Proof. eapply sbi_mixin_later_sep_1, sbi_sbi_mixin. Qed.
 Lemma later_sep_2 P Q : ▷ P ∗ ▷ Q ⊢ ▷ (P ∗ Q).
 Proof. eapply sbi_mixin_later_sep_2, sbi_sbi_mixin. Qed.
-Lemma later_persistently_1 P : ▷ □ P ⊢ □ ▷ P.
+Lemma later_persistently_1 P : ▷ bi_persistently P ⊢ bi_persistently (▷ P).
 Proof. eapply (sbi_mixin_later_persistently_1 bi_entails), sbi_sbi_mixin. Qed.
-Lemma later_persistently_2 P : □ ▷ P ⊢ ▷ □ P.
+Lemma later_persistently_2 P : bi_persistently (▷ P) ⊢ ▷ bi_persistently P.
 Proof. eapply (sbi_mixin_later_persistently_2 bi_entails), sbi_sbi_mixin. Qed.
 
 Lemma later_false_em P : ▷ P ⊢ ▷ False ∨ (▷ False → P).
