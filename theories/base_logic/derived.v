@@ -827,8 +827,18 @@ Proof.
     by rewrite -!or_intro_l -persistently_pure -persistently_later -persistently_sep_dup.
   - rewrite sep_or_r sep_elim_l sep_or_l; auto.
 Qed.
-Lemma except_0_forall {A} (Φ : A → uPred M) : ◇ (∀ a, Φ a) ⊢ ∀ a, ◇ Φ a.
-Proof. apply forall_intro=> a. by rewrite (forall_elim a). Qed.
+Lemma except_0_forall {A} (Φ : A → uPred M) : ◇ (∀ a, Φ a) ⊣⊢ ∀ a, ◇ Φ a.
+Proof.
+  apply (anti_symm _).
+  { apply forall_intro=> a. by rewrite (forall_elim a). }
+  trans (▷ (∀ a : A, Φ a) ∧ (∀ a : A, ◇ Φ a))%I.
+  { apply and_intro, reflexivity. rewrite later_forall. apply forall_mono=> a.
+    apply or_elim; auto using later_intro. }
+  rewrite later_false_excluded_middle and_or_r. apply or_elim.
+  { rewrite and_elim_l. apply or_intro_l. }
+  apply or_intro_r', forall_intro=> a. rewrite !(forall_elim a).
+  by rewrite /uPred_except_0 and_or_l impl_elim_l and_elim_r idemp.
+Qed.
 Lemma except_0_exist_2 {A} (Φ : A → uPred M) : (∃ a, ◇ Φ a) ⊢ ◇ ∃ a, Φ a.
 Proof. apply exist_elim=> a. by rewrite (exist_intro a). Qed.
 Lemma except_0_exist `{Inhabited A} (Φ : A → uPred M) :
