@@ -937,11 +937,8 @@ Qed.
 Global Instance forall_timeless {A} (Ψ : A → uPred M) :
   (∀ x, Timeless (Ψ x)) → Timeless (∀ x, Ψ x).
 Proof.
-  rewrite /Timeless=> HQ. rewrite later_false_excluded_middle.
-  apply or_mono; first done. apply forall_intro=> x.
-  rewrite -(löb (Ψ x)); apply impl_intro_l.
-  rewrite HQ /uPred_except_0 !and_or_r. apply or_elim; last auto.
-  by rewrite impl_elim_r (forall_elim x).
+  rewrite /Timeless=> HQ. rewrite except_0_forall later_forall.
+  apply forall_mono; auto.
 Qed.
 Global Instance exist_timeless {A} (Ψ : A → uPred M) :
   (∀ x, Timeless (Ψ x)) → Timeless (∃ x, Ψ x).
