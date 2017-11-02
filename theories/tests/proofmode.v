@@ -144,7 +144,7 @@ Qed.
 
 Lemma test_eauto_iFramE P Q R `{!Persistent R} :
   P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.
-Proof. eauto with iFrame. Qed.
+Proof. eauto 10 with iFrame. Qed.
 
 Lemma test_iCombine_persistent P Q R `{!Persistent R} :
   P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.

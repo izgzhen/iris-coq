@@ -8,7 +8,7 @@ Module Import uPred.
 End uPred.
 
 (* Hint DB for the logic *)
-Hint Resolve pure_intro.
+Hint Resolve pure_intro : I.
 Hint Resolve or_elim or_intro_l' or_intro_r' : I.
 Hint Resolve and_intro and_elim_l' and_elim_r' : I.
 Hint Resolve persistently_mono : I.

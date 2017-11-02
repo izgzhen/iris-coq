@@ -330,7 +330,7 @@ Section gmap.
     intros. apply (anti_symm _).
     { apply forall_intro=> k; apply forall_intro=> x.
       apply impl_intro_l, pure_elim_l=> ?; by apply big_sepM_lookup. }
-    induction m as [|i x m ? IH] using map_ind; [rewrite ?big_sepM_empty; auto|].
+    induction m as [|i x m ? IH] using map_ind; auto using big_sepM_empty'.
     rewrite big_sepM_insert // -and_sep_l. apply and_intro.
     - rewrite (forall_elim i) (forall_elim x) lookup_insert.
       by rewrite pure_True // True_impl.
@@ -488,8 +488,7 @@ Section gset.
     intros. apply (anti_symm _).
     { apply forall_intro=> x.
       apply impl_intro_l, pure_elim_l=> ?; by apply big_sepS_elem_of. }
-    induction X as [|x X ? IH] using collection_ind_L.
-    { rewrite big_sepS_empty; auto. }
+    induction X as [|x X ? IH] using collection_ind_L; auto using big_sepS_empty'.
     rewrite big_sepS_insert // -and_sep_l. apply and_intro.
     - by rewrite (forall_elim x) pure_True ?True_impl; last set_solver.
     - rewrite -IH. apply forall_mono=> y. apply impl_intro_l, pure_elim_l=> ?.
@@ -619,5 +618,3 @@ Section gmultiset.
   Proof. rewrite /big_opMS. apply _. Qed.
 End gmultiset.
 End big_op.
-
-Hint Resolve big_sepL_nil' big_sepM_empty' big_sepS_empty' big_sepMS_empty' | 0.

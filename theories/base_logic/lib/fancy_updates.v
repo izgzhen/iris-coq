@@ -224,7 +224,7 @@ Section proofmode_classes.
   Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 End proofmode_classes.
 
-Hint Extern 2 (coq_tactics.of_envs _ ⊢ |={_}=> _) => iModIntro.
+Hint Extern 2 (coq_tactics.envs_entails _ (|={_}=> _)) => iModIntro.
 
 (** Fancy updates that take a step. *)
 
