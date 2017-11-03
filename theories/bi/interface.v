@@ -112,6 +112,9 @@ Section bi_mixin.
     bi_mixin_prop_ext P Q : bi_plainly ((P → Q) ∧ (Q → P)) ⊢
       bi_internal_eq (OfeT PROP prop_ofe_mixin) P Q;
 
+    (* The following two laws are very similar, and indeed they hold
+       not just for □ and ■, but for any modality defined as
+       `M P n x := ∀ y, R x y → P n y`. *)
     bi_mixin_persistently_impl_plainly P Q :
       (bi_plainly P → bi_persistently Q) ⊢ bi_persistently (bi_plainly P → Q);
     bi_mixin_plainly_impl_plainly P Q :

@@ -235,6 +235,10 @@ Proof.
   iIntros ([]).
 Qed.
 
+Lemma test_iIntros_rewrite P (x1 x2 x3 x4 : nat) :
+  x1 = x2 → (⌜ x2 = x3 ⌝ ∗ ⌜ x3 ≡ x4 ⌝ ∗ P) -∗ ⌜ x1 = x4 ⌝ ∗ P.
+Proof. iIntros (?) "(-> & -> & $)"; auto. Qed.
+
 Lemma test_iNext_affine P Q :
   bi_affinely (▷ (Q ≡ P)) -∗ bi_affinely (▷ Q) -∗ bi_affinely (▷ P).
 Proof. iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ". Qed.
@@ -242,4 +246,5 @@ Proof. iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ". Qed.
 Lemma test_iAlways P Q R :
   □ P -∗ bi_persistently Q → R -∗ bi_persistently (bi_affinely (bi_affinely P)) ∗ □ Q.
 Proof. iIntros "#HP #HQ HR". iSplitL. iAlways. done. iAlways. done. Qed.
+
 End tests.

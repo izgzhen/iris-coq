@@ -1,5 +1,5 @@
 From stdpp Require Export strings.
-From iris.proofmode Require Import tokens.
+From iris.proofmode Require Import base tokens.
 Set Default Proof Using "Type".
 
 Inductive sel_pat :=

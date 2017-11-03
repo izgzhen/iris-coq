@@ -1,5 +1,5 @@
 From stdpp Require Export strings.
-From iris.proofmode Require Import tokens sel_patterns.
+From iris.proofmode Require Import base tokens sel_patterns.
 Set Default Proof Using "Type".
 
 Inductive intro_pat :=
@@ -11,6 +11,7 @@ Inductive intro_pat :=
   | IPureElim : intro_pat
   | IAlwaysElim : intro_pat → intro_pat
   | IModalElim : intro_pat → intro_pat
+  | IRewrite : direction → intro_pat
   | IPureIntro : intro_pat
   | IAlwaysIntro : intro_pat
   | IModalIntro : intro_pat
@@ -84,6 +85,7 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   | TPure :: ts => parse_go ts (SPat IPureElim :: k)
   | TAlways :: ts => parse_go ts (SAlwaysElim :: k)
   | TModal :: ts => parse_go ts (SModalElim :: k)
+  | TArrow d :: ts => parse_go ts (SPat (IRewrite d) :: k)
   | TPureIntro :: ts => parse_go ts (SPat IPureIntro :: k)
   | TAlwaysIntro :: ts => parse_go ts (SPat IAlwaysIntro :: k)
   | TModalIntro :: ts => parse_go ts (SPat IModalIntro :: k)

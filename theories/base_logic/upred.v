@@ -248,6 +248,9 @@ Definition uPred_wand {M} := unseal uPred_wand_aux M.
 Definition uPred_wand_eq :
   @uPred_wand = @uPred_wand_def := seal_eq uPred_wand_aux.
 
+(* Equivalently, this could be `∀ y, P n y`.  That's closer to the intuition
+   of "embedding the step-indexed logic in Iris", but the two are equivalent
+   because Iris is afine.  The following is easier to work with. *)
 Program Definition uPred_plainly_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n ε |}.
 Solve Obligations with naive_solver eauto using uPred_closed, ucmra_unit_validN.

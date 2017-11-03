@@ -121,6 +121,13 @@ Modalities
   an instance of the `ElimModal` type class. Instances include: later, except 0,
   basic update and fancy update.
 
+The persistence and plainness modalities
+----------------------------------------
+
+- `iAlways` : introduce a persistence or plainness modality and the spatial
+  context. In case of a plainness modality, the tactic will prune all persistent
+  hypotheses that are not plain.
+
 The later modality
 ------------------
 
@@ -197,6 +204,7 @@ _introduction patterns_:
 - `[ipat1|ipat2]` : disjunction elimination.
 - `[]` : false elimination.
 - `%` : move the hypothesis to the pure Coq context (anonymously).
+- `->` and `<-` : rewrite using a pure Coq equality
 - `# ipat` : move the hypothesis to the persistent context.
 - `> ipat` : eliminate a modality (if the goal permits).
 
@@ -207,10 +215,8 @@ appear at the top level:
   Items of the selection pattern can be prefixed with `$`, which cause them to
   be framed instead of cleared.
 - `!%` : introduce a pure goal (and leave the proof mode).
-- `!#` : introduce an persistence or plainness modality and clear the spatial
-  context. In case of a plainness modality, it will prune all persistent
-  hypotheses that are not plain.
-- `!>` : introduce a modality.
+- `!#` : introduce an persistence or plainness modality (by calling `iAlways`).
+- `!>` : introduce a modality (by calling `iModIntro`).
 - `/=` : perform `simpl`.
 - `//` : perform `try done` on all goals.
 - `//=` : syntactic sugar for `/= //`
