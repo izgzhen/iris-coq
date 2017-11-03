@@ -1029,23 +1029,23 @@ Global Instance from_modal_except_0 P : FromModal (◇ P) P.
 Proof. apply except_0_intro. Qed.
 
 (* IntoExcept0 *)
-Global Instance into_timeless_except_0 P : IntoExcept0 (◇ P) P.
+Global Instance into_except_0_except_0 P : IntoExcept0 (◇ P) P.
 Proof. by rewrite /IntoExcept0. Qed.
-Global Instance into_timeless_later P : Timeless P → IntoExcept0 (▷ P) P.
+Global Instance into_except_0_later P : Timeless P → IntoExcept0 (▷ P) P.
 Proof. by rewrite /IntoExcept0. Qed.
-Global Instance into_timeless_later_if p P : Timeless P → IntoExcept0 (▷?p P) P.
+Global Instance into_except_0_later_if p P : Timeless P → IntoExcept0 (▷?p P) P.
 Proof. rewrite /IntoExcept0. destruct p; auto using except_0_intro. Qed.
 
-Global Instance into_timeless_affinely P Q :
+Global Instance into_except_0_affinely P Q :
   IntoExcept0 P Q → IntoExcept0 (bi_affinely P) (bi_affinely Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_affinely_2. Qed.
-Global Instance into_timeless_absorbingly P Q :
+Global Instance into_except_0_absorbingly P Q :
   IntoExcept0 P Q → IntoExcept0 (▲ P) (▲ Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_absorbingly. Qed.
-Global Instance into_timeless_plainly P Q :
+Global Instance into_except_0_plainly P Q :
   IntoExcept0 P Q → IntoExcept0 (bi_plainly P) (bi_plainly Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_plainly. Qed.
-Global Instance into_timeless_persistently P Q :
+Global Instance into_except_0_persistently P Q :
   IntoExcept0 P Q → IntoExcept0 (bi_persistently P) (bi_persistently Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_persistently. Qed.
 
