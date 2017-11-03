@@ -772,6 +772,9 @@ Proof. rewrite /IntoForall=> HP. by rewrite HP persistently_forall. Qed.
 Global Instance into_forall_later {A} P (Φ : A → uPred M) :
   IntoForall P Φ → IntoForall (▷ P) (λ a, ▷ (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP later_forall. Qed.
+Global Instance into_forall_except_0 {A} P (Φ : A → uPred M) :
+  IntoForall P Φ → IntoForall (◇ P) (λ a, ◇ (Φ a))%I.
+Proof. rewrite /IntoForall=> HP. by rewrite HP except_0_forall. Qed.
 
 (* FromForall *)
 Global Instance from_forall_forall {A} (Φ : A → uPred M) :
@@ -801,6 +804,9 @@ Proof. rewrite /FromForall=> <-. by rewrite persistently_forall. Qed.
 Global Instance from_forall_later {A} P (Φ : A → uPred M) :
   FromForall P Φ → FromForall (▷ P) (λ a, ▷ (Φ a))%I.
 Proof. rewrite /FromForall=> <-. by rewrite later_forall. Qed.
+Global Instance from_forall_except_0 {A} P (Φ : A → uPred M) :
+  FromForall P Φ → FromForall (◇ P) (λ a, ◇ (Φ a))%I.
+Proof. rewrite /FromForall=> <-. by rewrite except_0_forall. Qed.
 
 (* FromModal *)
 Global Instance from_modal_later P : FromModal (▷ P) P.
