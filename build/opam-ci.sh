@@ -55,7 +55,7 @@ done
 # Upgrade cached things.
 echo
 echo "[opam-ci] Upgrading opam"
-opam upgrade -y --fixup
+opam upgrade -y --fixup && opam upgrade -y
 
 # Install build-dependencies.
 echo
