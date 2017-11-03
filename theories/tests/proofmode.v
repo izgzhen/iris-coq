@@ -247,4 +247,11 @@ Lemma test_iAlways P Q R :
   □ P -∗ bi_persistently Q → R -∗ bi_persistently (bi_affinely (bi_affinely P)) ∗ □ Q.
 Proof. iIntros "#HP #HQ HR". iSplitL. iAlways. done. iAlways. done. Qed.
 
+(* TODO: This test is broken in Coq 8.6. Should be restored once we drop Coq
+8.6 support. See also issue #108. *)
+(*
+Lemma test_iIntros_pure : (⌜ ¬False ⌝ : uPred M)%I.
+Proof. by iIntros (?). Qed.
+*)
+
 End tests.

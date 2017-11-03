@@ -9,16 +9,16 @@ Changes in and extensions of the theory:
 
 * [#] Add new modality: ■ ("plainly").
 * [#] Camera morphisms have to be homomorphisms, not just monotone functions.
-* [#] A proof that `f` has a fixed point if `f^k` is contractive.
+* Add a proof that `f` has a fixed point if `f^k` is contractive.
 * Constructions for least and greatest fixed points over monotone predicates
   (defined in the logic of Iris using impredicative quantification).
-* A proof of the inverse of `wp_bind`.
+* Add a proof of the inverse of `wp_bind`.
 
 Changes in Coq:
 
-* Some things got renamed and notation changed:
+* Rename some things and change notation:
   - The unit of a camera: `empty` -> `unit`, `∅` -> `ε`
-  - The proof mode type class `IntoOp` -> `IsOp`
+  - A proof mode type class `IntoOp` -> `IsOp`
   - OFEs with all elements being discrete: `Discrete` -> `OfeDiscrete`
   - OFE elements whose equality is discrete: `Timeless` -> `Discrete`
   - Timeless propositions: `TimelessP` -> `Timeless`
@@ -36,7 +36,8 @@ Changes in Coq:
     + `DRAMixin` -> `DraMixin`
     + `DRAT` -> `DraT`
     + `STS` -> `Sts`
-  - Many lemmas also changed their name.  A partial list:
+  - Many lemmas also changed their name.  `always_*` became `persistently_*`,
+    and furthermore: (the following list is not complete)
     + `impl_wand` -> `impl_wand_1` (it only involves one direction of the
       equivalent)
     + `always_impl_wand` -> `impl_wand`
@@ -49,7 +50,7 @@ Changes in Coq:
       direction of this equivalence got swapped for consistency's sake)
   The following `sed` snippet should get you most of the way:
 ```
-sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscrete\b/CmraDiscrete/g; s/\bSTS\b/Sts/g' -i $(find -name "*.v")
+sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscrete\b/CmraDiscrete/g; s/\bCMRAT\b/CmraT/g; s/\bCMRAMixin\b/CmraMixin/g; s/\bUCMRAT\b/UcmraT/g; s/\bUCMRAMixin\b/UcmraMixin/g; s/\bSTS\b/Sts/g' -i $(find -name "*.v")
 ```
 * Fix a bunch of consistency issues in the proof mode, and make it overall more
   usable.  In particular:
@@ -63,21 +64,27 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
   - There is a new connective `tc_opaque`, which can be used to make definitions
     opaque for type classes, and thus opaque for most tactics of the proof
     mode.
-  - Many missing type class instances for distributing connectives have been
-    defined.
-* The generic `fill` operation of the `ectxi_language` construct has been
-  defined in terms of a left fold instead of a right fold. This gives rise to
-  more definitional equalities.
-* The big operators have been improved:
+  - Define Many missing type class instances for distributing connectives.
+  - Implement the tactics `iIntros (?)` and `iIntros "!#"` (i.e. `iAlways`)
+    using type classes. This makes them more generic, e.g., `iIntros (?)` also
+    works when the universal quantifier is below a modality, and `iAlways` also
+    works for the plainness modality.  A breaking change, however, is that these
+    tactics now no longer work when the universal quantifier or modality is
+    behind a type class opaque definition.  Furthermore, this can change the
+    name of anonymous identifiers introduced with the "%" pattern.
+* Define the generic `fill` operation of the `ectxi_language` construct in terms
+  of a left fold instead of a right fold. This gives rise to more definitional
+  equalities.
+* Improved big operators:
   + They are no longer tied to cameras, but work on any monoid
-  + The version of big operations over lists was redefined so that it enjoy more
-    definitional equalities.
+  + The version of big operations over lists was redefined so that it enjoys
+    more definitional equalities.
 * Various improvements to `solve_ndisj`.
 * Improve handling of pure (non-state-dependent) reductions in heap_lang.
 * Use `Hint Mode` to prevent Coq from making arbitrary guesses in the presence
   of evars, which often led to divergence. There are a few places where type
   annotations are now needed.
-* The `prelude` folder has been moved to its own project: std++
+* Move the `prelude` folder to its own project: std++
 
 ## Iris 3.0.0 (released 2017-01-11)
 

@@ -156,7 +156,7 @@ Proof.
 Qed.
 
 Lemma env_lookup_delete_correct Γ i :
-  env_lookup_delete i Γ = x ← Γ !! i; Some (x,env_delete i Γ).
+  env_lookup_delete i Γ = (x ← Γ !! i; Some (x,env_delete i Γ)).
 Proof. induction Γ; intros; simplify; eauto. Qed.
 Lemma env_lookup_delete_Some Γ Γ' i x :
   env_lookup_delete i Γ = Some (x,Γ') ↔ Γ !! i = Some x ∧ Γ' = env_delete i Γ.

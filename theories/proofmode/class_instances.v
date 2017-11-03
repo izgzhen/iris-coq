@@ -591,6 +591,9 @@ Proof. by rewrite /FromForall. Qed.
 Global Instance from_forall_pure {A} (φ : A → Prop) :
   @FromForall PROP A (⌜∀ a : A, φ a⌝)%I (λ a, ⌜ φ a ⌝)%I.
 Proof. by rewrite /FromForall pure_forall. Qed.
+Global Instance from_forall_pure_not (φ : Prop) :
+  @FromForall PROP φ (⌜¬ φ⌝)%I (λ a : φ, False)%I.
+Proof. by rewrite /FromForall pure_forall. Qed.
 Global Instance from_forall_impl_pure P Q φ :
   IntoPureT P φ → FromForall (P → Q)%I (λ _ : φ, Q)%I.
 Proof.
