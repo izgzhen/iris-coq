@@ -94,7 +94,7 @@ Module inv. Section inv.
      * Using the STS monoid of a two-state STS, where [start] is the
        authoritative saying the state is exactly [start], and [finish]
        is the "we are at least in state [finish]" typically owned by threads.
-     * Ex () +_⊥ ()
+     * Ex () +_## ()
   *)
   Context (gname : Type).
   Context (start finished : gname → PROP).

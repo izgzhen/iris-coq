@@ -69,7 +69,7 @@ Proof.
 Qed.
 
 Lemma fupd_mask_frame_r' E1 E2 Ef P :
-  E1 ⊥ Ef → (|={E1,E2}=> ⌜E2 ⊥ Ef⌝ → P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P.
+  E1 ## Ef → (|={E1,E2}=> ⌜E2 ## Ef⌝ → P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P.
 Proof.
   intros. rewrite fupd_eq /fupd_def ownE_op //. iIntros "Hvs (Hw & HE1 &HEf)".
   iMod ("Hvs" with "[Hw HE1]") as ">($ & HE2 & HP)"; first by iFrame.
@@ -109,7 +109,7 @@ Proof.
 Qed.
 
 Lemma fupd_mask_frame_r E1 E2 Ef P :
-  E1 ⊥ Ef → (|={E1,E2}=> P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P.
+  E1 ## Ef → (|={E1,E2}=> P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P.
 Proof.
   iIntros (?) "H". iApply fupd_mask_frame_r'; auto.
   iApply fupd_wand_r; iFrame "H"; eauto.
@@ -236,7 +236,7 @@ Lemma step_fupd_wand E1 E2 P Q : (|={E1,E2}▷=> P) -∗ (P -∗ Q) -∗ |={E1,E
 Proof. iIntros "HP HPQ". by iApply "HPQ". Qed.
 
 Lemma step_fupd_mask_frame_r E1 E2 Ef P :
-  E1 ⊥ Ef → E2 ⊥ Ef → (|={E1,E2}▷=> P) ⊢ |={E1 ∪ Ef,E2 ∪ Ef}▷=> P.
+  E1 ## Ef → E2 ## Ef → (|={E1,E2}▷=> P) ⊢ |={E1 ∪ Ef,E2 ∪ Ef}▷=> P.
 Proof.
   iIntros (??) "HP". iApply fupd_mask_frame_r. done. iMod "HP". iModIntro.
   iNext. by iApply fupd_mask_frame_r.

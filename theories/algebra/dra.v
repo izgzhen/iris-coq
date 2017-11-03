@@ -9,21 +9,21 @@ Record DraMixin A `{Equiv A, Core A, Disjoint A, Op A, Valid A} := {
   mixin_dra_valid_proper : Proper ((≡) ==> impl) valid;
   mixin_dra_disjoint_proper x : Proper ((≡) ==> impl) (disjoint x);
   (* validity *)
-  mixin_dra_op_valid x y : ✓ x → ✓ y → x ⊥ y → ✓ (x ⋅ y);
+  mixin_dra_op_valid x y : ✓ x → ✓ y → x ## y → ✓ (x ⋅ y);
   mixin_dra_core_valid x : ✓ x → ✓ core x;
   (* monoid *)
   mixin_dra_assoc x y z :
-    ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⋅ (y ⋅ z) ≡ (x ⋅ y) ⋅ z;
-  mixin_dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ z;
+    ✓ x → ✓ y → ✓ z → x ## y → x ⋅ y ## z → x ⋅ (y ⋅ z) ≡ (x ⋅ y) ⋅ z;
+  mixin_dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ## y → x ⋅ y ## z → x ## z;
   mixin_dra_disjoint_move_l x y z :
-    ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ y ⋅ z;
+    ✓ x → ✓ y → ✓ z → x ## y → x ⋅ y ## z → x ## y ⋅ z;
   mixin_dra_symmetric : Symmetric (@disjoint A _);
-  mixin_dra_comm x y : ✓ x → ✓ y → x ⊥ y → x ⋅ y ≡ y ⋅ x;
-  mixin_dra_core_disjoint_l x : ✓ x → core x ⊥ x;
+  mixin_dra_comm x y : ✓ x → ✓ y → x ## y → x ⋅ y ≡ y ⋅ x;
+  mixin_dra_core_disjoint_l x : ✓ x → core x ## x;
   mixin_dra_core_l x : ✓ x → core x ⋅ x ≡ x;
   mixin_dra_core_idemp x : ✓ x → core (core x) ≡ core x;
   mixin_dra_core_mono x y : 
-    ∃ z, ✓ x → ✓ y → x ⊥ y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ⊥ z
+    ∃ z, ✓ x → ✓ y → x ## y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ## z
 }.
 Structure draT := DraT {
   dra_car :> Type;
@@ -59,30 +59,30 @@ Section dra_mixin.
   Proof. apply (mixin_dra_valid_proper _ (dra_mixin A)). Qed.
   Global Instance dra_disjoint_proper x : Proper ((≡) ==> impl) (disjoint x).
   Proof. apply (mixin_dra_disjoint_proper _ (dra_mixin A)). Qed.
-  Lemma dra_op_valid x y : ✓ x → ✓ y → x ⊥ y → ✓ (x ⋅ y).
+  Lemma dra_op_valid x y : ✓ x → ✓ y → x ## y → ✓ (x ⋅ y).
   Proof. apply (mixin_dra_op_valid _ (dra_mixin A)). Qed.
   Lemma dra_core_valid x : ✓ x → ✓ core x.
   Proof. apply (mixin_dra_core_valid _ (dra_mixin A)). Qed.
   Lemma dra_assoc x y z :
-    ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⋅ (y ⋅ z) ≡ (x ⋅ y) ⋅ z.
+    ✓ x → ✓ y → ✓ z → x ## y → x ⋅ y ## z → x ⋅ (y ⋅ z) ≡ (x ⋅ y) ⋅ z.
   Proof. apply (mixin_dra_assoc _ (dra_mixin A)). Qed.
-  Lemma dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ z.
+  Lemma dra_disjoint_ll x y z : ✓ x → ✓ y → ✓ z → x ## y → x ⋅ y ## z → x ## z.
   Proof. apply (mixin_dra_disjoint_ll _ (dra_mixin A)). Qed.
   Lemma dra_disjoint_move_l x y z :
-    ✓ x → ✓ y → ✓ z → x ⊥ y → x ⋅ y ⊥ z → x ⊥ y ⋅ z.
+    ✓ x → ✓ y → ✓ z → x ## y → x ⋅ y ## z → x ## y ⋅ z.
   Proof. apply (mixin_dra_disjoint_move_l _ (dra_mixin A)). Qed.
   Global Instance  dra_symmetric : Symmetric (@disjoint A _).
   Proof. apply (mixin_dra_symmetric _ (dra_mixin A)). Qed.
-  Lemma dra_comm x y : ✓ x → ✓ y → x ⊥ y → x ⋅ y ≡ y ⋅ x.
+  Lemma dra_comm x y : ✓ x → ✓ y → x ## y → x ⋅ y ≡ y ⋅ x.
   Proof. apply (mixin_dra_comm _ (dra_mixin A)). Qed.
-  Lemma dra_core_disjoint_l x : ✓ x → core x ⊥ x.
+  Lemma dra_core_disjoint_l x : ✓ x → core x ## x.
   Proof. apply (mixin_dra_core_disjoint_l _ (dra_mixin A)). Qed.
   Lemma dra_core_l x : ✓ x → core x ⋅ x ≡ x.
   Proof. apply (mixin_dra_core_l _ (dra_mixin A)). Qed.
   Lemma dra_core_idemp x : ✓ x → core (core x) ≡ core x.
   Proof. apply (mixin_dra_core_idemp _ (dra_mixin A)). Qed.
   Lemma dra_core_mono x y : 
-    ∃ z, ✓ x → ✓ y → x ⊥ y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ⊥ z.
+    ∃ z, ✓ x → ✓ y → x ## y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ## z.
   Proof. apply (mixin_dra_core_mono _ (dra_mixin A)). Qed.
 End dra_mixin.
 
@@ -126,16 +126,16 @@ Proof. by intros x1 x2 Hx; split; rewrite /= Hx. Qed.
 Instance: Proper ((≡) ==> (≡) ==> iff) (disjoint : relation A).
 Proof.
   intros x1 x2 Hx y1 y2 Hy; split.
-  - by rewrite Hy (symmetry_iff (⊥) x1) (symmetry_iff (⊥) x2) Hx.
-  - by rewrite -Hy (symmetry_iff (⊥) x2) (symmetry_iff (⊥) x1) -Hx.
+  - by rewrite Hy (symmetry_iff (##) x1) (symmetry_iff (##) x2) Hx.
+  - by rewrite -Hy (symmetry_iff (##) x2) (symmetry_iff (##) x1) -Hx.
 Qed.
 
-Lemma dra_disjoint_rl a b c : ✓ a → ✓ b → ✓ c → b ⊥ c → a ⊥ b ⋅ c → a ⊥ b.
+Lemma dra_disjoint_rl a b c : ✓ a → ✓ b → ✓ c → b ## c → a ## b ⋅ c → a ## b.
 Proof. intros ???. rewrite !(symmetry_iff _ a). by apply dra_disjoint_ll. Qed.
-Lemma dra_disjoint_lr a b c : ✓ a → ✓ b → ✓ c → a ⊥ b → a ⋅ b ⊥ c → b ⊥ c.
+Lemma dra_disjoint_lr a b c : ✓ a → ✓ b → ✓ c → a ## b → a ⋅ b ## c → b ## c.
 Proof. intros ????. rewrite dra_comm //. by apply dra_disjoint_ll. Qed.
 Lemma dra_disjoint_move_r a b c :
-  ✓ a → ✓ b → ✓ c → b ⊥ c → a ⊥ b ⋅ c → a ⋅ b ⊥ c.
+  ✓ a → ✓ b → ✓ c → b ## c → a ## b ⋅ c → a ⋅ b ## c.
 Proof.
   intros; symmetry; rewrite dra_comm; eauto using dra_disjoint_rl.
   apply dra_disjoint_move_l; auto; by rewrite dra_comm.
@@ -150,7 +150,7 @@ Program Instance validity_pcore : PCore (validity A) := λ x,
 Solve Obligations with naive_solver eauto using dra_core_valid.
 Program Instance validity_op : Op (validity A) := λ x y,
   Validity (validity_car x ⋅ validity_car y)
-           (✓ x ∧ ✓ y ∧ validity_car x ⊥ validity_car y) _.
+           (✓ x ∧ ✓ y ∧ validity_car x ## validity_car y) _.
 Solve Obligations with naive_solver eauto using dra_op_valid.
 
 Definition validity_ra_mixin : RAMixin (validity A).
@@ -185,14 +185,14 @@ Global Instance validity_cmra_total : CmraTotal validityR.
 Proof. rewrite /CmraTotal; eauto. Qed.
 
 Lemma validity_update x y :
-  (∀ c, ✓ x → ✓ c → validity_car x ⊥ c → ✓ y ∧ validity_car y ⊥ c) → x ~~> y.
+  (∀ c, ✓ x → ✓ c → validity_car x ## c → ✓ y ∧ validity_car y ## c) → x ~~> y.
 Proof.
   intros Hxy; apply cmra_discrete_update=> z [?[??]].
   split_and!; try eapply Hxy; eauto.
 Qed.
 
 Lemma to_validity_op a b :
-  (✓ (a ⋅ b) → ✓ a ∧ ✓ b ∧ a ⊥ b) →
+  (✓ (a ⋅ b) → ✓ a ∧ ✓ b ∧ a ## b) →
   to_validity (a ⋅ b) ≡ to_validity a ⋅ to_validity b.
 Proof. split; naive_solver eauto using dra_op_valid. Qed.
 

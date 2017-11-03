@@ -20,7 +20,7 @@ Context (vs_impl : ∀ E P Q, □ (P → Q) ⊢ P ={E,E}=> Q).
 Context (vs_transitive : ∀ E1 E2 E3 P Q R,
   (P ={E1,E2}=> Q) ∧ (Q ={E2,E3}=> R) ⊢ P ={E1,E3}=> R).
 Context (vs_mask_frame_r : ∀ E1 E2 Ef P Q,
-  E1 ⊥ Ef → (P ={E1,E2}=> Q) ⊢ P ={E1 ∪ Ef,E2 ∪ Ef}=> Q).
+  E1 ## Ef → (P ={E1,E2}=> Q) ⊢ P ={E1 ∪ Ef,E2 ∪ Ef}=> Q).
 Context (vs_frame_r : ∀ E1 E2 P Q R, (P ={E1,E2}=> Q) ⊢ P ∗ R ={E1,E2}=> Q ∗ R).
 Context (vs_exists : ∀ {A} E1 E2 (Φ : A → uPred M) Q,
   (∀ x, Φ x ={E1,E2}=> Q) ⊢ (∃ x, Φ x) ={E1,E2}=> Q).
@@ -57,7 +57,7 @@ Proof.
 Qed.
 
 Lemma fupd_mask_frame_r E1 E2 Ef P :
-  E1 ⊥ Ef → (|={E1,E2}=> P) ⊢ |={E1 ∪ Ef,E2 ∪ Ef}=> P.
+  E1 ## Ef → (|={E1,E2}=> P) ⊢ |={E1 ∪ Ef,E2 ∪ Ef}=> P.
 Proof.
   iIntros (HE); iDestruct 1 as (R) "[HR Hvs]". iExists R; iFrame "HR".
   by iApply vs_mask_frame_r.
