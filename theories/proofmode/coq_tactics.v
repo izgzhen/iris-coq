@@ -443,16 +443,15 @@ Global Instance affine_env_snoc Γ i P :
   Affine P → AffineEnv Γ → AffineEnv (Esnoc Γ i P).
 Proof. by constructor. Qed.
 
-Instance affine_env_spatial Δ :
-  TCOr (AffineBI PROP) (AffineEnv (env_spatial Δ)) → Affine ([∗] env_spatial Δ).
-Proof. destruct 1 as [?|H]. apply _. induction H; simpl; apply _. Qed.
+(* If the BI is affine, no need to walk on the whole environment. *)
+Global Instance affine_env_bi `(AffineBI PROP) Γ : AffineEnv Γ | 0.
+Proof. induction Γ; apply _. Qed.
 
-Lemma tac_emp_intro Δ :
-  (* Establishing [AffineEnv (env_spatial Δ)] is rather expensive (linear in the
-  size of the context), so first check whether the whole BI is affine (which
-  takes constant time). *)
-  TCOr (AffineBI PROP) (AffineEnv (env_spatial Δ)) →
-  Δ ⊢ emp.
+Instance affine_env_spatial Δ :
+  AffineEnv (env_spatial Δ) → Affine ([∗] env_spatial Δ).
+Proof. intros H. induction H; simpl; apply _. Qed.
+
+Lemma tac_emp_intro Δ : AffineEnv (env_spatial Δ) → Δ ⊢ emp.
 Proof. intros. by rewrite (affine Δ). Qed.
 
 Lemma tac_assumption Δ Δ' i p P Q :
@@ -571,7 +570,7 @@ Proof. destruct pe; by split. Qed.
 
 Lemma tac_always_intro Δ Δ' a pe pl Q Q' :
   FromAlways a pe pl Q' Q →
-  (if a then TCOr (AffineBI PROP) (AffineEnv (env_spatial Δ')) else TCTrue) →
+  (if a then AffineEnv (env_spatial Δ') else TCTrue) →
   IntoAlwaysEnvs pe pl Δ' Δ →
   (Δ ⊢ Q) → Δ' ⊢ Q'.
 Proof.
