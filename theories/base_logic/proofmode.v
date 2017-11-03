@@ -115,6 +115,12 @@ Proof. apply bupd_intro. Qed.
 Global Instance elim_modal_bupd P Q : ElimModal (|==> P) P (|==> Q) (|==> Q).
 Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
 
+Global Instance elim_modal_bupd_plain_goal P Q : Plain Q → ElimModal (|==> P) P Q Q.
+Proof. intros. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_plain. Qed.
+
+Global Instance elim_modal_bupd_plain P Q : Plain P → ElimModal (|==> P) P Q Q.
+Proof. intros. by rewrite /ElimModal bupd_plain wand_elim_r. Qed.
+
 Global Instance is_except_0_bupd P : IsExcept0 P → IsExcept0 (|==> P).
 Proof.
   rewrite /IsExcept0=> HP.

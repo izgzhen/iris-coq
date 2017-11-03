@@ -142,7 +142,7 @@ Section fractional.
   Proof. intros. rewrite /IntoSep [P]fractional_half //. Qed.
 
   (* The instance [frame_fractional] can be tried at all the nodes of
-     the proof search. The proof search then fails almost persistently on
+     the proof search. The proof search then fails almost always on
      [AsFractional R Φ r], but the slowdown is still noticeable.  For
      that reason, we factorize the three instances that could have been
      defined for that purpose into one. *)

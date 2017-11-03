@@ -36,6 +36,9 @@ Global Instance uPred_affine : AffineBI (uPredI M) | 0.
 Proof. intros P. rewrite /Affine. by apply bi.pure_intro. Qed.
 
 (* Own and valid derived *)
+Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) :
+  ✓ a ⊢ bi_persistently (✓ a : uPred M).
+Proof. by rewrite {1}plainly_cmra_valid_1 plainly_elim_persistently. Qed.
 Lemma affinely_persistently_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
   rewrite affine_affinely=>?; apply (anti_symm _); [by rewrite persistently_elim|].
@@ -47,6 +50,11 @@ Global Instance ownM_mono : Proper (flip (≼) ==> (⊢)) (@uPred_ownM M).
 Proof. intros a b [b' ->]. by rewrite ownM_op sep_elim_l. Qed.
 Lemma ownM_unit' : uPred_ownM ε ⊣⊢ True.
 Proof. apply (anti_symm _); first by apply pure_intro. apply ownM_empty. Qed.
+Lemma affinely_plainly_cmra_valid {A : cmraT} (a : A) : ■ ✓ a ⊣⊢ ✓ a.
+Proof.
+  rewrite affine_affinely.
+  apply (anti_symm _), plainly_cmra_valid_1. apply plainly_elim, _.
+Qed.
 Lemma affinely_persistently_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
 Proof.
   rewrite affine_affinely. intros; apply (anti_symm _); first by rewrite persistently_elim.
@@ -90,12 +98,24 @@ Proof.
     auto using and_elim_l, and_elim_r.
 Qed.
 
-(* Derived lemmas for persistence *)
+(* Plainness *)
+Global Instance limit_preserving_Plain {A:ofeT} `{Cofe A} (Φ : A → uPred M) :
+  NonExpansive Φ → LimitPreserving (λ x, Plain (Φ x)).
+Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
+Global Instance cmra_valid_plain {A : cmraT} (a : A) :
+  Plain (✓ a : uPred M)%I.
+Proof. rewrite /Persistent. apply plainly_cmra_valid_1. Qed.
+
+Lemma bupd_affinely_plainly P : (|==> ■ P) ⊢ P.
+Proof. by rewrite affine_affinely bupd_plainly. Qed.
+
+Lemma bupd_plain P `{!Plain P} : (|==> P) ⊢ P.
+Proof. by rewrite -{1}(plain_plainly P) bupd_plainly. Qed.
+
+(* Persistence *)
 Global Instance limit_preserving_Persistent {A:ofeT} `{Cofe A} (Φ : A → uPred M) :
   NonExpansive Φ → LimitPreserving (λ x, Persistent (Φ x)).
 Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
-
-(* Persistence *)
 Global Instance cmra_valid_persistent {A : cmraT} (a : A) :
   Persistent (✓ a : uPred M)%I.
 Proof. rewrite /Persistent. apply persistently_cmra_valid_1. Qed.

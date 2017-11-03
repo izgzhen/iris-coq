@@ -8,7 +8,7 @@ Reserved Notation "P -∗ Q" (at level 99, Q at level 200, right associativity).
 Reserved Notation "▷ P" (at level 20, right associativity).
 
 Section bi_mixin.
-  Context {PROP : Type} `{Dist PROP, Equiv PROP}.
+  Context {PROP : Type} `{Dist PROP, Equiv PROP} (prop_ofe_mixin : OfeMixin PROP).
   Context (bi_entails : PROP → PROP → Prop).
   Context (bi_emp : PROP).
   Context (bi_pure : Prop → PROP).
@@ -20,6 +20,7 @@ Section bi_mixin.
   Context (bi_internal_eq : ∀ A : ofeT, A → A → PROP).
   Context (bi_sep : PROP → PROP → PROP).
   Context (bi_wand : PROP → PROP → PROP).
+  Context (bi_plainly : PROP → PROP).
   Context (bi_persistently : PROP → PROP).
   Context (bi_later : PROP → PROP).
 
@@ -55,6 +56,7 @@ Section bi_mixin.
       Proper (pointwise_relation _ (dist n) ==> dist n) (bi_exist A);
     bi_mixin_sep_ne : NonExpansive2 bi_sep;
     bi_mixin_wand_ne : NonExpansive2 bi_wand;
+    bi_mixin_plainly_ne : NonExpansive bi_plainly;
     bi_mixin_persistently_ne : NonExpansive bi_persistently;
     bi_mixin_internal_eq_ne (A : ofeT) : NonExpansive2 (bi_internal_eq A);
 
@@ -97,18 +99,40 @@ Section bi_mixin.
     bi_mixin_wand_intro_r P Q R : (P ∗ Q ⊢ R) → P ⊢ Q -∗ R;
     bi_mixin_wand_elim_l' P Q R : (P ⊢ Q -∗ R) → P ∗ Q ⊢ R;
 
+    (* Plainly *)
+    bi_mixin_plainly_mono P Q : (P ⊢ Q) → bi_plainly P ⊢ bi_plainly Q;
+    bi_mixin_plainly_elim_persistently P : bi_plainly P ⊢ bi_persistently P;
+    bi_mixin_plainly_idemp_2 P : bi_plainly P ⊢ bi_plainly (bi_plainly P);
+
+    bi_mixin_plainly_forall_2 {A} (Ψ : A → PROP) :
+      (∀ a, bi_plainly (Ψ a)) ⊢ bi_plainly (∀ a, Ψ a);
+    bi_mixin_plainly_exist_1 {A} (Ψ : A → PROP) :
+      bi_plainly (∃ a, Ψ a) ⊢ ∃ a, bi_plainly (Ψ a);
+
+    bi_mixin_prop_ext P Q : bi_plainly ((P → Q) ∧ (Q → P)) ⊢
+      bi_internal_eq (OfeT PROP prop_ofe_mixin) P Q;
+
+    bi_mixin_persistently_impl_plainly P Q :
+      (bi_plainly P → bi_persistently Q) ⊢ bi_persistently (bi_plainly P → Q);
+    bi_mixin_plainly_impl_plainly P Q :
+      (bi_plainly P → bi_plainly Q) ⊢ bi_plainly (bi_plainly P → Q);
+
+    bi_mixin_plainly_emp_intro P : P ⊢ bi_plainly emp;
+    bi_mixin_plainly_absorbing P Q : bi_plainly P ∗ Q ⊢ bi_plainly P;
+
     (* Persistently *)
     bi_mixin_persistently_mono P Q :
       (P ⊢ Q) → bi_persistently P ⊢ bi_persistently Q;
     bi_mixin_persistently_idemp_2 P :
       bi_persistently P ⊢ bi_persistently (bi_persistently P);
+    bi_mixin_plainly_persistently_1 P :
+      bi_plainly (bi_persistently P) ⊢ bi_plainly P;
 
     bi_mixin_persistently_forall_2 {A} (Ψ : A → PROP) :
       (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a);
     bi_mixin_persistently_exist_1 {A} (Ψ : A → PROP) :
       bi_persistently (∃ a, Ψ a) ⊢ ∃ a, bi_persistently (Ψ a);
 
-    bi_mixin_persistently_emp_intro P : P ⊢ bi_persistently emp;
     bi_mixin_persistently_absorbing P Q :
       bi_persistently P ∗ Q ⊢ bi_persistently P;
     bi_mixin_persistently_and_sep_elim P Q :
@@ -129,6 +153,8 @@ Section bi_mixin.
       (▷ ∃ a, Φ a) ⊢ ▷ False ∨ (∃ a, ▷ Φ a);
     sbi_mixin_later_sep_1 P Q : ▷ (P ∗ Q) ⊢ ▷ P ∗ ▷ Q;
     sbi_mixin_later_sep_2 P Q : ▷ P ∗ ▷ Q ⊢ ▷ (P ∗ Q);
+    sbi_mixin_later_plainly_1 P : ▷ bi_plainly P ⊢ bi_plainly (▷ P);
+    sbi_mixin_later_plainly_2 P : bi_plainly (▷ P) ⊢ ▷ bi_plainly P;
     sbi_mixin_later_persistently_1 P :
       ▷ bi_persistently P ⊢ bi_persistently (▷ P);
     sbi_mixin_later_persistently_2 P :
@@ -153,11 +179,12 @@ Structure bi := BI {
   bi_internal_eq : ∀ A : ofeT, A → A → bi_car;
   bi_sep : bi_car → bi_car → bi_car;
   bi_wand : bi_car → bi_car → bi_car;
+  bi_plainly : bi_car → bi_car;
   bi_persistently : bi_car → bi_car;
   bi_ofe_mixin : OfeMixin bi_car;
-  bi_bi_mixin : BIMixin bi_entails bi_emp bi_pure bi_and bi_or bi_impl
-                        bi_forall bi_exist bi_internal_eq
-                        bi_sep bi_wand bi_persistently;
+  bi_bi_mixin : BIMixin bi_ofe_mixin bi_entails bi_emp bi_pure bi_and bi_or
+                        bi_impl bi_forall bi_exist bi_internal_eq
+                        bi_sep bi_wand bi_plainly bi_persistently;
 }.
 
 Coercion bi_ofeC (PROP : bi) : ofeT := OfeT PROP (bi_ofe_mixin PROP).
@@ -174,6 +201,7 @@ Instance: Params (@bi_exist) 2.
 Instance: Params (@bi_internal_eq) 2.
 Instance: Params (@bi_sep) 1.
 Instance: Params (@bi_wand) 1.
+Instance: Params (@bi_plainly) 1.
 Instance: Params (@bi_persistently) 1.
 
 Delimit Scope bi_scope with I.
@@ -191,6 +219,7 @@ Arguments bi_exist {PROP _} _%I : simpl never, rename.
 Arguments bi_internal_eq {PROP _} _ _ : simpl never, rename.
 Arguments bi_sep {PROP} _%I _%I : simpl never, rename.
 Arguments bi_wand {PROP} _%I _%I : simpl never, rename.
+Arguments bi_plainly {PROP} _%I : simpl never, rename.
 Arguments bi_persistently {PROP} _%I : simpl never, rename.
 
 Structure sbi := SBI {
@@ -208,15 +237,16 @@ Structure sbi := SBI {
   sbi_internal_eq : ∀ A : ofeT, A → A → sbi_car;
   sbi_sep : sbi_car → sbi_car → sbi_car;
   sbi_wand : sbi_car → sbi_car → sbi_car;
+  sbi_plainly : sbi_car → sbi_car;
   sbi_persistently : sbi_car → sbi_car;
   bi_later : sbi_car → sbi_car;
   sbi_ofe_mixin : OfeMixin sbi_car;
-  sbi_bi_mixin : BIMixin sbi_entails sbi_emp sbi_pure sbi_and sbi_or sbi_impl
-                         sbi_forall sbi_exist sbi_internal_eq
-                         sbi_sep sbi_wand sbi_persistently;
+  sbi_bi_mixin : BIMixin sbi_ofe_mixin sbi_entails sbi_emp sbi_pure sbi_and
+                         sbi_or sbi_impl sbi_forall sbi_exist sbi_internal_eq
+                         sbi_sep sbi_wand sbi_plainly sbi_persistently;
   sbi_sbi_mixin : SBIMixin sbi_entails sbi_pure sbi_or sbi_impl
                            sbi_forall sbi_exist sbi_internal_eq
-                           sbi_sep sbi_persistently bi_later;
+                           sbi_sep sbi_plainly sbi_persistently bi_later;
 }.
 
 Arguments sbi_car : simpl never.
@@ -231,6 +261,7 @@ Arguments bi_exist {PROP _} _%I : simpl never, rename.
 Arguments bi_internal_eq {PROP _} _ _ : simpl never, rename.
 Arguments bi_sep {PROP} _%I _%I : simpl never, rename.
 Arguments bi_wand {PROP} _%I _%I : simpl never, rename.
+Arguments bi_plainly {PROP} _%I : simpl never, rename.
 Arguments bi_persistently {PROP} _%I : simpl never, rename.
 
 Coercion sbi_ofeC (PROP : sbi) : ofeT := OfeT PROP (sbi_ofe_mixin PROP).
@@ -253,6 +284,7 @@ Arguments sbi_exist {PROP _} _%I : simpl never, rename.
 Arguments sbi_internal_eq {PROP _} _ _ : simpl never, rename.
 Arguments sbi_sep {PROP} _%I _%I : simpl never, rename.
 Arguments sbi_wand {PROP} _%I _%I : simpl never, rename.
+Arguments sbi_plainly {PROP} _%I : simpl never, rename.
 Arguments sbi_persistently {PROP} _%I : simpl never, rename.
 Arguments bi_later {PROP} _%I : simpl never, rename.
 
@@ -327,6 +359,8 @@ Global Instance sep_ne : NonExpansive2 (@bi_sep PROP).
 Proof. eapply bi_mixin_sep_ne, bi_bi_mixin. Qed.
 Global Instance wand_ne : NonExpansive2 (@bi_wand PROP).
 Proof. eapply bi_mixin_wand_ne, bi_bi_mixin. Qed.
+Global Instance plainly_ne : NonExpansive (@bi_plainly PROP).
+Proof. eapply bi_mixin_plainly_ne, bi_bi_mixin. Qed.
 Global Instance persistently_ne : NonExpansive (@bi_persistently PROP).
 Proof. eapply bi_mixin_persistently_ne, bi_bi_mixin. Qed.
 
@@ -360,7 +394,7 @@ Proof. eapply bi_mixin_impl_elim_l', bi_bi_mixin. Qed.
 Lemma forall_intro {A} P (Ψ : A → PROP) : (∀ a, P ⊢ Ψ a) → P ⊢ ∀ a, Ψ a.
 Proof. eapply bi_mixin_forall_intro, bi_bi_mixin. Qed.
 Lemma forall_elim {A} {Ψ : A → PROP} a : (∀ a, Ψ a) ⊢ Ψ a.
-Proof. eapply (bi_mixin_forall_elim  bi_entails), bi_bi_mixin. Qed.
+Proof. eapply (bi_mixin_forall_elim  _ bi_entails), bi_bi_mixin. Qed.
 
 Lemma exist_intro {A} {Ψ : A → PROP} a : Ψ a ⊢ ∃ a, Ψ a.
 Proof. eapply bi_mixin_exist_intro, bi_bi_mixin. Qed.
@@ -393,7 +427,7 @@ Proof. eapply bi_mixin_emp_sep_1, bi_bi_mixin. Qed.
 Lemma emp_sep_2 P : emp ∗ P ⊢ P.
 Proof. eapply bi_mixin_emp_sep_2, bi_bi_mixin. Qed.
 Lemma sep_comm' P Q : P ∗ Q ⊢ Q ∗ P.
-Proof. eapply (bi_mixin_sep_comm' bi_entails), bi_bi_mixin. Qed.
+Proof. eapply (bi_mixin_sep_comm' _ bi_entails), bi_bi_mixin. Qed.
 Lemma sep_assoc' P Q R : (P ∗ Q) ∗ R ⊢ P ∗ (Q ∗ R).
 Proof. eapply bi_mixin_sep_assoc', bi_bi_mixin. Qed.
 Lemma wand_intro_r P Q R : (P ∗ Q ⊢ R) → P ⊢ Q -∗ R.
@@ -401,12 +435,41 @@ Proof. eapply bi_mixin_wand_intro_r, bi_bi_mixin. Qed.
 Lemma wand_elim_l' P Q R : (P ⊢ Q -∗ R) → P ∗ Q ⊢ R.
 Proof. eapply bi_mixin_wand_elim_l', bi_bi_mixin. Qed.
 
+(* Plainly *)
+Lemma plainly_mono P Q : (P ⊢ Q) → bi_plainly P ⊢ bi_plainly Q.
+Proof. eapply bi_mixin_plainly_mono, bi_bi_mixin. Qed.
+Lemma plainly_elim_persistently P : bi_plainly P ⊢ bi_persistently P.
+Proof. eapply bi_mixin_plainly_elim_persistently, bi_bi_mixin. Qed.
+Lemma plainly_idemp_2 P : bi_plainly P ⊢ bi_plainly (bi_plainly P).
+Proof. eapply bi_mixin_plainly_idemp_2, bi_bi_mixin. Qed.
+Lemma plainly_forall_2 {A} (Ψ : A → PROP) :
+  (∀ a, bi_plainly (Ψ a)) ⊢ bi_plainly (∀ a, Ψ a).
+Proof. eapply bi_mixin_plainly_forall_2, bi_bi_mixin. Qed.
+Lemma plainly_exist_1 {A} (Ψ : A → PROP) :
+  bi_plainly (∃ a, Ψ a) ⊢ ∃ a, bi_plainly (Ψ a).
+Proof. eapply bi_mixin_plainly_exist_1, bi_bi_mixin. Qed.
+Lemma prop_ext P Q : bi_plainly ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q.
+Proof. eapply (bi_mixin_prop_ext _ bi_entails), bi_bi_mixin. Qed.
+Lemma persistently_impl_plainly P Q :
+  (bi_plainly P → bi_persistently Q) ⊢ bi_persistently (bi_plainly P → Q).
+Proof. eapply bi_mixin_persistently_impl_plainly, bi_bi_mixin. Qed.
+Lemma plainly_impl_plainly P Q :
+  (bi_plainly P → bi_plainly Q) ⊢ bi_plainly (bi_plainly P → Q).
+Proof. eapply bi_mixin_plainly_impl_plainly, bi_bi_mixin. Qed.
+Lemma plainly_absorbing P Q : bi_plainly P ∗ Q ⊢ bi_plainly P.
+Proof. eapply (bi_mixin_plainly_absorbing _ bi_entails), bi_bi_mixin. Qed.
+Lemma plainly_emp_intro P : P ⊢ bi_plainly emp.
+Proof. eapply bi_mixin_plainly_emp_intro, bi_bi_mixin. Qed.
+
 (* Persistently *)
 Lemma persistently_mono P Q : (P ⊢ Q) → bi_persistently P ⊢ bi_persistently Q.
 Proof. eapply bi_mixin_persistently_mono, bi_bi_mixin. Qed.
 Lemma persistently_idemp_2 P :
   bi_persistently P ⊢ bi_persistently (bi_persistently P).
 Proof. eapply bi_mixin_persistently_idemp_2, bi_bi_mixin. Qed.
+Lemma plainly_persistently_1 P :
+  bi_plainly (bi_persistently P) ⊢ bi_plainly P.
+Proof. eapply (bi_mixin_plainly_persistently_1 _ bi_entails), bi_bi_mixin. Qed.
 
 Lemma persistently_forall_2 {A} (Ψ : A → PROP) :
   (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a).
@@ -415,10 +478,8 @@ Lemma persistently_exist_1 {A} (Ψ : A → PROP) :
   bi_persistently (∃ a, Ψ a) ⊢ ∃ a, bi_persistently (Ψ a).
 Proof. eapply bi_mixin_persistently_exist_1, bi_bi_mixin. Qed.
 
-Lemma persistently_emp_intro P : P ⊢ bi_persistently emp.
-Proof. eapply bi_mixin_persistently_emp_intro, bi_bi_mixin. Qed.
 Lemma persistently_absorbing P Q : bi_persistently P ∗ Q ⊢ bi_persistently P.
-Proof. eapply (bi_mixin_persistently_absorbing bi_entails), bi_bi_mixin. Qed.
+Proof. eapply (bi_mixin_persistently_absorbing _ bi_entails), bi_bi_mixin. Qed.
 Lemma persistently_and_sep_elim P Q : bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q.
 Proof. eapply bi_mixin_persistently_and_sep_elim, bi_bi_mixin. Qed.
 End bi_laws.
@@ -450,6 +511,10 @@ Lemma later_sep_1 P Q : ▷ (P ∗ Q) ⊢ ▷ P ∗ ▷ Q.
 Proof. eapply sbi_mixin_later_sep_1, sbi_sbi_mixin. Qed.
 Lemma later_sep_2 P Q : ▷ P ∗ ▷ Q ⊢ ▷ (P ∗ Q).
 Proof. eapply sbi_mixin_later_sep_2, sbi_sbi_mixin. Qed.
+Lemma later_plainly_1 P : ▷ bi_plainly P ⊢ bi_plainly (▷ P).
+Proof. eapply (sbi_mixin_later_plainly_1 bi_entails), sbi_sbi_mixin. Qed.
+Lemma later_plainly_2 P : bi_plainly (▷ P) ⊢ ▷ bi_plainly P.
+Proof. eapply (sbi_mixin_later_plainly_2 bi_entails), sbi_sbi_mixin. Qed.
 Lemma later_persistently_1 P : ▷ bi_persistently P ⊢ bi_persistently (▷ P).
 Proof. eapply (sbi_mixin_later_persistently_1 bi_entails), sbi_sbi_mixin. Qed.
 Lemma later_persistently_2 P : bi_persistently (▷ P) ⊢ ▷ bi_persistently P.

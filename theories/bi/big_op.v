@@ -125,9 +125,13 @@ Section sep_list.
     ⊢ ([∗ list] k↦x ∈ l, Φ k x) ∧ ([∗ list] k↦x ∈ l, Ψ k x).
   Proof. auto using and_intro, big_sepL_mono, and_elim_l, and_elim_r. Qed.
 
+  Lemma big_sepL_plainly `{AffineBI PROP} Φ l :
+    bi_plainly ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ [∗ list] k↦x ∈ l, bi_plainly (Φ k x).
+  Proof. apply (big_opL_commute _). Qed.
+
   Lemma big_sepL_persistently `{AffineBI PROP} Φ l :
-    (bi_persistently ([∗ list] k↦x ∈ l, Φ k x)) ⊣⊢
-    ([∗ list] k↦x ∈ l, bi_persistently (Φ k x)).
+    bi_persistently ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢
+    [∗ list] k↦x ∈ l, bi_persistently (Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
   Lemma big_sepL_forall `{AffineBI PROP} Φ l :
@@ -158,6 +162,16 @@ Section sep_list.
       apply sep_mono_l, affinely_mono, persistently_mono.
       apply forall_intro=> k. by rewrite (forall_elim (S k)).
   Qed.
+
+  Global Instance big_sepL_nil_plain Φ :
+    Plain ([∗ list] k↦x ∈ [], Φ k x).
+  Proof. simpl; apply _. Qed.
+  Global Instance big_sepL_plain Φ l :
+    (∀ k x, Plain (Φ k x)) → Plain ([∗ list] k↦x ∈ l, Φ k x).
+  Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
+  Global Instance big_sepL_plain_id Ps :
+    TCForall Plain Ps → Plain ([∗] Ps).
+  Proof. induction 1; simpl; apply _. Qed.
 
   Global Instance big_sepL_nil_persistent Φ :
     Persistent ([∗ list] k↦x ∈ [], Φ k x).
@@ -264,9 +278,13 @@ Section and_list.
     ⊢ ([∧ list] k↦x ∈ l, Φ k x) ∧ ([∧ list] k↦x ∈ l, Ψ k x).
   Proof. auto using and_intro, big_andL_mono, and_elim_l, and_elim_r. Qed.
 
+  Lemma big_andL_plainly Φ l :
+    bi_plainly ([∧ list] k↦x ∈ l, Φ k x) ⊣⊢ [∧ list] k↦x ∈ l, bi_plainly (Φ k x).
+  Proof. apply (big_opL_commute _). Qed.
+
   Lemma big_andL_persistently Φ l :
-    (bi_persistently ([∧ list] k↦x ∈ l, Φ k x)) ⊣⊢
-    ([∧ list] k↦x ∈ l, bi_persistently (Φ k x)).
+    bi_persistently ([∧ list] k↦x ∈ l, Φ k x) ⊣⊢
+    [∧ list] k↦x ∈ l, bi_persistently (Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
   Lemma big_andL_forall `{AffineBI PROP} Φ l :
@@ -280,6 +298,13 @@ Section and_list.
     - by rewrite (forall_elim 0) (forall_elim x) pure_True // True_impl.
     - rewrite -IH. apply forall_intro=> k; by rewrite (forall_elim (S k)).
   Qed.
+
+  Global Instance big_andL_nil_plain Φ :
+    Plain ([∧ list] k↦x ∈ [], Φ k x).
+  Proof. simpl; apply _. Qed.
+  Global Instance big_andL_plain Φ l :
+    (∀ k x, Plain (Φ k x)) → Plain ([∧ list] k↦x ∈ l, Φ k x).
+  Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
 
   Global Instance big_andL_nil_persistent Φ :
     Persistent ([∧ list] k↦x ∈ [], Φ k x).
@@ -395,6 +420,10 @@ Section gmap.
     ⊢ ([∗ map] k↦x ∈ m, Φ k x) ∧ ([∗ map] k↦x ∈ m, Ψ k x).
   Proof. auto using and_intro, big_sepM_mono, and_elim_l, and_elim_r. Qed.
 
+  Lemma big_sepM_plainly `{AffineBI PROP} Φ m :
+    bi_plainly ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ [∗ map] k↦x ∈ m, bi_plainly (Φ k x).
+  Proof. apply (big_opM_commute _). Qed.
+
   Lemma big_sepM_persistently `{AffineBI PROP} Φ m :
     (bi_persistently ([∗ map] k↦x ∈ m, Φ k x)) ⊣⊢
       ([∗ map] k↦x ∈ m, bi_persistently (Φ k x)).
@@ -434,6 +463,12 @@ Section gmap.
       rewrite lookup_insert_ne; last by intros ?; simplify_map_eq.
       by rewrite pure_True // True_impl.
   Qed.
+
+  Global Instance big_sepM_empty_plain Φ : Plain ([∗ map] k↦x ∈ ∅, Φ k x).
+  Proof. rewrite /big_opM map_to_list_empty. apply _. Qed.
+  Global Instance big_sepM_plain Φ m :
+    (∀ k x, Plain (Φ k x)) → Plain ([∗ map] k↦x  ∈ m, Φ k x).
+  Proof. intros. apply (big_sepL_plain _ _)=> _ [??]; apply _. Qed.
 
   Global Instance big_sepM_empty_persistent Φ :
     Persistent ([∗ map] k↦x ∈ ∅, Φ k x).
@@ -561,8 +596,12 @@ Section gset.
     ([∗ set] y ∈ X, Φ y ∧ Ψ y) ⊢ ([∗ set] y ∈ X, Φ y) ∧ ([∗ set] y ∈ X, Ψ y).
   Proof. auto using and_intro, big_sepS_mono, and_elim_l, and_elim_r. Qed.
 
+  Lemma big_sepS_plainly `{AffineBI PROP} Φ X :
+    bi_plainly ([∗ set] y ∈ X, Φ y) ⊣⊢ [∗ set] y ∈ X, bi_plainly (Φ y).
+  Proof. apply (big_opS_commute _). Qed.
+
   Lemma big_sepS_persistently `{AffineBI PROP} Φ X :
-    bi_persistently ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, bi_persistently (Φ y)).
+    bi_persistently ([∗ set] y ∈ X, Φ y) ⊣⊢ [∗ set] y ∈ X, bi_persistently (Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
   Lemma big_sepS_forall `{AffineBI PROP} Φ X :
@@ -593,6 +632,13 @@ Section gset.
       apply forall_mono=> y. apply impl_intro_l, pure_elim_l=> ?.
       by rewrite pure_True ?True_impl; last set_solver.
   Qed.
+
+  Global Instance big_sepS_empty_plain Φ : Plain ([∗ set] x ∈ ∅, Φ x).
+  Proof. rewrite /big_opS elements_empty. apply _. Qed.
+  Global Instance big_sepS_plain Φ X :
+    (∀ x, Plain (Φ x)) → Plain ([∗ set] x ∈ X, Φ x).
+  Proof. rewrite /big_opS. apply _. Qed.
+
   Global Instance big_sepS_empty_persistent Φ :
     Persistent ([∗ set] x ∈ ∅, Φ x).
   Proof. rewrite /big_opS elements_empty. apply _. Qed.
@@ -610,7 +656,6 @@ End gset.
 Lemma big_sepM_dom `{Countable K} {A} (Φ : K → PROP) (m : gmap K A) :
   ([∗ map] k↦_ ∈ m, Φ k) ⊣⊢ ([∗ set] k ∈ dom _ m, Φ k).
 Proof. apply big_opM_dom. Qed.
-
 
 (** ** Big ops over finite multisets *)
 Section gmultiset.
@@ -669,10 +714,20 @@ Section gmultiset.
     ([∗ mset] y ∈ X, Φ y ∧ Ψ y) ⊢ ([∗ mset] y ∈ X, Φ y) ∧ ([∗ mset] y ∈ X, Ψ y).
   Proof. auto using and_intro, big_sepMS_mono, and_elim_l, and_elim_r. Qed.
 
+  Lemma big_sepMS_plainly `{AffineBI PROP} Φ X :
+    bi_plainly ([∗ mset] y ∈ X, Φ y) ⊣⊢ [∗ mset] y ∈ X, bi_plainly (Φ y).
+  Proof. apply (big_opMS_commute _). Qed.
+
   Lemma big_sepMS_persistently `{AffineBI PROP} Φ X :
     bi_persistently ([∗ mset] y ∈ X, Φ y) ⊣⊢
-      ([∗ mset] y ∈ X, bi_persistently (Φ y)).
+      [∗ mset] y ∈ X, bi_persistently (Φ y).
   Proof. apply (big_opMS_commute _). Qed.
+
+  Global Instance big_sepMS_empty_plain Φ : Plain ([∗ mset] x ∈ ∅, Φ x).
+  Proof. rewrite /big_opMS gmultiset_elements_empty. apply _. Qed.
+  Global Instance big_sepMS_plain Φ X :
+    (∀ x, Plain (Φ x)) → Plain ([∗ mset] x ∈ X, Φ x).
+  Proof. rewrite /big_opMS. apply _. Qed.
 
   Global Instance big_sepMS_empty_persistent Φ :
     Persistent ([∗ mset] x ∈ ∅, Φ x).

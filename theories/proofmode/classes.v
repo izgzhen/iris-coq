@@ -55,11 +55,11 @@ Arguments IntoPersistent {_} _ _%I _%I : simpl never.
 Arguments into_persistent {_} _ _%I _%I {_}.
 Hint Mode IntoPersistent + + ! - : typeclass_instances.
 
-Class FromPersistent {PROP : bi} (a p : bool) (P Q : PROP) :=
-  from_persistent : bi_affinely_if a (bi_persistently_if p Q) ⊢ P.
-Arguments FromPersistent {_} _ _ _%I _%I : simpl never.
-Arguments from_persistent {_} _ _ _%I _%I {_}.
-Hint Mode FromPersistent + - - ! - : typeclass_instances.
+Class FromAlways {PROP : bi} (a pe pl : bool) (P Q : PROP) :=
+  from_always : bi_affinely_if a (bi_persistently_if pe (bi_plainly_if pl Q)) ⊢ P.
+Arguments FromAlways {_} _ _ _ _%I _%I : simpl never.
+Arguments from_always {_} _ _ _ _%I _%I {_}.
+Hint Mode FromAlways + - - - ! - : typeclass_instances.
 
 Class FromAffinely {PROP : bi} (P Q : PROP) :=
   from_affinely : bi_affinely Q ⊢ P.

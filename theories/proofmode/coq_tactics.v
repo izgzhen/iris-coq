@@ -523,17 +523,70 @@ Qed.
 Lemma tac_pure_revert Δ φ Q : (Δ ⊢ ⌜φ⌝ → Q) → (φ → Δ ⊢ Q).
 Proof. intros HΔ ?. by rewrite HΔ pure_True // left_id. Qed.
 
-(** * Persistently *)
-Lemma tac_persistently_intro Δ a p Q Q' :
-  FromPersistent a p Q' Q →
-  (if a then TCOr (AffineBI PROP) (AffineEnv (env_spatial Δ)) else TCTrue) →
-  ((if p then envs_clear_spatial Δ else Δ) ⊢ Q) → Δ ⊢ Q'.
+(** * Persistence and plainness modalities *)
+Class IntoPlainEnv (Γ1 Γ2 : env PROP) := {
+  into_plain_env_subenv : env_subenv Γ2 Γ1;
+  into_plain_env_plain : Plain ([∧] Γ2);
+}.
+
+Global Instance into_plain_env_nil : IntoPlainEnv Enil Enil.
+Proof. constructor. constructor. simpl; apply _. Qed.
+Global Instance into_plain_env_snoc_plain Γ1 Γ2 i P :
+  Plain P → IntoPlainEnv Γ1 Γ2 →
+  IntoPlainEnv (Esnoc Γ1 i P) (Esnoc Γ2 i P) | 1.
+Proof. intros ? [??]; constructor. by constructor. simpl; apply _. Qed.
+Global Instance into_plain_env_snoc_skip Γ1 Γ2 i P :
+  IntoPlainEnv Γ1 Γ2 → IntoPlainEnv (Esnoc Γ1 i P) Γ2 | 2.
+Proof. intros [??]; constructor. by constructor. done. Qed.
+
+Lemma into_plain_env_sound Γ1 Γ2 :
+  IntoPlainEnv Γ1 Γ2 → (Envs Γ1 Enil) ⊢ bi_plainly (Envs Γ2 Enil).
+Proof .
+  intros [Hsub ?]. rewrite !of_envs_eq plainly_and plainly_pure /=. f_equiv.
+  { f_equiv=>-[/= ???]. split; auto. by eapply env_subenv_wf. }
+  rewrite !(right_id emp%I). trans (□ [∧] Γ2)%I.
+  - do 2 f_equiv. clear -Hsub.
+    induction Hsub as [|????? IH|????? IH]=>//=; rewrite IH //. apply and_elim_r.
+  - by rewrite {1}(plain ([∧] Γ2)) affinely_elim plainly_affinely
+               plainly_persistently persistently_plainly.
+Qed.
+
+Class IntoAlwaysEnvs (pe : bool) (pl : bool) (Δ1 Δ2 : envs PROP) := {
+  into_persistent_envs_persistent :
+    if pl then IntoPlainEnv (env_persistent Δ1) (env_persistent Δ2)
+    else env_persistent Δ1 = env_persistent Δ2;
+  into_persistent_envs_spatial :
+    if pe || pl then env_spatial Δ2 = Enil else env_spatial Δ1 = env_spatial Δ2
+}.
+
+Global Instance into_always_false_false Δ : IntoAlwaysEnvs false false Δ Δ.
+Proof. by split. Qed.
+Global Instance into_always_envs_true_false Γp Γs :
+  IntoAlwaysEnvs true false (Envs Γp Γs) (Envs Γp Enil).
+Proof. by split. Qed.
+Global Instance into_always_envs_x_true Γp1 Γp2 Γs1 pe :
+  IntoPlainEnv Γp1 Γp2 →
+  IntoAlwaysEnvs pe true (Envs Γp1 Γs1) (Envs Γp2 Enil).
+Proof. destruct pe; by split. Qed.
+
+Lemma tac_always_intro Δ Δ' a pe pl Q Q' :
+  FromAlways a pe pl Q' Q →
+  (if a then TCOr (AffineBI PROP) (AffineEnv (env_spatial Δ')) else TCTrue) →
+  IntoAlwaysEnvs pe pl Δ' Δ →
+  (Δ ⊢ Q) → Δ' ⊢ Q'.
 Proof.
-  intros ? Haffine HQ. rewrite -(from_persistent a p Q') -HQ. destruct p=> /=.
-  - rewrite envs_clear_spatial_sound.
-    rewrite {1}(env_spatial_is_nil_affinely_persistently (envs_clear_spatial Δ)) //.
-    destruct a=> /=. by rewrite sep_elim_l. by rewrite affinely_elim sep_elim_l.
-  - destruct a=> //=. apply and_intro; auto using tac_emp_intro.
+  intros ? Haffine [Hep Hes] HQ. rewrite -(from_always a pe pl Q') -HQ.
+  trans (bi_affinely_if a Δ'); [destruct a=>//; by apply: affinely_intro|f_equiv].
+  destruct pl; [|destruct pe].
+  - rewrite (envs_clear_spatial_sound Δ') into_plain_env_sound sep_elim_l.
+    destruct Δ as [Δ ?]. rewrite orb_true_r /= in Hes. rewrite Hes /=.
+    destruct pe=>/= //. by rewrite persistently_plainly.
+  - rewrite (envs_clear_spatial_sound Δ') /= /envs_clear_spatial Hep.
+    destruct Δ as [Δ ?]. simpl in Hes. subst. simpl.
+    rewrite -(sep_elim_l (bi_persistently _)). f_equiv.
+    rewrite {1}(env_spatial_is_nil_affinely_persistently (Envs Δ Enil)) //.
+    by rewrite affinely_elim.
+  - destruct Δ, Δ'; simpl in *. by subst.
 Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :
