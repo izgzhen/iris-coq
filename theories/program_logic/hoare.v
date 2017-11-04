@@ -58,7 +58,7 @@ Proof.
 Qed.
 
 Lemma ht_atomic E1 E2 P P' Φ Φ' e :
-  atomic e →
+  Atomic e →
   (P ={E1,E2}=> P') ∧ {{ P' }} e @ E2 {{ Φ' }} ∧ (∀ v, Φ' v ={E2,E1}=> Φ v)
   ⊢ {{ P }} e @ E1 {{ Φ }}.
 Proof.
