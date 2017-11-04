@@ -175,7 +175,7 @@ Proof.
     f_equal; eauto using subst_is_closed_nil, is_closed_to_val, eq_sym.
 Qed.
 
-Definition atomic (e : expr) :=
+Definition is_atomic (e : expr) :=
   match e with
   | Alloc e => bool_decide (is_Some (to_val e))
   | Load e => bool_decide (is_Some (to_val e))
@@ -187,7 +187,7 @@ Definition atomic (e : expr) :=
   | App (Rec _ _ (Lit _)) (Lit _) => true
   | _ => false
   end.
-Lemma atomic_correct e : atomic e → language.atomic (to_expr e).
+Lemma is_atomic_correct e : is_atomic e → Atomic (to_expr e).
 Proof.
   intros He. apply ectx_language_atomic.
   - intros σ e' σ' ef Hstep; simpl in *.
@@ -228,13 +228,11 @@ Hint Extern 10 (AsVal _) => solve_to_val : typeclass_instances.
 
 Ltac solve_atomic :=
   match goal with
-  | |- language.atomic ?e =>
-     let e' := W.of_expr e in change (language.atomic (W.to_expr e'));
-     apply W.atomic_correct; vm_compute; exact I
+  | |- Atomic ?e =>
+     let e' := W.of_expr e in change (Atomic (W.to_expr e'));
+     apply W.is_atomic_correct; vm_compute; exact I
   end.
-Hint Extern 10 (language.atomic _) => solve_atomic.
-(* For the side-condition of elim_upd_fupd_wp_atomic *)
-Hint Extern 10 (language.atomic _) => solve_atomic : typeclass_instances.
+Hint Extern 10 (Atomic _) => solve_atomic : typeclass_instances.
 
 (** Substitution *)
 Ltac simpl_subst :=

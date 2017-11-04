@@ -147,7 +147,7 @@ Lemma wp_fupd E e Φ : WP e @ E {{ v, |={E}=> Φ v }} ⊢ WP e @ E {{ Φ }}.
 Proof. iIntros "H". iApply (wp_strong_mono E); try iFrame; auto. Qed.
 
 Lemma wp_atomic E1 E2 e Φ :
-  atomic e →
+  Atomic e →
   (|={E1,E2}=> WP e @ E2 {{ v, |={E2,E1}=> Φ v }}) ⊢ WP e @ E1 {{ Φ }}.
 Proof.
   iIntros (Hatomic) "H". rewrite !wp_unfold /wp_pre.
@@ -285,10 +285,8 @@ Section proofmode_classes.
 
   (* lower precedence, if possible, it should persistently pick elim_upd_fupd_wp *)
   Global Instance elim_modal_fupd_wp_atomic E1 E2 e P Φ :
-    atomic e →
+    Atomic e →
     ElimModal (|={E1,E2}=> P) P
             (WP e @ E1 {{ Φ }}) (WP e @ E2 {{ v, |={E2,E1}=> Φ v }})%I | 100.
   Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r wp_atomic. Qed.
 End proofmode_classes.
-
-Hint Extern 0 (atomic _) => assumption : typeclass_instances.
