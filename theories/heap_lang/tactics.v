@@ -195,7 +195,7 @@ Proof.
     destruct e=> //=; repeat (simplify_eq/=; case_match=>//);
       inversion 1; simplify_eq/=; rewrite ?to_of_val; eauto.
     unfold subst'; repeat (simplify_eq/=; case_match=>//); eauto.
-  - apply ectxi_language_sub_values=> /= Ki e' Hfill.
+  - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
     destruct e=> //; destruct Ki; repeat (simplify_eq/=; case_match=>//);
       naive_solver eauto using to_val_is_Some.
 Qed.
