@@ -209,22 +209,21 @@ Ltac solve_closed :=
   end.
 Hint Extern 0 (Closed _ _) => solve_closed : typeclass_instances.
 
-Ltac solve_to_val :=
-  rewrite /AsVal /IntoVal;
-  try match goal with
-  | |- context E [language.to_val ?e] =>
-     let X := context E [to_val e] in change X
-  end;
+Ltac solve_into_val :=
   match goal with
-  | |- to_val ?e = Some ?v =>
+  | |- IntoVal ?e ?v =>
      let e' := W.of_expr e in change (to_val (W.to_expr e') = Some v);
      apply W.to_val_Some; simpl; unfold W.to_expr; reflexivity
-  | |- is_Some (to_val ?e) =>
+  end.
+Hint Extern 10 (IntoVal _ _) => solve_into_val : typeclass_instances.
+
+Ltac solve_as_val :=
+  match goal with
+  | |- AsVal ?e =>
      let e' := W.of_expr e in change (is_Some (to_val (W.to_expr e')));
      apply W.to_val_is_Some, (bool_decide_unpack _); vm_compute; exact I
   end.
-Hint Extern 10 (IntoVal _ _) => solve_to_val : typeclass_instances.
-Hint Extern 10 (AsVal _) => solve_to_val : typeclass_instances.
+Hint Extern 10 (AsVal _) => solve_as_val : typeclass_instances.
 
 Ltac solve_atomic :=
   match goal with
