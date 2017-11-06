@@ -49,8 +49,13 @@ Tactic Notation "iMatchHyp" tactic1(tac) :=
   | |- context[ environments.Esnoc _ ?x ?P ] => tac x P
   end.
 
-Class AsValid {PROP : bi} (φ : Prop) (P : PROP) := as_entails : φ ↔ P.
+Class AsValid {PROP : bi} (φ : Prop) (P : PROP) := as_valid : φ ↔ P.
 Arguments AsValid {_} _%type _%I.
+
+Lemma as_valid_1 (φ : Prop) {PROP : bi} (P : PROP) `{!AsValid φ P} : φ → P.
+Proof. by apply as_valid. Qed.
+Lemma as_valid_2 (φ : Prop) {PROP : bi} (P : PROP) `{!AsValid φ P} : P → φ.
+Proof. by apply as_valid. Qed.
 
 Instance as_valid_valid {PROP : bi} (P : PROP) : AsValid (bi_valid P) P | 0.
 Proof. by rewrite /AsValid. Qed.
@@ -66,9 +71,9 @@ Ltac iStartProof :=
   lazymatch goal with
   | |- envs_entails _ _ => idtac
   | |- let _ := _ in _ => fail
-  | |- ?P =>
-    apply (proj2 (_ : AsValid P _)), tac_adequate
-    || fail "iStartProof: not a BI entailment"
+  | |- ?φ => eapply (as_valid_2 φ);
+               [apply _ || fail "iStartProof: not a Bi entailment"
+               |apply tac_adequate]
   end.
 
 (** * Context manipulation *)
@@ -580,8 +585,8 @@ Tactic Notation "iIntoValid" open_constr(t) :=
       let e := fresh in evar (e:id T);
       let e' := eval unfold e in e in clear e; go (t e')
     | _ =>
-      let tT' := eval cbv zeta in tT in apply (proj1 (_ : AsValid tT' _) t)
-      || fail "iPoseProof: not a uPred"
+      let tT' := eval cbv zeta in tT in apply (as_valid_1 tT');
+        [apply _ || fail "iPoseProof: not a uPred"|exact t]
     end in
   go t.
 
