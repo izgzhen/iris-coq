@@ -52,8 +52,21 @@ Section language.
   Definition irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ e' σ' efs, ¬prim_step e σ e' σ' efs.
 
-  Definition atomic (e : expr Λ) : Prop :=
-    ∀ σ e' σ' efs, prim_step e σ e' σ' efs → irreducible e' σ'.
+  (* This (weak) form of atomicity is enough to open invariants when WP ensures
+     safety, i.e., programs never can get stuck.  We have an example in
+     lambdaRust of an expression that is atomic in this sense, but not in the
+     stronger sense defined below, and we have to be able to open invariants
+     around that expression.  See `CasStuckS` in
+     [lambdaRust](https://gitlab.mpi-sws.org/FP/LambdaRust-coq/blob/master/theories/lang/lang.v). *)
+  Class Atomic (e : expr Λ) : Prop :=
+    atomic σ e' σ' efs : prim_step e σ e' σ' efs → irreducible e' σ'.
+
+  (* To open invariants with a WP that does not ensure safety, we need a
+     stronger form of atomicity.  With the above definition, in case `e` reduces
+     to a stuck non-value, there is no proof that the invariants have been
+     established again. *)
+  Class StronglyAtomic (e : expr Λ) : Prop :=
+    strongly_atomic σ e' σ' efs : prim_step e σ e' σ' efs → is_Some (to_val e').
 
   Inductive step (ρ1 ρ2 : cfg Λ) : Prop :=
     | step_atomic e1 σ1 e2 σ2 efs t1 t2 :
@@ -73,6 +86,9 @@ Section language.
   Proof. intros [??] ??? ?%val_stuck. by destruct (to_val e). Qed.
   Global Instance of_val_inj : Inj (=) (=) (@of_val Λ).
   Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
+
+  Lemma strongly_atomic_atomic e : StronglyAtomic e → Atomic e.
+  Proof. unfold StronglyAtomic, Atomic. eauto using val_irreducible. Qed.
 
   Lemma reducible_fill `{LanguageCtx Λ K} e σ :
     to_val e = None → reducible (K e) σ → reducible e σ.
@@ -109,4 +125,13 @@ Section language.
   (* This is a family of frequent assumptions for PureExec *)
   Class IntoVal (e : expr Λ) (v : val Λ) :=
     into_val : to_val e = Some v.
+
+  Class AsVal (e : expr Λ) := as_val : is_Some (to_val e).
+  (* There is no instance [IntoVal → AsVal] as often one can solve [AsVal] more
+  efficiently since no witness has to be computed. *)
+  Global Instance as_vals_of_val vs : TCForall AsVal (of_val <$> vs).
+  Proof.
+    apply TCForall_Forall, Forall_fmap, Forall_true=> v.
+    rewrite /AsVal /= to_of_val; eauto.
+  Qed.
 End language.

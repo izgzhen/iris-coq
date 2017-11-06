@@ -62,6 +62,9 @@ Proof. iIntros "H1 #H2". by iFrame. Qed.
 Lemma test_iIntros_pure (ψ φ : Prop) P : ψ → (⌜ φ ⌝ → P → ⌜ φ ∧ ψ ⌝ ∧ P)%I.
 Proof. iIntros (??) "H". auto. Qed.
 
+Lemma test_iIntros_pure_not : (⌜ ¬False ⌝ : PROP)%I.
+Proof. by iIntros (?). Qed.
+
 Lemma test_fast_iIntros P Q :
   (∀ x y z : nat,
     ⌜x = plus 0 x⌝ → ⌜y = 0⌝ → ⌜z = 0⌝ → P → □ Q → foo (x ≡ x))%I.
@@ -137,7 +140,7 @@ Qed.
 
 Lemma test_eauto_iFrame P Q R `{!Persistent R} :
   P -∗ Q -∗ R → R ∗ Q ∗ P ∗ R ∨ False.
-Proof. eauto with iFrame. Qed.
+Proof. eauto 10 with iFrame. Qed.
 
 Lemma test_iCombine_persistent P Q R `{!Persistent R} :
   P -∗ Q -∗ R → R ∗ Q ∗ P ∗ R ∨ False.
@@ -246,12 +249,5 @@ Proof. iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ". Qed.
 Lemma test_iAlways P Q R :
   □ P -∗ bi_persistently Q → R -∗ bi_persistently (bi_affinely (bi_affinely P)) ∗ □ Q.
 Proof. iIntros "#HP #HQ HR". iSplitL. iAlways. done. iAlways. done. Qed.
-
-(* TODO: This test is broken in Coq 8.6. Should be restored once we drop Coq
-8.6 support. See also issue #108. *)
-(*
-Lemma test_iIntros_pure : (⌜ ¬False ⌝ : uPred M)%I.
-Proof. by iIntros (?). Qed.
-*)
 
 End tests.

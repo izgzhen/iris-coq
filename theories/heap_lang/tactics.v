@@ -114,7 +114,7 @@ Fixpoint is_closed (X : list string) (e : expr) : bool :=
 Lemma is_closed_correct X e : is_closed X e → heap_lang.is_closed X (to_expr e).
 Proof.
   revert X.
-  induction e; naive_solver eauto using is_closed_of_val, is_closed_to_val, is_closed_weaken_nil.
+  induction e; naive_solver eauto using is_closed_to_val, is_closed_weaken_nil.
 Qed.
 
 (* We define [to_val (ClosedExpr _)] to be [None] since [ClosedExpr]
@@ -172,10 +172,10 @@ Lemma to_expr_subst x er e :
   to_expr (subst x er e) = heap_lang.subst x (to_expr er) (to_expr e).
 Proof.
   induction e; simpl; repeat case_decide;
-    f_equal; eauto using subst_is_closed_nil, is_closed_of_val, is_closed_to_val, eq_sym.
+    f_equal; eauto using subst_is_closed_nil, is_closed_to_val, eq_sym.
 Qed.
 
-Definition atomic (e : expr) :=
+Definition is_atomic (e : expr) :=
   match e with
   | Alloc e => bool_decide (is_Some (to_val e))
   | Load e => bool_decide (is_Some (to_val e))
@@ -187,7 +187,7 @@ Definition atomic (e : expr) :=
   | App (Rec _ _ (Lit _)) (Lit _) => true
   | _ => false
   end.
-Lemma atomic_correct e : atomic e → language.atomic (to_expr e).
+Lemma is_atomic_correct e : is_atomic e → Atomic (to_expr e).
 Proof.
   intros He. apply ectx_language_atomic.
   - intros σ e' σ' ef Hstep; simpl in *.
@@ -209,31 +209,29 @@ Ltac solve_closed :=
   end.
 Hint Extern 0 (Closed _ _) => solve_closed : typeclass_instances.
 
-Ltac solve_to_val :=
-  rewrite /IntoVal;
-  try match goal with
-  | |- context E [language.to_val ?e] =>
-     let X := context E [to_val e] in change X
-  end;
+Ltac solve_into_val :=
   match goal with
-  | |- to_val ?e = Some ?v =>
+  | |- IntoVal ?e ?v =>
      let e' := W.of_expr e in change (to_val (W.to_expr e') = Some v);
      apply W.to_val_Some; simpl; unfold W.to_expr; reflexivity
-  | |- is_Some (to_val ?e) =>
+  end.
+Hint Extern 10 (IntoVal _ _) => solve_into_val : typeclass_instances.
+
+Ltac solve_as_val :=
+  match goal with
+  | |- AsVal ?e =>
      let e' := W.of_expr e in change (is_Some (to_val (W.to_expr e')));
      apply W.to_val_is_Some, (bool_decide_unpack _); vm_compute; exact I
   end.
-Hint Extern 10 (IntoVal _ _) => solve_to_val : typeclass_instances.
+Hint Extern 10 (AsVal _) => solve_as_val : typeclass_instances.
 
 Ltac solve_atomic :=
   match goal with
-  | |- language.atomic ?e =>
-     let e' := W.of_expr e in change (language.atomic (W.to_expr e'));
-     apply W.atomic_correct; vm_compute; exact I
+  | |- Atomic ?e =>
+     let e' := W.of_expr e in change (Atomic (W.to_expr e'));
+     apply W.is_atomic_correct; vm_compute; exact I
   end.
-Hint Extern 10 (language.atomic _) => solve_atomic.
-(* For the side-condition of elim_upd_fupd_wp_atomic *)
-Hint Extern 10 (language.atomic _) => solve_atomic : typeclass_instances.
+Hint Extern 10 (Atomic _) => solve_atomic : typeclass_instances.
 
 (** Substitution *)
 Ltac simpl_subst :=

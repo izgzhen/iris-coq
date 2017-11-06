@@ -21,8 +21,8 @@ Definition one_shot_example : val := λ: <>,
     end)).
 
 Definition one_shotR := csumR (exclR unitC) (agreeR ZC).
-Definition Pending : one_shotR := (Cinl (Excl ()) : one_shotR).
-Definition Shot (n : Z) : one_shotR := (Cinr (to_agree n) : one_shotR).
+Definition Pending : one_shotR := Cinl (Excl ()).
+Definition Shot (n : Z) : one_shotR := Cinr (to_agree n).
 
 Class one_shotG Σ := { one_shot_inG :> inG Σ one_shotR }.
 Definition one_shotΣ : gFunctors := #[GFunctor one_shotR].

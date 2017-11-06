@@ -18,6 +18,7 @@ Changes in Coq:
 
 * Rename some things and change notation:
   - The unit of a camera: `empty` -> `unit`, `∅` -> `ε`
+  - Disjointness: `⊥` -> `##`
   - A proof mode type class `IntoOp` -> `IsOp`
   - OFEs with all elements being discrete: `Discrete` -> `OfeDiscrete`
   - OFE elements whose equality is discrete: `Timeless` -> `Discrete`
@@ -85,6 +86,8 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
   of evars, which often led to divergence. There are a few places where type
   annotations are now needed.
 * Move the `prelude` folder to its own project: std++
+* The rules `internal_eq_rewrite` and `internal_eq_rewrite_contractive` are now
+  stated in the logic, i.e. they are `iApply` friendly.
 
 ## Iris 3.0.0 (released 2017-01-11)
 
@@ -113,7 +116,7 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
 * Slightly weaker notion of atomicity: an expression is atomic if it reduces in
   one step to something that does not reduce further.
 * Changed notation for embedding Coq assertions into Iris.  The new notation is
-  ⌜φ⌝.  Also removed `=` and `##` from the Iris scope.  (The old notations are
+  ⌜φ⌝.  Also removed `=` and `⊥` from the Iris scope.  (The old notations are
   provided in `base_logic.deprecated`.)
 * Up-closure of namespaces is now a notation (↑) instead of a coercion.
 * With invariants and the physical state being handled in the logic, there is no

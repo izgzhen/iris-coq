@@ -118,7 +118,7 @@ Section ectx_language.
   Lemma ectx_language_atomic e :
     (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
     sub_values e →
-    atomic e.
+    Atomic e.
   Proof.
     intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
     assert (K = empty_ectx) as -> by eauto 10 using val_stuck.

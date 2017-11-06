@@ -1,6 +1,6 @@
 From iris.proofmode Require Import coq_tactics.
 From iris.proofmode Require Import base intro_patterns spec_patterns sel_patterns.
-From iris.bi Require Export bi.
+From iris.bi Require Export bi big_op.
 From iris.proofmode Require Export classes notation.
 From iris.proofmode Require Import class_instances.
 From stdpp Require Import stringmap hlist.
@@ -22,7 +22,7 @@ Ltac env_reflexivity := env_cbv; exact eq_refl.
 (* Tactic Notation tactics cannot return terms *)
 Ltac iFresh' H :=
   lazymatch goal with
-  |- of_envs ?Δ ⊢ _ =>
+  |- envs_entails ?Δ _ =>
      (* [vm_compute fails] if any of the hypotheses in [Δ] contain evars, so
      first use [cbv] to compute the domain of [Δ] *)
      let Hs := eval cbv in (envs_dom Δ) in
@@ -34,14 +34,14 @@ Ltac iFresh := iFresh' "~".
 Ltac iMissingHyps Hs :=
   let Δ :=
     lazymatch goal with
-    | |- of_envs ?Δ ⊢ _ => Δ
+    | |- envs_entails ?Δ _ => Δ
     | |- context[ envs_split _ _ ?Δ ] => Δ
     end in
   let Hhyps := eval env_cbv in (envs_dom Δ) in
   eval vm_compute in (list_difference Hs Hhyps).
 
 Ltac iTypeOf H :=
-  let Δ := match goal with |- of_envs ?Δ ⊢ _ => Δ end in
+  let Δ := match goal with |- envs_entails ?Δ _ => Δ end in
   eval env_cbv in (envs_lookup H Δ).
 
 Tactic Notation "iMatchHyp" tactic1(tac) :=
@@ -64,7 +64,7 @@ Proof. split. apply bi.equiv_wand_iff. apply bi.wand_iff_equiv. Qed.
 (** * Start a proof *)
 Ltac iStartProof :=
   lazymatch goal with
-  | |- of_envs _ ⊢ _ => idtac
+  | |- envs_entails _ _ => idtac
   | |- let _ := _ in _ => fail
   | |- ?P =>
     apply (proj2 (_ : AsValid P _)), tac_adequate
@@ -101,7 +101,7 @@ Ltac iElaborateSelPat pat :=
        end
     end in
   lazymatch goal with
-  | |- of_envs ?Δ ⊢ _ =>
+  | |- envs_entails ?Δ _ =>
     let pat := sel_pat.parse pat in go pat Δ (@nil esel_pat)
   end.
 
@@ -167,7 +167,7 @@ Tactic Notation "iAssumption" :=
        |find p Γ Q]
     end in
   lazymatch goal with
-  | |- of_envs (Envs ?Γp ?Γs) ⊢ ?Q =>
+  | |- envs_entails (Envs ?Γp ?Γs) ?Q =>
      first [find true Γp Q | find false Γs Q
            |fail "iAssumption:" Q "not found"]
   end.
@@ -216,8 +216,8 @@ Tactic Notation "iPureIntro" :=
 Local Ltac iFrameFinish :=
   lazy iota beta;
   try match goal with
-  | |- _ ⊢ True => exact (bi.pure_intro _ _ I)
-  | |- _ ⊢ emp => iEmpIntro
+  | |- envs_entails _ True => exact (bi.pure_intro _ _ I)
+  | |- envs_entails _ emp => iEmpIntro
   end.
 
 Local Ltac iFramePure t :=
@@ -241,7 +241,7 @@ Local Ltac iFrameAnyPersistent :=
   let rec go Hs :=
     match Hs with [] => idtac | ?H :: ?Hs => repeat iFrameHyp H; go Hs end in
   match goal with
-  | |- of_envs ?Δ ⊢ _ =>
+  | |- envs_entails ?Δ _ =>
      let Hs := eval cbv in (env_dom (env_persistent Δ)) in go Hs
   end.
 
@@ -249,7 +249,7 @@ Local Ltac iFrameAnySpatial :=
   let rec go Hs :=
     match Hs with [] => idtac | ?H :: ?Hs => try iFrameHyp H; go Hs end in
   match goal with
-  | |- of_envs ?Δ ⊢ _ =>
+  | |- envs_entails ?Δ _ =>
      let Hs := eval cbv in (env_dom (env_spatial Δ)) in go Hs
   end.
 
@@ -312,7 +312,7 @@ Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
 Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
   try iStartProof;
   lazymatch goal with
-  | |- _ ⊢ _ =>
+  | |- envs_entails _ _ =>
     eapply tac_forall_intro;
       [apply _ ||
        let P := match goal with |- FromForall ?P _ => P end in
@@ -379,14 +379,14 @@ Local Tactic Notation "iIntroForall" :=
   lazymatch goal with
   | |- ∀ _, ?P => fail (* actually an →, this is handled by iIntro below *)
   | |- ∀ _, _ => intro
-  | |- _ ⊢ (∀ x : _, _) => let x' := fresh x in iIntro (x')
+  | |- envs_entails _ (∀ x : _, _) => let x' := fresh x in iIntro (x')
   end.
 Local Tactic Notation "iIntro" :=
   try iStartProof;
   lazymatch goal with
   | |- _ → ?P => intro
-  | |- _ ⊢ (_ -∗ _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
-  | |- _ ⊢ (_ → _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
+  | |- envs_entails _ (_ -∗ _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
+  | |- envs_entails _ (_ → _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
   end.
 
 (** * Specialize *)
@@ -736,13 +736,10 @@ Local Tactic Notation "iOrDestruct" constr(H) "as" constr(H1) constr(H2) :=
 (** * Conjunction and separating conjunction *)
 Tactic Notation "iSplit" :=
   iStartProof;
-  lazymatch goal with
-  | |- _ ⊢ _ =>
-    eapply tac_and_split;
-      [apply _ ||
-       let P := match goal with |- FromAnd ?P _ _ => P end in
-       fail "iSplit:" P "not a conjunction"| |]
-  end.
+  eapply tac_and_split;
+    [apply _ ||
+     let P := match goal with |- FromAnd ?P _ _ => P end in
+     fail "iSplit:" P "not a conjunction"| |].
 
 Tactic Notation "iSplitL" constr(Hs) :=
   iStartProof;
@@ -859,7 +856,7 @@ Tactic Notation "iAlways":=
 (** * Later *)
 Tactic Notation "iNext" open_constr(n) :=
   iStartProof;
-  let P := match goal with |- _ ⊢ ?P => P end in
+  let P := match goal with |- envs_entails _ ?P => P end in
   try lazymatch n with 0 => fail 1 "iNext: cannot strip 0 laters" end;
   eapply (tac_next _ _ n);
     [apply _ || fail "iNext:" P "does not contain" n "laters"
@@ -1410,7 +1407,7 @@ result in the following actions:
 Tactic Notation "iInductionCore" constr(x) "as" simple_intropattern(pat) constr(IH) :=
   let rec fix_ihs :=
     lazymatch goal with
-    | H : context [coq_tactics.of_envs _ ⊢ _] |- _ =>
+    | H : context [envs_entails _ _] |- _ =>
        eapply (tac_revert_ih _ _ _ H _);
          [reflexivity
           || fail "iInduction: spatial context not empty, this should not happen"|];
@@ -1430,8 +1427,8 @@ Ltac iHypsContaining x :=
        | _ => go Γ x Hs
        end
      end in
-  let Γp := lazymatch goal with |- of_envs (Envs ?Γp _) ⊢ _ => Γp end in
-  let Γs := lazymatch goal with |- of_envs (Envs _ ?Γs) ⊢ _ => Γs end in
+  let Γp := lazymatch goal with |- envs_entails (Envs ?Γp _) _ => Γp end in
+  let Γs := lazymatch goal with |- envs_entails (Envs _ ?Γs) _ => Γs end in
   let Hs := go Γp x (@nil string) in go Γs x Hs.
 
 Tactic Notation "iInductionRevert" constr(x) constr(Hs) "with" tactic(tac) :=
@@ -1759,25 +1756,34 @@ Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1)
 Tactic Notation "iMod" open_constr(lem) "as" "%" simple_intropattern(pat) :=
   iDestructCore lem as false (fun H => iModCore H; iPure H as pat).
 
+Hint Extern 0 (_ ⊢ _) => iStartProof.
+
 (* Make sure that by and done solve trivial things in proof mode *)
-Hint Extern 0 (of_envs _ ⊢ _) => by iPureIntro.
-Hint Extern 0 (of_envs _ ⊢ _) => iAssumption.
-Hint Extern 0 (of_envs _ ⊢ emp) => iEmpIntro.
-Hint Resolve bi.internal_eq_refl. (* Maybe make an [iReflexivity] tactic *)
+Hint Extern 0 (envs_entails _ _) => iPureIntro; try done.
+Hint Extern 0 (envs_entails _ _) => iAssumption.
+Hint Extern 0 (envs_entails _ emp) => iEmpIntro.
 
-(* For iIntros we do not check whether we are in proof mode because we actually
-want it to enter proof mode when we are not already in it. *)
-Hint Extern 0 (_ ⊢ _) => progress iIntros.
+(* TODO: look for a more principled way of adding trivial hints like those
+below; see the discussion in !75 for further details. *)
+Hint Extern 0 (envs_entails _ (_ ≡ _)) => apply bi.internal_eq_refl.
+Hint Extern 0 (envs_entails _ (big_opL _ _ _)) => apply bi.big_sepL_nil'.
+Hint Extern 0 (envs_entails _ (big_opM _ _ _)) => apply bi.big_sepM_empty'.
+Hint Extern 0 (envs_entails _ (big_opS _ _ _)) => apply bi.big_sepS_empty'.
+Hint Extern 0 (envs_entails _ (big_opMS _ _ _)) => apply bi.big_sepMS_empty'.
 
-Hint Extern 1 (of_envs _ ⊢ _ ∧ _) => iSplit.
-Hint Extern 1 (of_envs _ ⊢ _ ∗ _) => iSplit.
-Hint Extern 1 (of_envs _ ⊢ ▷ _) => iNext.
-Hint Extern 1 (of_envs _ ⊢ bi_plainly _) => iAlways.
-Hint Extern 1 (of_envs _ ⊢ bi_persistently _) => iAlways.
-Hint Extern 1 (of_envs _ ⊢ bi_affinely _) => iAlways.
-Hint Extern 1 (of_envs _ ⊢ ∃ _, _) => iExists _.
-Hint Extern 1 (of_envs _ ⊢ ◇ _) => iModIntro.
-Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iLeft.
-Hint Extern 1 (of_envs _ ⊢ _ ∨ _) => iRight.
+Hint Extern 0 (envs_entails _ (∀ _, _)) => iIntros.
+Hint Extern 0 (envs_entails _ (_ → _)) => iIntros.
+Hint Extern 0 (envs_entails _ (_ -∗ _)) => iIntros.
 
-Hint Extern 2 (of_envs _ ⊢ _ ∗ _) => progress iFrame : iFrame.
+Hint Extern 1 (envs_entails _ (_ ∧ _)) => iSplit.
+Hint Extern 1 (envs_entails _ (_ ∗ _)) => iSplit.
+Hint Extern 1 (envs_entails _ (▷ _)) => iNext.
+Hint Extern 1 (envs_entails _ (bi_plainly _)) => iAlways.
+Hint Extern 1 (envs_entails _ (bi_persistently _)) => iAlways.
+Hint Extern 1 (envs_entails _ (bi_affinely _)) => iAlways.
+Hint Extern 1 (envs_entails _ (∃ _, _)) => iExists _.
+Hint Extern 1 (envs_entails _ (◇ _)) => iModIntro.
+Hint Extern 1 (envs_entails _ (_ ∨ _)) => iLeft.
+Hint Extern 1 (envs_entails _ (_ ∨ _)) => iRight.
+
+Hint Extern 2 (envs_entails _ (_ ∗ _)) => progress iFrame : iFrame.

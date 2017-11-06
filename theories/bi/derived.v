@@ -1741,9 +1741,9 @@ Global Instance from_option_persistent {A} P (Ψ : A → PROP) (mx : option A) :
   (∀ x, Persistent (Ψ x)) → Persistent P → Persistent (from_option Ψ P mx).
 Proof. destruct mx; apply _. Qed.
 
+(* Not an instance, see the bottom of this file *)
 Lemma plain_persistent P : Plain P → Persistent P.
 Proof. intros. by rewrite /Persistent -plainly_elim_persistently. Qed.
-Hint Immediate plain_persistent.
 
 (* Properties of persistent propositions *)
 Lemma persistent_persistently_2 P `{!Persistent P} : P ⊢ bi_persistently P.
@@ -1925,6 +1925,12 @@ Global Instance later_proper' :
   Proper ((⊣⊢) ==> (⊣⊢)) (@bi_later PROP) := ne_proper _.
 
 (* Equality *)
+Lemma internal_eq_rewrite_contractive {A : ofeT} a b (Ψ : A → PROP)
+  {HΨ : Contractive Ψ} : ▷ (a ≡ b) ⊢ Ψ a → Ψ b.
+Proof.
+  rewrite later_eq_2. move: HΨ=>/contractive_alt [g [? HΨ]]. rewrite !HΨ.
+  by apply internal_eq_rewrite.
+Qed.
 Lemma internal_eq_rewrite_contractive' {A : ofeT} a b (Ψ : A → PROP) P
   {HΨ : Contractive Ψ} : (P ⊢ ▷ (a ≡ b)) → (P ⊢ Ψ a) → P ⊢ Ψ b.
 Proof.
@@ -2113,8 +2119,18 @@ Proof.
   - rewrite sep_or_r !sep_or_l {1}(later_intro P) {1}(later_intro Q).
     rewrite -!later_sep !left_absorb right_absorb. auto.
 Qed.
-Lemma except_0_forall_1 {A} (Φ : A → PROP) : ◇ (∀ a, Φ a) ⊢ ∀ a, ◇ Φ a.
-Proof. apply forall_intro=> a. by rewrite (forall_elim a). Qed.
+Lemma except_0_forall {A} (Φ : A → PROP) : ◇ (∀ a, Φ a) ⊣⊢ ∀ a, ◇ Φ a.
+Proof.
+  apply (anti_symm _).
+  { apply forall_intro=> a. by rewrite (forall_elim a). }
+  trans (▷ (∀ a : A, Φ a) ∧ (∀ a : A, ◇ Φ a))%I.
+  { apply and_intro, reflexivity. rewrite later_forall. apply forall_mono=> a.
+    apply or_elim; auto using later_intro. }
+  rewrite later_false_em and_or_r. apply or_elim.
+  { rewrite and_elim_l. apply or_intro_l. }
+  apply or_intro_r', forall_intro=> a. rewrite !(forall_elim a).
+  by rewrite and_or_l impl_elim_l and_elim_r idemp.
+Qed.
 Lemma except_0_exist_2 {A} (Φ : A → PROP) : (∃ a, ◇ Φ a) ⊢ ◇ ∃ a, Φ a.
 Proof. apply exist_elim=> a. by rewrite (exist_intro a). Qed.
 Lemma except_0_exist `{Inhabited A} (Φ : A → PROP) :
@@ -2157,6 +2173,13 @@ Proof.
   by apply and_mono, except_0_intro.
 Qed.
 
+Global Instance except_0_plain P : Plain P → Plain (◇ P).
+Proof. rewrite /bi_except_0; apply _. Qed.
+Global Instance except_0_persistent P : Persistent P → Persistent (◇ P).
+Proof. rewrite /bi_except_0; apply _. Qed.
+Global Instance except_0_absorbing P : Absorbing P → Absorbing (◇ P).
+Proof. rewrite /bi_except_0; apply _. Qed.
+
 (* Timeless instances *)
 Global Instance Timeless_proper : Proper ((≡) ==> iff) (@Timeless PROP).
 Proof. solve_proper. Qed.
@@ -2198,11 +2221,8 @@ Qed.
 Global Instance forall_timeless {A} (Ψ : A → PROP) :
   (∀ x, Timeless (Ψ x)) → Timeless (∀ x, Ψ x).
 Proof.
-  rewrite /Timeless=> HQ. rewrite later_false_em.
-  apply or_mono; first done. apply forall_intro=> x.
-  rewrite -(löb (Ψ x)); apply impl_intro_l.
-  rewrite HQ /bi_except_0 !and_or_r. apply or_elim; last auto.
-  by rewrite impl_elim_r (forall_elim x).
+  rewrite /Timeless=> HQ. rewrite except_0_forall later_forall.
+  apply forall_mono; auto.
 Qed.
 Global Instance exist_timeless {A} (Ψ : A → PROP) :
   (∀ x, Timeless (Ψ x)) → Timeless (∃ x, Ψ x).
@@ -2297,3 +2317,12 @@ Global Instance bi_except_0_sep_entails_homomorphism :
 Proof. split; try apply _. apply except_0_intro. Qed.
 End sbi_derived.
 End bi.
+
+(* When declared as an actual instance, [plain_persistent] will cause
+failing proof searches to take exponential time, as Coq will try to
+apply it the instance at any node in the proof search tree.
+
+To avoid that, we declare it using a [Hint Immediate], so that it will
+only be used at the leaves of the proof search tree, i.e. when the
+premise of the hint can be derived from just the current context. *)
+Hint Immediate bi.plain_persistent : typeclass_instances.

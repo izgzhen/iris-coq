@@ -842,6 +842,3 @@ Section gmultiset.
 End gmultiset.
 End sbi_big_op.
 End bi.
-
-Hint Resolve bi.big_sepL_nil' bi.big_sepM_empty'
-  bi.big_sepS_empty' bi.big_sepMS_empty' | 0.

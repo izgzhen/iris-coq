@@ -44,7 +44,6 @@ Section saved_prop.
     assert (∀ z, G2 (G1 z) ≡ z) as help.
     { intros z. rewrite /G1 /G2 -cFunctor_compose -{2}[z]cFunctor_id.
       apply (ne_proper (cFunctor_map F)); split=>?; apply iProp_fold_unfold. }
-    rewrite -{2}[x]help -{2}[y]help. apply later_mono.
-    apply f_equiv. solve_proper.
+    rewrite -{2}[x]help -{2}[y]help. apply later_mono, f_equiv, _.
   Qed.
 End saved_prop.

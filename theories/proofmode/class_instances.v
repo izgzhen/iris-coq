@@ -7,23 +7,6 @@ Section bi_instances.
 Context {PROP : bi}.
 Implicit Types P Q R : PROP.
 
-(* IntoInternalEq *)
-Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
-  @IntoInternalEq PROP A (x ≡ y) x y.
-Proof. by rewrite /IntoInternalEq. Qed.
-Global Instance into_internal_eq_affinely {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (bi_affinely P) x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite affinely_elim. Qed.
-Global Instance into_internal_eq_absorbingly {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (▲ P) x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite absorbingly_internal_eq. Qed.
-Global Instance into_internal_eq_plainly {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (bi_plainly P) x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite plainly_elim. Qed.
-Global Instance into_internal_eq_persistently {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (bi_persistently P) x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite persistently_elim. Qed.
-
 (* FromAffinely *)
 Global Instance from_affinely_affine P : Affine P → FromAffinely P P.
 Proof. intros. by rewrite /FromAffinely affinely_elim. Qed.
@@ -178,6 +161,23 @@ Global Instance from_pure_affinely P φ `{!Affine P} :
 Proof. by rewrite /FromPure affine_affinely. Qed.
 Global Instance from_pure_absorbingly P φ : FromPure P φ → FromPure (▲ P) φ.
 Proof. rewrite /FromPure=> <-. by rewrite absorbingly_pure. Qed.
+
+(* IntoInternalEq *)
+Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
+  @IntoInternalEq PROP A (x ≡ y) x y.
+Proof. by rewrite /IntoInternalEq. Qed.
+Global Instance into_internal_eq_affinely {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (bi_affinely P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite affinely_elim. Qed.
+Global Instance into_internal_eq_absorbingly {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (▲ P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite absorbingly_internal_eq. Qed.
+Global Instance into_internal_eq_plainly {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (bi_plainly P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite plainly_elim. Qed.
+Global Instance into_internal_eq_persistently {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (bi_persistently P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite persistently_elim. Qed.
 
 (* IntoPersistent *)
 Global Instance into_persistent_persistently p P Q :
@@ -1013,11 +1013,17 @@ Proof. rewrite /IntoExist=> HP ?. by rewrite HP except_0_exist. Qed.
 Global Instance into_forall_later {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (▷ P) (λ a, ▷ (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP later_forall. Qed.
+Global Instance into_forall_except_0 {A} P (Φ : A → PROP) :
+  IntoForall P Φ → IntoForall (◇ P) (λ a, ◇ (Φ a))%I.
+Proof. rewrite /IntoForall=> HP. by rewrite HP except_0_forall. Qed.
 
 (* FromForall *)
 Global Instance from_forall_later {A} P (Φ : A → PROP) :
   FromForall P Φ → FromForall (▷ P)%I (λ a, ▷ (Φ a))%I.
 Proof. rewrite /FromForall=> <-. by rewrite later_forall. Qed.
+Global Instance from_forall_except_0 {A} P (Φ : A → PROP) :
+  FromForall P Φ → FromForall (◇ P)%I (λ a, ◇ (Φ a))%I.
+Proof. rewrite /FromForall=> <-. by rewrite except_0_forall. Qed.
 
 (* IsExcept0 *)
 Global Instance is_except_0_except_0 P : IsExcept0 (◇ P).

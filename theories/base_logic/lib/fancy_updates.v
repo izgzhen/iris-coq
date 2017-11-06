@@ -80,6 +80,25 @@ Qed.
 Lemma fupd_frame_r E1 E2 P Q : (|={E1,E2}=> P) ∗ Q ={E1,E2}=∗ P ∗ Q.
 Proof. rewrite fupd_eq /fupd_def. by iIntros "[HwP $]". Qed.
 
+Lemma fupd_plain' E1 E2 E2' P Q `{!Plain P} :
+  E1 ⊆ E2 →
+  (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
+Proof.
+  iIntros ((E3&->&HE)%subseteq_disjoint_union_L) "HQP HQ".
+  rewrite fupd_eq /fupd_def ownE_op //. iIntros "H".
+  iMod ("HQ" with "H") as ">(Hws & [HE1 HE3] & HQ)"; iModIntro.
+  iAssert (◇ P)%I as "#HP".
+  { by iMod ("HQP" with "HQ [$]") as "(_ & _ & HP)". }
+  iMod "HP". iFrame. auto.
+Qed.
+
+Lemma later_fupd_plain E P `{!Plain P} : (▷ |={E}=> P) ={E}=∗ ▷ ◇ P.
+Proof.
+  rewrite fupd_eq /fupd_def. iIntros "HP [Hw HE]".
+  iAssert (▷ ◇ P)%I with "[-]" as "#$"; last by iFrame.
+  iNext. by iMod ("HP" with "[$]") as "(_ & _ & HP)".
+Qed.
+
 (** * Derived rules *)
 Global Instance fupd_mono' E1 E2 : Proper ((⊢) ==> (⊢)) (@fupd Σ _ E1 E2).
 Proof. intros P Q; apply fupd_mono. Qed.
@@ -138,6 +157,13 @@ Lemma fupd_big_sepS `{Countable A} E (Φ : A → iProp Σ) X :
 Proof.
   apply (big_opS_forall (λ P Q, P ={E}=∗ Q)); auto using fupd_intro.
   intros P1 P2 HP Q1 Q2 HQ. by rewrite HP HQ -fupd_sep.
+Qed.
+
+Lemma fupd_plain E1 E2 P Q `{!Plain P} :
+  E1 ⊆ E2 → (Q -∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
+Proof.
+  iIntros (HE) "HQP HQ". iApply (fupd_plain' _ _ E1 with "[HQP] HQ"); first done.
+  iIntros "?". iApply fupd_intro. by iApply "HQP".
 Qed.
 End fupd.
 
@@ -212,7 +238,7 @@ Section proofmode_classes.
   Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 End proofmode_classes.
 
-Hint Extern 2 (coq_tactics.of_envs _ ⊢ |={_}=> _) => iModIntro.
+Hint Extern 2 (coq_tactics.envs_entails _ (|={_}=> _)) => iModIntro.
 
 (** Fancy updates that take a step. *)
 

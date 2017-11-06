@@ -49,6 +49,12 @@ Arguments FromPure {_} _%I _%type_scope : simpl never.
 Arguments from_pure {_} _%I _%type_scope {_}.
 Hint Mode FromPure + ! - : typeclass_instances.
 
+Class IntoInternalEq {PROP : bi} {A : ofeT} (P : PROP) (x y : A) :=
+  into_internal_eq : P ⊢ x ≡ y.
+Arguments IntoInternalEq {_ _} _%I _%type_scope _%type_scope : simpl never.
+Arguments into_internal_eq {_ _} _%I _%type_scope _%type_scope {_}.
+Hint Mode IntoInternalEq + - ! - - : typeclass_instances.
+
 Class IntoPersistent {PROP : bi} (p : bool) (P Q : PROP) :=
   into_persistent : bi_persistently_if p P ⊢ bi_persistently Q.
 Arguments IntoPersistent {_} _ _%I _%I : simpl never.
@@ -73,12 +79,6 @@ Arguments IntoAbsorbingly {_} _%I _%I.
 Arguments into_absorbingly {_} _%I _%I {_}.
 Hint Mode IntoAbsorbingly + ! -  : typeclass_instances.
 Hint Mode IntoAbsorbingly + - ! : typeclass_instances.
-
-Class IntoInternalEq {PROP : bi} {A : ofeT} (P : PROP) (x y : A) :=
-  into_internal_eq : P ⊢ x ≡ y.
-Arguments IntoInternalEq {_ _} _%I _%type_scope _%type_scope : simpl never.
-Arguments into_internal_eq {_ _} _%I _%type_scope _%type_scope {_}.
-Hint Mode IntoInternalEq + - ! - - : typeclass_instances.
 
 (*
 Converting an assumption [R] into a wand [P -∗ Q] is done in three stages:

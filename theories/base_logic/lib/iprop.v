@@ -151,6 +151,5 @@ End iProp_solution.
 Lemma iProp_unfold_equivI {Σ} (P Q : iProp Σ) :
   iProp_unfold P ≡ iProp_unfold Q ⊢ (P ≡ Q : iProp Σ).
 Proof.
-  rewrite -{2}(iProp_fold_unfold P) -{2}(iProp_fold_unfold Q).
-  apply: bi.f_equiv.
+  rewrite -{2}(iProp_fold_unfold P) -{2}(iProp_fold_unfold Q). apply: bi.f_equiv.
 Qed.

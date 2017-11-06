@@ -11,18 +11,19 @@ Notation "" := Enil (only printing) : proof_scope.
 Notation "Γ H : P" := (Esnoc Γ H P)
   (at level 1, P at level 200,
    left associativity, format "Γ H  :  P '//'", only printing) : proof_scope.
+
 Notation "Γ '--------------------------------------' □ Δ '--------------------------------------' ∗ Q" :=
-  (of_envs (Envs Γ Δ) ⊢ Q%I)
+  (envs_entails (Envs Γ Δ) Q%I)
   (at level 1, Q at level 200, left associativity,
   format "Γ '--------------------------------------' □ '//' Δ '--------------------------------------' ∗ '//' Q '//'", only printing) :
   C_scope.
 Notation "Δ '--------------------------------------' ∗ Q" :=
-  (of_envs (Envs Enil Δ) ⊢ Q%I)
+  (envs_entails (Envs Enil Δ) Q%I)
   (at level 1, Q at level 200, left associativity,
   format "Δ '--------------------------------------' ∗ '//' Q '//'", only printing) : C_scope.
 Notation "Γ '--------------------------------------' □ Q" :=
-  (of_envs (Envs Γ Enil) ⊢ Q%I)
+  (envs_entails (Envs Γ Enil) Q%I)
   (at level 1, Q at level 200, left associativity,
   format "Γ '--------------------------------------' □ '//' Q '//'", only printing)  : C_scope.
-Notation "'--------------------------------------' ∗ Q" := (of_envs (Envs Enil Enil) ⊢ Q%I)
+Notation "'--------------------------------------' ∗ Q" := (envs_entails (Envs Enil Enil) Q%I)
   (at level 1, Q at level 200, format "'--------------------------------------' ∗ '//' Q '//'", only printing) : C_scope.

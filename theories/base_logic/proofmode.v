@@ -4,7 +4,7 @@ From iris.algebra Require Import proofmode_classes.
 Import uPred.
 Import bi.
 
-Hint Extern 1 (coq_tactics.of_envs _ ⊢ |==> _) => iModIntro.
+Hint Extern 1 (coq_tactics.envs_entails _ (|==> _)) => iModIntro.
 
 Section class_instances.
 Context {M : ucmraT}.
