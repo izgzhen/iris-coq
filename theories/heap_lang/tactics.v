@@ -187,12 +187,11 @@ Definition is_atomic (e : expr) :=
   | App (Rec _ _ (Lit _)) (Lit _) => true
   | _ => false
   end.
-Lemma is_atomic_correct s e : is_atomic e → Atomic s (to_expr e).
+Lemma is_atomic_correct e : is_atomic e → Atomic (to_expr e).
 Proof.
-  enough (is_atomic e → Atomic maybe_stuck (to_expr e)).
-  { destruct s; auto using strongly_atomic_atomic. }
   intros He. apply ectx_language_atomic.
-  - intros σ e' σ' ef Hstep; simpl in *. revert Hstep.
+  - intros σ e' σ' ef Hstep; simpl in *.
+    apply language.val_irreducible; revert Hstep.
     destruct e=> //=; repeat (simplify_eq/=; case_match=>//);
       inversion 1; simplify_eq/=; rewrite ?to_of_val; eauto.
     unfold subst'; repeat (simplify_eq/=; case_match=>//); eauto.
@@ -228,11 +227,11 @@ Hint Extern 10 (AsVal _) => solve_as_val : typeclass_instances.
 
 Ltac solve_atomic :=
   match goal with
-  | |- Atomic ?s ?e =>
-     let e' := W.of_expr e in change (Atomic s (W.to_expr e'));
+  | |- Atomic ?e =>
+     let e' := W.of_expr e in change (Atomic (W.to_expr e'));
      apply W.is_atomic_correct; vm_compute; exact I
   end.
-Hint Extern 10 (Atomic _ _) => solve_atomic : typeclass_instances.
+Hint Extern 10 (Atomic _) => solve_atomic : typeclass_instances.
 
 (** Substitution *)
 Ltac simpl_subst :=

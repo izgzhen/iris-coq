@@ -4,7 +4,7 @@ From iris.algebra Require Export base.
 From iris.program_logic Require Import language.
 Set Default Proof Using "Type".
 
-(* We need to make those arguments indices that we want canonical structure
+(* We need to make thos arguments indices that we want canonical structure
    inference to use a keys. *)
 Class EctxLanguage (expr val ectx state : Type) := {
   of_val : val → expr;
@@ -61,8 +61,6 @@ Section ectx_language.
     ∃ e' σ' efs, head_step e σ e' σ' efs.
   Definition head_irreducible (e : expr) (σ : state) :=
     ∀ e' σ' efs, ¬head_step e σ e' σ' efs.
-  Definition head_progressive (e : expr) (σ : state) :=
-    is_Some(to_val e) ∨ ∃ K e', e = fill K e' ∧ head_reducible e' σ.
 
   (* All non-value redexes are at the root.  In other words, all sub-redexes are
      values. *)
@@ -90,11 +88,6 @@ Section ectx_language.
     language.to_of_val := to_of_val; language.of_to_val := of_to_val;
     language.val_stuck := val_prim_stuck;
   |}.
-
-  Class HeadAtomic (s : stuckness) (e : expr) : Prop :=
-    head_atomic σ e' σ' efs :
-      head_step e σ e' σ' efs →
-      if s is not_stuck then irreducible e' σ' else is_Some (to_val e').
 
   (* Some lemmas about this language *)
   Lemma head_prim_step e1 σ1 e2 σ2 efs :
@@ -124,16 +117,10 @@ Section ectx_language.
     rewrite -not_reducible -not_head_reducible. eauto using prim_head_reducible.
   Qed.
 
-  Lemma progressive_head_progressive e σ :
-    progressive e σ → head_progressive e σ.
-  Proof.
-    case=>[?|Hred]; first by left.
-    right. move: Hred=> [] e' [] σ' [] efs [] K e1' e2' EQ EQ' Hstep. subst.
-    exists K, e1'. split; first done. by exists e2', σ', efs.
-  Qed.
-
-  Lemma ectx_language_atomic s e :
-    HeadAtomic s e → sub_redexes_are_values e → Atomic s e.
+  Lemma ectx_language_atomic e :
+    (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
+    sub_redexes_are_values e →
+    Atomic e.
   Proof.
     intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
     assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
