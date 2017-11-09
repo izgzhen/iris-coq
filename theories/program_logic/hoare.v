@@ -76,28 +76,15 @@ Proof.
   iIntros (v) "Hv". by iApply "HΦ".
 Qed.
 
-Lemma ht_atomic' s E1 E2 P P' Φ Φ' e :
-  StronglyAtomic e ∨ s = not_stuck ∧ Atomic e →
+Lemma ht_atomic s E1 E2 P P' Φ Φ' e `{!Atomic s e} :
   (P ={E1,E2}=> P') ∧ {{ P' }} e @ s; E2 {{ Φ' }} ∧ (∀ v, Φ' v ={E2,E1}=> Φ v)
   ⊢ {{ P }} e @ s; E1 {{ Φ }}.
 Proof.
-  iIntros (?) "(#Hvs & #Hwp & #HΦ) !# HP". iApply (wp_atomic' _ _ E2); auto.
+  iIntros "(#Hvs & #Hwp & #HΦ) !# HP". iApply (wp_atomic _ _ E2); auto.
   iMod ("Hvs" with "HP") as "HP". iModIntro.
   iApply (wp_wand with "[HP]"); [by iApply "Hwp"|].
   iIntros (v) "Hv". by iApply "HΦ".
 Qed.
-
-Lemma ht_strong_atomic s E1 E2 P P' Φ Φ' e :
-  StronglyAtomic e →
-  (P ={E1,E2}=> P') ∧ {{ P' }} e @ s; E2 {{ Φ' }} ∧ (∀ v, Φ' v ={E2,E1}=> Φ v)
-  ⊢ {{ P }} e @ s; E1 {{ Φ }}.
-Proof. by eauto using ht_atomic'. Qed.
-
-Lemma ht_atomic E1 E2 P P' Φ Φ' e :
-  Atomic e →
-  (P ={E1,E2}=> P') ∧ {{ P' }} e @ E2 {{ Φ' }} ∧ (∀ v, Φ' v ={E2,E1}=> Φ v)
-  ⊢ {{ P }} e @ E1 {{ Φ }}.
-Proof. by eauto using ht_atomic'. Qed.
 
 Lemma ht_bind `{LanguageCtx Λ K} s E P Φ Φ' e :
   {{ P }} e @ s; E {{ Φ }} ∧ (∀ v, {{ Φ v }} K (of_val v) @ s; E {{ Φ' }})

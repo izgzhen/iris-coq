@@ -56,21 +56,21 @@ Section language.
   Definition progressive (e : expr Λ) (σ : state Λ) :=
     is_Some (to_val e) ∨ reducible e σ.
 
-  (* This (weak) form of atomicity is enough to open invariants when WP ensures
+  (* [Atomic not_stuck]: This (weak) form of atomicity is enough to open invariants when WP ensures
      safety, i.e., programs never can get stuck.  We have an example in
      lambdaRust of an expression that is atomic in this sense, but not in the
      stronger sense defined below, and we have to be able to open invariants
      around that expression.  See `CasStuckS` in
-     [lambdaRust](https://gitlab.mpi-sws.org/FP/LambdaRust-coq/blob/master/theories/lang/lang.v). *)
-  Class Atomic (e : expr Λ) : Prop :=
-    atomic σ e' σ' efs : prim_step e σ e' σ' efs → irreducible e' σ'.
+     [lambdaRust](https://gitlab.mpi-sws.org/FP/LambdaRust-coq/blob/master/theories/lang/lang.v).
 
-  (* To open invariants with a WP that does not ensure safety, we need a
+     [Atomic maybe_stuck]: To open invariants with a WP that does not ensure safety, we need a
      stronger form of atomicity.  With the above definition, in case `e` reduces
      to a stuck non-value, there is no proof that the invariants have been
      established again. *)
-  Class StronglyAtomic (e : expr Λ) : Prop :=
-    strongly_atomic σ e' σ' efs : prim_step e σ e' σ' efs → is_Some (to_val e').
+  Class Atomic (s : stuckness) (e : expr Λ) : Prop :=
+    atomic σ e' σ' efs :
+      prim_step e σ e' σ' efs →
+      if s is not_stuck then irreducible e' σ' else is_Some (to_val e').
 
   Inductive step (ρ1 ρ2 : cfg Λ) : Prop :=
     | step_atomic e1 σ1 e2 σ2 efs t1 t2 :
@@ -91,8 +91,8 @@ Section language.
   Global Instance of_val_inj : Inj (=) (=) (@of_val Λ).
   Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 
-  Lemma strongly_atomic_atomic e : StronglyAtomic e → Atomic e.
-  Proof. unfold StronglyAtomic, Atomic. eauto using val_irreducible. Qed.
+  Lemma strongly_atomic_atomic e : Atomic maybe_stuck e → Atomic not_stuck e.
+  Proof. unfold Atomic. eauto using val_irreducible. Qed.
 
   Lemma reducible_fill `{LanguageCtx Λ K} e σ :
     to_val e = None → reducible (K e) σ → reducible e σ.

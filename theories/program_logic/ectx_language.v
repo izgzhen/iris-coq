@@ -91,6 +91,11 @@ Section ectx_language.
     language.val_stuck := val_prim_stuck;
   |}.
 
+  Class HeadAtomic (s : stuckness) (e : expr) : Prop :=
+    head_atomic σ e' σ' efs :
+      head_step e σ e' σ' efs →
+      if s is not_stuck then irreducible e' σ' else is_Some (to_val e').
+
   (* Some lemmas about this language *)
   Lemma head_prim_step e1 σ1 e2 σ2 efs :
     head_step e1 σ1 e2 σ2 efs → prim_step e1 σ1 e2 σ2 efs.
@@ -127,20 +132,8 @@ Section ectx_language.
     exists K, e1'. split; first done. by exists e2', σ', efs.
   Qed.
 
-  Lemma ectx_language_strong_atomic e :
-    (∀ σ e' σ' efs, head_step e σ e' σ' efs → is_Some (to_val e')) →
-    sub_redexes_are_values e →
-    StronglyAtomic e.
-  Proof.
-    intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
-    assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
-    rewrite fill_empty. eapply Hatomic_step. by rewrite fill_empty.
-  Qed.
-
-  Lemma ectx_language_atomic e :
-    (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
-    sub_redexes_are_values e →
-    Atomic e.
+  Lemma ectx_language_atomic s e :
+    HeadAtomic s e → sub_redexes_are_values e → Atomic s e.
   Proof.
     intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
     assert (K = empty_ectx) as -> by eauto 10 using val_stuck.

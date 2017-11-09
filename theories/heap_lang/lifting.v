@@ -47,7 +47,7 @@ Ltac inv_head_step :=
      inversion H; subst; clear H
   end.
 
-Local Hint Extern 0 (strongly_atomic _) => solve_atomic.
+Local Hint Extern 0 (atomic _ _) => solve_atomic.
 Local Hint Extern 0 (head_reducible _ _) => eexists _, _, _; simpl.
 
 Local Hint Constructors head_step.
