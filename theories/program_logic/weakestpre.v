@@ -11,8 +11,6 @@ Class irisG' (Λstate : Type) (Σ : gFunctors) := IrisG {
 }.
 Notation irisG Λ Σ := (irisG' (state Λ) Σ).
 
-CoInductive pbit := progress | noprogress.
-
 Definition wp_pre `{irisG Λ Σ} (p : pbit)
     (wp : coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
     coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ := λ E e1 Φ,
