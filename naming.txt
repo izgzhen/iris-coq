@@ -17,7 +17,7 @@ o
 p
 q
 r : iRes = resources
-s : state (STSs)
+s : state (STSs), stuckness bits
 t
 u
 v : val = values of language
