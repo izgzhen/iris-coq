@@ -311,6 +311,9 @@ Proof.
   iIntros (HΦ) "H"; iApply (wp_strong_mono s E E); auto.
   iIntros "{$H}" (v) "?". by iApply HΦ.
 Qed.
+Lemma wp_stuckness_mono s1 s2 E e Φ :
+  (s1 ≤ s2)%stuckness → WP e @ s1; E {{ Φ }} ⊢ WP e @ s2; E {{ Φ }}.
+Proof. case: s1; case: s2 => // _. exact: wp_forget_not_stuck. Qed.
 Lemma wp_mask_mono s E1 E2 e Φ : E1 ⊆ E2 → WP e @ s; E1 {{ Φ }} ⊢ WP e @ s; E2 {{ Φ }}.
 Proof. iIntros (?) "H"; iApply (wp_strong_mono s E1 E2); auto. iFrame; eauto. Qed.
 Global Instance wp_mono' s E e :

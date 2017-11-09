@@ -57,6 +57,9 @@ Proof. solve_proper. Qed.
 Lemma ht_mono s E P P' Φ Φ' e :
   (P ⊢ P') → (∀ v, Φ' v ⊢ Φ v) → {{ P' }} e @ s; E {{ Φ' }} ⊢ {{ P }} e @ s; E {{ Φ }}.
 Proof. by intros; apply persistently_mono, wand_mono, wp_mono. Qed.
+Lemma ht_stuckness_mono s1 s2 E P Φ e :
+  (s1 ≤ s2)%stuckness → {{ P }} e @ s1; E {{ Φ }} ⊢ {{ P }} e @ s2; E {{ Φ }}.
+Proof. by intros; apply persistently_mono, wand_mono, wp_stuckness_mono. Qed.
 Global Instance ht_mono' s E :
   Proper (flip (⊢) ==> eq ==> pointwise_relation _ (⊢) ==> (⊢)) (ht s E).
 Proof. solve_proper. Qed.

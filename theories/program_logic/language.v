@@ -44,6 +44,18 @@ Instance language_ctx_id Λ : LanguageCtx Λ id.
 Proof. constructor; naive_solver. Qed.
 
 Variant stuckness := not_stuck | maybe_stuck.
+Definition stuckness_le (s1 s2 : stuckness) : bool :=
+  match s1, s2 with
+  | maybe_stuck, not_stuck => false
+  | _, _ => true
+  end.
+Instance: @PreOrder stuckness stuckness_le.
+Proof.
+  split; first by case. move=>s1 s2 s3. by case: s1; case: s2; case: s3.
+Qed.
+Bind Scope stuckness_scope with stuckness.
+Delimit Scope stuckness_scope with stuckness.
+Infix "≤" := stuckness_le : stuckness_scope.
 
 Section language.
   Context {Λ : language}.
