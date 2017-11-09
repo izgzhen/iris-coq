@@ -5,21 +5,21 @@ From iris.heap_lang Require Export tactics lifting.
 Set Default Proof Using "Type".
 Import uPred.
 
-Lemma tac_wp_pure `{heapG Σ} K Δ Δ' p E e1 e2 φ Φ :
+Lemma tac_wp_pure `{heapG Σ} K Δ Δ' s E e1 e2 φ Φ :
   PureExec φ e1 e2 →
   φ →
   IntoLaterNEnvs 1 Δ Δ' →
-  envs_entails Δ' (WP fill K e2 @ p; E {{ Φ }}) →
-  envs_entails Δ (WP fill K e1 @ p; E {{ Φ }}).
+  envs_entails Δ' (WP fill K e2 @ s; E {{ Φ }}) →
+  envs_entails Δ (WP fill K e1 @ s; E {{ Φ }}).
 Proof.
   rewrite /envs_entails=> ??? HΔ'. rewrite into_laterN_env_sound /=.
   rewrite -lifting.wp_bind HΔ' -wp_pure_step_later //.
   by rewrite -ectx_lifting.wp_ectx_bind_inv.
 Qed.
 
-Lemma tac_wp_value `{heapG Σ} Δ p E Φ e v :
+Lemma tac_wp_value `{heapG Σ} Δ s E Φ e v :
   IntoVal e v →
-  envs_entails Δ (Φ v) → envs_entails Δ (WP e @ p; E {{ Φ }}).
+  envs_entails Δ (Φ v) → envs_entails Δ (WP e @ s; E {{ Φ }}).
 Proof. rewrite /envs_entails=> ? ->. by apply wp_value. Qed.
 
 Ltac wp_value_head := eapply tac_wp_value; [apply _|lazy beta].
@@ -27,7 +27,7 @@ Ltac wp_value_head := eapply tac_wp_value; [apply _|lazy beta].
 Tactic Notation "wp_pure" open_constr(efoc) :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?p ?E ?e ?Q) => reshape_expr e ltac:(fun K e' =>
+  | |- envs_entails _ (wp ?s ?E ?e ?Q) => reshape_expr e ltac:(fun K e' =>
     unify e' efoc;
     eapply (tac_wp_pure K);
     [simpl; apply _                 (* PureExec *)
@@ -52,9 +52,9 @@ Tactic Notation "wp_proj" := wp_pure (Fst _) || wp_pure (Snd _).
 Tactic Notation "wp_case" := wp_pure (Case _ _ _).
 Tactic Notation "wp_match" := wp_case; wp_let.
 
-Lemma tac_wp_bind `{heapG Σ} K Δ p E Φ e :
-  envs_entails Δ (WP e @ p; E {{ v, WP fill K (of_val v) @ p; E {{ Φ }} }})%I →
-  envs_entails Δ (WP fill K e @ p; E {{ Φ }}).
+Lemma tac_wp_bind `{heapG Σ} K Δ s E Φ e :
+  envs_entails Δ (WP e @ s; E {{ v, WP fill K (of_val v) @ s; E {{ Φ }} }})%I →
+  envs_entails Δ (WP fill K e @ s; E {{ Φ }}).
 Proof. rewrite /envs_entails=> ->. by apply wp_bind. Qed.
 
 Ltac wp_bind_core K :=
@@ -66,7 +66,7 @@ Ltac wp_bind_core K :=
 Tactic Notation "wp_bind" open_constr(efoc) :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?p ?E ?e ?Q) =>
+  | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     reshape_expr e ltac:(fun K e' => unify e' efoc; wp_bind_core K)
     || fail "wp_bind: cannot find" efoc "in" e
   | _ => fail "wp_bind: not a 'wp'"
@@ -79,13 +79,13 @@ Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val → iProp Σ.
 Implicit Types Δ : envs (iResUR Σ).
 
-Lemma tac_wp_alloc Δ Δ' p E j K e v Φ :
+Lemma tac_wp_alloc Δ Δ' s E j K e v Φ :
   IntoVal e v →
   IntoLaterNEnvs 1 Δ Δ' →
   (∀ l, ∃ Δ'',
     envs_app false (Esnoc Enil j (l ↦ v)) Δ' = Some Δ'' ∧
-    envs_entails Δ'' (WP fill K (Lit (LitLoc l)) @ p; E {{ Φ }})) →
-  envs_entails Δ (WP fill K (Alloc e) @ p; E {{ Φ }}).
+    envs_entails Δ'' (WP fill K (Lit (LitLoc l)) @ s; E {{ Φ }})) →
+  envs_entails Δ (WP fill K (Alloc e) @ s; E {{ Φ }}).
 Proof.
   rewrite /envs_entails=> ?? HΔ.
   rewrite -wp_bind. eapply wand_apply; first exact: wp_alloc.
@@ -94,11 +94,11 @@ Proof.
   by rewrite right_id HΔ'.
 Qed.
 
-Lemma tac_wp_load Δ Δ' p E i K l q v Φ :
+Lemma tac_wp_load Δ Δ' s E i K l q v Φ :
   IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I →
-  envs_entails Δ' (WP fill K (of_val v) @ p; E {{ Φ }}) →
-  envs_entails Δ (WP fill K (Load (Lit (LitLoc l))) @ p; E {{ Φ }}).
+  envs_entails Δ' (WP fill K (of_val v) @ s; E {{ Φ }}) →
+  envs_entails Δ (WP fill K (Load (Lit (LitLoc l))) @ s; E {{ Φ }}).
 Proof.
   rewrite /envs_entails=> ???.
   rewrite -wp_bind. eapply wand_apply; first exact: wp_load.
@@ -106,13 +106,13 @@ Proof.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_store Δ Δ' Δ'' p E i K l v e v' Φ :
+Lemma tac_wp_store Δ Δ' Δ'' s E i K l v e v' Φ :
   IntoVal e v' →
   IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v')) Δ' = Some Δ'' →
-  envs_entails Δ'' (WP fill K (Lit LitUnit) @ p; E {{ Φ }}) →
-  envs_entails Δ (WP fill K (Store (Lit (LitLoc l)) e) @ p; E {{ Φ }}).
+  envs_entails Δ'' (WP fill K (Lit LitUnit) @ s; E {{ Φ }}) →
+  envs_entails Δ (WP fill K (Store (Lit (LitLoc l)) e) @ s; E {{ Φ }}).
 Proof.
   rewrite /envs_entails=> ?????.
   rewrite -wp_bind. eapply wand_apply; first by eapply wp_store.
@@ -120,12 +120,12 @@ Proof.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_cas_fail Δ Δ' p E i K l q v e1 v1 e2 Φ :
+Lemma tac_wp_cas_fail Δ Δ' s E i K l q v e1 v1 e2 Φ :
   IntoVal e1 v1 → AsVal e2 →
   IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
-  envs_entails Δ' (WP fill K (Lit (LitBool false)) @ p; E {{ Φ }}) →
-  envs_entails Δ (WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ p; E {{ Φ }}).
+  envs_entails Δ' (WP fill K (Lit (LitBool false)) @ s; E {{ Φ }}) →
+  envs_entails Δ (WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ s; E {{ Φ }}).
 Proof.
   rewrite /envs_entails=> ??????.
   rewrite -wp_bind. eapply wand_apply; first exact: wp_cas_fail.
@@ -133,13 +133,13 @@ Proof.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_cas_suc Δ Δ' Δ'' p E i K l v e1 v1 e2 v2 Φ :
+Lemma tac_wp_cas_suc Δ Δ' Δ'' s E i K l v e1 v1 e2 v2 Φ :
   IntoVal e1 v1 → IntoVal e2 v2 →
   IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →
-  envs_entails Δ'' (WP fill K (Lit (LitBool true)) @ p; E {{ Φ }}) →
-  envs_entails Δ (WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ p; E {{ Φ }}).
+  envs_entails Δ'' (WP fill K (Lit (LitBool true)) @ s; E {{ Φ }}) →
+  envs_entails Δ (WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ s; E {{ Φ }}).
 Proof.
   rewrite /envs_entails=> ???????; subst.
   rewrite -wp_bind. eapply wand_apply; first exact: wp_cas_suc.
@@ -151,7 +151,7 @@ End heap.
 Tactic Notation "wp_apply" open_constr(lem) :=
   iPoseProofCore lem as false true (fun H =>
     lazymatch goal with
-    | |- envs_entails _ (wp ?p ?E ?e ?Q) =>
+    | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
       reshape_expr e ltac:(fun K e' =>
         wp_bind_core K; iApplyHyp H; try iNext; simpl) ||
       lazymatch iTypeOf H with
@@ -163,7 +163,7 @@ Tactic Notation "wp_apply" open_constr(lem) :=
 Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?p ?E ?e ?Q) =>
+  | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
          eapply (tac_wp_alloc _ _ _ _ H K); [apply _|..])
@@ -182,7 +182,7 @@ Tactic Notation "wp_alloc" ident(l) :=
 Tactic Notation "wp_load" :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?p ?E ?e ?Q) =>
+  | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' => eapply (tac_wp_load _ _ _ _ _ K))
       |fail 1 "wp_load: cannot find 'Load' in" e];
@@ -196,7 +196,7 @@ Tactic Notation "wp_load" :=
 Tactic Notation "wp_store" :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?p ?E ?e ?Q) =>
+  | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
          eapply (tac_wp_store _ _ _ _ _ _ K); [apply _|..])
@@ -212,7 +212,7 @@ Tactic Notation "wp_store" :=
 Tactic Notation "wp_cas_fail" :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?p ?E ?e ?Q) =>
+  | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
          eapply (tac_wp_cas_fail _ _ _ _ _ K); [apply _|apply _|..])
@@ -228,7 +228,7 @@ Tactic Notation "wp_cas_fail" :=
 Tactic Notation "wp_cas_suc" :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?p ?E ?e ?Q) =>
+  | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
          eapply (tac_wp_cas_suc _ _ _ _ _ _ K); [apply _|apply _|..])

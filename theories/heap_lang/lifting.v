@@ -62,18 +62,18 @@ Implicit Types efs : list expr.
 Implicit Types σ : state.
 
 (** Bind. This bundles some arguments that wp_ectx_bind leaves as indices. *)
-Lemma wp_bind {p E e} K Φ :
-  WP e @ p; E {{ v, WP fill K (of_val v) @ p; E {{ Φ }} }} ⊢ WP fill K e @ p; E {{ Φ }}.
+Lemma wp_bind {s E e} K Φ :
+  WP e @ s; E {{ v, WP fill K (of_val v) @ s; E {{ Φ }} }} ⊢ WP fill K e @ s; E {{ Φ }}.
 Proof. exact: wp_ectx_bind. Qed.
 
-Lemma wp_bindi {p E e} Ki Φ :
-  WP e @ p; E {{ v, WP fill_item Ki (of_val v) @ p; E {{ Φ }} }} ⊢
-     WP fill_item Ki e @ p; E {{ Φ }}.
+Lemma wp_bindi {s E e} Ki Φ :
+  WP e @ s; E {{ v, WP fill_item Ki (of_val v) @ s; E {{ Φ }} }} ⊢
+     WP fill_item Ki e @ s; E {{ Φ }}.
 Proof. exact: weakestpre.wp_bind. Qed.
 
 (** Base axioms for core primitives of the language: Stateless reductions *)
-Lemma wp_fork p E e Φ :
-  ▷ Φ (LitV LitUnit) ∗ ▷ WP e @ p; ⊤ {{ _, True }} ⊢ WP Fork e @ p; E {{ Φ }}.
+Lemma wp_fork s E e Φ :
+  ▷ Φ (LitV LitUnit) ∗ ▷ WP e @ s; ⊤ {{ _, True }} ⊢ WP Fork e @ s; E {{ Φ }}.
 Proof.
   rewrite -(wp_lift_pure_det_head_step (Fork e) (Lit LitUnit) [e]) //=; eauto.
   - by rewrite -step_fupd_intro // later_sep -(wp_value _ _ _ (Lit _)) // right_id.
@@ -132,9 +132,9 @@ Global Instance pure_case_inr e0 v e1 e2 `{!IntoVal e0 v} :
 Proof. solve_pure_exec. Qed.
 
 (** Heap *)
-Lemma wp_alloc p E e v :
+Lemma wp_alloc s E e v :
   IntoVal e v →
-  {{{ True }}} Alloc e @ p; E {{{ l, RET LitV (LitLoc l); l ↦ v }}}.
+  {{{ True }}} Alloc e @ s; E {{{ l, RET LitV (LitLoc l); l ↦ v }}}.
 Proof.
   iIntros (<-%of_to_val Φ) "_ HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>"; iSplit; first by auto.
@@ -143,8 +143,8 @@ Proof.
   iModIntro; iSplit=> //. iFrame. by iApply "HΦ".
 Qed.
 
-Lemma wp_load p E l q v :
-  {{{ ▷ l ↦{q} v }}} Load (Lit (LitLoc l)) @ p; E {{{ RET v; l ↦{q} v }}}.
+Lemma wp_load s E l q v :
+  {{{ ▷ l ↦{q} v }}} Load (Lit (LitLoc l)) @ s; E {{{ RET v; l ↦{q} v }}}.
 Proof.
   iIntros (Φ) ">Hl HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
@@ -153,9 +153,9 @@ Proof.
   iModIntro; iSplit=> //. iFrame. by iApply "HΦ".
 Qed.
 
-Lemma wp_store p E l v' e v :
+Lemma wp_store s E l v' e v :
   IntoVal e v →
-  {{{ ▷ l ↦ v' }}} Store (Lit (LitLoc l)) e @ p; E {{{ RET LitV LitUnit; l ↦ v }}}.
+  {{{ ▷ l ↦ v' }}} Store (Lit (LitLoc l)) e @ s; E {{{ RET LitV LitUnit; l ↦ v }}}.
 Proof.
   iIntros (<-%of_to_val Φ) ">Hl HΦ".
   iApply wp_lift_atomic_head_step_no_fork; auto.
@@ -165,9 +165,9 @@ Proof.
   iModIntro. iSplit=>//. by iApply "HΦ".
 Qed.
 
-Lemma wp_cas_fail p E l q v' e1 v1 e2 :
+Lemma wp_cas_fail s E l q v' e1 v1 e2 :
   IntoVal e1 v1 → AsVal e2 → v' ≠ v1 →
-  {{{ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ p; E
+  {{{ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ s; E
   {{{ RET LitV (LitBool false); l ↦{q} v' }}}.
 Proof.
   iIntros (<-%of_to_val [v2 <-%of_to_val] ? Φ) ">Hl HΦ".
@@ -177,9 +177,9 @@ Proof.
   iModIntro; iSplit=> //. iFrame. by iApply "HΦ".
 Qed.
 
-Lemma wp_cas_suc p E l e1 v1 e2 v2 :
+Lemma wp_cas_suc s E l e1 v1 e2 v2 :
   IntoVal e1 v1 → IntoVal e2 v2 →
-  {{{ ▷ l ↦ v1 }}} CAS (Lit (LitLoc l)) e1 e2 @ p; E
+  {{{ ▷ l ↦ v1 }}} CAS (Lit (LitLoc l)) e1 e2 @ s; E
   {{{ RET LitV (LitBool true); l ↦ v2 }}}.
 Proof.
   iIntros (<-%of_to_val <-%of_to_val Φ) ">Hl HΦ".

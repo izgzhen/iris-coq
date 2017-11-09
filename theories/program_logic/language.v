@@ -43,7 +43,7 @@ Class LanguageCtx (Λ : language) (K : expr Λ → expr Λ) := {
 Instance language_ctx_id Λ : LanguageCtx Λ id.
 Proof. constructor; naive_solver. Qed.
 
-Variant pbit := progress | noprogress.
+Variant stuckness := not_stuck | maybe_stuck.
 
 Section language.
   Context {Λ : language}.
