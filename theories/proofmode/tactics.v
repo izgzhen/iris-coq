@@ -109,14 +109,16 @@ Ltac iElaborateSelPat pat :=
     let pat := sel_pat.parse pat in go pat Δ (@nil esel_pat)
   end.
 
+Local Ltac iClearHyp H :=
+  eapply tac_clear with _ H _ _; (* (i:=H) *)
+    [env_reflexivity || fail "iClear:" H "not found"|].
+
 Tactic Notation "iClear" constr(Hs) :=
   let rec go Hs :=
     lazymatch Hs with
     | [] => idtac
     | ESelPure :: ?Hs => clear; go Hs
-    | ESelName _ ?H :: ?Hs =>
-       eapply tac_clear with _ H _ _; (* (i:=H) *)
-         [env_reflexivity || fail "iClear:" H "not found"|go Hs]
+    | ESelName _ ?H :: ?Hs => iClearHyp H; go Hs
     end in
   let Hs := iElaborateSelPat Hs in go Hs.
 
@@ -845,8 +847,8 @@ Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let rec go Hz pat :=
     lazymatch pat with
     | IAnom => idtac
-    | IDrop => iClear Hz
-    | IFrame => iFrame Hz
+    | IDrop => iClearHyp Hz
+    | IFrame => iFrameHyp Hz
     | IName ?y => iRename Hz into y
     | IList [[]] => iExFalso; iExact Hz
     | IList [[?pat1; IDrop]] => iAndDestructChoice Hz as Left Hz; go Hz pat1
