@@ -1,21 +1,19 @@
-From stdpp Require Export strings.
 From iris.proofmode Require Import base.
 From iris.algebra Require Export base.
-From stdpp Require Import stringmap.
 Set Default Proof Using "Type".
 
 Inductive env (A : Type) : Type :=
   | Enil : env A
-  | Esnoc : env A → string → A → env A.
+  | Esnoc : env A → ident → A → env A.
 Arguments Enil {_}.
-Arguments Esnoc {_} _ _%string _.
+Arguments Esnoc {_} _ _ _.
 Instance: Params (@Enil) 1.
 Instance: Params (@Esnoc) 1.
 
-Fixpoint env_lookup {A} (i : string) (Γ : env A) : option A :=
+Fixpoint env_lookup {A} (i : ident) (Γ : env A) : option A :=
   match Γ with
   | Enil => None
-  | Esnoc Γ j x => if string_beq i j then Some x else env_lookup i Γ
+  | Esnoc Γ j x => if ident_beq i j then Some x else env_lookup i Γ
   end.
 
 Module env_notations.
@@ -37,7 +35,7 @@ Fixpoint env_to_list {A} (E : env A) : list A :=
 Coercion env_to_list : env >-> list.
 Instance: Params (@env_to_list) 1.
 
-Fixpoint env_dom {A} (Γ : env A) : list string :=
+Fixpoint env_dom {A} (Γ : env A) : list ident :=
   match Γ with Enil => [] | Esnoc Γ i _ => i :: env_dom Γ end.
 
 Fixpoint env_app {A} (Γapp : env A) (Γ : env A) : option (env A) :=
@@ -48,28 +46,28 @@ Fixpoint env_app {A} (Γapp : env A) (Γ : env A) : option (env A) :=
      match Γ' !! i with None => Some (Esnoc Γ' i x) | Some _ => None end
   end.
 
-Fixpoint env_replace {A} (i: string) (Γi: env A) (Γ: env A) : option (env A) :=
+Fixpoint env_replace {A} (i: ident) (Γi: env A) (Γ: env A) : option (env A) :=
   match Γ with
   | Enil => None
   | Esnoc Γ j x =>
-     if string_beq i j then env_app Γi Γ else
+     if ident_beq i j then env_app Γi Γ else
      match Γi !! j with
      | None => Γ' ← env_replace i Γi Γ; Some (Esnoc Γ' j x)
      | Some _ => None
      end
   end.
 
-Fixpoint env_delete {A} (i : string) (Γ : env A) : env A :=
+Fixpoint env_delete {A} (i : ident) (Γ : env A) : env A :=
   match Γ with
   | Enil => Enil
-  | Esnoc Γ j x => if string_beq i j then Γ else Esnoc (env_delete i Γ) j x
+  | Esnoc Γ j x => if ident_beq i j then Γ else Esnoc (env_delete i Γ) j x
   end.
 
-Fixpoint env_lookup_delete {A} (i : string) (Γ : env A) : option (A * env A) :=
+Fixpoint env_lookup_delete {A} (i : ident) (Γ : env A) : option (A * env A) :=
   match Γ with
   | Enil => None
   | Esnoc Γ j x =>
-     if string_beq i j then Some (x,Γ)
+     if ident_beq i j then Some (x,Γ)
      else '(y,Γ') ← env_lookup_delete i Γ; Some (y, Esnoc Γ' j x)
   end.
 
@@ -88,15 +86,15 @@ Inductive env_subenv {A} : relation (env A) :=
 Section env.
 Context {A : Type}.
 Implicit Types Γ : env A.
-Implicit Types i : string.
+Implicit Types i : ident.
 Implicit Types x : A.
 Hint Resolve Esnoc_wf Enil_wf.
 
 Ltac simplify :=
   repeat match goal with
   | _ => progress simplify_eq/=
-  | H : context [string_beq ?s1 ?s2] |- _ => destruct (string_beq_reflect s1 s2)
-  | |- context [string_beq ?s1 ?s2] => destruct (string_beq_reflect s1 s2)
+  | H : context [ident_beq ?s1 ?s2] |- _ => destruct (ident_beq_reflect s1 s2)
+  | |- context [ident_beq ?s1 ?s2] => destruct (ident_beq_reflect s1 s2)
   | _ => case_match
   end.
 
