@@ -199,7 +199,7 @@ Proof. split; naive_solver eauto using dra_op_valid. Qed.
 (* TODO: This has to be proven again. *)
 (*
 Lemma to_validity_included x y:
-  (✓ y ∧ to_validity x ≼ to_validity y)%C ↔ (✓ x ∧ x ≼ y).
+  (✓ y ∧ to_validity x ≼ to_validity y)%stdpp ↔ (✓ x ∧ x ≼ y).
 Proof.
   split.
   - move=>[Hvl [z [Hvxz EQ]]]. move:(Hvl)=>Hvl'. apply Hvxz in Hvl'.

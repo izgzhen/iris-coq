@@ -8,8 +8,8 @@ Instance: Params (@pcore) 2.
 Class Op (A : Type) := op : A → A → A.
 Hint Mode Op ! : typeclass_instances.
 Instance: Params (@op) 2.
-Infix "⋅" := op (at level 50, left associativity) : C_scope.
-Notation "(⋅)" := op (only parsing) : C_scope.
+Infix "⋅" := op (at level 50, left associativity) : stdpp_scope.
+Notation "(⋅)" := op (only parsing) : stdpp_scope.
 
 (* The inclusion quantifies over [A], not [option A].  This means we do not get
    reflexivity.  However, if we used [option A], the following would no longer
@@ -17,8 +17,8 @@ Notation "(⋅)" := op (only parsing) : C_scope.
      x ≼ y ↔ x.1 ≼ y.1 ∧ x.2 ≼ y.2
 *)
 Definition included `{Equiv A, Op A} (x y : A) := ∃ z, y ≡ x ⋅ z.
-Infix "≼" := included (at level 70) : C_scope.
-Notation "(≼)" := included (only parsing) : C_scope.
+Infix "≼" := included (at level 70) : stdpp_scope.
+Notation "(≼)" := included (only parsing) : stdpp_scope.
 Hint Extern 0 (_ ≼ _) => reflexivity.
 Instance: Params (@included) 3.
 
@@ -31,11 +31,11 @@ Notation "✓{ n } x" := (validN n x)
 Class Valid (A : Type) := valid : A → Prop.
 Hint Mode Valid ! : typeclass_instances.
 Instance: Params (@valid) 2.
-Notation "✓ x" := (valid x) (at level 20) : C_scope.
+Notation "✓ x" := (valid x) (at level 20) : stdpp_scope.
 
 Definition includedN `{Dist A, Op A} (n : nat) (x y : A) := ∃ z, y ≡{n}≡ x ⋅ z.
 Notation "x ≼{ n } y" := (includedN n x y)
-  (at level 70, n at next level, format "x  ≼{ n }  y") : C_scope.
+  (at level 70, n at next level, format "x  ≼{ n }  y") : stdpp_scope.
 Instance: Params (@includedN) 4.
 Hint Extern 0 (_ ≼{_} _) => reflexivity.
 
@@ -140,7 +140,7 @@ End cmra_mixin.
 
 Definition opM {A : cmraT} (x : A) (my : option A) :=
   match my with Some y => x ⋅ y | None => x end.
-Infix "⋅?" := opM (at level 50, left associativity) : C_scope.
+Infix "⋅?" := opM (at level 50, left associativity) : stdpp_scope.
 
 (** * CoreId elements *)
 Class CoreId {A : cmraT} (x : A) := core_id : pcore x ≡ Some x.

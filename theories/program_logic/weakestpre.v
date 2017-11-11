@@ -76,20 +76,20 @@ Notation "'{{{' P } } } e @ E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }})
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  E  {{{  x .. y ,  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  @  E  {{{  x .. y ,  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }})
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  {{{  x .. y ,  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  {{{  x .. y ,  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e @ E {{{ 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }})
     (at level 20,
-     format "{{{  P  } } }  e  @  E  {{{  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  @  E  {{{  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e {{{ 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }})
     (at level 20,
-     format "{{{  P  } } }  e  {{{  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  {{{  RET  pat ;  Q } } }") : stdpp_scope.
 
 Section wp.
 Context `{irisG Λ Σ}.

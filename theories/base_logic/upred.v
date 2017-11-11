@@ -158,11 +158,11 @@ Hint Resolve uPred_mono uPred_closed : uPred_def.
 
 (** Notations *)
 Notation "P ⊢ Q" := (uPred_entails P%I Q%I)
-  (at level 99, Q at level 200, right associativity) : C_scope.
-Notation "(⊢)" := uPred_entails (only parsing) : C_scope.
+  (at level 99, Q at level 200, right associativity) : stdpp_scope.
+Notation "(⊢)" := uPred_entails (only parsing) : stdpp_scope.
 Notation "P ⊣⊢ Q" := (equiv (A:=uPred _) P%I Q%I)
-  (at level 95, no associativity) : C_scope.
-Notation "(⊣⊢)" := (equiv (A:=uPred _)) (only parsing) : C_scope.
+  (at level 95, no associativity) : stdpp_scope.
+Notation "(⊣⊢)" := (equiv (A:=uPred _)) (only parsing) : stdpp_scope.
 
 Module uPred.
 Section entails.
