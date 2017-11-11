@@ -91,10 +91,11 @@ Lemma saved_pred_alloc `{savedPredG Σ A} (f: A -n> iProp Σ) :
   (|==> ∃ γ, saved_pred_own γ f)%I.
 Proof. iApply saved_anything_alloc. Qed.
 
-Lemma saved_pred_agree `{savedPredG Σ A} γ f g :
-  saved_pred_own γ f -∗ saved_pred_own γ g -∗ ∀ x, ▷ (f x ≡ g x).
+(* We put the `x` on the outside to make this lemma easier to apply. *)
+Lemma saved_pred_agree `{savedPredG Σ A} γ f g x :
+  saved_pred_own γ f -∗ saved_pred_own γ g -∗ ▷ (f x ≡ g x).
 Proof.
-  iIntros "Hx Hy *". unfold saved_pred_own. iApply later_equivI.
+  iIntros "Hx Hy". unfold saved_pred_own. iApply later_equivI.
   iDestruct (ofe_morC_equivI (CofeMor Next ◎ f) (CofeMor Next ◎ g)) as "[FE _]".
   simpl. iApply ("FE" with "[-]").
   iApply (saved_anything_agree with "Hx Hy").
