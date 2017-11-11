@@ -858,7 +858,11 @@ Tactic Notation "iModCore" constr(H) :=
 Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let rec go Hz pat :=
     lazymatch pat with
-    | IAnom => idtac
+    | IAnom =>
+       lazymatch Hz with
+       | IAnon _ => idtac
+       | INamed ?Hz => let Hz' := iFresh in iRename Hz into Hz'
+       end
     | IDrop => iClearHyp Hz
     | IFrame => iFrameHyp Hz
     | IIdent ?y => iRename Hz into y
