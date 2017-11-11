@@ -672,9 +672,9 @@ Proof.
 Qed.
 
 (* Later derived *)
-Lemma later_proper P Q : (P ⊣⊢ Q) → ▷ P ⊣⊢ ▷ Q.
+Lemma later_proper' P Q : (P ⊣⊢ Q) → ▷ P ⊣⊢ ▷ Q.
 Proof. by intros ->. Qed.
-Hint Resolve later_mono later_proper.
+Hint Resolve later_mono later_proper'.
 Global Instance later_mono' : Proper ((⊢) ==> (⊢)) (@uPred_later M).
 Proof. intros P Q; apply later_mono. Qed.
 Global Instance later_flip_mono' :

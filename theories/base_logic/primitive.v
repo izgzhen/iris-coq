@@ -307,7 +307,8 @@ Proof.
   unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try omega.
   apply HPQ; eauto using cmra_validN_S.
 Qed.
-Global Instance later_proper' :
+Definition later_ne : NonExpansive (@uPred_later M) := _.
+Global Instance later_proper :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_later M) := ne_proper _.
 Global Instance plainly_ne : NonExpansive (@uPred_plainly M).
 Proof.
