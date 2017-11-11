@@ -62,6 +62,10 @@ Notation savedPropΣ := (savedAnythingΣ (▶ ∙)).
 Definition saved_prop_own `{savedPropG Σ} (γ : gname) (P: iProp Σ) :=
   saved_anything_own (F := ▶ ∙) γ (Next P).
 
+Lemma saved_prop_alloc_strong `{savedPropG Σ} (G : gset gname) (P: iProp Σ) :
+  (|==> ∃ γ, ⌜γ ∉ G⌝ ∧ saved_prop_own γ P)%I.
+Proof. iApply saved_anything_alloc_strong. Qed.
+
 Lemma saved_prop_alloc `{savedPropG Σ} (P: iProp Σ) :
   (|==> ∃ γ, saved_prop_own γ P)%I.
 Proof. iApply saved_anything_alloc. Qed.
@@ -78,6 +82,10 @@ Notation savedPredΣ A := (savedAnythingΣ (constCF A -n> ▶ ∙)).
 
 Definition saved_pred_own `{savedPredG Σ A} (γ : gname) (f: A -n> iProp Σ) :=
   saved_anything_own (F := A -n> ▶ ∙) γ (CofeMor Next ◎ f).
+
+Lemma saved_pred_alloc_strong `{savedPredG Σ A} (G : gset gname) (f: A -n> iProp Σ) :
+  (|==> ∃ γ, ⌜γ ∉ G⌝ ∧ saved_pred_own γ f)%I.
+Proof. iApply saved_anything_alloc_strong. Qed.
 
 Lemma saved_pred_alloc `{savedPredG Σ A} (f: A -n> iProp Σ) :
   (|==> ∃ γ, saved_pred_own γ f)%I.
