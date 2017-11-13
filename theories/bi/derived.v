@@ -1921,7 +1921,7 @@ Notation "P ⊣⊢ Q" := (equiv (A:=bi_car PROP) P%I Q%I).
 Hint Resolve or_elim or_intro_l' or_intro_r' True_intro False_elim.
 Hint Resolve and_elim_l' and_elim_r' and_intro forall_intro.
 
-Global Instance later_proper' :
+Global Instance later_proper :
   Proper ((⊣⊢) ==> (⊣⊢)) (@bi_later PROP) := ne_proper _.
 
 (* Equality *)
@@ -1942,9 +1942,7 @@ Lemma later_equivI {A : ofeT} (x y : A) : Next x ≡ Next y ⊣⊢ ▷ (x ≡ y)
 Proof. apply (anti_symm _); auto using later_eq_1, later_eq_2. Qed.
 
 (* Later derived *)
-Lemma later_proper P Q : (P ⊣⊢ Q) → ▷ P ⊣⊢ ▷ Q.
-Proof. by intros ->. Qed.
-Hint Resolve later_mono later_proper.
+Hint Resolve later_mono.
 Global Instance later_mono' : Proper ((⊢) ==> (⊢)) (@bi_later PROP).
 Proof. intros P Q; apply later_mono. Qed.
 Global Instance later_flip_mono' :
@@ -2021,9 +2019,9 @@ Proof. done. Qed.
 Lemma later_laterN n P : ▷^(S n) P ⊣⊢ ▷ ▷^n P.
 Proof. done. Qed.
 Lemma laterN_later n P : ▷^(S n) P ⊣⊢ ▷^n ▷ P.
-Proof. induction n; simpl; auto. Qed.
+Proof. induction n; f_equiv/=; auto. Qed.
 Lemma laterN_plus n1 n2 P : ▷^(n1 + n2) P ⊣⊢ ▷^n1 ▷^n2 P.
-Proof. induction n1; simpl; auto. Qed.
+Proof. induction n1; f_equiv/=; auto. Qed.
 Lemma laterN_le n1 n2 P : n1 ≤ n2 → ▷^n1 P ⊢ ▷^n2 P.
 Proof. induction 1; simpl; by rewrite -?later_intro. Qed.
 
@@ -2043,20 +2041,20 @@ Proof. apply (anti_symm (⊢)); auto using laterN_intro, True_intro. Qed.
 Lemma laterN_emp `{!AffineBI PROP} n : ▷^n emp ⊣⊢ emp.
 Proof. by rewrite -True_emp laterN_True. Qed.
 Lemma laterN_forall {A} n (Φ : A → PROP) : (▷^n ∀ a, Φ a) ⊣⊢ (∀ a, ▷^n Φ a).
-Proof. induction n as [|n IH]; simpl; rewrite -?later_forall; auto. Qed.
+Proof. induction n as [|n IH]; simpl; rewrite -?later_forall ?IH; auto. Qed.
 Lemma laterN_exist_2 {A} n (Φ : A → PROP) : (∃ a, ▷^n Φ a) ⊢ ▷^n (∃ a, Φ a).
 Proof. apply exist_elim; eauto using exist_intro, laterN_mono. Qed.
 Lemma laterN_exist `{Inhabited A} n (Φ : A → PROP) :
   (▷^n ∃ a, Φ a) ⊣⊢ ∃ a, ▷^n Φ a.
-Proof. induction n as [|n IH]; simpl; rewrite -?later_exist; auto. Qed.
+Proof. induction n as [|n IH]; simpl; rewrite -?later_exist ?IH; auto. Qed.
 Lemma laterN_and n P Q : ▷^n (P ∧ Q) ⊣⊢ ▷^n P ∧ ▷^n Q.
-Proof. induction n as [|n IH]; simpl; rewrite -?later_and; auto. Qed.
+Proof. induction n as [|n IH]; simpl; rewrite -?later_and ?IH; auto. Qed.
 Lemma laterN_or n P Q : ▷^n (P ∨ Q) ⊣⊢ ▷^n P ∨ ▷^n Q.
-Proof. induction n as [|n IH]; simpl; rewrite -?later_or; auto. Qed.
+Proof. induction n as [|n IH]; simpl; rewrite -?later_or ?IH; auto. Qed.
 Lemma laterN_impl n P Q : ▷^n (P → Q) ⊢ ▷^n P → ▷^n Q.
 Proof. apply impl_intro_l. by rewrite -laterN_and impl_elim_r. Qed.
 Lemma laterN_sep n P Q : ▷^n (P ∗ Q) ⊣⊢ ▷^n P ∗ ▷^n Q.
-Proof. induction n as [|n IH]; simpl; rewrite -?later_sep; auto. Qed.
+Proof. induction n as [|n IH]; simpl; rewrite -?later_sep ?IH; auto. Qed.
 Lemma laterN_wand n P Q : ▷^n (P -∗ Q) ⊢ ▷^n P -∗ ▷^n Q.
 Proof. apply wand_intro_l. by rewrite -laterN_sep wand_elim_r. Qed.
 Lemma laterN_iff n P Q : ▷^n (P ↔ Q) ⊢ ▷^n P ↔ ▷^n Q.
