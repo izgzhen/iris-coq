@@ -90,8 +90,9 @@ Section ectxi_language.
     fill_not_val, fill_app, step_by_val, foldl_app.
   Next Obligation. intros K1 K2 ?%app_eq_nil; tauto. Qed.
 
-  Lemma ectxi_language_sub_values e :
-    (∀ Ki e', e = fill_item Ki e' → is_Some (to_val e')) → sub_values e.
+  Lemma ectxi_language_sub_redexes_are_values e :
+    (∀ Ki e', e = fill_item Ki e' → is_Some (to_val e')) →
+    sub_redexes_are_values e.
   Proof.
     intros Hsub K e' ->. destruct K as [|Ki K _] using @rev_ind=> //=.
     intros []%eq_None_not_Some. eapply fill_val, Hsub. by rewrite /= fill_app.

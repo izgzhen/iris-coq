@@ -62,7 +62,9 @@ Section ectx_language.
   Definition head_irreducible (e : expr) (σ : state) :=
     ∀ e' σ' efs, ¬head_step e σ e' σ' efs.
 
-  Definition sub_values (e : expr) :=
+  (* All non-value redexes are at the root.  In other words, all sub-redexes are
+     values. *)
+  Definition sub_redexes_are_values (e : expr) :=
     ∀ K e', e = fill K e' → to_val e' = None → K = empty_ectx.
 
   Inductive prim_step (e1 : expr) (σ1 : state)
@@ -103,21 +105,21 @@ Section ectx_language.
   Qed.
 
   Lemma prim_head_reducible e σ :
-    reducible e σ → sub_values e → head_reducible e σ.
+    reducible e σ → sub_redexes_are_values e → head_reducible e σ.
   Proof.
     intros (e'&σ'&efs&[K e1' e2' -> -> Hstep]) ?.
     assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
     rewrite fill_empty /head_reducible; eauto.
   Qed.
   Lemma prim_head_irreducible e σ :
-    head_irreducible e σ → sub_values e → irreducible e σ.
+    head_irreducible e σ → sub_redexes_are_values e → irreducible e σ.
   Proof.
     rewrite -not_reducible -not_head_reducible. eauto using prim_head_reducible.
   Qed.
 
   Lemma ectx_language_atomic e :
     (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
-    sub_values e →
+    sub_redexes_are_values e →
     Atomic e.
   Proof.
     intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
