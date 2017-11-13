@@ -3,7 +3,7 @@ From iris.proofmode Require Import base tokens sel_patterns.
 Set Default Proof Using "Type".
 
 Inductive intro_pat :=
-  | IName : string → intro_pat
+  | IIdent : ident → intro_pat
   | IAnom : intro_pat
   | IDrop : intro_pat
   | IFrame : intro_pat
@@ -73,7 +73,7 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   match ts with
   | [] => Some k
   | TName "_" :: ts => parse_go ts (SPat IDrop :: k)
-  | TName s :: ts => parse_go ts (SPat (IName s) :: k)
+  | TName s :: ts => parse_go ts (SPat (IIdent s) :: k)
   | TAnom :: ts => parse_go ts (SPat IAnom :: k)
   | TFrame :: ts => parse_go ts (SPat IFrame :: k)
   | TBracketL :: ts => parse_go ts (SList :: k)
@@ -98,11 +98,11 @@ Fixpoint parse_go (ts : list token) (k : stack) : option stack :=
   end
 with parse_clear (ts : list token) (k : stack) : option stack :=
   match ts with
-  | TFrame :: TName s :: ts => parse_clear ts (SPat (IClearFrame (SelName s)) :: k)
+  | TFrame :: TName s :: ts => parse_clear ts (SPat (IClearFrame (SelIdent s)) :: k)
   | TFrame :: TPure :: ts => parse_clear ts (SPat (IClearFrame SelPure) :: k)
   | TFrame :: TAlways :: ts => parse_clear ts (SPat (IClearFrame SelPersistent) :: k)
   | TFrame :: TSep :: ts => parse_clear ts (SPat (IClearFrame SelSpatial) :: k)
-  | TName s :: ts => parse_clear ts (SPat (IClear (SelName s)) :: k)
+  | TName s :: ts => parse_clear ts (SPat (IClear (SelIdent s)) :: k)
   | TPure :: ts => parse_clear ts (SPat (IClear SelPure) :: k)
   | TAlways :: ts => parse_clear ts (SPat (IClear SelPersistent) :: k)
   | TSep :: ts => parse_clear ts (SPat (IClear SelSpatial) :: k)
@@ -134,6 +134,7 @@ Ltac parse s :=
      lazymatch eval vm_compute in (parse s) with
      | Some ?pats => pats | _ => fail "invalid list intro_pat" s
      end
+  | ident => constr:([IIdent s])
   | ?X => fail "intro_pat.parse:" s "has unexpected type" X
   end.
 Ltac parse_one s :=
@@ -165,6 +166,7 @@ Ltac intro_pat_persistent p :=
   | string =>
      let pat := intro_pat.parse p in
      eval cbv in (forallb intro_pat_persistent pat)
+  | ident => false
   | bool => p
   | ?X => fail "intro_pat_persistent:" p "has unexpected type" X
   end.
