@@ -30,10 +30,10 @@ Arguments big_opL {M} o {_ A} _ !_ /.
 Typeclasses Opaque big_opL.
 Notation "'[^' o 'list]' k ↦ x ∈ l , P" := (big_opL o (λ k x, P) l)
   (at level 200, o at level 1, l at level 10, k, x at level 1, right associativity,
-   format "[^ o  list]  k ↦ x  ∈  l ,  P") : C_scope.
+   format "[^ o  list]  k ↦ x  ∈  l ,  P") : stdpp_scope.
 Notation "'[^' o 'list]' x ∈ l , P" := (big_opL o (λ _ x, P) l)
   (at level 200, o at level 1, l at level 10, x at level 1, right associativity,
-   format "[^ o  list]  x  ∈  l ,  P") : C_scope.
+   format "[^ o  list]  x  ∈  l ,  P") : stdpp_scope.
 
 Definition big_opM `{Monoid M o} `{Countable K} {A} (f : K → A → M)
     (m : gmap K A) : M := big_opL o (λ _, curry f) (map_to_list m).
@@ -42,10 +42,10 @@ Arguments big_opM {M} o {_ K _ _ A} _ _ : simpl never.
 Typeclasses Opaque big_opM.
 Notation "'[^' o 'map]' k ↦ x ∈ m , P" := (big_opM o (λ k x, P) m)
   (at level 200, o at level 1, m at level 10, k, x at level 1, right associativity,
-   format "[^  o  map]  k ↦ x  ∈  m ,  P") : C_scope.
+   format "[^  o  map]  k ↦ x  ∈  m ,  P") : stdpp_scope.
 Notation "'[^' o 'map]' x ∈ m , P" := (big_opM o (λ _ x, P) m)
   (at level 200, o at level 1, m at level 10, x at level 1, right associativity,
-   format "[^ o  map]  x  ∈  m ,  P") : C_scope.
+   format "[^ o  map]  x  ∈  m ,  P") : stdpp_scope.
 
 Definition big_opS `{Monoid M o} `{Countable A} (f : A → M)
   (X : gset A) : M := big_opL o (λ _, f) (elements X).
@@ -54,7 +54,7 @@ Arguments big_opS {M} o {_ A _ _} _ _ : simpl never.
 Typeclasses Opaque big_opS.
 Notation "'[^' o 'set]' x ∈ X , P" := (big_opS o (λ x, P) X)
   (at level 200, o at level 1, X at level 10, x at level 1, right associativity,
-   format "[^ o  set]  x  ∈  X ,  P") : C_scope.
+   format "[^ o  set]  x  ∈  X ,  P") : stdpp_scope.
 
 Definition big_opMS `{Monoid M o} `{Countable A} (f : A → M)
   (X : gmultiset A) : M := big_opL o (λ _, f) (elements X).
@@ -63,7 +63,7 @@ Arguments big_opMS {M} o {_ A _ _} _ _ : simpl never.
 Typeclasses Opaque big_opMS.
 Notation "'[^' o 'mset]' x ∈ X , P" := (big_opMS o (λ x, P) X)
   (at level 200, o at level 1, X at level 10, x at level 1, right associativity,
-   format "[^ o  mset]  x  ∈  X ,  P") : C_scope.
+   format "[^ o  mset]  x  ∈  X ,  P") : stdpp_scope.
 
 (** * Properties about big ops *)
 Section big_op.

@@ -23,7 +23,7 @@ Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)%I
   (at level 99, E1,E2 at level 50, Q at level 200,
    format "P  ={ E1 , E2 }=∗  Q") : bi_scope.
 Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)
-  (at level 99, E1, E2 at level 50, Q at level 200, only parsing) : C_scope.
+  (at level 99, E1, E2 at level 50, Q at level 200, only parsing) : stdpp_scope.
 
 Notation "|={ E }=> Q" := (fupd E E Q)
   (at level 99, E at level 50, Q at level 200,
@@ -32,7 +32,7 @@ Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)%I
   (at level 99, E at level 50, Q at level 200,
    format "P  ={ E }=∗  Q") : bi_scope.
 Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)
-  (at level 99, E at level 50, Q at level 200, only parsing) : C_scope.
+  (at level 99, E at level 50, Q at level 200, only parsing) : stdpp_scope.
 
 Section fupd.
 Context `{invG Σ}.

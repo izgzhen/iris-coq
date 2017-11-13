@@ -28,7 +28,7 @@ Section bi_mixin.
   Local Notation "'emp'" := bi_emp.
   Local Notation "'True'" := (bi_pure True).
   Local Notation "'False'" := (bi_pure False).
-  Local Notation "'⌜' φ '⌝'" := (bi_pure φ%type%C).
+  Local Notation "'⌜' φ '⌝'" := (bi_pure φ%type%stdpp).
   Local Infix "∧" := bi_and.
   Local Infix "∨" := bi_or.
   Local Infix "→" := bi_impl.
@@ -213,7 +213,7 @@ Arguments bi_dist : simpl never.
 Arguments bi_equiv : simpl never.
 Arguments bi_entails {PROP} _%I _%I : simpl never, rename.
 Arguments bi_emp {PROP} : simpl never, rename.
-Arguments bi_pure {PROP} _%C : simpl never, rename.
+Arguments bi_pure {PROP} _%stdpp : simpl never, rename.
 Arguments bi_and {PROP} _%I _%I : simpl never, rename.
 Arguments bi_or {PROP} _%I _%I : simpl never, rename.
 Arguments bi_impl {PROP} _%I _%I : simpl never, rename.
@@ -255,7 +255,7 @@ Structure sbi := SBI {
 Arguments sbi_car : simpl never.
 Arguments sbi_entails {PROP} _%I _%I : simpl never, rename.
 Arguments bi_emp {PROP} : simpl never, rename.
-Arguments bi_pure {PROP} _%C : simpl never, rename.
+Arguments bi_pure {PROP} _%stdpp : simpl never, rename.
 Arguments bi_and {PROP} _%I _%I : simpl never, rename.
 Arguments bi_or {PROP} _%I _%I : simpl never, rename.
 Arguments bi_impl {PROP} _%I _%I : simpl never, rename.
@@ -278,7 +278,7 @@ Arguments sbi_dist : simpl never.
 Arguments sbi_equiv : simpl never.
 Arguments sbi_entails {PROP} _%I _%I : simpl never, rename.
 Arguments sbi_emp {PROP} : simpl never, rename.
-Arguments sbi_pure {PROP} _%C : simpl never, rename.
+Arguments sbi_pure {PROP} _%stdpp : simpl never, rename.
 Arguments sbi_and {PROP} _%I _%I : simpl never, rename.
 Arguments sbi_or {PROP} _%I _%I : simpl never, rename.
 Arguments sbi_impl {PROP} _%I _%I : simpl never, rename.
@@ -295,17 +295,17 @@ Hint Extern 0 (bi_entails _ _) => reflexivity.
 Instance bi_rewrite_relation (PROP : bi) : RewriteRelation (@bi_entails PROP).
 Instance bi_inhabited {PROP : bi} : Inhabited PROP := populate (bi_pure True).
 
-Notation "P ⊢ Q" := (bi_entails P%I Q%I) : C_scope.
-Notation "(⊢)" := bi_entails (only parsing) : C_scope.
+Notation "P ⊢ Q" := (bi_entails P%I Q%I) : stdpp_scope.
+Notation "(⊢)" := bi_entails (only parsing) : stdpp_scope.
 
 Notation "P ⊣⊢ Q" := (equiv (A:=bi_car _) P%I Q%I)
-  (at level 95, no associativity) : C_scope.
-Notation "(⊣⊢)" := (equiv (A:=bi_car _)) (only parsing) : C_scope.
+  (at level 95, no associativity) : stdpp_scope.
+Notation "(⊣⊢)" := (equiv (A:=bi_car _)) (only parsing) : stdpp_scope.
 
-Notation "P -∗ Q" := (P ⊢ Q) : C_scope.
+Notation "P -∗ Q" := (P ⊢ Q) : stdpp_scope.
 
 Notation "'emp'" := (bi_emp) : bi_scope.
-Notation "'⌜' φ '⌝'" := (bi_pure φ%type%C) : bi_scope.
+Notation "'⌜' φ '⌝'" := (bi_pure φ%type%stdpp) : bi_scope.
 Notation "'True'" := (bi_pure True) : bi_scope.
 Notation "'False'" := (bi_pure False) : bi_scope.
 Infix "∧" := bi_and : bi_scope.

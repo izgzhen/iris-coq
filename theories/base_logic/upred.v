@@ -558,7 +558,7 @@ Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : bi_scope.
 Notation "|==> Q" := (uPred_bupd Q)
   (at level 99, Q at level 200, format "|==>  Q") : bi_scope.
 Notation "P ==∗ Q" := (P ⊢ |==> Q)
-  (at level 99, Q at level 200, only parsing) : C_scope.
+  (at level 99, Q at level 200, only parsing) : stdpp_scope.
 Notation "P ==∗ Q" := (P -∗ |==> Q)%I
   (at level 99, Q at level 200, format "P  ==∗  Q") : bi_scope.
 

@@ -10,17 +10,17 @@ Instance: Params (@ht) 4.
 
 Notation "{{ P } } e @ E {{ Φ } }" := (ht E P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
-   format "{{  P  } }  e  @  E  {{  Φ  } }") : C_scope.
+   format "{{  P  } }  e  @  E  {{  Φ  } }") : stdpp_scope.
 Notation "{{ P } } e {{ Φ } }" := (ht ⊤ P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
-   format "{{  P  } }  e  {{  Φ  } }") : C_scope.
+   format "{{  P  } }  e  {{  Φ  } }") : stdpp_scope.
 
 Notation "{{ P } } e @ E {{ v , Q } }" := (ht E P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
-   format "{{  P  } }  e  @  E  {{  v ,  Q  } }") : C_scope.
+   format "{{  P  } }  e  @  E  {{  v ,  Q  } }") : stdpp_scope.
 Notation "{{ P } } e {{ v , Q } }" := (ht ⊤ P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
-   format "{{  P  } }  e  {{  v ,  Q  } }") : C_scope.
+   format "{{  P  } }  e  {{  v ,  Q  } }") : stdpp_scope.
 
 Section hoare.
 Context `{irisG Λ Σ}.
