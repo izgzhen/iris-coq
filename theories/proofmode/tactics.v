@@ -1263,7 +1263,7 @@ Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
       | 1 => repeat iIntroForall; let H := iFresh in iIntro H; tac H
       | S ?n' => repeat iIntroForall; let H := iFresh in iIntro H; go n'
       end in
-    intros; iStartProof; go n in
+    intros; go n in
   lazymatch type of lem with
   | nat => intro_destruct lem
   | Z => (* to make it work in Z_scope. We should just be able to bind
