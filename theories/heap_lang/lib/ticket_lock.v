@@ -153,7 +153,7 @@ Section proof.
     wp_store.
     iDestruct (own_valid_2 with "Hauth Hγo") as
       %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
-    iDestruct "Haown" as "[[Hγo' _]|?]".
+    iDestruct "Haown" as "[[Hγo' _]|Haown]".
     { iDestruct (own_valid_2 with "Hγo Hγo'") as %[[] ?]. }
     iMod (own_update_2 with "Hauth Hγo") as "[Hauth Hγo]".
     { apply auth_update, prod_local_update_1.

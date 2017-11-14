@@ -1,7 +1,6 @@
 From iris.bi Require Export bi.
 From iris.bi Require Import tactics.
 From iris.proofmode Require Export base environments classes.
-From stdpp Require Import stringmap hlist.
 Set Default Proof Using "Type".
 Import bi.
 Import env_notations.
@@ -37,24 +36,24 @@ Record envs_Forall2 {PROP : bi} (R : relation PROP) (Δ1 Δ2 : envs PROP) := {
   env_spatial_Forall2 : env_Forall2 R (env_spatial Δ1) (env_spatial Δ2)
 }.
 
-Definition envs_dom {PROP} (Δ : envs PROP) : list string :=
+Definition envs_dom {PROP} (Δ : envs PROP) : list ident :=
   env_dom (env_persistent Δ) ++ env_dom (env_spatial Δ).
 
-Definition envs_lookup {PROP} (i : string) (Δ : envs PROP) : option (bool * PROP) :=
+Definition envs_lookup {PROP} (i : ident) (Δ : envs PROP) : option (bool * PROP) :=
   let (Γp,Γs) := Δ in
   match env_lookup i Γp with
   | Some P => Some (true, P)
   | None => P ← env_lookup i Γs; Some (false, P)
   end.
 
-Definition envs_delete {PROP} (i : string) (p : bool) (Δ : envs PROP) : envs PROP :=
+Definition envs_delete {PROP} (i : ident) (p : bool) (Δ : envs PROP) : envs PROP :=
   let (Γp,Γs) := Δ in
   match p with
   | true => Envs (env_delete i Γp) Γs
   | false => Envs Γp (env_delete i Γs)
   end.
 
-Definition envs_lookup_delete {PROP} (i : string)
+Definition envs_lookup_delete {PROP} (i : ident)
     (Δ : envs PROP) : option (bool * PROP * envs PROP) :=
   let (Γp,Γs) := Δ in
   match env_lookup_delete i Γp with
@@ -62,7 +61,7 @@ Definition envs_lookup_delete {PROP} (i : string)
   | None => '(P,Γs') ← env_lookup_delete i Γs; Some (false, P, Envs Γp Γs')
   end.
 
-Fixpoint envs_lookup_delete_list {PROP} (js : list string) (remove_persistent : bool)
+Fixpoint envs_lookup_delete_list {PROP} (js : list ident) (remove_persistent : bool)
     (Δ : envs PROP) : option (bool * list PROP * envs PROP) :=
   match js with
   | [] => Some (true, [], Δ)
@@ -74,7 +73,7 @@ Fixpoint envs_lookup_delete_list {PROP} (js : list string) (remove_persistent : 
   end.
 
 Definition envs_snoc {PROP} (Δ : envs PROP)
-    (p : bool) (j : string) (P : PROP) : envs PROP :=
+    (p : bool) (j : ident) (P : PROP) : envs PROP :=
   let (Γp,Γs) := Δ in
   if p then Envs (Esnoc Γp j P) Γs else Envs Γp (Esnoc Γs j P).
 
@@ -86,7 +85,7 @@ Definition envs_app {PROP : bi} (p : bool)
   | false => _ ← env_app Γ Γp; Γs' ← env_app Γ Γs; Some (Envs Γp Γs')
   end.
 
-Definition envs_simple_replace {PROP : bi} (i : string) (p : bool)
+Definition envs_simple_replace {PROP : bi} (i : ident) (p : bool)
     (Γ : env PROP) (Δ : envs PROP) : option (envs PROP) :=
   let (Γp,Γs) := Δ in
   match p with
@@ -94,7 +93,7 @@ Definition envs_simple_replace {PROP : bi} (i : string) (p : bool)
   | false => _ ← env_app Γ Γp; Γs' ← env_replace i Γ Γs; Some (Envs Γp Γs')
   end.
 
-Definition envs_replace {PROP : bi} (i : string) (p q : bool)
+Definition envs_replace {PROP : bi} (i : ident) (p q : bool)
     (Γ : env PROP) (Δ : envs PROP) : option (envs PROP) :=
   if eqb p q then envs_simple_replace i p Γ Δ
   else envs_app q Γ (envs_delete i p Δ).
@@ -109,7 +108,7 @@ Definition envs_clear_persistent {PROP} (Δ : envs PROP) : envs PROP :=
   Envs Enil (env_spatial Δ).
 
 Fixpoint envs_split_go {PROP}
-    (js : list string) (Δ1 Δ2 : envs PROP) : option (envs PROP * envs PROP) :=
+    (js : list ident) (Δ1 Δ2 : envs PROP) : option (envs PROP * envs PROP) :=
   match js with
   | [] => Some (Δ1, Δ2)
   | j :: js =>
@@ -119,8 +118,9 @@ Fixpoint envs_split_go {PROP}
   end.
 (* if [d = Right] then [result = (remaining hyps, hyps named js)] and
    if [d = Left] then [result = (hyps named js, remaining hyps)] *)
+
 Definition envs_split {PROP} (d : direction)
-    (js : list string) (Δ : envs PROP) : option (envs PROP * envs PROP) :=
+    (js : list ident) (Δ : envs PROP) : option (envs PROP * envs PROP) :=
   '(Δ1,Δ2) ← envs_split_go js Δ (envs_clear_spatial Δ);
   if d is Right then Some (Δ1,Δ2) else Some (Δ2,Δ1).
 
@@ -223,11 +223,11 @@ Proof.
   apply wand_intro_l; destruct p; simpl.
   - apply and_intro; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
-      intros j; destruct (string_beq_reflect j i); naive_solver.
+      intros j; destruct (ident_beq_reflect j i); naive_solver.
     + by rewrite affinely_persistently_and and_sep_affinely_persistently assoc.
   - apply and_intro; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
-      intros j; destruct (string_beq_reflect j i); naive_solver.
+      intros j; destruct (ident_beq_reflect j i); naive_solver.
     + solve_sep_entails.
 Qed.
 

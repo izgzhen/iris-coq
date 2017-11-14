@@ -82,7 +82,7 @@ Lemma test_iAssumption_affine P Q R `{!Affine P, !Affine R} : P -∗ Q -∗ R -�
 Proof. iIntros "H1 H2 H3". iAssumption. Qed.
 
 Lemma test_iDestruct_spatial_and P Q1 Q2 : P ∗ (Q1 ∧ Q2) -∗ P ∗ Q1.
-Proof. iIntros "[H1 [H2 _]]". iFrame. Qed.
+Proof. iIntros "[H [? _]]". by iFrame. Qed.
 
 Lemma test_iAssert_persistent P Q : P -∗ Q -∗ True.
 Proof.
@@ -96,7 +96,7 @@ Qed.
 
 Lemma test_iSpecialize_auto_frame P Q R :
   (P -∗ True -∗ True -∗ Q -∗ R) -∗ P -∗ Q -∗ R.
-Proof. iIntros "H HP HQ". by iApply ("H" with "[$]"). Qed.
+Proof. iIntros "H ? HQ". by iApply ("H" with "[$]"). Qed.
 
 Lemma test_iEmp_intro P Q R `{!Affine P, !Persistent Q, !Affine R} :
   P -∗ Q → R -∗ emp.
