@@ -1,5 +1,4 @@
 From iris.algebra Require Import auth gmap frac agree.
-From iris.base_logic Require Import proofmode.
 From iris.base_logic.lib Require Export own.
 From iris.bi Require Import fractional.
 From iris.proofmode Require Import tactics.

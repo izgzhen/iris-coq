@@ -1,5 +1,5 @@
 From iris.proofmode Require Import tactics.
-From iris.base_logic Require Import proofmode lib.invariants.
+From iris.base_logic Require Import base_logic lib.invariants.
 
 Section base_logic_tests.
   Context {M : ucmraT}.

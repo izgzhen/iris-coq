@@ -2,7 +2,6 @@ From iris.base_logic.lib Require Export own.
 From stdpp Require Export coPset.
 From iris.algebra Require Import gmap auth agree gset coPset.
 From iris.proofmode Require Import tactics.
-From iris.base_logic Require Import proofmode.
 Set Default Proof Using "Type".
 
 Module invG.
