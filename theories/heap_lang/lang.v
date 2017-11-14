@@ -91,7 +91,7 @@ Bind Scope val_scope with val.
 
 Fixpoint of_val (v : val) : expr :=
   match v with
-  | RecV f x e _ => Rec f x e
+  | RecV f x e => Rec f x e
   | LitV l => Lit l
   | PairV v1 v2 => Pair (of_val v1) (of_val v2)
   | InjLV v => InjL (of_val v)
