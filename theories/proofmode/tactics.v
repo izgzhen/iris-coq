@@ -1328,6 +1328,7 @@ Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
      Also, rule out cases in which it does not make sense to copy, namely when
      destructing a lemma (instead of a hypothesis) or a spatial hyopthesis
      (which cannot be kept). *)
+     iStartProof;
      lazymatch ident with
      | None => iPoseProofCore lem as p false tac
      | Some ?H =>
