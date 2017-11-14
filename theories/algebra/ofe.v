@@ -1,5 +1,6 @@
 From iris.algebra Require Export base.
 Set Default Proof Using "Type".
+Set Primitive Projections.
 
 (** This files defines (a shallow embedding of) the category of OFEs:
     Complete ordered families of equivalences. This is a cartesian closed
@@ -33,25 +34,20 @@ Tactic Notation "ofe_subst" :=
   | H:@dist ?A ?d ?n _ ?x |- _ => symmetry in H;setoid_subst_aux (@dist A d n) x
   end.
 
-Section mixin.
-  Local Set Primitive Projections.
-  Record OfeMixin A `{Equiv A, Dist A} := {
-    mixin_equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y;
-    mixin_dist_equivalence n : Equivalence (dist n);
-    mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y
-  }.
-End mixin.
+Record OfeMixin A `{Equiv A, Dist A} := {
+  mixin_equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y;
+  mixin_dist_equivalence n : Equivalence (dist n);
+  mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y
+}.
 
 (** Bundeled version *)
-Structure ofeT := OfeT' {
+Structure ofeT := OfeT {
   ofe_car :> Type;
   ofe_equiv : Equiv ofe_car;
   ofe_dist : Dist ofe_car;
-  ofe_mixin : OfeMixin ofe_car;
-  _ : Type
+  ofe_mixin : OfeMixin ofe_car
 }.
-Arguments OfeT' _ {_ _} _ _.
-Notation OfeT A m := (OfeT' A m A).
+Arguments OfeT _ {_ _} _.
 Add Printing Constructor ofeT.
 Hint Extern 0 (Equiv _) => eapply (@ofe_equiv _) : typeclass_instances.
 Hint Extern 0 (Dist _) => eapply (@ofe_dist _) : typeclass_instances.
@@ -1057,7 +1053,7 @@ Proof.
 Qed.
 
 (** Later *)
-Inductive later (A : Type) : Type := Next { later_car : A }.
+Record later (A : Type) : Type := Next { later_car : A }.
 Add Printing Constructor later.
 Arguments Next {_} _.
 Arguments later_car {_} _.

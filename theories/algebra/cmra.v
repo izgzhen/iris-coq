@@ -1230,7 +1230,7 @@ Qed.
 (** ** CMRA for the option type *)
 Section option.
   Context {A : cmraT}.
-  Implicit Types a : A.
+  Implicit Types x y : A.
   Local Arguments core _ _ !_ /.
   Local Arguments pcore _ _ !_ /.
 
@@ -1242,11 +1242,11 @@ Section option.
   Arguments option_pcore !_ /.
   Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
 
-  Definition Some_valid a : ✓ Some a ↔ ✓ a := reflexivity _.
-  Definition Some_validN a n : ✓{n} Some a ↔ ✓{n} a := reflexivity _.
-  Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
-  Lemma Some_core `{CmraTotal A} a : Some (core a) = core (Some a).
-  Proof. rewrite /core /=. by destruct (cmra_total a) as [? ->]. Qed.
+  Definition Some_valid x : ✓ Some x ↔ ✓ x := reflexivity _.
+  Definition Some_validN x n : ✓{n} Some x ↔ ✓{n} x := reflexivity _.
+  Definition Some_op x y : Some (x ⋅ y) = Some x ⋅ Some y := eq_refl.
+  Lemma Some_core `{CmraTotal A} x : Some (core x) = core (Some x).
+  Proof. rewrite /core /=. by destruct (cmra_total x) as [? ->]. Qed.
   Lemma Some_op_opM x my : Some x ⋅ my = Some (x ⋅? my).
   Proof. by destruct my. Qed.
 

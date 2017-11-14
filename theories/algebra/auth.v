@@ -154,7 +154,7 @@ Proof.
   - by split; simpl; rewrite ?cmra_core_l.
   - by split; simpl; rewrite ?cmra_core_idemp.
   - intros ??; rewrite! auth_included; intros [??].
-    by split; simpl; apply cmra_core_mono.
+    by split; simpl; apply: cmra_core_mono. (* FIXME: apply cmra_core_mono. fails *)
   - assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
     { intros n a b1 b2 <-; apply cmra_includedN_l. }
    intros n [[[a1|]|] b1] [[[a2|]|] b2]; rewrite auth_validN_eq;
@@ -208,7 +208,7 @@ Lemma auth_frag_mono a b : a ≼ b → ◯ a ≼ ◯ b.
 Proof. intros [c ->]. rewrite auth_frag_op. apply cmra_included_l. Qed.
 
 Global Instance auth_frag_sep_homomorphism :
-  MonoidHomomorphism op op (≡) (Auth None).
+  MonoidHomomorphism op op (≡) (@Auth A None).
 Proof. by split; [split; try apply _|]. Qed.
 
 Lemma auth_both_op a b : Auth (Excl' a) b ≡ ● a ⋅ ◯ b.

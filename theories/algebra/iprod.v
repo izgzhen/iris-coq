@@ -318,7 +318,10 @@ Instance iprodCF_contractive `{Finite C} (F : C → cFunctor) :
   (∀ c, cFunctorContractive (F c)) → cFunctorContractive (iprodCF F).
 Proof.
   intros ? A1 A2 B1 B2 n ?? g.
-  by apply iprodC_map_ne=>c; apply cFunctor_contractive.
+  (* FIXME: when using `apply` we get
+    Anomaly "Uncaught exception Retyping.RetypeError(4)." Please report at http://coq.inria.fr/bugs/.
+  *)
+  apply: iprodC_map_ne=>c. by apply cFunctor_contractive.
 Qed.
 
 Program Definition iprodURF `{Finite C} (F : C → urFunctor) : urFunctor := {|
