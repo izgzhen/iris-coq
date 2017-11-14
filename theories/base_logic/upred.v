@@ -28,7 +28,20 @@ Record uPred (M : ucmraT) : Type := IProp {
      are monotonous both with respect to the step index and with
      respect to x. However, that would essentially require changing
      (by making it more complicated) the model of many connectives of
-     the logic, which we don't want. *)
+     the logic, which we don't want.
+     This sub-COFE is the sub-COFE of monotonous sProp predicates P
+     such that the following sProp assertion is valid:
+          ∀ x, (V(x) → P(x)) → P(x)
+     Where V is the validity predicate.
+
+     Another way of saying that this is equivalent to this definition of
+     uPred is to notice that our definition of uPred is equivalent to
+     quotienting the COFE of monotonous sProp predicates with the
+     following (sProp) equivalence relation:
+       P1 ≡ P2  :=  ∀ x, V(x) → (P1(x) ↔ P2(x))
+     whose equivalence classes appear to all have one only canonical
+     representative such that ∀ x, (V(x) → P(x)) → P(x).
+ *)
   uPred_closed n1 n2 x : uPred_holds n1 x → n2 ≤ n1 → ✓{n2} x → uPred_holds n2 x
 }.
 Arguments uPred_holds {_} _ _ _ : simpl never.
