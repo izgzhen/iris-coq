@@ -43,7 +43,7 @@ opam:
 build-coq.8.7.dev:
   <<: *template
   variables:
-    OPAM_PINS: "coq version 8.7.dev   coq-mathcomp-ssreflect version dev"
+    OPAM_PINS: "coq version 8.7.dev"
   artifacts:
     paths:
     - build-time.txt
