@@ -70,7 +70,7 @@ Definition saved_prop_own `{savedPropG Σ} (γ : gname) (P: iProp Σ) :=
 
 Instance saved_prop_own_contractive `{savedPropG Σ} γ :
   Contractive (saved_prop_own γ).
-Proof. rewrite /saved_prop_own. solve_contractive. Qed.
+Proof. solve_contractive. Qed.
 
 Lemma saved_prop_alloc_strong `{savedPropG Σ} (G : gset gname) (P: iProp Σ) :
   (|==> ∃ γ, ⌜γ ∉ G⌝ ∧ saved_prop_own γ P)%I.
