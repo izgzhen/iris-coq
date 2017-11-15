@@ -650,7 +650,7 @@ Proof.
   - intros i a b; eapply Hf, ucmra_unit_validN.
 Qed.
 
-(* Functions *)
+(* Function extensionality *)
 Lemma ofe_funC_equivI {A B} (f g : A -c> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.
 Lemma ofe_morC_equivI {A B : ofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.

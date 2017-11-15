@@ -978,6 +978,17 @@ Lemma plainly_plainly P `{!Plain P} : ■ P ⊣⊢ P.
 Proof. apply (anti_symm (⊢)); eauto. Qed.
 Lemma plainly_intro P Q `{!Plain P} : (P ⊢ Q) → P ⊢ ■ Q.
 Proof. rewrite -(plainly_plainly P); apply plainly_intro'. Qed.
+Lemma plainly_alt P : ■ P ⊣⊢ P ≡ True.
+Proof.
+  apply (anti_symm (⊢)).
+  - rewrite -prop_ext. apply plainly_intro'. rewrite plainly_elim.
+    apply and_intro; apply impl_intro_r.
+    + apply True_intro.
+    + apply and_elim_l.
+  - rewrite internal_eq_sym (internal_eq_rewrite _ _ (λ P, ■ P)%I).
+    eapply impl_elim; first reflexivity.
+    rewrite plainly_pure. apply True_intro.
+Qed.
 
 Lemma bupd_plain P `{!Plain P} : (|==> P) ⊢ P.
 Proof. by rewrite -{1}(plainly_plainly P) bupd_plainly. Qed.
