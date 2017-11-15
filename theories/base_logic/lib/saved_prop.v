@@ -42,15 +42,15 @@ Section saved_anything.
   Lemma saved_anything_agree γ x y :
     saved_anything_own γ x -∗ saved_anything_own γ y -∗ x ≡ y.
   Proof.
-    (* TODO: Use the proof mode. *)
-    apply wand_intro_r.
-    rewrite -own_op own_valid agree_validI agree_equivI.
+    iIntros "Hx Hy". rewrite /saved_anything_own.
+    iDestruct (own_valid_2 with "Hx Hy") as "Hv".
+    rewrite agree_validI agree_equivI.
     set (G1 := cFunctor_map F (iProp_fold, iProp_unfold)).
     set (G2 := cFunctor_map F (@iProp_unfold Σ, @iProp_fold Σ)).
     assert (∀ z, G2 (G1 z) ≡ z) as help.
     { intros z. rewrite /G1 /G2 -cFunctor_compose -{2}[z]cFunctor_id.
       apply (ne_proper (cFunctor_map F)); split=>?; apply iProp_fold_unfold. }
-    rewrite -{2}[x]help -{2}[y]help. apply f_equiv, _.
+    rewrite -{2}[x]help -{2}[y]help. by iApply f_equiv.
   Qed.
 End saved_anything.
 
