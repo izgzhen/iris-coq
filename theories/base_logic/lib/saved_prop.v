@@ -94,10 +94,7 @@ Definition saved_pred_own `{savedPredG Σ A} (γ : gname) (Φ : A -n> iProp Σ) 
   saved_anything_own (F := A -n> ▶ ∙) γ (CofeMor Next ◎ Φ).
 
 Instance saved_pred_own_contractive `{savedPredG Σ A} γ : Contractive (saved_pred_own γ).
-Proof.
-  intros n Φ Φ' HΦ. rewrite /saved_pred_own /saved_anything_own /=.
-  do 3 f_equiv. intros x. rewrite /=. by f_contractive.
-Qed.
+Proof. rewrite /saved_pred_own=> n Φ Φ' ?. f_equiv=> x /=. by f_contractive. Qed.
 
 Lemma saved_pred_alloc_strong `{savedPredG Σ A} (G : gset gname) (Φ : A -n> iProp Σ) :
   (|==> ∃ γ, ⌜γ ∉ G⌝ ∧ saved_pred_own γ Φ)%I.
