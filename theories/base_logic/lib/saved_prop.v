@@ -81,23 +81,23 @@ Qed.
 Notation savedPredG Σ A := (savedAnythingG Σ (constCF A -n> ▶ ∙)).
 Notation savedPredΣ A := (savedAnythingΣ (constCF A -n> ▶ ∙)).
 
-Definition saved_pred_own `{savedPredG Σ A} (γ : gname) (f: A -n> iProp Σ) :=
-  saved_anything_own (F := A -n> ▶ ∙) γ (CofeMor Next ◎ f).
+Definition saved_pred_own `{savedPredG Σ A} (γ : gname) (Φ : A -n> iProp Σ) :=
+  saved_anything_own (F := A -n> ▶ ∙) γ (CofeMor Next ◎ Φ).
 
-Lemma saved_pred_alloc_strong `{savedPredG Σ A} (G : gset gname) (f: A -n> iProp Σ) :
-  (|==> ∃ γ, ⌜γ ∉ G⌝ ∧ saved_pred_own γ f)%I.
+Lemma saved_pred_alloc_strong `{savedPredG Σ A} (G : gset gname) (Φ : A -n> iProp Σ) :
+  (|==> ∃ γ, ⌜γ ∉ G⌝ ∧ saved_pred_own γ Φ)%I.
 Proof. iApply saved_anything_alloc_strong. Qed.
 
-Lemma saved_pred_alloc `{savedPredG Σ A} (f: A -n> iProp Σ) :
-  (|==> ∃ γ, saved_pred_own γ f)%I.
+Lemma saved_pred_alloc `{savedPredG Σ A} (Φ : A -n> iProp Σ) :
+  (|==> ∃ γ, saved_pred_own γ Φ)%I.
 Proof. iApply saved_anything_alloc. Qed.
 
 (* We put the `x` on the outside to make this lemma easier to apply. *)
-Lemma saved_pred_agree `{savedPredG Σ A} γ f g x :
-  saved_pred_own γ f -∗ saved_pred_own γ g -∗ ▷ (f x ≡ g x).
+Lemma saved_pred_agree `{savedPredG Σ A} γ Φ Ψ x :
+  saved_pred_own γ Φ -∗ saved_pred_own γ Ψ -∗ ▷ (Φ x ≡ Ψ x).
 Proof.
-  iIntros "Hx Hy". unfold saved_pred_own. iApply later_equivI.
-  iDestruct (ofe_morC_equivI (CofeMor Next ◎ f) (CofeMor Next ◎ g)) as "[FE _]".
+  iIntros "HΦ HΨ". unfold saved_pred_own. iApply later_equivI.
+  iDestruct (ofe_morC_equivI (CofeMor Next ◎ Φ) (CofeMor Next ◎ Ψ)) as "[FE _]".
   simpl. iApply ("FE" with "[-]").
-  iApply (saved_anything_agree with "Hx Hy").
+  iApply (saved_anything_agree with "HΦ HΨ").
 Qed.
