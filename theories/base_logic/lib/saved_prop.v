@@ -28,7 +28,8 @@ Section saved_anything.
   Implicit Types x y : F (iProp Σ).
   Implicit Types γ : gname.
 
-  Global Instance saved_prop_persistent γ x : Persistent (saved_anything_own γ x).
+  Global Instance saved_anything_persistent γ x :
+    Persistent (saved_anything_own γ x).
   Proof. rewrite /saved_anything_own; apply _. Qed.
 
   Lemma saved_anything_alloc_strong x (G : gset gname) :
