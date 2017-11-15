@@ -32,6 +32,11 @@ Section saved_anything.
     Persistent (saved_anything_own γ x).
   Proof. rewrite /saved_anything_own; apply _. Qed.
 
+  Global Instance saved_anything_ne γ : NonExpansive (saved_anything_own γ).
+  Proof. solve_proper. Qed.
+  Global Instance saved_anything_proper γ : Proper ((≡) ==> (≡)) (saved_anything_own γ).
+  Proof. solve_proper. Qed.
+
   Lemma saved_anything_alloc_strong x (G : gset gname) :
     (|==> ∃ γ, ⌜γ ∉ G⌝ ∧ saved_anything_own γ x)%I.
   Proof. by apply own_alloc_strong. Qed.
