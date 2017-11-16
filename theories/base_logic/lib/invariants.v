@@ -7,7 +7,7 @@ Import uPred.
 
 (** Derived forms and lemmas about them. *)
 Definition inv_def `{invG Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
-  (∃ i, ⌜i ∈ (↑N:coPset)⌝ ∧ ownI i P)%I.
+  (∃ i P', ⌜i ∈ (↑N:coPset)⌝ ∧ ▷ □ (P' ↔ P) ∧ ownI i P')%I.
 Definition inv_aux : seal (@inv_def). by eexists. Qed.
 Definition inv {Σ i} := unseal inv_aux Σ i.
 Definition inv_eq : @inv = @inv_def := seal_eq inv_aux.
@@ -21,18 +21,24 @@ Implicit Types N : namespace.
 Implicit Types P Q R : iProp Σ.
 
 Global Instance inv_contractive N : Contractive (inv N).
-Proof.
-  rewrite inv_eq=> n ???. apply exist_ne=>i. by apply and_ne, ownI_contractive.
-Qed.
+Proof. rewrite inv_eq. solve_contractive. Qed.
 
 Global Instance inv_ne N : NonExpansive (inv N).
 Proof. apply contractive_ne, _. Qed.
 
-Global Instance inv_Proper N : Proper ((⊣⊢) ==> (⊣⊢)) (inv N).
+Global Instance inv_proper N : Proper ((⊣⊢) ==> (⊣⊢)) (inv N).
 Proof. apply ne_proper, _. Qed.
 
 Global Instance inv_persistent N P : Persistent (inv N P).
 Proof. rewrite inv_eq /inv; apply _. Qed.
+
+Lemma inv_iff N P Q : ▷ □ (P ↔ Q) -∗ inv N P -∗ inv N Q.
+Proof.
+  iIntros "#HPQ". rewrite inv_eq. iDestruct 1 as (i P') "(?&#HP&?)".
+  iExists i, P'. iFrame. iNext; iAlways; iSplit.
+  - iIntros "HP'". iApply "HPQ". by iApply "HP".
+  - iIntros "HQ". iApply "HP". by iApply "HPQ".
+Qed.
 
 Lemma fresh_inv_name (E : gset positive) N : ∃ i, i ∉ E ∧ i ∈ (↑N:coPset).
 Proof.
@@ -48,6 +54,7 @@ Proof.
   rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros "HP [Hw $]".
   iMod (ownI_alloc (∈ (↑N : coPset)) P with "[$HP $Hw]")
     as (i ?) "[$ ?]"; auto using fresh_inv_name.
+  do 2 iModIntro. iExists i, P. rewrite -(iff_refl True). auto.
 Qed.
 
 Lemma inv_alloc_open N E P :
@@ -61,7 +68,9 @@ Proof.
   { rewrite -?ownE_op; [|set_solver..].
     rewrite assoc_L -!union_difference_L //. set_solver. }
   do 2 iModIntro. iFrame "HE\N". iSplitL "Hw HEi"; first by iApply "Hw".
-  iSplitL "Hi"; first by eauto. iIntros "HP [Hw HE\N]".
+  iSplitL "Hi".
+  { iExists i, P. rewrite -(iff_refl True). auto. }
+  iIntros "HP [Hw HE\N]".
   iDestruct (ownI_close with "[$Hw $Hi $HP $HD]") as "[$ HEi]".
   do 2 iModIntro. iSplitL; [|done].
   iCombine "HEi" "HEN\i" as "HEN"; iCombine "HEN" "HE\N" as "HE".
@@ -72,13 +81,16 @@ Qed.
 Lemma inv_open E N P :
   ↑N ⊆ E → inv N P ={E,E∖↑N}=∗ ▷ P ∗ (▷ P ={E∖↑N,E}=∗ True).
 Proof.
-  rewrite inv_eq /inv_def fupd_eq /fupd_def; iDestruct 1 as (i) "[Hi #HiP]".
+  rewrite inv_eq /inv_def fupd_eq /fupd_def.
+  iDestruct 1 as (i P') "(Hi & #HP' & #HiP)".
   iDestruct "Hi" as % ?%elem_of_subseteq_singleton.
   rewrite {1 4}(union_difference_L (↑ N) E) // ownE_op; last set_solver.
   rewrite {1 5}(union_difference_L {[ i ]} (↑ N)) // ownE_op; last set_solver.
   iIntros "(Hw & [HE $] & $) !> !>".
-  iDestruct (ownI_open i P with "[$Hw $HE $HiP]") as "($ & $ & HD)".
-  iIntros "HP [Hw $] !> !>". iApply ownI_close; by iFrame.
+  iDestruct (ownI_open i with "[$Hw $HE $HiP]") as "($ & HP & HD)".
+  iDestruct ("HP'" with "HP") as "$".
+  iIntros "HP [Hw $] !> !>". iApply (ownI_close _ P'). iFrame "HD Hw HiP".
+  iApply "HP'". iFrame.
 Qed.
 
 Lemma inv_open_timeless E N P `{!Timeless P} :
