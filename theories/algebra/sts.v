@@ -79,7 +79,7 @@ Qed.
 Global Instance up_set_preserving : Proper ((⊆) ==> flip (⊆) ==> (⊆)) up_set.
 Proof.
   intros S1 S2 HS T1 T2 HT. rewrite /up_set.
-  f_equiv=> // s1 s2 Hs. by apply up_preserving.
+  f_equiv=> // s1 s2. by apply up_preserving.
 Qed.
 Global Instance up_set_proper : Proper ((≡) ==> (≡) ==> (≡)) up_set.
 Proof.
