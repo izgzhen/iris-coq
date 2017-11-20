@@ -23,6 +23,7 @@ Definition ownI `{invG Σ} (i : positive) (P : iProp Σ) : iProp Σ :=
   own invariant_name (◯ {[ i := invariant_unfold P ]}).
 Arguments ownI {_ _} _ _%I.
 Typeclasses Opaque ownI.
+Instance: Params (@invariant_unfold) 1.
 Instance: Params (@ownI) 3.
 
 Definition ownE `{invG Σ} (E : coPset) : iProp Σ :=
