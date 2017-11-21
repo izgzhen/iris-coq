@@ -512,15 +512,15 @@ Section fixpointAB_ne.
 End fixpointAB_ne.
 
 (** Function space *)
-(* We make [ofe_fun] a definition so that we can register it as a canonical
+(* We make [iprod] a definition so that we can register it as a canonical
 structure. *)
-Definition ofe_fun (A : Type) (B : ofeT) := A → B.
+Definition iprod {A} (B : A → ofeT) := ∀ x : A, B x.
 
-Section ofe_fun.
-  Context {A : Type} {B : ofeT}.
-  Instance ofe_fun_equiv : Equiv (ofe_fun A B) := λ f g, ∀ x, f x ≡ g x.
-  Instance ofe_fun_dist : Dist (ofe_fun A B) := λ n f g, ∀ x, f x ≡{n}≡ g x.
-  Definition ofe_fun_ofe_mixin : OfeMixin (ofe_fun A B).
+Section iprod.
+  Context {A : Type} {B : A → ofeT}.
+  Instance iprod_equiv : Equiv (iprod B) := λ f g, ∀ x, f x ≡ g x.
+  Instance iprod_dist : Dist (iprod B) := λ n f g, ∀ x, f x ≡{n}≡ g x.
+  Definition iprod_ofe_mixin : OfeMixin (iprod B).
   Proof.
     split.
     - intros f g; split; [intros Hfg n k; apply equiv_dist, Hfg|].
@@ -531,21 +531,21 @@ Section ofe_fun.
       + by intros f g h ?? x; trans (g x).
     - by intros n f g ? x; apply dist_S.
   Qed.
-  Canonical Structure ofe_funC := OfeT (ofe_fun A B) ofe_fun_ofe_mixin.
+  Canonical Structure iprodC := OfeT (iprod B) iprod_ofe_mixin.
 
-  Program Definition ofe_fun_chain `(c : chain ofe_funC)
-    (x : A) : chain B := {| chain_car n := c n x |}.
+  Program Definition iprod_chain `(c : chain iprodC)
+    (x : A) : chain (B x) := {| chain_car n := c n x |}.
   Next Obligation. intros c x n i ?. by apply (chain_cauchy c). Qed.
-  Global Program Instance ofe_fun_cofe `{Cofe B} : Cofe ofe_funC :=
-    { compl c x := compl (ofe_fun_chain c x) }.
-  Next Obligation. intros ? n c x. apply (conv_compl n (ofe_fun_chain c x)). Qed.
-End ofe_fun.
+  Global Program Instance iprod_cofe `{∀ x, Cofe (B x)} : Cofe iprodC :=
+    { compl c x := compl (iprod_chain c x) }.
+  Next Obligation. intros ? n c x. apply (conv_compl n (iprod_chain c x)). Qed.
+End iprod.
 
-Arguments ofe_funC : clear implicits.
+Arguments iprodC {_} _.
 Notation "A -c> B" :=
-  (ofe_funC A B) (at level 99, B at level 200, right associativity).
-Instance ofe_fun_inhabited {A} {B : ofeT} `{Inhabited B} :
-  Inhabited (A -c> B) := populate (λ _, inhabitant).
+  (@iprodC A (λ _, B)) (at level 99, B at level 200, right associativity).
+Instance iprod_inhabited {A} {B : A → ofeT} `{∀ x, Inhabited (B x)} :
+  Inhabited (iprodC B) := populate (λ _, inhabitant).
 
 (** Non-expansive function space *)
 Record ofe_mor (A B : ofeT) : Type := CofeMor {
@@ -762,36 +762,57 @@ Proof.
     by apply prodC_map_ne; apply cFunctor_contractive.
 Qed.
 
-Instance compose_ne {A} {B B' : ofeT} (f : B -n> B') :
-  NonExpansive (compose f : (A -c> B) → A -c> B').
-Proof. intros n g g' Hf x; simpl. by rewrite (Hf x). Qed.
+Definition iprod_map {A} {B1 B2 : A → ofeT} (f : ∀ x, B1 x → B2 x)
+  (g : iprod B1) : iprod B2 := λ x, f _ (g x).
 
-Definition ofe_funC_map {A B B'} (f : B -n> B') : (A -c> B) -n> (A -c> B') :=
-  @CofeMor (_ -c> _) (_ -c> _) (compose f) _.
-Instance ofe_funC_map_ne {A B B'} :
-  NonExpansive (@ofe_funC_map A B B').
-Proof. intros n f f' Hf g x. apply Hf. Qed.
+Lemma iprod_map_ext {A} {B1 B2 : A → ofeT} (f1 f2 : ∀ x, B1 x → B2 x)
+  (g : iprod B1) :
+  (∀ x, f1 x (g x) ≡ f2 x (g x)) → iprod_map f1 g ≡ iprod_map f2 g.
+Proof. done. Qed.
+Lemma iprod_map_id {A} {B : A → ofeT} (g : iprod B) :
+  iprod_map (λ _, id) g = g.
+Proof. done. Qed.
+Lemma iprod_map_compose {A} {B1 B2 B3 : A → ofeT}
+    (f1 : ∀ x, B1 x → B2 x) (f2 : ∀ x, B2 x → B3 x) (g : iprod B1) :
+  iprod_map (λ x, f2 x ∘ f1 x) g = iprod_map f2 (iprod_map f1 g).
+Proof. done. Qed.
 
-Program Definition ofe_funCF (T : Type) (F : cFunctor) : cFunctor := {|
-  cFunctor_car A B := ofe_funC T (cFunctor_car F A B);
-  cFunctor_map A1 A2 B1 B2 fg := ofe_funC_map (cFunctor_map F fg)
+Instance iprod_map_ne {A} {B1 B2 : A → ofeT} (f : ∀ x, B1 x → B2 x) n :
+  (∀ x, Proper (dist n ==> dist n) (f x)) →
+  Proper (dist n ==> dist n) (iprod_map f).
+Proof. by intros ? y1 y2 Hy x; rewrite /iprod_map (Hy x). Qed.
+
+Definition iprodC_map {A} {B1 B2 : A → ofeT} (f : iprod (λ x, B1 x -n> B2 x)) :
+  iprodC B1 -n> iprodC B2 := CofeMor (iprod_map f).
+Instance iprodC_map_ne {A} {B1 B2 : A → ofeT} :
+  NonExpansive (@iprodC_map A B1 B2).
+Proof. intros n f1 f2 Hf g x; apply Hf. Qed.
+
+Program Definition iprodCF {C} (F : C → cFunctor) : cFunctor := {|
+  cFunctor_car A B := iprodC (λ c, cFunctor_car (F c) A B);
+  cFunctor_map A1 A2 B1 B2 fg := iprodC_map (λ c, cFunctor_map (F c) fg)
 |}.
 Next Obligation.
-  intros ?? A1 A2 B1 B2 n ???; by apply ofe_funC_map_ne; apply cFunctor_ne.
+  intros C F A1 A2 B1 B2 n ?? g. by apply iprodC_map_ne=>?; apply cFunctor_ne.
 Qed.
-Next Obligation. intros F1 F2 A B ??. by rewrite /= /compose /= !cFunctor_id. Qed.
 Next Obligation.
-  intros T F A1 A2 A3 B1 B2 B3 f g f' g' ??; simpl.
-  by rewrite !cFunctor_compose.
+  intros C F A B g; simpl. rewrite -{2}(iprod_map_id g).
+  apply iprod_map_ext=> y; apply cFunctor_id.
 Qed.
-Notation "T -c> F" := (ofe_funCF T%type F%CF) : cFunctor_scope.
+Next Obligation.
+  intros C F A1 A2 A3 B1 B2 B3 f1 f2 f1' f2' g. rewrite /= -iprod_map_compose.
+  apply iprod_map_ext=>y; apply cFunctor_compose.
+Qed.
 
-Instance ofe_funCF_contractive (T : Type) (F : cFunctor) :
-  cFunctorContractive F → cFunctorContractive (ofe_funCF T F).
+Notation "T -c> F" := (@iprodCF T%type (λ _, F%CF)) : cFunctor_scope.
+
+Instance iprodCF_contractive `{Finite C} (F : C → cFunctor) :
+  (∀ c, cFunctorContractive (F c)) → cFunctorContractive (iprodCF F).
 Proof.
-  intros ?? A1 A2 B1 B2 n ???;
-    by apply ofe_funC_map_ne; apply cFunctor_contractive.
+  intros ? A1 A2 B1 B2 n ?? g.
+  by apply iprodC_map_ne=>c; apply cFunctor_contractive.
 Qed.
+
 
 Program Definition ofe_morCF (F1 F2 : cFunctor) : cFunctor := {|
   cFunctor_car A B := cFunctor_car F1 B A -n> cFunctor_car F2 A B;
