@@ -21,7 +21,7 @@ Definition saved_anything_own `{savedAnythingG Σ F}
     (γ : gname) (x : F (iProp Σ)) : iProp Σ :=
   own γ (to_agree $ (cFunctor_map F (iProp_fold, iProp_unfold) x)).
 Typeclasses Opaque saved_anything_own.
-Instance: Params (@saved_anything_own) 3.
+Instance: Params (@saved_anything_own) 4.
 
 Section saved_anything.
   Context `{savedAnythingG Σ F}.

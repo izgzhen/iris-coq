@@ -1061,6 +1061,7 @@ Inductive later (A : Type) : Type := Next { later_car : A }.
 Add Printing Constructor later.
 Arguments Next {_} _.
 Arguments later_car {_} _.
+Instance: Params (@Next) 1.
 
 Section later.
   Context {A : ofeT}.
