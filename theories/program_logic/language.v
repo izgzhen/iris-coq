@@ -145,12 +145,11 @@ Section language.
     PureExec φ (K e1) (K e2).
   Proof.
     intros [Hred Hstep]. split.
-    - intros σ ?. destruct (Hred σ) as (? & ? & ? & ?); first done.
-      do 3 eexists. eapply fill_step. done.
-    - intros σ ???? Hpstep. edestruct fill_step_inv as (? & ? & ?); [|exact Hpstep|].
-      + destruct (Hred σ) as (? & ? & ? & ?); first done.
-        eapply val_stuck. done.
-      + edestruct Hstep as (? & ? & ?); [done..|]. by subst.
+    - unfold reducible in *. naive_solver eauto using fill_step.
+    - intros σ1 e2' σ2 efs ? Hpstep.
+      destruct (fill_step_inv e1 σ1 e2' σ2 efs) as (e2'' & -> & ?); [|exact Hpstep|].
+      + destruct (Hred σ1) as (? & ? & ? & ?); eauto using val_stuck.
+      + edestruct (Hstep σ1 e2'' σ2 efs) as (-> & -> & ->); auto.
   Qed.
 
   (* This is a family of frequent assumptions for PureExec *)
