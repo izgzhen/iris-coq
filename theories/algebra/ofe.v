@@ -1101,8 +1101,7 @@ Section later.
 
   (* f is contractive iff it can factor into `Next` and a non-expansive function. *)
   Lemma contractive_alt {B : ofeT} (f : A → B) :
-    Contractive f ↔ ∃ g : later A → B,
-      (NonExpansive g) ∧ (∀ x, f x ≡ g (Next x)).
+    Contractive f ↔ ∃ g : later A → B, NonExpansive g ∧ ∀ x, f x ≡ g (Next x).
   Proof.
     split.
     - intros Hf. exists (f ∘ later_car); split=> // n x y ?. by f_equiv.
