@@ -49,7 +49,7 @@ Section proof.
     {{{ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
   Proof.
     iIntros (Φ) "HR HΦ". rewrite -wp_fupd /newlock /=.
-    wp_seq. wp_alloc l as "Hl".
+    wp_lam. wp_alloc l as "Hl".
     iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
     iMod (inv_alloc N _ (lock_inv γ l R) with "[-HΦ]") as "#?".
     { iIntros "!>". iExists false. by iFrame. }
