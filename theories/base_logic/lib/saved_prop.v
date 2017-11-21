@@ -87,22 +87,22 @@ Proof.
 Qed.
 
 (* Saved predicates. *)
-Notation savedPredG Σ A := (savedAnythingG Σ (constCF A -n> ▶ ∙)).
-Notation savedPredΣ A := (savedAnythingΣ (constCF A -n> ▶ ∙)).
+Notation savedPredG Σ A := (savedAnythingG Σ (A -c> ▶ ∙)).
+Notation savedPredΣ A := (savedAnythingΣ (A -c> ▶ ∙)).
 
-Definition saved_pred_own `{savedPredG Σ A} (γ : gname) (Φ : A -n> iProp Σ) :=
-  saved_anything_own (F := A -n> ▶ ∙) γ (CofeMor Next ◎ Φ).
+Definition saved_pred_own `{savedPredG Σ A} (γ : gname) (Φ : A -c> iProp Σ) :=
+  saved_anything_own (F := A -c> ▶ ∙) γ (CofeMor Next ∘ Φ).
 
 Instance saved_pred_own_contractive `{savedPredG Σ A} γ : Contractive (saved_pred_own γ).
 Proof.
-  solve_proper_core ltac:(fun _ => first [ intros ?; progress simpl | f_contractive | f_equiv ]).
+  solve_proper_core ltac:(fun _ => first [ intros ?; progress simpl | by auto | f_contractive | f_equiv ]).
 Qed.
 
-Lemma saved_pred_alloc_strong `{savedPredG Σ A} (G : gset gname) (Φ : A -n> iProp Σ) :
+Lemma saved_pred_alloc_strong `{savedPredG Σ A} (G : gset gname) (Φ : A -c> iProp Σ) :
   (|==> ∃ γ, ⌜γ ∉ G⌝ ∧ saved_pred_own γ Φ)%I.
 Proof. iApply saved_anything_alloc_strong. Qed.
 
-Lemma saved_pred_alloc `{savedPredG Σ A} (Φ : A -n> iProp Σ) :
+Lemma saved_pred_alloc `{savedPredG Σ A} (Φ : A -c> iProp Σ) :
   (|==> ∃ γ, saved_pred_own γ Φ)%I.
 Proof. iApply saved_anything_alloc. Qed.
 
@@ -111,7 +111,7 @@ Lemma saved_pred_agree `{savedPredG Σ A} γ Φ Ψ x :
   saved_pred_own γ Φ -∗ saved_pred_own γ Ψ -∗ ▷ (Φ x ≡ Ψ x).
 Proof.
   iIntros "HΦ HΨ". unfold saved_pred_own. iApply later_equivI.
-  iDestruct (ofe_morC_equivI (CofeMor Next ◎ Φ) (CofeMor Next ◎ Ψ)) as "[FE _]".
+  iDestruct (ofe_funC_equivI (CofeMor Next ∘ Φ) (CofeMor Next ∘ Ψ)) as "[FE _]".
   simpl. iApply ("FE" with "[-]").
   iApply (saved_anything_agree with "HΦ HΨ").
 Qed.
