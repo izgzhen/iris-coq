@@ -8,6 +8,7 @@ Set Default Proof Using "Type".
 Export ident.
 
 Declare Reduction env_cbv := cbv [
+  option_bind
   beq ascii_beq string_beq positive_beq ident_beq
   env_lookup env_lookup_delete env_delete env_app env_replace env_dom
   env_persistent env_spatial env_spatial_is_nil envs_dom

@@ -39,9 +39,9 @@ Fixpoint close_list (k : stack)
   | SList :: k => Some (SPat (IList (ps :: pss)) :: k)
   | SPat pat :: k => close_list k (pat :: ps) pss
   | SAlwaysElim :: k =>
-     '(p,ps) ← maybe2 (::) ps; close_list k (IAlwaysElim p :: ps) pss
+     ''(p,ps) ← maybe2 (::) ps; close_list k (IAlwaysElim p :: ps) pss
   | SModalElim :: k =>
-     '(p,ps) ← maybe2 (::) ps; close_list k (IModalElim p :: ps) pss
+     ''(p,ps) ← maybe2 (::) ps; close_list k (IModalElim p :: ps) pss
   | SBar :: k => close_list k [] (ps :: pss)
   | _ => None
   end.
@@ -114,8 +114,8 @@ Fixpoint close (k : stack) (ps : list intro_pat) : option (list intro_pat) :=
   match k with
   | [] => Some ps
   | SPat pat :: k => close k (pat :: ps)
-  | SAlwaysElim :: k => '(p,ps) ← maybe2 (::) ps; close k (IAlwaysElim p :: ps)
-  | SModalElim :: k => '(p,ps) ← maybe2 (::) ps; close k (IModalElim p :: ps)
+  | SAlwaysElim :: k => ''(p,ps) ← maybe2 (::) ps; close k (IAlwaysElim p :: ps)
+  | SModalElim :: k => ''(p,ps) ← maybe2 (::) ps; close k (IModalElim p :: ps)
   | _ => None
   end.
 

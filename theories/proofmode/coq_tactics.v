@@ -58,7 +58,7 @@ Definition envs_lookup_delete {PROP} (i : ident)
   let (Γp,Γs) := Δ in
   match env_lookup_delete i Γp with
   | Some (P,Γp') => Some (true, P, Envs Γp' Γs)
-  | None => '(P,Γs') ← env_lookup_delete i Γs; Some (false, P, Envs Γp Γs')
+  | None => ''(P,Γs') ← env_lookup_delete i Γs; Some (false, P, Envs Γp Γs')
   end.
 
 Fixpoint envs_lookup_delete_list {PROP} (js : list ident) (remove_persistent : bool)
@@ -66,9 +66,9 @@ Fixpoint envs_lookup_delete_list {PROP} (js : list ident) (remove_persistent : b
   match js with
   | [] => Some (true, [], Δ)
   | j :: js =>
-     '(p,P,Δ') ← envs_lookup_delete j Δ;
-     let Δ' := if p then (if remove_persistent then Δ' else Δ) else Δ' in
-     '(q,Hs,Δ'') ← envs_lookup_delete_list js remove_persistent Δ';
+     ''(p,P,Δ') ← envs_lookup_delete j Δ;
+     let Δ' := if p : bool then (if remove_persistent then Δ' else Δ) else Δ' in
+     ''(q,Hs,Δ'') ← envs_lookup_delete_list js remove_persistent Δ';
      Some (p && q, P :: Hs, Δ'')
   end.
 
@@ -112,16 +112,15 @@ Fixpoint envs_split_go {PROP}
   match js with
   | [] => Some (Δ1, Δ2)
   | j :: js =>
-     '(p,P,Δ1') ← envs_lookup_delete j Δ1;
-     if p then envs_split_go js Δ1 Δ2 else
+     ''(p,P,Δ1') ← envs_lookup_delete j Δ1;
+     if p : bool then envs_split_go js Δ1 Δ2 else
      envs_split_go js Δ1' (envs_snoc Δ2 false j P)
   end.
 (* if [d = Right] then [result = (remaining hyps, hyps named js)] and
    if [d = Left] then [result = (hyps named js, remaining hyps)] *)
-
 Definition envs_split {PROP} (d : direction)
     (js : list ident) (Δ : envs PROP) : option (envs PROP * envs PROP) :=
-  '(Δ1,Δ2) ← envs_split_go js Δ (envs_clear_spatial Δ);
+  ''(Δ1,Δ2) ← envs_split_go js Δ (envs_clear_spatial Δ);
   if d is Right then Some (Δ1,Δ2) else Some (Δ2,Δ1).
 
 (* Coq versions of the tactics *)
@@ -328,7 +327,7 @@ Proof. intros. by rewrite envs_lookup_sound// envs_replace_singleton_sound'//. Q
 
 Lemma envs_lookup_envs_clear_spatial Δ j :
   envs_lookup j (envs_clear_spatial Δ)
-  = '(p,P) ← envs_lookup j Δ; if p then Some (p,P) else None.
+  = ''(p,P) ← envs_lookup j Δ; if p : bool then Some (p,P) else None.
 Proof.
   rewrite /envs_lookup /envs_clear_spatial.
   destruct Δ as [Γp Γs]; simpl; destruct (Γp !! j) eqn:?; simplify_eq/=; auto.
@@ -400,7 +399,7 @@ Proof.
   destruct (envs_split_go _ _) as [[Δ1' Δ2']|] eqn:HΔ; [|done].
   apply envs_split_go_sound in HΔ as ->; last first.
   { intros j P. by rewrite envs_lookup_envs_clear_spatial=> ->. }
-  destruct d; simplify_eq; solve_sep_entails.
+  destruct d; simplify_eq/=; solve_sep_entails.
 Qed.
 
 Global Instance envs_Forall2_refl (R : relation PROP) :
@@ -734,7 +733,7 @@ Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q neg js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
   IntoWand q false R P1 P2 →
   ElimModal P1' P1 Q Q →
-  ('(Δ1,Δ2) ← envs_split (if neg is true then Right else Left) js Δ';
+  (''(Δ1,Δ2) ← envs_split (if neg is true then Right else Left) js Δ';
     Δ2' ← envs_app false (Esnoc Enil j P2) Δ2;
     Some (Δ1,Δ2')) = Some (Δ1,Δ2') → (* does not preserve position of [j] *)
   envs_entails Δ1 P1' → envs_entails Δ2' Q → envs_entails Δ Q.

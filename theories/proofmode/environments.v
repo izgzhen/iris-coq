@@ -17,11 +17,9 @@ Fixpoint env_lookup {A} (i : ident) (Γ : env A) : option A :=
   end.
 
 Module env_notations.
-  Notation "x ← y ; z" := (match y with Some x => z | None => None end).
-  Notation "' ( x1 , x2 ) ← y ; z" :=
-    (match y with Some (x1,x2) => z | None => None end).
-  Notation "' ( x1 , x2 , x3 ) ← y ; z" :=
-    (match y with Some (x1,x2,x3) => z | None => None end).
+  Notation "y ≫= f" := (option_bind f y).
+  Notation "x ← y ; z" := (y ≫= λ x, z).
+  Notation "' x1 .. xn ← y ; z" := (y ≫= (λ x1, .. (λ xn, z) .. )).
   Notation "Γ !! j" := (env_lookup j Γ).
 End env_notations.
 Import env_notations.
@@ -68,7 +66,7 @@ Fixpoint env_lookup_delete {A} (i : ident) (Γ : env A) : option (A * env A) :=
   | Enil => None
   | Esnoc Γ j x =>
      if ident_beq i j then Some (x,Γ)
-     else '(y,Γ') ← env_lookup_delete i Γ; Some (y, Esnoc Γ' j x)
+     else ''(y,Γ') ← env_lookup_delete i Γ; Some (y, Esnoc Γ' j x)
   end.
 
 Definition env_is_singleton {A} (Γ : env A) : bool :=
@@ -101,6 +99,8 @@ Ltac simplify :=
   | _ => progress simplify_eq/=
   | H : context [ident_beq ?s1 ?s2] |- _ => destruct (ident_beq_reflect s1 s2)
   | |- context [ident_beq ?s1 ?s2] => destruct (ident_beq_reflect s1 s2)
+  | H : context [option_bind _ ?x] |- _ => destruct x eqn:?
+  | |- context [option_bind _ ?x] => destruct x eqn:?
   | _ => case_match
   end.
 
