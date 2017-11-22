@@ -1675,6 +1675,13 @@ Lemma plain_plainly P `{!Plain P, !Absorbing P} : bi_plainly P ⊣⊢ P.
 Proof. apply (anti_symm _), plain_plainly_2, _. apply plainly_elim, _. Qed.
 Lemma plainly_intro P Q `{!Plain P} : (P ⊢ Q) → P ⊢ bi_plainly Q.
 Proof. by intros <-. Qed.
+Lemma plainly_alt P : bi_plainly P ⊣⊢ P ≡ True.
+Proof.
+  apply (anti_symm (⊢)).
+  - rewrite -prop_ext. apply plainly_mono, and_intro; apply impl_intro_r; auto.
+  - rewrite internal_eq_sym (internal_eq_rewrite _ _ bi_plainly).
+    by rewrite plainly_pure True_impl.
+Qed.
 
 (* Persistence *)
 Global Instance Persistent_proper : Proper ((≡) ==> iff) (@Persistent PROP).

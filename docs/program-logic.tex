@@ -257,7 +257,7 @@ This can be instantiated, for example, with ownership of an authoritative RA to 
 
 \begin{align*}
   \textdom{wp} \eqdef{}& \MU \textdom{wp}. \Lam \mask, \expr, \pred. \\
-        & (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \prop) \lor {}\\
+        & (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \pred(\val)) \lor {}\\
         & \Bigl(\toval(\expr) = \bot \land \All \state. I(\state) \vsW[\mask][\emptyset] {}\\
         &\qquad \red(\expr, \state) * \later\All \expr', \state', \vec\expr. (\expr, \state \step \expr', \state', \vec\expr) \vsW[\emptyset][\mask] {}\\
         &\qquad\qquad I(\state') * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \vec\expr} \textdom{wp}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
