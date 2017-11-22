@@ -17,8 +17,8 @@ Fixpoint env_lookup {A} (i : ident) (Γ : env A) : option A :=
   end.
 
 Module env_notations.
-  Notation "y ≫= f" := (match y with Some x => f x | None => None end).
-  Notation "x ← y ; z" := (match y with Some x => z | None => None end).
+  Notation "y ≫= f" := (option_bind f y).
+  Notation "x ← y ; z" := (y ≫= λ x, z).
   Notation "' x1 .. xn ← y ; z" := (y ≫= (λ x1, .. (λ xn, z) .. )).
   Notation "Γ !! j" := (env_lookup j Γ).
 End env_notations.
@@ -93,6 +93,8 @@ Ltac simplify :=
   | _ => progress simplify_eq/=
   | H : context [ident_beq ?s1 ?s2] |- _ => destruct (ident_beq_reflect s1 s2)
   | |- context [ident_beq ?s1 ?s2] => destruct (ident_beq_reflect s1 s2)
+  | H : context [option_bind _ ?x] |- _ => destruct x eqn:?
+  | |- context [option_bind _ ?x] => destruct x eqn:?
   | _ => case_match
   end.
 

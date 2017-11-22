@@ -361,7 +361,7 @@ Proof.
   destruct (envs_split_go _ _) as [[Δ1' Δ2']|] eqn:HΔ; [|done].
   apply envs_split_go_sound in HΔ as ->; last first.
   { intros j P. by rewrite envs_lookup_envs_clear_spatial=> ->. }
-  destruct d; simplify_eq; solve_sep_entails.
+  destruct d; simplify_eq/=; solve_sep_entails.
 Qed.
 
 Global Instance envs_Forall2_refl (R : relation (uPred M)) :
