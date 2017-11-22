@@ -17,11 +17,9 @@ Fixpoint env_lookup {A} (i : ident) (Γ : env A) : option A :=
   end.
 
 Module env_notations.
+  Notation "y ≫= f" := (match y with Some x => f x | None => None end).
   Notation "x ← y ; z" := (match y with Some x => z | None => None end).
-  Notation "' ( x1 , x2 ) ← y ; z" :=
-    (match y with Some (x1,x2) => z | None => None end).
-  Notation "' ( x1 , x2 , x3 ) ← y ; z" :=
-    (match y with Some (x1,x2,x3) => z | None => None end).
+  Notation "' x1 .. xn ← y ; z" := (y ≫= (λ x1, .. (λ xn, z) .. )).
   Notation "Γ !! j" := (env_lookup j Γ).
 End env_notations.
 Import env_notations.
@@ -68,7 +66,7 @@ Fixpoint env_lookup_delete {A} (i : ident) (Γ : env A) : option (A * env A) :=
   | Enil => None
   | Esnoc Γ j x =>
      if ident_beq i j then Some (x,Γ)
-     else '(y,Γ') ← env_lookup_delete i Γ; Some (y, Esnoc Γ' j x)
+     else ''(y,Γ') ← env_lookup_delete i Γ; Some (y, Esnoc Γ' j x)
   end.
 
 Inductive env_Forall2 {A B} (P : A → B → Prop) : env A → env B → Prop :=
