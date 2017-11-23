@@ -174,7 +174,7 @@ Proof.
   iSplitR "H"; last iExact "H". iIntros (v) "H". by iApply "H".
 Qed.
 
-Lemma wp_bind K `{!LanguageCtx Λ K} E e Φ :
+Lemma wp_bind K `{!LanguageCtx K} E e Φ :
   WP e @ E {{ v, WP K (of_val v) @ E {{ Φ }} }} ⊢ WP K e @ E {{ Φ }}.
 Proof.
   iIntros "H". iLöb as "IH" forall (E e Φ). rewrite wp_unfold /wp_pre.
@@ -189,7 +189,7 @@ Proof.
   by iApply "IH".
 Qed.
 
-Lemma wp_bind_inv K `{!LanguageCtx Λ K} E e Φ :
+Lemma wp_bind_inv K `{!LanguageCtx K} E e Φ :
   WP K e @ E {{ Φ }} ⊢ WP e @ E {{ v, WP K (of_val v) @ E {{ Φ }} }}.
 Proof.
   iIntros "H". iLöb as "IH" forall (E e Φ). rewrite !wp_unfold /wp_pre.

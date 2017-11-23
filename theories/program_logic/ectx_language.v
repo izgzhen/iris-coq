@@ -176,7 +176,7 @@ Section ectx_language.
   Qed.
 
   (* Every evaluation context is a context. *)
-  Global Instance ectx_lang_ctx K : LanguageCtx _ (fill K).
+  Global Instance ectx_lang_ctx K : LanguageCtx (fill K).
   Proof.
     split; simpl.
     - eauto using fill_not_val.

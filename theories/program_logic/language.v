@@ -39,7 +39,7 @@ Canonical Structure exprC Λ := leibnizC (expr Λ).
 
 Definition cfg (Λ : language) := (list (expr Λ) * state Λ)%type.
 
-Class LanguageCtx (Λ : language) (K : expr Λ → expr Λ) := {
+Class LanguageCtx {Λ : language} (K : expr Λ → expr Λ) := {
   fill_not_val e :
     to_val e = None → to_val (K e) = None;
   fill_step e1 σ1 e2 σ2 efs :
@@ -50,7 +50,7 @@ Class LanguageCtx (Λ : language) (K : expr Λ → expr Λ) := {
     ∃ e2', e2 = K e2' ∧ prim_step e1' σ1 e2' σ2 efs
 }.
 
-Instance language_ctx_id Λ : LanguageCtx Λ id.
+Instance language_ctx_id Λ : LanguageCtx (@id (expr Λ)).
 Proof. constructor; naive_solver. Qed.
 
 Section language.

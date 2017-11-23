@@ -114,8 +114,8 @@ Section ectxi_language.
     intros []%eq_None_not_Some. eapply fill_val, Hsub. by rewrite /= fill_app.
   Qed.
 
-  Global Instance ectxi_lang_ctx_item Ki : LanguageCtx _ (fill_item Ki).
-  Proof. change (LanguageCtx ectxi_lang (fill [Ki])). apply _. Qed.
+  Global Instance ectxi_lang_ctx_item Ki : LanguageCtx (fill_item Ki).
+  Proof. change (LanguageCtx (fill [Ki])). apply _. Qed.
 End ectxi_language.
 
 Arguments fill {_} _ _%E.
