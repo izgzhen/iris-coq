@@ -13,8 +13,7 @@ Lemma tac_wp_pure `{heapG Σ} K Δ Δ' E e1 e2 φ Φ :
   envs_entails Δ (WP fill K e1 @ E {{ Φ }}).
 Proof.
   rewrite /envs_entails=> ??? HΔ'. rewrite into_laterN_env_sound /=.
-  rewrite -lifting.wp_bind HΔ' -wp_pure_step_later //.
-  by rewrite -ectx_lifting.wp_ectx_bind_inv.
+  rewrite -wp_bind HΔ' -wp_pure_step_later //. by rewrite -wp_bind_inv.
 Qed.
 
 Lemma tac_wp_value `{heapG Σ} Δ E Φ e v :
@@ -55,7 +54,7 @@ Tactic Notation "wp_match" := wp_case; wp_let.
 Lemma tac_wp_bind `{heapG Σ} K Δ E Φ e :
   envs_entails Δ (WP e @ E {{ v, WP fill K (of_val v) @ E {{ Φ }} }})%I →
   envs_entails Δ (WP fill K e @ E {{ Φ }}).
-Proof. rewrite /envs_entails=> ->. by apply wp_bind. Qed.
+Proof. rewrite /envs_entails=> ->. by apply: wp_bind. Qed.
 
 Ltac wp_bind_core K :=
   lazymatch eval hnf in K with
