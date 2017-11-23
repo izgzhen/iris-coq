@@ -1,4 +1,5 @@
 From iris.algebra Require Export ofe monoid.
+From stdpp Require Import finite.
 Set Default Proof Using "Type".
 
 Class PCore (A : Type) := pcore : A → option A.
@@ -1461,4 +1462,104 @@ Instance optionURF_contractive F :
   rFunctorContractive F → urFunctorContractive (optionURF F).
 Proof.
   by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive.
+Qed.
+
+(* Dependently-typed functions *)
+Section iprod_cmra.
+  Context `{Hfin : Finite A} {B : A → ucmraT}.
+  Implicit Types f g : iprod B.
+
+  Instance iprod_op : Op (iprod B) := λ f g x, f x ⋅ g x.
+  Instance iprod_pcore : PCore (iprod B) := λ f, Some (λ x, core (f x)).
+  Instance iprod_valid : Valid (iprod B) := λ f, ∀ x, ✓ f x.
+  Instance iprod_validN : ValidN (iprod B) := λ n f, ∀ x, ✓{n} f x.
+
+  Definition iprod_lookup_op f g x : (f ⋅ g) x = f x ⋅ g x := eq_refl.
+  Definition iprod_lookup_core f x : (core f) x = core (f x) := eq_refl.
+
+  Lemma iprod_included_spec (f g : iprod B) : f ≼ g ↔ ∀ x, f x ≼ g x.
+  Proof using Hfin.
+    split; [by intros [h Hh] x; exists (h x); rewrite /op /iprod_op (Hh x)|].
+    intros [h ?]%finite_choice. by exists h.
+  Qed.
+
+  Lemma iprod_cmra_mixin : CmraMixin (iprod B).
+  Proof using Hfin.
+    apply cmra_total_mixin.
+    - eauto.
+    - by intros n f1 f2 f3 Hf x; rewrite iprod_lookup_op (Hf x).
+    - by intros n f1 f2 Hf x; rewrite iprod_lookup_core (Hf x).
+    - by intros n f1 f2 Hf ? x; rewrite -(Hf x).
+    - intros g; split.
+      + intros Hg n i; apply cmra_valid_validN, Hg.
+      + intros Hg i; apply cmra_valid_validN=> n; apply Hg.
+    - intros n f Hf x; apply cmra_validN_S, Hf.
+    - by intros f1 f2 f3 x; rewrite iprod_lookup_op assoc.
+    - by intros f1 f2 x; rewrite iprod_lookup_op comm.
+    - by intros f x; rewrite iprod_lookup_op iprod_lookup_core cmra_core_l.
+    - by intros f x; rewrite iprod_lookup_core cmra_core_idemp.
+    - intros f1 f2; rewrite !iprod_included_spec=> Hf x.
+      by rewrite iprod_lookup_core; apply cmra_core_mono, Hf.
+    - intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
+    - intros n f f1 f2 Hf Hf12.
+      destruct (finite_choice (λ x (yy : B x * B x),
+        f x ≡ yy.1 ⋅ yy.2 ∧ yy.1 ≡{n}≡ f1 x ∧ yy.2 ≡{n}≡ f2 x)) as [gg Hgg].
+      { intros x. specialize (Hf12 x).
+        destruct (cmra_extend n (f x) (f1 x) (f2 x)) as (y1&y2&?&?&?); eauto.
+        exists (y1,y2); eauto. }
+      exists (λ x, gg x.1), (λ x, gg x.2). split_and!=> -?; naive_solver.
+  Qed.
+  Canonical Structure iprodR := CmraT (iprod B) iprod_cmra_mixin.
+
+  Instance iprod_unit : Unit (iprod B) := λ x, ε.
+  Definition iprod_lookup_empty x : ε x = ε := eq_refl.
+
+  Lemma iprod_ucmra_mixin : UcmraMixin (iprod B).
+  Proof.
+    split.
+    - intros x; apply ucmra_unit_valid.
+    - by intros f x; rewrite iprod_lookup_op left_id.
+    - constructor=> x. apply core_id_core, _.
+  Qed.
+  Canonical Structure iprodUR := UcmraT (iprod B) iprod_ucmra_mixin.
+
+  Global Instance iprod_unit_discrete :
+    (∀ i, Discrete (ε : B i)) → Discrete (ε : iprod B).
+  Proof. intros ? f Hf x. by apply: discrete. Qed.
+End iprod_cmra.
+
+Arguments iprodR {_ _ _} _.
+Arguments iprodUR {_ _ _} _.
+
+Instance iprod_map_cmra_morphism
+    `{Finite A} {B1 B2 : A → ucmraT} (f : ∀ x, B1 x → B2 x) :
+  (∀ x, CmraMorphism (f x)) → CmraMorphism (iprod_map f).
+Proof.
+  split; first apply _.
+  - intros n g Hg x; rewrite /iprod_map; apply (cmra_morphism_validN (f _)), Hg.
+  - intros. apply Some_proper=>i. apply (cmra_morphism_core (f i)).
+  - intros g1 g2 i. by rewrite /iprod_map iprod_lookup_op cmra_morphism_op.
+Qed.
+
+Program Definition iprodURF `{Finite C} (F : C → urFunctor) : urFunctor := {|
+  urFunctor_car A B := iprodUR (λ c, urFunctor_car (F c) A B);
+  urFunctor_map A1 A2 B1 B2 fg := iprodC_map (λ c, urFunctor_map (F c) fg)
+|}.
+Next Obligation.
+  intros C ?? F A1 A2 B1 B2 n ?? g.
+  by apply iprodC_map_ne=>?; apply urFunctor_ne.
+Qed.
+Next Obligation.
+  intros C ?? F A B g; simpl. rewrite -{2}(iprod_map_id g).
+  apply iprod_map_ext=> y; apply urFunctor_id.
+Qed.
+Next Obligation.
+  intros C ?? F A1 A2 A3 B1 B2 B3 f1 f2 f1' f2' g. rewrite /=-iprod_map_compose.
+  apply iprod_map_ext=>y; apply urFunctor_compose.
+Qed.
+Instance iprodURF_contractive `{Finite C} (F : C → urFunctor) :
+  (∀ c, urFunctorContractive (F c)) → urFunctorContractive (iprodURF F).
+Proof.
+  intros ? A1 A2 B1 B2 n ?? g.
+  by apply iprodC_map_ne=>c; apply urFunctor_contractive.
 Qed.
