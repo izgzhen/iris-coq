@@ -654,10 +654,10 @@ Qed.
 (* Function extensionality *)
 Lemma ofe_morC_equivI {A B : ofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.
-Lemma iprod_equivI `{B : A → ofeT} (g1 g2 : iprod B) : g1 ≡ g2 ⊣⊢ ∀ i, g1 i ≡ g2 i.
+Lemma ofe_fun_equivI `{B : A → ofeT} (g1 g2 : ofe_fun B) : g1 ≡ g2 ⊣⊢ ∀ i, g1 i ≡ g2 i.
 Proof. by uPred.unseal. Qed.
 
-Lemma iprod_validI `{Finite A} {B : A → ucmraT} (g : iprod B) : ✓ g ⊣⊢ ∀ i, ✓ g i.
+Lemma ofe_fun_validI `{Finite A} {B : A → ucmraT} (g : ofe_fun B) : ✓ g ⊣⊢ ∀ i, ✓ g i.
 Proof. by uPred.unseal. Qed.
 
 (* Sigma OFE *)

@@ -1,5 +1,5 @@
 From iris.base_logic Require Export base_logic.
-From iris.algebra Require Import iprod gmap.
+From iris.algebra Require Import gmap.
 From iris.algebra Require cofe_solver.
 Set Default Proof Using "Type".
 
@@ -47,7 +47,7 @@ Definition gname := positive.
 
 (** The resources functor [iResF Σ A := ∀ i : gid, gname -fin-> (Σ i) A]. *)
 Definition iResF (Σ : gFunctors) : urFunctor :=
-  iprodURF (λ i, gmapURF gname (Σ i)).
+  ofe_funURF (λ i, gmapURF gname (Σ i)).
 
 
 (** We define functions for the empty list of functors, the singleton list of
@@ -116,7 +116,7 @@ construction, and also avoid Coq from blindly unfolding it. *)
 Module Type iProp_solution_sig.
   Parameter iPreProp : gFunctors → ofeT.
   Definition iResUR (Σ : gFunctors) : ucmraT :=
-    iprodUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
+    ofe_funUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
   Notation iProp Σ := (uPredC (iResUR Σ)).
 
   Parameter iProp_unfold: ∀ {Σ}, iProp Σ -n> iPreProp Σ.
@@ -134,7 +134,7 @@ Module Export iProp_solution : iProp_solution_sig.
 
   Definition iPreProp (Σ : gFunctors) : ofeT := iProp_result Σ.
   Definition iResUR (Σ : gFunctors) : ucmraT :=
-    iprodUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
+    ofe_funUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
   Notation iProp Σ := (uPredC (iResUR Σ)).
 
   Definition iProp_unfold {Σ} : iProp Σ -n> iPreProp Σ :=

@@ -113,5 +113,5 @@ Lemma saved_pred_agree `{savedPredG Σ A} γ Φ Ψ x :
 Proof.
   unfold saved_pred_own. iIntros "#HΦ #HΨ /=". iApply later_equivI.
   iDestruct (saved_anything_agree with "HΦ HΨ") as "Heq".
-  by iDestruct (iprod_equivI with "Heq") as "?".
+  by iDestruct (ofe_fun_equivI with "Heq") as "?".
 Qed.
