@@ -4,6 +4,11 @@ From iris.algebra Require Export base.
 From iris.program_logic Require Import language.
 Set Default Proof Using "Type".
 
+(* TAKE CARE: When you define an [ectxLanguage] canonical structure for your
+language, you need to also define a corresponding [language] canonical
+structure. Use the coercion [LanguageOfEctx] as defined in the bottom of this
+file for doing that. *)
+
 Section ectx_language_mixin.
   Context {expr val ectx state : Type}.
   Context (of_val : val → expr).

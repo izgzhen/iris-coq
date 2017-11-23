@@ -4,6 +4,28 @@ From iris.algebra Require Export base.
 From iris.program_logic Require Import language ectx_language.
 Set Default Proof Using "Type".
 
+(* TAKE CARE: When you define an [ectxiLanguage] canonical structure for your
+language, you need to also define a corresponding [language] and [ectxLanguage]
+canonical structure for canonical structure inference to work properly. You
+should use the coercion [EctxLanguageOfEctxi] and [LanguageOfEctx] for that, and
+not [ectxi_lang] and [ectxi_lang_ectx], otherwise the canonical projections will
+not point to the right terms.
+
+A full concrete example of setting up your language can be found in [heap_lang].
+Below you can find the relevant parts:
+
+  Module heap_lang.
+    (* Your language definition *)
+
+    Lemma heap_lang_mixin : EctxiLanguageMixin of_val to_val fill_item head_step.
+    Proof. (* ... *) Qed.
+  End heap_lang.
+
+  Canonical Structure heap_ectxi_lang := EctxiLanguage heap_lang.heap_lang_mixin.
+  Canonical Structure heap_ectx_lang := EctxLanguageOfEctxi heap_ectxi_lang.
+  Canonical Structure heap_lang := LanguageOfEctx heap_ectx_lang.
+*)
+
 Section ectxi_language_mixin.
   Context {expr val ectx_item state : Type}.
   Context (of_val : val → expr).
