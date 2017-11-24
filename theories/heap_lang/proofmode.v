@@ -24,12 +24,12 @@ Proof. rewrite /envs_entails=> ? ->. by apply wp_value. Qed.
 Ltac wp_value_head := eapply tac_wp_value; [apply _|lazy beta].
 
 Tactic Notation "wp_pure" open_constr(efoc) :=
-  iStartProof;
+  iStartProof; simpl; (* simpl possible [of_val]s *)
   lazymatch goal with
   | |- envs_entails _ (wp ?E ?e ?Q) => reshape_expr e ltac:(fun K e' =>
     unify e' efoc;
-    eapply tac_wp_pure;
-    [simpl; change e with (fill K e'); apply _  (* PureExec *)
+    eapply (tac_wp_pure _ _ _ (fill K e'));
+    [apply _                        (* PureExec *)
     |try fast_done                  (* The pure condition for PureExec *)
     |apply _                        (* IntoLaters *)
     |simpl_subst; try wp_value_head (* new goal *)
