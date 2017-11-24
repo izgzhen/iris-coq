@@ -24,16 +24,18 @@ Proof. rewrite /envs_entails=> ? ->. by apply wp_value. Qed.
 Ltac wp_value_head := eapply tac_wp_value; [apply _|lazy beta].
 
 Tactic Notation "wp_pure" open_constr(efoc) :=
-  iStartProof; simpl; (* simpl possible [of_val]s *)
+  iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?E ?e ?Q) => reshape_expr e ltac:(fun K e' =>
-    unify e' efoc;
-    eapply (tac_wp_pure _ _ _ (fill K e'));
-    [apply _                        (* PureExec *)
-    |try fast_done                  (* The pure condition for PureExec *)
-    |apply _                        (* IntoLaters *)
-    |simpl_subst; try wp_value_head (* new goal *)
-    ])
+  | |- envs_entails _ (wp ?E ?e ?Q) =>
+    let e := eval simpl in e in
+    reshape_expr e ltac:(fun K e' =>
+      unify e' efoc;
+      eapply (tac_wp_pure _ _ _ (fill K e'));
+      [apply _                        (* PureExec *)
+      |try fast_done                  (* The pure condition for PureExec *)
+      |apply _                        (* IntoLaters *)
+      |simpl_subst; try wp_value_head (* new goal *)
+      ])
    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a reduct"
   | _ => fail "wp_pure: not a 'wp'"
   end.
