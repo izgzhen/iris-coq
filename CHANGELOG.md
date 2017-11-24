@@ -73,6 +73,10 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
     tactics now no longer work when the universal quantifier or modality is
     behind a type class opaque definition.  Furthermore, this can change the
     name of anonymous identifiers introduced with the "%" pattern.
+* Make `ofe_fun` dependently typed, subsuming `iprod`.  The latter got removed.
+* Generalize `saved_prop` to let the user choose the location of the type-level
+  later.  Rename the general form to `saved_anything`.  Provide `saved_prop` and
+  `saved_pred` as special cases.
 * Define the generic `fill` operation of the `ectxi_language` construct in terms
   of a left fold instead of a right fold. This gives rise to more definitional
   equalities.
