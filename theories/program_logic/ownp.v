@@ -156,10 +156,9 @@ End lifting.
 
 Section ectx_lifting.
   Import ectx_language.
-  Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.
-  Context `{ownPG (ectx_lang expr) Σ} {Hinh : Inhabited state}.
-  Implicit Types Φ : val → iProp Σ.
-  Implicit Types e : expr.
+  Context {Λ : ectxLanguage} `{ownPG Λ Σ} {Hinh : Inhabited (state Λ)}.
+  Implicit Types Φ : val Λ → iProp Σ.
+  Implicit Types e : expr Λ.
   Hint Resolve head_prim_reducible head_reducible_prim_step.
 
   Lemma ownP_lift_head_step E Φ e1 :

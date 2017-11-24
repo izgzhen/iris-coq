@@ -76,6 +76,11 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
 * Define the generic `fill` operation of the `ectxi_language` construct in terms
   of a left fold instead of a right fold. This gives rise to more definitional
   equalities.
+* The language hierarchy (`language`, `ectx_language`, `ectxi_language`) is now
+  fully formalized using canonical structures instead of using a mixture of
+  type classes and canonical structures. Also, it now uses explicit mixins. The
+  file `program_logic/ectxi_language` contains some documentation on how to
+  setup Iris for your language.
 * Improved big operators:
   + They are no longer tied to cameras, but work on any monoid
   + The version of big operations over lists was redefined so that it enjoys
