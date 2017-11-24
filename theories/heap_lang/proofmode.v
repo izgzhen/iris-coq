@@ -5,15 +5,15 @@ From iris.heap_lang Require Export tactics lifting.
 Set Default Proof Using "Type".
 Import uPred.
 
-Lemma tac_wp_pure `{heapG Σ} K Δ Δ' E e1 e2 φ Φ :
+Lemma tac_wp_pure `{heapG Σ} Δ Δ' E e1 e2 φ Φ :
   PureExec φ e1 e2 →
   φ →
   IntoLaterNEnvs 1 Δ Δ' →
-  envs_entails Δ' (WP fill K e2 @ E {{ Φ }}) →
-  envs_entails Δ (WP fill K e1 @ E {{ Φ }}).
+  envs_entails Δ' (WP e2 @ E {{ Φ }}) →
+  envs_entails Δ (WP e1 @ E {{ Φ }}).
 Proof.
   rewrite /envs_entails=> ??? HΔ'. rewrite into_laterN_env_sound /=.
-  rewrite -wp_bind HΔ' -wp_pure_step_later //. by rewrite -wp_bind_inv.
+  rewrite HΔ' -wp_pure_step_later //.
 Qed.
 
 Lemma tac_wp_value `{heapG Σ} Δ E Φ e v :
@@ -28,11 +28,12 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
   lazymatch goal with
   | |- envs_entails _ (wp ?E ?e ?Q) => reshape_expr e ltac:(fun K e' =>
     unify e' efoc;
-    eapply (tac_wp_pure K);
-    [simpl; apply _                 (* PureExec *)
+    eapply tac_wp_pure;
+    [simpl; change e with (fill K e'); apply _  (* PureExec *)
     |try fast_done                  (* The pure condition for PureExec *)
     |apply _                        (* IntoLaters *)
-    |simpl_subst; try wp_value_head (* new goal *)])
+    |simpl_subst; try wp_value_head (* new goal *)
+    ])
    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a reduct"
   | _ => fail "wp_pure: not a 'wp'"
   end.

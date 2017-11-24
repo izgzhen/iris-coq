@@ -140,6 +140,19 @@ Section language.
     PureExec P e1 e2.
   Proof. intros HPE. split; intros; eapply HPE; eauto. Qed.
 
+  Global Instance pure_exec_ctx K `{LanguageCtx Λ K} e1 e2 φ :
+    PureExec φ e1 e2 →
+    PureExec φ (K e1) (K e2).
+  Proof.
+    intros [Hred Hstep]. split.
+    - intros σ ?. destruct (Hred σ) as (? & ? & ? & ?); first done.
+      do 3 eexists. eapply fill_step. done.
+    - intros σ ???? Hpstep. edestruct fill_step_inv as (? & ? & ?); [|exact Hpstep|].
+      + destruct (Hred σ) as (? & ? & ? & ?); first done.
+        eapply val_stuck. done.
+      + edestruct Hstep as (? & ? & ?); [done..|]. by subst.
+  Qed.
+
   (* This is a family of frequent assumptions for PureExec *)
   Class IntoVal (e : expr Λ) (v : val Λ) :=
     into_val : to_val e = Some v.
