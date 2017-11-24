@@ -140,7 +140,8 @@ Section language.
     PureExec P e1 e2.
   Proof. intros HPE. split; intros; eapply HPE; eauto. Qed.
 
-  Global Instance pure_exec_ctx K `{LanguageCtx Λ K} e1 e2 φ :
+  (* We do not make this an instance because it is awfully general. *)
+  Lemma pure_exec_ctx K `{LanguageCtx Λ K} e1 e2 φ :
     PureExec φ e1 e2 →
     PureExec φ (K e1) (K e2).
   Proof.
