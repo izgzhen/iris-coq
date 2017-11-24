@@ -205,6 +205,12 @@ Section ectx_language.
       eexists e2', σ2, efs. by apply head_prim_step.
     - intros σ1 e2' σ2 efs ? ?%head_reducible_prim_step; eauto.
   Qed.
+
+  Global Instance pure_exec_fill K e1 e2 φ :
+    PureExec φ e1 e2 →
+    PureExec φ (fill K e1) (fill K e2).
+  Proof. apply: pure_exec_ctx. Qed.
+
 End ectx_language.
 
 Arguments ectx_lang : clear implicits.

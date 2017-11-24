@@ -140,6 +140,19 @@ Section language.
     PureExec P e1 e2.
   Proof. intros HPE. split; intros; eapply HPE; eauto. Qed.
 
+  (* We do not make this an instance because it is awfully general. *)
+  Lemma pure_exec_ctx K `{LanguageCtx Λ K} e1 e2 φ :
+    PureExec φ e1 e2 →
+    PureExec φ (K e1) (K e2).
+  Proof.
+    intros [Hred Hstep]. split.
+    - unfold reducible in *. naive_solver eauto using fill_step.
+    - intros σ1 e2' σ2 efs ? Hpstep.
+      destruct (fill_step_inv e1 σ1 e2' σ2 efs) as (e2'' & -> & ?); [|exact Hpstep|].
+      + destruct (Hred σ1) as (? & ? & ? & ?); eauto using val_stuck.
+      + edestruct (Hstep σ1 e2'' σ2 efs) as (-> & -> & ->); auto.
+  Qed.
+
   (* This is a family of frequent assumptions for PureExec *)
   Class IntoVal (e : expr Λ) (v : val Λ) :=
     into_val : to_val e = Some v.
