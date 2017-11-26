@@ -374,7 +374,7 @@ Lemma fill_item_val Ki e :
   is_Some (to_val (fill_item Ki e)) → is_Some (to_val e).
 Proof. intros [v ?]. destruct Ki; simplify_option_eq; eauto. Qed.
 
-Lemma val_stuck e1 σ1 e2 σ2 efs : head_step e1 σ1 e2 σ2 efs → to_val e1 = None.
+Lemma val_head_stuck e1 σ1 e2 σ2 efs : head_step e1 σ1 e2 σ2 efs → to_val e1 = None.
 Proof. destruct 1; naive_solver. Qed.
 
 Lemma head_ctx_step_val Ki e σ1 e2 σ2 efs :
@@ -467,20 +467,18 @@ Lemma subst_rec_ne' f y e x es :
   (x ≠ f ∨ f = BAnon) → (x ≠ y ∨ y = BAnon) →
   subst' x es (Rec f y e) = Rec f y (subst' x es e).
 Proof. intros. destruct x; simplify_option_eq; naive_solver. Qed.
+
+Lemma heap_lang_mixin : EctxiLanguageMixin of_val to_val fill_item head_step.
+Proof.
+  split; apply _ || eauto using to_of_val, of_to_val, val_head_stuck,
+    fill_item_val, fill_item_no_val_inj, head_ctx_step_val.
+Qed.
 End heap_lang.
 
 (** Language *)
-Program Instance heap_ectxi_lang :
-  EctxiLanguage
-    (heap_lang.expr) heap_lang.val heap_lang.ectx_item heap_lang.state := {|
-  of_val := heap_lang.of_val; to_val := heap_lang.to_val;
-  fill_item := heap_lang.fill_item; head_step := heap_lang.head_step
-|}.
-Solve Obligations with eauto using heap_lang.to_of_val, heap_lang.of_to_val,
-  heap_lang.val_stuck, heap_lang.fill_item_val, heap_lang.fill_item_no_val_inj,
-  heap_lang.head_ctx_step_val.
-
-Canonical Structure heap_lang := ectx_lang (heap_lang.expr).
+Canonical Structure heap_ectxi_lang := EctxiLanguage heap_lang.heap_lang_mixin.
+Canonical Structure heap_ectx_lang := EctxLanguageOfEctxi heap_ectxi_lang.
+Canonical Structure heap_lang := LanguageOfEctx heap_ectx_lang.
 
 (* Prefer heap_lang names over ectx_language names. *)
 Export heap_lang.

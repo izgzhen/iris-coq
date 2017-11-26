@@ -213,14 +213,16 @@ Note that for RAs, this and the RA-based definition of a frame-preserving update
 Note that every RA is a discrete CMRA, by picking the discrete COFE for the equivalence relation.
 Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE structure, as well as the step-index of $\mval$.
 
-\begin{defn}
-  A function $f : \monoid_1 \to \monoid_2$ between two CMRAs is \emph{monotone} (written $f : \monoid_1 \monra \monoid_2$) if it satisfies the following conditions:
+\begin{defn}[CMRA homomorphism]
+  A function $f : \monoid_1 \to \monoid_2$ between two CMRAs is \emph{a CMRA homomorphism} if it satisfies the following conditions:
   \begin{enumerate}[itemsep=0pt]
   \item $f$ is non-expansive
+  \item $f$ commutes with composition:\\
+    $\All \melt_1 \in \monoid_1, \melt_2 \in \monoid_1. f(\melt_1) \mtimes f(\melt_2) = f(\melt_1 \mtimes \melt_2)$
+  \item $f$ commutes with the core:\\
+    $\All \melt \in \monoid_1. \mcore{f(\melt)} = f(\mcore{\melt})$
   \item $f$ preserves validity: \\
     $\All n, \melt \in \monoid_1. \melt \in \mval_n \Ra f(\melt) \in \mval_n$
-  \item $f$ preserves CMRA inclusion:\\
-    $\All \melt \in \monoid_1, \meltB \in \monoid_1. \melt \mincl \meltB \Ra f(\melt) \mincl f(\meltB)$
   \end{enumerate}
 \end{defn}
 

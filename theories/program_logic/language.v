@@ -1,6 +1,19 @@
 From iris.algebra Require Export ofe.
 Set Default Proof Using "Type".
 
+Section language_mixin.
+  Context {expr val state : Type}.
+  Context (of_val : val → expr).
+  Context (to_val : expr → option val).
+  Context (prim_step : expr → state → expr → state → list expr → Prop).
+
+  Record LanguageMixin := {
+    mixin_to_of_val v : to_val (of_val v) = Some v;
+    mixin_of_to_val e v : to_val e = Some v → of_val v = e;
+    mixin_val_stuck e σ e' σ' efs : prim_step e σ e' σ' efs → to_val e = None
+  }.
+End language_mixin.
+
 Structure language := Language {
   expr : Type;
   val : Type;
@@ -8,20 +21,17 @@ Structure language := Language {
   of_val : val → expr;
   to_val : expr → option val;
   prim_step : expr → state → expr → state → list expr → Prop;
-  to_of_val v : to_val (of_val v) = Some v;
-  of_to_val e v : to_val e = Some v → of_val v = e;
-  val_stuck e σ e' σ' efs : prim_step e σ e' σ' efs → to_val e = None
+  language_mixin : LanguageMixin of_val to_val prim_step
 }.
 Delimit Scope expr_scope with E.
 Delimit Scope val_scope with V.
 Bind Scope expr_scope with expr.
 Bind Scope val_scope with val.
+
+Arguments Language {_ _ _ _ _ _} _.
 Arguments of_val {_} _.
 Arguments to_val {_} _.
 Arguments prim_step {_} _ _ _ _ _.
-Arguments to_of_val {_} _.
-Arguments of_to_val {_} _ _ _.
-Arguments val_stuck {_} _ _ _ _ _ _.
 
 Canonical Structure stateC Λ := leibnizC (state Λ).
 Canonical Structure valC Λ := leibnizC (val Λ).
@@ -29,7 +39,7 @@ Canonical Structure exprC Λ := leibnizC (expr Λ).
 
 Definition cfg (Λ : language) := (list (expr Λ) * state Λ)%type.
 
-Class LanguageCtx (Λ : language) (K : expr Λ → expr Λ) := {
+Class LanguageCtx {Λ : language} (K : expr Λ → expr Λ) := {
   fill_not_val e :
     to_val e = None → to_val (K e) = None;
   fill_step e1 σ1 e2 σ2 efs :
@@ -40,12 +50,20 @@ Class LanguageCtx (Λ : language) (K : expr Λ → expr Λ) := {
     ∃ e2', e2 = K e2' ∧ prim_step e1' σ1 e2' σ2 efs
 }.
 
-Instance language_ctx_id Λ : LanguageCtx Λ id.
+Instance language_ctx_id Λ : LanguageCtx (@id (expr Λ)).
 Proof. constructor; naive_solver. Qed.
 
 Section language.
   Context {Λ : language}.
   Implicit Types v : val Λ.
+  Implicit Types e : expr Λ.
+
+  Lemma to_of_val v : to_val (of_val v) = Some v.
+  Proof. apply language_mixin. Qed.
+  Lemma of_to_val e v : to_val e = Some v → of_val v = e.
+  Proof. apply language_mixin. Qed.
+  Lemma val_stuck e σ e' σ' efs : prim_step e σ e' σ' efs → to_val e = None.
+  Proof. apply language_mixin. Qed.
 
   Definition reducible (e : expr Λ) (σ : state Λ) :=
     ∃ e' σ' efs, prim_step e σ e' σ' efs.
@@ -121,6 +139,19 @@ Section language.
     (P → PureExec True e1 e2) →
     PureExec P e1 e2.
   Proof. intros HPE. split; intros; eapply HPE; eauto. Qed.
+
+  (* We do not make this an instance because it is awfully general. *)
+  Lemma pure_exec_ctx K `{LanguageCtx Λ K} e1 e2 φ :
+    PureExec φ e1 e2 →
+    PureExec φ (K e1) (K e2).
+  Proof.
+    intros [Hred Hstep]. split.
+    - unfold reducible in *. naive_solver eauto using fill_step.
+    - intros σ1 e2' σ2 efs ? Hpstep.
+      destruct (fill_step_inv e1 σ1 e2' σ2 efs) as (e2'' & -> & ?); [|exact Hpstep|].
+      + destruct (Hred σ1) as (? & ? & ? & ?); eauto using val_stuck.
+      + edestruct (Hstep σ1 e2'' σ2 efs) as (-> & -> & ->); auto.
+  Qed.
 
   (* This is a family of frequent assumptions for PureExec *)
   Class IntoVal (e : expr Λ) (v : val Λ) :=

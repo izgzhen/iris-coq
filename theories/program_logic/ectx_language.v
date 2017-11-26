@@ -4,9 +4,51 @@ From iris.algebra Require Export base.
 From iris.program_logic Require Import language.
 Set Default Proof Using "Type".
 
-(* We need to make thos arguments indices that we want canonical structure
-   inference to use a keys. *)
-Class EctxLanguage (expr val ectx state : Type) := {
+(* TAKE CARE: When you define an [ectxLanguage] canonical structure for your
+language, you need to also define a corresponding [language] canonical
+structure. Use the coercion [LanguageOfEctx] as defined in the bottom of this
+file for doing that. *)
+
+Section ectx_language_mixin.
+  Context {expr val ectx state : Type}.
+  Context (of_val : val → expr).
+  Context (to_val : expr → option val).
+  Context (empty_ectx : ectx).
+  Context (comp_ectx : ectx → ectx → ectx).
+  Context (fill : ectx → expr → expr).
+  Context (head_step : expr → state → expr → state → list expr → Prop).
+
+  Record EctxLanguageMixin := {
+    mixin_to_of_val v : to_val (of_val v) = Some v;
+    mixin_of_to_val e v : to_val e = Some v → of_val v = e;
+    mixin_val_head_stuck e1 σ1 e2 σ2 efs :
+      head_step e1 σ1 e2 σ2 efs → to_val e1 = None;
+
+    mixin_fill_empty e : fill empty_ectx e = e;
+    mixin_fill_comp K1 K2 e : fill K1 (fill K2 e) = fill (comp_ectx K1 K2) e;
+    mixin_fill_inj K : Inj (=) (=) (fill K);
+    mixin_fill_val K e : is_Some (to_val (fill K e)) → is_Some (to_val e);
+
+    (* There are a whole lot of sensible axioms (like associativity, and left and
+    right identity, we could demand for [comp_ectx] and [empty_ectx]. However,
+    positivity suffices. *)
+    mixin_ectx_positive K1 K2 :
+      comp_ectx K1 K2 = empty_ectx → K1 = empty_ectx ∧ K2 = empty_ectx;
+
+    mixin_step_by_val K K' e1 e1' σ1 e2 σ2 efs :
+      fill K e1 = fill K' e1' →
+      to_val e1 = None →
+      head_step e1' σ1 e2 σ2 efs →
+      ∃ K'', K' = comp_ectx K K'';
+  }.
+End ectx_language_mixin.
+
+Structure ectxLanguage := EctxLanguage {
+  expr : Type;
+  val : Type;
+  ectx : Type;
+  state : Type;
+
   of_val : val → expr;
   to_val : expr → option val;
   empty_ectx : ectx;
@@ -14,61 +56,58 @@ Class EctxLanguage (expr val ectx state : Type) := {
   fill : ectx → expr → expr;
   head_step : expr → state → expr → state → list expr → Prop;
 
-  to_of_val v : to_val (of_val v) = Some v;
-  of_to_val e v : to_val e = Some v → of_val v = e;
-  val_stuck e1 σ1 e2 σ2 efs : head_step e1 σ1 e2 σ2 efs → to_val e1 = None;
-
-  fill_empty e : fill empty_ectx e = e;
-  fill_comp K1 K2 e : fill K1 (fill K2 e) = fill (comp_ectx K1 K2) e;
-  fill_inj K :> Inj (=) (=) (fill K);
-  fill_not_val K e : to_val e = None → to_val (fill K e) = None;
-
-  (* There are a whole lot of sensible axioms (like associativity, and left and
-  right identity, we could demand for [comp_ectx] and [empty_ectx]. However,
-  positivity suffices. *)
-  ectx_positive K1 K2 :
-    comp_ectx K1 K2 = empty_ectx → K1 = empty_ectx ∧ K2 = empty_ectx;
-
-  step_by_val K K' e1 e1' σ1 e2 σ2 efs :
-    fill K e1 = fill K' e1' →
-    to_val e1 = None →
-    head_step e1' σ1 e2 σ2 efs →
-    exists K'', K' = comp_ectx K K'';
+  ectx_language_mixin :
+    EctxLanguageMixin of_val to_val empty_ectx comp_ectx fill head_step
 }.
 
-Arguments of_val {_ _ _ _ _} _%V.
-Arguments to_val {_ _ _ _ _} _%E.
-Arguments empty_ectx {_ _ _ _ _}.
-Arguments comp_ectx {_ _ _ _ _} _ _.
-Arguments fill {_ _ _ _ _} _ _%E.
-Arguments head_step {_ _ _ _ _} _%E _ _%E _ _.
-
-Arguments to_of_val {_ _ _ _ _} _.
-Arguments of_to_val {_ _ _ _ _} _ _ _.
-Arguments val_stuck {_ _ _ _ _} _ _ _ _ _ _.
-Arguments fill_empty {_ _ _ _ _} _.
-Arguments fill_comp {_ _ _ _ _} _ _ _.
-Arguments fill_not_val {_ _ _ _ _} _ _ _.
-Arguments ectx_positive {_ _ _ _ _} _ _ _.
-Arguments step_by_val {_ _ _ _ _} _ _ _ _ _ _ _ _ _ _ _.
+Arguments EctxLanguage {_ _ _ _ _ _ _ _ _ _} _.
+Arguments of_val {_} _%V.
+Arguments to_val {_} _%E.
+Arguments empty_ectx {_}.
+Arguments comp_ectx {_} _ _.
+Arguments fill {_} _ _%E.
+Arguments head_step {_} _%E _ _%E _ _.
 
 (* From an ectx_language, we can construct a language. *)
 Section ectx_language.
-  Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.
-  Implicit Types (e : expr) (K : ectx).
+  Context {Λ : ectxLanguage}.
+  Implicit Types v : val Λ.
+  Implicit Types e : expr Λ.
+  Implicit Types K : ectx Λ.
 
-  Definition head_reducible (e : expr) (σ : state) :=
+  (* Only project stuff out of the mixin that is not also in language *)
+  Lemma val_head_stuck e1 σ1 e2 σ2 efs : head_step e1 σ1 e2 σ2 efs → to_val e1 = None.
+  Proof. apply ectx_language_mixin. Qed.
+  Lemma fill_empty e : fill empty_ectx e = e.
+  Proof. apply ectx_language_mixin. Qed.
+  Lemma fill_comp K1 K2 e : fill K1 (fill K2 e) = fill (comp_ectx K1 K2) e.
+  Proof. apply ectx_language_mixin. Qed.
+  Global Instance fill_inj K : Inj (=) (=) (fill K).
+  Proof. apply ectx_language_mixin. Qed.
+  Lemma fill_val K e : is_Some (to_val (fill K e)) → is_Some (to_val e).
+  Proof. apply ectx_language_mixin. Qed.
+  Lemma ectx_positive K1 K2 :
+    comp_ectx K1 K2 = empty_ectx → K1 = empty_ectx ∧ K2 = empty_ectx.
+  Proof. apply ectx_language_mixin. Qed.
+  Lemma step_by_val K K' e1 e1' σ1 e2 σ2 efs :
+    fill K e1 = fill K' e1' →
+    to_val e1 = None →
+    head_step e1' σ1 e2 σ2 efs →
+    ∃ K'', K' = comp_ectx K K''.
+  Proof. apply ectx_language_mixin. Qed.
+
+  Definition head_reducible (e : expr Λ) (σ : state Λ) :=
     ∃ e' σ' efs, head_step e σ e' σ' efs.
-  Definition head_irreducible (e : expr) (σ : state) :=
+  Definition head_irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ e' σ' efs, ¬head_step e σ e' σ' efs.
 
   (* All non-value redexes are at the root.  In other words, all sub-redexes are
      values. *)
-  Definition sub_redexes_are_values (e : expr) :=
+  Definition sub_redexes_are_values (e : expr Λ) :=
     ∀ K e', e = fill K e' → to_val e' = None → K = empty_ectx.
 
-  Inductive prim_step (e1 : expr) (σ1 : state)
-      (e2 : expr) (σ2 : state) (efs : list expr) : Prop :=
+  Inductive prim_step (e1 : expr Λ) (σ1 : state Λ)
+      (e2 : expr Λ) (σ2 : state Λ) (efs : list (expr Λ)) : Prop :=
     Ectx_step K e1' e2' :
       e1 = fill K e1' → e2 = fill K e2' →
       head_step e1' σ1 e2' σ2 efs → prim_step e1 σ1 e2 σ2 efs.
@@ -77,19 +116,21 @@ Section ectx_language.
     head_step e1 σ1 e2 σ2 efs → prim_step (fill K e1) σ1 (fill K e2) σ2 efs.
   Proof. econstructor; eauto. Qed.
 
-  Lemma val_prim_stuck e1 σ1 e2 σ2 efs :
-    prim_step e1 σ1 e2 σ2 efs → to_val e1 = None.
-  Proof. intros [??? -> -> ?]; eauto using fill_not_val, val_stuck. Qed.
+  Definition ectx_lang_mixin : LanguageMixin of_val to_val prim_step.
+  Proof.
+    split.
+    - apply ectx_language_mixin.
+    - apply ectx_language_mixin.
+    - intros ????? [??? -> -> ?%val_head_stuck].
+      apply eq_None_not_Some. by intros ?%fill_val%eq_None_not_Some.
+  Qed.
 
-  Canonical Structure ectx_lang : language := {|
-    language.expr := expr; language.val := val; language.state := state;
-    language.of_val := of_val; language.to_val := to_val;
-    language.prim_step := prim_step;
-    language.to_of_val := to_of_val; language.of_to_val := of_to_val;
-    language.val_stuck := val_prim_stuck;
-  |}.
+  Canonical Structure ectx_lang : language := Language ectx_lang_mixin.
 
   (* Some lemmas about this language *)
+  Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
+  Proof. rewrite !eq_None_not_Some. eauto using fill_val. Qed.
+
   Lemma head_prim_step e1 σ1 e2 σ2 efs :
     head_step e1 σ1 e2 σ2 efs → prim_step e1 σ1 e2 σ2 efs.
   Proof. apply Ectx_step with empty_ectx; by rewrite ?fill_empty. Qed.
@@ -108,7 +149,7 @@ Section ectx_language.
     reducible e σ → sub_redexes_are_values e → head_reducible e σ.
   Proof.
     intros (e'&σ'&efs&[K e1' e2' -> -> Hstep]) ?.
-    assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
+    assert (K = empty_ectx) as -> by eauto 10 using val_head_stuck.
     rewrite fill_empty /head_reducible; eauto.
   Qed.
   Lemma prim_head_irreducible e σ :
@@ -123,7 +164,7 @@ Section ectx_language.
     Atomic e.
   Proof.
     intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
-    assert (K = empty_ectx) as -> by eauto 10 using val_stuck.
+    assert (K = empty_ectx) as -> by eauto 10 using val_head_stuck.
     rewrite fill_empty. eapply Hatomic_step. by rewrite fill_empty.
   Qed.
 
@@ -135,14 +176,14 @@ Section ectx_language.
     intros (e2''&σ2''&efs''&?) [K e1' e2' -> -> Hstep].
     destruct (step_by_val K empty_ectx e1' (fill K e1') σ1 e2'' σ2'' efs'')
       as [K' [-> _]%symmetry%ectx_positive];
-      eauto using fill_empty, fill_not_val, val_stuck.
+      eauto using fill_empty, fill_not_val, val_head_stuck.
     by rewrite !fill_empty.
   Qed.
 
   (* Every evaluation context is a context. *)
-  Global Instance ectx_lang_ctx K : LanguageCtx ectx_lang (fill K).
+  Global Instance ectx_lang_ctx K : LanguageCtx (fill K).
   Proof.
-    split.
+    split; simpl.
     - eauto using fill_not_val.
     - intros ????? [K' e1' e2' Heq1 Heq2 Hstep].
       by exists (comp_ectx K K') e1' e2'; rewrite ?Heq1 ?Heq2 ?fill_comp.
@@ -164,6 +205,18 @@ Section ectx_language.
       eexists e2', σ2, efs. by apply head_prim_step.
     - intros σ1 e2' σ2 efs ? ?%head_reducible_prim_step; eauto.
   Qed.
+
+  Global Instance pure_exec_fill K e1 e2 φ :
+    PureExec φ e1 e2 →
+    PureExec φ (fill K e1) (fill K e2).
+  Proof. apply: pure_exec_ctx. Qed.
+
 End ectx_language.
 
-Arguments ectx_lang _ {_ _ _ _}.
+Arguments ectx_lang : clear implicits.
+Coercion ectx_lang : ectxLanguage >-> language.
+
+Definition LanguageOfEctx (Λ : ectxLanguage) : language :=
+  let '@EctxLanguage E V C St of_val to_val empty comp fill head mix := Λ in
+  @Language E V St of_val to_val _
+    (@ectx_lang_mixin (@EctxLanguage E V C St of_val to_val empty comp fill head mix)).
