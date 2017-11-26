@@ -14,12 +14,14 @@ Changes in and extensions of the theory:
   (defined in the logic of Iris using impredicative quantification).
 * Add a proof of the inverse of `wp_bind`.
 * Support verifying code that might get stuck by distinguishing
-  "progressive" vs. "non-progressive" weakest preconditions. (See
-  [Swasey et al. OOPSLA '17] for examples.) The progressive `WP e @ E
-  {{ Φ }}` ensures that, as `e` runs, it does not get stuck. The
-  non-progressive `WP e @ E ?{{ Φ }}` ensures that, as usual, all
-  invariants are preserved while `e` runs, but it permits execution to
-  get stuck. The former implies the latter.
+  "non-stuck" vs. "(potentially) stuck" weakest preconditions. (See
+  [Swasey et al. OOPSLA '17] for examples.) The non-stuck `WP e @ E {{
+  Φ }}` ensures that, as `e` runs, it does not get stuck. The stuck
+  `WP e @ E ?{{ Φ }}` ensures that, as usual, all invariants are
+  preserved while `e` runs, but it permits execution to get stuck. The
+  former implies the latter. The full judgment is `WP e @ s; E {{ Φ
+  }}`, where non-stuck WP uses *stuckness bit* `s = not_stuck` while
+  stuck WP uses `s = maybe_stuck`.
 
 Changes in Coq:
 
@@ -104,9 +106,6 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
 * Move the `prelude` folder to its own project: std++
 * The rules `internal_eq_rewrite` and `internal_eq_rewrite_contractive` are now
   stated in the logic, i.e. they are `iApply` friendly.
-* Use *stuckness bits* `s` to define progressive vs. non-progressive
-  WP. The full judgment is `WP e @ s; E {{ Φ }}`; progressive WP uses
-  `s = not_stuck` while non-progressive WP uses `s = maybe_stuck`.
 * Restore the original, stronger notion of atomicity alongside the
   weaker notion. These are `Atomic s e` where the stuckness bit `s`
   indicates whether expression `e` is weakly (`s = not_stuck`) or
