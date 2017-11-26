@@ -129,8 +129,8 @@ Section ectx_language.
 
   Canonical Structure ectx_lang : language := Language ectx_lang_mixin.
 
-  Class HeadAtomic (s : stuckness) (e : expr Λ) : Prop :=
-    head_atomic σ e' σ' efs :
+  Definition HeadAtomic (s : stuckness) (e : expr Λ) : Prop :=
+    ∀ σ e' σ' efs,
       head_step e σ e' σ' efs →
       if s is not_stuck then irreducible e' σ' else is_Some (to_val e').
 
