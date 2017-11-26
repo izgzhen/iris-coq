@@ -21,8 +21,8 @@ Instance nclose : UpClose namespace coPset := unseal nclose_aux.
 Definition nclose_eq : @nclose = @nclose_def := seal_eq nclose_aux.
 
 Notation "N .@ x" := (ndot N x)
-  (at level 19, left associativity, format "N .@ x") : C_scope.
-Notation "(.@)" := ndot (only parsing) : C_scope.
+  (at level 19, left associativity, format "N .@ x") : stdpp_scope.
+Notation "(.@)" := ndot (only parsing) : stdpp_scope.
 
 Instance ndisjoint : Disjoint namespace := λ N1 N2, nclose N1 ## nclose N2.
 

@@ -23,6 +23,7 @@ Definition ownI `{invG Σ} (i : positive) (P : iProp Σ) : iProp Σ :=
   own invariant_name (◯ {[ i := invariant_unfold P ]}).
 Arguments ownI {_ _} _ _%I.
 Typeclasses Opaque ownI.
+Instance: Params (@invariant_unfold) 1.
 Instance: Params (@ownI) 3.
 
 Definition ownE `{invG Σ} (E : coPset) : iProp Σ :=
@@ -104,7 +105,7 @@ Qed.
 Lemma ownI_open i P : wsat ∗ ownI i P ∗ ownE {[i]} ⊢ wsat ∗ ▷ P ∗ ownD {[i]}.
 Proof.
   rewrite /ownI /wsat -!lock.
-  iIntros "(Hw & Hi & HiE)". iDestruct "Hw" as (I) "[? HI]".
+  iIntros "(Hw & Hi & HiE)". iDestruct "Hw" as (I) "[Hw HI]".
   iDestruct (invariant_lookup I i P with "[$]") as (Q ?) "#HPQ".
   iDestruct (big_opM_delete _ _ i with "HI") as "[[[HQ $]|HiE'] HI]"; eauto.
   - iSplitR "HQ"; last by iNext; iRewrite -"HPQ".
@@ -115,7 +116,7 @@ Qed.
 Lemma ownI_close i P : wsat ∗ ownI i P ∗ ▷ P ∗ ownD {[i]} ⊢ wsat ∗ ownE {[i]}.
 Proof.
   rewrite /ownI /wsat -!lock.
-  iIntros "(Hw & Hi & HP & HiD)". iDestruct "Hw" as (I) "[? HI]".
+  iIntros "(Hw & Hi & HP & HiD)". iDestruct "Hw" as (I) "[Hw HI]".
   iDestruct (invariant_lookup with "[$]") as (Q ?) "#HPQ".
   iDestruct (big_opM_delete _ _ i with "HI") as "[[[HQ ?]|$] HI]"; eauto.
   - iDestruct (ownD_singleton_twice with "[$]") as %[].
@@ -128,7 +129,7 @@ Lemma ownI_alloc φ P :
   wsat ∗ ▷ P ==∗ ∃ i, ⌜φ i⌝ ∗ wsat ∗ ownI i P.
 Proof.
   iIntros (Hfresh) "[Hw HP]". rewrite /wsat -!lock.
-  iDestruct "Hw" as (I) "[? HI]".
+  iDestruct "Hw" as (I) "[Hw HI]".
   iMod (own_unit (gset_disjUR positive) disabled_name) as "HE".
   iMod (own_updateP with "[$]") as "HE".
   { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).
@@ -150,7 +151,7 @@ Lemma ownI_alloc_open φ P :
   (∀ E : gset positive, ∃ i, i ∉ E ∧ φ i) →
   wsat ==∗ ∃ i, ⌜φ i⌝ ∗ (ownE {[i]} -∗ wsat) ∗ ownI i P ∗ ownD {[i]}.
 Proof.
-  iIntros (Hfresh) "Hw". rewrite /wsat -!lock. iDestruct "Hw" as (I) "[? HI]".
+  iIntros (Hfresh) "Hw". rewrite /wsat -!lock. iDestruct "Hw" as (I) "[Hw HI]".
   iMod (own_unit (gset_disjUR positive) disabled_name) as "HD".
   iMod (own_updateP with "[$]") as "HD".
   { apply (gset_disj_alloc_empty_updateP_strong' (λ i, I !! i = None ∧ φ i)).

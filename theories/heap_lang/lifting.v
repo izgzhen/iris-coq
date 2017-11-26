@@ -61,16 +61,6 @@ Implicit Types Φ : val → iProp Σ.
 Implicit Types efs : list expr.
 Implicit Types σ : state.
 
-(** Bind. This bundles some arguments that wp_ectx_bind leaves as indices. *)
-Lemma wp_bind {s E e} K Φ :
-  WP e @ s; E {{ v, WP fill K (of_val v) @ s; E {{ Φ }} }} ⊢ WP fill K e @ s; E {{ Φ }}.
-Proof. exact: wp_ectx_bind. Qed.
-
-Lemma wp_bindi {s E e} Ki Φ :
-  WP e @ s; E {{ v, WP fill_item Ki (of_val v) @ s; E {{ Φ }} }} ⊢
-     WP fill_item Ki e @ s; E {{ Φ }}.
-Proof. exact: weakestpre.wp_bind. Qed.
-
 (** Base axioms for core primitives of the language: Stateless reductions *)
 Lemma wp_fork s E e Φ :
   ▷ Φ (LitV LitUnit) ∗ ▷ WP e @ s; ⊤ {{ _, True }} ⊢ WP Fork e @ s; E {{ Φ }}.

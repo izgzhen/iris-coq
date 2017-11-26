@@ -620,9 +620,9 @@ Definition ccompose {A B C}
   (f : B -n> C) (g : A -n> B) : A -n> C := CofeMor (f ∘ g).
 Instance: Params (@ccompose) 3.
 Infix "◎" := ccompose (at level 40, left associativity).
-Lemma ccompose_ne {A B C} (f1 f2 : B -n> C) (g1 g2 : A -n> B) n :
-  f1 ≡{n}≡ f2 → g1 ≡{n}≡ g2 → f1 ◎ g1 ≡{n}≡ f2 ◎ g2.
-Proof. by intros Hf Hg x; rewrite /= (Hg x) (Hf (g2 x)). Qed.
+Global Instance ccompose_ne {A B C} :
+  NonExpansive2 (@ccompose A B C).
+Proof. intros n ?? Hf g1 g2 Hg x. rewrite /= (Hg x) (Hf (g2 x)) //. Qed.
 
 (* Function space maps *)
 Definition ofe_mor_map {A A' B B'} (f : A' -n> A) (g : B -n> B')
@@ -1061,6 +1061,7 @@ Inductive later (A : Type) : Type := Next { later_car : A }.
 Add Printing Constructor later.
 Arguments Next {_} _.
 Arguments later_car {_} _.
+Instance: Params (@Next) 1.
 
 Section later.
   Context {A : ofeT}.
@@ -1100,8 +1101,7 @@ Section later.
 
   (* f is contractive iff it can factor into `Next` and a non-expansive function. *)
   Lemma contractive_alt {B : ofeT} (f : A → B) :
-    Contractive f ↔ ∃ g : later A → B,
-      (NonExpansive g) ∧ (∀ x, f x ≡ g (Next x)).
+    Contractive f ↔ ∃ g : later A → B, NonExpansive g ∧ ∀ x, f x ≡ g (Next x).
   Proof.
     split.
     - intros Hf. exists (f ∘ later_car); split=> // n x y ?. by f_equiv.

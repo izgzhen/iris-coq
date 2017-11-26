@@ -10,35 +10,35 @@ Instance: Params (@ht) 5.
 
 Notation "{{ P } } e @ s ; E {{ Φ } }" := (ht s E P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
-   format "{{  P  } }  e  @  s ;  E  {{  Φ  } }") : C_scope.
+   format "{{  P  } }  e  @  s ;  E  {{  Φ  } }") : stdpp_scope.
 Notation "{{ P } } e @ E {{ Φ } }" := (ht not_stuck E P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
-   format "{{  P  } }  e  @  E  {{  Φ  } }") : C_scope.
+   format "{{  P  } }  e  @  E  {{  Φ  } }") : stdpp_scope.
 Notation "{{ P } } e @ E ? {{ Φ } }" := (ht maybe_stuck E P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
-   format "{{  P  } }  e  @  E  ? {{  Φ  } }") : C_scope.
+   format "{{  P  } }  e  @  E  ? {{  Φ  } }") : stdpp_scope.
 Notation "{{ P } } e {{ Φ } }" := (ht not_stuck ⊤ P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
-   format "{{  P  } }  e  {{  Φ  } }") : C_scope.
+   format "{{  P  } }  e  {{  Φ  } }") : stdpp_scope.
 Notation "{{ P } } e ? {{ Φ } }" := (ht maybe_stuck ⊤ P%I e%E Φ%I)
   (at level 20, P, e, Φ at level 200,
-   format "{{  P  } }  e  ? {{  Φ  } }") : C_scope.
+   format "{{  P  } }  e  ? {{  Φ  } }") : stdpp_scope.
 
 Notation "{{ P } } e @ s ; E {{ v , Q } }" := (ht s E P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
-   format "{{  P  } }  e  @  s ;  E  {{  v ,  Q  } }") : C_scope.
+   format "{{  P  } }  e  @  s ;  E  {{  v ,  Q  } }") : stdpp_scope.
 Notation "{{ P } } e @ E {{ v , Q } }" := (ht not_stuck E P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
-   format "{{  P  } }  e  @  E  {{  v ,  Q  } }") : C_scope.
+   format "{{  P  } }  e  @  E  {{  v ,  Q  } }") : stdpp_scope.
 Notation "{{ P } } e @ E ? {{ v , Q } }" := (ht maybe_stuck E P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
-   format "{{  P  } }  e  @  E  ? {{  v ,  Q  } }") : C_scope.
+   format "{{  P  } }  e  @  E  ? {{  v ,  Q  } }") : stdpp_scope.
 Notation "{{ P } } e {{ v , Q } }" := (ht not_stuck ⊤ P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
-   format "{{  P  } }  e  {{  v ,  Q  } }") : C_scope.
+   format "{{  P  } }  e  {{  v ,  Q  } }") : stdpp_scope.
 Notation "{{ P } } e ? {{ v , Q } }" := (ht maybe_stuck ⊤ P%I e%E (λ v, Q)%I)
   (at level 20, P, e, Q at level 200,
-   format "{{  P  } }  e  ? {{  v ,  Q  } }") : C_scope.
+   format "{{  P  } }  e  ? {{  v ,  Q  } }") : stdpp_scope.
 
 Section hoare.
 Context `{irisG Λ Σ}.

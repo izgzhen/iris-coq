@@ -39,7 +39,7 @@ Inductive expr :=
 Fixpoint to_expr (e : expr) : heap_lang.expr :=
   match e with
   | Val v e' _ => e'
-  | ClosedExpr e _ => e
+  | ClosedExpr e => e
   | Var x => heap_lang.Var x
   | Rec f x e => heap_lang.Rec f x (to_expr e)
   | App e1 e2 => heap_lang.App (to_expr e1) (to_expr e2)
@@ -100,7 +100,7 @@ Ltac of_expr e :=
 
 Fixpoint is_closed (X : list string) (e : expr) : bool :=
   match e with
-  | Val _ _ _ | ClosedExpr _ _ => true
+  | Val _ _ _ | ClosedExpr _ => true
   | Var x => bool_decide (x ∈ X)
   | Rec f x e => is_closed (f :b: x :b: X) e
   | Lit _ => true
@@ -147,7 +147,7 @@ Proof. intros [v ?]; exists v; eauto using to_val_Some. Qed.
 Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
   match e with
   | Val v e H => Val v e H
-  | ClosedExpr e H => @ClosedExpr e H
+  | ClosedExpr e => ClosedExpr e
   | Var y => if decide (x = y) then es else Var y
   | Rec f y e =>
      Rec f y $ if decide (BNamed x ≠ f ∧ BNamed x ≠ y) then subst x es e else e

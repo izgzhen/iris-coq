@@ -3,11 +3,13 @@ From iris.proofmode Require Import base intro_patterns spec_patterns sel_pattern
 From iris.base_logic Require Export base_logic big_op.
 From iris.proofmode Require Export classes notation.
 From iris.proofmode Require Import class_instances.
-From stdpp Require Import stringmap hlist.
+From stdpp Require Import hlist pretty.
 Set Default Proof Using "Type".
+Export ident.
 
 Declare Reduction env_cbv := cbv [
-  beq ascii_beq string_beq
+  option_bind
+  beq ascii_beq string_beq positive_beq ident_beq
   env_lookup env_lookup_delete env_delete env_app env_replace env_dom
   env_persistent env_spatial env_spatial_is_nil envs_dom
   envs_lookup envs_lookup_delete envs_delete envs_snoc envs_app
@@ -20,16 +22,19 @@ Ltac env_reflexivity := env_cbv; exact eq_refl.
 
 (** * Misc *)
 (* Tactic Notation tactics cannot return terms *)
-Ltac iFresh' H :=
+Ltac iFresh :=
   lazymatch goal with
   |- envs_entails ?Δ _ =>
      (* [vm_compute fails] if any of the hypotheses in [Δ] contain evars, so
      first use [cbv] to compute the domain of [Δ] *)
      let Hs := eval cbv in (envs_dom Δ) in
-     eval vm_compute in (fresh_string_of_set H (of_list Hs))
-  | _ => H
+     eval vm_compute in
+       (IAnon (match Hs with
+         | [] => 1
+         | _ => 1 + foldr Pos.max 1 (omap (maybe IAnon) Hs)
+         end))%positive
+  | _ => constr:(IAnon 1)
   end.
-Ltac iFresh := iFresh' "~".
 
 Ltac iMissingHyps Hs :=
   let Δ :=
@@ -83,7 +88,7 @@ Tactic Notation "iRename" constr(H1) "into" constr(H2) :=
 
 Local Inductive esel_pat :=
   | ESelPure
-  | ESelName : bool → string → esel_pat.
+  | ESelIdent : bool → ident → esel_pat.
 
 Ltac iElaborateSelPat pat :=
   let rec go pat Δ Hs :=
@@ -93,14 +98,14 @@ Ltac iElaborateSelPat pat :=
     | SelPersistent :: ?pat =>
        let Hs' := eval env_cbv in (env_dom (env_persistent Δ)) in
        let Δ' := eval env_cbv in (envs_clear_persistent Δ) in
-       go pat Δ' ((ESelName true <$> Hs') ++ Hs)
+       go pat Δ' ((ESelIdent true <$> Hs') ++ Hs)
     | SelSpatial :: ?pat =>
        let Hs' := eval env_cbv in (env_dom (env_spatial Δ)) in
        let Δ' := eval env_cbv in (envs_clear_spatial Δ) in
-       go pat Δ' ((ESelName false <$> Hs') ++ Hs)
-    | SelName ?H :: ?pat =>
+       go pat Δ' ((ESelIdent false <$> Hs') ++ Hs)
+    | SelIdent ?H :: ?pat =>
        lazymatch eval env_cbv in (envs_lookup_delete H Δ) with
-       | Some (?p,_,?Δ') => go pat Δ' (ESelName p H :: Hs)
+       | Some (?p,_,?Δ') => go pat Δ' (ESelIdent p H :: Hs)
        | None => fail "iElaborateSelPat:" H "not found"
        end
     end in
@@ -109,14 +114,16 @@ Ltac iElaborateSelPat pat :=
     let pat := sel_pat.parse pat in go pat Δ (@nil esel_pat)
   end.
 
+Local Ltac iClearHyp H :=
+  eapply tac_clear with _ H _ _; (* (i:=H) *)
+    [env_reflexivity || fail "iClear:" H "not found"|].
+
 Tactic Notation "iClear" constr(Hs) :=
   let rec go Hs :=
     lazymatch Hs with
     | [] => idtac
     | ESelPure :: ?Hs => clear; go Hs
-    | ESelName _ ?H :: ?Hs =>
-       eapply tac_clear with _ H _ _; (* (i:=H) *)
-         [env_reflexivity || fail "iClear:" H "not found"|go Hs]
+    | ESelIdent _ ?H :: ?Hs => iClearHyp H; go Hs
     end in
   let Hs := iElaborateSelPat Hs in go Hs.
 
@@ -260,7 +267,7 @@ Tactic Notation "iFrame" constr(Hs) :=
     | SelPure :: ?Hs => iFrameAnyPure; go Hs
     | SelPersistent :: ?Hs => iFrameAnyPersistent; go Hs
     | SelSpatial :: ?Hs => iFrameAnySpatial; go Hs
-    | SelName ?H :: ?Hs => iFrameHyp H; go Hs
+    | SelIdent ?H :: ?Hs => iFrameHyp H; go Hs
     end
   in let Hs := sel_pat.parse Hs in go Hs.
 Tactic Notation "iFrame" "(" constr(t1) ")" constr(Hs) :=
@@ -406,7 +413,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
     | SForall :: ?pats =>
        idtac "the * specialization pattern is deprecated because it is applied implicitly";
        go H1 pats
-    | SName ?H2 :: ?pats =>
+    | SIdent ?H2 :: ?pats =>
        eapply tac_specialize with _ _ H2 _ H1 _ _ _ _; (* (j:=H1) (i:=H2) *)
          [env_reflexivity || fail "iSpecialize:" H2 "not found"
          |env_reflexivity || fail "iSpecialize:" H1 "not found"
@@ -486,12 +493,17 @@ defaults to [false] (i.e. spatial hypotheses are not preserved). *)
 Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
   let p := intro_pat_persistent p in
   let t :=
-    match type of t with string => constr:(ITrm t hnil "") | _ => t end in
+    match type of t with
+    | string => constr:(ITrm (INamed t) hnil "")
+    | ident => constr:(ITrm t hnil "")
+    | _ => t
+    end in
   lazymatch t with
   | ITrm ?H ?xs ?pat =>
     let pat := spec_pat.parse pat in
+    let H := lazymatch type of H with string => constr:(INamed H) | _ => H end in
     lazymatch type of H with
-    | string =>
+    | ident =>
       (* The lemma [tac_specialize_persistent_helper] allows one to use all
       spatial hypotheses for both proving the premises of the lemma we
       specialize as well as those of the remaining goal. We can only use it when
@@ -553,8 +565,8 @@ Tactic Notation "iPoseProofCore" open_constr(lem)
     "as" constr(p) constr(lazy_tc) tactic(tac) :=
   try iStartProof;
   let Htmp := iFresh in
-  let t :=
-    lazymatch lem with ITrm ?t ?xs ?pat => t | _ => lem end in
+  let t := lazymatch lem with ITrm ?t ?xs ?pat => t | _ => lem end in
+  let t := lazymatch type of t with string => constr:(INamed t) | _ => t end in
   let spec_tac _ :=
     lazymatch lem with
     | ITrm ?t ?xs ?pat => iSpecializeCore (ITrm Htmp xs pat) as p
@@ -562,7 +574,7 @@ Tactic Notation "iPoseProofCore" open_constr(lem)
     end in
   let go goal_tac :=
     lazymatch type of t with
-    | string =>
+    | ident =>
        eapply tac_pose_proof_hyp with _ _ t _ Htmp _;
          [env_reflexivity || fail "iPoseProof:" t "not found"
          |env_reflexivity || fail "iPoseProof:" Htmp "not fresh"
@@ -618,7 +630,7 @@ Tactic Notation "iRevert" constr(Hs) :=
     | ESelPure :: ?Hs =>
        repeat match goal with x : _ |- _ => revert x end;
        go Hs
-    | ESelName _ ?H :: ?Hs =>
+    | ESelIdent _ ?H :: ?Hs =>
        eapply tac_revert with _ H _ _; (* (i:=H2) *)
          [env_reflexivity || fail "iRevert:" H "not found"
          |env_cbv; go Hs]
@@ -705,6 +717,7 @@ Tactic Notation "iSplit" :=
 Tactic Notation "iSplitL" constr(Hs) :=
   iStartProof;
   let Hs := words Hs in
+  let Hs := eval vm_compute in (INamed <$> Hs) in
   eapply tac_sep_split with _ _ Left Hs _ _; (* (js:=Hs) *)
     [apply _ ||
      let P := match goal with |- FromAnd _ ?P _ _ => P end in
@@ -717,6 +730,7 @@ Tactic Notation "iSplitL" constr(Hs) :=
 Tactic Notation "iSplitR" constr(Hs) :=
   iStartProof;
   let Hs := words Hs in
+  let Hs := eval vm_compute in (INamed <$> Hs) in
   eapply tac_sep_split with _ _ Right Hs _ _; (* (js:=Hs) *)
     [apply _ ||
      let P := match goal with |- FromAnd _ ?P _ _ => P end in
@@ -748,6 +762,7 @@ Local Tactic Notation "iAndDestructChoice" constr(H) "as" constr(d) constr(H') :
 (** * Combinining hypotheses *)
 Tactic Notation "iCombine" constr(Hs) "as" constr(H) :=
   let Hs := words Hs in
+  let Hs := eval vm_compute in (INamed <$> Hs) in
   eapply tac_combine with _ _ Hs _ _ H _;
     [env_reflexivity ||
      let Hs := iMissingHyps Hs in
@@ -844,10 +859,14 @@ Tactic Notation "iModCore" constr(H) :=
 Local Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let rec go Hz pat :=
     lazymatch pat with
-    | IAnom => idtac
-    | IDrop => iClear Hz
-    | IFrame => iFrame Hz
-    | IName ?y => iRename Hz into y
+    | IAnom =>
+       lazymatch Hz with
+       | IAnon _ => idtac
+       | INamed ?Hz => let Hz' := iFresh in iRename Hz into Hz'
+       end
+    | IDrop => iClearHyp Hz
+    | IFrame => iFrameHyp Hz
+    | IIdent ?y => iRename Hz into y
     | IList [[]] => iExFalso; iExact Hz
     | IList [[?pat1; IDrop]] => iAndDestructChoice Hz as Left Hz; go Hz pat1
     | IList [[IDrop; ?pat2]] => iAndDestructChoice Hz as Right Hz; go Hz pat2
@@ -919,9 +938,9 @@ Tactic Notation "iIntros" constr(pat) :=
     | [] => idtac
     (* Optimizations to avoid generating fresh names *)
     | IPureElim :: ?pats => iIntro (?); go pats
-    | IAlwaysElim (IName ?H) :: ?pats => iIntro #H; go pats
+    | IAlwaysElim (IIdent ?H) :: ?pats => iIntro #H; go pats
     | IDrop :: ?pats => iIntro _; go pats
-    | IName ?H :: ?pats => iIntro H; go pats
+    | IIdent ?H :: ?pats => iIntro H; go pats
     (* Introduction patterns that can only occur at the top-level *)
     | IPureIntro :: ?pats => iPureIntro; go pats
     | IAlwaysIntro :: ?pats => iAlways; go pats
@@ -1153,10 +1172,10 @@ Tactic Notation "iRevertIntros" constr(Hs) "with" tactic(tac) :=
     lazymatch Hs with
     | [] => tac
     | ESelPure :: ?Hs => fail "iRevertIntros: % not supported"
-    | ESelName ?p ?H :: ?Hs =>
+    | ESelIdent ?p ?H :: ?Hs =>
        iRevert H; go Hs;
        let H' :=
-         match p with true => constr:([IAlwaysElim (IName H)]) | false => H end in
+         match p with true => constr:([IAlwaysElim (IIdent H)]) | false => H end in
        iIntros H'
     end in
   try iStartProof; let Hs := iElaborateSelPat Hs in go Hs.
@@ -1226,14 +1245,17 @@ Instance copy_destruct_persistently {M} (P : uPred M) :
   CopyDestruct P → CopyDestruct (□ P).
 
 Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
-  let hyp_name :=
+  let ident :=
     lazymatch type of lem with
-    | string => constr:(Some lem)
+    | ident => constr:(Some lem)
+    | string => constr:(Some (INamed lem))
     | iTrm =>
        lazymatch lem with
-       | @iTrm string ?H _ _ => constr:(Some H) | _ => constr:(@None string)
+       | @iTrm ident ?H _ _ => constr:(Some H)
+       | @iTrm string ?H _ _ => constr:(Some (INamed H))
+       | _ => constr:(@None ident)
        end
-    | _ => constr:(@None string)
+    | _ => constr:(@None ident)
     end in
   let intro_destruct n :=
     let rec go n' :=
@@ -1242,7 +1264,7 @@ Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
       | 1 => repeat iIntroForall; let H := iFresh in iIntro H; tac H
       | S ?n' => repeat iIntroForall; let H := iFresh in iIntro H; go n'
       end in
-    intros; iStartProof; go n in
+    intros; go n in
   lazymatch type of lem with
   | nat => intro_destruct lem
   | Z => (* to make it work in Z_scope. We should just be able to bind
@@ -1253,7 +1275,8 @@ Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
      Also, rule out cases in which it does not make sense to copy, namely when
      destructing a lemma (instead of a hypothesis) or a spatial hyopthesis
      (which cannot be kept). *)
-     lazymatch hyp_name with
+     iStartProof;
+     lazymatch ident with
      | None => iPoseProofCore lem as p false tac
      | Some ?H =>
         lazymatch iTypeOf H with
@@ -1357,17 +1380,22 @@ result in the following actions:
 - Introduce the proofmode hypotheses [Hs]
 *)
 Tactic Notation "iInductionCore" constr(x) "as" simple_intropattern(pat) constr(IH) :=
-  let rec fix_ihs :=
+  let rec fix_ihs rev_tac :=
     lazymatch goal with
     | H : context [envs_entails _ _] |- _ =>
        eapply (tac_revert_ih _ _ _ H _);
-         [reflexivity
-          || fail "iInduction: spatial context not empty, this should not happen"|];
-       clear H; fix_ihs;
-       let IH' := iFresh' IH in iIntros [IAlwaysElim (IName IH')]
-    | _ => idtac
+         [env_reflexivity
+          || fail "iInduction: spatial context not empty, this should not happen"
+         |clear H];
+       fix_ihs ltac:(fun j =>
+         let IH' := eval vm_compute in
+           match j with 0%N => IH | _ => IH +:+ pretty j end in
+         iIntros [IAlwaysElim (IIdent IH')];
+         let j := eval vm_compute in (1 + j)%N in
+         rev_tac j)
+    | _ => rev_tac 0%N
     end in
-  induction x as pat; fix_ihs.
+  induction x as pat; fix_ihs ltac:(fun _ => idtac).
 
 Ltac iHypsContaining x :=
   let rec go Γ x Hs :=
@@ -1381,7 +1409,7 @@ Ltac iHypsContaining x :=
      end in
   let Γp := lazymatch goal with |- envs_entails (Envs ?Γp _) _ => Γp end in
   let Γs := lazymatch goal with |- envs_entails (Envs _ ?Γs) _ => Γs end in
-  let Hs := go Γp x (@nil string) in go Γs x Hs.
+  let Hs := go Γp x (@nil ident) in go Γs x Hs.
 
 Tactic Notation "iInductionRevert" constr(x) constr(Hs) "with" tactic(tac) :=
   iRevertIntros Hs with (
@@ -1634,7 +1662,7 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) :=
        let P := match goal with |- IntoInternalEq ?P _ _ ⊢ _ => P end in
        fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
-      |intros ??? ->; reflexivity|lazy beta; iClear Heq]).
+      |intros ??? ->; reflexivity|lazy beta; iClearHyp Heq]).
 
 Tactic Notation "iRewrite" open_constr(lem) := iRewriteCore Right lem.
 Tactic Notation "iRewrite" "-" open_constr(lem) := iRewriteCore Left lem.
@@ -1649,7 +1677,7 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) "in" constr(H) 
        fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
       |intros ??? ->; reflexivity
-      |env_reflexivity|lazy beta; iClear Heq]).
+      |env_reflexivity|lazy beta; iClearHyp Heq]).
 
 Tactic Notation "iRewrite" open_constr(lem) "in" constr(H) :=
   iRewriteCore Right lem in H.

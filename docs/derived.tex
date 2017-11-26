@@ -82,7 +82,7 @@ The two core assertions are: $\BoxSlice\namesp\prop\sname$, saying that there is
 
   \inferH{Slice-delete-empty}
   {f(\sname) = \BoxEmp}
-  {\BoxSlice\namesp\propB\sname \proves \lateropt b\ABox\namesp\prop{f} \vs[\namesp] \Exists \prop'. \lateropt b(\later(\prop = \prop' * \propB) * \ABox\namesp{\prop'}{\mapinsert\gname\bot{f}})}
+  {\BoxSlice\namesp\propB\sname \proves \lateropt b\ABox\namesp\prop{f} \vs[\namesp] \Exists \prop'. \lateropt b(\later(\prop = \prop' * \propB) * \ABox\namesp{\prop'}{\mapinsert\sname\bot{f}})}
 
   \inferH{Slice-fill}
   {f(\sname) = \BoxEmp}
@@ -117,10 +117,10 @@ We need a CMRA as follows:
 
 Now we can define the assertions:
 \begin{align*}
-  \SliceInv(\sname, \prop) \eqdef{}& \Exists b. \ownGhost\sname{(\authfull b, \munit)} * (b = 1 \Ra \prop) \\
+  \SliceInv(\sname, \prop) \eqdef{}& \Exists b. \ownGhost\sname{(\authfull b, \munit)} * ((b = \BoxFull) \Ra \prop) \\
   \BoxSlice\namesp\prop\sname \eqdef{}& \ownGhost\sname{(\munit, \prop)} * \knowInv\namesp{\SliceInv(\sname,\prop)} \\
   \ABox\namesp\prop{f} \eqdef{}& \Exists \propB : \nat \to \Prop. \later\left( \prop = \Sep_{\sname \in \dom(f)} \propB(\sname) \right ) * {}\\
-  & \Sep_{\sname \in \dom(f)} \Exists \gname. \ownGhost\sname{(\authfrag f(\sname), \propB(\sname))} * \knowInv\namesp{\SliceInv(\sname,\propB(\sname))}
+  & \Sep_{\sname \in \dom(f)} \ownGhost\sname{(\authfrag f(\sname), \propB(\sname))} * \knowInv\namesp{\SliceInv(\sname,\propB(\sname))}
 \end{align*}
 \endgroup % Model paragraph
 
@@ -136,7 +136,7 @@ Here are some derived rules:
 
   \inferH{Slice-split}
   {f(\sname) = s}
-  {\kern-4ex\BoxSlice\namesp{\propB_1 * \propB_2}\sname \proves \lateropt b \ABox\namesp\prop{f} \vs[\namesp] \Exists \sname_1 \notin \dom(f), \sname_2 \notin \dom(f). \sname_1 \neq \sname_1 \land {}\\\kern5ex \always\BoxSlice\namesp{\propB_1}{\sname_1} * \always\BoxSlice\namesp{\propB_2}{\sname_2} * \lateropt b \ABox\namesp\prop{\mapinsert{\sname_2}{s}{\mapinsert{\sname_1}{s}{\mapinsert\sname\bot{f}}}}}
+  {\kern-4ex\BoxSlice\namesp{\propB_1 * \propB_2}\sname \proves \lateropt b \ABox\namesp\prop{f} \vs[\namesp] \Exists \sname_1 \notin \dom(f), \sname_2 \notin \dom(f). \sname_1 \neq \sname_2 \land {}\\\kern5ex \always\BoxSlice\namesp{\propB_1}{\sname_1} * \always\BoxSlice\namesp{\propB_2}{\sname_2} * \lateropt b \ABox\namesp\prop{\mapinsert{\sname_2}{s}{\mapinsert{\sname_1}{s}{\mapinsert\sname\bot{f}}}}}
 
   \inferH{Slice-merge}
   {\sname_1 \neq \sname_2 \and f(\sname_1) = f(\sname_2) = s}

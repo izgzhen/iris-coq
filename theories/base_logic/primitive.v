@@ -168,7 +168,7 @@ Definition uPred_bupd {M} := unseal uPred_bupd_aux M.
 Definition uPred_bupd_eq : @uPred_bupd = @uPred_bupd_def := seal_eq uPred_bupd_aux.
 
 (* Latest notation *)
-Notation "'⌜' φ '⌝'" := (uPred_pure φ%C%type)
+Notation "'⌜' φ '⌝'" := (uPred_pure φ%stdpp%type)
   (at level 1, φ at level 200, format "⌜ φ ⌝") : uPred_scope.
 Notation "'False'" := (uPred_pure False) : uPred_scope.
 Notation "'True'" := (uPred_pure True) : uPred_scope.
@@ -198,7 +198,7 @@ Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : uPred_scope.
 Notation "|==> Q" := (uPred_bupd Q)
   (at level 99, Q at level 200, format "|==>  Q") : uPred_scope.
 Notation "P ==∗ Q" := (P ⊢ |==> Q)
-  (at level 99, Q at level 200, only parsing) : C_scope.
+  (at level 99, Q at level 200, only parsing) : stdpp_scope.
 Notation "P ==∗ Q" := (P -∗ |==> Q)%I
   (at level 99, Q at level 200, format "P  ==∗  Q") : uPred_scope.
 
@@ -206,7 +206,7 @@ Coercion uPred_valid {M} (P : uPred M) : Prop := True%I ⊢ P.
 Typeclasses Opaque uPred_valid.
 
 Notation "P -∗ Q" := (P ⊢ Q)
-  (at level 99, Q at level 200, right associativity) : C_scope.
+  (at level 99, Q at level 200, right associativity) : stdpp_scope.
 
 Module uPred.
 Definition unseal_eqs :=
@@ -307,7 +307,8 @@ Proof.
   unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try omega.
   apply HPQ; eauto using cmra_validN_S.
 Qed.
-Global Instance later_proper' :
+Definition later_ne : NonExpansive (@uPred_later M) := _.
+Global Instance later_proper :
   Proper ((⊣⊢) ==> (⊣⊢)) (@uPred_later M) := ne_proper _.
 Global Instance plainly_ne : NonExpansive (@uPred_plainly M).
 Proof.
@@ -649,7 +650,7 @@ Proof.
   - intros i a b; eapply Hf, ucmra_unit_validN.
 Qed.
 
-(* Functions *)
+(* Function extensionality *)
 Lemma ofe_funC_equivI {A B} (f g : A -c> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.
 Lemma ofe_morC_equivI {A B : ofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.

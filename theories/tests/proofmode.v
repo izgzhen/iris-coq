@@ -30,7 +30,7 @@ Proof.
   iRight.
   iDestruct "H1" as (z1 z2 c) "(H1&_&#Hc)".
   iPoseProof "Hc" as "foo".
-  iRevert (a b) "Ha Hb". iIntros (b a) "Hb {foo} Ha".
+  iRevert (a b) "Ha Hb". iIntros (b a) "? {foo} Ha".
   iAssert (uPred_ownM (a ⋅ core a)) with "[Ha]" as "[Ha #Hac]".
   { by rewrite cmra_core_r. }
   iIntros "{$Hac $Ha}".
@@ -98,7 +98,7 @@ Lemma test_very_fast_iIntros P :
 Proof. by iIntros. Qed.
 
 Lemma test_iDestruct_spatial_and P Q1 Q2 : P ∗ (Q1 ∧ Q2) -∗ P ∗ Q1.
-Proof. iIntros "[H1 [H2 _]]". by iFrame. Qed.
+Proof. iIntros "[H [? _]]". by iFrame. Qed.
 
 Lemma test_iFrame_pure (x y z : M) :
   ✓ x → ⌜y ≡ z⌝ -∗ (✓ x ∧ ✓ x ∧ y ≡ z : uPred M).
@@ -116,7 +116,7 @@ Qed.
 
 Lemma test_iSpecialize_auto_frame P Q R :
   (P -∗ True -∗ True -∗ Q -∗ R) -∗ P -∗ Q -∗ R.
-Proof. iIntros "H HP HQ". by iApply ("H" with "[$]"). Qed.
+Proof. iIntros "H ? HQ". by iApply ("H" with "[$]"). Qed.
 
 (* Check coercions *)
 Lemma test_iExist_coercion (P : Z → uPred M) : (∀ x, P x) -∗ ∃ x, P x.

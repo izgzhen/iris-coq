@@ -195,11 +195,10 @@ End lifting.
 
 Section ectx_lifting.
   Import ectx_language.
-  Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.
-  Context `{ownPG (ectx_lang expr) Σ} {Hinh : Inhabited state}.
+  Context {Λ : ectxLanguage} `{ownPG Λ Σ} {Hinh : Inhabited (state Λ)}.
   Implicit Types s : stuckness.
-  Implicit Types Φ : val → iProp Σ.
-  Implicit Types e : expr.
+  Implicit Types Φ : val Λ → iProp Σ.
+  Implicit Types e : expr Λ.
   Hint Resolve head_prim_reducible head_reducible_prim_step.
   Hint Resolve (reducible_not_val _ inhabitant).
   Hint Resolve progressive_head_progressive.

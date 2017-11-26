@@ -121,47 +121,47 @@ Notation "'{{{' P } } } e @ s ; E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E {{ Φ }})
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  s ;  E  {{{  x .. y ,  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  @  s ;  E  {{{  x .. y ,  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e @ E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }})
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  E  {{{  x .. y ,  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  @  E  {{{  x .. y ,  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e @ E ? {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?{{ Φ }})
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  E  ? {{{  x .. y ,  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  @  E  ? {{{  x .. y ,  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }})
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  {{{  x .. y ,  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  {{{  x .. y ,  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e ? {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?{{ Φ }})
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  ? {{{  x .. y ,  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  ? {{{  x .. y ,  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e @ s ; E {{{ 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ s; E {{ Φ }})
     (at level 20,
-     format "{{{  P  } } }  e  @  s ;  E  {{{  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  @  s ;  E  {{{  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e @ E {{{ 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }})
     (at level 20,
-     format "{{{  P  } } }  e  @  E  {{{  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  @  E  {{{  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e @ E ? {{{ 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E ?{{ Φ }})
     (at level 20,
-     format "{{{  P  } } }  e  @  E  ? {{{  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  @  E  ? {{{  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e {{{ 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }})
     (at level 20,
-     format "{{{  P  } } }  e  {{{  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  {{{  RET  pat ;  Q } } }") : stdpp_scope.
 Notation "'{{{' P } } } e ? {{{ 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e ?{{ Φ }})
     (at level 20,
-     format "{{{  P  } } }  e  ? {{{  RET  pat ;  Q } } }") : C_scope.
+     format "{{{  P  } } }  e  ? {{{  RET  pat ;  Q } } }") : stdpp_scope.
 
 Section wp.
 Context `{irisG Λ Σ}.
@@ -275,7 +275,7 @@ Proof.
   iSplitR "H"; last iExact "H". iIntros (v) "H". by iApply "H".
 Qed.
 
-Lemma wp_bind K `{!LanguageCtx Λ K} s E e Φ :
+Lemma wp_bind K `{!LanguageCtx K} s E e Φ :
   WP e @ s; E {{ v, WP K (of_val v) @ s; E {{ Φ }} }} ⊢ WP K e @ s; E {{ Φ }}.
 Proof.
   iIntros "H". iLöb as "IH" forall (E e Φ). rewrite wp_unfold /wp_pre.
@@ -291,7 +291,7 @@ Proof.
   by iApply "IH".
 Qed.
 
-Lemma wp_bind_inv K `{!LanguageCtx Λ K} s E e Φ :
+Lemma wp_bind_inv K `{!LanguageCtx K} s E e Φ :
   WP K e @ s; E {{ Φ }} ⊢ WP e @ s; E {{ v, WP K (of_val v) @ s; E {{ Φ }} }}.
 Proof.
   iIntros "H". iLöb as "IH" forall (E e Φ). rewrite !wp_unfold /wp_pre.

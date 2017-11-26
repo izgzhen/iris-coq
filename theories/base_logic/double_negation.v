@@ -9,7 +9,7 @@ Definition uPred_nnupd {M} (P: uPred M) : uPred M :=
 Notation "|=n=> Q" := (uPred_nnupd Q)
   (at level 99, Q at level 200, format "|=n=>  Q") : uPred_scope.
 Notation "P =n=> Q" := (P ⊢ |=n=> Q)
-  (at level 99, Q at level 200, only parsing) : C_scope.
+  (at level 99, Q at level 200, only parsing) : stdpp_scope.
 Notation "P =n=∗ Q" := (P -∗ |=n=> Q)%I
   (at level 99, Q at level 200, format "P  =n=∗  Q") : uPred_scope.
 

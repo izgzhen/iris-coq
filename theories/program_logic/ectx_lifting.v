@@ -4,26 +4,15 @@ From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 
 Section wp.
-Context {expr val ectx state} {Λ : EctxLanguage expr val ectx state}.
-Context `{irisG (ectx_lang expr) Σ} {Hinh : Inhabited state}.
+Context {Λ : ectxLanguage} `{irisG Λ Σ} {Hinh : Inhabited (state Λ)}.
 Implicit Types s : stuckness.
 Implicit Types P : iProp Σ.
-Implicit Types Φ : val → iProp Σ.
-Implicit Types v : val.
-Implicit Types e : expr.
+Implicit Types Φ : val Λ → iProp Σ.
+Implicit Types v : val Λ.
+Implicit Types e : expr Λ.
 Hint Resolve head_prim_reducible head_reducible_prim_step.
 Hint Resolve (reducible_not_val _ inhabitant).
 Hint Resolve progressive_head_progressive.
-
-Lemma wp_ectx_bind {s E e} K Φ :
-  WP e @ s; E {{ v, WP fill K (of_val v) @ s; E {{ Φ }} }}
-  ⊢ WP fill K e @ s; E {{ Φ }}.
-Proof. apply: weakestpre.wp_bind. Qed.
-
-Lemma wp_ectx_bind_inv {s E Φ} K e :
-  WP fill K e @ s; E {{ Φ }}
-  ⊢ WP e @ s; E {{ v, WP fill K (of_val v) @ s; E {{ Φ }} }}.
-Proof. apply: weakestpre.wp_bind_inv. Qed.
 
 Lemma wp_lift_head_step {s E Φ} e1 :
   to_val e1 = None →

@@ -49,3 +49,41 @@ Qed.
 
 Lemma string_beq_reflect s1 s2 : reflect (s1 = s2) (string_beq s1 s2).
 Proof. apply iff_reflect. by rewrite string_beq_true. Qed.
+
+Module Export ident.
+Inductive ident :=
+  | IAnon : positive → ident
+  | INamed :> string → ident.
+End ident.
+
+Instance maybe_IAnon : Maybe IAnon := λ i,
+  match i with IAnon n => Some n | _ => None end.
+Instance maybe_INamed : Maybe INamed := λ i,
+  match i with INamed s => Some s | _ => None end.
+
+Instance beq_eq_dec : EqDecision ident.
+Proof. solve_decision. Defined.
+
+Definition positive_beq := Eval compute in Pos.eqb.
+
+Lemma positive_beq_true x y : positive_beq x y = true ↔ x = y.
+Proof. apply Pos.eqb_eq. Qed.
+
+Definition ident_beq (i1 i2 : ident) : bool :=
+  match i1, i2 with
+  | IAnon n1, IAnon n2 => positive_beq n1 n2
+  | INamed s1, INamed s2 => string_beq s1 s2
+  | _, _ => false
+  end.
+
+Lemma ident_beq_true i1 i2 : ident_beq i1 i2 = true ↔ i1 = i2.
+Proof.
+  destruct i1, i2; rewrite /= ?string_beq_true ?positive_beq_true; naive_solver.
+Qed.
+
+Lemma ident_beq_reflect i1 i2 : reflect (i1 = i2) (ident_beq i1 i2).
+Proof. apply iff_reflect. by rewrite ident_beq_true. Qed.
+
+Definition option_bind {A B} (f : A → option B) (mx : option A) : option B :=
+  match mx with Some x => f x | None => None end.
+Arguments option_bind _ _ _ !_ /.
