@@ -83,8 +83,8 @@ Section language.
     ∃ e' σ' efs, prim_step e σ e' σ' efs.
   Definition irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ e' σ' efs, ¬prim_step e σ e' σ' efs.
-  Definition progressive (e : expr Λ) (σ : state Λ) :=
-    is_Some (to_val e) ∨ reducible e σ.
+  Definition stuck (e : expr Λ) (σ : state Λ) :=
+    to_val e = None ∧ irreducible e σ.
 
   (* [Atomic not_stuck]: This (weak) form of atomicity is enough to open invariants when WP ensures
      safety, i.e., programs never can get stuck.  We have an example in

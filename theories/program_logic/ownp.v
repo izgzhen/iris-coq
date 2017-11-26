@@ -103,14 +103,14 @@ Section lifting.
   Qed.
 
   Lemma ownP_lift_stuck E Φ e :
-    (|={E,∅}=> ∃ σ, ⌜¬ progressive e σ⌝ ∗ ▷ ownP σ)
+    (|={E,∅}=> ∃ σ, ⌜stuck e σ⌝ ∗ ▷ ownP σ)
     ⊢ WP e @ E ?{{ Φ }}.
   Proof.
     iIntros "H". destruct (to_val e) as [v|] eqn:EQe.
-    - apply of_to_val in EQe as <-; iApply fupd_wp.
-      iMod "H" as (σ1) "[#H _]"; iDestruct "H" as %Hstuck; exfalso.
-      by apply Hstuck; left; rewrite to_of_val; exists v.
-    - iApply wp_lift_stuck; [done|]; iIntros (σ1) "Hσ".
+    - apply of_to_val in EQe as <-. iApply fupd_wp.
+      iMod "H" as (σ1) "[H _]". iDestruct "H" as %[Hnv _]. exfalso.
+      by rewrite to_of_val in Hnv.
+    - iApply wp_lift_stuck; [done|]. iIntros (σ1) "Hσ".
       iMod "H" as (σ1') "(% & >Hσf)".
       by iDestruct (ownP_eq with "Hσ Hσf") as %->.
   Qed.
@@ -201,7 +201,7 @@ Section ectx_lifting.
   Implicit Types e : expr Λ.
   Hint Resolve head_prim_reducible head_reducible_prim_step.
   Hint Resolve (reducible_not_val _ inhabitant).
-  Hint Resolve progressive_head_progressive.
+  Hint Resolve head_stuck_stuck.
 
   Lemma ownP_lift_head_step s E Φ e1 :
     to_val e1 = None →
@@ -217,11 +217,12 @@ Section ectx_lifting.
   Qed.
 
   Lemma ownP_lift_head_stuck E Φ e :
-    (|={E,∅}=> ∃ σ, ⌜¬ head_progressive e σ⌝ ∗ ▷ ownP σ)
+    sub_redexes_are_values e →
+    (|={E,∅}=> ∃ σ, ⌜head_stuck e σ⌝ ∗ ▷ ownP σ)
     ⊢ WP e @ E ?{{ Φ }}.
   Proof.
-    iIntros "H". iApply ownP_lift_stuck. iMod "H" as (σ) "[% >Hσ]".
-    iModIntro. iExists σ. iFrame "Hσ". by eauto.
+    iIntros (?) "H". iApply ownP_lift_stuck. iMod "H" as (σ) "[% >Hσ]".
+    iExists σ. by auto.
   Qed.
 
   Lemma ownP_lift_pure_head_step s E Φ e1 :

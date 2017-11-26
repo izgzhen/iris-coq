@@ -26,13 +26,12 @@ Qed.
 
 Lemma wp_lift_stuck E Φ e :
   to_val e = None →
-  (∀ σ, state_interp σ ={E,∅}=∗ ⌜¬ progressive e σ⌝)
+  (∀ σ, state_interp σ ={E,∅}=∗ ⌜stuck e σ⌝)
   ⊢ WP e @ E ?{{ Φ }}.
 Proof.
   rewrite wp_unfold /wp_pre=>->. iIntros "H" (σ1) "Hσ".
-  iMod ("H" with "Hσ") as "Hstuck". iDestruct "Hstuck" as %Hstuck.
-  iModIntro. iSplit; first done. iIntros "!>" (e2 σ2 efs) "%". exfalso.
-  apply Hstuck. right. by exists e2, σ2, efs.
+  iMod ("H" with "Hσ") as %[? Hirr]. iModIntro. iSplit; first done.
+  iIntros "!>" (e2 σ2 efs) "%". by case: (Hirr e2 σ2 efs).
 Qed.
 
 (** Derived lifting lemmas. *)
@@ -53,12 +52,12 @@ Proof.
 Qed.
 
 Lemma wp_lift_pure_stuck `{Inhabited (state Λ)} E Φ e :
-  (∀ σ, ¬ progressive e σ) →
+  (∀ σ, stuck e σ) →
   True ⊢ WP e @ E ?{{ Φ }}.
 Proof.
   iIntros (Hstuck) "_". iApply wp_lift_stuck.
   - destruct(to_val e) as [v|] eqn:He; last done.
-    exfalso. apply (Hstuck inhabitant). left. by exists v.
+    rewrite -He. by case: (Hstuck inhabitant).
   - iIntros (σ) "_". iMod (fupd_intro_mask' E ∅) as "_".
     by set_solver. by auto.
 Qed.

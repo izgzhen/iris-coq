@@ -40,7 +40,7 @@ Record adequate {Λ} (s : stuckness) (e1 : expr Λ) (σ1 : state Λ) (φ : val �
   adequate_safe t2 σ2 e2 :
    s = not_stuck →
    rtc step ([e1], σ1) (t2, σ2) →
-   e2 ∈ t2 → progressive e2 σ2
+   e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2)
 }.
 
 Theorem adequate_tp_safe {Λ} (e1 : expr Λ) t2 σ1 σ2 φ :
@@ -133,7 +133,7 @@ Proof.
 Qed.
 
 Lemma wp_safe E e σ Φ :
-  world' E σ -∗ WP e @ E {{ Φ }} ==∗ ▷ ⌜progressive e σ⌝.
+  world' E σ -∗ WP e @ E {{ Φ }} ==∗ ▷ ⌜is_Some (to_val e) ∨ reducible e σ⌝.
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "(Hw&HE&Hσ) H".
   destruct (to_val e) as [v|] eqn:?.
@@ -145,7 +145,7 @@ Qed.
 Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :
   nsteps step n (e1 :: t1, σ1) (t2, σ2) → e2 ∈ t2 →
   world σ1 ∗ WP e1 {{ Φ }} ∗ wptp not_stuck t1
-  ⊢ ▷^(S (S n)) ⌜progressive e2 σ2⌝.
+  ⊢ ▷^(S (S n)) ⌜is_Some (to_val e2) ∨ reducible e2 σ2⌝.
 Proof.
   intros ? He2. rewrite wptp_steps // laterN_later. apply: bupd_iter_laterN_mono.
   iDestruct 1 as (e2' t2' ?) "(Hw & H & Htp)"; simplify_eq.

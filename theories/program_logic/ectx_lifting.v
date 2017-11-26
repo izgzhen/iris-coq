@@ -12,7 +12,7 @@ Implicit Types v : val Λ.
 Implicit Types e : expr Λ.
 Hint Resolve head_prim_reducible head_reducible_prim_step.
 Hint Resolve (reducible_not_val _ inhabitant).
-Hint Resolve progressive_head_progressive.
+Hint Resolve head_stuck_stuck.
 
 Lemma wp_lift_head_step {s E Φ} e1 :
   to_val e1 = None →
@@ -30,11 +30,12 @@ Qed.
 
 Lemma wp_lift_head_stuck E Φ e :
   to_val e = None →
-  (∀ σ, state_interp σ ={E,∅}=∗ ⌜¬ head_progressive e σ⌝)
+  sub_redexes_are_values e →
+  (∀ σ, state_interp σ ={E,∅}=∗ ⌜head_stuck e σ⌝)
   ⊢ WP e @ E ?{{ Φ }}.
 Proof.
-  iIntros (?) "H". iApply wp_lift_stuck; first done.
-  iIntros (σ) "Hσ". iMod ("H" with "Hσ") as "%". by auto. 
+  iIntros (??) "H". iApply wp_lift_stuck; first done.
+  iIntros (σ) "Hσ". iMod ("H" with "Hσ") as "%". by auto.
 Qed.
 
 Lemma wp_lift_pure_head_step {s E E' Φ} e1 :
@@ -52,13 +53,13 @@ Qed.
 
 Lemma wp_lift_pure_head_stuck E Φ e :
   to_val e = None →
-  (∀ K e1 σ1 e2 σ2 efs, e = fill K e1 → ¬ head_step e1 σ1 e2 σ2 efs) →
+  sub_redexes_are_values e →
+  (∀ σ, head_stuck e σ) →
   WP e @ E ?{{ Φ }}%I.
 Proof using Hinh.
-  iIntros (Hnv Hnstep). iApply wp_lift_head_stuck; first done.
+  iIntros (?? Hstuck). iApply wp_lift_head_stuck; [done|done|].
   iIntros (σ) "_". iMod (fupd_intro_mask' E ∅) as "_"; first set_solver.
-  iModIntro. iPureIntro. case; first by rewrite Hnv; case.
-  move=>[] K [] e1 [] Hfill [] e2 [] σ2 [] efs /= Hstep. exact: Hnstep.
+  by auto.
 Qed.
 
 Lemma wp_lift_atomic_head_step {s E Φ} e1 :
