@@ -432,13 +432,14 @@ The premise in \ruleref{upd-update} is a \emph{meta-level} side-condition that h
 
 The consistency statement of the logic reads as follows: For any $n$, we have
 \begin{align*}
-  \lnot(\TRUE \proves (\upd\later)^n\spac\FALSE)
+  \lnot(\TRUE \proves (\later)^n\spac\FALSE)
 \end{align*}
-where $(\upd\later)^n$ is short for $\upd\later$ being nested $n$ times.
+where $(\later)^n$ is short for $\later$ being nested $n$ times.
 
 The reason we want a stronger consistency than the usual $\lnot(\TRUE \proves \FALSE)$ is our modalities: it should be impossible to derive a contradiction below the modalities.
-For $\always$, this follows from the elimination rule, but the other two modalities do not have an elimination rule.
-Hence we declare that it is impossible to derive a contradiction below any combination of these two modalities.
+For $\always$ and $\plainly$, this follows from the elimination rules.
+For updates, we use the fact that $\upd\FALSE \proves \upd\plainly\FALSE \proves \FALSE$.
+However, there is no elimination rule for $\later$, so we declare that it is impossible to derive a contradiction below any number of laters.
 
 
 %%% Local Variables:
