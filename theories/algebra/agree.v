@@ -34,6 +34,9 @@ Arguments agree_car {_} _.
 Arguments agree_not_nil {_} _.
 Local Coercion agree_car : agree >-> list.
 
+Definition to_agree {A} (a : A) : agree A :=
+  {| agree_car := [a]; agree_not_nil := eq_refl |}.
+
 Lemma elem_of_agree {A} (x : agree A) : ∃ a, a ∈ agree_car x.
 Proof. destruct x as [[|a ?] ?]; set_solver+. Qed.
 Lemma agree_eq {A} (x y : agree A) : agree_car x = agree_car y → x = y.
@@ -155,9 +158,6 @@ Proof.
   - intros x; rewrite agree_validN_def=> Hv n. apply agree_validN_def=> a b ??.
     apply discrete_iff_0; auto.
 Qed.
-
-Program Definition to_agree (a : A) : agree A :=
-  {| agree_car := [a]; agree_not_nil := eq_refl |}.
 
 Global Instance to_agree_ne : NonExpansive to_agree.
 Proof.
