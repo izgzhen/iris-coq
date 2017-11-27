@@ -26,11 +26,10 @@ Proof.
   Thus Ag(T) is not necessarily complete.
 *)
 
-Record agree (A : Type) : Type := Agree {
+Record agree (A : Type) : Type := {
   agree_car : list A;
   agree_not_nil : bool_decide (agree_car = []) = false
 }.
-Arguments Agree {_} _ _.
 Arguments agree_car {_} _.
 Arguments agree_not_nil {_} _.
 Local Coercion agree_car : agree >-> list.
@@ -82,7 +81,7 @@ Instance agree_validN : ValidN (agree A) := λ n x,
 Instance agree_valid : Valid (agree A) := λ x, ∀ n, ✓{n} x.
 
 Program Instance agree_op : Op (agree A) := λ x y,
-  Agree (agree_car x ++ agree_car y) _.
+  {| agree_car := agree_car x ++ agree_car y |}.
 Next Obligation. by intros [[|??]] y. Qed.
 Instance agree_pcore : PCore (agree A) := Some.
 
