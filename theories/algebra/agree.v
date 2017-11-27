@@ -166,6 +166,15 @@ Proof.
 Qed.
 Global Instance to_agree_proper : Proper ((≡) ==> (≡)) to_agree := ne_proper _.
 
+Global Instance to_agree_discrete a : Discrete a → Discrete (to_agree a).
+Proof.
+  intros ? y [H H'] n; split.
+  - intros a' ->%elem_of_list_singleton. destruct (H a) as [b ?]; first by left.
+    exists b. by rewrite -discrete_iff_0.
+  - intros b Hb. destruct (H' b) as (b'&->%elem_of_list_singleton&?); auto.
+    exists a. by rewrite elem_of_list_singleton -discrete_iff_0.
+Qed.
+
 Global Instance to_agree_injN n : Inj (dist n) (dist n) (to_agree).
 Proof.
   move=> a b [_] /=. setoid_rewrite elem_of_list_singleton. naive_solver.
