@@ -494,7 +494,7 @@ Qed.
 Lemma tac_clear Δ Δ' i p P Q :
   envs_lookup_delete i Δ = Some (p,P,Δ') →
   (if p then TCTrue else TCOr (Affine P) (Absorbing Q)) →
-  (envs_entails Δ' Q) →
+  envs_entails Δ' Q →
   envs_entails Δ Q.
 Proof.
   rewrite /envs_entails=> ?? HQ. rewrite envs_lookup_delete_sound //.
@@ -588,7 +588,7 @@ Lemma tac_always_intro Δ Δ' a pe pl Q Q' :
   FromAlways a pe pl Q' Q →
   (if a then AffineEnv (env_spatial Δ') else TCTrue) →
   IntoAlwaysEnvs pe pl Δ' Δ →
-  (envs_entails Δ Q) → envs_entails Δ' Q'.
+  envs_entails Δ Q → envs_entails Δ' Q'.
 Proof.
   rewrite /envs_entails => ? Haffine [Hep Hes] HQ.
   rewrite -(from_always a pe pl Q') -HQ.
@@ -783,7 +783,7 @@ Lemma tac_specialize_assert_persistent Δ Δ' Δ'' j q P1 P1' P2 R Q :
   Persistent P1 →
   IntoAbsorbingly P1' P1 →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ'' →
-  (envs_entails Δ' P1') → (envs_entails Δ'' Q) → envs_entails Δ Q.
+  envs_entails Δ' P1' → envs_entails Δ'' Q → envs_entails Δ Q.
 Proof.
   rewrite /envs_entails => /envs_lookup_delete_Some [? ->] ???? HP1 <-.
   rewrite envs_lookup_sound //.
