@@ -63,12 +63,13 @@ Below, $\melt$ ranges over $\monoid$ and $i$ ranges over $\set{1,2}$.
 %\\&
     \ownM{\term} \mid \mval(\term) \mid
     \always\prop \mid
+    \plainly\prop \mid
     {\later\prop} \mid
     \upd \prop
 \end{align*}
 Recursive predicates must be \emph{guarded}: in $\MU \var. \term$, the variable $\var$ can only appear under the later $\later$ modality.
 
-Note that the modalities $\upd$, $\always$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $\lor$, and $\Ra$.
+Note that the modalities $\upd$, $\always$, $\plainly$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $\lor$, and $\Ra$.
 
 
 \paragraph{Variable conventions.}
@@ -175,6 +176,9 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 \and
 	\infer{\vctx \proves \wtt{\prop}{\Prop}}
 		{\vctx \proves \wtt{\always\prop}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\prop}{\Prop}}
+		{\vctx \proves \wtt{\plainly\prop}{\Prop}}
 \and
 	\infer{\vctx \proves \wtt{\prop}{\Prop}}
 		{\vctx \proves \wtt{\later\prop}{\Prop}}
