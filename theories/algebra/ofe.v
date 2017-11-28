@@ -190,9 +190,7 @@ Section ofe.
     split; intros; auto. apply (discrete _), dist_le with n; auto with lia.
   Qed.
   Lemma discrete_iff_0 n (x : A) `{!Discrete x} y : x ≡{0}≡ y ↔ x ≡{n}≡ y.
-  Proof.
-    split=> ?. by apply equiv_dist, (discrete _). eauto using dist_le with lia.
-  Qed.
+  Proof. by rewrite -!discrete_iff. Qed.
 End ofe.
 
 (** Contractive functions *)

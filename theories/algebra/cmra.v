@@ -555,11 +555,15 @@ Proof.
   split; first by rewrite cmra_valid_validN.
   eauto using cmra_discrete_valid, cmra_validN_le with lia.
 Qed.
+Lemma cmra_discrete_valid_iff_0 `{CmraDiscrete A} n x : ✓{0} x ↔ ✓{n} x.
+Proof. by rewrite -!cmra_discrete_valid_iff. Qed.
 Lemma cmra_discrete_included_iff `{OfeDiscrete A} n x y : x ≼ y ↔ x ≼{n} y.
 Proof.
   split; first by apply cmra_included_includedN.
   intros [z ->%(discrete_iff _ _)]; eauto using cmra_included_l.
 Qed.
+Lemma cmra_discrete_included_iff_0 `{OfeDiscrete A} n x y : x ≼{0} y ↔ x ≼{n} y.
+Proof. by rewrite -!cmra_discrete_included_iff. Qed.
 
 (** Cancelable elements  *)
 Global Instance cancelable_proper : Proper (equiv ==> iff) (@Cancelable A).
