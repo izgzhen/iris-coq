@@ -111,8 +111,7 @@ Proof. iApply saved_anything_alloc. Qed.
 Lemma saved_pred_agree `{savedPredG Σ A} γ Φ Ψ x :
   saved_pred_own γ Φ -∗ saved_pred_own γ Ψ -∗ ▷ (Φ x ≡ Ψ x).
 Proof.
-  iIntros "HΦ HΨ". unfold saved_pred_own. iApply later_equivI.
-  iDestruct (ofe_funC_equivI (CofeMor Next ∘ Φ) (CofeMor Next ∘ Ψ)) as "[FE _]".
-  simpl. iApply ("FE" with "[-]").
-  iApply (saved_anything_agree with "HΦ HΨ").
+  unfold saved_pred_own. iIntros "#HΦ #HΨ /=". iApply later_equivI.
+  iDestruct (saved_anything_agree with "HΦ HΨ") as "Heq".
+  by iDestruct (ofe_fun_equivI with "Heq") as "?".
 Qed.
