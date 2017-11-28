@@ -19,7 +19,6 @@ variables:
   - 'time make -k -j$CPU_CORES TIMED=y 2>&1 | tee build-log.txt'
   - 'if fgrep Axiom build-log.txt >/dev/null; then exit 1; fi'
   - 'cat build-log.txt | egrep "[a-zA-Z0-9_/-]+ \((real|user): [0-9]" | tee build-time.txt'
-  - 'if test -n "$VALIDATE" && (( RANDOM % 10 == 0 )); then make validate; fi'
   cache:
     key: "$CI_JOB_NAME"
     paths:
@@ -68,7 +67,6 @@ build-coq.8.6.1:
   <<: *template
   variables:
     OPAM_PINS: "coq version 8.6.1   coq-mathcomp-ssreflect version 1.6.4"
-#    VALIDATE: "1" # coqchk fails with a stack overflow
   artifacts:
     paths:
     - build-time.txt
