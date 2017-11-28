@@ -35,7 +35,12 @@ We collect here some important and frequently used derived proof rules.
 
   \infer{}
   {\prop \proves \later\prop}
+
+  \infer{}
+  {\TRUE \proves \plainly\TRUE}
 \end{mathparpagebreakable}
+
+Noteworthy here is the fact that $\prop \proves \later\prop$ can be derived from Löb induction, and $\TRUE \proves \plainly\TRUE$ can be derived via $\plainly$ commuting with universal quantification ranging over the empty type $0$.
 
 \subsection{Persistent assertions}
 We call an assertion $\prop$ \emph{persistent} if $\prop \proves \always\prop$.
