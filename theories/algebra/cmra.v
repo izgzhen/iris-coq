@@ -1464,7 +1464,7 @@ Proof.
   by intros ? A1 A2 B1 B2 n f g Hfg; apply optionC_map_ne, rFunctor_contractive.
 Qed.
 
-(* Dependently-typed functions *)
+(* Dependently-typed functions over a finite domain *)
 Section ofe_fun_cmra.
   Context `{Hfin : Finite A} {B : A → ucmraT}.
   Implicit Types f g : ofe_fun B.

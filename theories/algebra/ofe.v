@@ -1087,7 +1087,7 @@ Proof.
   destruct n as [|n]; simpl in *; first done. apply cFunctor_ne, Hfg.
 Qed.
 
-(* Dependently-typed functions *)
+(* Dependently-typed functions over a discrete domain *)
 (* We make [ofe_fun] a definition so that we can register it as a canonical
 structure. *)
 Definition ofe_fun {A} (B : A → ofeT) := ∀ x : A, B x.
