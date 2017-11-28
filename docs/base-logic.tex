@@ -41,7 +41,7 @@ Below, $\melt$ ranges over $\monoid$ and $i$ ranges over $\set{1,2}$.
   \term, \prop, \pred \bnfdef{}&
       \var \mid
       \sigfn(\term_1, \dots, \term_n) \mid
-      \textlog{abort}(\term) \mid
+      \textlog{abort}\; \term \mid
       () \mid
       (\term, \term) \mid
       \pi_i\; \term \mid
@@ -119,7 +119,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 %%% empty, unit, products, sums
 \and
 	\infer{\vctx \proves \wtt\term{0}}
-        {\vctx \proves \wtt{\textlog{abort}(\term)}\type}
+        {\vctx \proves \wtt{\textlog{abort}\; \term}\type}
 \and
 	\axiom{\vctx \proves \wtt{()}{1}}
 \and
