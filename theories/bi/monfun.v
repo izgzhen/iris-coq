@@ -38,30 +38,49 @@ Proof.
   by rewrite {1}/dist /= /funbi_dist /=.
 Qed.
 
-Definition funbi_sig {I B} (P : funbi_ty I B):
-  sig (fun f : I -c> B => mono (bi_index_rel I) f) :=
-  exist _ (funbi_car P) (funbi_mono P).
-Definition sig_funbi {I : bi_index} {B : bi}
-           (P : sig (fun f : I -c> B => mono (bi_index_rel I) f)):
-  funbi_ty I B :=
-  FUN (proj1_sig P) (proj2_sig P).
+Section Ofe_Cofe.
+  Context {I : bi_index} {B : bi}.
+  Implicit Types i : I.
+  Implicit Types P : funbi_ty I B.
 
-Lemma funbi_sig_equiv {I B}:
-  ∀ P Q : funbi_ty I B, P ≡ Q ↔ funbi_sig P ≡ funbi_sig Q.
-Proof. done. Qed.
+  Definition funbi_sig P:
+    sig (fun f : I -c> B => mono (bi_index_rel I) f) :=
+    exist _ (funbi_car P) (funbi_mono P).
 
-Lemma funbi_sig_dist {I B}:
-  ∀ n, ∀ P Q : funbi_ty I B, P ≡{n}≡ Q ↔ funbi_sig P ≡{n}≡ funbi_sig Q.
-Proof. done. Qed.
+  Definition sig_funbi
+             (P' : sig (fun f : I -c> B => mono (bi_index_rel I) f)):
+    funbi_ty I B :=
+    FUN (proj1_sig P') (proj2_sig P').
 
-Lemma funbi_sig_cancel {I B}:
-  ∀ P, @funbi_sig I B (sig_funbi P) ≡ P.
-Proof. intros [f M]. reflexivity. Qed.
+  Lemma funbi_sig_equiv:
+    ∀ P Q, P ≡ Q ↔ funbi_sig P ≡ funbi_sig Q.
+  Proof. done. Qed.
 
-Definition funbi_ofe_mixin I B : OfeMixin (funbi_ty I B).
-Proof. by apply (iso_ofe_mixin funbi_sig funbi_sig_equiv funbi_sig_dist). Qed.
+  Lemma funbi_sig_dist:
+    ∀ n, ∀ P Q : funbi_ty I B, P ≡{n}≡ Q ↔ funbi_sig P ≡{n}≡ funbi_sig Q.
+  Proof. done. Qed.
 
-Canonical Structure funbi_ofe I B := OfeT (funbi_ty I B) (funbi_ofe_mixin I B).
+  Definition funbi_ofe_mixin : OfeMixin (funbi_ty I B).
+  Proof. by apply (iso_ofe_mixin funbi_sig funbi_sig_equiv funbi_sig_dist). Qed.
+
+  Canonical Structure funbi_ofe := OfeT (funbi_ty I B) (funbi_ofe_mixin).
+
+  Instance funbi_cofe
+  {C : Cofe B}
+  {limit_preserving_entails :
+     ∀ cP cQ : chain B, (∀ n, cP n ⊢ cQ n) → compl cP ⊢ compl cQ}
+    : Cofe (funbi_ofe).
+  Proof.
+    unshelve refine (iso_cofe_subtype (A:=I-c>B)
+                                      (fun f => mono (bi_index_rel I) f)
+                                      (@FUN _ _)
+                                      (@funbi_car _ _) _ _ _);
+    [done|done|].
+    intros c i j Hij.
+    apply limit_preserving_entails.
+    intros. by apply funbi_mono.
+  Qed.
+End Ofe_Cofe.
 
 
 Inductive funbi_entails {I B} (P1 P2 : funbi_ty I B) : Prop := funbi_in_entails : (∀ i, bi_entails (funbi_car P1 i) (funbi_car P2 i)) → funbi_entails P1 P2.
@@ -196,7 +215,7 @@ Local Definition unseal_eqs :=
   ).
 
 Lemma funbi_mixin I B :
-  BiMixin  (funbi_ofe_mixin I B) funbi_entails funbi_emp funbi_pure funbi_and funbi_or funbi_impl funbi_forall funbi_exist funbi_internal_eq funbi_sep funbi_wand funbi_plainly funbi_persistently.
+  BiMixin  (@funbi_ofe_mixin I B) funbi_entails funbi_emp funbi_pure funbi_and funbi_or funbi_impl funbi_forall funbi_exist funbi_internal_eq funbi_sep funbi_wand funbi_plainly funbi_persistently.
 Proof.
   rewrite !unseal_eqs.
   split;
@@ -290,7 +309,7 @@ Admitted.
 
 
 Canonical Structure funbi I B : bi :=
-  Bi (funbi_ty I B) funbi_dist funbi_equiv funbi_entails funbi_emp funbi_pure funbi_and funbi_or funbi_impl funbi_forall funbi_exist funbi_internal_eq funbi_sep funbi_wand funbi_plainly funbi_persistently (funbi_ofe_mixin _ _) (funbi_mixin _ _).
+  Bi (funbi_ty I B) funbi_dist funbi_equiv funbi_entails funbi_emp funbi_pure funbi_and funbi_or funbi_impl funbi_forall funbi_exist funbi_internal_eq funbi_sep funbi_wand funbi_plainly funbi_persistently funbi_ofe_mixin (funbi_mixin _ _).
 
 Instance funbi_affine I B : BiAffine B → BiAffine (funbi I B).
 Proof. split => ?. by apply affine. Qed.
@@ -354,7 +373,7 @@ Proof.
     intros. by rewrite funbi_mono.
 Qed.
 Canonical Structure funsbi I (B : sbi) : sbi :=
-    Sbi (funbi_ty I B) funbi_dist funbi_equiv funbi_entails funbi_emp funbi_pure funbi_and funbi_or funbi_impl funbi_forall funbi_exist funbi_internal_eq funbi_sep funbi_wand funbi_plainly funbi_persistently funbi_later (funbi_ofe_mixin I B) (bi_bi_mixin _) (funsbi_mixin _ _).
+    Sbi (funbi_ty I B) funbi_dist funbi_equiv funbi_entails funbi_emp funbi_pure funbi_and funbi_or funbi_impl funbi_forall funbi_exist funbi_internal_eq funbi_sep funbi_wand funbi_plainly funbi_persistently funbi_later funbi_ofe_mixin (bi_bi_mixin _) (funsbi_mixin _ _).
 
 Ltac unseal := rewrite 
                  /(@sbi_except_0 (funsbi _ _))
