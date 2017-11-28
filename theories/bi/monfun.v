@@ -38,19 +38,28 @@ Proof.
   by rewrite {1}/dist /= /funbi_dist /=.
 Qed.
 
+Definition funbi_sig {I B} (P : funbi_ty I B):
+  sig (fun f : I -c> B => mono (bi_index_rel I) f) :=
+  exist _ (funbi_car P) (funbi_mono P).
+Definition sig_funbi {I : bi_index} {B : bi}
+           (P : sig (fun f : I -c> B => mono (bi_index_rel I) f)):
+  funbi_ty I B :=
+  FUN (proj1_sig P) (proj2_sig P).
+
+Lemma funbi_sig_equiv {I B}:
+  ∀ P Q : funbi_ty I B, P ≡ Q ↔ funbi_sig P ≡ funbi_sig Q.
+Proof. done. Qed.
+
+Lemma funbi_sig_dist {I B}:
+  ∀ n, ∀ P Q : funbi_ty I B, P ≡{n}≡ Q ↔ funbi_sig P ≡{n}≡ funbi_sig Q.
+Proof. done. Qed.
+
+Lemma funbi_sig_cancel {I B}:
+  ∀ P, @funbi_sig I B (sig_funbi P) ≡ P.
+Proof. intros [f M]. reflexivity. Qed.
 
 Definition funbi_ofe_mixin I B : OfeMixin (funbi_ty I B).
-Proof.
-  split.
-  - intros.
-    apply (mixin_equiv_dist _ ofe_fun_ofe_mixin).
-  - intros.
-    split.
-    + apply (mixin_dist_equivalence _ ofe_fun_ofe_mixin).
-    + repeat intro. by eapply (Equivalence_Symmetric).
-    + intros x y z H1 H2 ?. by eapply (Equivalence_Transitive), H2.
-  - intros. by apply (mixin_dist_S _ ofe_fun_ofe_mixin).
-Defined.
+Proof. by apply (iso_ofe_mixin funbi_sig funbi_sig_equiv funbi_sig_dist). Qed.
 
 Canonical Structure funbi_ofe I B := OfeT (funbi_ty I B) (funbi_ofe_mixin I B).
 
