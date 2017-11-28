@@ -35,6 +35,7 @@ theories/bi/tactics.v
 theories/bi/fractional.v
 theories/bi/counter_examples.v
 theories/bi/fixpoint.v
+theories/bi/monfun.v
 theories/base_logic/upred.v
 theories/base_logic/derived.v
 theories/base_logic/base_logic.v
