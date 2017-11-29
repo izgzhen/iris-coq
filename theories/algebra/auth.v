@@ -208,7 +208,7 @@ Lemma auth_frag_mono a b : a ≼ b → ◯ a ≼ ◯ b.
 Proof. intros [c ->]. rewrite auth_frag_op. apply cmra_included_l. Qed.
 
 Global Instance auth_frag_sep_homomorphism :
-  MonoidHomomorphism op op (≡) (Auth None).
+  MonoidHomomorphism op op (≡) (@Auth A None).
 Proof. by split; [split; try apply _|]. Qed.
 
 Lemma auth_both_op a b : Auth (Excl' a) b ≡ ● a ⋅ ◯ b.
