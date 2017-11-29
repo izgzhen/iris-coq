@@ -1846,6 +1846,32 @@ Proof.
     + apply forall_intro=> x; rewrite -IH; apply forall_intro=> xs.
       by rewrite (forall_elim (hcons x xs)).
 Qed.
+
+(* Limits *)
+Lemma limit_preserving_entails {A : ofeT} `{Cofe A} (Φ Ψ : A → PROP) :
+  NonExpansive Φ → NonExpansive Ψ → LimitPreserving (λ x, Φ x ⊢ Ψ x).
+Proof.
+  intros HΦ HΨ c Hc.
+  assert (Heq : ∀ P Q : PROP, (∀ n, (P → Q)%I ≡{n}≡ True%I) ↔ (P -∗ Q)).
+  { intros ??. rewrite -equiv_dist. split=>EQ.
+    - by rewrite -(left_id True%I bi_and P) -EQ impl_elim_l.
+    - apply bi.equiv_spec; split; [by apply True_intro|].
+      apply impl_intro_l. by rewrite right_id. }
+  apply Heq=>n. rewrite conv_compl. by apply Heq.
+Qed.
+Lemma limit_preserving_equiv {A : ofeT} `{Cofe A} (Φ Ψ : A → PROP) :
+  NonExpansive Φ → NonExpansive Ψ → LimitPreserving (λ x, Φ x ⊣⊢ Ψ x).
+Proof.
+  intros HΦ HΨ. eapply limit_preserving_ext.
+  { intros x. symmetry; apply equiv_spec. }
+  apply limit_preserving_and; by apply limit_preserving_entails.
+Qed.
+Global Instance limit_preserving_Plain {A:ofeT} `{Cofe A} (Φ : A → PROP) :
+  NonExpansive Φ → LimitPreserving (λ x, Plain (Φ x)).
+Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
+Global Instance limit_preserving_Persistent {A:ofeT} `{Cofe A} (Φ : A → PROP) :
+  NonExpansive Φ → LimitPreserving (λ x, Persistent (Φ x)).
+Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 End bi_derived.
 
 Section sbi_derived.

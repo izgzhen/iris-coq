@@ -15,22 +15,6 @@ Implicit Types A : Type.
 Notation "P ⊢ Q" := (bi_entails (PROP:=uPredI M) P%I Q%I).
 Notation "P ⊣⊢ Q" := (equiv (A:=uPredI M) P%I Q%I).
 
-(* Limits *)
-Lemma limit_preserving_entails {A : ofeT} `{Cofe A} (Φ Ψ : A → uPred M) :
-  NonExpansive Φ → NonExpansive Ψ → LimitPreserving (λ x, Φ x ⊢ Ψ x).
-Proof.
-  intros HΦ HΨ c Hc. etrans; [apply equiv_spec, compl_chain_map|].
-  etrans; [|apply equiv_spec, symmetry, compl_chain_map].
-  by apply entails_lim.
-Qed.
-Lemma limit_preserving_equiv {A : ofeT} `{Cofe A} (Φ Ψ : A → uPred M) :
-  NonExpansive Φ → NonExpansive Ψ → LimitPreserving (λ x, Φ x ⊣⊢ Ψ x).
-Proof.
-  intros HΦ HΨ. eapply limit_preserving_ext.
-  { intros x. symmetry; apply equiv_spec. }
-  apply limit_preserving_and; by apply limit_preserving_entails.
-Qed.
-
 (* Own and valid derived *)
 Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) :
   ✓ a ⊢ bi_persistently (✓ a : uPred M).
@@ -96,9 +80,6 @@ Proof.
 Qed.
 
 (* Plainness *)
-Global Instance limit_preserving_Plain {A:ofeT} `{Cofe A} (Φ : A → uPred M) :
-  NonExpansive Φ → LimitPreserving (λ x, Plain (Φ x)).
-Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 Global Instance cmra_valid_plain {A : cmraT} (a : A) :
   Plain (✓ a : uPred M)%I.
 Proof. rewrite /Persistent. apply plainly_cmra_valid_1. Qed.
@@ -110,9 +91,6 @@ Lemma bupd_plain P `{!Plain P} : (|==> P) ⊢ P.
 Proof. by rewrite -{1}(plain_plainly P) bupd_plainly. Qed.
 
 (* Persistence *)
-Global Instance limit_preserving_Persistent {A:ofeT} `{Cofe A} (Φ : A → uPred M) :
-  NonExpansive Φ → LimitPreserving (λ x, Persistent (Φ x)).
-Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 Global Instance cmra_valid_persistent {A : cmraT} (a : A) :
   Persistent (✓ a : uPred M)%I.
 Proof. rewrite /Persistent. apply persistently_cmra_valid_1. Qed.
