@@ -3,6 +3,7 @@ image: ralfjung/opam-ci:latest
 stages:
   - build
   - deploy
+  - build_more
 
 variables:
   CPU_CORES: "9"
@@ -51,6 +52,7 @@ reverse-deps:
 
 build-coq.8.7.dev:
   <<: *template
+  stage: build_more
   variables:
     OPAM_PINS: "coq version 8.7.dev   coq-mathcomp-ssreflect version dev"
   except:
