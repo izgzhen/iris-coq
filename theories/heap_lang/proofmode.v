@@ -12,6 +12,18 @@ Ltac wp_simpl :=
       let e' := eval simpl in e in change (envs_entails Δ (wp E e' Q))
   end.
 
+Lemma tac_wp_simpl_subst `{heapG Σ} Δ E Φ e e' :
+  e = e' →
+  envs_entails Δ (WP e' @ E {{ Φ }}) → envs_entails Δ (WP e @ E {{ Φ }}).
+Proof. by intros ->. Qed.
+
+Ltac wp_simpl_subst :=
+  try iStartProof;
+  try lazymatch goal with
+  | |- envs_entails ?Δ (wp ?E ?e ?Q) =>
+      eapply tac_wp_simpl_subst; [simpl_subst; reflexivity|]
+  end.
+
 Lemma tac_wp_pure `{heapG Σ} Δ Δ' E e1 e2 φ Φ :
   PureExec φ e1 e2 →
   φ →
@@ -41,7 +53,7 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
       [apply _                        (* PureExec *)
       |try fast_done                  (* The pure condition for PureExec *)
       |apply _                        (* IntoLaters *)
-      |simpl_subst; try wp_value_head (* new goal *)
+      |wp_simpl_subst; try wp_value_head (* new goal *)
       ])
    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a reduct"
   | _ => fail "wp_pure: not a 'wp'"
