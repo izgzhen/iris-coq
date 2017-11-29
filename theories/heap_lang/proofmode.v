@@ -5,24 +5,17 @@ From iris.heap_lang Require Export tactics lifting.
 Set Default Proof Using "Type".
 Import uPred.
 
-Ltac wp_simpl :=
-  try iStartProof;
-  try lazymatch goal with
-  | |- envs_entails ?Δ (wp ?E ?e ?Q) =>
-      let e' := eval simpl in e in change (envs_entails Δ (wp E e' Q))
-  end.
-
-Lemma tac_wp_simpl_subst `{heapG Σ} Δ E Φ e e' :
+Lemma tac_wp_simpl `{heapG Σ} Δ E Φ e e' :
   e = e' →
   envs_entails Δ (WP e' @ E {{ Φ }}) → envs_entails Δ (WP e @ E {{ Φ }}).
 Proof. by intros ->. Qed.
 
-Ltac wp_simpl_subst :=
+Ltac wp_eval t :=
   try iStartProof;
-  try lazymatch goal with
-  | |- envs_entails ?Δ (wp ?E ?e ?Q) =>
-      eapply tac_wp_simpl_subst; [simpl_subst; reflexivity|]
-  end.
+  try (eapply tac_wp_simpl; [t; reflexivity|]).
+
+Ltac wp_simpl := wp_eval simpl.
+Ltac wp_simpl_subst := wp_eval simpl_subst.
 
 Lemma tac_wp_pure `{heapG Σ} Δ Δ' E e1 e2 φ Φ :
   PureExec φ e1 e2 →
