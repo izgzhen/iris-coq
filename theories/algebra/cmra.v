@@ -1514,7 +1514,7 @@ Section ofe_fun_cmra.
       { intros x. specialize (Hf12 x).
         destruct (cmra_extend n (f x) (f1 x) (f2 x)) as (y1&y2&?&?&?); eauto.
         exists (y1,y2); eauto. }
-      exists (λ x, gg x.1), (λ x, gg x.2). split_and!=> -?; naive_solver.
+      exists (λ x, (gg x).1), (λ x, (gg x).2). split_and!=> -?; naive_solver.
   Qed.
   Canonical Structure ofe_funR := CmraT (ofe_fun B) ofe_fun_cmra_mixin.
 
