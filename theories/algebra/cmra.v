@@ -1333,6 +1333,9 @@ Section option.
   Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
   Proof. rewrite -!not_eq_None_Some op_None. destruct mx, my; naive_solver. Qed.
 
+  Lemma cmra_opM_assoc' x my mz : x ⋅? my ⋅? mz ≡ x ⋅? (my ⋅ mz).
+  Proof. destruct my, mz; by rewrite /= -?assoc. Qed.
+
   Global Instance Some_core_id (x : A) : CoreId x → CoreId (Some x).
   Proof. by constructor. Qed.
   Global Instance option_core_id (mx : option A) :
