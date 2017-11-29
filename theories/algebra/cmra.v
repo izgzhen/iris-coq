@@ -1235,92 +1235,93 @@ Qed.
 (** ** CMRA for the option type *)
 Section option.
   Context {A : cmraT}.
-  Implicit Types a : A.
+  Implicit Types a b : A.
+  Implicit Types ma mb : option A.
   Local Arguments core _ _ !_ /.
   Local Arguments pcore _ _ !_ /.
 
-  Instance option_valid : Valid (option A) := λ mx,
-    match mx with Some x => ✓ x | None => True end.
-  Instance option_validN : ValidN (option A) := λ n mx,
-    match mx with Some x => ✓{n} x | None => True end.
-  Instance option_pcore : PCore (option A) := λ mx, Some (mx ≫= pcore).
+  Instance option_valid : Valid (option A) := λ ma,
+    match ma with Some a => ✓ a | None => True end.
+  Instance option_validN : ValidN (option A) := λ n ma,
+    match ma with Some a => ✓{n} a | None => True end.
+  Instance option_pcore : PCore (option A) := λ ma, Some (ma ≫= pcore).
   Arguments option_pcore !_ /.
-  Instance option_op : Op (option A) := union_with (λ x y, Some (x ⋅ y)).
+  Instance option_op : Op (option A) := union_with (λ a b, Some (a ⋅ b)).
 
   Definition Some_valid a : ✓ Some a ↔ ✓ a := reflexivity _.
   Definition Some_validN a n : ✓{n} Some a ↔ ✓{n} a := reflexivity _.
   Definition Some_op a b : Some (a ⋅ b) = Some a ⋅ Some b := eq_refl.
   Lemma Some_core `{CmraTotal A} a : Some (core a) = core (Some a).
   Proof. rewrite /core /=. by destruct (cmra_total a) as [? ->]. Qed.
-  Lemma Some_op_opM x my : Some x ⋅ my = Some (x ⋅? my).
-  Proof. by destruct my. Qed.
+  Lemma Some_op_opM a ma : Some a ⋅ ma = Some (a ⋅? ma).
+  Proof. by destruct ma. Qed.
 
-  Lemma option_included (mx my : option A) :
-    mx ≼ my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ (x ≡ y ∨ x ≼ y).
+  Lemma option_included ma mb :
+    ma ≼ mb ↔ ma = None ∨ ∃ a b, ma = Some a ∧ mb = Some b ∧ (a ≡ b ∨ a ≼ b).
   Proof.
     split.
-    - intros [mz Hmz].
-      destruct mx as [x|]; [right|by left].
-      destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
-      destruct mz as [z|]; inversion_clear Hmz; split_and?; auto;
+    - intros [mc Hmc].
+      destruct ma as [a|]; [right|by left].
+      destruct mb as [b|]; [exists a, b|destruct mc; inversion_clear Hmc].
+      destruct mc as [c|]; inversion_clear Hmc; split_and?; auto;
         setoid_subst; eauto using cmra_included_l.
-    - intros [->|(x&y&->&->&[Hz|[z Hz]])].
-      + exists my. by destruct my.
+    - intros [->|(a&b&->&->&[Hc|[c Hc]])].
+      + exists mb. by destruct mb.
       + exists None; by constructor.
-      + exists (Some z); by constructor.
+      + exists (Some c); by constructor.
   Qed.
 
-  Lemma option_includedN n (mx my : option A) :
-    mx ≼{n} my ↔ mx = None ∨ ∃ x y, mx = Some x ∧ my = Some y ∧ (x ≡{n}≡ y ∨ x ≼{n} y).
+  Lemma option_includedN n ma mb :
+    ma ≼{n} mb ↔ ma = None ∨ ∃ x y, ma = Some x ∧ mb = Some y ∧ (x ≡{n}≡ y ∨ x ≼{n} y).
   Proof.
     split.
-    - intros [mz Hmz].
-      destruct mx as [x|]; [right|by left].
-      destruct my as [y|]; [exists x, y|destruct mz; inversion_clear Hmz].
-      destruct mz as [z|]; inversion_clear Hmz; split_and?; auto;
+    - intros [mc Hmc].
+      destruct ma as [a|]; [right|by left].
+      destruct mb as [b|]; [exists a, b|destruct mc; inversion_clear Hmc].
+      destruct mc as [c|]; inversion_clear Hmc; split_and?; auto;
         ofe_subst; eauto using cmra_includedN_l.
-    - intros [->|(x&y&->&->&[Hz|[z Hz]])].
-      + exists my. by destruct my.
+    - intros [->|(a&y&->&->&[Hc|[c Hc]])].
+      + exists mb. by destruct mb.
       + exists None; by constructor.
-      + exists (Some z); by constructor.
+      + exists (Some c); by constructor.
   Qed.
 
   Lemma option_cmra_mixin : CmraMixin (option A).
   Proof.
     apply cmra_total_mixin.
     - eauto.
-    - by intros [x|] n; destruct 1; constructor; ofe_subst.
+    - by intros [a|] n; destruct 1; constructor; ofe_subst.
     - destruct 1; by ofe_subst.
     - by destruct 1; rewrite /validN /option_validN //=; ofe_subst.
-    - intros [x|]; [apply cmra_valid_validN|done].
-    - intros n [x|]; unfold validN, option_validN; eauto using cmra_validN_S.
-    - intros [x|] [y|] [z|]; constructor; rewrite ?assoc; auto.
-    - intros [x|] [y|]; constructor; rewrite 1?comm; auto.
-    - intros [x|]; simpl; auto.
-      destruct (pcore x) as [cx|] eqn:?; constructor; eauto using cmra_pcore_l.
-    - intros [x|]; simpl; auto.
-      destruct (pcore x) as [cx|] eqn:?; simpl; eauto using cmra_pcore_idemp.
-    - intros mx my; setoid_rewrite option_included.
-      intros [->|(x&y&->&->&[?|?])]; simpl; eauto.
-      + destruct (pcore x) as [cx|] eqn:?; eauto.
-        destruct (cmra_pcore_proper x y cx) as (?&?&?); eauto 10.
-      + destruct (pcore x) as [cx|] eqn:?; eauto.
-        destruct (cmra_pcore_mono x y cx) as (?&?&?); eauto 10.
-    - intros n [x|] [y|]; rewrite /validN /option_validN /=;
+    - intros [a|]; [apply cmra_valid_validN|done].
+    - intros n [a|]; unfold validN, option_validN; eauto using cmra_validN_S.
+    - intros [a|] [b|] [c|]; constructor; rewrite ?assoc; auto.
+    - intros [a|] [b|]; constructor; rewrite 1?comm; auto.
+    - intros [a|]; simpl; auto.
+      destruct (pcore a) as [ca|] eqn:?; constructor; eauto using cmra_pcore_l.
+    - intros [a|]; simpl; auto.
+      destruct (pcore a) as [ca|] eqn:?; simpl; eauto using cmra_pcore_idemp.
+    - intros ma mb; setoid_rewrite option_included.
+      intros [->|(a&b&->&->&[?|?])]; simpl; eauto.
+      + destruct (pcore a) as [ca|] eqn:?; eauto.
+        destruct (cmra_pcore_proper a b ca) as (?&?&?); eauto 10.
+      + destruct (pcore a) as [ca|] eqn:?; eauto.
+        destruct (cmra_pcore_mono a b ca) as (?&?&?); eauto 10.
+    - intros n [a|] [b|]; rewrite /validN /option_validN /=;
         eauto using cmra_validN_op_l.
-    - intros n mx my1 my2.
-      destruct mx as [x|], my1 as [y1|], my2 as [y2|]; intros Hx Hx';
+    - intros n ma mb1 mb2.
+      destruct ma as [a|], mb1 as [b1|], mb2 as [b2|]; intros Hx Hx';
         inversion_clear Hx'; auto.
-      + destruct (cmra_extend n x y1 y2) as (z1&z2&?&?&?); auto.
-        by exists (Some z1), (Some z2); repeat constructor.
-      + by exists (Some x), None; repeat constructor.
-      + by exists None, (Some x); repeat constructor.
+      + destruct (cmra_extend n a b1 b2) as (c1&c2&?&?&?); auto.
+        by exists (Some c1), (Some c2); repeat constructor.
+      + by exists (Some a), None; repeat constructor.
+      + by exists None, (Some a); repeat constructor.
       + exists None, None; repeat constructor.
   Qed.
   Canonical Structure optionR := CmraT (option A) option_cmra_mixin.
 
   Global Instance option_cmra_discrete : CmraDiscrete A → CmraDiscrete optionR.
-  Proof. split; [apply _|]. by intros [x|]; [apply (cmra_discrete_valid x)|]. Qed.
+  Proof. split; [apply _|]. by intros [a|]; [apply (cmra_discrete_valid a)|]. Qed.
 
   Instance option_unit : Unit (option A) := None.
   Lemma option_ucmra_mixin : UcmraMixin optionR.
@@ -1328,64 +1329,63 @@ Section option.
   Canonical Structure optionUR := UcmraT (option A) option_ucmra_mixin.
 
   (** Misc *)
-  Lemma op_None mx my : mx ⋅ my = None ↔ mx = None ∧ my = None.
-  Proof. destruct mx, my; naive_solver. Qed.
-  Lemma op_is_Some mx my : is_Some (mx ⋅ my) ↔ is_Some mx ∨ is_Some my.
-  Proof. rewrite -!not_eq_None_Some op_None. destruct mx, my; naive_solver. Qed.
+  Lemma op_None ma mb : ma ⋅ mb = None ↔ ma = None ∧ mb = None.
+  Proof. destruct ma, mb; naive_solver. Qed.
+  Lemma op_is_Some ma mb : is_Some (ma ⋅ mb) ↔ is_Some ma ∨ is_Some mb.
+  Proof. rewrite -!not_eq_None_Some op_None. destruct ma, mb; naive_solver. Qed.
 
-  Lemma cmra_opM_assoc' x my mz : x ⋅? my ⋅? mz ≡ x ⋅? (my ⋅ mz).
-  Proof. destruct my, mz; by rewrite /= -?assoc. Qed.
+  Lemma cmra_opM_assoc' a mb mc : a ⋅? mb ⋅? mc ≡ a ⋅? (mb ⋅ mc).
+  Proof. destruct mb, mc; by rewrite /= -?assoc. Qed.
 
-  Global Instance Some_core_id (x : A) : CoreId x → CoreId (Some x).
+  Global Instance Some_core_id a : CoreId a → CoreId (Some a).
   Proof. by constructor. Qed.
-  Global Instance option_core_id (mx : option A) :
-    (∀ x : A, CoreId x) → CoreId mx.
-  Proof. intros. destruct mx; apply _. Qed.
+  Global Instance option_core_id ma : (∀ x : A, CoreId x) → CoreId ma.
+  Proof. intros. destruct ma; apply _. Qed.
 
-  Lemma exclusiveN_Some_l n x `{!Exclusive x} my :
-    ✓{n} (Some x ⋅ my) → my = None.
-  Proof. destruct my. move=> /(exclusiveN_l _ x) []. done. Qed.
-  Lemma exclusiveN_Some_r n x `{!Exclusive x} my :
-    ✓{n} (my ⋅ Some x) → my = None.
+  Lemma exclusiveN_Some_l n a `{!Exclusive a} mb :
+    ✓{n} (Some a ⋅ mb) → mb = None.
+  Proof. destruct mb. move=> /(exclusiveN_l _ a) []. done. Qed.
+  Lemma exclusiveN_Some_r n a `{!Exclusive a} mb :
+    ✓{n} (mb ⋅ Some a) → mb = None.
   Proof. rewrite comm. by apply exclusiveN_Some_l. Qed.
 
-  Lemma exclusive_Some_l x `{!Exclusive x} my : ✓ (Some x ⋅ my) → my = None.
-  Proof. destruct my. move=> /(exclusive_l x) []. done. Qed.
-  Lemma exclusive_Some_r x `{!Exclusive x} my : ✓ (my ⋅ Some x) → my = None.
+  Lemma exclusive_Some_l a `{!Exclusive a} mb : ✓ (Some a ⋅ mb) → mb = None.
+  Proof. destruct mb. move=> /(exclusive_l a) []. done. Qed.
+  Lemma exclusive_Some_r a `{!Exclusive a} mb : ✓ (mb ⋅ Some a) → mb = None.
   Proof. rewrite comm. by apply exclusive_Some_l. Qed.
 
-  Lemma Some_includedN n x y : Some x ≼{n} Some y ↔ x ≡{n}≡ y ∨ x ≼{n} y.
+  Lemma Some_includedN n a b : Some a ≼{n} Some b ↔ a ≡{n}≡ b ∨ a ≼{n} b.
   Proof. rewrite option_includedN; naive_solver. Qed.
-  Lemma Some_included x y : Some x ≼ Some y ↔ x ≡ y ∨ x ≼ y.
+  Lemma Some_included a b : Some a ≼ Some b ↔ a ≡ b ∨ a ≼ b.
   Proof. rewrite option_included; naive_solver. Qed.
-  Lemma Some_included_2 x y : x ≼ y → Some x ≼ Some y.
+  Lemma Some_included_2 a b : a ≼ b → Some a ≼ Some b.
   Proof. rewrite Some_included; eauto. Qed.
 
-  Lemma Some_includedN_total `{CmraTotal A} n x y : Some x ≼{n} Some y ↔ x ≼{n} y.
+  Lemma Some_includedN_total `{CmraTotal A} n a b : Some a ≼{n} Some b ↔ a ≼{n} b.
   Proof. rewrite Some_includedN. split. by intros [->|?]. eauto. Qed.
-  Lemma Some_included_total `{CmraTotal A} x y : Some x ≼ Some y ↔ x ≼ y.
+  Lemma Some_included_total `{CmraTotal A} a b : Some a ≼ Some b ↔ a ≼ b.
   Proof. rewrite Some_included. split. by intros [->|?]. eauto. Qed.
 
-  Lemma Some_includedN_exclusive n x `{!Exclusive x} y :
-    Some x ≼{n} Some y → ✓{n} y → x ≡{n}≡ y.
+  Lemma Some_includedN_exclusive n a `{!Exclusive a} b :
+    Some a ≼{n} Some b → ✓{n} b → a ≡{n}≡ b.
   Proof. move=> /Some_includedN [//|/exclusive_includedN]; tauto. Qed.
-  Lemma Some_included_exclusive x `{!Exclusive x} y :
-    Some x ≼ Some y → ✓ y → x ≡ y.
+  Lemma Some_included_exclusive a `{!Exclusive a} b :
+    Some a ≼ Some b → ✓ b → a ≡ b.
   Proof. move=> /Some_included [//|/exclusive_included]; tauto. Qed.
 
-  Lemma is_Some_includedN n mx my : mx ≼{n} my → is_Some mx → is_Some my.
+  Lemma is_Some_includedN n ma mb : ma ≼{n} mb → is_Some ma → is_Some mb.
   Proof. rewrite -!not_eq_None_Some option_includedN. naive_solver. Qed.
-  Lemma is_Some_included mx my : mx ≼ my → is_Some mx → is_Some my.
+  Lemma is_Some_included ma mb : ma ≼ mb → is_Some ma → is_Some mb.
   Proof. rewrite -!not_eq_None_Some option_included. naive_solver. Qed.
 
-  Global Instance cancelable_Some x :
-    IdFree x → Cancelable x → Cancelable (Some x).
+  Global Instance cancelable_Some a :
+    IdFree a → Cancelable a → Cancelable (Some a).
   Proof.
-    intros Hirr ?? [y|] [z|] ? EQ; inversion_clear EQ.
-    - constructor. by apply (cancelableN x).
-    - destruct (Hirr y); [|eauto using dist_le with lia].
-      by eapply (cmra_validN_op_l 0 x y), (cmra_validN_le n); last lia.
-    - destruct (Hirr z); [|symmetry; eauto using dist_le with lia].
+    intros Hirr ?? [b|] [c|] ? EQ; inversion_clear EQ.
+    - constructor. by apply (cancelableN a).
+    - destruct (Hirr b); [|eauto using dist_le with lia].
+      by eapply (cmra_validN_op_l 0 a b), (cmra_validN_le n); last lia.
+    - destruct (Hirr c); [|symmetry; eauto using dist_le with lia].
       by eapply (cmra_validN_le n); last lia.
     - done.
   Qed.
@@ -1396,35 +1396,37 @@ Arguments optionUR : clear implicits.
 
 Section option_prod.
   Context {A B : cmraT}.
+  Implicit Types a : A.
+  Implicit Types b : B.
 
-  Lemma Some_pair_includedN n (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼{n} Some (x2,y2) → Some x1 ≼{n} Some x2 ∧ Some y1 ≼{n} Some y2.
+  Lemma Some_pair_includedN n a1 a2 b1 b2 :
+    Some (a1,b1) ≼{n} Some (a2,b2) → Some a1 ≼{n} Some a2 ∧ Some b1 ≼{n} Some b2.
   Proof. rewrite !Some_includedN. intros [[??]|[??]%prod_includedN]; eauto. Qed.
-  Lemma Some_pair_includedN_total_1 `{CmraTotal A} n (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼{n} Some (x2,y2) → x1 ≼{n} x2 ∧ Some y1 ≼{n} Some y2.
-  Proof. intros ?%Some_pair_includedN. by rewrite -(Some_includedN_total _ x1). Qed.
-  Lemma Some_pair_includedN_total_2 `{CmraTotal B} n (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼{n} Some (x2,y2) → Some x1 ≼{n} Some x2 ∧ y1 ≼{n} y2.
-  Proof. intros ?%Some_pair_includedN. by rewrite -(Some_includedN_total _ y1). Qed.
+  Lemma Some_pair_includedN_total_1 `{CmraTotal A} n a1 a2 b1 b2 :
+    Some (a1,b1) ≼{n} Some (a2,b2) → a1 ≼{n} a2 ∧ Some b1 ≼{n} Some b2.
+  Proof. intros ?%Some_pair_includedN. by rewrite -(Some_includedN_total _ a1). Qed.
+  Lemma Some_pair_includedN_total_2 `{CmraTotal B} n a1 a2 b1 b2 :
+    Some (a1,b1) ≼{n} Some (a2,b2) → Some a1 ≼{n} Some a2 ∧ b1 ≼{n} b2.
+  Proof. intros ?%Some_pair_includedN. by rewrite -(Some_includedN_total _ b1). Qed.
 
-  Lemma Some_pair_included (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼ Some (x2,y2) → Some x1 ≼ Some x2 ∧ Some y1 ≼ Some y2.
+  Lemma Some_pair_included a1 a2 b1 b2 :
+    Some (a1,b1) ≼ Some (a2,b2) → Some a1 ≼ Some a2 ∧ Some b1 ≼ Some b2.
   Proof. rewrite !Some_included. intros [[??]|[??]%prod_included]; eauto. Qed.
-  Lemma Some_pair_included_total_1 `{CmraTotal A} (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼ Some (x2,y2) → x1 ≼ x2 ∧ Some y1 ≼ Some y2.
-  Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total x1). Qed.
-  Lemma Some_pair_included_total_2 `{CmraTotal B} (x1 x2 : A) (y1 y2 : B) :
-    Some (x1,y1) ≼ Some (x2,y2) → Some x1 ≼ Some x2 ∧ y1 ≼ y2.
-  Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total y1). Qed.
+  Lemma Some_pair_included_total_1 `{CmraTotal A} a1 a2 b1 b2 :
+    Some (a1,b1) ≼ Some (a2,b2) → a1 ≼ a2 ∧ Some b1 ≼ Some b2.
+  Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total a1). Qed.
+  Lemma Some_pair_included_total_2 `{CmraTotal B} a1 a2 b1 b2 :
+    Some (a1,b1) ≼ Some (a2,b2) → Some a1 ≼ Some a2 ∧ b1 ≼ b2.
+  Proof. intros ?%Some_pair_included. by rewrite -(Some_included_total b1). Qed.
 End option_prod.
 
 Instance option_fmap_cmra_morphism {A B : cmraT} (f: A → B) `{!CmraMorphism f} :
   CmraMorphism (fmap f : option A → option B).
 Proof.
   split; first apply _.
-  - intros n [x|] ?; rewrite /cmra_validN //=. by apply (cmra_morphism_validN f).
-  - move=> [x|] //. by apply Some_proper, cmra_morphism_pcore.
-  - move=> [x|] [y|] //=. by rewrite -(cmra_morphism_op f).
+  - intros n [a|] ?; rewrite /cmra_validN //=. by apply (cmra_morphism_validN f).
+  - move=> [a|] //. by apply Some_proper, cmra_morphism_pcore.
+  - move=> [a|] [b|] //=. by rewrite -(cmra_morphism_op f).
 Qed.
 
 Program Definition optionRF (F : rFunctor) : rFunctor := {|

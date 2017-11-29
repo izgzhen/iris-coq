@@ -6,6 +6,7 @@ Set Default Proof Using "Type".
 
 Section cofe.
 Context {A : ofeT}.
+Implicit Types l : list A.
 
 Instance list_dist : Dist (list A) := λ n, Forall2 (dist n).
 
