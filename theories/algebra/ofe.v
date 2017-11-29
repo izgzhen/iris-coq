@@ -1178,7 +1178,7 @@ Qed.
 
 Notation "T -c> F" := (@ofe_funCF T%type (λ _, F%CF)) : cFunctor_scope.
 
-Instance ofe_funCF_contractive `{Finite C} (F : C → cFunctor) :
+Instance ofe_funCF_contractive {C} (F : C → cFunctor) :
   (∀ c, cFunctorContractive (F c)) → cFunctorContractive (ofe_funCF F).
 Proof.
   intros ? A1 A2 B1 B2 n ?? g.
