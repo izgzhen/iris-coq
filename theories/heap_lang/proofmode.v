@@ -5,6 +5,13 @@ From iris.heap_lang Require Export tactics lifting.
 Set Default Proof Using "Type".
 Import uPred.
 
+Ltac wp_simpl :=
+  try iStartProof;
+  try lazymatch goal with
+  | |- envs_entails ?Δ (wp ?E ?e ?Q) =>
+      let e' := eval simpl in e in change (envs_entails Δ (wp E e' Q))
+  end.
+
 Lemma tac_wp_pure `{heapG Σ} Δ Δ' E e1 e2 φ Φ :
   PureExec φ e1 e2 →
   φ →
@@ -155,7 +162,7 @@ Tactic Notation "wp_apply" open_constr(lem) :=
     lazymatch goal with
     | |- envs_entails _ (wp ?E ?e ?Q) =>
       reshape_expr e ltac:(fun K e' =>
-        wp_bind_core K; iApplyHyp H; try iNext; simpl) ||
+        wp_bind_core K; iApplyHyp H; try iNext; wp_simpl) ||
       lazymatch iTypeOf H with
       | Some (_,?P) => fail "wp_apply: cannot apply" P
       end
@@ -174,7 +181,7 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
     |first [intros l | fail 1 "wp_alloc:" l "not fresh"];
       eexists; split;
         [env_cbv; reflexivity || fail "wp_alloc:" H "not fresh"
-        |simpl; try wp_value_head]]
+        |wp_simpl; try wp_value_head]]
   | _ => fail "wp_alloc: not a 'wp'"
   end.
 
@@ -191,7 +198,7 @@ Tactic Notation "wp_load" :=
     [apply _
     |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
      iAssumptionCore || fail "wp_load: cannot find" l "↦ ?"
-    |simpl; try wp_value_head]
+    |wp_simpl; try wp_value_head]
   | _ => fail "wp_load: not a 'wp'"
   end.
 
@@ -207,7 +214,7 @@ Tactic Notation "wp_store" :=
     |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
      iAssumptionCore || fail "wp_store: cannot find" l "↦ ?"
     |env_cbv; reflexivity
-    |simpl; try first [wp_pure (Seq (Lit LitUnit) _)|wp_value_head]]
+    |wp_simpl; try first [wp_pure (Seq (Lit LitUnit) _)|wp_value_head]]
   | _ => fail "wp_store: not a 'wp'"
   end.
 
@@ -223,7 +230,7 @@ Tactic Notation "wp_cas_fail" :=
     |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
      iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
     |try congruence
-    |simpl; try wp_value_head]
+    |wp_simpl; try wp_value_head]
   | _ => fail "wp_cas_fail: not a 'wp'"
   end.
 
@@ -240,6 +247,6 @@ Tactic Notation "wp_cas_suc" :=
      iAssumptionCore || fail "wp_cas_suc: cannot find" l "↦ ?"
     |try congruence
     |env_cbv; reflexivity
-    |simpl; try wp_value_head]
+    |wp_simpl; try wp_value_head]
   | _ => fail "wp_cas_suc: not a 'wp'"
   end.
