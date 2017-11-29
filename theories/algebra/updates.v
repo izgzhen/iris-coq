@@ -77,6 +77,12 @@ Lemma cmra_update_op x1 x2 y1 y2 : x1 ~~> y1 → x2 ~~> y2 → x1 ⋅ x2 ~~> y1 
 Proof.
   rewrite !cmra_update_updateP; eauto using cmra_updateP_op with congruence.
 Qed.
+
+Lemma cmra_update_op_l x y : x ⋅ y ~~> x.
+Proof. intros n mz. rewrite comm cmra_opM_assoc. apply cmra_validN_op_r. Qed.
+Lemma cmra_update_op_r x y : x ⋅ y ~~> y.
+Proof. rewrite comm. apply cmra_update_op_l. Qed.
+
 Lemma cmra_update_valid0 x y : (✓{0} x → x ~~> y) → x ~~> y.
 Proof.
   intros H n mz Hmz. apply H, Hmz.
