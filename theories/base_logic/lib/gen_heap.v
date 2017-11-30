@@ -72,6 +72,14 @@ Section to_gen_heap.
   Proof. by rewrite /to_gen_heap fmap_delete. Qed.
 End to_gen_heap.
 
+Lemma gen_heap_init `{gen_heapPreG L V Σ} σ :
+  (|==> ∃ _ : gen_heapG L V Σ, gen_heap_ctx σ)%I.
+Proof.
+  iMod (own_alloc (● to_gen_heap σ)) as (γ) "Hh".
+  { apply: auth_auth_valid. exact: to_gen_heap_valid. }
+  iModIntro. by iExists (GenHeapG L V Σ _ _ _ γ).
+Qed.
+
 Section gen_heap.
   Context `{gen_heapG L V Σ}.
   Implicit Types P Q : iProp Σ.
