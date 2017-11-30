@@ -5,6 +5,18 @@ From iris.heap_lang Require Export tactics lifting.
 Set Default Proof Using "Type".
 Import uPred.
 
+Lemma tac_wp_expr_eval `{heapG Σ} Δ E Φ e e' :
+  e = e' →
+  envs_entails Δ (WP e' @ E {{ Φ }}) → envs_entails Δ (WP e @ E {{ Φ }}).
+Proof. by intros ->. Qed.
+
+Ltac wp_expr_eval t :=
+  try iStartProof;
+  try (eapply tac_wp_expr_eval; [t; reflexivity|]).
+
+Ltac wp_expr_simpl := wp_expr_eval simpl.
+Ltac wp_expr_simpl_subst := wp_expr_eval simpl_subst.
+
 Lemma tac_wp_pure `{heapG Σ} Δ Δ' E e1 e2 φ Φ :
   PureExec φ e1 e2 →
   φ →
@@ -34,7 +46,7 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
       [apply _                        (* PureExec *)
       |try fast_done                  (* The pure condition for PureExec *)
       |apply _                        (* IntoLaters *)
-      |simpl_subst; try wp_value_head (* new goal *)
+      |wp_expr_simpl_subst; try wp_value_head (* new goal *)
       ])
    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a reduct"
   | _ => fail "wp_pure: not a 'wp'"
@@ -54,15 +66,16 @@ Tactic Notation "wp_proj" := wp_pure (Fst _) || wp_pure (Snd _).
 Tactic Notation "wp_case" := wp_pure (Case _ _ _).
 Tactic Notation "wp_match" := wp_case; wp_let.
 
-Lemma tac_wp_bind `{heapG Σ} K Δ E Φ e :
-  envs_entails Δ (WP e @ E {{ v, WP fill K (of_val v) @ E {{ Φ }} }})%I →
+Lemma tac_wp_bind `{heapG Σ} K Δ E Φ e f :
+  f = (λ e, fill K e) → (* as an eta expanded hypothesis so that we can `simpl` it *)
+  envs_entails Δ (WP e @ E {{ v, WP f (of_val v) @ E {{ Φ }} }})%I →
   envs_entails Δ (WP fill K e @ E {{ Φ }}).
-Proof. rewrite /envs_entails=> ->. by apply: wp_bind. Qed.
+Proof. rewrite /envs_entails=> -> ->. by apply: wp_bind. Qed.
 
 Ltac wp_bind_core K :=
   lazymatch eval hnf in K with
   | [] => idtac
-  | _ => apply (tac_wp_bind K); simpl
+  | _ => eapply (tac_wp_bind K); [simpl; reflexivity|lazy beta]
   end.
 
 Tactic Notation "wp_bind" open_constr(efoc) :=
@@ -155,7 +168,7 @@ Tactic Notation "wp_apply" open_constr(lem) :=
     lazymatch goal with
     | |- envs_entails _ (wp ?E ?e ?Q) =>
       reshape_expr e ltac:(fun K e' =>
-        wp_bind_core K; iApplyHyp H; try iNext; simpl) ||
+        wp_bind_core K; iApplyHyp H; try iNext; wp_expr_simpl) ||
       lazymatch iTypeOf H with
       | Some (_,?P) => fail "wp_apply: cannot apply" P
       end
@@ -174,7 +187,7 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
     |first [intros l | fail 1 "wp_alloc:" l "not fresh"];
       eexists; split;
         [env_cbv; reflexivity || fail "wp_alloc:" H "not fresh"
-        |simpl; try wp_value_head]]
+        |wp_expr_simpl; try wp_value_head]]
   | _ => fail "wp_alloc: not a 'wp'"
   end.
 
@@ -191,7 +204,7 @@ Tactic Notation "wp_load" :=
     [apply _
     |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
      iAssumptionCore || fail "wp_load: cannot find" l "↦ ?"
-    |simpl; try wp_value_head]
+    |wp_expr_simpl; try wp_value_head]
   | _ => fail "wp_load: not a 'wp'"
   end.
 
@@ -207,7 +220,7 @@ Tactic Notation "wp_store" :=
     |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
      iAssumptionCore || fail "wp_store: cannot find" l "↦ ?"
     |env_cbv; reflexivity
-    |simpl; try first [wp_pure (Seq (Lit LitUnit) _)|wp_value_head]]
+    |wp_expr_simpl; try first [wp_pure (Seq (Lit LitUnit) _)|wp_value_head]]
   | _ => fail "wp_store: not a 'wp'"
   end.
 
@@ -223,7 +236,7 @@ Tactic Notation "wp_cas_fail" :=
     |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
      iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?"
     |try congruence
-    |simpl; try wp_value_head]
+    |wp_expr_simpl; try wp_value_head]
   | _ => fail "wp_cas_fail: not a 'wp'"
   end.
 
@@ -240,6 +253,6 @@ Tactic Notation "wp_cas_suc" :=
      iAssumptionCore || fail "wp_cas_suc: cannot find" l "↦ ?"
     |try congruence
     |env_cbv; reflexivity
-    |simpl; try wp_value_head]
+    |wp_expr_simpl; try wp_value_head]
   | _ => fail "wp_cas_suc: not a 'wp'"
   end.

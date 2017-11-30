@@ -40,7 +40,7 @@ Lemma sum_loop_wp `{!heapG Σ} v t l (n : Z) :
   {{{ RET #(); l ↦ #(sum t + n) ∗ is_tree v t }}}.
 Proof.
   iIntros (Φ) "[Hl Ht] HΦ".
-  iInduction t as [n'|tl ? tr] "IH" forall (v l n Φ); wp_rec; wp_let.
+  iInduction t as [n'|tl ? tr] "IH" forall (v l n Φ); simpl; wp_rec; wp_let.
   - iDestruct "Ht" as "%"; subst.
     wp_match. wp_load. wp_op. wp_store.
     by iApply ("HΦ" with "[$Hl]").
