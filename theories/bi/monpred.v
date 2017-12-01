@@ -234,79 +234,79 @@ Lemma monPred_bi_mixin I B : BiMixin (@monPred_ofe_mixin I B)
   monPred_sep monPred_wand monPred_plainly monPred_persistently.
 Proof.
   split; try unseal;
-    repeat match goal with
-        | _ => intro || done
-        | [ H : monPred_entails _ _ |- _] => destruct H as [H]
-        | [ |- monPred_entails _ _ ] => split => ? /=
-        | [ |- @dist _ monPred_dist _ _ _ ] => split => ? /=
-        | [ |- ?f _ ≡{_}≡ ?f _ ] => f_equiv
-        | [ |- ?f _ _ ≡{_}≡ ?f _ _ ] => f_equiv
-        end.
+    try by (repeat intro; split=> ? /=; repeat f_equiv).
   - split.
-    + intros ?. by split.
-    + intros ? ? ? [e1] [e2]. split => ?. by rewrite e1 e2.
+    + intros P. by split.
+    + intros P Q R [H1] [H2]. split => ?. by rewrite H1 H2.
   - split.
     + intros [HPQ]. split; split => i; move: (HPQ i); by apply bi.equiv_spec.
     + intros [[] []]. split=>i. by apply bi.equiv_spec.
-  - by apply bi.pure_intro.
-  - apply bi.pure_elim'. move/H => [] //=.
-  - by apply bi.pure_forall_2.
-  - by apply bi.and_elim_l.
-  - by apply bi.and_elim_r.
-  - by apply bi.and_intro.
-  - by apply bi.or_intro_l.
-  - by apply bi.or_intro_r.
-  - by apply bi.or_elim.
-  - setoid_rewrite bi.pure_impl_forall. do 2 apply bi.forall_intro => ?.
-    apply bi.impl_intro_r. rewrite -H /=. by do 2 f_equiv.
-  - rewrite H /=. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //.
+  - intros P φ ?. split=> i. by apply bi.pure_intro.
+  - intros φ P HP. split=> i. apply bi.pure_elim'=> ?. by apply HP.
+  - intros A φ. split=> i. by apply bi.pure_forall_2.
+  - intros P Q. split=> i. by apply bi.and_elim_l.
+  - intros P Q. split=> i. by apply bi.and_elim_r.
+  - intros P Q R [?] [?]. split=> i. by apply bi.and_intro.
+  - intros P Q. split=> i. by apply bi.or_intro_l.
+  - intros P Q. split=> i. by apply bi.or_intro_r.
+  - intros P Q R [?] [?]. split=> i. by apply bi.or_elim.
+  - intros P Q R [HR]. split=> i /=. setoid_rewrite bi.pure_impl_forall.
+    apply bi.forall_intro=> j. apply bi.forall_intro=> Hij.
+    apply bi.impl_intro_r. by rewrite -HR /= !Hij.
+  - intros P Q R [HR]. split=> i /=.
+     rewrite HR /= bi.forall_elim bi.pure_impl_forall bi.forall_elim //.
     apply bi.impl_elim_l.
-  - apply bi.forall_intro => ?. by apply H.
-  - by apply: bi.forall_elim.
-  - by rewrite /= -bi.exist_intro.
-  - apply bi.exist_elim => ?. by apply H.
-  - by apply bi.internal_eq_refl.
-  - setoid_rewrite bi.pure_impl_forall. do 2 apply bi.forall_intro => ?.
+  - intros A P Ψ HΨ. split=> i. apply bi.forall_intro => ?. by apply HΨ.
+  - intros A Ψ. split=> i. by apply: bi.forall_elim.
+  - intros A Ψ a. split=> i. by rewrite /= -bi.exist_intro.
+  - intros A Ψ Q HΨ. split=> i. apply bi.exist_elim => a. by apply HΨ.
+  - intros A P a. split=> i. by apply bi.internal_eq_refl.
+  - intros A a b Ψ ?. split=> i /=.
+    setoid_rewrite bi.pure_impl_forall. do 2 apply bi.forall_intro => ?.
     erewrite (bi.internal_eq_rewrite _ _ (flip Ψ _)) => //=. solve_proper.
-  - by apply bi.fun_ext.
-  - by apply bi.sig_eq.
-  - by apply bi.discrete_eq_1.
-  - by apply bi.sep_mono.
-  - by apply bi.emp_sep_1.
-  - by apply bi.emp_sep_2.
-  - by apply bi.sep_comm'.
-  - by apply bi.sep_assoc'.
-  - setoid_rewrite bi.pure_impl_forall. do 2 apply bi.forall_intro => ?.
-    apply bi.wand_intro_r. rewrite -H /=. by do 2 f_equiv.
-  - apply bi.wand_elim_l'.
-    rewrite H /= bi.forall_elim bi.pure_impl_forall bi.forall_elim //.
-  - by do 3 f_equiv.
-  - by rewrite bi.forall_elim bi.plainly_elim_persistently.
-  - repeat setoid_rewrite <-bi.plainly_forall.
+  - intros A1 A2 f g. split=> i. by apply bi.fun_ext.
+  - intros A P x y. split=> i. by apply bi.sig_eq.
+  - intros A a b ?. split=> i. by apply bi.discrete_eq_1.
+  - intros P P' Q Q' [?] [?]. split=> i. by apply bi.sep_mono.
+  - intros P. split=> i. by apply bi.emp_sep_1.
+  - intros P. split=> i. by apply bi.emp_sep_2.
+  - intros P Q. split=> i. by apply bi.sep_comm'.
+  - intros P Q R. split=> i. by apply bi.sep_assoc'.
+  - intros P Q R [HR]. split=> i /=. setoid_rewrite bi.pure_impl_forall.
+    apply bi.forall_intro=> j. apply bi.forall_intro=> Hij.
+    apply bi.wand_intro_r. by rewrite -HR /= !Hij.
+  - intros P Q R [HP]. split=> i. apply bi.wand_elim_l'.
+    rewrite HP /= bi.forall_elim bi.pure_impl_forall bi.forall_elim //.
+  - intros P Q [?]. split=> i /=. by do 3 f_equiv.
+  - intros P. split=> i /=. by rewrite bi.forall_elim bi.plainly_elim_persistently.
+  - intros P. split=> i /=. repeat setoid_rewrite <-bi.plainly_forall.
     rewrite -bi.plainly_idemp_2. f_equiv. by apply bi.forall_intro=>_.
-  - apply bi.forall_intro=>?. rewrite bi.plainly_forall. apply bi.forall_intro=>?.
+  - intros A Ψ. split=> i /=. apply bi.forall_intro=> j.
+    rewrite bi.plainly_forall. apply bi.forall_intro=> a.
     by rewrite !bi.forall_elim.
-  - rewrite <-(sig_monPred_sig P), <-(sig_monPred_sig Q), <-(bi.f_equiv _).
-    rewrite -bi.sig_equivI /= -bi.fun_ext. f_equiv=>i.
-    rewrite -bi.prop_ext !(bi.forall_elim i) !bi.pure_impl_forall
+  - intros P Q. split=> i /=.
+    rewrite <-(sig_monPred_sig P), <-(sig_monPred_sig Q), <-(bi.f_equiv _).
+    rewrite -bi.sig_equivI /= -bi.fun_ext. f_equiv=> j.
+    rewrite -bi.prop_ext !(bi.forall_elim j) !bi.pure_impl_forall
             !bi.forall_elim //.
-  - repeat setoid_rewrite bi.pure_impl_forall.
+  - intros P Q. split=> i /=. repeat setoid_rewrite bi.pure_impl_forall.
     repeat setoid_rewrite <-bi.plainly_forall.
     repeat setoid_rewrite bi.persistently_forall. do 4 f_equiv.
     apply bi.persistently_impl_plainly.
-  - repeat setoid_rewrite bi.pure_impl_forall. rewrite 2!bi.forall_elim //.
+  - intros P Q. split=> i /=.
+    repeat setoid_rewrite bi.pure_impl_forall. rewrite 2!bi.forall_elim //.
     repeat setoid_rewrite <-bi.plainly_forall.
     setoid_rewrite bi.plainly_impl_plainly. f_equiv.
     do 3 apply bi.forall_intro => ?. f_equiv. rewrite bi.forall_elim //.
-  - apply bi.forall_intro=>_. by apply bi.plainly_emp_intro.
-  - apply bi.sep_elim_l, _.
-  - by f_equiv.
-  - by apply bi.persistently_idemp_2.
-  - by setoid_rewrite bi.plainly_persistently_1.
-  - by apply bi.persistently_forall_2.
-  - by apply bi.persistently_exist_1.
-  - apply bi.sep_elim_l, _.
-  - by apply bi.persistently_and_sep_elim.
+  - intros P. split=> i. apply bi.forall_intro=>_. by apply bi.plainly_emp_intro.
+  - intros P Q. split=> i. apply bi.sep_elim_l, _.
+  - intros P Q [?]. split=> i /=. by f_equiv.
+  - intros P. split=> i. by apply bi.persistently_idemp_2.
+  - intros P. split=> i /=. by setoid_rewrite bi.plainly_persistently_1.
+  - intros A Ψ. split=> i. by apply bi.persistently_forall_2.
+  - intros A Ψ. split=> i. by apply bi.persistently_exist_1.
+  - intros P Q. split=> i. apply bi.sep_elim_l, _.
+  - intros P Q. split=> i. by apply bi.persistently_and_sep_elim.
 Qed.
 
 Canonical Structure monPredI I B : bi :=
@@ -320,28 +320,26 @@ Lemma monPred_sbi_mixin I (B : sbi) :
            monPred_impl monPred_forall monPred_exist monPred_internal_eq
            monPred_sep monPred_plainly monPred_persistently monPred_later.
 Proof.
-  intros. split; try unseal;
-    repeat match goal with
-           | _ => intro || done
-           | [ H : monPred_entails _ _ |- _] => destruct H as [H]
-           | [ |- monPred_entails _ _ ] => split => ? /=
-           | [ |- @dist _ _ _ _ _ ] => split => ? /=
-           end.
-  - apply bi.later_contractive. rewrite /dist_later in H. destruct n => //. by apply H.
-  - by apply bi.later_eq_1.
-  - by apply bi.later_eq_2.
-  - by apply bi.later_mono.
-  - setoid_rewrite bi.pure_impl_forall. rewrite /= !bi.forall_elim //. by apply bi.löb.
-  - by apply bi.later_forall_2.
-  - by apply bi.later_exist_false.
-  - by apply bi.later_sep_1.
-  - by apply bi.later_sep_2.
-  - rewrite bi.later_forall. f_equiv=>?. by rewrite -bi.later_plainly_1.
-  - rewrite bi.later_forall. f_equiv=>?. by rewrite -bi.later_plainly_2.
-  - by apply bi.later_persistently_1.
-  - by apply bi.later_persistently_2.
-  - rewrite /= -bi.forall_intro. apply bi.later_false_em.
-    intros. rewrite bi.pure_impl_forall. apply bi.forall_intro=>?. by repeat f_equiv.
+  split; unseal.
+  - intros n P Q HPQ. split=> i /=.
+    apply bi.later_contractive. destruct n as [|n]=> //. by apply HPQ.
+  - intros A x y. split=> i. by apply bi.later_eq_1.
+  - intros A x y. split=> i. by apply bi.later_eq_2.
+  - intros P Q [?]. split=> i. by apply bi.later_mono.
+  - intros P. split=> i /=.
+    setoid_rewrite bi.pure_impl_forall. rewrite /= !bi.forall_elim //. by apply bi.löb.
+  - intros A Ψ. split=> i. by apply bi.later_forall_2.
+  - intros A Ψ. split=> i. by apply bi.later_exist_false.
+  - intros P Q. split=> i. by apply bi.later_sep_1.
+  - intros P Q. split=> i. by apply bi.later_sep_2.
+  - intros P. split=> i /=.
+    rewrite bi.later_forall. f_equiv=> j. by rewrite -bi.later_plainly_1.
+  - intros P. split=> i /=.
+    rewrite bi.later_forall. f_equiv=> j. by rewrite -bi.later_plainly_2.
+  - intros P. split=> i. by apply bi.later_persistently_1.
+  - intros P. split=> i. by apply bi.later_persistently_2.
+  - intros P. split=> i /=. rewrite -bi.forall_intro. apply bi.later_false_em.
+    intros j. rewrite bi.pure_impl_forall. apply bi.forall_intro=> Hij. by rewrite Hij.
 Qed.
 
 Canonical Structure monPredSI I (B : sbi) : sbi :=
