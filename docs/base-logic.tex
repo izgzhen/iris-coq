@@ -63,12 +63,13 @@ Below, $\melt$ ranges over $\monoid$ and $i$ ranges over $\set{1,2}$.
 %\\&
     \ownM{\term} \mid \mval(\term) \mid
     \always\prop \mid
+    \plainly\prop \mid
     {\later\prop} \mid
     \upd \prop
 \end{align*}
 Recursive predicates must be \emph{guarded}: in $\MU \var. \term$, the variable $\var$ can only appear under the later $\later$ modality.
 
-Note that the modalities $\upd$, $\always$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $\lor$, and $\Ra$.
+Note that the modalities $\upd$, $\always$, $\plainly$ and $\later$ bind more tightly than $*$, $\wand$, $\land$, $\lor$, and $\Ra$.
 
 
 \paragraph{Variable conventions.}
@@ -175,6 +176,9 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 \and
 	\infer{\vctx \proves \wtt{\prop}{\Prop}}
 		{\vctx \proves \wtt{\always\prop}{\Prop}}
+\and
+	\infer{\vctx \proves \wtt{\prop}{\Prop}}
+		{\vctx \proves \wtt{\plainly\prop}{\Prop}}
 \and
 	\infer{\vctx \proves \wtt{\prop}{\Prop}}
 		{\vctx \proves \wtt{\later\prop}{\Prop}}
@@ -303,7 +307,30 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
   {\prop \proves \propB \wand \propC}
 \end{mathpar}
 
-\paragraph{Laws for the always modality.}
+\paragraph{Laws for the plainness modality.}
+\begin{mathpar}
+\infer[$\plainly$-mono]
+  {\prop \proves \propB}
+  {\plainly{\prop} \proves \plainly{\propB}}
+\and
+\infer[$\plainly$-E]{}
+{\plainly\prop \proves \always\prop}
+\and
+\begin{array}[c]{rMcMl}
+  \TRUE &\proves& \plainly{\TRUE} \\
+  (\plainly P \Ra \plainly Q) &\proves& \plainly (\plainly P \Ra Q)
+\end{array}
+\and
+\begin{array}[c]{rMcMl}
+  \plainly{\prop} &\proves& \plainly\plainly\prop \\
+  \All x. \plainly{\prop} &\proves& \plainly{\All x. \prop} \\
+  \plainly{\Exists x. \prop} &\proves& \Exists x. \plainly{\prop}
+\end{array}
+\and
+\infer[PropExt]{}{\plainly ( ( P \Ra Q) \land (Q \Ra P ) ) \proves P =_{\Prop} Q}
+\end{mathpar}
+
+\paragraph{Laws for the persistence modality.}
 \begin{mathpar}
 \infer[$\always$-mono]
   {\prop \proves \propB}
@@ -313,9 +340,8 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 {\always\prop \proves \prop}
 \and
 \begin{array}[c]{rMcMl}
-  \TRUE &\proves& \always{\TRUE} \\
-  \always{(\prop \land \propB)} &\proves& \always{(\prop * \propB)} \\
-  \always{\prop} \land \propB &\proves& \always{\prop} * \propB
+  \always{\prop} \land \propB &\proves& \always{\prop} * \propB \\
+  (\plainly P \Ra \always Q) &\proves& \always (\plainly P \Ra Q)
 \end{array}
 \and
 \begin{array}[c]{rMcMl}
@@ -344,7 +370,8 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 \and
 \begin{array}[c]{rMcMl}
   \later{(\prop * \propB)} &\provesIff& \later\prop * \later\propB \\
-  \always{\later\prop} &\provesIff& \later\always{\prop}
+  \always{\later\prop} &\provesIff& \later\always{\prop} \\
+  \plainly{\later\prop} &\provesIff& \later\plainly{\prop}
 \end{array}
 \end{mathpar}
 
@@ -393,6 +420,10 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\lambda
 \inferH{upd-update}
 {\melt \mupd \meltsB}
 {\ownM\melt \proves \upd \Exists\meltB\in\meltsB. \ownM\meltB}
+
+\inferH{upd-plainly}
+{}
+{\upd\plainly\prop \proves \prop}
 \end{mathpar}
 The premise in \ruleref{upd-update} is a \emph{meta-level} side-condition that has to be proven about $a$ and $B$.
 %\ralf{Trouble is, we don't actually have $\in$ inside the logic...}
@@ -401,13 +432,14 @@ The premise in \ruleref{upd-update} is a \emph{meta-level} side-condition that h
 
 The consistency statement of the logic reads as follows: For any $n$, we have
 \begin{align*}
-  \lnot(\TRUE \proves (\upd\later)^n\spac\FALSE)
+  \lnot(\TRUE \proves (\later)^n\spac\FALSE)
 \end{align*}
-where $(\upd\later)^n$ is short for $\upd\later$ being nested $n$ times.
+where $(\later)^n$ is short for $\later$ being nested $n$ times.
 
 The reason we want a stronger consistency than the usual $\lnot(\TRUE \proves \FALSE)$ is our modalities: it should be impossible to derive a contradiction below the modalities.
-For $\always$, this follows from the elimination rule, but the other two modalities do not have an elimination rule.
-Hence we declare that it is impossible to derive a contradiction below any combination of these two modalities.
+For $\always$ and $\plainly$, this follows from the elimination rules.
+For updates, we use the fact that $\upd\FALSE \proves \upd\plainly\FALSE \proves \FALSE$.
+However, there is no elimination rule for $\later$, so we declare that it is impossible to derive a contradiction below any number of laters.
 
 
 %%% Local Variables:
