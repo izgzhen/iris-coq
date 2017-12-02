@@ -111,8 +111,8 @@ Inductive monPred_entails (P1 P2 : monPred) : Prop :=
   { monPred_in_entails i : P1 i ⊢ P2 i }.
 Hint Immediate monPred_in_entails.
 
-Program Definition monPred_upclosed (P : I → B) : monPred :=
-  MonPred (λ i, (∀ j, ⌜i ⊑ j⌝ → P j)%I) _.
+Program Definition monPred_upclosed (Φ : I → B) : monPred :=
+  MonPred (λ i, (∀ j, ⌜i ⊑ j⌝ → Φ j)%I) _.
 Next Obligation. solve_proper. Qed.
 
 Definition monPred_ipure_def (P : B) : monPred := MonPred (λ _, P) _.
