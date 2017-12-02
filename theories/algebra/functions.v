@@ -25,7 +25,7 @@ Section ofe.
     by destruct (decide _) as [[]|].
   Qed.
   Global Instance ofe_fun_insert_proper x :
-    Proper ((≡) ==> (≡) ==> (≡)) (ofe_fun_insert x) := ne_proper_2 _.
+    Proper ((≡) ==> (≡) ==> (≡)) (ofe_fun_insert (B:=B) x) := ne_proper_2 _.
 
   Lemma ofe_fun_lookup_insert f x y : (ofe_fun_insert x y f) x = y.
   Proof.

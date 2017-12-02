@@ -10,6 +10,16 @@ Section LiftingTests.
   Implicit Types P Q : iProp Σ.
   Implicit Types Φ : val → iProp Σ.
 
+  Definition simpl_test :
+    ⌜(10 = 4 + 6)%nat⌝ -∗
+    WP let: "x" := ref #1 in "x" <- !"x";; !"x" {{ v, ⌜v = #1⌝ }}.
+  Proof.
+    iIntros "?". wp_alloc l. repeat (wp_pure _) || wp_load || wp_store.
+    match goal with
+    | |- context [ (10 = 4 + 6)%nat ] => done
+    end.
+  Qed.
+
   Definition heap_e  : expr :=
     let: "x" := ref #1 in "x" <- !"x" + #1 ;; !"x".
 

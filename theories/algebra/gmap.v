@@ -7,6 +7,7 @@ Set Default Proof Using "Type".
 Section cofe.
 Context `{Countable K} {A : ofeT}.
 Implicit Types m : gmap K A.
+Implicit Types i : K.
 
 Instance gmap_dist : Dist (gmap K A) := λ n m1 m2,
   ∀ i, m1 !! i ≡{n}≡ m2 !! i.
