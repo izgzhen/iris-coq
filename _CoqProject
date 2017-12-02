@@ -14,7 +14,7 @@ theories/algebra/dra.v
 theories/algebra/cofe_solver.v
 theories/algebra/agree.v
 theories/algebra/excl.v
-theories/algebra/iprod.v
+theories/algebra/functions.v
 theories/algebra/frac.v
 theories/algebra/csum.v
 theories/algebra/list.v

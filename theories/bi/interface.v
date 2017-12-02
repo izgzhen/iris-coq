@@ -87,7 +87,7 @@ Section bi_mixin.
     bi_mixin_internal_eq_refl {A : ofeT} P (a : A) : P ⊢ a ≡ a;
     bi_mixin_internal_eq_rewrite {A : ofeT} a b (Ψ : A → PROP) :
       NonExpansive Ψ → a ≡ b ⊢ Ψ a → Ψ b;
-    bi_mixin_fun_ext {A B} (f g : A -c> B) : (∀ x, f x ≡ g x) ⊢ f ≡ g;
+    bi_mixin_fun_ext {A} {B : A → ofeT} (f g : ofe_fun B) : (∀ x, f x ≡ g x) ⊢ f ≡ g;
     bi_mixin_sig_eq {A : ofeT} (P : A → Prop) (x y : sig P) : `x ≡ `y ⊢ x ≡ y;
     bi_mixin_discrete_eq_1 {A : ofeT} (a b : A) : Discrete a → a ≡ b ⊢ ⌜a ≡ b⌝;
 
@@ -415,7 +415,7 @@ Lemma internal_eq_rewrite {A : ofeT} a b (Ψ : A → PROP) :
   NonExpansive Ψ → a ≡ b ⊢ Ψ a → Ψ b.
 Proof. eapply bi_mixin_internal_eq_rewrite, bi_bi_mixin. Qed.
 
-Lemma fun_ext {A B} (f g : A -c> B) : (∀ x, f x ≡ g x) ⊢ (f ≡ g : PROP).
+Lemma fun_ext {A} {B : A → ofeT} (f g : ofe_fun B) : (∀ x, f x ≡ g x) ⊢ (f ≡ g : PROP).
 Proof. eapply bi_mixin_fun_ext, bi_bi_mixin. Qed.
 Lemma sig_eq {A : ofeT} (P : A → Prop) (x y : sig P) : `x ≡ `y ⊢ (x ≡ y : PROP).
 Proof. eapply bi_mixin_sig_eq, bi_bi_mixin. Qed.

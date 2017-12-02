@@ -49,7 +49,7 @@ Proof. by intros; rewrite ownM_valid cmra_valid_elim. Qed.
 Global Instance ownM_mono : Proper (flip (≼) ==> (⊢)) (@uPred_ownM M).
 Proof. intros a b [b' ->]. by rewrite ownM_op sep_elim_l. Qed.
 Lemma ownM_unit' : uPred_ownM ε ⊣⊢ True.
-Proof. apply (anti_symm _); first by apply pure_intro. apply ownM_empty. Qed.
+Proof. apply (anti_symm _); first by apply pure_intro. apply ownM_unit. Qed.
 Lemma affinely_plainly_cmra_valid {A : cmraT} (a : A) : ■ ✓ a ⊣⊢ ✓ a.
 Proof.
   rewrite affine_affinely.

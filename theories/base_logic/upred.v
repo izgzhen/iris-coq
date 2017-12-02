@@ -1,5 +1,6 @@
 From iris.algebra Require Export cmra updates.
 From iris.bi Require Export interface.
+From stdpp Require Import finite.
 Set Default Proof Using "Type".
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etrans; [|eassumption].
@@ -634,7 +635,7 @@ Proof.
   rewrite /bi_persistently /=. unseal.
   split=> n x Hx /=. by apply cmra_core_monoN.
 Qed.
-Lemma ownM_empty : bi_valid (uPred_ownM (ε:M)).
+Lemma ownM_unit : bi_valid (uPred_ownM (ε:M)).
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
 Lemma later_ownM (a : M) : ▷ uPred_ownM a ⊢ ∃ b, uPred_ownM b ∧ ▷ (a ≡ b).
 Proof.
@@ -670,6 +671,10 @@ Proof. by unseal. Qed.
 Lemma option_validI {A : cmraT} (mx : option A) :
   ✓ mx ⊣⊢ match mx with Some x => ✓ x | None => True : uPred M end.
 Proof. unseal. by destruct mx. Qed.
+
+Lemma ofe_fun_validI `{Finite A} {B : A → ucmraT} (g : ofe_fun B) :
+  (✓ g : uPred M) ⊣⊢ ∀ i, ✓ g i.
+Proof. by uPred.unseal. Qed.
 
 (* Basic update modality *)
 Lemma bupd_intro P : P ==∗ P.
