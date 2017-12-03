@@ -1339,6 +1339,13 @@ Proof.
   by rewrite -persistently_and_affinely_sep_l affinely_and_r affinely_and idemp.
 Qed.
 
+Lemma wand_impl_affinely_persistently P Q : (□ P -∗ Q) ⊣⊢ (bi_persistently P → Q).
+Proof.
+  apply (anti_symm (⊢)).
+  - apply impl_intro_l. by rewrite persistently_and_affinely_sep_l wand_elim_r.
+  - apply wand_intro_l. by rewrite -persistently_and_affinely_sep_l impl_elim_r.
+Qed.
+
 (* The combined affinely plainly modality *)
 Lemma affinely_plainly_elim P : ■ P ⊢ P.
 Proof. apply plainly_and_emp_elim. Qed.
@@ -1376,6 +1383,9 @@ Lemma affinely_plainly_sep_dup P : ■ P ⊣⊢ ■ P ∗ ■ P.
 Proof.
   by rewrite -plainly_and_affinely_sep_l affinely_and_r affinely_and idemp.
 Qed.
+
+Lemma wand_impl_affinely_plainly P Q : (■ P -∗ Q) ⊣⊢ (bi_plainly P → Q).
+Proof. by rewrite -(persistently_plainly P) wand_impl_affinely_persistently. Qed.
 
 (* Conditional affinely modality *)
 Global Instance affinely_if_ne p : NonExpansive (@bi_affinely_if PROP p).
