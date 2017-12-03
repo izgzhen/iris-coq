@@ -1072,6 +1072,9 @@ Proof.
   by rewrite (comm bi_and) persistently_and_emp_elim wand_elim_l.
 Qed.
 
+Lemma wand_impl_persistently_2 P Q : (bi_persistently P -∗ Q) ⊢ (bi_persistently P → Q).
+Proof. apply impl_intro_l. by rewrite persistently_and_sep_l_1 wand_elim_r. Qed.
+
 Section persistently_affinely_bi.
   Context `{AffineBI PROP}.
 
@@ -1093,6 +1096,11 @@ Section persistently_affinely_bi.
     apply (anti_symm (⊢)); auto using persistently_impl_wand_2.
     apply persistently_intro', wand_intro_l.
     by rewrite -persistently_and_sep_r persistently_elim impl_elim_r.
+  Qed.
+
+  Lemma wand_impl_persistently P Q : (bi_persistently P -∗ Q) ⊣⊢ (bi_persistently P → Q).
+  Proof.
+    apply (anti_symm (⊢)). apply wand_impl_persistently_2. by rewrite -impl_wand_1.
   Qed.
 
   Lemma wand_alt P Q : (P -∗ Q) ⊣⊢ ∃ R, R ∗ bi_persistently (P ∗ R → Q).
@@ -1259,6 +1267,9 @@ Proof.
   by rewrite (comm bi_and) plainly_and_emp_elim wand_elim_l.
 Qed.
 
+Lemma wand_impl_plainly_2 P Q : (bi_plainly P -∗ Q) ⊢ (bi_plainly P → Q).
+Proof. apply impl_intro_l. by rewrite plainly_and_sep_l_1 wand_elim_r. Qed.
+
 Section plainly_affinely_bi.
   Context `{AffineBI PROP}.
 
@@ -1280,16 +1291,9 @@ Section plainly_affinely_bi.
     by rewrite -plainly_and_sep_r plainly_elim impl_elim_r.
   Qed.
 
-  Lemma wand_impl_persistently P Q : (bi_persistently P -∗ Q) ⊣⊢ (bi_persistently P → Q).
-  Proof.
-    apply (anti_symm (⊢)); [|by rewrite -impl_wand_1].
-    apply impl_intro_l. by rewrite persistently_and_sep_l wand_elim_r.
-  Qed.
-
   Lemma wand_impl_plainly P Q : (bi_plainly P -∗ Q) ⊣⊢ (bi_plainly P → Q).
   Proof.
-    apply (anti_symm (⊢)); [|by rewrite -impl_wand_1].
-    apply impl_intro_l. by rewrite plainly_and_sep_l wand_elim_r.
+    apply (anti_symm (⊢)). by rewrite wand_impl_plainly_2. by rewrite -impl_wand_1.
   Qed.
 End plainly_affinely_bi.
 
