@@ -1757,17 +1757,6 @@ Proof.
   intros. by rewrite /Persistent {2}(plain P) -persistently_impl_plainly
                      -(persistent Q) (plainly_elim_absorbingly P) absorbing.
 Qed.
-(* TODO : can we prove this lemma under positivity of the BI (or even
-   weaker assumptions) ? *)
-Global Instance wand_persistent `{AffineBI PROP} P Q :
-  Plain P → Persistent Q → Persistent (P -∗ Q).
-Proof.
- intros. by rewrite /Persistent {2}(plain P) wand_impl_plainly
-   -persistently_impl_plainly -wand_impl_plainly -(persistent Q) (plainly_elim P).
-Qed.
-Global Instance pure_wand_persistent φ Q :
-  Persistent Q → Absorbing Q → Persistent (⌜φ⌝ -∗ Q).
-Proof. intros. rewrite pure_wand_forall. apply _. Qed.
 
 Global Instance sep_persistent P Q :
   Persistent P → Persistent Q → Persistent (P ∗ Q).
@@ -1784,6 +1773,15 @@ Proof. rewrite /bi_absorbingly. apply _. Qed.
 Global Instance from_option_persistent {A} P (Ψ : A → PROP) (mx : option A) :
   (∀ x, Persistent (Ψ x)) → Persistent P → Persistent (from_option Ψ P mx).
 Proof. destruct mx; apply _. Qed.
+
+Global Instance wand_persistent P Q :
+  Plain P → Persistent Q → Absorbing Q → Persistent (P -∗ Q).
+Proof.
+  intros. rewrite /Persistent {2}(plain P). trans (bi_persistently (bi_plainly P → Q)).
+  - rewrite -persistently_impl_plainly -wand_impl_affinely_plainly -(persistent Q).
+    by rewrite affinely_plainly_elim.
+  - apply persistently_mono, wand_intro_l. by rewrite sep_and impl_elim_r.
+Qed.
 
 (* Plainness instances *)
 Global Instance pure_plain φ : Plain (⌜φ⌝%I : PROP).
@@ -1815,16 +1813,14 @@ Proof.
   intros. by rewrite /Plain {2}(plain P) -plainly_impl_plainly -(plain Q)
                      (plainly_elim_absorbingly P) absorbing.
 Qed.
-(* TODO : can we prove this lemma under positivity of the BI (or even
-   weaker assumptions) ? *)
-Global Instance wand_plain `{AffineBI PROP} P Q :
-  Plain P → Plain Q → Plain (P -∗ Q).
+Global Instance wand_plain P Q :
+  Plain P → Plain Q → Absorbing Q → Plain (P -∗ Q).
 Proof.
-  intros. rewrite /Plain {2}(plain P) wand_impl_plainly -plainly_impl_plainly.
-  by rewrite -wand_impl_plainly -(plain Q) (plainly_elim P).
+  intros. rewrite /Plain {2}(plain P). trans (bi_plainly (bi_plainly P → Q)).
+  - rewrite -plainly_impl_plainly -wand_impl_affinely_plainly -(plain Q).
+    by rewrite affinely_plainly_elim.
+  - apply plainly_mono, wand_intro_l. by rewrite sep_and impl_elim_r.
 Qed.
-Global Instance pure_wand_plain φ Q `{!Absorbing Q} : Plain Q → Plain (⌜φ⌝ -∗ Q).
-Proof. intros ?. rewrite pure_wand_forall. apply _. Qed.
 Global Instance sep_plain P Q : Plain P → Plain Q → Plain (P ∗ Q).
 Proof. intros. by rewrite /Plain -plainly_sep_2 -!plain. Qed.
 
