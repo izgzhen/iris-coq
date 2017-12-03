@@ -74,7 +74,8 @@ Arguments from_affinely {_} _%I _%type_scope {_}.
 Hint Mode FromAffinely + ! - : typeclass_instances.
 Hint Mode FromAffinely + - ! : typeclass_instances.
 
-Class IntoAbsorbingly {PROP : bi} (P Q : PROP) := into_absorbingly : P ⊢ ▲ Q.
+Class IntoAbsorbingly {PROP : bi} (P Q : PROP) :=
+  into_absorbingly : P ⊢ bi_absorbingly Q.
 Arguments IntoAbsorbingly {_} _%I _%I.
 Arguments into_absorbingly {_} _%I _%I {_}.
 Hint Mode IntoAbsorbingly + ! -  : typeclass_instances.

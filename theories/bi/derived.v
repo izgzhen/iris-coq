@@ -49,9 +49,8 @@ Definition bi_absorbingly {PROP : bi} (P : PROP) : PROP := (True ∗ P)%I.
 Arguments bi_absorbingly {_} _%I : simpl never.
 Instance: Params (@bi_absorbingly) 1.
 Typeclasses Opaque bi_absorbingly.
-Notation "▲ P" := (bi_absorbingly P) (at level 20, right associativity) : bi_scope.
 
-Class Absorbing {PROP : bi} (P : PROP) := absorbing : ▲ P ⊢ P.
+Class Absorbing {PROP : bi} (P : PROP) := absorbing : bi_absorbingly P ⊢ P.
 Arguments Absorbing {_} _%I : simpl never.
 Arguments absorbing {_} _%I.
 
@@ -767,53 +766,57 @@ Global Instance absorbingly_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@bi_absorbingly PROP).
 Proof. solve_proper. Qed.
 
-Lemma absorbingly_intro P : P ⊢ ▲ P.
+Lemma absorbingly_intro P : P ⊢ bi_absorbingly P.
 Proof. by rewrite /bi_absorbingly -True_sep_2. Qed.
-Lemma absorbingly_mono P Q : (P ⊢ Q) → ▲ P ⊢ ▲ Q.
+Lemma absorbingly_mono P Q : (P ⊢ Q) → bi_absorbingly P ⊢ bi_absorbingly Q.
 Proof. by intros ->. Qed.
-Lemma absorbingly_idemp P : ▲ ▲ P ⊣⊢ ▲ P.
+Lemma absorbingly_idemp P : bi_absorbingly (bi_absorbingly P) ⊣⊢ bi_absorbingly P.
 Proof.
   apply (anti_symm _), absorbingly_intro.
   rewrite /bi_absorbingly assoc. apply sep_mono; auto.
 Qed.
 
-Lemma absorbingly_pure φ : ▲ ⌜ φ ⌝ ⊣⊢ ⌜ φ ⌝.
+Lemma absorbingly_pure φ : bi_absorbingly ⌜ φ ⌝ ⊣⊢ ⌜ φ ⌝.
 Proof.
   apply (anti_symm _), absorbingly_intro.
   apply wand_elim_r', pure_elim'=> ?. apply wand_intro_l; auto.
 Qed.
-Lemma absorbingly_or P Q : ▲ (P ∨ Q) ⊣⊢ ▲ P ∨ ▲ Q.
+Lemma absorbingly_or P Q :
+  bi_absorbingly (P ∨ Q) ⊣⊢ bi_absorbingly P ∨ bi_absorbingly Q.
 Proof. by rewrite /bi_absorbingly sep_or_l. Qed.
-Lemma absorbingly_and P Q : ▲ (P ∧ Q) ⊢ ▲ P ∧ ▲ Q.
+Lemma absorbingly_and P Q :
+  bi_absorbingly (P ∧ Q) ⊢ bi_absorbingly P ∧ bi_absorbingly Q.
 Proof. apply and_intro; apply absorbingly_mono; auto. Qed.
-Lemma absorbingly_forall {A} (Φ : A → PROP) : ▲ (∀ a, Φ a) ⊢ ∀ a, ▲ Φ a.
+Lemma absorbingly_forall {A} (Φ : A → PROP) :
+  bi_absorbingly (∀ a, Φ a) ⊢ ∀ a, bi_absorbingly (Φ a).
 Proof. apply forall_intro=> a. by rewrite (forall_elim a). Qed.
-Lemma absorbingly_exist {A} (Φ : A → PROP) : ▲ (∃ a, Φ a) ⊣⊢ ∃ a, ▲ Φ a.
+Lemma absorbingly_exist {A} (Φ : A → PROP) :
+  bi_absorbingly (∃ a, Φ a) ⊣⊢ ∃ a, bi_absorbingly (Φ a).
 Proof. by rewrite /bi_absorbingly sep_exist_l. Qed.
 
-Lemma absorbingly_internal_eq {A : ofeT} (x y : A) : ▲ (x ≡ y) ⊣⊢ x ≡ y.
+Lemma absorbingly_internal_eq {A : ofeT} (x y : A) : bi_absorbingly (x ≡ y) ⊣⊢ x ≡ y.
 Proof.
   apply (anti_symm _), absorbingly_intro.
   apply wand_elim_r', (internal_eq_rewrite' x y (λ y, True -∗ x ≡ y)%I); auto.
   apply wand_intro_l, internal_eq_refl.
 Qed.
 
-Lemma absorbingly_sep P Q : ▲ (P ∗ Q) ⊣⊢ ▲ P ∗ ▲ Q.
+Lemma absorbingly_sep P Q : bi_absorbingly (P ∗ Q) ⊣⊢ bi_absorbingly P ∗ bi_absorbingly Q.
 Proof. by rewrite -{1}absorbingly_idemp /bi_absorbingly !assoc -!(comm _ P) !assoc. Qed.
-Lemma absorbingly_True_emp : ▲ True ⊣⊢ ▲ emp.
+Lemma absorbingly_True_emp : bi_absorbingly True ⊣⊢ bi_absorbingly emp.
 Proof. by rewrite absorbingly_pure /bi_absorbingly right_id. Qed.
-Lemma absorbingly_wand P Q : ▲ (P -∗ Q) ⊢ ▲ P -∗ ▲ Q.
+Lemma absorbingly_wand P Q : bi_absorbingly (P -∗ Q) ⊢ bi_absorbingly P -∗ bi_absorbingly Q.
 Proof. apply wand_intro_l. by rewrite -absorbingly_sep wand_elim_r. Qed.
 
-Lemma absorbingly_sep_l P Q : ▲ P ∗ Q ⊣⊢ ▲ (P ∗ Q).
+Lemma absorbingly_sep_l P Q : bi_absorbingly P ∗ Q ⊣⊢ bi_absorbingly (P ∗ Q).
 Proof. by rewrite /bi_absorbingly assoc. Qed.
-Lemma absorbingly_sep_r P Q : P ∗ ▲ Q ⊣⊢ ▲ (P ∗ Q).
+Lemma absorbingly_sep_r P Q : P ∗ bi_absorbingly Q ⊣⊢ bi_absorbingly (P ∗ Q).
 Proof. by rewrite /bi_absorbingly !assoc (comm _ P). Qed.
-Lemma absorbingly_sep_lr P Q : ▲ P ∗ Q ⊣⊢ P ∗ ▲ Q.
+Lemma absorbingly_sep_lr P Q : bi_absorbingly P ∗ Q ⊣⊢ P ∗ bi_absorbingly Q.
 Proof. by rewrite absorbingly_sep_l absorbingly_sep_r. Qed.
 
 Lemma affinely_absorbingly `{!PositiveBI PROP} P :
-  bi_affinely (▲ P) ⊣⊢ bi_affinely P.
+  bi_affinely (bi_absorbingly P) ⊣⊢ bi_affinely P.
 Proof.
   apply (anti_symm _), affinely_mono, absorbingly_intro.
   by rewrite /bi_absorbingly affinely_sep affinely_True_emp affinely_emp left_id.
@@ -872,13 +875,13 @@ Proof. intros. by rewrite /Absorbing -absorbingly_sep_r absorbing. Qed.
 Global Instance wand_absorbing P Q : Absorbing Q → Absorbing (P -∗ Q).
 Proof. intros. by rewrite /Absorbing absorbingly_wand !absorbing -absorbingly_intro. Qed.
 
-Global Instance absorbingly_absorbing P : Absorbing (▲ P).
+Global Instance absorbingly_absorbing P : Absorbing (bi_absorbingly P).
 Proof. rewrite /bi_absorbingly. apply _. Qed.
 
 (* Properties of affine and absorbing propositions *)
 Lemma affine_affinely P `{!Affine P} : bi_affinely P ⊣⊢ P.
 Proof. rewrite /bi_affinely. apply (anti_symm _); auto. Qed.
-Lemma absorbing_absorbingly P `{!Absorbing P} : ▲ P ⊣⊢ P.
+Lemma absorbing_absorbingly P `{!Absorbing P} : bi_absorbingly P ⊣⊢ P.
 Proof. by apply (anti_symm _), absorbingly_intro. Qed.
 
 Lemma True_affine_all_affine P : Affine (True%I : PROP) → Affine P.
@@ -965,7 +968,8 @@ Global Instance persistently_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@bi_persistently PROP).
 Proof. intros P Q; apply persistently_mono. Qed.
 
-Lemma absorbingly_persistently P : ▲ bi_persistently P ⊣⊢ bi_persistently P.
+Lemma absorbingly_persistently P :
+  bi_absorbingly (bi_persistently P) ⊣⊢ bi_persistently P.
 Proof.
   apply (anti_symm _), absorbingly_intro.
   by rewrite /bi_absorbingly comm persistently_absorbing.
@@ -987,7 +991,7 @@ Proof.
 Qed.
 Lemma persistently_and_emp_elim P : emp ∧ bi_persistently P ⊢ P.
 Proof. by rewrite comm persistently_and_sep_elim right_id and_elim_r. Qed.
-Lemma persistently_elim_absorbingly P : bi_persistently P ⊢ ▲ P.
+Lemma persistently_elim_absorbingly P : bi_persistently P ⊢ bi_absorbingly P.
 Proof.
   rewrite -(right_id True%I _ (bi_persistently _)%I) -{1}(left_id emp%I _ True%I).
   by rewrite persistently_and_sep_assoc (comm bi_and) persistently_and_emp_elim comm.
@@ -1171,7 +1175,7 @@ Global Instance plainly_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@bi_plainly PROP).
 Proof. intros P Q; apply plainly_mono. Qed.
 
-Lemma absorbingly_plainly P : ▲ bi_plainly P ⊣⊢ bi_plainly P.
+Lemma absorbingly_plainly P : bi_absorbingly (bi_plainly P) ⊣⊢ bi_plainly P.
 Proof.
   apply (anti_symm _), absorbingly_intro.
   by rewrite /bi_absorbingly comm plainly_absorbing.
@@ -1195,7 +1199,7 @@ Proof.
 Qed.
 Lemma plainly_and_emp_elim P : emp ∧ bi_plainly P ⊢ P.
 Proof. by rewrite plainly_elim_persistently persistently_and_emp_elim. Qed.
-Lemma plainly_elim_absorbingly P : bi_plainly P ⊢ ▲ P.
+Lemma plainly_elim_absorbingly P : bi_plainly P ⊢ bi_absorbingly P.
 Proof. by rewrite plainly_elim_persistently persistently_elim_absorbingly. Qed.
 Lemma plainly_elim P `{!Absorbing P} : bi_plainly P ⊢ P.
 Proof. by rewrite plainly_elim_persistently persistently_elim. Qed.
@@ -1662,7 +1666,7 @@ Proof.
 Qed.
 Global Instance affinely_plain P : Plain P → Plain (bi_affinely P).
 Proof. rewrite /bi_affinely. apply _. Qed.
-Global Instance absorbingly_plain P : Plain P → Plain (▲ P).
+Global Instance absorbingly_plain P : Plain P → Plain (bi_absorbingly P).
 Proof. rewrite /bi_absorbingly. apply _. Qed.
 Global Instance from_option_palin {A} P (Ψ : A → PROP) (mx : option A) :
   (∀ x, Plain (Ψ x)) → Plain P → Plain (from_option Ψ P mx).
@@ -1742,7 +1746,7 @@ Global Instance persistently_persistent P : Persistent (bi_persistently P).
 Proof. by rewrite /Persistent persistently_idemp. Qed.
 Global Instance affinely_persistent P : Persistent P → Persistent (bi_affinely P).
 Proof. rewrite /bi_affinely. apply _. Qed.
-Global Instance absorbingly_persistent P : Persistent P → Persistent (▲ P).
+Global Instance absorbingly_persistent P : Persistent P → Persistent (bi_absorbingly P).
 Proof. rewrite /bi_absorbingly. apply _. Qed.
 Global Instance from_option_persistent {A} P (Ψ : A → PROP) (mx : option A) :
   (∀ x, Persistent (Ψ x)) → Persistent P → Persistent (from_option Ψ P mx).
@@ -1796,7 +1800,8 @@ Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
 Lemma persistent_entails_r P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
 Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
 
-Lemma persistent_absorbingly_affinely P `{!Persistent P} : P ⊢ ▲ bi_affinely P.
+Lemma persistent_absorbingly_affinely P `{!Persistent P} :
+  P ⊢ bi_absorbingly (bi_affinely P).
 Proof.
   by rewrite {1}(persistent_persistently_2 P) -persistently_affinely
              persistently_elim_absorbingly.
@@ -2005,7 +2010,7 @@ Lemma later_affinely_plainly_if_2 p P : ■?p ▷ P ⊢ ▷ ■?p P.
 Proof. destruct p; simpl; auto using later_affinely_plainly_2. Qed.
 Lemma later_affinely_persistently_if_2 p P : □?p ▷ P ⊢ ▷ □?p P.
 Proof. destruct p; simpl; auto using later_affinely_persistently_2. Qed.
-Lemma later_absorbingly P : ▷ ▲ P ⊣⊢ ▲ ▷ P.
+Lemma later_absorbingly P : ▷ bi_absorbingly P ⊣⊢ bi_absorbingly (▷ P).
 Proof. by rewrite /bi_absorbingly later_sep later_True. Qed.
 
 Global Instance later_plain P : Plain P → Plain (▷ P).
@@ -2080,7 +2085,7 @@ Lemma laterN_affinely_plainly_if_2 n p P : ■?p ▷^n P ⊢ ▷^n ■?p P.
 Proof. destruct p; simpl; auto using laterN_affinely_plainly_2. Qed.
 Lemma laterN_affinely_persistently_if_2 n p P : □?p ▷^n P ⊢ ▷^n □?p P.
 Proof. destruct p; simpl; auto using laterN_affinely_persistently_2. Qed.
-Lemma laterN_absorbingly n P : ▷^n ▲ P ⊣⊢ ▲ ▷^n P.
+Lemma laterN_absorbingly n P : ▷^n (bi_absorbingly P) ⊣⊢ bi_absorbingly (▷^n P).
 Proof. by rewrite /bi_absorbingly laterN_sep laterN_True. Qed.
 
 Global Instance laterN_plain n P : Plain P → Plain (▷^n P).
@@ -2163,7 +2168,7 @@ Lemma except_0_affinely_plainly_if_2 p P : ■?p ◇ P ⊢ ◇ ■?p P.
 Proof. destruct p; simpl; auto using except_0_affinely_plainly_2. Qed.
 Lemma except_0_affinely_persistently_if_2 p P : □?p ◇ P ⊢ ◇ □?p P.
 Proof. destruct p; simpl; auto using except_0_affinely_persistently_2. Qed.
-Lemma except_0_absorbingly P : ◇ ▲ P ⊣⊢ ▲ ◇ P.
+Lemma except_0_absorbingly P : ◇ (bi_absorbingly P) ⊣⊢ bi_absorbingly (◇ P).
 Proof. by rewrite /bi_absorbingly except_0_sep except_0_True. Qed.
 
 Lemma except_0_frame_l P Q : P ∗ ◇ Q ⊢ ◇ (P ∗ Q).
@@ -2250,7 +2255,7 @@ Qed.
 Global Instance affinely_timeless P :
   Timeless (emp%I : PROP) → Timeless P → Timeless (bi_affinely P).
 Proof. rewrite /bi_affinely; apply _. Qed.
-Global Instance absorbingly_timeless P : Timeless P → Timeless (▲ P).
+Global Instance absorbingly_timeless P : Timeless P → Timeless (bi_absorbingly P).
 Proof. rewrite /bi_absorbingly; apply _. Qed.
 
 Global Instance eq_timeless {A : ofeT} (a b : A) :

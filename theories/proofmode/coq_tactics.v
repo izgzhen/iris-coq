@@ -798,7 +798,7 @@ Qed.
 
 Lemma tac_specialize_persistent_helper Δ Δ'' j q P R R' Q :
   envs_lookup j Δ = Some (q,P) →
-  envs_entails Δ (▲ R) →
+  envs_entails Δ (bi_absorbingly R) →
   IntoPersistent false R R' →
   (if q then TCTrue else AffineBI PROP) →
   envs_replace j q true (Esnoc Enil j R') Δ = Some Δ'' →

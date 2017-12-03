@@ -18,7 +18,7 @@ Global Instance into_absorbingly_True : @IntoAbsorbingly PROP True emp | 0.
 Proof. by rewrite /IntoAbsorbingly -absorbingly_True_emp absorbingly_pure. Qed.
 Global Instance into_absorbingly_absorbing P : Absorbing P → IntoAbsorbingly P P | 1.
 Proof. intros. by rewrite /IntoAbsorbingly absorbing_absorbingly. Qed.
-Global Instance into_absorbingly_default P : IntoAbsorbingly (▲ P) P | 100.
+Global Instance into_absorbingly_default P : IntoAbsorbingly (bi_absorbingly P) P | 100.
 Proof. by rewrite /IntoAbsorbingly. Qed.
 
 (* FromAssumption *)
@@ -35,7 +35,7 @@ Global Instance from_assumption_affinely_r P Q :
   FromAssumption true P Q → FromAssumption true P (bi_affinely Q).
 Proof. rewrite /FromAssumption /= =><-. by rewrite affinely_idemp. Qed.
 Global Instance from_assumption_absorbingly_r p P Q :
-  FromAssumption p P Q → FromAssumption p P (▲ Q).
+  FromAssumption p P Q → FromAssumption p P (bi_absorbingly Q).
 Proof. rewrite /FromAssumption /= =><-. apply absorbingly_intro. Qed.
 
 Global Instance from_assumption_affinely_plainly_l p P Q :
@@ -108,7 +108,7 @@ Proof. rewrite /FromPure /IntoPure=> <- ->. by rewrite pure_impl impl_wand_2. Qe
 Global Instance into_pure_affinely P φ :
   IntoPure P φ → IntoPure (bi_affinely P) φ.
 Proof. rewrite /IntoPure=> ->. apply affinely_elim. Qed.
-Global Instance into_pure_absorbingly P φ : IntoPure P φ → IntoPure (▲ P) φ.
+Global Instance into_pure_absorbingly P φ : IntoPure P φ → IntoPure (bi_absorbingly P) φ.
 Proof. rewrite /IntoPure=> ->. by rewrite absorbingly_pure. Qed.
 Global Instance into_pure_plainly P φ : IntoPure P φ → IntoPure (bi_plainly P) φ.
 Proof. rewrite /IntoPure=> ->. apply: plainly_elim. Qed.
@@ -159,7 +159,7 @@ Proof. rewrite /FromPure=> <-. by rewrite persistently_pure. Qed.
 Global Instance from_pure_affinely P φ `{!Affine P} :
   FromPure P φ → FromPure (bi_affinely P) φ.
 Proof. by rewrite /FromPure affine_affinely. Qed.
-Global Instance from_pure_absorbingly P φ : FromPure P φ → FromPure (▲ P) φ.
+Global Instance from_pure_absorbingly P φ : FromPure P φ → FromPure (bi_absorbingly P) φ.
 Proof. rewrite /FromPure=> <-. by rewrite absorbingly_pure. Qed.
 
 (* IntoInternalEq *)
@@ -170,7 +170,7 @@ Global Instance into_internal_eq_affinely {A : ofeT} (x y : A) P :
   IntoInternalEq P x y → IntoInternalEq (bi_affinely P) x y.
 Proof. rewrite /IntoInternalEq=> ->. by rewrite affinely_elim. Qed.
 Global Instance into_internal_eq_absorbingly {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (▲ P) x y.
+  IntoInternalEq P x y → IntoInternalEq (bi_absorbingly P) x y.
 Proof. rewrite /IntoInternalEq=> ->. by rewrite absorbingly_internal_eq. Qed.
 Global Instance into_internal_eq_plainly {A : ofeT} (x y : A) P :
   IntoInternalEq P x y → IntoInternalEq (bi_plainly P) x y.
@@ -353,7 +353,7 @@ Global Instance from_sep_affinely P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (bi_affinely P) (bi_affinely Q1) (bi_affinely Q2).
 Proof. rewrite /FromSep=> <-. by rewrite affinely_sep_2. Qed.
 Global Instance from_sep_absorbingly P Q1 Q2 :
-  FromSep P Q1 Q2 → FromSep (▲ P) (▲ Q1) (▲ Q2).
+  FromSep P Q1 Q2 → FromSep (bi_absorbingly P) (bi_absorbingly Q1) (bi_absorbingly Q2).
 Proof. rewrite /FromSep=> <-. by rewrite absorbingly_sep. Qed.
 Global Instance from_sep_plainly P Q1 Q2 :
   FromSep P Q1 Q2 →
@@ -491,7 +491,7 @@ Global Instance from_or_affinely P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (bi_affinely P) (bi_affinely Q1) (bi_affinely Q2).
 Proof. rewrite /FromOr=> <-. by rewrite affinely_or. Qed.
 Global Instance from_or_absorbingly P Q1 Q2 :
-  FromOr P Q1 Q2 → FromOr (▲ P) (▲ Q1) (▲ Q2).
+  FromOr P Q1 Q2 → FromOr (bi_absorbingly P) (bi_absorbingly Q1) (bi_absorbingly Q2).
 Proof. rewrite /FromOr=> <-. by rewrite absorbingly_or. Qed.
 Global Instance from_or_plainly P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
@@ -510,7 +510,7 @@ Global Instance into_or_affinely P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (bi_affinely P) (bi_affinely Q1) (bi_affinely Q2).
 Proof. rewrite /IntoOr=>->. by rewrite affinely_or. Qed.
 Global Instance into_or_absorbingly P Q1 Q2 :
-  IntoOr P Q1 Q2 → IntoOr (▲ P) (▲ Q1) (▲ Q2).
+  IntoOr P Q1 Q2 → IntoOr (bi_absorbingly P) (bi_absorbingly Q1) (bi_absorbingly Q2).
 Proof. rewrite /IntoOr=>->. by rewrite absorbingly_or. Qed.
 Global Instance into_or_plainly P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
@@ -530,7 +530,7 @@ Global Instance from_exist_affinely {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (bi_affinely P) (λ a, bi_affinely (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite affinely_exist. Qed.
 Global Instance from_exist_absorbingly {A} P (Φ : A → PROP) :
-  FromExist P Φ → FromExist (▲ P) (λ a, ▲ (Φ a))%I.
+  FromExist P Φ → FromExist (bi_absorbingly P) (λ a, bi_absorbingly (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite absorbingly_exist. Qed.
 Global Instance from_exist_plainly {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (bi_plainly P) (λ a, bi_plainly (Φ a))%I.
@@ -562,7 +562,7 @@ Proof.
   rewrite -exist_intro //. apply sep_elim_r, _.
 Qed.
 Global Instance into_exist_absorbingly {A} P (Φ : A → PROP) :
-  IntoExist P Φ → IntoExist (▲ P) (λ a, ▲ (Φ a))%I.
+  IntoExist P Φ → IntoExist (bi_absorbingly P) (λ a, bi_absorbingly (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP absorbingly_exist. Qed.
 Global Instance into_exist_plainly {A} P (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (bi_plainly P) (λ a, bi_plainly (Φ a))%I.
@@ -633,7 +633,7 @@ Global Instance forall_modal_wand {A} P P' (Φ Ψ : A → PROP) :
 Proof.
   rewrite /ElimModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
 Qed.
-Global Instance elim_modal_absorbingly P Q : Absorbing Q → ElimModal (▲ P) P Q Q.
+Global Instance elim_modal_absorbingly P Q : Absorbing Q → ElimModal (bi_absorbingly P) P Q Q.
 Proof.
   rewrite /ElimModal=> H. by rewrite absorbingly_sep_l wand_elim_r absorbing_absorbingly.
 Qed.
@@ -666,11 +666,11 @@ Global Instance make_sep_emp_r P : MakeSep P emp P.
 Proof. by rewrite /MakeSep right_id. Qed.
 Global Instance make_sep_true_l P : Absorbing P → MakeSep True P P.
 Proof. intros. by rewrite /MakeSep True_sep. Qed.
-Global Instance make_and_emp_l_absorbingly P : MakeSep True P (▲ P) | 10.
+Global Instance make_and_emp_l_absorbingly P : MakeSep True P (bi_absorbingly P) | 10.
 Proof. intros. by rewrite /MakeSep. Qed.
 Global Instance make_sep_true_r P : Absorbing P → MakeSep P True P.
 Proof. intros. by rewrite /MakeSep sep_True. Qed.
-Global Instance make_and_emp_r_absorbingly P : MakeSep P True (▲ P) | 10.
+Global Instance make_and_emp_r_absorbingly P : MakeSep P True (bi_absorbingly P) | 10.
 Proof. intros. by rewrite /MakeSep comm. Qed.
 Global Instance make_sep_default P Q : MakeSep P Q (P ∗ Q) | 100.
 Proof. by rewrite /MakeSep. Qed.
@@ -794,18 +794,18 @@ Proof.
   by rewrite -{1}affinely_idemp affinely_sep_2.
 Qed.
 
-Class MakeAbsorbingly (P Q : PROP) := make_absorbingly : ▲ P ⊣⊢ Q.
+Class MakeAbsorbingly (P Q : PROP) := make_absorbingly : bi_absorbingly P ⊣⊢ Q.
 Arguments MakeAbsorbingly _%I _%I.
 Global Instance make_absorbingly_emp : MakeAbsorbingly emp True | 0.
 Proof. by rewrite /MakeAbsorbingly -absorbingly_True_emp absorbingly_pure. Qed.
 (* Note: there is no point in having an instance `Absorbing P → MakeAbsorbingly P P`
 because framing will never turn a proposition that is not absorbing into
 something that is absorbing. *)
-Global Instance make_absorbingly_default P : MakeAbsorbingly P (▲ P) | 100.
+Global Instance make_absorbingly_default P : MakeAbsorbingly P (bi_absorbingly P) | 100.
 Proof. by rewrite /MakeAbsorbingly. Qed.
 
 Global Instance frame_absorbingly p R P Q Q' :
-  Frame p R P Q → MakeAbsorbingly Q Q' → Frame p R (▲ P) Q'.
+  Frame p R P Q → MakeAbsorbingly Q Q' → Frame p R (bi_absorbingly P) Q'.
 Proof. rewrite /Frame /MakeAbsorbingly=> <- <- /=. by rewrite absorbingly_sep_r. Qed.
 
 Class MakePersistently (P Q : PROP) := make_persistently : bi_persistently P ⊣⊢ Q.
@@ -834,7 +834,7 @@ Global Instance frame_forall {A} p R (Φ Ψ : A → PROP) :
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
 
 (* FromModal *)
-Global Instance from_modal_absorbingly P : FromModal (▲ P) P.
+Global Instance from_modal_absorbingly P : FromModal (bi_absorbingly P) P.
 Proof. apply absorbingly_intro. Qed.
 End bi_instances.
 
@@ -1049,7 +1049,7 @@ Global Instance into_except_0_affinely P Q :
   IntoExcept0 P Q → IntoExcept0 (bi_affinely P) (bi_affinely Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_affinely_2. Qed.
 Global Instance into_except_0_absorbingly P Q :
-  IntoExcept0 P Q → IntoExcept0 (▲ P) (▲ Q).
+  IntoExcept0 P Q → IntoExcept0 (bi_absorbingly P) (bi_absorbingly Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_absorbingly. Qed.
 Global Instance into_except_0_plainly P Q :
   IntoExcept0 P Q → IntoExcept0 (bi_plainly P) (bi_plainly Q).
@@ -1155,7 +1155,7 @@ Global Instance into_later_affinely n P Q :
   IntoLaterN n P Q → IntoLaterN n (bi_affinely P) (bi_affinely Q).
 Proof. rewrite /IntoLaterN=> ->. by rewrite laterN_affinely_2. Qed.
 Global Instance into_later_absorbingly n P Q :
-  IntoLaterN n P Q → IntoLaterN n (▲ P) (▲ Q).
+  IntoLaterN n P Q → IntoLaterN n (bi_absorbingly P) (bi_absorbingly Q).
 Proof. rewrite /IntoLaterN=> ->. by rewrite laterN_absorbingly. Qed.
 Global Instance into_later_plainly n P Q :
   IntoLaterN n P Q → IntoLaterN n (bi_plainly P) (bi_plainly Q).
@@ -1244,7 +1244,7 @@ Global Instance from_later_persistently n P Q :
   FromLaterN n P Q → FromLaterN n (bi_persistently P) (bi_persistently Q).
 Proof. by rewrite /FromLaterN laterN_persistently=> ->. Qed.
 Global Instance from_later_absorbingly n P Q :
-  FromLaterN n P Q → FromLaterN n (▲ P) (▲ Q).
+  FromLaterN n P Q → FromLaterN n (bi_absorbingly P) (bi_absorbingly Q).
 Proof. by rewrite /FromLaterN laterN_absorbingly=> ->. Qed.
 
 Global Instance from_later_forall {A} n (Φ Ψ : A → PROP) :
