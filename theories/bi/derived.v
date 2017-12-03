@@ -1689,6 +1689,13 @@ Global Instance exist_absorbing {A} (Φ : A → PROP) :
   (∀ x, Absorbing (Φ x)) → Absorbing (∃ x, Φ x).
 Proof. rewrite /Absorbing=> ?. rewrite absorbingly_exist. auto using exist_mono. Qed.
 
+Global Instance impl_absorbing P Q :
+  Persistent P → Absorbing P → Absorbing Q → Absorbing (P → Q).
+Proof.
+  intros. rewrite /Absorbing. apply impl_intro_l.
+  rewrite persistent_and_affinely_sep_l_1 absorbingly_sep_r.
+  by rewrite -persistent_and_affinely_sep_l impl_elim_r.
+Qed.
 Global Instance internal_eq_absorbing {A : ofeT} (x y : A) :
   Absorbing (x ≡ y : PROP)%I.
 Proof. by rewrite /Absorbing absorbingly_internal_eq. Qed.
