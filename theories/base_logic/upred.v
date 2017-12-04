@@ -610,7 +610,7 @@ Global Instance bupd_proper : Proper ((≡) ==> (≡)) (@uPred_bupd M) := ne_pro
 
 (** PlainlyExist1BI *)
 
-Lemma uPred_plainly_exist_1 : PlainlyExist1BI (uPredI M).
+Global Instance uPred_plainly_exist_1 : PlainlyExist1BI (uPredI M).
 Proof. unfold PlainlyExist1BI. by unseal. Qed.
 
 (** Limits *)
