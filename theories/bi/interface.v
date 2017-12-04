@@ -107,8 +107,6 @@ Section bi_mixin.
 
     bi_mixin_plainly_forall_2 {A} (Ψ : A → PROP) :
       (∀ a, bi_plainly (Ψ a)) ⊢ bi_plainly (∀ a, Ψ a);
-    bi_mixin_plainly_exist_1 {A} (Ψ : A → PROP) :
-      bi_plainly (∃ a, Ψ a) ⊢ ∃ a, bi_plainly (Ψ a);
 
     bi_mixin_prop_ext P Q : bi_plainly ((P → Q) ∧ (Q → P)) ⊢
       bi_internal_eq (OfeT PROP prop_ofe_mixin) P Q;
@@ -331,6 +329,10 @@ Coercion sbi_valid {PROP : sbi} : PROP → Prop := bi_valid.
 Arguments bi_valid {_} _%I : simpl never.
 Typeclasses Opaque bi_valid.
 
+Class PlainlyExist1BI (PROP : bi) :=
+  plainly_exist_1 A (Ψ : A → PROP) : bi_plainly (∃ a, Ψ a) ⊢ ∃ a, bi_plainly (Ψ a).
+Arguments plainly_exist_1 {_ _ _} _.
+
 Module bi.
 Section bi_laws.
 Context {PROP : bi}.
@@ -449,9 +451,6 @@ Proof. eapply bi_mixin_plainly_idemp_2, bi_bi_mixin. Qed.
 Lemma plainly_forall_2 {A} (Ψ : A → PROP) :
   (∀ a, bi_plainly (Ψ a)) ⊢ bi_plainly (∀ a, Ψ a).
 Proof. eapply bi_mixin_plainly_forall_2, bi_bi_mixin. Qed.
-Lemma plainly_exist_1 {A} (Ψ : A → PROP) :
-  bi_plainly (∃ a, Ψ a) ⊢ ∃ a, bi_plainly (Ψ a).
-Proof. eapply bi_mixin_plainly_exist_1, bi_bi_mixin. Qed.
 Lemma prop_ext P Q : bi_plainly ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q.
 Proof. eapply (bi_mixin_prop_ext _ bi_entails), bi_bi_mixin. Qed.
 Lemma persistently_impl_plainly P Q :

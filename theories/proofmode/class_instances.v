@@ -495,7 +495,7 @@ Global Instance from_or_absorbingly P Q1 Q2 :
 Proof. rewrite /FromOr=> <-. by rewrite absorbingly_or. Qed.
 Global Instance from_or_plainly P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
-Proof. rewrite /FromOr=> <-. by rewrite plainly_or. Qed.
+Proof. rewrite /FromOr=> <-. by rewrite -plainly_or_2. Qed.
 Global Instance from_or_persistently P Q1 Q2 :
   FromOr P Q1 Q2 →
   FromOr (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
@@ -512,7 +512,7 @@ Proof. rewrite /IntoOr=>->. by rewrite affinely_or. Qed.
 Global Instance into_or_absorbingly P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (bi_absorbingly P) (bi_absorbingly Q1) (bi_absorbingly Q2).
 Proof. rewrite /IntoOr=>->. by rewrite absorbingly_or. Qed.
-Global Instance into_or_plainly P Q1 Q2 :
+Global Instance into_or_plainly `{PlainlyExist1BI PROP} P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
 Proof. rewrite /IntoOr=>->. by rewrite plainly_or. Qed.
 Global Instance into_or_persistently P Q1 Q2 :
@@ -534,7 +534,7 @@ Global Instance from_exist_absorbingly {A} P (Φ : A → PROP) :
 Proof. rewrite /FromExist=> <-. by rewrite absorbingly_exist. Qed.
 Global Instance from_exist_plainly {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (bi_plainly P) (λ a, bi_plainly (Φ a))%I.
-Proof. rewrite /FromExist=> <-. by rewrite plainly_exist. Qed.
+Proof. rewrite /FromExist=> <-. by rewrite -plainly_exist_2. Qed.
 Global Instance from_exist_persistently {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (bi_persistently P) (λ a, bi_persistently (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite persistently_exist. Qed.
@@ -564,7 +564,7 @@ Qed.
 Global Instance into_exist_absorbingly {A} P (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (bi_absorbingly P) (λ a, bi_absorbingly (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP absorbingly_exist. Qed.
-Global Instance into_exist_plainly {A} P (Φ : A → PROP) :
+Global Instance into_exist_plainly `{PlainlyExist1BI PROP} {A} P (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (bi_plainly P) (λ a, bi_plainly (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP plainly_exist. Qed.
 Global Instance into_exist_persistently {A} P (Φ : A → PROP) :
@@ -1051,7 +1051,7 @@ Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_affinely_2. Qed.
 Global Instance into_except_0_absorbingly P Q :
   IntoExcept0 P Q → IntoExcept0 (bi_absorbingly P) (bi_absorbingly Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_absorbingly. Qed.
-Global Instance into_except_0_plainly P Q :
+Global Instance into_except_0_plainly `{PlainlyExist1BI PROP} P Q :
   IntoExcept0 P Q → IntoExcept0 (bi_plainly P) (bi_plainly Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_plainly. Qed.
 Global Instance into_except_0_persistently P Q :

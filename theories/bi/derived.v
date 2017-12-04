@@ -1183,15 +1183,18 @@ Proof.
   apply (anti_symm _); auto using plainly_forall_2.
   apply forall_intro=> x. by rewrite (forall_elim x).
 Qed.
-Lemma plainly_exist {A} (Ψ : A → PROP) :
+Lemma plainly_exist_2 {A} (Ψ : A → PROP) :
+  (∃ a, bi_plainly (Ψ a)) ⊢ bi_plainly (∃ a, Ψ a).
+Proof. apply exist_elim=> x. by rewrite (exist_intro x). Qed.
+Lemma plainly_exist `{PlainlyExist1BI PROP} {A} (Ψ : A → PROP) :
   bi_plainly (∃ a, Ψ a) ⊣⊢ ∃ a, bi_plainly (Ψ a).
-Proof.
-  apply (anti_symm _); auto using plainly_exist_1.
-  apply exist_elim=> x. by rewrite (exist_intro x).
-Qed.
+Proof. apply (anti_symm _); auto using plainly_exist_1, plainly_exist_2. Qed.
 Lemma plainly_and P Q : bi_plainly (P ∧ Q) ⊣⊢ bi_plainly P ∧ bi_plainly Q.
 Proof. rewrite !and_alt plainly_forall. by apply forall_proper=> -[]. Qed.
-Lemma plainly_or P Q : bi_plainly (P ∨ Q) ⊣⊢ bi_plainly P ∨ bi_plainly Q.
+Lemma plainly_or_2 P Q : bi_plainly P ∨ bi_plainly Q ⊢ bi_plainly (P ∨ Q).
+Proof. rewrite !or_alt -plainly_exist_2. by apply exist_mono=> -[]. Qed.
+Lemma plainly_or `{PlainlyExist1BI PROP} P Q :
+  bi_plainly (P ∨ Q) ⊣⊢ bi_plainly P ∨ bi_plainly Q.
 Proof. rewrite !or_alt plainly_exist. by apply exist_proper=> -[]. Qed.
 Lemma plainly_impl P Q : bi_plainly (P → Q) ⊢ bi_plainly P → bi_plainly Q.
 Proof.
@@ -1362,9 +1365,14 @@ Proof.
 Qed.
 Lemma affinely_plainly_and P Q : ■ (P ∧ Q) ⊣⊢ ■ P ∧ ■ Q.
 Proof. by rewrite plainly_and affinely_and. Qed.
-Lemma affinely_plainly_or P Q : ■ (P ∨ Q) ⊣⊢ ■ P ∨ ■ Q.
+Lemma affinely_plainly_or_2 P Q : ■ P ∨ ■ Q ⊢ ■ (P ∨ Q).
+Proof. by rewrite -plainly_or_2 affinely_or. Qed.
+Lemma affinely_plainly_or `{PlainlyExist1BI PROP} P Q : ■ (P ∨ Q) ⊣⊢ ■ P ∨ ■ Q.
 Proof. by rewrite plainly_or affinely_or. Qed.
-Lemma affinely_plainly_exist {A} (Φ : A → PROP) : ■ (∃ x, Φ x) ⊣⊢ ∃ x, ■ Φ x.
+Lemma affinely_plainly_exist_2 {A} (Φ : A → PROP) : (∃ x, ■ Φ x) ⊢ ■ (∃ x, Φ x).
+Proof. by rewrite -plainly_exist_2 affinely_exist. Qed.
+Lemma affinely_plainly_exist `{PlainlyExist1BI PROP} {A} (Φ : A → PROP) :
+  ■ (∃ x, Φ x) ⊣⊢ ∃ x, ■ Φ x.
 Proof. by rewrite plainly_exist affinely_exist. Qed.
 Lemma affinely_plainly_sep_2 P Q : ■ P ∗ ■ Q ⊢ ■ (P ∗ Q).
 Proof. by rewrite affinely_sep_2 plainly_sep_2. Qed.
@@ -1523,9 +1531,17 @@ Lemma plainly_if_pure p φ : bi_plainly_if p ⌜φ⌝ ⊣⊢ ⌜φ⌝.
 Proof. destruct p; simpl; auto using plainly_pure. Qed.
 Lemma plainly_if_and p P Q : bi_plainly_if p (P ∧ Q) ⊣⊢ bi_plainly_if p P ∧ bi_plainly_if p Q.
 Proof. destruct p; simpl; auto using plainly_and. Qed.
-Lemma plainly_if_or p P Q : bi_plainly_if p (P ∨ Q) ⊣⊢ bi_plainly_if p P ∨ bi_plainly_if p Q.
+Lemma plainly_if_or_2 p P Q :
+  bi_plainly_if p P ∨ bi_plainly_if p Q ⊢ bi_plainly_if p (P ∨ Q).
+Proof. destruct p; simpl; auto using plainly_or_2. Qed.
+Lemma plainly_if_or `{PlainlyExist1BI PROP} p P Q :
+  bi_plainly_if p (P ∨ Q) ⊣⊢ bi_plainly_if p P ∨ bi_plainly_if p Q.
 Proof. destruct p; simpl; auto using plainly_or. Qed.
-Lemma plainly_if_exist {A} p (Ψ : A → PROP) : (bi_plainly_if p (∃ a, Ψ a)) ⊣⊢ ∃ a, bi_plainly_if p (Ψ a).
+Lemma plainly_if_exist_2 {A} p (Ψ : A → PROP) :
+  (∃ a, bi_plainly_if p (Ψ a)) ⊢ bi_plainly_if p (∃ a, Ψ a).
+Proof. destruct p; simpl; auto using plainly_exist_2. Qed.
+Lemma plainly_if_exist `{PlainlyExist1BI PROP} {A} p (Ψ : A → PROP) :
+  bi_plainly_if p (∃ a, Ψ a) ⊣⊢ ∃ a, bi_plainly_if p (Ψ a).
 Proof. destruct p; simpl; auto using plainly_exist. Qed.
 Lemma plainly_if_sep `{PositiveBI PROP} p P Q :
   bi_plainly_if p (P ∗ Q) ⊣⊢ bi_plainly_if p P ∗ bi_plainly_if p Q.
@@ -1550,9 +1566,15 @@ Lemma affinely_plainly_if_emp p : ■?p emp ⊣⊢ emp.
 Proof. destruct p; simpl; auto using affinely_plainly_emp. Qed.
 Lemma affinely_plainly_if_and p P Q : ■?p (P ∧ Q) ⊣⊢ ■?p P ∧ ■?p Q.
 Proof. destruct p; simpl; auto using affinely_plainly_and. Qed.
-Lemma affinely_plainly_if_or p P Q : ■?p (P ∨ Q) ⊣⊢ ■?p P ∨ ■?p Q.
+Lemma affinely_plainly_if_or_2 p P Q : ■?p P ∨ ■?p Q ⊢ ■?p (P ∨ Q).
+Proof. destruct p; simpl; auto using affinely_plainly_or_2. Qed.
+Lemma affinely_plainly_if_or `{PlainlyExist1BI PROP} p P Q :
+  ■?p (P ∨ Q) ⊣⊢ ■?p P ∨ ■?p Q.
 Proof. destruct p; simpl; auto using affinely_plainly_or. Qed.
-Lemma affinely_plainly_if_exist {A} p (Ψ : A → PROP) :
+Lemma affinely_plainly_if_exist_2 {A} p (Ψ : A → PROP) :
+  (∃ a, ■?p Ψ a) ⊢ ■?p ∃ a, Ψ a .
+Proof. destruct p; simpl; auto using affinely_plainly_exist_2. Qed.
+Lemma affinely_plainly_if_exist `{PlainlyExist1BI PROP}  {A} p (Ψ : A → PROP) :
   (■?p ∃ a, Ψ a) ⊣⊢ ∃ a, ■?p Ψ a.
 Proof. destruct p; simpl; auto using affinely_plainly_exist. Qed.
 Lemma affinely_plainly_if_sep_2 p P Q : ■?p P ∗ ■?p Q ⊢ ■?p (P ∗ Q).
@@ -1791,7 +1813,7 @@ Proof. apply plainly_emp_intro. Qed.
 Global Instance and_plain P Q : Plain P → Plain Q → Plain (P ∧ Q).
 Proof. intros. by rewrite /Plain plainly_and -!plain. Qed.
 Global Instance or_plain P Q : Plain P → Plain Q → Plain (P ∨ Q).
-Proof. intros. by rewrite /Plain plainly_or -!plain. Qed.
+Proof. intros. by rewrite /Plain -plainly_or_2 -!plain. Qed.
 Global Instance forall_plain {A} (Ψ : A → PROP) :
   (∀ x, Plain (Ψ x)) → Plain (∀ x, Ψ x).
 Proof.
@@ -1800,7 +1822,7 @@ Qed.
 Global Instance exist_plain {A} (Ψ : A → PROP) :
   (∀ x, Plain (Ψ x)) → Plain (∃ x, Ψ x).
 Proof.
-  intros. rewrite /Plain plainly_exist. apply exist_mono=> x. by rewrite -plain.
+  intros. rewrite /Plain -plainly_exist_2. apply exist_mono=> x. by rewrite -plain.
 Qed.
 
 Global Instance internal_eq_plain {A : ofeT} (a b : A) :
@@ -1852,7 +1874,7 @@ Proof.
   split; [split|]; try apply _. apply plainly_and. apply plainly_pure.
 Qed.
 
-Global Instance bi_plainly_or_homomorphism :
+Global Instance bi_plainly_or_homomorphism `{PlainlyExist1BI PROP} :
   MonoidHomomorphism bi_or bi_or (≡) (@bi_plainly PROP).
 Proof.
   split; [split|]; try apply _. apply plainly_or. apply plainly_pure.
@@ -2161,7 +2183,10 @@ Proof.
 Qed.
 Lemma except_0_later P : ◇ ▷ P ⊢ ▷ P.
 Proof. by rewrite /bi_except_0 -later_or False_or. Qed.
-Lemma except_0_plainly P : ◇ bi_plainly P ⊣⊢ bi_plainly (◇ P).
+Lemma except_0_plainly_1 P : ◇ bi_plainly P ⊢ bi_plainly (◇ P).
+Proof. by rewrite /bi_except_0 -plainly_or_2 -later_plainly plainly_pure. Qed.
+Lemma except_0_plainly `{PlainlyExist1BI PROP} P :
+  ◇ bi_plainly P ⊣⊢ bi_plainly (◇ P).
 Proof. by rewrite /bi_except_0 plainly_or -later_plainly plainly_pure. Qed.
 Lemma except_0_persistently P : ◇ bi_persistently P ⊣⊢ bi_persistently (◇ P).
 Proof.
@@ -2169,11 +2194,12 @@ Proof.
 Qed.
 Lemma except_0_affinely_2 P : bi_affinely (◇ P) ⊢ ◇ bi_affinely P.
 Proof. rewrite /bi_affinely except_0_and. auto using except_0_intro. Qed.
-Lemma except_0_affinely_plainly_2 P : ■ ◇ P ⊢ ◇ ■ P.
+Lemma except_0_affinely_plainly_2 `{PlainlyExist1BI PROP} P : ■ ◇ P ⊢ ◇ ■ P.
 Proof. by rewrite -except_0_plainly except_0_affinely_2. Qed.
 Lemma except_0_affinely_persistently_2 P : □ ◇ P ⊢ ◇ □ P.
 Proof. by rewrite -except_0_persistently except_0_affinely_2. Qed.
-Lemma except_0_affinely_plainly_if_2 p P : ■?p ◇ P ⊢ ◇ ■?p P.
+Lemma except_0_affinely_plainly_if_2  `{PlainlyExist1BI PROP} p P :
+  ■?p ◇ P ⊢ ◇ ■?p P.
 Proof. destruct p; simpl; auto using except_0_affinely_plainly_2. Qed.
 Lemma except_0_affinely_persistently_if_2 p P : □?p ◇ P ⊢ ◇ □?p P.
 Proof. destruct p; simpl; auto using except_0_affinely_persistently_2. Qed.
@@ -2250,7 +2276,8 @@ Proof.
   - rewrite /bi_except_0; auto.
   - apply exist_elim=> x. rewrite -(exist_intro x); auto.
 Qed.
-Global Instance plainly_timeless P : Timeless P → Timeless (bi_plainly P).
+Global Instance plainly_timeless P  `{PlainlyExist1BI PROP} :
+  Timeless P → Timeless (bi_plainly P).
 Proof.
   intros. rewrite /Timeless /bi_except_0 later_plainly_1.
   by rewrite (timeless P) /bi_except_0 plainly_or {1}plainly_elim.
