@@ -200,6 +200,8 @@ Definition monPred_all := unseal (@monPred_all_aux).
 Definition monPred_all_eq : @monPred_all = _ := seal_eq _.
 End Bi.
 
+Typeclasses Opaque monPred_pure monPred_emp monPred_plainly.
+
 Program Definition monPred_later_def {I : bi_index} {B : sbi}
         (P : monPred I B) : monPred I B := MonPred (λ i, ▷ (P i))%I _.
 Next Obligation. solve_proper. Qed.
@@ -396,8 +398,21 @@ Global Instance monPred_all_mono_flip :
   Proper (flip (⊢) ==> flip (⊢)) (@monPred_all I B).
 Proof. solve_proper. Qed.
 
+Global Instance monPred_positive : BiPositive B → BiPositive (monPredI I B).
+Proof. split => ?. unseal. apply bi_positive. Qed.
 Global Instance monPred_affine : BiAffine B → BiAffine (monPredI I B).
 Proof. split => ?. unseal. by apply affine. Qed.
+
+(* (∀ x, bottom ⊑ x) cannot be infered using typeclasses. So this is
+  not an instance. One should explicitely make an instance from this
+  lemma for each instantiation of monPred. *)
+Lemma monPred_plainly_exist (bottom : I) :
+  (∀ x, bottom ⊑ x) → BiPlainlyExist B → BiPlainlyExist (monPredI I B).
+Proof.
+  intros ????. unseal. split=>? /=.
+  rewrite (bi.forall_elim bottom) plainly_exist_1. do 2 f_equiv.
+  apply bi.forall_intro=>?. by do 2 f_equiv.
+Qed.
 
 Lemma monPred_wand_force P Q i : (P -∗ Q) i -∗ (P i -∗ Q i).
 Proof. unseal. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //. Qed.
@@ -413,28 +428,38 @@ Lemma monPred_affinely_if_eq p P i:
   (bi_affinely_if p P) i = bi_affinely_if p (P i).
 Proof. rewrite /bi_affinely_if. destruct p => //. rewrite /bi_affinely. by unseal. Qed.
 
-(* TODO : if we use this for linear BIs, we should additionally define
-   Absorbing and Affine instances. *)
-
 Global Instance monPred_car_persistent P i : Persistent P → Persistent (P i).
 Proof. move => [] /(_ i). by unseal. Qed.
 Global Instance monPred_car_plain P i : Plain P → Plain (P i).
 Proof. move => [] /(_ i). unfold Plain. unseal. rewrite bi.forall_elim //. Qed.
+Global Instance monPred_car_absorbing P i : Absorbing P → Absorbing (P i).
+Proof. move => [] /(_ i). unfold Absorbing. by unseal. Qed.
+Global Instance monPred_car_affine P i : Affine P → Affine (P i).
+Proof. move => [] /(_ i). unfold Affine. by unseal. Qed.
 
 (* Notation "☐ P" := (monPred_ipure P%I) *)
 (*   (at level 20, right associativity) : bi_scope. *)
 Global Instance monPred_ipure_plain (P : B) :
   Plain P → Plain (@monPred_ipure I B P).
-Proof. intros. split => ? /=. unseal. apply bi.forall_intro=>?. apply (plain _). Qed.
+Proof. split => ? /=. unseal. apply bi.forall_intro=>?. apply (plain _). Qed.
 Global Instance monPred_ipure_persistent (P : B) :
   Persistent P → Persistent (@monPred_ipure I B P).
-Proof. intros. split => ? /=. unseal. exact: H. Qed.
+Proof. split => ? /=. unseal. exact: H. Qed.
+Global Instance monPred_ipure_absorbing (P : B) :
+  Absorbing P → Absorbing (@monPred_ipure I B P).
+Proof. unfold Absorbing. split => ? /=. by unseal. Qed.
+Global Instance monPred_ipure_affine (P : B) :
+  Affine P → Affine (@monPred_ipure I B P).
+Proof. unfold Affine. split => ? /=. by unseal. Qed.
 
 (* Note that monPred_in is *not* Plain, because it does depend on the
    index. *)
 Global Instance monPred_in_persistent V :
   Persistent (@monPred_in I B V).
 Proof. unfold Persistent. unseal; split => ?. by apply bi.pure_persistent. Qed.
+Global Instance monPred_in_absorbing V :
+  Absorbing (@monPred_in I B V).
+Proof. unfold Absorbing. unseal. split=> ? /=. apply absorbing, _. Qed.
 
 Global Instance monPred_all_plain P : Plain P → Plain (@monPred_all I B P).
 Proof.
@@ -447,6 +472,18 @@ Global Instance monPred_all_persistent P :
 Proof.
   move=>[]. unfold Persistent. unseal=>Hp. split => ?.
   by apply persistent, bi.forall_persistent.
+Qed.
+Global Instance monPred_all_absorbing P :
+  Absorbing P → Absorbing (@monPred_all I B P).
+Proof.
+  move=>[]. unfold Absorbing. unseal=>Hp. split => ?.
+  by apply absorbing, bi.forall_absorbing.
+Qed.
+Global Instance monPred_all_affine P :
+  Inhabited I → Affine P → Affine (@monPred_all I B P).
+Proof.
+  move=>? []. unfold Affine. unseal=>Hp. split => ?.
+  by apply affine, bi.forall_affine.
 Qed.
 End bi_facts.
 
