@@ -166,6 +166,6 @@ End proof.
 
 Typeclasses Opaque is_lock issued locked.
 
-Definition ticket_lock `{!heapG Σ, !tlockG Σ} : lock Σ :=
+Canonical Structure ticket_lock `{!heapG Σ, !tlockG Σ} : lock Σ :=
   {| lock.locked_exclusive := locked_exclusive; lock.newlock_spec := newlock_spec;
      lock.acquire_spec := acquire_spec; lock.release_spec := release_spec |}.
