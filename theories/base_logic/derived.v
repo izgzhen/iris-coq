@@ -1,8 +1,8 @@
 From iris.base_logic Require Export upred.
-From iris.bi Require Export interface derived.
+From iris.bi Require Export derived_laws.
 Set Default Proof Using "Type".
 Import upred.uPred.
-Import interface.bi derived.bi.
+Import interface.bi derived_laws.bi.
 
 Module uPred.
 Section derived.

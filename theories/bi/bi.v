@@ -1,9 +1,9 @@
-From iris.bi Require Export interface derived big_op.
+From iris.bi Require Export derived_laws big_op.
 Set Default Proof Using "Type".
 
 Module Import bi.
   Export bi.interface.bi.
-  Export bi.derived.bi.
+  Export bi.derived_laws.bi.
   Export bi.big_op.bi.
 End bi.
 

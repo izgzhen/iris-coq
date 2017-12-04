@@ -1,5 +1,5 @@
 From iris.algebra Require Export big_op.
-From iris.bi Require Export derived.
+From iris.bi Require Export derived_laws.
 From stdpp Require Import countable fin_collections functions.
 Set Default Proof Using "Type".
 
@@ -41,7 +41,7 @@ Notation "'[∗' 'mset]' x ∈ X , P" := (big_opMS bi_sep (λ x, P) X)
 
 (** * Properties *)
 Module bi.
-Import interface.bi derived.bi.
+Import interface.bi derived_laws.bi.
 Section bi_big_op.
 Context {PROP : bi}.
 Implicit Types Ps Qs : list PROP.

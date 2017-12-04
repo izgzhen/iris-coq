@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra updates.
-From iris.bi Require Export interface.
+From iris.bi Require Export derived_connectives.
 From stdpp Require Import finite.
 Set Default Proof Using "Type".
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
