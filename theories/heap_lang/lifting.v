@@ -179,4 +179,17 @@ Proof.
   iMod (@gen_heap_update with "Hσ Hl") as "[$ Hl]".
   iModIntro. iSplit=>//. by iApply "HΦ".
 Qed.
+
+Lemma wp_faa E l i1 e2 i2 :
+  IntoVal e2 (LitV (LitInt i2)) →
+  {{{ ▷ l ↦ LitV (LitInt i1) }}} FAA (Lit (LitLoc l)) e2 @ E
+  {{{ RET LitV (LitInt i1); l ↦ LitV (LitInt (i1 + i2)) }}}.
+Proof.
+  iIntros (<-%of_to_val Φ) ">Hl HΦ".
+  iApply wp_lift_atomic_head_step_no_fork; auto.
+  iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
+  iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
+  iMod (@gen_heap_update with "Hσ Hl") as "[$ Hl]".
+  iModIntro. iSplit=>//. by iApply "HΦ".
+Qed.
 End lifting.
