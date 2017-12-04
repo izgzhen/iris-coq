@@ -31,7 +31,7 @@ Context `{!heapG Σ, !spawnG Σ} (N : namespace).
 
 Definition spawn_inv (γ : gname) (l : loc) (Ψ : val → iProp Σ) : iProp Σ :=
   (∃ lv, l ↦ lv ∗ (⌜lv = NONEV⌝ ∨
-                   ∃ v, ⌜lv = SOMEV v⌝ ∗ (Ψ v ∨ own γ (Excl ()))))%I.
+                   ∃ w, ⌜lv = SOMEV w⌝ ∗ (Ψ w ∨ own γ (Excl ()))))%I.
 
 Definition join_handle (l : loc) (Ψ : val → iProp Σ) : iProp Σ :=
   (∃ γ, own γ (Excl ()) ∗ inv N (spawn_inv γ l Ψ))%I.
