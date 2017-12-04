@@ -45,6 +45,11 @@ Existing Instance absorbing_bi | 0.
 Class BiPositive (PROP : bi) :=
   bi_positive (P Q : PROP) : bi_affinely (P ∗ Q) ⊢ bi_affinely P ∗ Q.
 
+Class BiPlainlyExist (PROP : bi) :=
+  plainly_exist_1 A (Ψ : A → PROP) :
+    bi_plainly (∃ a, Ψ a) ⊢ ∃ a, bi_plainly (Ψ a).
+Arguments plainly_exist_1 _ {_ _} _.
+
 Definition bi_absorbingly {PROP : bi} (P : PROP) : PROP := (True ∗ P)%I.
 Arguments bi_absorbingly {_} _%I : simpl never.
 Instance: Params (@bi_absorbingly) 1.

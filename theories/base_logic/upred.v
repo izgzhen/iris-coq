@@ -474,8 +474,6 @@ Proof.
     unseal; split=> n x ?? //.
   - (* (∀ a, bi_plainly (Ψ a)) ⊢ bi_plainly (∀ a, Ψ a) *)
     by unseal.
-  - (* bi_plainly (∃ a, Ψ a) ⊢ ∃ a, bi_plainly (Ψ a) *)
-    by unseal.
   - (* bi_plainly ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q *)
     unseal; split=> n x ? /= HPQ; split=> n' x' ? HP;
     split; eapply HPQ; eauto using @ucmra_unit_least.
@@ -609,6 +607,14 @@ Proof.
     exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
 Qed.
 Global Instance bupd_proper : Proper ((≡) ==> (≡)) (@uPred_bupd M) := ne_proper _.
+
+(** BI instances *)
+
+Global Instance uPred_affine : BiAffine (uPredI M) | 0.
+Proof. intros P. rewrite /Affine. by apply bi.pure_intro. Qed.
+
+Global Instance uPred_plainly_exist_1 : BiPlainlyExist (uPredI M).
+Proof. unfold BiPlainlyExist. by unseal. Qed.
 
 (** Limits *)
 Lemma entails_lim (cP cQ : chain (uPredC M)) :

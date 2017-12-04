@@ -31,10 +31,6 @@ Proof.
   apply limit_preserving_and; by apply limit_preserving_entails.
 Qed.
 
-(* Affine *)
-Global Instance uPred_affine : BiAffine (uPredI M) | 0.
-Proof. intros P. rewrite /Affine. by apply bi.pure_intro. Qed.
-
 (* Own and valid derived *)
 Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) :
   ✓ a ⊢ bi_persistently (✓ a : uPred M).
