@@ -36,7 +36,7 @@ Section proof.
 
   Global Instance lock_inv_ne γ l : NonExpansive (lock_inv γ l).
   Proof. solve_proper. Qed.
-  Global Instance is_lock_ne l : NonExpansive (is_lock γ l).
+  Global Instance is_lock_ne γ l : NonExpansive (is_lock γ l).
   Proof. solve_proper. Qed.
 
   (** The main proofs. *)
@@ -90,6 +90,6 @@ End proof.
 
 Typeclasses Opaque is_lock locked.
 
-Definition spin_lock `{!heapG Σ, !lockG Σ} : lock Σ :=
+Canonical Structure spin_lock `{!heapG Σ, !lockG Σ} : lock Σ :=
   {| lock.locked_exclusive := locked_exclusive; lock.newlock_spec := newlock_spec;
      lock.acquire_spec := acquire_spec; lock.release_spec := release_spec |}.
