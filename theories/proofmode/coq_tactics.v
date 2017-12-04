@@ -458,7 +458,7 @@ Global Instance affine_env_snoc Γ i P :
 Proof. by constructor. Qed.
 
 (* If the BI is affine, no need to walk on the whole environment. *)
-Global Instance affine_env_bi `(AffineBI PROP) Γ : AffineEnv Γ | 0.
+Global Instance affine_env_bi `(BiAffine PROP) Γ : AffineEnv Γ | 0.
 Proof. induction Γ; apply _. Qed.
 
 Instance affine_env_spatial Δ :
@@ -800,7 +800,7 @@ Lemma tac_specialize_persistent_helper Δ Δ'' j q P R R' Q :
   envs_lookup j Δ = Some (q,P) →
   envs_entails Δ (bi_absorbingly R) →
   IntoPersistent false R R' →
-  (if q then TCTrue else AffineBI PROP) →
+  (if q then TCTrue else BiAffine PROP) →
   envs_replace j q true (Esnoc Enil j R') Δ = Some Δ'' →
   envs_entails Δ'' Q → envs_entails Δ Q.
 Proof.

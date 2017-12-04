@@ -32,7 +32,7 @@ Proof.
 Qed.
 
 (* Affine *)
-Global Instance uPred_affine : AffineBI (uPredI M) | 0.
+Global Instance uPred_affine : BiAffine (uPredI M) | 0.
 Proof. intros P. rewrite /Affine. by apply bi.pure_intro. Qed.
 
 (* Own and valid derived *)
@@ -131,6 +131,6 @@ Proof. split; [split; try apply _|]. apply ownM_op. apply ownM_unit'. Qed.
 End derived.
 
 (* Also add this to the global hint database, otherwise [eauto] won't work for
-many lemmas that have [AffineBI] as a premise. *)
+many lemmas that have [BiAffine] as a premise. *)
 Hint Immediate uPred_affine.
 End uPred.

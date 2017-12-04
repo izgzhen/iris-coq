@@ -50,7 +50,7 @@ Proof.
   rewrite /FromAssumption /= =><-.
   by rewrite persistently_elim plainly_elim_persistently.
 Qed.
-Global Instance from_assumption_plainly_l_false `{AffineBI PROP} P Q :
+Global Instance from_assumption_plainly_l_false `{BiAffine PROP} P Q :
   FromAssumption true P Q → FromAssumption false (bi_plainly P) Q.
 Proof.
   rewrite /FromAssumption /= =><-.
@@ -62,7 +62,7 @@ Proof. rewrite /FromAssumption /= =><-. by rewrite affinely_persistently_if_elim
 Global Instance from_assumption_persistently_l_true P Q :
   FromAssumption true P Q → FromAssumption true (bi_persistently P) Q.
 Proof. rewrite /FromAssumption /= =><-. by rewrite persistently_idemp. Qed.
-Global Instance from_assumption_persistently_l_false `{AffineBI PROP} P Q :
+Global Instance from_assumption_persistently_l_false `{BiAffine PROP} P Q :
   FromAssumption true P Q → FromAssumption false (bi_persistently P) Q.
 Proof. rewrite /FromAssumption /= =><-. by rewrite affine_affinely. Qed.
 Global Instance from_assumption_affinely_l_true p P Q :
@@ -224,7 +224,7 @@ Proof.
   rewrite /FromAssumption /IntoWand=> HP. by rewrite HP affinely_persistently_if_elim.
 Qed.
 
-Global Instance into_wand_impl_false_false `{!AffineBI PROP} P Q P' :
+Global Instance into_wand_impl_false_false `{!BiAffine PROP} P Q P' :
   FromAssumption false P P' → IntoWand false false (P' → Q) P Q.
 Proof.
   rewrite /FromAssumption /IntoWand /= => ->. apply wand_intro_r.
@@ -274,7 +274,7 @@ Proof. by rewrite /IntoWand affinely_plainly_elim. Qed.
 Global Instance into_wand_plainly_true q R P Q :
   IntoWand true q R P Q → IntoWand true q (bi_plainly R) P Q.
 Proof. by rewrite /IntoWand /= persistently_plainly plainly_elim_persistently. Qed.
-Global Instance into_wand_plainly_false `{!AffineBI PROP} q R P Q :
+Global Instance into_wand_plainly_false `{!BiAffine PROP} q R P Q :
   IntoWand false q R P Q → IntoWand false q (bi_plainly R) P Q.
 Proof. by rewrite /IntoWand plainly_elim. Qed.
 
@@ -284,7 +284,7 @@ Proof. by rewrite /IntoWand affinely_persistently_elim. Qed.
 Global Instance into_wand_persistently_true q R P Q :
   IntoWand true q R P Q → IntoWand true q (bi_persistently R) P Q.
 Proof. by rewrite /IntoWand /= persistently_idemp. Qed.
-Global Instance into_wand_persistently_false `{!AffineBI PROP} q R P Q :
+Global Instance into_wand_persistently_false `{!BiAffine PROP} q R P Q :
   IntoWand false q R P Q → IntoWand false q (bi_persistently R) P Q.
 Proof. by rewrite /IntoWand persistently_elim. Qed.
 
@@ -388,7 +388,7 @@ Proof.
   by rewrite -(affine_affinely Q) affinely_and_r affinely_and (from_affinely P').
 Qed.
 
-Global Instance into_and_sep `{PositiveBI PROP} P Q : IntoAnd true (P ∗ Q) P Q.
+Global Instance into_and_sep `{BiPositive PROP} P Q : IntoAnd true (P ∗ Q) P Q.
 Proof.
   by rewrite /IntoAnd /= persistently_sep -and_sep_persistently persistently_and.
 Qed.
@@ -460,10 +460,10 @@ Global Instance into_sep_affinely P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep (bi_affinely P) Q1 Q2 | 20.
 Proof. rewrite /IntoSep /= => ->. by rewrite affinely_elim. Qed.
 
-Global Instance into_sep_plainly `{PositiveBI PROP} P Q1 Q2 :
+Global Instance into_sep_plainly `{BiPositive PROP} P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
 Proof. rewrite /IntoSep /= => ->. by rewrite plainly_sep. Qed.
-Global Instance into_sep_persistently `{PositiveBI PROP} P Q1 Q2 :
+Global Instance into_sep_persistently `{BiPositive PROP} P Q1 Q2 :
   IntoSep P Q1 Q2 →
   IntoSep (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
 Proof. rewrite /IntoSep /= => ->. by rewrite persistently_sep. Qed.
@@ -609,7 +609,7 @@ Proof.
   - by rewrite (into_pure P) -pure_wand_forall wand_elim_l.
 Qed.
 
-Global Instance from_forall_affinely `{AffineBI PROP} {A} P (Φ : A → PROP) :
+Global Instance from_forall_affinely `{BiAffine PROP} {A} P (Φ : A → PROP) :
   FromForall P Φ → FromForall (bi_affinely P)%I (λ a, bi_affinely (Φ a))%I.
 Proof.
   rewrite /FromForall=> <-. rewrite affine_affinely. by setoid_rewrite affinely_elim.
@@ -1234,7 +1234,7 @@ Global Instance from_later_sep n P1 P2 Q1 Q2 :
   FromLaterN n P1 Q1 → FromLaterN n P2 Q2 → FromLaterN n (P1 ∗ P2) (Q1 ∗ Q2).
 Proof. intros ??; red. by rewrite laterN_sep; apply sep_mono. Qed.
 
-Global Instance from_later_affinely n P Q `{AffineBI PROP} :
+Global Instance from_later_affinely n P Q `{BiAffine PROP} :
   FromLaterN n P Q → FromLaterN n (bi_affinely P) (bi_affinely Q).
 Proof. rewrite /FromLaterN=><-. by rewrite affinely_elim affine_affinely. Qed.
 Global Instance from_later_plainly n P Q :
