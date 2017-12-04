@@ -10,7 +10,7 @@ Lemma soundness φ n : (▷^n ⌜ φ ⌝ : uPred M)%I → φ.
 Proof.
   cut ((▷^n ⌜ φ ⌝ : uPred M)%I n ε → φ).
   { intros help H. eapply help, H; eauto using ucmra_unit_validN. by unseal. }
-  rewrite /bi_laterN; unseal. induction n as [|n IH]=> H; auto.
+  rewrite /sbi_laterN; unseal. induction n as [|n IH]=> H; auto.
 Qed.
 
 Corollary consistency_modal n : ¬ (▷^n False : uPred M)%I.

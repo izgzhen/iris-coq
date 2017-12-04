@@ -341,7 +341,7 @@ Definition unseal_eqs :=
 Ltac unseal := (* Coq unfold is used to circumvent bug #5699 in rewrite /foo *)
   unfold bi_emp; simpl;
   unfold uPred_emp, bi_pure, bi_and, bi_or, bi_impl, bi_forall, bi_exist,
-  bi_internal_eq, bi_sep, bi_wand, bi_plainly, bi_persistently, bi_later; simpl;
+  bi_internal_eq, bi_sep, bi_wand, bi_plainly, bi_persistently, sbi_later; simpl;
   unfold sbi_emp, sbi_pure, sbi_and, sbi_or, sbi_impl, sbi_forall, sbi_exist,
   sbi_internal_eq, sbi_sep, sbi_wand, sbi_plainly, sbi_persistently; simpl;
   rewrite !unseal_eqs /=.
@@ -516,7 +516,7 @@ Lemma uPred_sbi_mixin (M : ucmraT) : SBIMixin
   uPred_sep uPred_plainly uPred_persistently uPred_later.
 Proof.
   split.
-  - (* Contractive bi_later *)
+  - (* Contractive sbi_later *)
     unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try omega.
     apply HPQ; eauto using cmra_validN_S.
   - (* Next x ≡ Next y ⊢ ▷ (x ≡ y) *)
@@ -645,7 +645,7 @@ Lemma ownM_unit : bi_valid (uPred_ownM (ε:M)).
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
 Lemma later_ownM (a : M) : ▷ uPred_ownM a ⊢ ∃ b, uPred_ownM b ∧ ▷ (a ≡ b).
 Proof.
-  rewrite /bi_and /bi_later /bi_exist /bi_internal_eq /=; unseal.
+  rewrite /bi_and /sbi_later /bi_exist /bi_internal_eq /=; unseal.
   split=> -[|n] x /= ? Hax; first by eauto using ucmra_unit_leastN.
   destruct Hax as [y ?].
   destruct (cmra_extend n x a y) as (a'&y'&Hx&?&?); auto using cmra_validN_S.

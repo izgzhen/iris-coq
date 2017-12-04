@@ -94,20 +94,20 @@ Fixpoint bi_hforall {PROP : bi} {As} : himpl As PROP → PROP :=
   | tcons A As => λ Φ, ∀ x, bi_hforall (Φ x)
   end%I.
 
-Definition bi_laterN {PROP : sbi} (n : nat) (P : PROP) : PROP :=
-  Nat.iter n bi_later P.
-Arguments bi_laterN {_} !_%nat_scope _%I.
-Instance: Params (@bi_laterN) 2.
-Notation "▷^ n P" := (bi_laterN n P)
+Definition sbi_laterN {PROP : sbi} (n : nat) (P : PROP) : PROP :=
+  Nat.iter n sbi_later P.
+Arguments sbi_laterN {_} !_%nat_scope _%I.
+Instance: Params (@sbi_laterN) 2.
+Notation "▷^ n P" := (sbi_laterN n P)
   (at level 20, n at level 9, P at level 20, format "▷^ n  P") : bi_scope.
-Notation "▷? p P" := (bi_laterN (Nat.b2n p) P)
+Notation "▷? p P" := (sbi_laterN (Nat.b2n p) P)
   (at level 20, p at level 9, P at level 20, format "▷? p  P") : bi_scope.
 
-Definition bi_except_0 {PROP : sbi} (P : PROP) : PROP := (▷ False ∨ P)%I.
-Arguments bi_except_0 {_} _%I : simpl never.
-Notation "◇ P" := (bi_except_0 P) (at level 20, right associativity) : bi_scope.
-Instance: Params (@bi_except_0) 1.
-Typeclasses Opaque bi_except_0.
+Definition sbi_except_0 {PROP : sbi} (P : PROP) : PROP := (▷ False ∨ P)%I.
+Arguments sbi_except_0 {_} _%I : simpl never.
+Notation "◇ P" := (sbi_except_0 P) (at level 20, right associativity) : bi_scope.
+Instance: Params (@sbi_except_0) 1.
+Typeclasses Opaque sbi_except_0.
 
 Class Timeless {PROP : sbi} (P : PROP) := timeless : ▷ P ⊢ ◇ P.
 Arguments Timeless {_} _%I : simpl never.

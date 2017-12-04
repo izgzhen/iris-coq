@@ -77,7 +77,7 @@ Proof.
 Qed.
 Lemma except_0_bupd P : ◇ (|==> P) ⊢ (|==> ◇ P).
 Proof.
-  rewrite /bi_except_0. apply or_elim; auto using bupd_mono, or_intro_r.
+  rewrite /sbi_except_0. apply or_elim; auto using bupd_mono, or_intro_r.
   by rewrite -bupd_intro -or_intro_l.
 Qed.
 

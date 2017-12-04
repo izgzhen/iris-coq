@@ -23,7 +23,7 @@ Section bi_mixin.
   Context (bi_wand : PROP → PROP → PROP).
   Context (bi_plainly : PROP → PROP).
   Context (bi_persistently : PROP → PROP).
-  Context (bi_later : PROP → PROP).
+  Context (sbi_later : PROP → PROP).
 
   Local Infix "⊢" := bi_entails.
   Local Notation "'emp'" := bi_emp.
@@ -40,7 +40,7 @@ Section bi_mixin.
   Local Notation "x ≡ y" := (bi_internal_eq _ x y).
   Local Infix "∗" := bi_sep.
   Local Infix "-∗" := bi_wand.
-  Local Notation "▷ P" := (bi_later P).
+  Local Notation "▷ P" := (sbi_later P).
 
   Record BIMixin := {
     bi_mixin_entails_po : PreOrder bi_entails;
@@ -142,7 +142,7 @@ Section bi_mixin.
   }.
 
   Record SBIMixin := {
-    sbi_mixin_later_contractive : Contractive bi_later;
+    sbi_mixin_later_contractive : Contractive sbi_later;
 
     sbi_mixin_later_eq_1 {A : ofeT} (x y : A) : Next x ≡ Next y ⊢ ▷ (x ≡ y);
     sbi_mixin_later_eq_2 {A : ofeT} (x y : A) : ▷ (x ≡ y) ⊢ Next x ≡ Next y;
@@ -241,14 +241,14 @@ Structure sbi := SBI {
   sbi_wand : sbi_car → sbi_car → sbi_car;
   sbi_plainly : sbi_car → sbi_car;
   sbi_persistently : sbi_car → sbi_car;
-  bi_later : sbi_car → sbi_car;
+  sbi_later : sbi_car → sbi_car;
   sbi_ofe_mixin : OfeMixin sbi_car;
   sbi_bi_mixin : BIMixin sbi_ofe_mixin sbi_entails sbi_emp sbi_pure sbi_and
                          sbi_or sbi_impl sbi_forall sbi_exist sbi_internal_eq
                          sbi_sep sbi_wand sbi_plainly sbi_persistently;
   sbi_sbi_mixin : SBIMixin sbi_entails sbi_pure sbi_or sbi_impl
                            sbi_forall sbi_exist sbi_internal_eq
-                           sbi_sep sbi_plainly sbi_persistently bi_later;
+                           sbi_sep sbi_plainly sbi_persistently sbi_later;
 }.
 
 Arguments sbi_car : simpl never.
@@ -288,7 +288,7 @@ Arguments sbi_sep {PROP} _%I _%I : simpl never, rename.
 Arguments sbi_wand {PROP} _%I _%I : simpl never, rename.
 Arguments sbi_plainly {PROP} _%I : simpl never, rename.
 Arguments sbi_persistently {PROP} _%I : simpl never, rename.
-Arguments bi_later {PROP} _%I : simpl never, rename.
+Arguments sbi_later {PROP} _%I : simpl never, rename.
 
 Hint Extern 0 (bi_entails _ _) => reflexivity.
 Instance bi_rewrite_relation (PROP : bi) : RewriteRelation (@bi_entails PROP).
@@ -321,7 +321,7 @@ Notation "∃ x .. y , P" :=
   (bi_exist (λ x, .. (bi_exist (λ y, P)) ..)%I) : bi_scope.
 
 Infix "≡" := bi_internal_eq : bi_scope.
-Notation "▷ P" := (bi_later P) : bi_scope.
+Notation "▷ P" := (sbi_later P) : bi_scope.
 
 Coercion bi_valid {PROP : bi} (P : PROP) : Prop := emp ⊢ P.
 Coercion sbi_valid {PROP : sbi} : PROP → Prop := bi_valid.
@@ -488,7 +488,7 @@ Context {PROP : sbi}.
 Implicit Types φ : Prop.
 Implicit Types P Q R : PROP.
 
-Global Instance later_contractive : Contractive (@bi_later PROP).
+Global Instance later_contractive : Contractive (@sbi_later PROP).
 Proof. eapply sbi_mixin_later_contractive, sbi_sbi_mixin. Qed.
 
 Lemma later_eq_1 {A : ofeT} (x y : A) : Next x ≡ Next y ⊢ ▷ (x ≡ y : PROP).
