@@ -1,5 +1,5 @@
 From iris.algebra Require Export big_op.
-From iris.bi Require Export derived.
+From iris.bi Require Export derived_laws.
 From stdpp Require Import countable fin_collections functions.
 Set Default Proof Using "Type".
 
@@ -41,7 +41,7 @@ Notation "'[∗' 'mset]' x ∈ X , P" := (big_opMS bi_sep (λ x, P) X)
 
 (** * Properties *)
 Module bi.
-Import interface.bi derived.bi.
+Import interface.bi derived_laws.bi.
 Section bi_big_op.
 Context {PROP : bi}.
 Implicit Types Ps Qs : list PROP.
@@ -55,7 +55,7 @@ Section sep_list.
 
   Lemma big_sepL_nil Φ : ([∗ list] k↦y ∈ nil, Φ k y) ⊣⊢ emp.
   Proof. done. Qed.
-  Lemma big_sepL_nil' `{AffineBI PROP} P Φ : P ⊢ [∗ list] k↦y ∈ nil, Φ k y.
+  Lemma big_sepL_nil' `{BiAffine PROP} P Φ : P ⊢ [∗ list] k↦y ∈ nil, Φ k y.
   Proof. apply (affine _). Qed.
   Lemma big_sepL_cons Φ x l :
     ([∗ list] k↦y ∈ x :: l, Φ k y) ⊣⊢ Φ 0 x ∗ [∗ list] k↦y ∈ l, Φ (S k) y.
@@ -75,7 +75,7 @@ Section sep_list.
     (∀ k y, l !! k = Some y → Φ k y ⊣⊢ Ψ k y) →
     ([∗ list] k ↦ y ∈ l, Φ k y) ⊣⊢ ([∗ list] k ↦ y ∈ l, Ψ k y).
   Proof. apply big_opL_proper. Qed.
-  Lemma big_sepL_submseteq `{AffineBI PROP} (Φ : A → PROP) l1 l2 :
+  Lemma big_sepL_submseteq `{BiAffine PROP} (Φ : A → PROP) l1 l2 :
     l1 ⊆+ l2 → ([∗ list] y ∈ l2, Φ y) ⊢ [∗ list] y ∈ l1, Φ y.
   Proof.
     intros [l ->]%submseteq_Permutation. by rewrite big_sepL_app sep_elim_l.
@@ -125,16 +125,16 @@ Section sep_list.
     ⊢ ([∗ list] k↦x ∈ l, Φ k x) ∧ ([∗ list] k↦x ∈ l, Ψ k x).
   Proof. auto using and_intro, big_sepL_mono, and_elim_l, and_elim_r. Qed.
 
-  Lemma big_sepL_plainly `{AffineBI PROP} Φ l :
+  Lemma big_sepL_plainly `{BiAffine PROP} Φ l :
     bi_plainly ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ [∗ list] k↦x ∈ l, bi_plainly (Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
-  Lemma big_sepL_persistently `{AffineBI PROP} Φ l :
+  Lemma big_sepL_persistently `{BiAffine PROP} Φ l :
     bi_persistently ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢
     [∗ list] k↦x ∈ l, bi_persistently (Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
-  Lemma big_sepL_forall `{AffineBI PROP} Φ l :
+  Lemma big_sepL_forall `{BiAffine PROP} Φ l :
     (∀ k x, Persistent (Φ k x)) →
     ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ (∀ k x, ⌜l !! k = Some x⌝ → Φ k x).
   Proof.
@@ -287,7 +287,7 @@ Section and_list.
     [∧ list] k↦x ∈ l, bi_persistently (Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
-  Lemma big_andL_forall `{AffineBI PROP} Φ l :
+  Lemma big_andL_forall `{BiAffine PROP} Φ l :
     ([∧ list] k↦x ∈ l, Φ k x) ⊣⊢ (∀ k x, ⌜l !! k = Some x⌝ → Φ k x).
   Proof.
     apply (anti_symm _).
@@ -328,7 +328,7 @@ Section gmap.
     (∀ k x, m !! k = Some x → Φ k x ⊣⊢ Ψ k x) →
     ([∗ map] k ↦ x ∈ m, Φ k x) ⊣⊢ ([∗ map] k ↦ x ∈ m, Ψ k x).
   Proof. apply big_opM_proper. Qed.
-  Lemma big_sepM_subseteq `{AffineBI PROP} Φ m1 m2 :
+  Lemma big_sepM_subseteq `{BiAffine PROP} Φ m1 m2 :
     m2 ⊆ m1 → ([∗ map] k ↦ x ∈ m1, Φ k x) ⊢ [∗ map] k ↦ x ∈ m2, Φ k x.
   Proof. intros. by apply big_sepL_submseteq, map_to_list_submseteq. Qed.
 
@@ -339,7 +339,7 @@ Section gmap.
 
   Lemma big_sepM_empty Φ : ([∗ map] k↦x ∈ ∅, Φ k x) ⊣⊢ emp.
   Proof. by rewrite big_opM_empty. Qed.
-  Lemma big_sepM_empty' `{AffineBI PROP} P Φ : P ⊢ [∗ map] k↦x ∈ ∅, Φ k x.
+  Lemma big_sepM_empty' `{BiAffine PROP} P Φ : P ⊢ [∗ map] k↦x ∈ ∅, Φ k x.
   Proof. rewrite big_sepM_empty. apply: affine. Qed.
 
   Lemma big_sepM_insert Φ m i x :
@@ -420,16 +420,16 @@ Section gmap.
     ⊢ ([∗ map] k↦x ∈ m, Φ k x) ∧ ([∗ map] k↦x ∈ m, Ψ k x).
   Proof. auto using and_intro, big_sepM_mono, and_elim_l, and_elim_r. Qed.
 
-  Lemma big_sepM_plainly `{AffineBI PROP} Φ m :
+  Lemma big_sepM_plainly `{BiAffine PROP} Φ m :
     bi_plainly ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ [∗ map] k↦x ∈ m, bi_plainly (Φ k x).
   Proof. apply (big_opM_commute _). Qed.
 
-  Lemma big_sepM_persistently `{AffineBI PROP} Φ m :
+  Lemma big_sepM_persistently `{BiAffine PROP} Φ m :
     (bi_persistently ([∗ map] k↦x ∈ m, Φ k x)) ⊣⊢
       ([∗ map] k↦x ∈ m, bi_persistently (Φ k x)).
   Proof. apply (big_opM_commute _). Qed.
 
-  Lemma big_sepM_forall `{AffineBI PROP} Φ m :
+  Lemma big_sepM_forall `{BiAffine PROP} Φ m :
     (∀ k x, Persistent (Φ k x)) →
     ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ (∀ k x, ⌜m !! k = Some x⌝ → Φ k x).
   Proof.
@@ -499,7 +499,7 @@ Section gset.
     (∀ x, x ∈ X → Φ x ⊣⊢ Ψ x) →
     ([∗ set] x ∈ X, Φ x) ⊣⊢ ([∗ set] x ∈ X, Ψ x).
   Proof. apply big_opS_proper. Qed.
-  Lemma big_sepS_subseteq `{AffineBI PROP} Φ X Y :
+  Lemma big_sepS_subseteq `{BiAffine PROP} Φ X Y :
     Y ⊆ X → ([∗ set] x ∈ X, Φ x) ⊢ [∗ set] x ∈ Y, Φ x.
   Proof. intros. by apply big_sepL_submseteq, elements_submseteq. Qed.
 
@@ -509,7 +509,7 @@ Section gset.
 
   Lemma big_sepS_empty Φ : ([∗ set] x ∈ ∅, Φ x) ⊣⊢ emp.
   Proof. by rewrite big_opS_empty. Qed.
-  Lemma big_sepS_empty' `{!AffineBI PROP} P Φ : P ⊢ [∗ set] x ∈ ∅, Φ x.
+  Lemma big_sepS_empty' `{!BiAffine PROP} P Φ : P ⊢ [∗ set] x ∈ ∅, Φ x.
   Proof. rewrite big_sepS_empty. apply: affine. Qed.
 
   Lemma big_sepS_insert Φ X x :
@@ -575,12 +575,12 @@ Section gset.
     by apply sep_mono_r, wand_intro_l.
   Qed.
 
-  Lemma big_sepS_filter `{AffineBI PROP}
+  Lemma big_sepS_filter `{BiAffine PROP}
       (P : A → Prop) `{∀ x, Decision (P x)} Φ X :
     ([∗ set] y ∈ filter P X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ⌜P y⌝ → Φ y).
   Proof. setoid_rewrite <-decide_emp. apply big_sepS_filter'. Qed.
 
-  Lemma big_sepS_filter_acc `{AffineBI PROP}
+  Lemma big_sepS_filter_acc `{BiAffine PROP}
       (P : A → Prop) `{∀ y, Decision (P y)} Φ X Y :
     (∀ y, y ∈ Y → P y → y ∈ X) →
     ([∗ set] y ∈ X, Φ y) -∗
@@ -596,15 +596,15 @@ Section gset.
     ([∗ set] y ∈ X, Φ y ∧ Ψ y) ⊢ ([∗ set] y ∈ X, Φ y) ∧ ([∗ set] y ∈ X, Ψ y).
   Proof. auto using and_intro, big_sepS_mono, and_elim_l, and_elim_r. Qed.
 
-  Lemma big_sepS_plainly `{AffineBI PROP} Φ X :
+  Lemma big_sepS_plainly `{BiAffine PROP} Φ X :
     bi_plainly ([∗ set] y ∈ X, Φ y) ⊣⊢ [∗ set] y ∈ X, bi_plainly (Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
-  Lemma big_sepS_persistently `{AffineBI PROP} Φ X :
+  Lemma big_sepS_persistently `{BiAffine PROP} Φ X :
     bi_persistently ([∗ set] y ∈ X, Φ y) ⊣⊢ [∗ set] y ∈ X, bi_persistently (Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
-  Lemma big_sepS_forall `{AffineBI PROP} Φ X :
+  Lemma big_sepS_forall `{BiAffine PROP} Φ X :
     (∀ x, Persistent (Φ x)) → ([∗ set] x ∈ X, Φ x) ⊣⊢ (∀ x, ⌜x ∈ X⌝ → Φ x).
   Proof.
     intros. apply (anti_symm _).
@@ -671,7 +671,7 @@ Section gmultiset.
     (∀ x, x ∈ X → Φ x ⊣⊢ Ψ x) →
     ([∗ mset] x ∈ X, Φ x) ⊣⊢ ([∗ mset] x ∈ X, Ψ x).
   Proof. apply big_opMS_proper. Qed.
-  Lemma big_sepMS_subseteq `{AffineBI PROP} Φ X Y :
+  Lemma big_sepMS_subseteq `{BiAffine PROP} Φ X Y :
     Y ⊆ X → ([∗ mset] x ∈ X, Φ x) ⊢ [∗ mset] x ∈ Y, Φ x.
   Proof. intros. by apply big_sepL_submseteq, gmultiset_elements_submseteq. Qed.
 
@@ -681,7 +681,7 @@ Section gmultiset.
 
   Lemma big_sepMS_empty Φ : ([∗ mset] x ∈ ∅, Φ x) ⊣⊢ emp.
   Proof. by rewrite big_opMS_empty. Qed.
-  Lemma big_sepMS_empty' `{!AffineBI PROP} P Φ : P ⊢ [∗ mset] x ∈ ∅, Φ x.
+  Lemma big_sepMS_empty' `{!BiAffine PROP} P Φ : P ⊢ [∗ mset] x ∈ ∅, Φ x.
   Proof. rewrite big_sepMS_empty. apply: affine. Qed.
 
   Lemma big_sepMS_union Φ X Y :
@@ -714,11 +714,11 @@ Section gmultiset.
     ([∗ mset] y ∈ X, Φ y ∧ Ψ y) ⊢ ([∗ mset] y ∈ X, Φ y) ∧ ([∗ mset] y ∈ X, Ψ y).
   Proof. auto using and_intro, big_sepMS_mono, and_elim_l, and_elim_r. Qed.
 
-  Lemma big_sepMS_plainly `{AffineBI PROP} Φ X :
+  Lemma big_sepMS_plainly `{BiAffine PROP} Φ X :
     bi_plainly ([∗ mset] y ∈ X, Φ y) ⊣⊢ [∗ mset] y ∈ X, bi_plainly (Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 
-  Lemma big_sepMS_persistently `{AffineBI PROP} Φ X :
+  Lemma big_sepMS_persistently `{BiAffine PROP} Φ X :
     bi_persistently ([∗ mset] y ∈ X, Φ y) ⊣⊢
       [∗ mset] y ∈ X, bi_persistently (Φ y).
   Proof. apply (big_opMS_commute _). Qed.
@@ -756,11 +756,11 @@ Section list.
   Implicit Types l : list A.
   Implicit Types Φ Ψ : nat → A → PROP.
 
-  Lemma big_sepL_later `{AffineBI PROP} Φ l :
+  Lemma big_sepL_later `{BiAffine PROP} Φ l :
     ▷ ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, ▷ Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
-  Lemma big_sepL_laterN `{AffineBI PROP} Φ n l :
+  Lemma big_sepL_laterN `{BiAffine PROP} Φ n l :
     ▷^n ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, ▷^n Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
@@ -781,11 +781,11 @@ Section gmap.
   Implicit Types m : gmap K A.
   Implicit Types Φ Ψ : K → A → PROP.
 
-  Lemma big_sepM_later `{AffineBI PROP} Φ m :
+  Lemma big_sepM_later `{BiAffine PROP} Φ m :
     ▷ ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, ▷ Φ k x).
   Proof. apply (big_opM_commute _). Qed.
 
-  Lemma big_sepM_laterN `{AffineBI PROP} Φ n m :
+  Lemma big_sepM_laterN `{BiAffine PROP} Φ n m :
     ▷^n ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, ▷^n Φ k x).
   Proof. apply (big_opM_commute _). Qed.
 
@@ -803,11 +803,11 @@ Section gset.
   Implicit Types X : gset A.
   Implicit Types Φ : A → PROP.
 
-  Lemma big_sepS_later `{AffineBI PROP} Φ X :
+  Lemma big_sepS_later `{BiAffine PROP} Φ X :
     ▷ ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ▷ Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
-  Lemma big_sepS_laterN `{AffineBI PROP} Φ n X :
+  Lemma big_sepS_laterN `{BiAffine PROP} Φ n X :
     ▷^n ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ▷^n Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
@@ -825,11 +825,11 @@ Section gmultiset.
   Implicit Types X : gmultiset A.
   Implicit Types Φ : A → PROP.
 
-  Lemma big_sepMS_later `{AffineBI PROP} Φ X :
+  Lemma big_sepMS_later `{BiAffine PROP} Φ X :
     ▷ ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, ▷ Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 
-  Lemma big_sepMS_laterN `{AffineBI PROP} Φ n X :
+  Lemma big_sepMS_laterN `{BiAffine PROP} Φ n X :
     ▷^n ([∗ mset] y ∈ X, Φ y) ⊣⊢ ([∗ mset] y ∈ X, ▷^n Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 

@@ -5,7 +5,7 @@ Set Default Proof Using "Type*".
 (** This proves that we need the ▷ in a "Saved Proposition" construction with
 name-dependent allocation. *)
 Module savedprop. Section savedprop.
-  Context `{AffineBI PROP}.
+  Context `{BiAffine PROP}.
   Notation "¬ P" := (□ (P → False))%I : bi_scope.
   Implicit Types P : PROP.
 
@@ -65,7 +65,7 @@ End savedprop. End savedprop.
 
 (** This proves that we need the ▷ when opening invariants. *)
 Module inv. Section inv.
-  Context `{AffineBI PROP}.
+  Context `{BiAffine PROP}.
   Implicit Types P : PROP.
 
   (** Assumptions *)

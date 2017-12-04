@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra updates.
-From iris.bi Require Export interface.
+From iris.bi Require Export derived_connectives.
 From stdpp Require Import finite.
 Set Default Proof Using "Type".
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
@@ -608,10 +608,13 @@ Proof.
 Qed.
 Global Instance bupd_proper : Proper ((≡) ==> (≡)) (@uPred_bupd M) := ne_proper _.
 
-(** PlainlyExist1BI *)
+(** BI instances *)
 
-Global Instance uPred_plainly_exist_1 : PlainlyExist1BI (uPredI M).
-Proof. unfold PlainlyExist1BI. by unseal. Qed.
+Global Instance uPred_affine : BiAffine (uPredI M) | 0.
+Proof. intros P. rewrite /Affine. by apply bi.pure_intro. Qed.
+
+Global Instance uPred_plainly_exist_1 : BiPlainlyExist (uPredI M).
+Proof. unfold BiPlainlyExist. by unseal. Qed.
 
 (** Limits *)
 Lemma entails_lim (cP cQ : chain (uPredC M)) :

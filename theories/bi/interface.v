@@ -329,10 +329,6 @@ Coercion sbi_valid {PROP : sbi} : PROP → Prop := bi_valid.
 Arguments bi_valid {_} _%I : simpl never.
 Typeclasses Opaque bi_valid.
 
-Class PlainlyExist1BI (PROP : bi) :=
-  plainly_exist_1 A (Ψ : A → PROP) : bi_plainly (∃ a, Ψ a) ⊢ ∃ a, bi_plainly (Ψ a).
-Arguments plainly_exist_1 {_ _ _} _.
-
 Module bi.
 Section bi_laws.
 Context {PROP : bi}.

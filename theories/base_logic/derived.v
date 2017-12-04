@@ -1,8 +1,8 @@
 From iris.base_logic Require Export upred.
-From iris.bi Require Export interface derived.
+From iris.bi Require Export derived_laws.
 Set Default Proof Using "Type".
 Import upred.uPred.
-Import interface.bi derived.bi.
+Import interface.bi derived_laws.bi.
 
 Module uPred.
 Section derived.
@@ -30,10 +30,6 @@ Proof.
   { intros x. symmetry; apply equiv_spec. }
   apply limit_preserving_and; by apply limit_preserving_entails.
 Qed.
-
-(* Affine *)
-Global Instance uPred_affine : AffineBI (uPredI M) | 0.
-Proof. intros P. rewrite /Affine. by apply bi.pure_intro. Qed.
 
 (* Own and valid derived *)
 Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) :
@@ -131,6 +127,6 @@ Proof. split; [split; try apply _|]. apply ownM_op. apply ownM_unit'. Qed.
 End derived.
 
 (* Also add this to the global hint database, otherwise [eauto] won't work for
-many lemmas that have [AffineBI] as a premise. *)
+many lemmas that have [BiAffine] as a premise. *)
 Hint Immediate uPred_affine.
 End uPred.
