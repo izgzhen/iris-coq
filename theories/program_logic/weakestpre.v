@@ -22,6 +22,7 @@ Instance: PreOrder stuckness_le.
 Proof.
   split; first by case. move=>s1 s2 s3. by case: s1; case: s2; case: s3.
 Qed.
+Instance: SqSubsetEq stuckness := stuckness_le.
 
 Definition stuckness_to_atomicity (s : stuckness) : atomicity :=
   if s is maybe_stuck then strongly_atomic else weakly_atomic.
@@ -315,7 +316,7 @@ Proof.
   iIntros "{$H}" (v) "?". by iApply HΦ.
 Qed.
 Lemma wp_stuck_mono s1 s2 E e Φ :
-  stuckness_le s1 s2 → WP e @ s1; E {{ Φ }} ⊢ WP e @ s2; E {{ Φ }}.
+  s1 ⊑ s2 → WP e @ s1; E {{ Φ }} ⊢ WP e @ s2; E {{ Φ }}.
 Proof. case: s1; case: s2 => // _. exact: wp_stuck_weaken. Qed.
 Lemma wp_mask_mono s E1 E2 e Φ : E1 ⊆ E2 → WP e @ s; E1 {{ Φ }} ⊢ WP e @ s; E2 {{ Φ }}.
 Proof. iIntros (?) "H"; iApply (wp_strong_mono s E1 E2); auto. iFrame; eauto. Qed.
