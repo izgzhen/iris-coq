@@ -53,19 +53,7 @@ Class LanguageCtx {Λ : language} (K : expr Λ → expr Λ) := {
 Instance language_ctx_id Λ : LanguageCtx (@id (expr Λ)).
 Proof. constructor; naive_solver. Qed.
 
-Variant stuckness := not_stuck | maybe_stuck.
-Definition stuckness_le (s1 s2 : stuckness) : bool :=
-  match s1, s2 with
-  | maybe_stuck, not_stuck => false
-  | _, _ => true
-  end.
-Instance: @PreOrder stuckness stuckness_le.
-Proof.
-  split; first by case. move=>s1 s2 s3. by case: s1; case: s2; case: s3.
-Qed.
-Bind Scope stuckness_scope with stuckness.
-Delimit Scope stuckness_scope with stuckness.
-Infix "≤" := stuckness_le : stuckness_scope.
+Inductive atomicity := strongly_atomic | weakly_atomic.
 
 Section language.
   Context {Λ : language}.
@@ -86,21 +74,21 @@ Section language.
   Definition stuck (e : expr Λ) (σ : state Λ) :=
     to_val e = None ∧ irreducible e σ.
 
-  (* [Atomic not_stuck]: This (weak) form of atomicity is enough to open invariants when WP ensures
-     safety, i.e., programs never can get stuck.  We have an example in
-     lambdaRust of an expression that is atomic in this sense, but not in the
-     stronger sense defined below, and we have to be able to open invariants
-     around that expression.  See `CasStuckS` in
+  (* [Atomic weakly_atomic]: This (weak) form of atomicity is enough to open
+     invariants when WP ensures safety, i.e., programs never can get stuck.  We
+     have an example in lambdaRust of an expression that is atomic in this
+     sense, but not in the stronger sense defined below, and we have to be able
+     to open invariants around that expression.  See `CasStuckS` in
      [lambdaRust](https://gitlab.mpi-sws.org/FP/LambdaRust-coq/blob/master/theories/lang/lang.v).
 
-     [Atomic maybe_stuck]: To open invariants with a WP that does not ensure safety, we need a
-     stronger form of atomicity.  With the above definition, in case `e` reduces
-     to a stuck non-value, there is no proof that the invariants have been
-     established again. *)
-  Class Atomic (s : stuckness) (e : expr Λ) : Prop :=
+     [Atomic strongly_atomic]: To open invariants with a WP that does not ensure
+     safety, we need a stronger form of atomicity.  With the above definition,
+     in case `e` reduces to a stuck non-value, there is no proof that the
+     invariants have been established again. *)
+  Class Atomic (a : atomicity) (e : expr Λ) : Prop :=
     atomic σ e' σ' efs :
       prim_step e σ e' σ' efs →
-      if s is not_stuck then irreducible e' σ' else is_Some (to_val e').
+      if a is weakly_atomic then irreducible e' σ' else is_Some (to_val e').
 
   Inductive step (ρ1 ρ2 : cfg Λ) : Prop :=
     | step_atomic e1 σ1 e2 σ2 efs t1 t2 :
@@ -121,7 +109,8 @@ Section language.
   Global Instance of_val_inj : Inj (=) (=) (@of_val Λ).
   Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 
-  Lemma strongly_atomic_atomic e : Atomic maybe_stuck e → Atomic not_stuck e.
+  Lemma strongly_atomic_atomic e :
+    Atomic strongly_atomic e → Atomic weakly_atomic e.
   Proof. unfold Atomic. eauto using val_irreducible. Qed.
 
   Lemma reducible_fill `{LanguageCtx Λ K} e σ :

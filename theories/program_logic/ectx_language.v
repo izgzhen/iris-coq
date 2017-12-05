@@ -129,10 +129,10 @@ Section ectx_language.
 
   Canonical Structure ectx_lang : language := Language ectx_lang_mixin.
 
-  Definition HeadAtomic (s : stuckness) (e : expr Λ) : Prop :=
+  Definition head_atomic (a : atomicity) (e : expr Λ) : Prop :=
     ∀ σ e' σ' efs,
       head_step e σ e' σ' efs →
-      if s is not_stuck then irreducible e' σ' else is_Some (to_val e').
+      if a is weakly_atomic then irreducible e' σ' else is_Some (to_val e').
 
   (* Some lemmas about this language *)
   Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
@@ -173,8 +173,8 @@ Section ectx_language.
     apply (Hirr empty_ectx). by rewrite fill_empty.
   Qed.
 
-  Lemma ectx_language_atomic s e :
-    HeadAtomic s e → sub_redexes_are_values e → Atomic s e.
+  Lemma ectx_language_atomic a e :
+    head_atomic a e → sub_redexes_are_values e → Atomic a e.
   Proof.
     intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
     assert (K = empty_ectx) as -> by eauto 10 using val_head_stuck.

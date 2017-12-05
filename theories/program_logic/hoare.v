@@ -58,7 +58,7 @@ Lemma ht_mono s E P P' Φ Φ' e :
   (P ⊢ P') → (∀ v, Φ' v ⊢ Φ v) → {{ P' }} e @ s; E {{ Φ' }} ⊢ {{ P }} e @ s; E {{ Φ }}.
 Proof. by intros; apply persistently_mono, wand_mono, wp_mono. Qed.
 Lemma ht_stuck_mono s1 s2 E P Φ e :
-  (s1 ≤ s2)%stuckness → {{ P }} e @ s1; E {{ Φ }} ⊢ {{ P }} e @ s2; E {{ Φ }}.
+  stuckness_le s1 s2 → {{ P }} e @ s1; E {{ Φ }} ⊢ {{ P }} e @ s2; E {{ Φ }}.
 Proof. by intros; apply persistently_mono, wand_mono, wp_stuck_mono. Qed.
 Global Instance ht_mono' s E :
   Proper (flip (⊢) ==> eq ==> pointwise_relation _ (⊢) ==> (⊢)) (ht s E).
@@ -79,7 +79,7 @@ Proof.
   iIntros (v) "Hv". by iApply "HΦ".
 Qed.
 
-Lemma ht_atomic s E1 E2 P P' Φ Φ' e `{!Atomic s e} :
+Lemma ht_atomic s E1 E2 P P' Φ Φ' e `{!Atomic (stuckness_to_atomicity s) e} :
   (P ={E1,E2}=> P') ∧ {{ P' }} e @ s; E2 {{ Φ' }} ∧ (∀ v, Φ' v ={E2,E1}=> Φ v)
   ⊢ {{ P }} e @ s; E1 {{ Φ }}.
 Proof.

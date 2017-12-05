@@ -11,6 +11,17 @@ Class irisG' (Λstate : Type) (Σ : gFunctors) := IrisG {
 }.
 Notation irisG Λ Σ := (irisG' (state Λ) Σ).
 
+Inductive stuckness := not_stuck | maybe_stuck.
+Definition stuckness_le (s1 s2 : stuckness) : bool :=
+  match s1, s2 with
+  | maybe_stuck, not_stuck => false
+  | _, _ => true
+  end.
+Instance: PreOrder stuckness_le.
+Proof.
+  split; first by case. move=>s1 s2 s3. by case: s1; case: s2; case: s3.
+Qed.
+
 Definition wp_pre `{irisG Λ Σ} (s : stuckness)
     (wp : coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
     coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ := λ E e1 Φ,
@@ -233,7 +244,10 @@ Qed.
 Lemma wp_fupd s E e Φ : WP e @ s; E {{ v, |={E}=> Φ v }} ⊢ WP e @ s; E {{ Φ }}.
 Proof. iIntros "H". iApply (wp_strong_mono s E); try iFrame; auto. Qed.
 
-Lemma wp_atomic s E1 E2 e Φ `{Hatomic : !Atomic s e} :
+Definition stuckness_to_atomicity s :=
+  if s is maybe_stuck then strongly_atomic else weakly_atomic.
+
+Lemma wp_atomic s E1 E2 e Φ `{!Atomic (stuckness_to_atomicity s) e} :
   (|={E1,E2}=> WP e @ s; E2 {{ v, |={E2,E1}=> Φ v }}) ⊢ WP e @ s; E1 {{ Φ }}.
 Proof.
   iIntros "H". rewrite !wp_unfold /wp_pre.
@@ -245,8 +259,8 @@ Proof.
     rewrite !wp_unfold /wp_pre. destruct (to_val e2) as [v2|] eqn:He2.
     + iDestruct "H" as ">> $". by iFrame.
     + iMod ("H" with "[$]") as "[H _]". iDestruct "H" as %(? & ? & ? & ?).
-      by edestruct (Hatomic _ _ _ _ Hstep).
-  - destruct (Hatomic _ _ _ _ Hstep) as [v <-%of_to_val].
+      by edestruct (atomic _ _ _ _ Hstep).
+  - destruct (atomic _ _ _ _ Hstep) as [v <-%of_to_val].
     iMod ("H" with "[#]") as "($ & H & $)"; first done.
     iMod (wp_value_inv with "H") as ">H". by iApply wp_value'.
 Qed.
@@ -300,7 +314,7 @@ Proof.
   iIntros "{$H}" (v) "?". by iApply HΦ.
 Qed.
 Lemma wp_stuck_mono s1 s2 E e Φ :
-  (s1 ≤ s2)%stuckness → WP e @ s1; E {{ Φ }} ⊢ WP e @ s2; E {{ Φ }}.
+  stuckness_le s1 s2 → WP e @ s1; E {{ Φ }} ⊢ WP e @ s2; E {{ Φ }}.
 Proof. case: s1; case: s2 => // _. exact: wp_stuck_weaken. Qed.
 Lemma wp_mask_mono s E1 E2 e Φ : E1 ⊆ E2 → WP e @ s; E1 {{ Φ }} ⊢ WP e @ s; E2 {{ Φ }}.
 Proof. iIntros (?) "H"; iApply (wp_strong_mono s E1 E2); auto. iFrame; eauto. Qed.
@@ -379,7 +393,7 @@ Section proofmode_classes.
 
   (* lower precedence, if possible, it should persistently pick elim_upd_fupd_wp *)
   Global Instance elim_modal_fupd_wp_atomic s E1 E2 e P Φ :
-    Atomic s e →
+    Atomic (stuckness_to_atomicity s) e →
     ElimModal (|={E1,E2}=> P) P
             (WP e @ s; E1 {{ Φ }}) (WP e @ s; E2 {{ v, |={E2,E1}=> Φ v }})%I | 100.
   Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r wp_atomic. Qed.
