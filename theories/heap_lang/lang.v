@@ -317,6 +317,7 @@ Definition subst' (mx : binder) (es : expr) : expr → expr :=
 Definition un_op_eval (op : un_op) (v : val) : option val :=
   match op, v with
   | NegOp, LitV (LitBool b) => Some $ LitV $ LitBool (negb b)
+  | NegOp, LitV (LitInt n) => Some $ LitV $ LitInt (Z.lnot n)
   | MinusUnOp, LitV (LitInt n) => Some $ LitV $ LitInt (- n)
   | _, _ => None
   end.
