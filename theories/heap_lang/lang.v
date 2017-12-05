@@ -57,7 +57,8 @@ Inductive expr :=
   | Alloc (e : expr)
   | Load (e : expr)
   | Store (e1 : expr) (e2 : expr)
-  | CAS (e0 : expr) (e1 : expr) (e2 : expr).
+  | CAS (e0 : expr) (e1 : expr) (e2 : expr)
+  | FAA (e1 : expr) (e2 : expr).
 
 Bind Scope expr_scope with expr.
 
@@ -68,7 +69,7 @@ Fixpoint is_closed (X : list string) (e : expr) : bool :=
   | Lit _ => true
   | UnOp _ e | Fst e | Snd e | InjL e | InjR e | Fork e | Alloc e | Load e =>
      is_closed X e
-  | App e1 e2 | BinOp _ e1 e2 | Pair e1 e2 | Store e1 e2 =>
+  | App e1 e2 | BinOp _ e1 e2 | Pair e1 e2 | Store e1 e2 | FAA e1 e2 =>
      is_closed X e1 && is_closed X e2
   | If e0 e1 e2 | Case e0 e1 e2 | CAS e0 e1 e2 =>
      is_closed X e0 && is_closed X e1 && is_closed X e2
@@ -189,6 +190,7 @@ Proof.
   | Load e => GenNode 13 [go e]
   | Store e1 e2 => GenNode 14 [go e1; go e2]
   | CAS e0 e1 e2 => GenNode 15 [go e0; go e1; go e2]
+  | FAA e1 e2 => GenNode 16 [go e1; go e2]
   end).
  set (dec := fix go e :=
   match e with
@@ -210,6 +212,7 @@ Proof.
   | GenNode 13 [e] => Load (go e)
   | GenNode 14 [e1; e2] => Store (go e1) (go e2)
   | GenNode 15 [e0; e1; e2] => CAS (go e0) (go e1) (go e2)
+  | GenNode 16 [e1; e2] => FAA (go e1) (go e2)
   | _ => Lit LitUnit (* dummy *)
   end).
  refine (inj_countable' enc dec _). intros e. induction e; f_equal/=; auto.
@@ -245,7 +248,9 @@ Inductive ectx_item :=
   | StoreRCtx (v1 : val)
   | CasLCtx (e1 : expr) (e2 : expr)
   | CasMCtx (v0 : val) (e2 : expr)
-  | CasRCtx (v0 : val) (v1 : val).
+  | CasRCtx (v0 : val) (v1 : val)
+  | FaaLCtx (e2 : expr)
+  | FaaRCtx (v1 : val).
 
 Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   match Ki with
@@ -269,6 +274,8 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   | CasLCtx e1 e2 => CAS e e1 e2
   | CasMCtx v0 e2 => CAS (of_val v0) e e2
   | CasRCtx v0 v1 => CAS (of_val v0) (of_val v1) e
+  | FaaLCtx e2 => FAA e e2
+  | FaaRCtx v1 => FAA (of_val v1) e
   end.
 
 (** Substitution *)
@@ -293,6 +300,7 @@ Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
   | Load e => Load (subst x es e)
   | Store e1 e2 => Store (subst x es e1) (subst x es e2)
   | CAS e0 e1 e2 => CAS (subst x es e0) (subst x es e1) (subst x es e2)
+  | FAA e1 e2 => FAA (subst x es e1) (subst x es e2)
   end.
 
 Definition subst' (mx : binder) (es : expr) : expr → expr :=
@@ -364,7 +372,12 @@ Inductive head_step : expr → state → expr → state → list (expr) → Prop
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
-     head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) [].
+     head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) []
+   | FaaS l i1 e2 i2 σ :
+     to_val e2 = Some (LitV (LitInt i2)) →
+     σ !! l = Some (LitV (LitInt i1)) →
+     head_step (FAA (Lit $ LitLoc l) e2) σ (Lit $ LitInt i1) (<[l:=LitV (LitInt (i1 + i2))]>σ) [].
+
 
 (** Basic properties about the language *)
 Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).
