@@ -117,11 +117,11 @@ Next Obligation. solve_proper. Qed.
 
 Definition monPred_ipure_def (P : B) : monPred := MonPred (λ _, P) _.
 Definition monPred_ipure_aux : seal (@monPred_ipure_def). by eexists. Qed.
-Definition monPred_ipure := unseal monPred_ipure_aux.
-Definition monPred_ipure_eq : @monPred_ipure = _ := seal_eq _.
+Global Instance monPred_ipure : BiEmbedding B monPred := unseal monPred_ipure_aux.
+Definition monPred_ipure_eq : bi_embedding = _ := seal_eq _.
 
-Definition monPred_pure (φ : Prop) : monPred := monPred_ipure (bi_pure φ).
-Definition monPred_emp : monPred := monPred_ipure emp%I.
+Definition monPred_pure (φ : Prop) : monPred := ⎡⌜φ⌝⎤%I.
+Definition monPred_emp : monPred := ⎡emp⎤%I.
 
 Program Definition monPred_and_def P Q : monPred :=
   MonPred (λ i, P i ∧ Q i)%I _.
@@ -183,8 +183,7 @@ Definition monPred_persistently_aux : seal (@monPred_persistently_def). by eexis
 Definition monPred_persistently := unseal monPred_persistently_aux.
 Definition monPred_persistently_eq : @monPred_persistently = _ := seal_eq _.
 
-Definition monPred_plainly P : monPred :=
-  monPred_ipure (∀ i, bi_plainly (P i))%I.
+Definition monPred_plainly P : monPred := ⎡∀ i, bi_plainly (P i)⎤%I.
 
 Program Definition monPred_in_def (i_0 : I) : monPred :=
   MonPred (λ i : I, ⌜i_0 ⊑ i⌝%I) _.
@@ -369,14 +368,17 @@ Global Instance monPred_car_mono_flip :
   Proper (flip (⊢) ==> flip (⊑) ==> flip (⊢)) (@monPred_car I B).
 Proof. solve_proper. Qed.
 
-Global Instance monPred_ipure_ne : NonExpansive (@monPred_ipure I B).
+Global Instance monPred_ipure_ne :
+  NonExpansive (@bi_embedding B (monPred I B) _).
 Proof. unseal. by split. Qed.
-Global Instance monPred_ipure_proper : Proper ((≡) ==> (≡)) (@monPred_ipure I B).
+Global Instance monPred_ipure_proper :
+  Proper ((≡) ==> (≡)) (@bi_embedding B (monPred I B) _).
 Proof. apply (ne_proper _). Qed.
-Global Instance monPred_ipure_mono : Proper ((⊢) ==> (⊢)) (@monPred_ipure I B).
+Global Instance monPred_ipure_mono :
+  Proper ((⊢) ==> (⊢)) (@bi_embedding B (monPred I B) _).
 Proof. unseal. by split. Qed.
 Global Instance monPred_ipure_mono_flip :
-  Proper (flip (⊢) ==> flip (⊢)) (@monPred_ipure I B).
+  Proper (flip (⊢) ==> flip (⊢)) (@bi_embedding B (monPred I B) _).
 Proof. solve_proper. Qed.
 
 Global Instance monPred_in_proper (R : relation I) :
@@ -437,19 +439,17 @@ Proof. move => [] /(_ i). unfold Absorbing. by unseal. Qed.
 Global Instance monPred_car_affine P i : Affine P → Affine (P i).
 Proof. move => [] /(_ i). unfold Affine. by unseal. Qed.
 
-(* Notation "☐ P" := (monPred_ipure P%I) *)
-(*   (at level 20, right associativity) : bi_scope. *)
 Global Instance monPred_ipure_plain (P : B) :
-  Plain P → Plain (@monPred_ipure I B P).
+  Plain P → @Plain (monPredI I B) ⎡P⎤%I.
 Proof. split => ? /=. unseal. apply bi.forall_intro=>?. apply (plain _). Qed.
 Global Instance monPred_ipure_persistent (P : B) :
-  Persistent P → Persistent (@monPred_ipure I B P).
+  Persistent P → @Persistent (monPredI I B) ⎡P⎤%I.
 Proof. split => ? /=. unseal. exact: H. Qed.
 Global Instance monPred_ipure_absorbing (P : B) :
-  Absorbing P → Absorbing (@monPred_ipure I B P).
+  Absorbing P → @Absorbing (monPredI I B) ⎡P⎤%I.
 Proof. unfold Absorbing. split => ? /=. by unseal. Qed.
 Global Instance monPred_ipure_affine (P : B) :
-  Affine P → Affine (@monPred_ipure I B P).
+  Affine P → @Affine (monPredI I B) ⎡P⎤%I.
 Proof. unfold Affine. split => ? /=. by unseal. Qed.
 
 (* Note that monPred_in is *not* Plain, because it does depend on the
@@ -495,7 +495,7 @@ Implicit Types P Q : monPred I B.
 Global Instance monPred_car_timeless P i : Timeless P → Timeless (P i).
 Proof. move => [] /(_ i). unfold Timeless. by unseal. Qed.
 Global Instance monPred_ipure_timeless (P : B) :
-  Timeless P → Timeless (@monPred_ipure I B P).
+  Timeless P → @Timeless (monPredSI I B) ⎡P⎤%I.
 Proof. intros. split => ? /=. unseal. exact: H. Qed.
 Global Instance monPred_in_timeless V : Timeless (@monPred_in I B V).
 Proof. split => ? /=. unseal. apply timeless, _. Qed.
