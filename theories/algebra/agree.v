@@ -26,14 +26,16 @@ Proof.
   Thus Ag(T) is not necessarily complete.
 *)
 
-Record agree (A : Type) : Type := Agree {
+Record agree (A : Type) : Type := {
   agree_car : list A;
   agree_not_nil : bool_decide (agree_car = []) = false
 }.
-Arguments Agree {_} _ _.
 Arguments agree_car {_} _.
 Arguments agree_not_nil {_} _.
 Local Coercion agree_car : agree >-> list.
+
+Definition to_agree {A} (a : A) : agree A :=
+  {| agree_car := [a]; agree_not_nil := eq_refl |}.
 
 Lemma elem_of_agree {A} (x : agree A) : ∃ a, a ∈ agree_car x.
 Proof. destruct x as [[|a ?] ?]; set_solver+. Qed.
@@ -82,7 +84,7 @@ Instance agree_validN : ValidN (agree A) := λ n x,
 Instance agree_valid : Valid (agree A) := λ x, ∀ n, ✓{n} x.
 
 Program Instance agree_op : Op (agree A) := λ x y,
-  Agree (agree_car x ++ agree_car y) _.
+  {| agree_car := agree_car x ++ agree_car y |}.
 Next Obligation. by intros [[|??]] y. Qed.
 Instance agree_pcore : PCore (agree A) := Some.
 
@@ -157,15 +159,21 @@ Proof.
     apply discrete_iff_0; auto.
 Qed.
 
-Program Definition to_agree (a : A) : agree A :=
-  {| agree_car := [a]; agree_not_nil := eq_refl |}.
-
 Global Instance to_agree_ne : NonExpansive to_agree.
 Proof.
   intros n a1 a2 Hx; split=> b /=;
     setoid_rewrite elem_of_list_singleton; naive_solver.
 Qed.
 Global Instance to_agree_proper : Proper ((≡) ==> (≡)) to_agree := ne_proper _.
+
+Global Instance to_agree_discrete a : Discrete a → Discrete (to_agree a).
+Proof.
+  intros ? y [H H'] n; split.
+  - intros a' ->%elem_of_list_singleton. destruct (H a) as [b ?]; first by left.
+    exists b. by rewrite -discrete_iff_0.
+  - intros b Hb. destruct (H' b) as (b'&->%elem_of_list_singleton&?); auto.
+    exists a. by rewrite elem_of_list_singleton -discrete_iff_0.
+Qed.
 
 Global Instance to_agree_injN n : Inj (dist n) (dist n) (to_agree).
 Proof.

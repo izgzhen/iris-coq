@@ -566,9 +566,9 @@ Proof.
   apply plainly_intro', impl_intro_r.
   by rewrite plainly_and_sep_l' plainly_elim wand_elim_l.
 Qed.
-Lemma wand_impl_plainly P Q : (■ P -∗ Q) ⊣⊢ (■ P → Q).
+Lemma impl_wand_plainly P Q : (■ P → Q) ⊣⊢ (■ P -∗ Q).
 Proof.
-  apply (anti_symm (⊢)); [|by rewrite -impl_wand_1].
+  apply (anti_symm (⊢)); [by rewrite -impl_wand_1|].
   apply impl_intro_l. by rewrite plainly_and_sep_l' wand_elim_r.
 Qed.
 Lemma plainly_entails_l' P Q : (P ⊢ ■ Q) → P ⊢ ■ Q ∗ P.
@@ -1029,7 +1029,7 @@ Qed.
 Global Instance wand_plain P Q : Plain P → Plain Q → Plain (P -∗ Q)%I.
 Proof.
   rewrite /Plain=> HP HQ.
-  by rewrite {2}HP -{1}(plainly_elim P) !wand_impl_plainly -plainly_impl_plainly -HQ.
+  by rewrite {2}HP -{1}(plainly_elim P) -!impl_wand_plainly -plainly_impl_plainly -HQ.
 Qed.
 Global Instance plainly_plain P : Plain (■ P).
 Proof. by intros; apply plainly_intro'. Qed.
@@ -1079,7 +1079,7 @@ Global Instance wand_persistent P Q :
   Plain P → Persistent Q → Persistent (P -∗ Q)%I.
 Proof.
   rewrite /Plain /Persistent=> HP HQ.
-  by rewrite {2}HP -{1}(plainly_elim P) !wand_impl_plainly -persistently_impl_plainly -HQ.
+  by rewrite {2}HP -{1}(plainly_elim P) -!impl_wand_plainly -persistently_impl_plainly -HQ.
 Qed.
 Global Instance plainly_persistent P : Persistent (■ P).
 Proof. by rewrite /Persistent persistently_plainly. Qed.

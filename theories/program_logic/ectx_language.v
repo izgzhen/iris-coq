@@ -229,6 +229,13 @@ End ectx_language.
 Arguments ectx_lang : clear implicits.
 Coercion ectx_lang : ectxLanguage >-> language.
 
+(* This definition makes sure that the fields of the [language] record do not
+refer to the projections of the [ectxLanguage] record but to the actual fields
+of the [ectxLanguage] record. This is crucial for canonical structure search to
+work.
+
+Note that this trick no longer works when we switch to canonical projections
+because then the pattern match [let '...] will be desugared into projections. *)
 Definition LanguageOfEctx (Λ : ectxLanguage) : language :=
   let '@EctxLanguage E V C St of_val to_val empty comp fill head mix := Λ in
   @Language E V St of_val to_val _

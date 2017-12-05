@@ -1,4 +1,5 @@
 From iris.base_logic Require Export upred.
+From stdpp Require Import finite.
 From iris.algebra Require Export updates.
 Set Default Proof Using "Type".
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
@@ -651,12 +652,15 @@ Proof.
 Qed.
 
 (* Function extensionality *)
-Lemma ofe_funC_equivI {A B} (f g : A -c> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
-Proof. by unseal. Qed.
 Lemma ofe_morC_equivI {A B : ofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
 Proof. by unseal. Qed.
+Lemma ofe_fun_equivI `{B : A → ofeT} (g1 g2 : ofe_fun B) : g1 ≡ g2 ⊣⊢ ∀ i, g1 i ≡ g2 i.
+Proof. by uPred.unseal. Qed.
 
-(* Sig ofes *)
+Lemma ofe_fun_validI `{Finite A} {B : A → ucmraT} (g : ofe_fun B) : ✓ g ⊣⊢ ∀ i, ✓ g i.
+Proof. by uPred.unseal. Qed.
+
+(* Sigma OFE *)
 Lemma sig_equivI {A : ofeT} (P : A → Prop) (x y : sigC P) :
   x ≡ y ⊣⊢ proj1_sig x ≡ proj1_sig y.
 Proof. by unseal. Qed.

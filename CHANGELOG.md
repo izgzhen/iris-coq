@@ -7,7 +7,7 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 Changes in and extensions of the theory:
 
-* [#] Add new modality: ■ ("plainly").
+* Add new modality: ■ ("plainly").
 * Camera morphisms have to be homomorphisms, not just monotone functions.
 * Add a proof that `f` has a fixed point if `f^k` is contractive.
 * Constructions for least and greatest fixed points over monotone predicates
