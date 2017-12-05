@@ -12,6 +12,7 @@ Class irisG' (Λstate : Type) (Σ : gFunctors) := IrisG {
 Notation irisG Λ Σ := (irisG' (state Λ) Σ).
 
 Inductive stuckness := not_stuck | maybe_stuck.
+
 Definition stuckness_le (s1 s2 : stuckness) : bool :=
   match s1, s2 with
   | maybe_stuck, not_stuck => false
@@ -21,6 +22,9 @@ Instance: PreOrder stuckness_le.
 Proof.
   split; first by case. move=>s1 s2 s3. by case: s1; case: s2; case: s3.
 Qed.
+
+Definition stuckness_to_atomicity (s : stuckness) : atomicity :=
+  if s is maybe_stuck then strongly_atomic else weakly_atomic.
 
 Definition wp_pre `{irisG Λ Σ} (s : stuckness)
     (wp : coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
@@ -243,9 +247,6 @@ Proof.
 Qed.
 Lemma wp_fupd s E e Φ : WP e @ s; E {{ v, |={E}=> Φ v }} ⊢ WP e @ s; E {{ Φ }}.
 Proof. iIntros "H". iApply (wp_strong_mono s E); try iFrame; auto. Qed.
-
-Definition stuckness_to_atomicity s :=
-  if s is maybe_stuck then strongly_atomic else weakly_atomic.
 
 Lemma wp_atomic s E1 E2 e Φ `{!Atomic (stuckness_to_atomicity s) e} :
   (|={E1,E2}=> WP e @ s; E2 {{ v, |={E2,E1}=> Φ v }}) ⊢ WP e @ s; E1 {{ Φ }}.
