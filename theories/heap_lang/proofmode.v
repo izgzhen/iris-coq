@@ -66,18 +66,11 @@ Tactic Notation "wp_proj" := wp_pure (Fst _) || wp_pure (Snd _).
 Tactic Notation "wp_case" := wp_pure (Case _ _ _).
 Tactic Notation "wp_match" := wp_case; wp_let.
 
-<<<<<<< HEAD
-Lemma tac_wp_bind `{heapG Σ} K Δ s E Φ e :
-  envs_entails Δ (WP e @ s; E {{ v, WP fill K (of_val v) @ s; E {{ Φ }} }})%I →
-  envs_entails Δ (WP fill K e @ s; E {{ Φ }}).
-Proof. rewrite /envs_entails=> ->. by apply: wp_bind. Qed.
-=======
-Lemma tac_wp_bind `{heapG Σ} K Δ E Φ e f :
+Lemma tac_wp_bind `{heapG Σ} K Δ s E Φ e f :
   f = (λ e, fill K e) → (* as an eta expanded hypothesis so that we can `simpl` it *)
-  envs_entails Δ (WP e @ E {{ v, WP f (of_val v) @ E {{ Φ }} }})%I →
-  envs_entails Δ (WP fill K e @ E {{ Φ }}).
+  envs_entails Δ (WP e @ s; E {{ v, WP f (of_val v) @ s; E {{ Φ }} }})%I →
+  envs_entails Δ (WP fill K e @ s; E {{ Φ }}).
 Proof. rewrite /envs_entails=> -> ->. by apply: wp_bind. Qed.
->>>>>>> master
 
 Ltac wp_bind_core K :=
   lazymatch eval hnf in K with
