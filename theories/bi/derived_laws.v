@@ -1623,8 +1623,14 @@ Proof. intros. by rewrite /Absorbing -absorbingly_sep_l absorbing. Qed.
 Global Instance sep_absorbing_r P Q : Absorbing Q → Absorbing (P ∗ Q).
 Proof. intros. by rewrite /Absorbing -absorbingly_sep_r absorbing. Qed.
 
-Global Instance wand_absorbing P Q : Absorbing Q → Absorbing (P -∗ Q).
+Global Instance wand_absorbing_l P Q : Absorbing P → Absorbing (P -∗ Q).
+Proof.
+  intros. rewrite /Absorbing /bi_absorbingly. apply wand_intro_l.
+  by rewrite assoc (sep_elim_l P) wand_elim_r.
+Qed.
+Global Instance wand_absorbing_r P Q : Absorbing Q → Absorbing (P -∗ Q).
 Proof. intros. by rewrite /Absorbing absorbingly_wand !absorbing -absorbingly_intro. Qed.
+
 
 Global Instance absorbingly_absorbing P : Absorbing (bi_absorbingly P).
 Proof. rewrite /bi_absorbingly. apply _. Qed.
