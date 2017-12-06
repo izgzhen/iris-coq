@@ -93,6 +93,7 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
 * Some extensions/improvements of heap_lang:
   - Improve handling of pure (non-state-dependent) reductions.
   - Add fetch-and-add (`FAA`) operation.
+  - Syntax for all Coq's binary operations on `Z`.
 * Use `Hint Mode` to prevent Coq from making arbitrary guesses in the presence
   of evars, which often led to divergence. There are a few places where type
   annotations are now needed.

@@ -15,7 +15,10 @@ Inductive base_lit : Set :=
 Inductive un_op : Set :=
   | NegOp | MinusUnOp.
 Inductive bin_op : Set :=
-  | PlusOp | MinusOp | LeOp | LtOp | EqOp.
+  | PlusOp | MinusOp | MultOp | QuotOp | RemOp (* Arithmetic *)
+  | AndOp | OrOp | XorOp (* Bitwise *)
+  | ShiftLOp | ShiftROp (* Shifts *)
+  | LeOp | LtOp | EqOp. (* Relations *)
 
 Inductive binder := BAnon | BNamed : string → binder.
 Delimit Scope binder_scope with bind.
@@ -158,9 +161,13 @@ Qed.
 Instance bin_op_countable : Countable bin_op.
 Proof.
  refine (inj_countable' (λ op, match op with
-  | PlusOp => 0 | MinusOp => 1 | LeOp => 2 | LtOp => 3 | EqOp => 4
+  | PlusOp => 0 | MinusOp => 1 | MultOp => 2 | QuotOp => 3 | RemOp => 4
+  | AndOp => 5 | OrOp => 6 | XorOp => 7 | ShiftLOp => 8 | ShiftROp => 9
+  | LeOp => 10 | LtOp => 11 | EqOp => 12
   end) (λ n, match n with
-  | 0 => PlusOp | 1 => MinusOp | 2 => LeOp | 3 => LtOp | _ => EqOp
+  | 0 => PlusOp | 1 => MinusOp | 2 => MultOp | 3 => QuotOp | 4 => RemOp
+  | 5 => AndOp | 6 => OrOp | 7 => XorOp | 8 => ShiftLOp | 9 => ShiftROp
+  | 10 => LeOp | 11 => LtOp | _ => EqOp
   end) _); by intros [].
 Qed.
 Instance binder_countable : Countable binder.
@@ -310,18 +317,44 @@ Definition subst' (mx : binder) (es : expr) : expr → expr :=
 Definition un_op_eval (op : un_op) (v : val) : option val :=
   match op, v with
   | NegOp, LitV (LitBool b) => Some $ LitV $ LitBool (negb b)
+  | NegOp, LitV (LitInt n) => Some $ LitV $ LitInt (Z.lnot n)
   | MinusUnOp, LitV (LitInt n) => Some $ LitV $ LitInt (- n)
   | _, _ => None
   end.
 
+Definition bin_op_eval_int (op : bin_op) (n1 n2 : Z) : base_lit :=
+  match op with
+  | PlusOp => LitInt (n1 + n2)
+  | MinusOp => LitInt (n1 - n2)
+  | MultOp => LitInt (n1 * n2)
+  | QuotOp => LitInt (n1 `quot` n2)
+  | RemOp => LitInt (n1 `rem` n2)
+  | AndOp => LitInt (Z.land n1 n2)
+  | OrOp => LitInt (Z.lor n1 n2)
+  | XorOp => LitInt (Z.lxor n1 n2)
+  | ShiftLOp => LitInt (n1 ≪ n2)
+  | ShiftROp => LitInt (n1 ≫ n2)
+  | LeOp => LitBool (bool_decide (n1 ≤ n2))
+  | LtOp => LitBool (bool_decide (n1 < n2))
+  | EqOp => LitBool (bool_decide (n1 = n2))
+  end.
+
+Definition bin_op_eval_bool (op : bin_op) (b1 b2 : bool) : option base_lit :=
+  match op with
+  | PlusOp | MinusOp | MultOp | QuotOp | RemOp => None (* Arithmetic *)
+  | AndOp => Some (LitBool (b1 && b2))
+  | OrOp => Some (LitBool (b1 || b2))
+  | XorOp => Some (LitBool (xorb b1 b2))
+  | ShiftLOp | ShiftROp => None (* Shifts *)
+  | LeOp | LtOp => None (* InEquality *)
+  | EqOp => Some (LitBool (bool_decide (b1 = b2)))
+  end.
+
 Definition bin_op_eval (op : bin_op) (v1 v2 : val) : option val :=
-  match op, v1, v2 with
-  | PlusOp, LitV (LitInt n1), LitV (LitInt n2) => Some $ LitV $ LitInt (n1 + n2)
-  | MinusOp, LitV (LitInt n1), LitV (LitInt n2) => Some $ LitV $ LitInt (n1 - n2)
-  | LeOp, LitV (LitInt n1), LitV (LitInt n2) => Some $ LitV $ LitBool $ bool_decide (n1 ≤ n2)
-  | LtOp, LitV (LitInt n1), LitV (LitInt n2) => Some $ LitV $ LitBool $ bool_decide (n1 < n2)
-  | EqOp, v1, v2 => Some $ LitV $ LitBool $ bool_decide (v1 = v2)
-  | _, _, _ => None
+  match v1, v2 with
+  | LitV (LitInt n1), LitV (LitInt n2) => Some $ LitV $ bin_op_eval_int op n1 n2
+  | LitV (LitBool b1), LitV (LitBool b2) => LitV <$> bin_op_eval_bool op b1 b2
+  | v1, v2 => guard (op = EqOp); Some $ LitV $ LitBool $ bool_decide (v1 = v2)
   end.
 
 Inductive head_step : expr → state → expr → state → list (expr) → Prop :=
