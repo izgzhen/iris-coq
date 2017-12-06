@@ -1,5 +1,5 @@
 From iris.bi Require Export monpred.
-From iris.proofmode Require Import tactics.
+From iris.proofmode Require Import tactics class_instances.
 
 Class MakeMonPredAt {I : biIndex} {PROP : bi} (i : I)
       (P : monPred I PROP) (𝓟 : PROP) :=
@@ -137,12 +137,24 @@ Proof.
   by rewrite -monPred_at_persistently -monPred_at_persistently_if.
 Qed.
 
-Global Instance from_always_monPred_at a pe P Q 𝓠 i :
-  FromAlways a pe false P Q → MakeMonPredAt i Q 𝓠 →
-  FromAlways a pe false (P i) 𝓠 | 0.
+Global Instance from_always_affinely_monPred_at P Q 𝓠 i :
+  FromAlways always_modality_affinely P Q → MakeMonPredAt i Q 𝓠 →
+  FromAlways always_modality_affinely (P i) 𝓠 | 0.
 Proof.
-  rewrite /FromAlways /MakeMonPredAt /bi_persistently_if /bi_affinely_if=><- /=.
-  destruct a, pe=><- /=; by rewrite ?monPred_at_affinely ?monPred_at_persistently.
+  rewrite /FromAlways /MakeMonPredAt /==> <- <-. by rewrite monPred_at_affinely.
+Qed.
+Global Instance from_always_persistently_monPred_at P Q 𝓠 i :
+  FromAlways always_modality_persistently P Q → MakeMonPredAt i Q 𝓠 →
+  FromAlways always_modality_persistently (P i) 𝓠 | 0.
+Proof.
+  rewrite /FromAlways /MakeMonPredAt /==> <- <-. by rewrite monPred_at_persistently.
+Qed.
+Global Instance from_always_affinely_persistently_monPred_at P Q 𝓠 i :
+  FromAlways always_modality_affinely_persistently P Q → MakeMonPredAt i Q 𝓠 →
+  FromAlways always_modality_affinely_persistently (P i) 𝓠 | 0.
+Proof.
+  rewrite /FromAlways /MakeMonPredAt /==> <- <-.
+  by rewrite monPred_at_affinely monPred_at_persistently.
 Qed.
 
 Lemma into_wand_monPred_at_unknown_unknown p q R P 𝓟 Q 𝓠 i :

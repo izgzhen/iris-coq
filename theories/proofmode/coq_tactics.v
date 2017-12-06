@@ -543,72 +543,124 @@ Qed.
 Lemma tac_pure_revert Δ φ Q : envs_entails Δ (⌜φ⌝ → Q) → (φ → envs_entails Δ Q).
 Proof. rewrite /envs_entails. intros HΔ ?. by rewrite HΔ pure_True // left_id. Qed.
 
-(** * Persistence and plainness modalities *)
-Class IntoPlainEnv (Γ1 Γ2 : env PROP) := {
-  into_plain_env_subenv : env_subenv Γ2 Γ1;
-  into_plain_env_plain : Plain ([∧] Γ2);
+(** * Always modalities *)
+Class FilterPersistentEnv
+    (M : always_modality PROP) (C : PROP → Prop) (Γ1 Γ2 : env PROP) := {
+  filter_persistent_env :
+    (∀ P, C P → □ P ⊢ M (□ P)) →
+    □ ([∧] Γ1) ⊢ M (□ ([∧] Γ2));
+  filter_persistent_env_wf : env_wf Γ1 → env_wf Γ2;
+  filter_persistent_env_dom i : Γ1 !! i = None → Γ2 !! i = None;
 }.
-
-Global Instance into_plain_env_nil : IntoPlainEnv Enil Enil.
-Proof. constructor. constructor. simpl; apply _. Qed.
-Global Instance into_plain_env_snoc_plain Γ1 Γ2 i P :
-  Plain P → IntoPlainEnv Γ1 Γ2 →
-  IntoPlainEnv (Esnoc Γ1 i P) (Esnoc Γ2 i P) | 1.
-Proof. intros ? [??]; constructor. by constructor. simpl; apply _. Qed.
-Global Instance into_plain_env_snoc_skip Γ1 Γ2 i P :
-  IntoPlainEnv Γ1 Γ2 → IntoPlainEnv (Esnoc Γ1 i P) Γ2 | 2.
-Proof. intros [??]; constructor. by constructor. done. Qed.
-
-Lemma into_plain_env_sound Γ1 Γ2 :
-  IntoPlainEnv Γ1 Γ2 → of_envs (Envs Γ1 Enil) ⊢ bi_plainly $ of_envs $ Envs Γ2 Enil.
+Global Instance filter_persistent_env_nil M C : FilterPersistentEnv M C Enil Enil.
 Proof.
-  intros [Hsub ?]. rewrite !of_envs_eq plainly_and plainly_pure /=. f_equiv.
-  { f_equiv=>-[/= ???]. split; auto. by eapply env_subenv_wf. }
-  rewrite !(right_id emp%I). trans (□ [∧] Γ2)%I.
-  - do 2 f_equiv. clear -Hsub.
-    induction Hsub as [|????? IH|????? IH]=>//=; rewrite IH //. apply and_elim_r.
-  - by rewrite {1}(plain ([∧] Γ2)) affinely_elim plainly_affinely
-               plainly_persistently persistently_plainly.
+  split=> // HC /=. rewrite !persistently_pure !affinely_True_emp.
+  by rewrite affinely_emp -always_modality_emp.
+Qed.
+Global Instance filter_persistent_env_snoc M (C : PROP → Prop) Γ Γ' i P :
+  C P →
+  FilterPersistentEnv M C Γ Γ' →
+  FilterPersistentEnv M C (Esnoc Γ i P) (Esnoc Γ' i P).
+Proof.
+  intros ? [HΓ Hwf Hdom]; split; simpl.
+  - intros HC. rewrite affinely_persistently_and HC // HΓ //.
+    by rewrite always_modality_and -affinely_persistently_and.
+  - inversion 1; constructor; auto.
+  - intros j. destruct (ident_beq _ _); naive_solver.
+Qed.
+Global Instance filter_persistent_env_snoc_not M (C : PROP → Prop) Γ Γ' i P :
+  FilterPersistentEnv M C Γ Γ' →
+  FilterPersistentEnv M C (Esnoc Γ i P) Γ' | 100.
+Proof.
+  intros [HΓ Hwf Hdom]; split; simpl.
+  - intros HC. by rewrite and_elim_r HΓ.
+  - inversion 1; auto.
+  - intros j. destruct (ident_beq _ _); naive_solver.
 Qed.
 
-Class IntoAlwaysEnvs (pe : bool) (pl : bool) (Δ1 Δ2 : envs PROP) := {
-  into_persistent_envs_persistent :
-    if pl then IntoPlainEnv (env_persistent Δ1) (env_persistent Δ2)
-    else env_persistent Δ1 = env_persistent Δ2;
-  into_persistent_envs_spatial :
-    if pe || pl then env_spatial Δ2 = Enil else env_spatial Δ1 = env_spatial Δ2
+Class FilterSpatialEnv
+    (M : always_modality PROP) (C : PROP → Prop) (Γ1 Γ2 : env PROP) := {
+  filter_spatial_env :
+    (∀ P, C P → P ⊢ M P) → (∀ P, Absorbing (M P)) →
+    ([∗] Γ1) ⊢ M ([∗] Γ2);
+  filter_spatial_env_wf : env_wf Γ1 → env_wf Γ2;
+  filter_spatial_env_dom i : Γ1 !! i = None → Γ2 !! i = None;
 }.
-
-Global Instance into_always_false_false Δ : IntoAlwaysEnvs false false Δ Δ.
-Proof. by split. Qed.
-Global Instance into_always_envs_true_false Γp Γs :
-  IntoAlwaysEnvs true false (Envs Γp Γs) (Envs Γp Enil).
-Proof. by split. Qed.
-Global Instance into_always_envs_x_true Γp1 Γp2 Γs1 pe :
-  IntoPlainEnv Γp1 Γp2 →
-  IntoAlwaysEnvs pe true (Envs Γp1 Γs1) (Envs Γp2 Enil).
-Proof. destruct pe; by split. Qed.
-
-Lemma tac_always_intro Δ Δ' a pe pl Q Q' :
-  FromAlways a pe pl Q' Q →
-  (if a then AffineEnv (env_spatial Δ') else TCTrue) →
-  IntoAlwaysEnvs pe pl Δ' Δ →
-  envs_entails Δ Q → envs_entails Δ' Q'.
+Global Instance filter_spatial_env_nil M C : FilterSpatialEnv M C Enil Enil.
+Proof. split=> // HC /=. by rewrite -always_modality_emp. Qed.
+Global Instance filter_spatial_env_snoc M (C : PROP → Prop) Γ Γ' i P :
+  C P →
+  FilterSpatialEnv M C Γ Γ' →
+  FilterSpatialEnv M C (Esnoc Γ i P) (Esnoc Γ' i P).
 Proof.
-  rewrite /envs_entails => ? Haffine [Hep Hes] HQ.
-  rewrite -(from_always a pe pl Q') -HQ.
-  trans (bi_affinely_if a (of_envs Δ'));
-    [destruct a=>//; by apply: affinely_intro|f_equiv].
-  destruct pl; [|destruct pe].
-  - rewrite (envs_clear_spatial_sound Δ') into_plain_env_sound sep_elim_l.
-    destruct Δ as [Δ ?]. rewrite orb_true_r /= in Hes. rewrite Hes /=.
-    destruct pe=>/= //. by rewrite persistently_plainly.
-  - rewrite (envs_clear_spatial_sound Δ') /= /envs_clear_spatial Hep.
-    destruct Δ as [Δ ?]. simpl in Hes. subst. simpl.
-    rewrite -(sep_elim_l (bi_persistently _)). f_equiv.
-    rewrite {1}(env_spatial_is_nil_affinely_persistently (Envs Δ Enil)) //.
-    by rewrite affinely_elim.
-  - destruct Δ, Δ'; simpl in *. by subst.
+  intros ? [HΓ Hwf Hdom]; split; simpl.
+  - intros HC ?. by rewrite {1}(HC P) // HΓ // always_modality_sep.
+  - inversion 1; constructor; auto.
+  - intros j. destruct (ident_beq _ _); naive_solver.
+Qed.
+
+Global Instance filter_spatial_env_snoc_not M (C : PROP → Prop) Γ Γ' i P :
+  FilterSpatialEnv M C Γ Γ' →
+  FilterSpatialEnv M C (Esnoc Γ i P) Γ' | 100.
+Proof.
+  intros [HΓ Hwf Hdom]; split; simpl.
+  - intros HC ?. by rewrite HΓ // sep_elim_r.
+  - inversion 1; auto.
+  - intros j. destruct (ident_beq _ _); naive_solver.
+Qed.
+
+Ltac tac_always_cases :=
+  simplify_eq/=;
+  repeat match goal with
+  | H : TCAnd _ _ |- _ => destruct H
+  | H : TCEq ?x _ |- _ => inversion H; subst x; clear H
+  | H : TCForall _ _ |- _ => apply TCForall_Forall in H
+  | H : FilterPersistentEnv _ _ _ _ |- _ => destruct H
+  | H : FilterSpatialEnv _ _ _ _ |- _ => destruct H
+  end; simpl; auto using Enil_wf.
+
+Lemma tac_always_intro Γp Γs Γp' Γs' M Q Q' :
+  FromAlways M Q' Q →
+  match always_modality_persistent_spec M with
+  | AIEnvForall C => TCAnd (TCForall C (env_to_list Γp)) (TCEq Γp Γp')
+  | AIEnvFilter C => FilterPersistentEnv M C Γp Γp'
+  | AIEnvIsEmpty => TCAnd (TCEq Γp Enil) (TCEq Γp' Enil)
+  | AIEnvClear => TCEq Γp' Enil
+  | AIEnvId => TCEq Γp Γp'
+  end →
+  match always_modality_spatial_spec M with
+  | AIEnvForall C => TCAnd (TCForall C (env_to_list Γs)) (TCEq Γs Γs')
+  | AIEnvFilter C => FilterSpatialEnv M C Γs Γs'
+  | AIEnvIsEmpty => TCAnd (TCEq Γs Enil) (TCEq Γs' Enil)
+  | AIEnvClear => TCEq Γs' Enil
+  | AIEnvId => TCEq Γs Γs'
+  end →
+  envs_entails (Envs Γp' Γs') Q → envs_entails (Envs Γp Γs) Q'.
+Proof.
+  rewrite /envs_entails /FromAlways /of_envs /= => <- HΓp HΓs <-.
+  apply pure_elim_l=> -[???]. assert (envs_wf (Envs Γp' Γs')).
+  { split; simpl in *.
+    - destruct (always_modality_persistent_spec M); tac_always_cases.
+    - destruct (always_modality_spatial_spec M); tac_always_cases.
+    - destruct (always_modality_persistent_spec M),
+        (always_modality_spatial_spec M); tac_always_cases; naive_solver. }
+  rewrite pure_True // left_id. rewrite -always_modality_sep. apply sep_mono.
+  - destruct (always_modality_persistent_spec M) eqn:?; tac_always_cases.
+    + by rewrite {1}affinely_elim_emp (always_modality_emp M)
+        persistently_True_emp affinely_persistently_emp.
+    + eauto using always_modality_persistent_forall_big_and.
+    + eauto using always_modality_persistent_filter.
+    + by rewrite {1}affinely_elim_emp (always_modality_emp M)
+        persistently_True_emp affinely_persistently_emp.
+    + eauto using always_modality_persistent_id.
+  - destruct (always_modality_spatial_spec M) eqn:?; tac_always_cases.
+    + by rewrite -always_modality_emp.
+    + eauto using always_modality_spatial_forall_big_sep.
+    + eauto using always_modality_spatial_filter,
+        always_modality_spatial_filter_absorbing.
+    + rewrite -(always_modality_spatial_clear M) // -always_modality_emp.
+      by rewrite -absorbingly_True_emp absorbingly_pure -True_intro.
+    + by destruct (always_modality_spatial_id M).
 Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :
