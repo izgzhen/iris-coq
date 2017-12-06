@@ -76,7 +76,7 @@ Next Obligation.
   by rewrite Hy Hx assoc.
 Qed.
 Next Obligation.
-  intros M P Q n1 n2 x (x1&x2&Hx&?&?) ?; rewrite {1}(dist_le _ _ _ _ Hx) // =>?.
+  intros M P Q n1 n2 x (x1&x2&Hx&?&?) ?.
   exists x1, x2; ofe_subst; split_and!;
     eauto using dist_le, uPred_closed, cmra_validN_op_l, cmra_validN_op_r.
 Qed.

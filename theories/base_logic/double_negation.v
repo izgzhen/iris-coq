@@ -194,7 +194,6 @@ Lemma nnupd_nnupd_k_dist k P: (|=n=> P)%I ≡{k}≡ (|=n=>_k P)%I.
                   eapply laterN_big; eauto. unseal.
                   eapply (Hnnupdk n k); first omega; eauto.
                   exists x, x'. split_and!; eauto. eapply uPred_closed; eauto.
-                  eapply cmra_validN_op_l; eauto.
       ** intros HP. eapply IHk; auto.
          move:HP. unseal. intros (?&?); naive_solver.
 Qed.
@@ -234,7 +233,7 @@ Proof.
     apply and_intro.
     * rewrite (nnupd_k_unfold k P). rewrite and_elim_l.
       rewrite nnupd_k_unfold. rewrite and_elim_l.
-      apply wand_intro_l. 
+      apply wand_intro_l.
       rewrite {1}(nnupd_k_intro (S k) (P -∗ ▷^(S k) (False)%I)).
       rewrite nnupd_k_unfold and_elim_l. apply wand_elim_r.
     * do 2 rewrite nnupd_k_weaken //.
