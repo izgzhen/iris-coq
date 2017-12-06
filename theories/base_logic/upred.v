@@ -29,7 +29,7 @@ Section cofe.
 
   (* A good way of understanding this defintion of the uPred OFE is to
      consider the OFE uPred0 of monotonous SProp predicates. That is,
-     uPred0 is the OFE of non-expanding functions from M to SProp that
+     uPred0 is the OFE of non-expansive functions from M to SProp that
      are monotonous with respect to CMRA inclusion. This notion of
      monotonicity has to be stated in the SProp logic. It is exactly
      uPred_mono.
