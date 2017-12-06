@@ -11,11 +11,11 @@ Structure bi_index :=
 Existing Instances bi_index_rel bi_index_rel_preorder.
 
 Section Ofe_Cofe.
-Context {I : bi_index} {B : bi}.
+Context {I : bi_index} {PROP : bi}.
 Implicit Types i : I.
 
 Record monPred :=
-  MonPred { monPred_car :> I -> B;
+  MonPred { monPred_car :> I → PROP;
             monPred_mono : Proper ((⊑) ==> (⊢)) monPred_car }.
 Local Existing Instance monPred_mono.
 
@@ -31,10 +31,10 @@ Section Ofe_Cofe_def.
     { monPred_in_dist i : P i ≡{n}≡ Q i }.
   Instance monPred_dist : Dist monPred := monPred_dist'.
 
-  Definition monPred_sig P : { f : I -c> B | Proper ((⊑) ==> (⊢)) f } :=
+  Definition monPred_sig P : { f : I -c> PROP | Proper ((⊑) ==> (⊢)) f } :=
     exist _ (monPred_car P) (monPred_mono P).
 
-  Definition sig_monPred (P' : { f : I -c> B | Proper ((⊑) ==> (⊢)) f })
+  Definition sig_monPred (P' : { f : I -c> PROP | Proper ((⊑) ==> (⊢)) f })
     : monPred :=
     MonPred (proj1_sig P') (proj2_sig P').
 
@@ -53,16 +53,16 @@ Section Ofe_Cofe_def.
 
   Canonical Structure monPred_ofe := OfeT monPred monPred_ofe_mixin.
 
-  Global Instance monPred_cofe `{Cofe B} : Cofe monPred_ofe.
+  Global Instance monPred_cofe `{Cofe PROP} : Cofe monPred_ofe.
   Proof.
-    unshelve refine (iso_cofe_subtype (A:=I-c>B) _ MonPred monPred_car _ _ _);
+    unshelve refine (iso_cofe_subtype (A:=I-c>PROP) _ MonPred monPred_car _ _ _);
       [apply _|by apply monPred_sig_dist|done|].
     intros c i j Hij. apply @limit_preserving;
       [by apply bi.limit_preserving_entails; intros ??|]=>n. by rewrite Hij.
   Qed.
 End Ofe_Cofe_def.
 
-Lemma monPred_sig_monPred (P' : { f : I -c> B | Proper ((⊑) ==> (⊢)) f }) :
+Lemma monPred_sig_monPred (P' : { f : I -c> PROP | Proper ((⊑) ==> (⊢)) f }) :
   monPred_sig (sig_monPred P') ≡ P'.
 Proof. by change (P' ≡ P'). Qed.
 Lemma sig_monPred_sig P : sig_monPred (monPred_sig P) ≡ P.
@@ -102,22 +102,22 @@ Arguments monPred_ofe _ _ : clear implicits.
 (** BI and SBI structures. *)
 
 Section Bi.
-Context {I : bi_index} {B : bi}.
+Context {I : bi_index} {PROP : bi}.
 Implicit Types i : I.
-Notation monPred := (monPred I B).
+Notation monPred := (monPred I PROP).
 Implicit Types P Q : monPred.
 
 Inductive monPred_entails (P1 P2 : monPred) : Prop :=
   { monPred_in_entails i : P1 i ⊢ P2 i }.
 Hint Immediate monPred_in_entails.
 
-Program Definition monPred_upclosed (Φ : I → B) : monPred :=
+Program Definition monPred_upclosed (Φ : I → PROP) : monPred :=
   MonPred (λ i, (∀ j, ⌜i ⊑ j⌝ → Φ j)%I) _.
 Next Obligation. solve_proper. Qed.
 
-Definition monPred_ipure_def (P : B) : monPred := MonPred (λ _, P) _.
+Definition monPred_ipure_def (P : PROP) : monPred := MonPred (λ _, P) _.
 Definition monPred_ipure_aux : seal (@monPred_ipure_def). by eexists. Qed.
-Global Instance monPred_ipure : BiEmbedding B monPred := unseal monPred_ipure_aux.
+Global Instance monPred_ipure : BiEmbedding PROP monPred := unseal monPred_ipure_aux.
 Definition monPred_ipure_eq : bi_embedding = _ := seal_eq _.
 
 Definition monPred_pure (φ : Prop) : monPred := ⎡⌜φ⌝⎤%I.
@@ -201,12 +201,12 @@ End Bi.
 
 Typeclasses Opaque monPred_pure monPred_emp monPred_plainly.
 
-Program Definition monPred_later_def {I : bi_index} {B : sbi}
-        (P : monPred I B) : monPred I B := MonPred (λ i, ▷ (P i))%I _.
+Program Definition monPred_later_def {I : bi_index} {PROP : sbi}
+        (P : monPred I PROP) : monPred I PROP := MonPred (λ i, ▷ (P i))%I _.
 Next Obligation. solve_proper. Qed.
-Definition monPred_later_aux {I B} : seal (@monPred_later_def I B). by eexists. Qed.
-Definition monPred_later {I B} := unseal (@monPred_later_aux I B).
-Definition monPred_later_eq {I B} : @monPred_later I B = _ := seal_eq _.
+Definition monPred_later_aux {I PROP} : seal (@monPred_later_def I PROP). by eexists. Qed.
+Definition monPred_later {I PROP} := unseal (@monPred_later_aux I PROP).
+Definition monPred_later_eq {I PROP} : @monPred_later I PROP = _ := seal_eq _.
 
 Definition unseal_eqs :=
   (@monPred_and_eq, @monPred_or_eq, @monPred_impl_eq,
@@ -226,9 +226,9 @@ Ltac unseal :=
   rewrite !unseal_eqs /=.
 
 Section canonical_bi.
-Context (I : bi_index) (B : bi).
+Context (I : bi_index) (PROP : bi).
 
-Lemma monPred_bi_mixin : BiMixin (@monPred_ofe_mixin I B)
+Lemma monPred_bi_mixin : BiMixin (@monPred_ofe_mixin I PROP)
   monPred_entails monPred_emp monPred_pure monPred_and monPred_or
   monPred_impl monPred_forall monPred_exist monPred_internal_eq
   monPred_sep monPred_wand monPred_plainly monPred_persistently.
@@ -310,17 +310,17 @@ Proof.
 Qed.
 
 Canonical Structure monPredI : bi :=
-  Bi (monPred I B) monPred_dist monPred_equiv monPred_entails monPred_emp
+  Bi (monPred I PROP) monPred_dist monPred_equiv monPred_entails monPred_emp
      monPred_pure monPred_and monPred_or monPred_impl monPred_forall
      monPred_exist monPred_internal_eq monPred_sep monPred_wand monPred_plainly
      monPred_persistently monPred_ofe_mixin monPred_bi_mixin.
 End canonical_bi.
 
 Section canonical_sbi.
-Context (I : bi_index) (B : sbi).
+Context (I : bi_index) (PROP : sbi).
 
 Lemma monPred_sbi_mixin :
-  SbiMixin (PROP:=monPred I B) monPred_entails monPred_pure monPred_or
+  SbiMixin (PROP:=monPred I PROP) monPred_entails monPred_pure monPred_or
            monPred_impl monPred_forall monPred_exist monPred_internal_eq
            monPred_sep monPred_plainly monPred_persistently monPred_later.
 Proof.
@@ -347,7 +347,7 @@ Proof.
 Qed.
 
 Canonical Structure monPredSI : sbi :=
-  Sbi (monPred I B) monPred_dist monPred_equiv monPred_entails monPred_emp
+  Sbi (monPred I PROP) monPred_dist monPred_equiv monPred_entails monPred_emp
       monPred_pure monPred_and monPred_or monPred_impl monPred_forall
       monPred_exist monPred_internal_eq monPred_sep monPred_wand monPred_plainly
       monPred_persistently monPred_later monPred_ofe_mixin
@@ -357,59 +357,59 @@ End canonical_sbi.
 (** Primitive facts that cannot be deduced from the BI structure. *)
 
 Section bi_facts.
-Context {I : bi_index} {B : bi}.
+Context {I : bi_index} {PROP : bi}.
 Implicit Types i : I.
-Implicit Types P Q : monPred I B.
+Implicit Types P Q : monPred I PROP.
 
 Global Instance monPred_car_mono :
-  Proper ((⊢) ==> (⊑) ==> (⊢)) (@monPred_car I B).
+  Proper ((⊢) ==> (⊑) ==> (⊢)) (@monPred_car I PROP).
 Proof. by move=> ?? [?] ?? ->. Qed.
 Global Instance monPred_car_mono_flip :
-  Proper (flip (⊢) ==> flip (⊑) ==> flip (⊢)) (@monPred_car I B).
+  Proper (flip (⊢) ==> flip (⊑) ==> flip (⊢)) (@monPred_car I PROP).
 Proof. solve_proper. Qed.
 
 Global Instance monPred_ipure_ne :
-  NonExpansive (@bi_embedding B (monPred I B) _).
+  NonExpansive (@bi_embedding PROP (monPred I PROP) _).
 Proof. unseal. by split. Qed.
 Global Instance monPred_ipure_proper :
-  Proper ((≡) ==> (≡)) (@bi_embedding B (monPred I B) _).
+  Proper ((≡) ==> (≡)) (@bi_embedding PROP (monPred I PROP) _).
 Proof. apply (ne_proper _). Qed.
 Global Instance monPred_ipure_mono :
-  Proper ((⊢) ==> (⊢)) (@bi_embedding B (monPred I B) _).
+  Proper ((⊢) ==> (⊢)) (@bi_embedding PROP (monPred I PROP) _).
 Proof. unseal. by split. Qed.
 Global Instance monPred_ipure_mono_flip :
-  Proper (flip (⊢) ==> flip (⊢)) (@bi_embedding B (monPred I B) _).
+  Proper (flip (⊢) ==> flip (⊢)) (@bi_embedding PROP (monPred I PROP) _).
 Proof. solve_proper. Qed.
 
 Global Instance monPred_in_proper (R : relation I) :
   Proper (R ==> R ==> iff) (⊑) → Reflexive R →
-  Proper (R ==> (≡)) (@monPred_in I B).
+  Proper (R ==> (≡)) (@monPred_in I PROP).
 Proof. unseal. split. solve_proper. Qed.
-Global Instance monPred_in_mono : Proper (flip (⊑) ==> (⊢)) (@monPred_in I B).
+Global Instance monPred_in_mono : Proper (flip (⊑) ==> (⊢)) (@monPred_in I PROP).
 Proof. unseal. split. solve_proper. Qed.
-Global Instance monPred_in_mono_flip : Proper ((⊑) ==> flip (⊢)) (@monPred_in I B).
+Global Instance monPred_in_mono_flip : Proper ((⊑) ==> flip (⊢)) (@monPred_in I PROP).
 Proof. solve_proper. Qed.
 
-Global Instance monPred_all_ne : NonExpansive (@monPred_all I B).
+Global Instance monPred_all_ne : NonExpansive (@monPred_all I PROP).
 Proof. unseal. split. solve_proper. Qed.
-Global Instance monPred_all_proper : Proper ((≡) ==> (≡)) (@monPred_all I B).
+Global Instance monPred_all_proper : Proper ((≡) ==> (≡)) (@monPred_all I PROP).
 Proof. apply (ne_proper _). Qed.
-Global Instance monPred_all_mono : Proper ((⊢) ==> (⊢)) (@monPred_all I B).
+Global Instance monPred_all_mono : Proper ((⊢) ==> (⊢)) (@monPred_all I PROP).
 Proof. unseal. split. solve_proper. Qed.
 Global Instance monPred_all_mono_flip :
-  Proper (flip (⊢) ==> flip (⊢)) (@monPred_all I B).
+  Proper (flip (⊢) ==> flip (⊢)) (@monPred_all I PROP).
 Proof. solve_proper. Qed.
 
-Global Instance monPred_positive : BiPositive B → BiPositive (monPredI I B).
+Global Instance monPred_positive : BiPositive PROP → BiPositive (monPredI I PROP).
 Proof. split => ?. unseal. apply bi_positive. Qed.
-Global Instance monPred_affine : BiAffine B → BiAffine (monPredI I B).
+Global Instance monPred_affine : BiAffine PROP → BiAffine (monPredI I PROP).
 Proof. split => ?. unseal. by apply affine. Qed.
 
 (* (∀ x, bottom ⊑ x) cannot be infered using typeclasses. So this is
   not an instance. One should explicitely make an instance from this
   lemma for each instantiation of monPred. *)
 Lemma monPred_plainly_exist (bottom : I) :
-  (∀ x, bottom ⊑ x) → BiPlainlyExist B → BiPlainlyExist (monPredI I B).
+  (∀ x, bottom ⊑ x) → BiPlainlyExist PROP → BiPlainlyExist (monPredI I PROP).
 Proof.
   intros ????. unseal. split=>? /=.
   rewrite (bi.forall_elim bottom) plainly_exist_1. do 2 f_equiv.
@@ -439,48 +439,48 @@ Proof. move => [] /(_ i). unfold Absorbing. by unseal. Qed.
 Global Instance monPred_car_affine P i : Affine P → Affine (P i).
 Proof. move => [] /(_ i). unfold Affine. by unseal. Qed.
 
-Global Instance monPred_ipure_plain (P : B) :
-  Plain P → @Plain (monPredI I B) ⎡P⎤%I.
+Global Instance monPred_ipure_plain (P : PROP) :
+  Plain P → @Plain (monPredI I PROP) ⎡P⎤%I.
 Proof. split => ? /=. unseal. apply bi.forall_intro=>?. apply (plain _). Qed.
-Global Instance monPred_ipure_persistent (P : B) :
-  Persistent P → @Persistent (monPredI I B) ⎡P⎤%I.
+Global Instance monPred_ipure_persistent (P : PROP) :
+  Persistent P → @Persistent (monPredI I PROP) ⎡P⎤%I.
 Proof. split => ? /=. unseal. exact: H. Qed.
-Global Instance monPred_ipure_absorbing (P : B) :
-  Absorbing P → @Absorbing (monPredI I B) ⎡P⎤%I.
+Global Instance monPred_ipure_absorbing (P : PROP) :
+  Absorbing P → @Absorbing (monPredI I PROP) ⎡P⎤%I.
 Proof. unfold Absorbing. split => ? /=. by unseal. Qed.
-Global Instance monPred_ipure_affine (P : B) :
-  Affine P → @Affine (monPredI I B) ⎡P⎤%I.
+Global Instance monPred_ipure_affine (P : PROP) :
+  Affine P → @Affine (monPredI I PROP) ⎡P⎤%I.
 Proof. unfold Affine. split => ? /=. by unseal. Qed.
 
 (* Note that monPred_in is *not* Plain, because it does depend on the
    index. *)
 Global Instance monPred_in_persistent V :
-  Persistent (@monPred_in I B V).
+  Persistent (@monPred_in I PROP V).
 Proof. unfold Persistent. unseal; split => ?. by apply bi.pure_persistent. Qed.
 Global Instance monPred_in_absorbing V :
-  Absorbing (@monPred_in I B V).
+  Absorbing (@monPred_in I PROP V).
 Proof. unfold Absorbing. unseal. split=> ? /=. apply absorbing, _. Qed.
 
-Global Instance monPred_all_plain P : Plain P → Plain (@monPred_all I B P).
+Global Instance monPred_all_plain P : Plain P → Plain (@monPred_all I PROP P).
 Proof.
   move=>[]. unfold Plain. unseal=>Hp. split=>? /=.
   apply bi.forall_intro=>i. rewrite {1}(bi.forall_elim i) Hp.
   by rewrite bi.plainly_forall.
 Qed.
 Global Instance monPred_all_persistent P :
-  Persistent P → Persistent (@monPred_all I B P).
+  Persistent P → Persistent (@monPred_all I PROP P).
 Proof.
   move=>[]. unfold Persistent. unseal=>Hp. split => ?.
   by apply persistent, bi.forall_persistent.
 Qed.
 Global Instance monPred_all_absorbing P :
-  Absorbing P → Absorbing (@monPred_all I B P).
+  Absorbing P → Absorbing (@monPred_all I PROP P).
 Proof.
   move=>[]. unfold Absorbing. unseal=>Hp. split => ?.
   by apply absorbing, bi.forall_absorbing.
 Qed.
 Global Instance monPred_all_affine P :
-  Inhabited I → Affine P → Affine (@monPred_all I B P).
+  Inhabited I → Affine P → Affine (@monPred_all I PROP P).
 Proof.
   move=>? []. unfold Affine. unseal=>Hp. split => ?.
   by apply affine, bi.forall_affine.
@@ -488,19 +488,19 @@ Qed.
 End bi_facts.
 
 Section sbi_facts.
-Context {I : bi_index} {B : sbi}.
+Context {I : bi_index} {PROP : sbi}.
 Implicit Types i : I.
-Implicit Types P Q : monPred I B.
+Implicit Types P Q : monPred I PROP.
 
 Global Instance monPred_car_timeless P i : Timeless P → Timeless (P i).
 Proof. move => [] /(_ i). unfold Timeless. by unseal. Qed.
-Global Instance monPred_ipure_timeless (P : B) :
-  Timeless P → @Timeless (monPredSI I B) ⎡P⎤%I.
+Global Instance monPred_ipure_timeless (P : PROP) :
+  Timeless P → @Timeless (monPredSI I PROP) ⎡P⎤%I.
 Proof. intros. split => ? /=. unseal. exact: H. Qed.
-Global Instance monPred_in_timeless V : Timeless (@monPred_in I B V).
+Global Instance monPred_in_timeless V : Timeless (@monPred_in I PROP V).
 Proof. split => ? /=. unseal. apply timeless, _. Qed.
 Global Instance monPred_all_timeless P :
-  Timeless P → Timeless (@monPred_all I B P).
+  Timeless P → Timeless (@monPred_all I PROP P).
 Proof.
   move=>[]. unfold Timeless. unseal=>Hti. split=> ? /=.
   by apply timeless, bi.forall_timeless.

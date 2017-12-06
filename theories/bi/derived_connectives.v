@@ -114,11 +114,3 @@ Arguments Timeless {_} _%I : simpl never.
 Arguments timeless {_} _%I {_}.
 Hint Mode Timeless + ! : typeclass_instances.
 Instance: Params (@Timeless) 1.
-
-(* Typically, embeddings are used to *define* the destination BI.
-   Hence we cannot ask B to be a BI. *)
-Class BiEmbedding (A B : Type) := bi_embedding : A → B.
-Arguments bi_embedding {_ _ _} _%I : simpl never.
-Notation "⎡ P ⎤" := (bi_embedding P) : bi_scope.
-Instance: Params (@bi_embedding) 3.
-Typeclasses Opaque bi_embedding.
