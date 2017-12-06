@@ -337,6 +337,25 @@ Notation "⎡ P ⎤" := (bi_embedding P) : bi_scope.
 Instance: Params (@bi_embedding) 3.
 Typeclasses Opaque bi_embedding.
 
+Class BiMorphism {PROP1 PROP2 : bi} (mor : PROP1 → PROP2) := {
+  bi_mor_ne :> NonExpansive mor;
+  bi_mor_mono :> Proper ((⊢) ==> (⊢)) mor;
+  bi_mor_emp : mor emp ⊣⊢ emp;
+  bi_mor_impl_2 P Q : (mor P → mor Q)%I ⊢ mor (P → Q)%I;
+  bi_mor_forall_2 A Φ : (∀ x, mor (Φ x)) ⊢ mor (@bi_forall _ A Φ);
+  bi_mor_exist_1 A Φ : mor (@bi_exist _ A Φ) ⊢ ∃ x, mor (Φ x);
+  bi_mor_internal_eq_1 (A : ofeT) (x y : A) : mor (x ≡ y) ⊢ (x ≡ y);
+  bi_mor_sep P Q : mor (P ∗ Q) ⊣⊢ (mor P ∗ mor Q);
+  bi_mor_wand_2 P Q : (mor P -∗ mor Q) ⊢ mor (P -∗ Q);
+  bi_mor_plainly P : mor (bi_plainly P) ⊣⊢ bi_plainly (mor P);
+  bi_mor_persistently P : mor (bi_persistently P) ⊣⊢ bi_persistently (mor P)
+}.
+
+Class SbiMorphism {PROP1 PROP2 : sbi} (mor : PROP1 → PROP2) := {
+  sbi_mor_bi_mor :> BiMorphism mor;
+  sbi_mor_later P : mor (▷ P) ⊣⊢ ▷ mor P
+}.
+
 Module bi.
 Section bi_laws.
 Context {PROP : bi}.

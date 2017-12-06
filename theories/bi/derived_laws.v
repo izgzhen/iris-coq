@@ -2296,3 +2296,99 @@ To avoid that, we declare it using a [Hint Immediate], so that it will
 only be used at the leaves of the proof search tree, i.e. when the
 premise of the hint can be derived from just the current context. *)
 Hint Immediate bi.plain_persistent : typeclass_instances.
+
+(* BI morphisms *)
+Section bi_morphims.
+  Context `{@BiMorphism PROP1 PROP2 mor}.
+
+  Global Instance bi_mor_proper : Proper ((≡) ==> (≡)) mor.
+  Proof. apply (ne_proper _). Qed.
+  Global Instance bi_mor_mono_flip : Proper (flip (⊢) ==> flip (⊢)) mor.
+  Proof. solve_proper. Qed.
+
+  Lemma bi_mor_forall A Φ : mor (@bi_forall _ A Φ) ⊣⊢ (∀ x, mor (Φ x)).
+  Proof.
+    apply bi.equiv_spec; split; [|apply bi_mor_forall_2].
+    apply bi.forall_intro=>?. by rewrite bi.forall_elim.
+  Qed.
+  Lemma bi_mor_exist A Φ : mor (@bi_exist _ A Φ) ⊣⊢ (∃ x, mor (Φ x)).
+  Proof.
+    apply bi.equiv_spec; split; [apply bi_mor_exist_1|].
+    apply bi.exist_elim=>?. by rewrite -bi.exist_intro.
+  Qed.
+  Lemma bi_mor_and P Q : mor (P ∧ Q) ⊣⊢ mor P ∧ mor Q.
+  Proof. rewrite !bi.and_alt bi_mor_forall. by f_equiv=>-[]. Qed.
+  Lemma bi_mor_or P Q : mor (P ∨ Q) ⊣⊢ mor P ∨ mor Q.
+  Proof. rewrite !bi.or_alt bi_mor_exist. by f_equiv=>-[]. Qed.
+  Lemma bi_mor_impl P Q : mor (P → Q) ⊣⊢ (mor P → mor Q).
+  Proof.
+    apply bi.equiv_spec; split; [|apply bi_mor_impl_2].
+    apply bi.impl_intro_l. by rewrite -bi_mor_and bi.impl_elim_r.
+  Qed.
+  Lemma bi_mor_wand P Q : mor (P -∗ Q) ⊣⊢ (mor P -∗ mor Q).
+  Proof.
+    apply bi.equiv_spec; split; [|apply bi_mor_wand_2].
+    apply bi.wand_intro_l. by rewrite -bi_mor_sep bi.wand_elim_r.
+  Qed.
+  Lemma bi_mor_pure φ : mor ⌜φ⌝ ⊣⊢ ⌜φ⌝.
+  Proof.
+    rewrite (@bi.pure_alt PROP1) (@bi.pure_alt PROP2) bi_mor_exist.
+    do 2 f_equiv. apply bi.equiv_spec. split; [apply bi.True_intro|].
+    rewrite -(_ : (emp → emp : PROP1) ⊢ True) ?bi_mor_impl;
+      last apply bi.True_intro.
+    apply bi.impl_intro_l. by rewrite right_id.
+  Qed.
+  Lemma bi_mor_internal_eq (A : ofeT) (x y : A) : mor (x ≡ y) ⊣⊢ (x ≡ y).
+  Proof.
+    apply bi.equiv_spec; split; [apply bi_mor_internal_eq_1|].
+    rewrite (bi.internal_eq_rewrite x y (λ y, mor (x ≡ y)%I) _); [|solve_proper].
+    rewrite -(bi.internal_eq_refl True%I) bi_mor_pure.
+    eapply bi.impl_elim; [done|]. apply bi.True_intro.
+  Qed.
+  Lemma bi_mor_iff P Q : mor (P ↔ Q) ⊣⊢ (mor P ↔ mor Q).
+  Proof. by rewrite bi_mor_and !bi_mor_impl. Qed.
+  Lemma bi_mor_wand_iff P Q : mor (P ∗-∗ Q) ⊣⊢ (mor P ∗-∗ mor Q).
+  Proof. by rewrite bi_mor_and !bi_mor_wand. Qed.
+  Lemma bi_mor_affinely P : mor (bi_affinely P) ⊣⊢ bi_affinely (mor P).
+  Proof. by rewrite bi_mor_and bi_mor_emp. Qed.
+  Lemma bi_mor_absorbingly P : mor (bi_absorbingly P) ⊣⊢ bi_absorbingly (mor P).
+  Proof. by rewrite bi_mor_sep bi_mor_pure. Qed.
+  Lemma bi_mor_plainly_if P b :
+    mor (bi_plainly_if b P) ⊣⊢ bi_plainly_if b (mor P).
+  Proof. destruct b; auto using bi_mor_plainly. Qed.
+  Lemma bi_mor_persistently_if P b :
+    mor (bi_persistently_if b P) ⊣⊢ bi_persistently_if b (mor P).
+  Proof. destruct b; auto using bi_mor_persistently. Qed.
+  Lemma bi_mor_affinely_if P b :
+    mor (bi_affinely_if b P) ⊣⊢ bi_affinely_if b (mor P).
+  Proof. destruct b; simpl; auto using bi_mor_affinely. Qed.
+  Lemma bi_mor_hforall {As} (Φ : himpl As PROP1):
+    mor (bi_hforall Φ) ⊣⊢ bi_hforall (hcompose mor Φ).
+  Proof. induction As=>//. rewrite /= bi_mor_forall. by do 2 f_equiv. Qed.
+  Lemma bi_mor_hexist {As} (Φ : himpl As PROP1):
+    mor (bi_hexist Φ) ⊣⊢ bi_hexist (hcompose mor Φ).
+  Proof. induction As=>//. rewrite /= bi_mor_exist. by do 2 f_equiv. Qed.
+
+  Global Instance bi_mor_plain P : Plain P → Plain (mor P).
+  Proof. intros ?. by rewrite /Plain -bi_mor_plainly -plain. Qed.
+  Global Instance bi_mor_persistent P : Persistent P → Persistent (mor P).
+  Proof. intros ?. by rewrite /Persistent -bi_mor_persistently -persistent. Qed.
+  Global Instance bi_mor_affine P : Affine P → Affine (mor P).
+  Proof. intros ?. by rewrite /Affine (affine P) bi_mor_emp. Qed.
+  Global Instance bi_mor_absorbing P : Absorbing P → Absorbing (mor P).
+  Proof. intros ?. by rewrite /Absorbing -bi_mor_absorbingly absorbing. Qed.
+End bi_morphims.
+
+Section sbi_morphims.
+  Context `{@SbiMorphism PROP1 PROP2 mor}.
+
+  Lemma sbi_mor_laterN n P : mor (▷^n P) ⊣⊢ ▷^n (mor P).
+  Proof. induction n=>//=. rewrite sbi_mor_later. by f_equiv. Qed.
+  Lemma sbi_mor_except_0 P : mor (◇ P) ⊣⊢ ◇ (mor P).
+  Proof. by rewrite bi_mor_or sbi_mor_later bi_mor_pure. Qed.
+
+  Global Instance sbi_mor_timeless P : Timeless P → Timeless (mor P).
+  Proof.
+    intros ?. by rewrite /Timeless -sbi_mor_except_0 -sbi_mor_later timeless.
+  Qed.
+End sbi_morphims.

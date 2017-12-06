@@ -372,19 +372,6 @@ Global Instance monPred_car_mono_flip :
   Proper (flip (⊢) ==> flip (⊑) ==> flip (⊢)) (@monPred_car I PROP).
 Proof. solve_proper. Qed.
 
-Global Instance monPred_ipure_ne :
-  NonExpansive (@bi_embedding PROP (monPred I PROP) _).
-Proof. unseal. by split. Qed.
-Global Instance monPred_ipure_proper :
-  Proper ((≡) ==> (≡)) (@bi_embedding PROP (monPred I PROP) _).
-Proof. apply (ne_proper _). Qed.
-Global Instance monPred_ipure_mono :
-  Proper ((⊢) ==> (⊢)) (@bi_embedding PROP (monPred I PROP) _).
-Proof. unseal. by split. Qed.
-Global Instance monPred_ipure_mono_flip :
-  Proper (flip (⊢) ==> flip (⊢)) (@bi_embedding PROP (monPred I PROP) _).
-Proof. solve_proper. Qed.
-
 Global Instance monPred_in_proper (R : relation I) :
   Proper (R ==> R ==> iff) (⊑) → Reflexive R →
   Proper (R ==> (≡)) (@monPred_in I PROP).
@@ -443,19 +430,6 @@ Proof. move => [] /(_ i). unfold Absorbing. by unseal. Qed.
 Global Instance monPred_car_affine P i : Affine P → Affine (P i).
 Proof. move => [] /(_ i). unfold Affine. by unseal. Qed.
 
-Global Instance monPred_ipure_plain (P : PROP) :
-  Plain P → @Plain (monPredI I PROP) ⎡P⎤%I.
-Proof. split => ? /=. unseal. apply bi.forall_intro=>?. apply (plain _). Qed.
-Global Instance monPred_ipure_persistent (P : PROP) :
-  Persistent P → @Persistent (monPredI I PROP) ⎡P⎤%I.
-Proof. split => ? /=. unseal. exact: H. Qed.
-Global Instance monPred_ipure_absorbing (P : PROP) :
-  Absorbing P → @Absorbing (monPredI I PROP) ⎡P⎤%I.
-Proof. unfold Absorbing. split => ? /=. by unseal. Qed.
-Global Instance monPred_ipure_affine (P : PROP) :
-  Affine P → @Affine (monPredI I PROP) ⎡P⎤%I.
-Proof. unfold Affine. split => ? /=. by unseal. Qed.
-
 (* Note that monPred_in is *not* Plain, because it does depend on the
    index. *)
 Global Instance monPred_in_persistent V :
@@ -489,6 +463,18 @@ Proof.
   move=> []. unfold Affine. unseal=>Hp. split => ?.
   by apply affine, bi.forall_affine.
 Qed.
+
+Global Instance monPred_ipure_bi_mor :
+  @BiMorphism PROP (monPredI I PROP) bi_embedding.
+Proof.
+  split; try apply _; unseal; try done.
+  - split=>? /=.
+    by rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim.
+  - split=>? /=.
+    by rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim.
+  - intros ?. split => ? /=. apply bi.equiv_spec; split.
+    by apply bi.forall_intro. by rewrite bi.forall_elim.
+Qed.
 End bi_facts.
 
 Section sbi_facts.
@@ -509,4 +495,8 @@ Proof.
   move=>[]. unfold Timeless. unseal=>Hti. split=> ? /=.
   by apply timeless, bi.forall_timeless.
 Qed.
+
+Global Instance monPred_ipure_sbi_mor :
+  @SbiMorphism PROP (monPredSI I PROP) bi_embedding.
+Proof. split; try apply _. by unseal. Qed.
 End sbi_facts.
