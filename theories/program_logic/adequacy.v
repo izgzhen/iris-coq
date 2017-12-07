@@ -37,7 +37,7 @@ Qed.
 Record adequate {Λ} (s : stuckness) (e1 : expr Λ) (σ1 : state Λ) (φ : val Λ → Prop) := {
   adequate_result t2 σ2 v2 :
    rtc step ([e1], σ1) (of_val v2 :: t2, σ2) → φ v2;
-  adequate_safe t2 σ2 e2 :
+  adequate_not_stuck t2 σ2 e2 :
    s = NotStuck →
    rtc step ([e1], σ1) (t2, σ2) →
    e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2)
@@ -51,7 +51,7 @@ Proof.
   intros Had ?.
   destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
   apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
-  destruct (adequate_safe NotStuck e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&efs&?)];
+  destruct (adequate_not_stuck NotStuck e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&efs&?)];
     rewrite ?eq_None_not_Some; auto.
   { exfalso. eauto. }
   destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.

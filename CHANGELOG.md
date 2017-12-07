@@ -34,6 +34,7 @@ Changes in Coq:
   - Camera elements such that `core x = x`: `Persistent` -> `CoreId`
   - Persistent propositions: `PersistentP` -> `Persistent`
   - The persistent modality: `always` -> `persistently`
+  - Adequacy for non-stuck weakestpre: `adequate_safe` -> `adequate_not_stuck`
   - Consistently SnakeCase identifiers:
     + `CMRAMixin` -> `CmraMixin`
     + `CMRAT` -> `CmraT`
