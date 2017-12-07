@@ -9,9 +9,6 @@ Set Default Proof Using "Type".
 Record uPred (M : ucmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;
 
-  (* [uPred_mono] is used to prove non-expansiveness (guaranteed by
-     [uPred_ne]). Therefore, it is important that we do not restrict
-     it to only valid elements. *)
   uPred_mono n x1 x2 : uPred_holds n x1 → x1 ≼{n} x2 → uPred_holds n x2;
 
   uPred_closed n1 n2 x : uPred_holds n1 x → n2 ≤ n1 → uPred_holds n2 x
