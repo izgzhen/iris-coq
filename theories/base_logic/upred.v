@@ -23,37 +23,38 @@ Arguments uPred_holds {_} _%I _ _.
 Section cofe.
   Context {M : ucmraT}.
 
-  (* A good way of understanding this defintion of the uPred OFE is to
+  (* A good way of understanding this definition of the uPred OFE is to
      consider the OFE uPred0 of monotonous SProp predicates. That is,
      uPred0 is the OFE of non-expansive functions from M to SProp that
      are monotonous with respect to CMRA inclusion. This notion of
-     monotonicity has to be stated in the SProp logic. It is exactly
-     uPred_mono.
+     monotonicity has to be stated in the SProp logic. Together with the
+     usual closedness property of SProp, this gives exactly uPred_mono.
 
      Then, we quotient uPred0 *in the sProp logic* with respect to
      equivalence on valid elements of M. That is, we quotient with
      respect to the following *sProp* equivalence relation:
         P1 ≡ P2 := ∀ x, ✓ x → (P1(x) ↔ P2(x))       (1)
-     When seen from the ambiant logic, computing this logic require
-     redefinig both a custom Equiv and Dist.
+     When seen from the ambiant logic, obtaining this quotient requires
+     definig both a custom Equiv and Dist.
 
 
-     It is worth noting that this equivalence relation admit canonical
+     It is worth noting that this equivalence relation admits canonical
      representatives. More precisely, one can show that every
-     equivalence class contain exactly one element P0 such that:
+     equivalence class contains exactly one element P0 such that:
         ∀ x, (✓ x → P(x)) → P(x)                   (2)
      (Again, this assertion has to be understood in sProp). Starting
      from an element P of a given class, one can build this canonical
      representative by chosing:
-        P0(x) = ✓ x → P(x)                         (3)
+        P0(x) := ✓ x → P(x)                        (3)
 
      Hence, as an alternative definition of uPred, we could use the set
      of canonical representatives (i.e., the subtype of monotonous
      sProp predicates that verify (2)). This alternative definition would
      save us from using a quotient. However, the definitions of the various
      connectives would get more complicated, because we have to make sure
-     they all verify (2), which sometimes requires some adjustments. We would
-     moreover need to prove one more property for every logical connective.
+     they all verify (2), which sometimes requires some adjustments. We
+     would moreover need to prove one more property for every logical
+     connective.
    *)
 
   Inductive uPred_equiv' (P Q : uPred M) : Prop :=
