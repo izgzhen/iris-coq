@@ -162,16 +162,16 @@ Proof.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 
-Lemma tac_wp_faa Δ Δ' Δ'' E i K l i1 e2 i2 Φ :
+Lemma tac_wp_faa Δ Δ' Δ'' s E i K l i1 e2 i2 Φ :
   IntoVal e2 (LitV (LitInt i2)) →
   IntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ LitV (LitInt i1))%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ LitV (LitInt (i1 + i2)))) Δ' = Some Δ'' →
-  envs_entails Δ'' (WP fill K (Lit (LitInt i1)) @ E {{ Φ }}) →
-  envs_entails Δ (WP fill K (FAA (Lit (LitLoc l)) e2) @ E {{ Φ }}).
+  envs_entails Δ'' (WP fill K (Lit (LitInt i1)) @ s; E {{ Φ }}) →
+  envs_entails Δ (WP fill K (FAA (Lit (LitLoc l)) e2) @ s; E {{ Φ }}).
 Proof.
   rewrite /envs_entails=> ?????; subst.
-  rewrite -wp_bind. eapply wand_apply; first exact: (wp_faa _ _ i1 _ i2).
+  rewrite -wp_bind. eapply wand_apply; first exact: (wp_faa _ _ _ i1 _ i2).
   rewrite into_laterN_env_sound -later_sep envs_simple_replace_sound //; simpl.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
@@ -274,10 +274,10 @@ Tactic Notation "wp_cas_suc" :=
 Tactic Notation "wp_faa" :=
   iStartProof;
   lazymatch goal with
-  | |- envs_entails _ (wp ?E ?e ?Q) =>
+  | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_wp_faa _ _ _ _ _ K); [apply _|..])
+         eapply (tac_wp_faa _ _ _ _ _ _ K); [apply _|..])
       |fail 1 "wp_faa: cannot find 'CAS' in" e];
     [apply _
     |let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in

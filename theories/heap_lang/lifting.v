@@ -180,9 +180,9 @@ Proof.
   iModIntro. iSplit=>//. by iApply "HΦ".
 Qed.
 
-Lemma wp_faa E l i1 e2 i2 :
+Lemma wp_faa s E l i1 e2 i2 :
   IntoVal e2 (LitV (LitInt i2)) →
-  {{{ ▷ l ↦ LitV (LitInt i1) }}} FAA (Lit (LitLoc l)) e2 @ E
+  {{{ ▷ l ↦ LitV (LitInt i1) }}} FAA (Lit (LitLoc l)) e2 @ s; E
   {{{ RET LitV (LitInt i1); l ↦ LitV (LitInt (i1 + i2)) }}}.
 Proof.
   iIntros (<-%of_to_val Φ) ">Hl HΦ".
