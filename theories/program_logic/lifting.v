@@ -36,17 +36,19 @@ Qed.
 
 (** Derived lifting lemmas. *)
 Lemma wp_lift_pure_step `{Inhabited (state Λ)} s E E' Φ e1 :
-  to_val e1 = None →
-  (∀ σ1, if s is not_stuck then reducible e1 σ1 else True) →
+  (∀ σ1, if s is not_stuck then reducible e1 σ1 else to_val e1 = None) →
   (∀ σ1 e2 σ2 efs, prim_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
   (|={E,E'}▷=> ∀ e2 efs σ, ⌜prim_step e1 σ e2 σ efs⌝ →
     WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
-  iIntros (? Hsafe Hstep) "H". iApply wp_lift_step; first done.
+  iIntros (Hsafe Hstep) "H". iApply wp_lift_step.
+  { specialize (Hsafe inhabitant). destruct s; last done.
+      by eapply reducible_not_val. }
   iIntros (σ1) "Hσ". iMod "H".
-  iMod fupd_intro_mask' as "Hclose"; last iModIntro; first by set_solver.
-  iSplit; first by iPureIntro; apply Hsafe. iNext. iIntros (e2 σ2 efs ?).
+  iMod fupd_intro_mask' as "Hclose"; last iModIntro; first by set_solver. iSplit.
+  { iPureIntro. destruct s; done. }
+  iNext. iIntros (e2 σ2 efs ?).
   destruct (Hstep σ1 e2 σ2 efs); auto; subst.
   iMod "Hclose" as "_". iFrame "Hσ". iMod "H". iApply "H"; auto.
 Qed.
@@ -83,13 +85,12 @@ Proof.
 Qed.
 
 Lemma wp_lift_pure_det_step `{Inhabited (state Λ)} {s E E' Φ} e1 e2 efs :
-  to_val e1 = None →
-  (∀ σ1, if s is not_stuck then reducible e1 σ1 else true) →
+  (∀ σ1, if s is not_stuck then reducible e1 σ1 else to_val e1 = None) →
   (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
   (|={E,E'}▷=> WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
-  iIntros (?? Hpuredet) "H". iApply (wp_lift_pure_step s E E'); try done.
+  iIntros (? Hpuredet) "H". iApply (wp_lift_pure_step s E E'); try done.
   { by intros; eapply Hpuredet. }
   iApply (step_fupd_wand with "H"); iIntros "H".
   by iIntros (e' efs' σ (_&->&->)%Hpuredet).
@@ -102,9 +103,8 @@ Lemma wp_pure_step_fupd `{Inhabited (state Λ)} s E E' e1 e2 φ Φ :
 Proof.
   iIntros ([??] Hφ) "HWP".
   iApply (wp_lift_pure_det_step with "[HWP]").
-  - apply (reducible_not_val _ inhabitant). by auto.
+  - intros σ. specialize (pure_exec_safe σ). destruct s; eauto using reducible_not_val.
   - destruct s; naive_solver.
-  - naive_solver.
   - by rewrite big_sepL_nil right_id.
 Qed.
 
