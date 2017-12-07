@@ -118,9 +118,9 @@ Lemma wp_lift_pure_det_head_step_no_fork' {s E Φ} e1 e2 :
   (∀ σ1, head_reducible e1 σ1) →
   (∀ σ1 e2' σ2 efs',
     head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
-  ▷ WP e2 @ E {{ Φ }} ⊢ WP e1 @ E {{ Φ }}.
+  ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
 Proof using Hinh.
-  intros. rewrite -[(WP e1 @ _ {{ _ }})%I]wp_lift_pure_det_head_step_no_fork //.
+  intros. rewrite -[(WP e1 @ s; _ {{ _ }})%I]wp_lift_pure_det_head_step_no_fork //.
   rewrite -step_fupd_intro //.
 Qed.
 End wp.
