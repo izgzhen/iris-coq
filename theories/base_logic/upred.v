@@ -9,9 +9,8 @@ Set Default Proof Using "Type".
 Record uPred (M : ucmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;
 
-  uPred_mono n x1 x2 : uPred_holds n x1 → x1 ≼{n} x2 → uPred_holds n x2;
-
-  uPred_closed n1 n2 x : uPred_holds n1 x → n2 ≤ n1 → uPred_holds n2 x
+  uPred_mono n1 n2 x1 x2 :
+    uPred_holds n1 x1 → x1 ≼{n1} x2 → n2 ≤ n1 → uPred_holds n2 x2
 }.
 Arguments uPred_holds {_} _ _ _ : simpl never.
 Add Printing Constructor uPred.
@@ -81,18 +80,15 @@ Section cofe.
   Program Definition uPred_compl : Compl uPredC := λ c,
     {| uPred_holds n x := ∀ n', n' ≤ n → ✓{n'}x → c n' n' x |}.
   Next Obligation.
-    move=> /= c n x1 x2 Hx1 Hx12 n' Hn'n Hv.
-    eapply uPred_mono. by eapply Hx1, cmra_validN_includedN, cmra_includedN_le.
-    by eapply cmra_includedN_le.
-  Qed.
-  Next Obligation.
-    move=> /= c n1 n2 x Hc Hn12 n3 Hn23 Hv. apply Hc. lia. done.
+    move=> /= c n1 n2 x1 x2 HP Hx12 Hn12 n3 Hn23 Hv. eapply uPred_mono.
+    eapply HP, cmra_validN_includedN, cmra_includedN_le=>//; lia.
+    eapply cmra_includedN_le=>//; lia. done.
   Qed.
   Global Program Instance uPred_cofe : Cofe uPredC := {| compl := uPred_compl |}.
   Next Obligation.
     intros n c; split=>i x Hin Hv.
     etrans; [|by symmetry; apply (chain_cauchy c i n)]. split=>H; [by apply H|].
-    repeat intro. apply (chain_cauchy c n' i)=>//. by eapply uPred_closed.
+    repeat intro. apply (chain_cauchy c n' i)=>//. by eapply uPred_mono.
   Qed.
 End cofe.
 Arguments uPredC : clear implicits.
@@ -107,8 +103,7 @@ Proof. by intros x1 x2 Hx; apply uPred_ne, equiv_dist. Qed.
 Lemma uPred_holds_ne {M} (P Q : uPred M) n1 n2 x :
   P ≡{n2}≡ Q → n2 ≤ n1 → ✓{n2} x → Q n1 x → P n2 x.
 Proof.
-  intros [Hne] ???. eapply Hne; try done.
-  eapply uPred_closed; eauto using cmra_validN_le.
+  intros [Hne] ???. eapply Hne; try done. eauto using uPred_mono, cmra_validN_le.
 Qed.
 
 (** functor *)
@@ -116,7 +111,6 @@ Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CmraMorphism f} (P : uPred M1) :
   uPred M2 := {| uPred_holds n x := P n (f x) |}.
 Next Obligation. naive_solver eauto using uPred_mono, cmra_morphism_monotoneN. Qed.
-Next Obligation. naive_solver eauto using uPred_closed, cmra_morphism_validN. Qed.
 
 Instance uPred_map_ne {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CmraMorphism f} n : Proper (dist n ==> dist n) (uPred_map f).
@@ -174,7 +168,7 @@ Inductive uPred_entails {M} (P Q : uPred M) : Prop :=
 Hint Extern 0 (uPred_entails _ _) => reflexivity.
 Instance uPred_entails_rewrite_relation M : RewriteRelation (@uPred_entails M).
 
-Hint Resolve uPred_mono uPred_closed : uPred_def.
+Hint Resolve uPred_mono : uPred_def.
 
 (** Notations *)
 Notation "P ⊢ Q" := (uPred_entails P%I Q%I)
