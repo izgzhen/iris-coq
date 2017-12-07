@@ -53,7 +53,7 @@ Class LanguageCtx {Λ : language} (K : expr Λ → expr Λ) := {
 Instance language_ctx_id Λ : LanguageCtx (@id (expr Λ)).
 Proof. constructor; naive_solver. Qed.
 
-Inductive atomicity := strongly_atomic | weakly_atomic.
+Inductive atomicity := StronglyAtomic | WeaklyAtomic.
 
 Section language.
   Context {Λ : language}.
@@ -74,21 +74,21 @@ Section language.
   Definition stuck (e : expr Λ) (σ : state Λ) :=
     to_val e = None ∧ irreducible e σ.
 
-  (* [Atomic weakly_atomic]: This (weak) form of atomicity is enough to open
+  (* [Atomic WeaklyAtomic]: This (weak) form of atomicity is enough to open
      invariants when WP ensures safety, i.e., programs never can get stuck.  We
      have an example in lambdaRust of an expression that is atomic in this
      sense, but not in the stronger sense defined below, and we have to be able
      to open invariants around that expression.  See `CasStuckS` in
      [lambdaRust](https://gitlab.mpi-sws.org/FP/LambdaRust-coq/blob/master/theories/lang/lang.v).
 
-     [Atomic strongly_atomic]: To open invariants with a WP that does not ensure
+     [Atomic StronglyAtomic]: To open invariants with a WP that does not ensure
      safety, we need a stronger form of atomicity.  With the above definition,
      in case `e` reduces to a stuck non-value, there is no proof that the
      invariants have been established again. *)
   Class Atomic (a : atomicity) (e : expr Λ) : Prop :=
     atomic σ e' σ' efs :
       prim_step e σ e' σ' efs →
-      if a is weakly_atomic then irreducible e' σ' else is_Some (to_val e').
+      if a is WeaklyAtomic then irreducible e' σ' else is_Some (to_val e').
 
   Inductive step (ρ1 ρ2 : cfg Λ) : Prop :=
     | step_atomic e1 σ1 e2 σ2 efs t1 t2 :
@@ -110,7 +110,7 @@ Section language.
   Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 
   Lemma strongly_atomic_atomic e :
-    Atomic strongly_atomic e → Atomic weakly_atomic e.
+    Atomic StronglyAtomic e → Atomic WeaklyAtomic e.
   Proof. unfold Atomic. eauto using val_irreducible. Qed.
 
   Lemma reducible_fill `{LanguageCtx Λ K} e σ :

@@ -11,11 +11,11 @@ Class irisG' (Λstate : Type) (Σ : gFunctors) := IrisG {
 }.
 Notation irisG Λ Σ := (irisG' (state Λ) Σ).
 
-Inductive stuckness := not_stuck | maybe_stuck.
+Inductive stuckness := NotStuck | MaybeStuck.
 
 Definition stuckness_le (s1 s2 : stuckness) : bool :=
   match s1, s2 with
-  | maybe_stuck, not_stuck => false
+  | MaybeStuck, NotStuck => false
   | _, _ => true
   end.
 Instance: PreOrder stuckness_le.
@@ -25,7 +25,7 @@ Qed.
 Instance: SqSubsetEq stuckness := stuckness_le.
 
 Definition stuckness_to_atomicity (s : stuckness) : atomicity :=
-  if s is maybe_stuck then strongly_atomic else weakly_atomic.
+  if s is MaybeStuck then StronglyAtomic else WeaklyAtomic.
 
 Definition wp_pre `{irisG Λ Σ} (s : stuckness)
     (wp : coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
@@ -33,7 +33,7 @@ Definition wp_pre `{irisG Λ Σ} (s : stuckness)
   match to_val e1 with
   | Some v => |={E}=> Φ v
   | None => ∀ σ1,
-     state_interp σ1 ={E,∅}=∗ ⌜if s is not_stuck then reducible e1 σ1 else True⌝ ∗
+     state_interp σ1 ={E,∅}=∗ ⌜if s is NotStuck then reducible e1 σ1 else True⌝ ∗
      ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={∅,E}=∗
        state_interp σ2 ∗ wp E e2 Φ ∗
        [∗ list] ef ∈ efs, wp ⊤ ef (λ _, True)
@@ -57,32 +57,32 @@ Instance: Params (@wp) 6.
 Notation "'WP' e @ s ; E {{ Φ } }" := (wp s E e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'[' 'WP'  e  '/' @  s ;  E  {{  Φ  } } ']'") : uPred_scope.
-Notation "'WP' e @ E {{ Φ } }" := (wp not_stuck E e%E Φ)
+Notation "'WP' e @ E {{ Φ } }" := (wp NotStuck E e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'[' 'WP'  e  '/' @  E  {{  Φ  } } ']'") : uPred_scope.
-Notation "'WP' e @ E ? {{ Φ } }" := (wp maybe_stuck E e%E Φ)
+Notation "'WP' e @ E ? {{ Φ } }" := (wp MaybeStuck E e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'[' 'WP'  e  '/' @  E  ? {{  Φ  } } ']'") : uPred_scope.
-Notation "'WP' e {{ Φ } }" := (wp not_stuck ⊤ e%E Φ)
+Notation "'WP' e {{ Φ } }" := (wp NotStuck ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'[' 'WP'  e  '/' {{  Φ  } } ']'") : uPred_scope.
-Notation "'WP' e ? {{ Φ } }" := (wp maybe_stuck ⊤ e%E Φ)
+Notation "'WP' e ? {{ Φ } }" := (wp MaybeStuck ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
    format "'[' 'WP'  e  '/' ? {{  Φ  } } ']'") : uPred_scope.
 
 Notation "'WP' e @ s ; E {{ v , Q } }" := (wp s E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' @  s ;  E  {{  v ,  Q  } } ']'") : uPred_scope.
-Notation "'WP' e @ E {{ v , Q } }" := (wp not_stuck E e%E (λ v, Q))
+Notation "'WP' e @ E {{ v , Q } }" := (wp NotStuck E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' @  E  {{  v ,  Q  } } ']'") : uPred_scope.
-Notation "'WP' e @ E ? {{ v , Q } }" := (wp maybe_stuck E e%E (λ v, Q))
+Notation "'WP' e @ E ? {{ v , Q } }" := (wp MaybeStuck E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' @  E  ? {{  v ,  Q  } } ']'") : uPred_scope.
-Notation "'WP' e {{ v , Q } }" := (wp not_stuck ⊤ e%E (λ v, Q))
+Notation "'WP' e {{ v , Q } }" := (wp NotStuck ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' {{  v ,  Q  } } ']'") : uPred_scope.
-Notation "'WP' e ? {{ v , Q } }" := (wp maybe_stuck ⊤ e%E (λ v, Q))
+Notation "'WP' e ? {{ v , Q } }" := (wp MaybeStuck ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' ? {{  v ,  Q  } } ']'") : uPred_scope.
 
@@ -400,3 +400,4 @@ Section proofmode_classes.
             (WP e @ s; E1 {{ Φ }}) (WP e @ s; E2 {{ v, |={E2,E1}=> Φ v }})%I | 100.
   Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r wp_atomic. Qed.
 End proofmode_classes.
+

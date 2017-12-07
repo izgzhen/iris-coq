@@ -20,7 +20,7 @@ Changes in and extensions of the theory:
   }}` ensures that, as usual, all invariants are preserved while `e` runs, but
   it permits execution to get stuck. The former implies the latter. The full
   judgment is `WP e @ s; E {{ Φ }}`, where non-stuck WP uses *stuckness bit* `s
-  = not_stuck` while stuck WP uses `s = maybe_stuck`.
+  = NotStuck` while stuck WP uses `s = MaybeStuck`.
 
 Changes in Coq:
 
@@ -105,10 +105,10 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
 * Move the `prelude` folder to its own project: std++
 * The rules `internal_eq_rewrite` and `internal_eq_rewrite_contractive` are now
   stated in the logic, i.e. they are `iApply` friendly.
-* Restore the original, stronger notion of atomicity alongside the
-  weaker notion. These are `Atomic s e` where the stuckness bit `s`
-  indicates whether expression `e` is weakly (`s = not_stuck`) or
-  strongly (`s = maybe_stuck`) atomic.
+* Restore the original, stronger notion of atomicity alongside the weaker
+  notion. These are `Atomic a e` where the stuckness bit `s` indicates whether
+  expression `e` is weakly (`a = WeaklyAtomic`) or strongly (`a =
+  StronglyAtomic`) atomic.
 
 ## Iris 3.0.0 (released 2017-01-11)
 

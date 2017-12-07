@@ -15,7 +15,7 @@ Implicit Types Φ : val Λ → iProp Σ.
 Lemma wp_lift_step s E Φ e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E,∅}=∗
-    ⌜if s is not_stuck then reducible e1 σ1 else True⌝ ∗
+    ⌜if s is NotStuck then reducible e1 σ1 else True⌝ ∗
     ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={∅,E}=∗
       state_interp σ2 ∗ WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
@@ -36,7 +36,7 @@ Qed.
 
 (** Derived lifting lemmas. *)
 Lemma wp_lift_pure_step `{Inhabited (state Λ)} s E E' Φ e1 :
-  (∀ σ1, if s is not_stuck then reducible e1 σ1 else to_val e1 = None) →
+  (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
   (∀ σ1 e2 σ2 efs, prim_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
   (|={E,E'}▷=> ∀ e2 efs σ, ⌜prim_step e1 σ e2 σ efs⌝ →
     WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
@@ -69,7 +69,7 @@ Qed.
 Lemma wp_lift_atomic_step {s E Φ} e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E}=∗
-    ⌜if s is not_stuck then reducible e1 σ1 else True⌝ ∗
+    ⌜if s is NotStuck then reducible e1 σ1 else True⌝ ∗
     ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={E}=∗
       state_interp σ2 ∗
       default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
@@ -85,7 +85,7 @@ Proof.
 Qed.
 
 Lemma wp_lift_pure_det_step `{Inhabited (state Λ)} {s E E' Φ} e1 e2 efs :
-  (∀ σ1, if s is not_stuck then reducible e1 σ1 else to_val e1 = None) →
+  (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
   (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
   (|={E,E'}▷=> WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.

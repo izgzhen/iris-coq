@@ -86,7 +86,7 @@ Section lifting.
   Proof. rewrite /ownP; apply _. Qed.
 
   Lemma ownP_lift_step s E Φ e1 :
-    (|={E,∅}=> ∃ σ1, ⌜if s is not_stuck then reducible e1 σ1 else to_val e1 = None⌝ ∗ ▷ ownP σ1 ∗
+    (|={E,∅}=> ∃ σ1, ⌜if s is NotStuck then reducible e1 σ1 else to_val e1 = None⌝ ∗ ▷ ownP σ1 ∗
       ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2
             ={∅,E}=∗ WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -119,7 +119,7 @@ Section lifting.
   Qed.
 
   Lemma ownP_lift_pure_step `{Inhabited (state Λ)} s E Φ e1 :
-    (∀ σ1, if s is not_stuck then reducible e1 σ1 else to_val e1 = None) →
+    (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (∀ σ1 e2 σ2 efs, prim_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
     (▷ ∀ e2 efs σ, ⌜prim_step e1 σ e2 σ efs⌝ →
       WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
@@ -136,7 +136,7 @@ Section lifting.
 
   (** Derived lifting lemmas. *)
   Lemma ownP_lift_atomic_step {s E Φ} e1 σ1 :
-    (if s is not_stuck then reducible e1 σ1 else to_val e1 = None) →
+    (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (▷ ownP σ1 ∗ ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2 -∗
       default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -151,7 +151,7 @@ Section lifting.
   Qed.
 
   Lemma ownP_lift_atomic_det_step {s E Φ e1} σ1 v2 σ2 efs :
-    (if s is not_stuck then reducible e1 σ1 else to_val e1 = None) →
+    (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (∀ e2' σ2' efs', prim_step e1 σ1 e2' σ2' efs' →
                      σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
     ▷ ownP σ1 ∗ ▷ (ownP σ2 -∗
@@ -164,7 +164,7 @@ Section lifting.
   Qed.
 
   Lemma ownP_lift_atomic_det_step_no_fork {s E e1} σ1 v2 σ2 :
-    (if s is not_stuck then reducible e1 σ1 else to_val e1 = None) →
+    (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (∀ e2' σ2' efs', prim_step e1 σ1 e2' σ2' efs' →
       σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
     {{{ ▷ ownP σ1 }}} e1 @ s; E {{{ RET v2; ownP σ2 }}}.
@@ -174,7 +174,7 @@ Section lifting.
   Qed.
 
   Lemma ownP_lift_pure_det_step `{Inhabited (state Λ)} {s E Φ} e1 e2 efs :
-    (∀ σ1, if s is not_stuck then reducible e1 σ1 else to_val e1 = None) →
+    (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
     ▷ (WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤{{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -184,7 +184,7 @@ Section lifting.
   Qed.
 
   Lemma ownP_lift_pure_det_step_no_fork `{Inhabited (state Λ)} {s E Φ} e1 e2 :
-    (∀ σ1, if s is not_stuck then reducible e1 σ1 else to_val e1 = None) →
+    (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.

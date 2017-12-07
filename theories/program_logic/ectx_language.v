@@ -132,7 +132,7 @@ Section ectx_language.
   Definition head_atomic (a : atomicity) (e : expr Λ) : Prop :=
     ∀ σ e' σ' efs,
       head_step e σ e' σ' efs →
-      if a is weakly_atomic then irreducible e' σ' else is_Some (to_val e').
+      if a is WeaklyAtomic then irreducible e' σ' else is_Some (to_val e').
 
   (* Some lemmas about this language *)
   Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.

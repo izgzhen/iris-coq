@@ -38,20 +38,20 @@ Record adequate {Λ} (s : stuckness) (e1 : expr Λ) (σ1 : state Λ) (φ : val �
   adequate_result t2 σ2 v2 :
    rtc step ([e1], σ1) (of_val v2 :: t2, σ2) → φ v2;
   adequate_safe t2 σ2 e2 :
-   s = not_stuck →
+   s = NotStuck →
    rtc step ([e1], σ1) (t2, σ2) →
    e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2)
 }.
 
 Theorem adequate_tp_safe {Λ} (e1 : expr Λ) t2 σ1 σ2 φ :
-  adequate not_stuck e1 σ1 φ →
+  adequate NotStuck e1 σ1 φ →
   rtc step ([e1], σ1) (t2, σ2) →
   Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
 Proof.
   intros Had ?.
   destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
   apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
-  destruct (adequate_safe not_stuck e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&efs&?)];
+  destruct (adequate_safe NotStuck e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&efs&?)];
     rewrite ?eq_None_not_Some; auto.
   { exfalso. eauto. }
   destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
@@ -144,7 +144,7 @@ Qed.
 
 Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :
   nsteps step n (e1 :: t1, σ1) (t2, σ2) → e2 ∈ t2 →
-  world σ1 ∗ WP e1 {{ Φ }} ∗ wptp not_stuck t1
+  world σ1 ∗ WP e1 {{ Φ }} ∗ wptp NotStuck t1
   ⊢ ▷^(S (S n)) ⌜is_Some (to_val e2) ∨ reducible e2 σ2⌝.
 Proof.
   intros ? He2. rewrite wptp_steps // laterN_later. apply: bupd_iter_laterN_mono.

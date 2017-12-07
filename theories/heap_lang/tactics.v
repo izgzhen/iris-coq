@@ -189,7 +189,7 @@ Definition is_atomic (e : expr) :=
   end.
 Lemma is_atomic_correct s e : is_atomic e → Atomic s (to_expr e).
 Proof.
-  enough (is_atomic e → Atomic strongly_atomic (to_expr e)).
+  enough (is_atomic e → Atomic StronglyAtomic (to_expr e)).
   { destruct s; auto using strongly_atomic_atomic. }
   intros He. apply ectx_language_atomic.
   - intros σ e' σ' ef Hstep; simpl in *. revert Hstep.
