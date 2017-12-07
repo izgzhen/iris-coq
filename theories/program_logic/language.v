@@ -109,9 +109,9 @@ Section language.
   Global Instance of_val_inj : Inj (=) (=) (@of_val Λ).
   Proof. by intros v v' Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
 
-  Lemma strongly_atomic_atomic e :
-    Atomic StronglyAtomic e → Atomic WeaklyAtomic e.
-  Proof. unfold Atomic. eauto using val_irreducible. Qed.
+  Lemma strongly_atomic_atomic e a :
+    Atomic StronglyAtomic e → Atomic a e.
+  Proof. unfold Atomic. destruct a; eauto using val_irreducible. Qed.
 
   Lemma reducible_fill `{LanguageCtx Λ K} e σ :
     to_val e = None → reducible (K e) σ → reducible e σ.
