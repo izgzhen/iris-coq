@@ -105,5 +105,5 @@ Section LiftingTests.
   Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
 End LiftingTests.
 
-Lemma heap_e_adequate σ : adequate heap_e σ (= #2).
+Lemma heap_e_adequate σ : adequate NotStuck heap_e σ (= #2).
 Proof. eapply (heap_adequacy heapΣ)=> ?. by apply heap_e_spec. Qed.

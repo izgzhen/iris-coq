@@ -14,9 +14,9 @@ Definition heapΣ : gFunctors := #[invΣ; gen_heapΣ loc val].
 Instance subG_heapPreG {Σ} : subG heapΣ Σ → heapPreG Σ.
 Proof. solve_inG. Qed.
 
-Definition heap_adequacy Σ `{heapPreG Σ} e σ φ :
-  (∀ `{heapG Σ}, WP e {{ v, ⌜φ v⌝ }}%I) →
-  adequate e σ φ.
+Definition heap_adequacy Σ `{heapPreG Σ} s e σ φ :
+  (∀ `{heapG Σ}, WP e @ s; ⊤ {{ v, ⌜φ v⌝ }}%I) →
+  adequate s e σ φ.
 Proof.
   intros Hwp; eapply (wp_adequacy _ _); iIntros (?) "".
   iMod (gen_heap_init σ) as (?) "Hh".

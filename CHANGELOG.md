@@ -13,6 +13,14 @@ Changes in and extensions of the theory:
 * Constructions for least and greatest fixed points over monotone predicates
   (defined in the logic of Iris using impredicative quantification).
 * Add a proof of the inverse of `wp_bind`.
+* Support verifying code that might get stuck by distinguishing "non-stuck"
+  vs. "(potentially) stuck" weakest preconditions. (See
+  [Swasey et al., OOPSLA '17] for examples.) The non-stuck `WP e @ E {{ Φ }}`
+  ensures that, as `e` runs, it does not get stuck. The stuck `WP e @ E ?{{ Φ
+  }}` ensures that, as usual, all invariants are preserved while `e` runs, but
+  it permits execution to get stuck. The former implies the latter. The full
+  judgment is `WP e @ s; E {{ Φ }}`, where non-stuck WP uses *stuckness bit* `s
+  = NotStuck` while stuck WP uses `s = MaybeStuck`.
 
 Changes in Coq:
 
@@ -100,6 +108,10 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
 * Move the `prelude` folder to its own project: std++
 * The rules `internal_eq_rewrite` and `internal_eq_rewrite_contractive` are now
   stated in the logic, i.e. they are `iApply` friendly.
+* Restore the original, stronger notion of atomicity alongside the weaker
+  notion. These are `Atomic a e` where the stuckness bit `s` indicates whether
+  expression `e` is weakly (`a = WeaklyAtomic`) or strongly (`a =
+  StronglyAtomic`) atomic.
 
 ## Iris 3.0.0 (released 2017-01-11)
 

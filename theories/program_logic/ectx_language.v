@@ -100,6 +100,8 @@ Section ectx_language.
     ∃ e' σ' efs, head_step e σ e' σ' efs.
   Definition head_irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ e' σ' efs, ¬head_step e σ e' σ' efs.
+  Definition head_stuck (e : expr Λ) (σ : state Λ) :=
+    to_val e = None ∧ ∀ K e', e = fill K e' → head_irreducible e' σ.
 
   (* All non-value redexes are at the root.  In other words, all sub-redexes are
      values. *)
@@ -126,6 +128,11 @@ Section ectx_language.
   Qed.
 
   Canonical Structure ectx_lang : language := Language ectx_lang_mixin.
+
+  Definition head_atomic (a : atomicity) (e : expr Λ) : Prop :=
+    ∀ σ e' σ' efs,
+      head_step e σ e' σ' efs →
+      if a is WeaklyAtomic then irreducible e' σ' else is_Some (to_val e').
 
   (* Some lemmas about this language *)
   Lemma fill_not_val K e : to_val e = None → to_val (fill K e) = None.
@@ -158,10 +165,16 @@ Section ectx_language.
     rewrite -not_reducible -not_head_reducible. eauto using prim_head_reducible.
   Qed.
 
-  Lemma ectx_language_atomic e :
-    (∀ σ e' σ' efs, head_step e σ e' σ' efs → irreducible e' σ') →
-    sub_redexes_are_values e →
-    Atomic e.
+  Lemma head_stuck_stuck e σ :
+    head_stuck e σ → sub_redexes_are_values e → stuck e σ.
+  Proof.
+    move=>[] ? Hirr ?. split; first done.
+    apply prim_head_irreducible; last done.
+    apply (Hirr empty_ectx). by rewrite fill_empty.
+  Qed.
+
+  Lemma ectx_language_atomic a e :
+    head_atomic a e → sub_redexes_are_values e → Atomic a e.
   Proof.
     intros Hatomic_step Hatomic_fill σ e' σ' efs [K e1' e2' -> -> Hstep].
     assert (K = empty_ectx) as -> by eauto 10 using val_head_stuck.
