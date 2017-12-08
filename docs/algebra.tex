@@ -89,6 +89,8 @@ For once, every \emph{contractive function} $f : \ofe \to \cofeB$ where $\cofeB$
 This also holds if $f^k$ is contractive for an arbitrary $k$.
 Furthermore, by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}, every contractive (bi)functor from $\COFEs$ to $\COFEs$ has a unique\footnote{Uniqueness is not proven in Coq.} fixed-point.
 
+$\SProp$ as defined above is complete, \ie it is a COFE.
+
 
 \subsection{RA}
 
@@ -208,7 +210,7 @@ This operation is needed to prove that $\later$ commutes with separating conjunc
 
 \begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
-  \[ \All n, \maybe{\melt_\f}. \melt \mtimes n \in \mval(\maybe{\melt_\f}) \Ra \Exists \meltB \in \meltsB. \meltB \mtimes n \in\mval(\maybe{\melt_\f}) \]
+  \[ \All n, \maybe{\melt_\f}. n \in \mval(\melt \mtimes \maybe{\melt_\f}) \Ra \Exists \meltB \in \meltsB. n \in\mval(\meltB \mtimes \maybe{\melt_\f}) \]
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
