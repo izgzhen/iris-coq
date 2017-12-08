@@ -53,6 +53,16 @@ In particular:
 The function space $(-) \nfn (-)$ is a locally non-expansive bifunctor.
 Note that the composition of non-expansive (bi)functors is non-expansive, and the composition of a non-expansive and a contractive (bi)functor is contractive.
 
+One very important OFE is the OFE of \emph{step-indexed propositions}:
+For every step-index, such a proposition either holds or does not hold.
+Moreover, if a propositions holds for some $n$, it also has to hold for all smaller step-indices.
+\begin{align*}
+  \SProp \eqdef{}& \psetdown{\nat} \\
+    \eqdef{}& \setComp{X \in \pset{\nat}}{ \All n, m. n \geq m \Ra n \in X \Ra m \in X } \\
+  X \nequiv{n} Y \eqdef{}& \All m \leq n. m \in X \Lra m \in Y \\
+  X \nincl{n} Y \eqdef{}& \All m \leq n. m \in X \Ra m \in Y
+\end{align*}
+
 \subsection{COFE}
 
 COFEs are \emph{complete OFEs}, which means that we can take limits of arbitrary chains.
@@ -84,7 +94,7 @@ Furthermore, by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkeda
 
 \begin{defn}
   A \emph{resource algebra} (RA) is a tuple \\
-  $(\monoid, \mval \subseteq \monoid, \mcore{{-}}:
+  $(\monoid, \mvalFull :  \monoid \to \mProp, \mcore{{-}}:
   \monoid \to \maybe\monoid, (\mtimes) : \monoid \times \monoid \to \monoid)$ satisfying:
   \begin{align*}
     \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{ra-assoc} \\
@@ -92,16 +102,19 @@ Furthermore, by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkeda
     \All \melt.& \mcore\melt \in \monoid \Ra \mcore\melt \mtimes \melt = \melt \tagH{ra-core-id} \\
     \All \melt.& \mcore\melt \in \monoid \Ra \mcore{\mcore\melt} = \mcore\melt \tagH{ra-core-idem} \\
     \All \melt, \meltB.& \mcore\melt \in \monoid \land \melt \mincl \meltB \Ra \mcore\meltB \in \monoid \land \mcore\melt \mincl \mcore\meltB \tagH{ra-core-mono} \\
-    \All \melt, \meltB.& (\melt \mtimes \meltB) \in \mval \Ra \melt \in \mval \tagH{ra-valid-op} \\
+    \All \melt, \meltB.& \mvalFull(\melt \mtimes \meltB)  \Ra \mvalFull(\melt)  \tagH{ra-valid-op} \\
     \text{where}\qquad %\qquad\\
     \maybe\monoid \eqdef{}& \monoid \uplus \set{\mnocore} \qquad\qquad\qquad \melt^? \mtimes \mnocore \eqdef \mnocore \mtimes \melt^? \eqdef \melt^? \\
     \melt \mincl \meltB \eqdef{}& \Exists \meltC \in \monoid. \meltB = \melt \mtimes \meltC \tagH{ra-incl}
   \end{align*}
 \end{defn}
-\noindent
+Here, $\mProp$ is the set of (meta-level) propositions.
+Think of \texttt{Prop} in Coq or $\mathbb{B}$ in classical mathematics.
+
 RAs are closely related to \emph{Partial Commutative Monoids} (PCMs), with two key differences:
 \begin{enumerate}
-\item The composition operation on RAs is total (as opposed to the partial composition operation of a PCM), but there is a specific subset $\mval$ of \emph{valid} elements that is compatible with the composition operation (\ruleref{ra-valid-op}).
+\item The composition operation on RAs is total (as opposed to the partial composition operation of a PCM), but there is a specific subset of \emph{valid} elements that is compatible with the composition operation (\ruleref{ra-valid-op}).
+These valid elements are identified by the \emph{validity predicate} $\mvalFull$.
 
 This take on partiality is necessary when defining the structure of \emph{higher-order} ghost state, CMRAs, in the next subsection.
 
@@ -122,7 +135,7 @@ Notice also that the core of an RA is a strict generalization of the unit that a
 
 \begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
-  \[ \All \maybe{\melt_\f} \in \maybe\monoid. \melt \mtimes \maybe{\melt_\f} \in \mval \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \maybe{\melt_\f} \in \mval \]
+  \[ \All \maybe{\melt_\f} \in \maybe\monoid. \melt \mtimes \mvalFull(\maybe{\melt_\f}) \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \mvalFull(\maybe{\melt_\f}) \]
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
@@ -134,17 +147,15 @@ Since Iris ensures that the global ghost state is valid, this means that we can 
 \subsection{CMRA}
 
 \begin{defn}
-  A \emph{CMRA} is a tuple $(\monoid : \OFEs, (\mval_n \subseteq \monoid)_{n \in \nat},\\ \mcore{{-}}: \monoid \nfn \maybe\monoid, (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying:
+  A \emph{CMRA} is a tuple $(\monoid : \OFEs, \mval : \monoid \nfn \SProp, \mcore{{-}}: \monoid \nfn \maybe\monoid,\\ (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying:
   \begin{align*}
-    \All n, \melt, \meltB.& \melt \nequiv{n} \meltB \land \melt\in\mval_n \Ra \meltB\in\mval_n \tagH{cmra-valid-ne} \\
-    \All n, m.& n \geq m \Ra \mval_n \subseteq \mval_m \tagH{cmra-valid-mono} \\
     \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{cmra-assoc} \\
     \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{cmra-comm} \\
     \All \melt.& \mcore\melt \in \monoid \Ra \mcore\melt \mtimes \melt = \melt \tagH{cmra-core-id} \\
     \All \melt.& \mcore\melt \in \monoid \Ra \mcore{\mcore\melt} = \mcore\melt \tagH{cmra-core-idem} \\
     \All \melt, \meltB.& \mcore\melt \in \monoid \land \melt \mincl \meltB \Ra \mcore\meltB \in \monoid \land \mcore\melt \mincl \mcore\meltB \tagH{cmra-core-mono} \\
-    \All n, \melt, \meltB.& (\melt \mtimes \meltB) \in \mval_n \Ra \melt \in \mval_n \tagH{cmra-valid-op} \\
-    \All n, \melt, \meltB_1, \meltB_2.& \omit\rlap{$\melt \in \mval_n \land \melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \Ra {}$} \\
+    \All \melt, \meltB.& \mval(\melt \mtimes \meltB) \subseteq \mval(\melt)  \tagH{cmra-valid-op} \\
+    \All n, \melt, \meltB_1, \meltB_2.& \omit\rlap{$n \in \mval(\melt) \land \melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \Ra {}$} \\
     &\Exists \meltC_1, \meltC_2. \melt = \meltC_1 \mtimes \meltC_2 \land \meltC_1 \nequiv{n} \meltB_1 \land \meltC_2 \nequiv{n} \meltB_2 \tagH{cmra-extend} \\
     \text{where}\qquad\qquad\\
     \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{cmra-incl} \\
@@ -154,8 +165,8 @@ Since Iris ensures that the global ghost state is valid, this means that we can 
 
 This is a natural generalization of RAs over OFEs.
 All operations have to be non-expansive, and the validity predicate $\mval$ can now also depend on the step-index.
-We define the plain $\mval$ as the ``limit'' of the $\mval_n$:
-\[ \mval \eqdef \bigcap_{n \in \nat} \mval_n \]
+We define the plain $\mvalFull$ as the ``limit'' of the step-indexed approximation:
+\[ \mvalFull(\melt) \eqdef \All n. n \in \mval(\melt) \]
 
 \paragraph{The extension axiom (\ruleref{cmra-extend}).}
 Notice that the existential quantification in this axiom is \emph{constructive}, \ie it is a sigma type in Coq.
@@ -184,7 +195,7 @@ This operation is needed to prove that $\later$ commutes with separating conjunc
 \begin{defn}
   An element $\munit$ of a CMRA $\monoid$ is called the \emph{unit} of $\monoid$ if it satisfies the following conditions:
   \begin{enumerate}[itemsep=0pt]
-  \item $\munit$ is valid: \\ $\All n. \munit \in \mval_n$
+  \item $\munit$ is valid: \\ $\All n. n \in \mval(\munit)$
   \item $\munit$ is a left-identity of the operation: \\
     $\All \melt \in M. \munit \mtimes \melt = \melt$
   \item $\munit$ is its own core: \\ $\mcore\munit = \munit$
@@ -197,7 +208,7 @@ This operation is needed to prove that $\later$ commutes with separating conjunc
 
 \begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
-  \[ \All n, \maybe{\melt_\f}. \melt \mtimes \maybe{\melt_\f} \in \mval_n \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \maybe{\melt_\f} \in \mval_n \]
+  \[ \All n, \maybe{\melt_\f}. \melt \mtimes n \in \mval(\maybe{\melt_\f}) \Ra \Exists \meltB \in \meltsB. \meltB \mtimes n \in\mval(\maybe{\melt_\f}) \]
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
@@ -208,7 +219,7 @@ Note that for RAs, this and the RA-based definition of a frame-preserving update
   \begin{enumerate}[itemsep=0pt]
   \item $\monoid$ is a discrete COFE
   \item $\mval$ ignores the step-index: \\
-    $\All \melt \in \monoid. \melt \in \mval_0 \Ra \All n, \melt \in \mval_n$
+    $\All \melt \in \monoid. 0 \in \mval(\melt) \Ra \All n. n \in \mval(\melt)$
   \end{enumerate}
 \end{defn}
 Note that every RA is a discrete CMRA, by picking the discrete COFE for the equivalence relation.
@@ -223,7 +234,7 @@ Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE struct
   \item $f$ commutes with the core:\\
     $\All \melt \in \monoid_1. \mcore{f(\melt)} = f(\mcore{\melt})$
   \item $f$ preserves validity: \\
-    $\All n, \melt \in \monoid_1. \melt \in \mval_n \Ra f(\melt) \in \mval_n$
+    $\All n, \melt \in \monoid_1. n \in \mval(\melt) \Ra n \in \mval(f(\melt))$
   \end{enumerate}
 \end{defn}
 

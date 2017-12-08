@@ -21,32 +21,15 @@ $\latert(-)$ is a locally \emph{contractive} functor from $\OFEs$ to $\OFEs$.
 
 Given a CMRA $\monoid$, we define the COFE $\UPred(\monoid)$ of \emph{uniform predicates} over $\monoid$ as follows:
 \begin{align*}
-  \UPred(\monoid) \eqdef{} \setComp{\pred: \nat \times \monoid \to \mProp}{
-  \begin{inbox}[c]
-    (\All n, x, y. \pred(n, x) \land x \nequiv{n} y \Ra \pred(n, y)) \land {}\\
-    (\All n, m, x, y. \pred(n, x) \land x \mincl y \land m \leq n \land y \in \mval_m \Ra \pred(m, y))
-  \end{inbox}
-}
+\monoid \monnra \SProp \eqdef{}& \setComp{\pred: \monoid \nfn \SProp}
+{\All n, \melt, \meltB. \melt \mincl[n] \meltB \Ra \pred(\melt) \nincl{n} \pred(\meltB)} \\
+  \UPred(\monoid) \eqdef{}&  \faktor{\monoid \monnra \SProp}{\equiv} \\
+  \pred \equiv \predB \eqdef{}& \All m, \melt. m \in \mval(\melt) \Ra (m \in \pred(\melt) \iff  m \in \predB(\melt)) \\
+  \pred \nequiv{n} \predB \eqdef{}& \All m \le n, \melt. m \in \mval(\melt) \Ra (m \in \pred(\melt) \iff  m \in \predB(\melt))
 \end{align*}
-where $\mProp$ is the set of meta-level propositions, \eg Coq's \texttt{Prop}.
+You can think of uniform predicates as monotone, step-indexed predicates over a CMRA that ``ignore'' invalid elements (as defined by the quotient).
+
 $\UPred(-)$ is a locally non-expansive functor from $\CMRAs$ to $\COFEs$.
-
-One way to understand this definition is to re-write it a little.
-We start by defining the COFE of \emph{step-indexed propositions}: For every step-index, the proposition either holds or does not hold.
-\begin{align*}
-  \SProp \eqdef{}& \psetdown{\nat} \\
-    \eqdef{}& \setComp{X \in \pset{\nat}}{ \All n, m. n \geq m \Ra n \in X \Ra m \in X } \\
-  X \nequiv{n} Y \eqdef{}& \All m \leq n. m \in X \Lra m \in Y
-\end{align*}
-Notice that this notion of $\SProp$ is already hidden in the validity predicate $\mval_n$ of a CMRA:
-We could equivalently require every CMRA to define $\mval_{-}(-) : \monoid \nfn \SProp$, replacing \ruleref{cmra-valid-ne} and \ruleref{cmra-valid-mono}.
-
-Now we can rewrite $\UPred(\monoid)$ as monotone step-indexed predicates over $\monoid$, where the definition of a ``monotone'' function here is a little funny.
-\begin{align*}
-  \UPred(\monoid) \cong{}& \monoid \monra \SProp \\
-     \eqdef{}& \setComp{\pred: \monoid \nfn \SProp}{\All n, m, x, y. n \in \pred(x) \land x \mincl y \land m \leq n \land y \in \mval_m \Ra m \in \pred(y)}
-\end{align*}
-The reason we chose the first definition is that it is easier to work with in Coq.
 
 \clearpage
 \section{RA and CMRA constructions}
@@ -69,16 +52,16 @@ Frame-preserving updates on the $M_i$ lift to the product:
 The \emph{sum CMRA} $\monoid_1 \csumm \monoid_2$ for any CMRAs $\monoid_1$ and $\monoid_2$ is defined as (again, we use a datatype-like notation):
 \begin{align*}
   \monoid_1 \csumm \monoid_2 \eqdef{}& \cinl(\melt_1:\monoid_1) \mid \cinr(\melt_2:\monoid_2) \mid \mundef \\
-  \mval_n \eqdef{}& \setComp{\cinl(\melt_1)}{\melt_1 \in \mval'_n}
-    \cup \setComp{\cinr(\melt_2)}{\melt_2 \in \mval''_n}  \\
+  \mval(\mundef) \eqdef{}& \emptyset \\
+  \mval(\cinl(\melt)) \eqdef{}& \mval_1(\melt)  \\
   \cinl(\melt_1) \mtimes \cinl(\meltB_1) \eqdef{}& \cinl(\melt_1 \mtimes \meltB_1)  \\
 %  \munit \mtimes \ospending \eqdef{}& \ospending \mtimes \munit \eqdef \ospending \\
 %  \munit \mtimes \osshot(\melt) \eqdef{}& \osshot(\melt) \mtimes \munit \eqdef \osshot(\melt) \\
   \mcore{\cinl(\melt_1)} \eqdef{}& \begin{cases}\mnocore & \text{if $\mcore{\melt_1} = \mnocore$} \\ \cinl({\mcore{\melt_1}}) & \text{otherwise} \end{cases}
 \end{align*}
-The composition and core for $\cinr$ are defined symmetrically.
+Above, $\mval_1$ refers to the validity of $\monoid_1$.
+The validity, composition and core for $\cinr$ are defined symmetrically.
 The remaining cases of the composition and core are all $\mundef$.
-Above, $\mval'$ refers to the validity of $\monoid_1$, and $\mval''$ to the validity of $\monoid_2$.
 
 Notice that we added the artificial ``invalid'' (or ``undefined'') element $\mundef$ to this CMRA just in order to make certain compositions of elements (in this case, $\cinl$ and $\cinr$) invalid.
 
@@ -99,7 +82,7 @@ We obtain the following frame-preserving updates, as well as their symmetric cou
   {\cinl(\melt) \mupd \setComp{ \cinl(\meltB)}{\meltB \in \meltsB}}
 
   \inferH{sum-swap}
-  {\All \melt_\f, n. \melt \mtimes \melt_\f \notin \mval'_n \and \meltB \in \mval''}
+  {\All \melt_\f \in M, n. n  \notin \mval(\melt \mtimes \melt_\f) \and \mvalFull(\meltB)}
   {\cinl(\melt) \mupd \cinr(\meltB)}
 \end{mathpar}
 Crucially, the second rule allows us to \emph{swap} the ``side'' of the sum that the CMRA is on if $\mval$ has \emph{no possible frame}.
@@ -122,18 +105,18 @@ Given some infinite countable $K$ and some CMRA $\monoid$, the set of finite par
 We obtain the following frame-preserving updates:
 \begin{mathpar}
   \inferH{fpfn-alloc-strong}
-  {\text{$G$ infinite} \and \melt \in \mval}
+  {\text{$G$ infinite} \and \mvalFull(\melt)}
   {\emptyset \mupd \setComp{\mapsingleton \gname \melt}{\gname \in G}}
 
   \inferH{fpfn-alloc}
-  {\melt \in \mval}
+  {\mvalFull(\melt)}
   {\emptyset \mupd \setComp{\mapsingleton \gname \melt}{\gname \in K}}
 
   \inferH{fpfn-update}
   {\melt \mupd_\monoid \meltsB}
   {\mapinsert i \melt f] \mupd \setComp{ \mapinsert i \meltB f}{\meltB \in \meltsB}}
 \end{mathpar}
-Above, $\mval$ refers to the validity of $\monoid$.
+Above, $\mvalFull$ refers to the (full) validity of $\monoid$.
 
 $K \fpfn (-)$ is a locally non-expansive functor from $\CMRAs$ to $\CMRAs$.
 
@@ -146,7 +129,7 @@ Given some OFE $\cofe$, we define the CMRA $\agm(\cofe)$ as follows:
   \textnormal{where }& \melt \sim \meltB \eqdef{} \All n. \melt \nequiv{n} \meltB  \\
 ~\\
 %    \All n \in {\melt.V}.\, \melt.x \nequiv{n} \meltB.x \\
-  \mval_n \eqdef{}& \setComp{\melt \in \agm(\cofe)}{ \All x, y \in \melt. x \nequiv{n} y } \\
+  \mval(\melt) \eqdef{}& \setComp{n}{ \All x, y \in \melt. x \nequiv{n} y } \\
   \mcore\melt \eqdef{}& \melt \\
   \melt \mtimes \meltB \eqdef{}& \melt \cup \meltB
 \end{align*}
@@ -158,11 +141,11 @@ We define a non-expansive injection $\aginj$ into $\agm(\cofe)$ as follows:
 \[ \aginj(x) \eqdef \set{x} \]
 There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can show the following:
 \begin{mathpar}
-  \axiomH{ag-val}{\aginj(x) \in \mval_n}
+  \axiomH{ag-val}{\mvalFull(\aginj(x))}
 
   \axiomH{ag-dup}{\aginj(x) = \aginj(x)\mtimes\aginj(x)}
   
-  \axiomH{ag-agree}{\aginj(x) \mtimes \aginj(y) \in \mval_n \Lra x \nequiv{n} y}
+  \axiomH{ag-agree}{n \in \mval(\aginj(x) \mtimes \aginj(y)) \Ra x \nequiv{n} y}
 \end{mathpar}
 
 
@@ -171,7 +154,7 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
 Given an OFE $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
 \begin{align*}
   \exm(\cofe) \eqdef{}& \exinj(\cofe) \mid \mundef \\
-  \mval_n \eqdef{}& \setComp{\melt\in\exm(\cofe)}{\melt \neq \mundef}
+  \mval(\melt) \eqdef{}& \setComp{n}{\melt \neq \mundef}
 \end{align*}
 All cases of composition go to $\mundef$.
 \begin{align*}
@@ -281,7 +264,7 @@ We assume that $M$ has a unit $\munit$, and hence its core is total.
 (If $M$ is an exclusive monoid, the construction is very similar to a half-ownership monoid with two asymmetric halves.)
 \begin{align*}
 \authm(M) \eqdef{}& \maybe{\exm(M)} \times M \\
-\mval_n \eqdef{}& \setComp{ (x, \meltB) \in \authm(M) }{ \meltB \in \mval_n \land (x = \mnocore \lor \Exists \melt. x = \exinj(\melt) \land \meltB \mincl_n \melt) } \\
+\mval( (x, \meltB ) ) \eqdef{}& \setComp{ n }{ n \in \mval(\meltB) \land (x = \mnocore \lor \Exists \melt. x = \exinj(\melt) \land \meltB \mincl_n \melt) } \\
   (x_1, \meltB_1) \mtimes (x_2, \meltB_2) \eqdef{}& (x_1 \mtimes x_2, \meltB_2 \mtimes \meltB_2) \\
   \mcore{(x, \meltB)} \eqdef{}& (\mnocore, \mcore\meltB) \\
   (x_1, \meltB_1) \nequiv{n} (x_2, \meltB_2) \eqdef{}& x_1 \nequiv{n} x_2 \land \meltB_1 \nequiv{n} \meltB_2
@@ -295,7 +278,7 @@ The frame-preserving update involves the notion of a \emph{local update}:
 \newcommand\lupd{\stackrel{\mathrm l}{\mupd}}
 \begin{defn}
   It is possible to do a \emph{local update} from $\melt_1$ and $\meltB_1$ to $\melt_2$ and $\meltB_2$, written $(\melt_1, \meltB_1) \lupd (\melt_2, \meltB_2)$, if
-  \[ \All n, \maybe{\melt_\f}. \melt_1 \in \mval_n \land \melt_1 \nequiv{n} \meltB_1 \mtimes \maybe{\melt_\f} \Ra \melt_2 \in \mval_n \land \melt_2 \nequiv{n} \meltB_2 \mtimes \maybe{\melt_\f} \]
+  \[ \All n, \maybe{\melt_\f}. n \in \mval(\melt_1) \land \melt_1 \nequiv{n} \meltB_1 \mtimes \maybe{\melt_\f} \Ra n \in \mval(\melt_2) \land \melt_2 \nequiv{n} \meltB_2 \mtimes \maybe{\melt_\f} \]
 \end{defn}
 In other words, the idea is that for every possible frame $\maybe{\melt_\f}$ completing $\meltB_1$ to $\melt_1$, the same frame also completes $\meltB_2$ to $\melt_2$.
 
@@ -327,7 +310,7 @@ We further define \emph{closed} sets of states (given a particular set of tokens
 The STS RA is defined as follows
 \begin{align*}
   \monoid \eqdef{}& \STSauth(s:\STSS, T:\wp(\STST) \mid \STSL(s) \disj T) \mid{}\\& \STSfrag(S: \wp(\STSS), T: \wp(\STST) \mid \STSclsd(S, T) \land S \neq \emptyset) \mid \mundef \\
-  \mval \eqdef{}& \setComp{\melt\in\monoid}{\melt \neq \mundef} \\
+  \mvalFull(\melt) \eqdef{}& \melt \neq \mundef \\
   \STSfrag(S_1, T_1) \mtimes \STSfrag(S_2, T_2) \eqdef{}& \STSfrag(S_1 \cap S_2, T_1 \cup T_2) \qquad\qquad\qquad \text{if $T_1 \disj T_2$ and $S_1 \cap S_2 \neq \emptyset$} \\
   \STSfrag(S, T) \mtimes \STSauth(s, T') \eqdef{}& \STSauth(s, T') \mtimes \STSfrag(S, T) \eqdef \STSauth(s, T \cup T') \qquad \text{if $T \disj T'$ and $s \in S$} \\
   \mcore{\STSfrag(S, T)} \eqdef{}& \STSfrag(\upclose(S, \emptyset), \emptyset) \\
