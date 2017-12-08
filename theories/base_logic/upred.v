@@ -107,6 +107,23 @@ Proof.
   intros [Hne] ???. eapply Hne; try done. eauto using uPred_mono, cmra_validN_le.
 Qed.
 
+(* Equivalence to the definition of uPred in the appendix. *)
+Lemma uPred_alt {M : ucmraT} (P: nat → M → Prop) :
+  (∀ n1 n2 x1 x2, P n1 x1 → x1 ≼{n1} x2 → n2 ≤ n1 → P n2 x2) ↔
+  ( (∀ x n1 n2, n2 ≤ n1 → P n1 x → P n2 x) (* Pointwise down-closed *)
+  ∧ (∀ n x1 x2, x1 ≡{n}≡ x2 → ∀ m, m ≤ n → P m x1 ↔ P m x2) (* Non-expansive *)
+  ∧ (∀ n x1 x2, x1 ≼{n} x2 → ∀ m, m ≤ n → P m x1 → P m x2) (* Monotonicity *)
+  ).
+Proof.
+  (* Provide this lemma to eauto. *)
+  assert (∀ n1 n2 (x1 x2 : M), n2 ≤ n1 → x1 ≡{n1}≡ x2 → x1 ≼{n2} x2).
+  { intros ????? H. eapply cmra_includedN_le; last done. by rewrite H. }
+  (* Now go ahead. *)
+  split.
+  - intros Hupred. repeat split; eauto using cmra_includedN_le.
+  - intros (Hdown & _ & Hmono) **. eapply Hmono; [done..|]. eapply Hdown; done.
+Qed.
+
 (** functor *)
 Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CmraMorphism f} (P : uPred M1) :
