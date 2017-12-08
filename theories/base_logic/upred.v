@@ -24,10 +24,11 @@ Set Default Proof Using "Type".
    It is worth noting that this equivalence relation admits canonical
    representatives. More precisely, one can show that every
    equivalence class contains exactly one element P0 such that:
-     ∀ x, (✓ x → P(x)) → P(x)                   (2)
-   (Again, this assertion has to be understood in sProp). Starting
-   from an element P of a given class, one can build this canonical
-   representative by chosing:
+     ∀ x, (✓ x → P0(x)) → P0(x)                 (2)
+   (Again, this assertion has to be understood in sProp). Intuitively,
+   this says that P0 trivially holds whenever the resource is invalid.
+   Starting from any element P, one can find this canonical
+   representative by choosing:
      P0(x) := ✓ x → P(x)                        (3)
 
    Hence, as an alternative definition of uPred, we could use the set
