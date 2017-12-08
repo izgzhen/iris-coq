@@ -42,7 +42,7 @@ We are thus going to define the assertions as mapping CMRA elements to sets of s
 	\Lam \melt. \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt) \cup \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt) \\
 	\Sem{\vctx \proves \prop \Ra \propB : \Prop}_\gamma &\eqdef
 	\Lam \melt. \setComp{n}{\begin{aligned}
-            \All m, \meltB.& m \leq n \land \melt \mincl \meltB \land \meltB \in \mval_m \Ra {} \\
+            \All m, \meltB.& m \leq n \land \melt \mincl \meltB \land m \in \mval(\meltB) \Ra {} \\
             & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\meltB)\end{aligned}}\\
 	\Sem{\vctx \proves \All \var : \type. \prop : \Prop}_\gamma &\eqdef
 	\Lam \melt. \setComp{n}{ \All v \in \Sem{\type}. n \in \Sem{\vctx, \var : \type \proves \prop : \Prop}_{\mapinsert \var v \gamma}(\melt) } \\
@@ -54,15 +54,15 @@ We are thus going to define the assertions as mapping CMRA elements to sets of s
 \\
 	\Sem{\vctx \proves \prop \wand \propB : \Prop}_\gamma &\eqdef
 	\Lam \melt. \setComp{n}{\begin{aligned}
-            \All m, \meltB.& m \leq n \land  \melt\mtimes\meltB \in \mval_m \Ra {} \\
+            \All m, \meltB.& m \leq n \land  m \in \mval(\melt\mtimes\meltB) \Ra {} \\
             & m \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\meltB) \Ra {}\\& m \in \Sem{\vctx \proves \propB : \Prop}_\gamma(\melt\mtimes\meltB)\end{aligned}} \\
         \Sem{\vctx \proves \ownM{\term} : \Prop}_\gamma &\eqdef \Lam\meltB. \setComp{n}{\Sem{\vctx \proves \term : \textlog{M}}_\gamma \mincl[n] \meltB}  \\
-        \Sem{\vctx \proves \mval(\term) : \Prop}_\gamma &\eqdef \Lam\any. \setComp{n}{\Sem{\vctx \proves \term : \textlog{M}}_\gamma \in \mval_n} \\
+        \Sem{\vctx \proves \mval(\term) : \Prop}_\gamma &\eqdef \Lam\any. \mval(\Sem{\vctx \proves \term : \textlog{M}}_\gamma) \\
 	\Sem{\vctx \proves \always{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \Sem{\vctx \proves \prop : \Prop}_\gamma(\mcore\melt) \\
 	\Sem{\vctx \proves \plainly{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \Sem{\vctx \proves \prop : \Prop}_\gamma(\munit) \\
 	\Sem{\vctx \proves \later{\prop} : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{n = 0 \lor n-1 \in \Sem{\vctx \proves \prop : \Prop}_\gamma(\melt)}\\
         \Sem{\vctx \proves \upd\prop : \Prop}_\gamma &\eqdef \Lam\melt. \setComp{n}{\begin{aligned}
-            \All m, \melt'. & m \leq n \land (\melt \mtimes \melt') \in \mval_m \Ra {}\\& \Exists \meltB. (\meltB \mtimes \melt') \in \mval_m \land m \in \Sem{\vctx \proves \prop :\Prop}_\gamma(\meltB)
+            \All m, \melt'. & m \leq n \land m \in \mval(\melt \mtimes \melt') \Ra {}\\& \Exists \meltB. m \in \mval(\meltB \mtimes \melt') \land m \in \Sem{\vctx \proves \prop :\Prop}_\gamma(\meltB)
           \end{aligned}
 }
 \end{align*}

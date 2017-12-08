@@ -36,7 +36,7 @@
 \newcommand{\upclose}{\mathord{\uparrow}}
 \newcommand{\ALT}{\ |\ }
 
-\newcommand{\spac}{\,} % a space
+\newcommand{\spac}{\hskip 0.2em plus 0.1em} % a space
 
 \def\All #1.{\forall #1.\spac}%
 \def\Exists #1.{\exists #1.\spac}%
@@ -117,6 +117,7 @@
 \newcommand{\wtt}[2]{#1 : #2} % well-typed term
 
 \newcommand{\nequiv}[1]{\ensuremath{\mathrel{\stackrel{#1}{=}}}}
+\newcommand{\nincl}[1]{\ensuremath{\mathrel{\stackrel{#1}{\subseteq}}}}
 \newcommand{\notnequiv}[1]{\ensuremath{\mathrel{\stackrel{#1}{\neq}}}}
 \newcommand{\nequivset}[2]{\ensuremath{\mathrel{\stackrel{#1}{=}_{#2}}}}
 \newcommand{\nequivB}[1]{\ensuremath{\mathrel{\stackrel{#1}{\equiv}}}}

@@ -6,43 +6,46 @@ Set Default Proof Using "Type".
     base_logic.base_logic; that will also give you all the primitive
     and many derived laws for the logic. *)
 
+(* A good way of understanding this definition of the uPred OFE is to
+   consider the OFE uPred0 of monotonous SProp predicates. That is,
+   uPred0 is the OFE of non-expansive functions from M to SProp that
+   are monotonous with respect to CMRA inclusion. This notion of
+   monotonicity has to be stated in the SProp logic. Together with the
+   usual closedness property of SProp, this gives exactly uPred_mono.
+
+   Then, we quotient uPred0 *in the sProp logic* with respect to
+   equivalence on valid elements of M. That is, we quotient with
+   respect to the following *sProp* equivalence relation:
+     P1 ≡ P2 := ∀ x, ✓ x → (P1(x) ↔ P2(x))       (1)
+   When seen from the ambiant logic, obtaining this quotient requires
+   definig both a custom Equiv and Dist.
+
+
+   It is worth noting that this equivalence relation admits canonical
+   representatives. More precisely, one can show that every
+   equivalence class contains exactly one element P0 such that:
+     ∀ x, (✓ x → P0(x)) → P0(x)                 (2)
+   (Again, this assertion has to be understood in sProp). Intuitively,
+   this says that P0 trivially holds whenever the resource is invalid.
+   Starting from any element P, one can find this canonical
+   representative by choosing:
+     P0(x) := ✓ x → P(x)                        (3)
+
+   Hence, as an alternative definition of uPred, we could use the set
+   of canonical representatives (i.e., the subtype of monotonous
+   sProp predicates that verify (2)). This alternative definition would
+   save us from using a quotient. However, the definitions of the various
+   connectives would get more complicated, because we have to make sure
+   they all verify (2), which sometimes requires some adjustments. We
+   would moreover need to prove one more property for every logical
+   connective.
+ *)
+
 Record uPred (M : ucmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;
 
-  (* [uPred_mono] is used to prove non-expansiveness (guaranteed by
-     [uPred_ne]). Therefore, it is important that we do not restrict
-     it to only valid elements. *)
-  uPred_mono n x1 x2 : uPred_holds n x1 → x1 ≼{n} x2 → uPred_holds n x2;
-
-  (* We have to restrict this to hold only for valid elements,
-     otherwise this condition is no longer limit preserving, and uPred
-     does no longer form a COFE (i.e., [uPred_compl] breaks). This is
-     because the distance and equivalence on this cofe ignores the
-     truth value on invalid elements. This, in turn, is required by
-     the fact that entailment has to ignore invalid elements, which is
-     itself essential for proving [ownM_valid].
-
-     We could, actually, remove this restriction and make this
-     condition apply even to invalid elements: we have proved that
-     uPred is isomorphic to a sub-COFE of the COFE of predicates that
-     are monotonous both with respect to the step index and with
-     respect to x. However, that would essentially require changing
-     (by making it more complicated) the model of many connectives of
-     the logic, which we don't want.
-     This sub-COFE is the sub-COFE of monotonous sProp predicates P
-     such that the following sProp assertion is valid:
-          ∀ x, (V(x) → P(x)) → P(x)
-     Where V is the validity predicate.
-
-     Another way of saying that this is equivalent to this definition of
-     uPred is to notice that our definition of uPred is equivalent to
-     quotienting the COFE of monotonous sProp predicates with the
-     following (sProp) equivalence relation:
-       P1 ≡ P2  :=  ∀ x, V(x) → (P1(x) ↔ P2(x))
-     whose equivalence classes appear to all have one only canonical
-     representative such that ∀ x, (V(x) → P(x)) → P(x).
- *)
-  uPred_closed n1 n2 x : uPred_holds n1 x → n2 ≤ n1 → ✓{n2} x → uPred_holds n2 x
+  uPred_mono n1 n2 x1 x2 :
+    uPred_holds n1 x1 → x1 ≼{n1} x2 → n2 ≤ n1 → uPred_holds n2 x2
 }.
 Arguments uPred_holds {_} _ _ _ : simpl never.
 Add Printing Constructor uPred.
@@ -77,15 +80,17 @@ Section cofe.
   Canonical Structure uPredC : ofeT := OfeT (uPred M) uPred_ofe_mixin.
 
   Program Definition uPred_compl : Compl uPredC := λ c,
-    {| uPred_holds n x := c n n x |}.
-  Next Obligation. naive_solver eauto using uPred_mono. Qed.
+    {| uPred_holds n x := ∀ n', n' ≤ n → ✓{n'}x → c n' n' x |}.
   Next Obligation.
-    intros c n1 n2 x ???; simpl in *.
-    apply (chain_cauchy c n2 n1); eauto using uPred_closed.
+    move=> /= c n1 n2 x1 x2 HP Hx12 Hn12 n3 Hn23 Hv. eapply uPred_mono.
+    eapply HP, cmra_validN_includedN, cmra_includedN_le=>//; lia.
+    eapply cmra_includedN_le=>//; lia. done.
   Qed.
   Global Program Instance uPred_cofe : Cofe uPredC := {| compl := uPred_compl |}.
   Next Obligation.
-    intros n c; split=>i x ??; symmetry; apply (chain_cauchy c i n); auto.
+    intros n c; split=>i x Hin Hv.
+    etrans; [|by symmetry; apply (chain_cauchy c i n)]. split=>H; [by apply H|].
+    repeat intro. apply (chain_cauchy c n' i)=>//. by eapply uPred_mono.
   Qed.
 End cofe.
 Arguments uPredC : clear implicits.
@@ -100,8 +105,24 @@ Proof. by intros x1 x2 Hx; apply uPred_ne, equiv_dist. Qed.
 Lemma uPred_holds_ne {M} (P Q : uPred M) n1 n2 x :
   P ≡{n2}≡ Q → n2 ≤ n1 → ✓{n2} x → Q n1 x → P n2 x.
 Proof.
-  intros [Hne] ???. eapply Hne; try done.
-  eapply uPred_closed; eauto using cmra_validN_le.
+  intros [Hne] ???. eapply Hne; try done. eauto using uPred_mono, cmra_validN_le.
+Qed.
+
+(* Equivalence to the definition of uPred in the appendix. *)
+Lemma uPred_alt {M : ucmraT} (P: nat → M → Prop) :
+  (∀ n1 n2 x1 x2, P n1 x1 → x1 ≼{n1} x2 → n2 ≤ n1 → P n2 x2) ↔
+  ( (∀ x n1 n2, n2 ≤ n1 → P n1 x → P n2 x) (* Pointwise down-closed *)
+  ∧ (∀ n x1 x2, x1 ≡{n}≡ x2 → ∀ m, m ≤ n → P m x1 ↔ P m x2) (* Non-expansive *)
+  ∧ (∀ n x1 x2, x1 ≼{n} x2 → ∀ m, m ≤ n → P m x1 → P m x2) (* Monotonicity *)
+  ).
+Proof.
+  (* Provide this lemma to eauto. *)
+  assert (∀ n1 n2 (x1 x2 : M), n2 ≤ n1 → x1 ≡{n1}≡ x2 → x1 ≼{n2} x2).
+  { intros ????? H. eapply cmra_includedN_le; last done. by rewrite H. }
+  (* Now go ahead. *)
+  split.
+  - intros Hupred. repeat split; eauto using cmra_includedN_le.
+  - intros (Hdown & _ & Hmono) **. eapply Hmono; [done..|]. eapply Hdown; done.
 Qed.
 
 (** functor *)
@@ -109,7 +130,6 @@ Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CmraMorphism f} (P : uPred M1) :
   uPred M2 := {| uPred_holds n x := P n (f x) |}.
 Next Obligation. naive_solver eauto using uPred_mono, cmra_morphism_monotoneN. Qed.
-Next Obligation. naive_solver eauto using uPred_closed, cmra_morphism_validN. Qed.
 
 Instance uPred_map_ne {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CmraMorphism f} n : Proper (dist n ==> dist n) (uPred_map f).
@@ -167,7 +187,7 @@ Inductive uPred_entails {M} (P Q : uPred M) : Prop :=
 Hint Extern 0 (uPred_entails _ _) => reflexivity.
 Instance uPred_entails_rewrite_relation M : RewriteRelation (@uPred_entails M).
 
-Hint Resolve uPred_mono uPred_closed : uPred_def.
+Hint Resolve uPred_mono : uPred_def.
 
 (** Notations *)
 Notation "P ⊢ Q" := (uPred_entails P%I Q%I)
