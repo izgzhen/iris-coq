@@ -173,7 +173,11 @@ Since Iris ensures that the global ghost state is valid, this means that we can 
   \end{align*}
 \end{defn}
 
-This is a natural generalization of RAs over OFEs.
+This is a natural generalization of RAs over OFEs\footnote{The reader may wonder why on earth we call them ``cameras''.
+The reason, which may not be entirely convincing, is that ``camera'' was originally just used as a comfortable pronunciation of ``CMRA'', the name used in earlier Iris papers.
+CMRA was originally supposed to be an acronym for ``complete metric resource algebras'' (or something like that), but we were never very satisfied with it and thus ended up never spelling it out.
+To make matters worse, the ``complete'' part of CMRA is now downright misleading, for whereas previously the carrier of a CMRA was required to be a COFE (complete OFE), we have relaxed that restriction and permit it to be an (incomplete) OFE.
+For these reasons, we have decided to stick with the name ``camera'', for purposes of continuity, but to drop any pretense that it stands for something.}.
 All operations have to be non-expansive, and the validity predicate $\mval$ can now also depend on the step-index.
 We define the plain $\mvalFull$ as the ``limit'' of the step-indexed approximation:
 \[ \mvalFull(\melt) \eqdef \All n. n \in \mval(\melt) \]
