@@ -5,7 +5,7 @@
 This section describes how to build a program logic for an arbitrary language (\cf \Sref{sec:language}) on top of the base logic.
 So in the following, we assume that some language $\Lang$ was fixed.
 
-\subsection{Dynamic Composeable Higher-Order Resources}
+\subsection{Dynamic composeable higher-order resources}
 \label{sec:composeable-resources}
 
 The base logic described in \Sref{sec:base-logic} works over an arbitrary CMRA $\monoid$ defining the structure of the resources.
@@ -101,7 +101,7 @@ We will typically leave the $M_i$ implicit when asserting ghost ownership, as th
 
 
 
-\subsection{World Satisfaction, Invariants, Fancy Updates}
+\subsection{World satisfaction, invariants, fancy updates}
 \label{sec:invariants}
 
 To introduce invariants into our logic, we will define weakest precondition to explicitly thread through the proof that all the invariants are maintained throughout program execution.
@@ -137,7 +137,7 @@ The following assertion states that an invariant with name $\iname$ exists and m
 \[ \knowInv\iname\prop \eqdef \ownGhost{\gname_{\textmon{Inv}}}
   {\authfrag \mapsingleton \iname {\aginj(\latertinj(\wIso(\prop)))}} \]
 
-\paragraph{Fancy Updates and View Shifts.}
+\paragraph{Fancy updates and view shifts.}
 Next, we define \emph{fancy updates}, which are essentially the same as the basic updates of the base logic ($\Sref{sec:base-logic}$), except that they also have access to world satisfaction and can enable and disable invariants:
 \[ \pvs[\mask_1][\mask_2] \prop \eqdef W * \ownGhost{\gname_{\textmon{En}}}{\mask_1} \wand \upd\diamond (W * \ownGhost{\gname_{\textmon{En}}}{\mask_2} * \prop) \]
 Here, $\mask_1$ and $\mask_2$ are the \emph{masks} of the view update, defining which invariants have to be (at least!) available before and after the update.
@@ -244,7 +244,7 @@ Still, just to give an idea of what view shifts ``are'', here are some proof rul
   {\FALSE \vs[\mask_1][\mask_2] \prop }
 \end{mathparpagebreakable}
 
-\subsection{Weakest Precondition}
+\subsection{Weakest preconditions}
 
 Finally, we can define the core piece of the program logic, the assertion that reasons about program behavior: Weakest precondition, from which Hoare triples will be derived.
 
@@ -439,7 +439,7 @@ We only give some of the proof rules for Hoare triples here, since we usually do
 %   {\knowInv\iname\propC \proves \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask \uplus \set\iname]}
 \end{mathparpagebreakable}
 
-\subsection{Invariant Namespaces}
+\subsection{Invariant namespaces}
 \label{sec:namespaces}
 
 In \Sref{sec:invariants}, we defined an assertion $\knowInv\iname\prop$ expressing knowledge (\ie the assertion is persistent) that $\prop$ is maintained as invariant with name $\iname$.
