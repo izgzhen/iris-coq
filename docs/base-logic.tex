@@ -1,8 +1,8 @@
 \section{Base Logic}
 \label{sec:base-logic}
 
-The base logic is parameterized by an arbitrary CMRA $\monoid$ having a unit $\munit$.
-By \lemref{lem:cmra-unit-total-core}, this means that the core of $\monoid$ is a total function, so we will treat it as such in the following.
+The base logic is parameterized by an arbitrary camera $\monoid$ having a unit $\munit$.
+By \lemref{lem:camera-unit-total-core}, this means that the core of $\monoid$ is a total function, so we will treat it as such in the following.
 This defines the structure of resources that can be owned.
 
 As usual for higher-order logics, you can furthermore pick a \emph{signature} $\Sig = (\SigType, \SigFn, \SigAx)$ to add more types, symbols and axioms to the language.
@@ -193,7 +193,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	\infer{\vctx \proves \wtt{\melt}{\textlog{M}}}
 		{\vctx \proves \wtt{\ownM{\melt}}{\Prop}}
 \and
-	\infer{\vctx \proves \wtt{\melt}{\type} \and \text{$\type$ is a CMRA}}
+	\infer{\vctx \proves \wtt{\melt}{\type} \and \text{$\type$ is a camera}}
 		{\vctx \proves \wtt{\mval(\melt)}{\Prop}}
 \and
 	\infer{\vctx \proves \wtt{\prop}{\Prop}}
