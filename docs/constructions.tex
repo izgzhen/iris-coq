@@ -1,11 +1,11 @@
-\section{OFE and COFE constructions}
+\section{OFE and COFE Constructions}
 
-\subsection{Trivial pointwise lifting}
+\subsection{Trivial Pointwise Lifting}
 
 The (C)OFE structure on many types can be easily obtained by pointwise lifting of the structure of the components.
 This is what we do for option $\maybe\cofe$, product $(M_i)_{i \in I}$ (with $I$ some finite index set), sum $\cofe + \cofe'$ and finite partial functions $K \fpfn \monoid$ (with $K$ infinite countable).
 
-\subsection{Next (type-level later)}
+\subsection{Next (Type-Level Later)}
 
 Given a OFE $\cofe$, we define $\latert\cofe$ as follows (using a datatype-like notation to define the type):
 \begin{align*}
@@ -51,7 +51,7 @@ connective.
 
 
 \clearpage
-\section{RA and CMRA constructions}
+\section{RA and CMRA Constructions}
 
 \subsection{Product}
 \label{sec:prodm}
@@ -116,7 +116,7 @@ We can easily extend this to a full CMRA by defining a suitable core, namely
 \end{align*}
 Notice that this core is total, as the result always lies in $\maybe\monoid$ (rather than in $\maybe{\mathord{\maybe\monoid}}$).
 
-\subsection{Finite partial function}
+\subsection{Finite Partial Functions}
 \label{sec:fpfnm}
 
 Given some infinite countable $K$ and some CMRA $\monoid$, the set of finite partial functions $K \fpfn \monoid$ is equipped with a CMRA structure by lifting everything pointwise.
@@ -308,7 +308,7 @@ We then obtain
   {\authfull \melt_1 , \authfrag \meltB_1 \mupd \authfull \melt_2 , \authfrag \meltB_2}
 \end{mathpar}
 
-\subsection{STS with tokens}
+\subsection{STS with Tokens}
 \label{sec:sts-cmra}
 
 Given a state-transition system~(STS, \ie a directed graph) $(\STSS, {\stsstep} \subseteq \STSS \times \STSS)$, a set of tokens $\STST$, and a labeling $\STSL: \STSS \ra \wp(\STST)$ of \emph{protocol-owned} tokens for each state, we construct an RA modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
