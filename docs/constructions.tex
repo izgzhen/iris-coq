@@ -19,7 +19,7 @@ $\latert(-)$ is a locally \emph{contractive} functor from $\OFEs$ to $\OFEs$.
 
 \subsection{Uniform Predicates}
 
-Given a CMRA $\monoid$, we define the COFE $\UPred(\monoid)$ of \emph{uniform predicates} over $\monoid$ as follows:
+Given a camera $\monoid$, we define the COFE $\UPred(\monoid)$ of \emph{uniform predicates} over $\monoid$ as follows:
 \begin{align*}
 \monoid \monnra \SProp \eqdef{}& \setComp{\pred: \monoid \nfn \SProp}
 {\All n, \melt, \meltB. \melt \mincl[n] \meltB \Ra \pred(\melt) \nincl{n} \pred(\meltB)} \\
@@ -27,7 +27,7 @@ Given a CMRA $\monoid$, we define the COFE $\UPred(\monoid)$ of \emph{uniform pr
   \pred \equiv \predB \eqdef{}& \All m, \melt. m \in \mval(\melt) \Ra (m \in \pred(\melt) \iff  m \in \predB(\melt)) \\
   \pred \nequiv{n} \predB \eqdef{}& \All m \le n, \melt. m \in \mval(\melt) \Ra (m \in \pred(\melt) \iff  m \in \predB(\melt))
 \end{align*}
-You can think of uniform predicates as monotone, step-indexed predicates over a CMRA that ``ignore'' invalid elements (as defined by the quotient).
+You can think of uniform predicates as monotone, step-indexed predicates over a camera that ``ignore'' invalid elements (as defined by the quotient).
 
 $\UPred(-)$ is a locally non-expansive functor from $\CMRAs$ to $\COFEs$.
 
@@ -51,12 +51,12 @@ connective.
 
 
 \clearpage
-\section{RA and CMRA Constructions}
+\section{RA and Camera Constructions}
 
 \subsection{Product}
 \label{sec:prodm}
 
-Given a family $(M_i)_{i \in I}$ of CMRAs ($I$ finite), we construct a CMRA for the product $\prod_{i \in I} M_i$ by lifting everything pointwise.
+Given a family $(M_i)_{i \in I}$ of cameras ($I$ finite), we construct a camera for the product $\prod_{i \in I} M_i$ by lifting everything pointwise.
 
 Frame-preserving updates on the $M_i$ lift to the product:
 \begin{mathpar}
@@ -68,7 +68,7 @@ Frame-preserving updates on the $M_i$ lift to the product:
 \subsection{Sum}
 \label{sec:summ}
 
-The \emph{sum CMRA} $\monoid_1 \csumm \monoid_2$ for any CMRAs $\monoid_1$ and $\monoid_2$ is defined as (again, we use a datatype-like notation):
+The \emph{sum camera} $\monoid_1 \csumm \monoid_2$ for any cameras $\monoid_1$ and $\monoid_2$ is defined as (again, we use a datatype-like notation):
 \begin{align*}
   \monoid_1 \csumm \monoid_2 \eqdef{}& \cinl(\melt_1:\monoid_1) \mid \cinr(\melt_2:\monoid_2) \mid \mundef \\
   \mval(\mundef) \eqdef{}& \emptyset \\
@@ -82,7 +82,7 @@ Above, $\mval_1$ refers to the validity of $\monoid_1$.
 The validity, composition and core for $\cinr$ are defined symmetrically.
 The remaining cases of the composition and core are all $\mundef$.
 
-Notice that we added the artificial ``invalid'' (or ``undefined'') element $\mundef$ to this CMRA just in order to make certain compositions of elements (in this case, $\cinl$ and $\cinr$) invalid.
+Notice that we added the artificial ``invalid'' (or ``undefined'') element $\mundef$ to this camera just in order to make certain compositions of elements (in this case, $\cinl$ and $\cinr$) invalid.
 
 The step-indexed equivalence is inductively defined as follows:
 \begin{mathpar}
@@ -104,12 +104,12 @@ We obtain the following frame-preserving updates, as well as their symmetric cou
   {\All \melt_\f \in M, n. n  \notin \mval(\melt \mtimes \melt_\f) \and \mvalFull(\meltB)}
   {\cinl(\melt) \mupd \cinr(\meltB)}
 \end{mathpar}
-Crucially, the second rule allows us to \emph{swap} the ``side'' of the sum that the CMRA is on if $\mval$ has \emph{no possible frame}.
+Crucially, the second rule allows us to \emph{swap} the ``side'' of the sum that the camera is on if $\mval$ has \emph{no possible frame}.
 
 \subsection{Option}
 
-The definition of the (CM)RA axioms already lifted the composition operation on $\monoid$ to one on $\maybe\monoid$.
-We can easily extend this to a full CMRA by defining a suitable core, namely
+The definition of the camera/RA axioms already lifted the composition operation on $\monoid$ to one on $\maybe\monoid$.
+We can easily extend this to a full camera by defining a suitable core, namely
 \begin{align*}
   \mcore{\mnocore} \eqdef{}& \mnocore & \\
   \mcore{\maybe\melt} \eqdef{}& \mcore\melt & \text{If $\maybe\melt \neq \mnocore$}
@@ -119,7 +119,7 @@ Notice that this core is total, as the result always lies in $\maybe\monoid$ (ra
 \subsection{Finite Partial Functions}
 \label{sec:fpfnm}
 
-Given some infinite countable $K$ and some CMRA $\monoid$, the set of finite partial functions $K \fpfn \monoid$ is equipped with a CMRA structure by lifting everything pointwise.
+Given some infinite countable $K$ and some camera $\monoid$, the set of finite partial functions $K \fpfn \monoid$ is equipped with a camera structure by lifting everything pointwise.
 
 We obtain the following frame-preserving updates:
 \begin{mathpar}
@@ -141,7 +141,7 @@ $K \fpfn (-)$ is a locally non-expansive functor from $\CMRAs$ to $\CMRAs$.
 
 \subsection{Agreement}
 
-Given some OFE $\cofe$, we define the CMRA $\agm(\cofe)$ as follows:
+Given some OFE $\cofe$, we define the camera $\agm(\cofe)$ as follows:
 \begin{align*}
   \agm(\cofe) \eqdef{}& \setComp{\melt \in \finpset\cofe}{\melt \neq \emptyset} /\ {\sim} \\[-0.2em]
   \melt \nequiv{n} \meltB \eqdef{}& (\All x \in \melt. \Exists y \in \meltB. x \nequiv{n} y) \land (\All y \in \meltB. \Exists x \in \melt. x \nequiv{n} y) \\
@@ -168,9 +168,9 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
 \end{mathpar}
 
 
-\subsection{Exclusive CMRA}
+\subsection{Exclusive Camera}
 
-Given an OFE $\cofe$, we define a CMRA $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
+Given an OFE $\cofe$, we define a camera $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
 \begin{align*}
   \exm(\cofe) \eqdef{}& \exinj(\cofe) \mid \mundef \\
   \mval(\melt) \eqdef{}& \setComp{n}{\melt \neq \mundef}
@@ -276,9 +276,9 @@ We obtain the following frame-preserving update:
 
 
 \subsection{Authoritative}
-\label{sec:auth-cmra}
+\label{sec:auth-camera}
 
-Given a CMRA $M$, we construct $\authm(M)$ modeling someone owning an \emph{authoritative} element $\melt$ of $M$, and others potentially owning fragments $\meltB \mincl \melt$ of $\melt$.
+Given a camera $M$, we construct $\authm(M)$ modeling someone owning an \emph{authoritative} element $\melt$ of $M$, and others potentially owning fragments $\meltB \mincl \melt$ of $\melt$.
 We assume that $M$ has a unit $\munit$, and hence its core is total.
 (If $M$ is an exclusive monoid, the construction is very similar to a half-ownership monoid with two asymmetric halves.)
 \begin{align*}
@@ -309,7 +309,7 @@ We then obtain
 \end{mathpar}
 
 \subsection{STS with Tokens}
-\label{sec:sts-cmra}
+\label{sec:sts-camera}
 
 Given a state-transition system~(STS, \ie a directed graph) $(\STSS, {\stsstep} \subseteq \STSS \times \STSS)$, a set of tokens $\STST$, and a labeling $\STSL: \STSS \ra \wp(\STST)$ of \emph{protocol-owned} tokens for each state, we construct an RA modeling an authoritative current state and permitting transitions given a \emph{bound} on the current state and a set of \emph{locally-owned} tokens.
 

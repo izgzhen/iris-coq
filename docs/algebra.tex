@@ -126,7 +126,7 @@ RAs are closely related to \emph{Partial Commutative Monoids} (PCMs), with two k
 \item The composition operation on RAs is total (as opposed to the partial composition operation of a PCM), but there is a specific subset of \emph{valid} elements that is compatible with the composition operation (\ruleref{ra-valid-op}).
 These valid elements are identified by the \emph{validity predicate} $\mvalFull$.
 
-This take on partiality is necessary when defining the structure of \emph{higher-order} ghost state, CMRAs, in the next subsection.
+This take on partiality is necessary when defining the structure of \emph{higher-order} ghost state, \emph{cameras}, in the next subsection.
 
 \item Instead of a single unit that is an identity to every element, we allow
 for an arbitrary number of units, via a function $\mcore{{-}}$ assigning to an element $\melt$ its \emph{(duplicable) core} $\mcore\melt$, as demanded by \ruleref{ra-core-id}.
@@ -154,22 +154,22 @@ Notice that $\maybe{\melt_\f}$ could be $\mnocore$, so the frame-preserving upda
 Intuitively, this means that whatever assumptions the rest of the program is making about the state of $\gname$, if these assumptions are compatible with $\melt$, then updating to $\meltB$ will not invalidate any of these assumptions.
 Since Iris ensures that the global ghost state is valid, this means that we can soundly update the ghost state from $\melt$ to a non-deterministically picked $\meltB \in \meltsB$.
 
-\subsection{CMRA}
+\subsection{Cameras}
 
 \begin{defn}
-  A \emph{CMRA} is a tuple $(\monoid : \OFEs, \mval : \monoid \nfn \SProp, \mcore{{-}}: \monoid \nfn \maybe\monoid,\\ (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying:
+  A \emph{camera} is a tuple $(\monoid : \OFEs, \mval : \monoid \nfn \SProp, \mcore{{-}}: \monoid \nfn \maybe\monoid,\\ (\mtimes) : \monoid \times \monoid \nfn \monoid)$ satisfying:
   \begin{align*}
-    \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{cmra-assoc} \\
-    \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{cmra-comm} \\
-    \All \melt.& \mcore\melt \in \monoid \Ra \mcore\melt \mtimes \melt = \melt \tagH{cmra-core-id} \\
-    \All \melt.& \mcore\melt \in \monoid \Ra \mcore{\mcore\melt} = \mcore\melt \tagH{cmra-core-idem} \\
-    \All \melt, \meltB.& \mcore\melt \in \monoid \land \melt \mincl \meltB \Ra \mcore\meltB \in \monoid \land \mcore\melt \mincl \mcore\meltB \tagH{cmra-core-mono} \\
-    \All \melt, \meltB.& \mval(\melt \mtimes \meltB) \subseteq \mval(\melt)  \tagH{cmra-valid-op} \\
+    \All \melt, \meltB, \meltC.& (\melt \mtimes \meltB) \mtimes \meltC = \melt \mtimes (\meltB \mtimes \meltC) \tagH{camera-assoc} \\
+    \All \melt, \meltB.& \melt \mtimes \meltB = \meltB \mtimes \melt \tagH{camera-comm} \\
+    \All \melt.& \mcore\melt \in \monoid \Ra \mcore\melt \mtimes \melt = \melt \tagH{camera-core-id} \\
+    \All \melt.& \mcore\melt \in \monoid \Ra \mcore{\mcore\melt} = \mcore\melt \tagH{camera-core-idem} \\
+    \All \melt, \meltB.& \mcore\melt \in \monoid \land \melt \mincl \meltB \Ra \mcore\meltB \in \monoid \land \mcore\melt \mincl \mcore\meltB \tagH{camera-core-mono} \\
+    \All \melt, \meltB.& \mval(\melt \mtimes \meltB) \subseteq \mval(\melt)  \tagH{camera-valid-op} \\
     \All n, \melt, \meltB_1, \meltB_2.& \omit\rlap{$n \in \mval(\melt) \land \melt \nequiv{n} \meltB_1 \mtimes \meltB_2 \Ra {}$} \\
-    &\Exists \meltC_1, \meltC_2. \melt = \meltC_1 \mtimes \meltC_2 \land \meltC_1 \nequiv{n} \meltB_1 \land \meltC_2 \nequiv{n} \meltB_2 \tagH{cmra-extend} \\
+    &\Exists \meltC_1, \meltC_2. \melt = \meltC_1 \mtimes \meltC_2 \land \meltC_1 \nequiv{n} \meltB_1 \land \meltC_2 \nequiv{n} \meltB_2 \tagH{camera-extend} \\
     \text{where}\qquad\qquad\\
-    \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{cmra-incl} \\
-    \melt \mincl[n] \meltB \eqdef{}& \Exists \meltC. \meltB \nequiv{n} \melt \mtimes \meltC \tagH{cmra-inclN}
+    \melt \mincl \meltB \eqdef{}& \Exists \meltC. \meltB = \melt \mtimes \meltC \tagH{camera-incl} \\
+    \melt \mincl[n] \meltB \eqdef{}& \Exists \meltC. \meltB \nequiv{n} \melt \mtimes \meltC \tagH{camera-inclN}
   \end{align*}
 \end{defn}
 
@@ -178,7 +178,7 @@ All operations have to be non-expansive, and the validity predicate $\mval$ can 
 We define the plain $\mvalFull$ as the ``limit'' of the step-indexed approximation:
 \[ \mvalFull(\melt) \eqdef \All n. n \in \mval(\melt) \]
 
-\paragraph{The extension axiom (\ruleref{cmra-extend}).}
+\paragraph{The extension axiom (\ruleref{camera-extend}).}
 Notice that the existential quantification in this axiom is \emph{constructive}, \ie it is a sigma type in Coq.
 The purpose of this axiom is to compute $\melt_1$, $\melt_2$ completing the following square:
 
@@ -203,7 +203,7 @@ This operation is needed to prove that $\later$ commutes with separating conjunc
 \end{mathpar}
 
 \begin{defn}
-  An element $\munit$ of a CMRA $\monoid$ is called the \emph{unit} of $\monoid$ if it satisfies the following conditions:
+  An element $\munit$ of a camera $\monoid$ is called the \emph{unit} of $\monoid$ if it satisfies the following conditions:
   \begin{enumerate}[itemsep=0pt]
   \item $\munit$ is valid: \\ $\All n. n \in \mval(\munit)$
   \item $\munit$ is a left-identity of the operation: \\
@@ -212,7 +212,7 @@ This operation is needed to prove that $\later$ commutes with separating conjunc
   \end{enumerate}
 \end{defn}
 
-\begin{lem}\label{lem:cmra-unit-total-core}
+\begin{lem}\label{lem:camera-unit-total-core}
   If $\monoid$ has a unit $\munit$, then the core $\mcore{{-}}$ is total, \ie $\All\melt. \mcore\melt \in \monoid$.
 \end{lem}
 
@@ -225,18 +225,18 @@ This operation is needed to prove that $\later$ commutes with separating conjunc
 Note that for RAs, this and the RA-based definition of a frame-preserving update coincide.
 
 \begin{defn}
-  A CMRA $\monoid$ is \emph{discrete} if it satisfies the following conditions:
+  A camera $\monoid$ is \emph{discrete} if it satisfies the following conditions:
   \begin{enumerate}[itemsep=0pt]
   \item $\monoid$ is a discrete COFE
   \item $\mval$ ignores the step-index: \\
     $\All \melt \in \monoid. 0 \in \mval(\melt) \Ra \All n. n \in \mval(\melt)$
   \end{enumerate}
 \end{defn}
-Note that every RA is a discrete CMRA, by picking the discrete COFE for the equivalence relation.
-Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE structure, as well as the step-index of $\mval$.
+Note that every RA is a discrete camera, by picking the discrete COFE for the equivalence relation.
+Furthermore, discrete cameras can be turned into RAs by ignoring their COFE structure, as well as the step-index of $\mval$.
 
-\begin{defn}[CMRA homomorphism]
-  A function $f : \monoid_1 \to \monoid_2$ between two CMRAs is \emph{a CMRA homomorphism} if it satisfies the following conditions:
+\begin{defn}[Camera homomorphism]
+  A function $f : \monoid_1 \to \monoid_2$ between two cameras is \emph{a camera homomorphism} if it satisfies the following conditions:
   \begin{enumerate}[itemsep=0pt]
   \item $f$ is non-expansive
   \item $f$ commutes with composition:\\
@@ -249,7 +249,7 @@ Furthermore, discrete CMRAs can be turned into RAs by ignoring their COFE struct
 \end{defn}
 
 \begin{defn}
-  The category $\CMRAs$ consists of CMRAs as objects, and monotone functions as arrows.
+  The category $\CMRAs$ consists of cameras as objects, and monotone functions as arrows.
 \end{defn}
 Note that every object/arrow in $\CMRAs$ is also an object/arrow of $\OFEs$.
 The notion of a locally non-expansive (or contractive) bifunctor naturally generalizes to bifunctors between these categories.

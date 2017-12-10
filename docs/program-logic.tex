@@ -8,13 +8,13 @@ So in the following, we assume that some language $\Lang$ was fixed.
 \subsection{Dynamic Composeable Higher-Order Resources}
 \label{sec:composeable-resources}
 
-The base logic described in \Sref{sec:base-logic} works over an arbitrary CMRA $\monoid$ defining the structure of the resources.
-It turns out that we can generalize this further and permit picking CMRAs ``$\iFunc(\Prop)$'' that depend on the structure of assertions themselves.
+The base logic described in \Sref{sec:base-logic} works over an arbitrary camera $\monoid$ defining the structure of the resources.
+It turns out that we can generalize this further and permit picking cameras ``$\iFunc(\Prop)$'' that depend on the structure of assertions themselves.
 Of course, $\Prop$ is just the syntactic type of assertions; for this to make sense we have to look at the semantics.
 
-Furthermore, there is a composability problem with the given logic: if we have one proof performed with CMRA $\monoid_1$, and another proof carried out with a \emph{different} CMRA $\monoid_2$, then the two proofs are actually carried out in two \emph{entirely separate logics} and hence cannot be combined.
+Furthermore, there is a composability problem with the given logic: if we have one proof performed with camera $\monoid_1$, and another proof carried out with a \emph{different} camera $\monoid_2$, then the two proofs are actually carried out in two \emph{entirely separate logics} and hence cannot be combined.
 
-Finally, in many cases just having a single ``instance'' of a CMRA available for reasoning is not enough.
+Finally, in many cases just having a single ``instance'' of a camera available for reasoning is not enough.
 For example, when reasoning about a dynamically allocated data structure, every time a new instance of that data structure is created, we will want a fresh resource governing the state of this particular instance.
 While it would be possible to handle this problem whenever it comes up, it turns out to be useful to provide a general solution.
 
@@ -23,7 +23,7 @@ The purpose of this section is to describe how we solve these issues.
 \paragraph{Picking the resources.}
 The key ingredient that we will employ on top of the base logic is to give some more fixed structure to the resources.
 To instantiate the program logic, the user picks a family of locally contractive bifunctors $(\iFunc_i : \OFEs \to \CMRAs)_{i \in \mathcal{I}}$.
-(This is in contrast to the base logic, where the user picks a single, fixed CMRA that has a unit.)
+(This is in contrast to the base logic, where the user picks a single, fixed camera that has a unit.)
 
 From this, we construct the bifunctor defining the overall resources as follows:
 \begin{align*}
@@ -31,7 +31,7 @@ From this, we construct the bifunctor defining the overall resources as follows:
   \textdom{ResF}(\ofe^\op, \ofe) \eqdef{}& \prod_{i \in \mathcal I} \GName \fpfn \iFunc_i(\ofe^\op, \ofe)
 \end{align*}
 We will motivate both the use of a product and the finite partial function below.
-$\textdom{ResF}(\ofe^\op, \ofe)$ is a CMRA by lifting the individual CMRAs pointwise, and it has a unit (using the empty finite partial functions).
+$\textdom{ResF}(\ofe^\op, \ofe)$ is a camera by lifting the individual cameras pointwise, and it has a unit (using the empty finite partial functions).
 Furthermore, since the $\iFunc_i$ are locally contractive, so is $\textdom{ResF}$.
 
 Now we can write down the recursive domain equation:
@@ -47,13 +47,13 @@ We do not need to consider how the object $\iPreProp$ is constructed, we only ne
 
 Notice that $\iProp$ is the semantic model of assertions for the base logic described in \Sref{sec:base-logic} with $\Res$:
 \[ \Sem{\Prop} \eqdef \iProp = \UPred(\Res) \]
-Effectively, we just defined a way to instantiate the base logic with $\Res$ as the CMRA of resources, while providing a way for $\Res$ to depend on $\iPreProp$, which is isomorphic to $\Sem\Prop$.
+Effectively, we just defined a way to instantiate the base logic with $\Res$ as the camera of resources, while providing a way for $\Res$ to depend on $\iPreProp$, which is isomorphic to $\Sem\Prop$.
 
 We thus obtain all the rules of \Sref{sec:base-logic}, and furthermore, we can use the maps $\wIso$ and $\wIso^{-1}$ \emph{in the logic} to convert between logical assertions $\Sem\Prop$ and the domain $\iPreProp$ which is used in the construction of $\Res$ -- so from elements of $\iPreProp$, we can construct elements of $\Sem{\textlog M}$, which are the elements that can be owned in our logic.
 
 \paragraph{Proof composability.}
 To make our proofs composeable, we \emph{generalize} our proofs over the family of functors.
-This is possible because we made $\Res$ a \emph{product} of all the CMRAs picked by the user, and because we can actually work with that product ``pointwise''.
+This is possible because we made $\Res$ a \emph{product} of all the cameras picked by the user, and because we can actually work with that product ``pointwise''.
 So instead of picking a \emph{concrete} family, proofs will assume to be given an \emph{arbitrary} family of functors, plus a proof that this family \emph{contains the functors they need}.
 Composing two proofs is then merely a matter of conjoining the assumptions they make about the functors.
 Since the logic is entirely parametric in the choice of functors, there is no trouble reasoning without full knowledge of the family of functors.
@@ -61,7 +61,7 @@ Since the logic is entirely parametric in the choice of functors, there is no tr
 Only when the top-level proof is completed we will ``close'' the proof by picking a concrete family that contains exactly those functors the proof needs.
 
 \paragraph{Dynamic resources.}
-Finally, the use of finite partial functions lets us have as many instances of any CMRA as we could wish for:
+Finally, the use of finite partial functions lets us have as many instances of any camera as we could wish for:
 Because there can only ever be finitely many instances already allocated, it is always possible to create a fresh instance with any desired (valid) starting state.
 This is best demonstrated by giving some proof rules.
 
@@ -96,7 +96,7 @@ We can show the following properties for this form of ownership:
 \end{mathparpagebreakable}
 
 Below, we will always work within (an instance of) the logic as described here.
-Whenever a CMRA is used in a proof, we implicitly assume it to be available in the global family of functors.
+Whenever a camera is used in a proof, we implicitly assume it to be available in the global family of functors.
 We will typically leave the $M_i$ implicit when asserting ghost ownership, as the type of $\melt$ will be clear from the context.
 
 
@@ -108,7 +108,7 @@ To introduce invariants into our logic, we will define weakest precondition to e
 However, in order to be able to access invariants, we will also have to provide a way to \emph{temporarily disable} (or ``open'') them.
 To this end, we use tokens that manage which invariants are currently enabled.
 
-We assume to have the following four CMRAs available:
+We assume to have the following four cameras available:
 \begin{align*}
   \InvName \eqdef{}& \nat \\
   \textmon{Inv} \eqdef{}& \authm(\InvName \fpfn \agm(\latert \iPreProp)) \\
@@ -117,7 +117,7 @@ We assume to have the following four CMRAs available:
 \end{align*}
 The last two are the tokens used for managing invariants, $\textmon{Inv}$ is the monoid used to manage the invariants themselves.
 
-We assume that at the beginning of the verification, instances named $\gname_{\textmon{State}}$, $\gname_{\textmon{Inv}}$, $\gname_{\textmon{En}}$ and $\gname_{\textmon{Dis}}$ of these CMRAs have been created, such that these names are globally known.
+We assume that at the beginning of the verification, instances named $\gname_{\textmon{State}}$, $\gname_{\textmon{Inv}}$, $\gname_{\textmon{En}}$ and $\gname_{\textmon{Dis}}$ of these cameras have been created, such that these names are globally known.
 
 \paragraph{World Satisfaction.}
 We can now define the assertion $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
