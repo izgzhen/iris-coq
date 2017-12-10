@@ -83,14 +83,23 @@ COFEs are \emph{complete OFEs}, which means that we can take limits of arbitrary
 \end{defn}
 
 The function space $\ofe \nfn \cofeB$ is a COFE if $\cofeB$ is a COFE (\ie the domain $\ofe$ can actually be just an OFE).
-
-Completeness is necessary to take fixed-points.
-For once, every contractive function $f : \cofe \to \cofe$ where $\cofe$ is a COFE and inhabited has a \emph{unique} fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
-This also holds if $f^k$ is contractive for an arbitrary $k$.
-Furthermore, by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}, every contractive (bi)functor from $\COFEs$ to $\COFEs$ has a unique\footnote{Uniqueness is not proven in Coq.} fixed-point.
-
 $\SProp$ as defined above is complete, \ie it is a COFE.
 
+Completeness is necessary to take fixed-points.
+
+\begin{thm}[Banach's fixed-point]
+\label{thm:banach}
+Given an inhabited COFE $\ofe$ and a contractive function $f : \ofe \to \ofe$, there exists a unique fixed-point $\fixp_T f$ such that $f(\fixp_T f) = \fixp_T f$.
+\end{thm}
+
+The above theorem also holds if $f^k$ is contractive for an arbitrary $k$.
+
+\begin{thm}[America and Rutten~\cite{America-Rutten:JCSS89,birkedal:metric-space}]
+\label{thm:america_rutten}
+Let $1$ be the discrete COFE on the unit type: $1 \eqdef \Delta \{ () \}$.
+Given a locally contractive bifunctor $G : \COFEs^{\textrm{op}} \times \COFEs \to \COFEs$, and provided that \(G(1, 1)\) is inhabited,
+then there exists a unique\footnote{Uniqueness is not proven in Coq.} COFE $\ofe$ such that $G(\ofe^{\textrm{op}}, \ofe) \cong \ofe$ (\ie the two are isomorphic in $\COFEs$).
+\end{thm}
 
 \subsection{RA}
 
