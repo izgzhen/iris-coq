@@ -32,7 +32,7 @@ Notice that these are immutable locations, so the maps-to proposition is persist
 The rule \ruleref{sprop-alloc} is then thought of as allocation, and the rule \ruleref{sprop-agree} states that a given location $\gname$ can only store \emph{one} proposition, so multiple witnesses covering the same location must agree.
 
 %Compared to saved propositions in prior work, \ruleref{sprop-alloc} is stronger since the stored proposition can depend on the name being allocated.
-%\derek{Can't we cut the above sentence?  This makes it sound like we are doing something weird that we ought not to be since prior work didn't do it.  But in fact, I thought that in our construction we don't really need to rely on this feature at all!  So I'm confused.}
+%\derek{Can't we cut the above sentence?  This makes it sound like we are doing something weird that we ought not to be since prior work didn't do it.  But in fact, I thought that in our construction we do not really need to rely on this feature at all!  So I'm confused.}
 The conclusion of \ruleref{sprop-agree} usually is guarded by a $\later$.
 The point of this theorem is to show that said later is \emph{essential}, as removing it introduces inconsistency.
 %
@@ -43,7 +43,7 @@ $A(\gname) \eqdef \Exists \prop : \Prop. \always\lnot \prop \land \gname \Mapsto
 Intuitively, $A(\gname)$ says that the saved proposition named $\gname$ does \emph{not} hold, \ie we can disprove it.
 Using \ruleref{sprop-persist}, it is immediate that $A(\gname)$ is persistent.
 
-Now, by applying \ruleref{sprop-alloc} with $A$, we obtain a proof of $\prop \eqdef \gname \Mapsto A(\gname)$: this says that the proposition named $\gname$ is the proposition saying that it, itself, doesn't hold.
+Now, by applying \ruleref{sprop-alloc} with $A$, we obtain a proof of $\prop \eqdef \gname \Mapsto A(\gname)$: this says that the proposition named $\gname$ is the proposition saying that it, itself, does not hold.
 In other words, $\prop$ says that the proposition named $\gname$ expresses its own negation.
 Unsurprisingly, that leads to a contradiction, as is shown in the following lemma:
 \begin{lem}   \label{lem:saved-prop-counterexample-not-agname}   We have $\gname \Mapsto A(\gname) \proves \always\lnot A(\gname)$ and $\gname \Mapsto A(\gname) \proves A(\gname)$. \end{lem}
