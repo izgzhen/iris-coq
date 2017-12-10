@@ -80,7 +80,7 @@ For every definition, we have to show all the side-conditions: The maps have to 
 	\Sem{\vctx \proves \term(\termB) : \type'}_\gamma &\eqdef
 	\Sem{\vctx \proves \term : \type \to \type'}_\gamma(\Sem{\vctx \proves \termB : \type}_\gamma) \\
 	\Sem{\vctx \proves \MU \var:\type. \term : \type}_\gamma &\eqdef
-	\mathit{fix}(\Lam \termB : \Sem{\type}. \Sem{\vctx, x : \type \proves \term : \type}_{\mapinsert \var \termB \gamma}) \\
+	\fixp_{\Sem{\type}}(\Lam \termB : \Sem{\type}. \Sem{\vctx, x : \type \proves \term : \type}_{\mapinsert \var \termB \gamma}) \\
   ~\\
 	\Sem{\vctx \proves \textlog{abort}\;\term : \type}_\gamma &\eqdef \mathit{abort}_{\Sem\type}(\Sem{\vctx \proves \term:0}_\gamma) \\
 	\Sem{\vctx \proves () : 1}_\gamma &\eqdef () \\
@@ -102,7 +102,7 @@ For every definition, we have to show all the side-conditions: The maps have to 
 An environment $\vctx$ is interpreted as the set of
 finite partial functions $\rho$, with $\dom(\rho) = \dom(\vctx)$ and
 $\rho(x)\in\Sem{\vctx(x)}$.
-Above, $\mathit{fix}$ is the fixed-point on COFEs, and $\mathit{abort}_T$ is the unique function $\emptyset \to T$.
+Above, $\fixp$ is Banach's fixed-point (see \thmref{thm:banach}), and $\mathit{abort}_T$ is the unique function $\emptyset \to T$.
 
 \paragraph{Logical entailment.}
 We can now define \emph{semantic} logical entailment.
