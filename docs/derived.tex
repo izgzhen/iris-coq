@@ -61,18 +61,18 @@ from which we can derive
 
 \subsection{Boxes}
 
-The idea behind the \emph{boxes} is to have an assertion $\prop$ that is actually split into a number of pieces, each of which can be taken out and back in separately.
-In some sense, this is a replacement for having an ``authoritative PCM of Iris assertions itself''.
+The idea behind the \emph{boxes} is to have an proposition $\prop$ that is actually split into a number of pieces, each of which can be taken out and back in separately.
+In some sense, this is a replacement for having an ``authoritative PCM of Iris propositions itself''.
 It is similar to the pattern involving saved propositions that was used for the barrier~\cite{iris2}, but more complicated because there are some operations that we want to perform without a later.
 
-Roughly, the idea is that a \emph{box} is a container for an assertion $\prop$.
-A box consists of a bunch of \emph{slices} which decompose $\prop$ into a separating conjunction of the assertions $\propB_\sname$ governed by the individual slices.
+Roughly, the idea is that a \emph{box} is a container for an proposition $\prop$.
+A box consists of a bunch of \emph{slices} which decompose $\prop$ into a separating conjunction of the propositions $\propB_\sname$ governed by the individual slices.
 Each slice is either \emph{full} (it right now contains $\propB_\sname$), or \emph{empty} (it does not contain anything currently).
-The assertion governing the box keeps track of the state of all the slices that make up the box.
+The proposition governing the box keeps track of the state of all the slices that make up the box.
 The crux is that opening and closing of a slice can be done even if we only have ownership of the boxes ``later'' ($\later$).
 
 The interface for boxes is as follows:
-The two core assertions are: $\BoxSlice\namesp\prop\sname$, saying that there is a slice in namespace $\namesp$ with name $\sname$  and content $\prop$; and $\ABox\namesp\prop{f}$, saying that $f$ describes the slices of a box in namespace $\namesp$, such that all the slices together contain $\prop$. Here, $f$ is of type $\nat \fpfn \BoxState$ mapping names to states, where $\BoxState \eqdef \set{\BoxFull, \BoxEmp}$.
+The two core propositions are: $\BoxSlice\namesp\prop\sname$, saying that there is a slice in namespace $\namesp$ with name $\sname$  and content $\prop$; and $\ABox\namesp\prop{f}$, saying that $f$ describes the slices of a box in namespace $\namesp$, such that all the slices together contain $\prop$. Here, $f$ is of type $\nat \fpfn \BoxState$ mapping names to states, where $\BoxState \eqdef \set{\BoxFull, \BoxEmp}$.
 \begin{mathpar}
   \inferH{Box-create}{}
   {\TRUE \vs[\namesp] \ABox\namesp\TRUE\emptyset}
@@ -115,7 +115,7 @@ We need a camera as follows:
   \BoxM \eqdef{}& \authm(\maybe{\exm(\BoxState)}) \times \maybe{\agm(\latert \iProp)}
 \end{align*}
 
-Now we can define the assertions:
+Now we can define the propositions:
 \begin{align*}
   \SliceInv(\sname, \prop) \eqdef{}& \Exists b. \ownGhost\sname{(\authfull b, \munit)} * ((b = \BoxFull) \Ra \prop) \\
   \BoxSlice\namesp\prop\sname \eqdef{}& \ownGhost\sname{(\munit, \prop)} * \knowInv\namesp{\SliceInv(\sname,\prop)} \\

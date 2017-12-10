@@ -42,9 +42,9 @@ We collect here some important and frequently used derived proof rules.
 
 Noteworthy here is the fact that $\prop \proves \later\prop$ can be derived from Löb induction, and $\TRUE \proves \plainly\TRUE$ can be derived via $\plainly$ commuting with universal quantification ranging over the empty type $0$.
 
-\subsection{Persistent Assertions}
-We call an assertion $\prop$ \emph{persistent} if $\prop \proves \always\prop$.
-These are assertions that ``don't own anything'', so we can (and will) treat them like ``normal'' intuitionistic assertions.
+\subsection{Persistent Propositions}
+We call a proposition $\prop$ \emph{persistent} if $\prop \proves \always\prop$.
+These are propositions that ``don't own anything'', so we can (and will) treat them like ``normal'' intuitionistic propositions.
 
 Of course, $\always\prop$ is persistent for any $\prop$.
 Furthermore, by the proof rules given in \Sref{sec:proof-rules}, $\TRUE$, $\FALSE$, $t = t'$ as well as $\ownGhost\gname{\mcore\melt}$ and $\mval(\melt)$ are persistent.
@@ -52,15 +52,15 @@ Persistence is preserved by conjunction, disjunction, separating conjunction as 
 
 
 
-\subsection{Timeless Assertions and Except-0}
+\subsection{Timeless Proposition and Except-0}
 
 One of the troubles of working in a step-indexed logic is the ``later'' modality $\later$.
 It turns out that we can somewhat mitigate this trouble by working below the following \emph{except-0} modality:
 \[ \diamond \prop \eqdef \later\FALSE \lor \prop \]
 
-This modality is useful because there is a class of assertions which we call \emph{timeless} assertions, for which we have
+This modality is useful because there is a class of propositions which we call \emph{timeless} propositions, for which we have
 \[ \timeless{\prop} \eqdef \later\prop \proves \diamond\prop  \]
-In other words, when working below the except-0 modality, we can \emph{strip away} the later from timeless assertions.
+In other words, when working below the except-0 modality, we can \emph{strip away} the later from timeless propositions.
 
 The following rules can be derived about except-0:
 \begin{mathpar}
@@ -88,7 +88,7 @@ The following rules can be derived about except-0:
 \end{array}
 \end{mathpar}
 
-The following rules identify the class of timeless assertions:
+The following rules identify the class of timeless propositions:
 \begin{mathparpagebreakable}
 \infer
 {\vctx \proves \timeless{\prop} \and \vctx \proves \timeless{\propB}}

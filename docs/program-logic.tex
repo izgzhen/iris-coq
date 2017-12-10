@@ -9,8 +9,8 @@ So in the following, we assume that some language $\Lang$ was fixed.
 \label{sec:composeable-resources}
 
 The base logic described in \Sref{sec:base-logic} works over an arbitrary camera $\monoid$ defining the structure of the resources.
-It turns out that we can generalize this further and permit picking cameras ``$\iFunc(\Prop)$'' that depend on the structure of assertions themselves.
-Of course, $\Prop$ is just the syntactic type of assertions; for this to make sense we have to look at the semantics.
+It turns out that we can generalize this further and permit picking cameras ``$\iFunc(\Prop)$'' that depend on the structure of propositions themselves.
+Of course, $\Prop$ is just the syntactic type of propositions; for this to make sense we have to look at the semantics.
 
 Furthermore, there is a composability problem with the given logic: if we have one proof performed with camera $\monoid_1$, and another proof carried out with a \emph{different} camera $\monoid_2$, then the two proofs are actually carried out in two \emph{entirely separate logics} and hence cannot be combined.
 
@@ -45,11 +45,11 @@ We do not need to consider how the object $\iPreProp$ is constructed, we only ne
 	\wIso^{-1} &: \iPreProp \nfn \iProp
 \end{align*}
 
-Notice that $\iProp$ is the semantic model of assertions for the base logic described in \Sref{sec:base-logic} with $\Res$:
+Notice that $\iProp$ is the semantic model of propositions for the base logic described in \Sref{sec:base-logic} with $\Res$:
 \[ \Sem{\Prop} \eqdef \iProp = \UPred(\Res) \]
 Effectively, we just defined a way to instantiate the base logic with $\Res$ as the camera of resources, while providing a way for $\Res$ to depend on $\iPreProp$, which is isomorphic to $\Sem\Prop$.
 
-We thus obtain all the rules of \Sref{sec:base-logic}, and furthermore, we can use the maps $\wIso$ and $\wIso^{-1}$ \emph{in the logic} to convert between logical assertions $\Sem\Prop$ and the domain $\iPreProp$ which is used in the construction of $\Res$ -- so from elements of $\iPreProp$, we can construct elements of $\Sem{\textlog M}$, which are the elements that can be owned in our logic.
+We thus obtain all the rules of \Sref{sec:base-logic}, and furthermore, we can use the maps $\wIso$ and $\wIso^{-1}$ \emph{in the logic} to convert between logical propositions $\Sem\Prop$ and the domain $\iPreProp$ which is used in the construction of $\Res$ -- so from elements of $\iPreProp$, we can construct elements of $\Sem{\textlog M}$, which are the elements that can be owned in our logic.
 
 \paragraph{Proof composability.}
 To make our proofs composeable, we \emph{generalize} our proofs over the family of functors.
@@ -120,7 +120,7 @@ The last two are the tokens used for managing invariants, $\textmon{Inv}$ is the
 We assume that at the beginning of the verification, instances named $\gname_{\textmon{State}}$, $\gname_{\textmon{Inv}}$, $\gname_{\textmon{En}}$ and $\gname_{\textmon{Dis}}$ of these cameras have been created, such that these names are globally known.
 
 \paragraph{World Satisfaction.}
-We can now define the assertion $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
+We can now define the proposition $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
 \begin{align*}
   W \eqdef{}& \Exists I : \InvName \fpfn \Prop.
   \begin{array}[t]{@{} l}
@@ -133,7 +133,7 @@ We can now define the assertion $W$ (\emph{world satisfaction}) which ensures th
 \end{align*}
 
 \paragraph{Invariants.}
-The following assertion states that an invariant with name $\iname$ exists and maintains assertion $\prop$:
+The following proposition states that an invariant with name $\iname$ exists and maintains proposition $\prop$:
 \[ \knowInv\iname\prop \eqdef \ownGhost{\gname_{\textmon{Inv}}}
   {\authfrag \mapsingleton \iname {\aginj(\latertinj(\wIso(\prop)))}} \]
 
@@ -246,11 +246,11 @@ Still, just to give an idea of what view shifts ``are'', here are some proof rul
 
 \subsection{Weakest Precondition}
 
-Finally, we can define the core piece of the program logic, the assertion that reasons about program behavior: Weakest precondition, from which Hoare triples will be derived.
+Finally, we can define the core piece of the program logic, the proposition that reasons about program behavior: Weakest precondition, from which Hoare triples will be derived.
 
 \paragraph{Defining weakest precondition.}
 We assume that everything making up the definition of the language, \ie values, expressions, states, the conversion functions, reduction relation and all their properties, are suitably reflected into the logic (\ie they are part of the signature $\Sig$).
-We further assume (as a parameter) a predicate $\stateinterp : \State \to \iProp$ that interprets the physical state as an Iris assertion.
+We further assume (as a parameter) a predicate $\stateinterp : \State \to \iProp$ that interprets the physical state as an Iris proposition.
 This can be instantiated, for example, with ownership of an authoritative RA to tie the physical state to fragments that are used for user-level proofs.
 
 \begin{align*}
@@ -442,7 +442,7 @@ We only give some of the proof rules for Hoare triples here, since we usually do
 \subsection{Invariant Namespaces}
 \label{sec:namespaces}
 
-In \Sref{sec:invariants}, we defined an assertion $\knowInv\iname\prop$ expressing knowledge (\ie the assertion is persistent) that $\prop$ is maintained as invariant with name $\iname$.
+In \Sref{sec:invariants}, we defined a proposition $\knowInv\iname\prop$ expressing knowledge (\ie the proposition is persistent) that $\prop$ is maintained as invariant with name $\iname$.
 The concrete name $\iname$ is picked when the invariant is allocated, so it cannot possibly be statically known -- it will always be a variable that's threaded through everything.
 However, we hardly care about the actual, concrete name.
 All we need to know is that this name is \emph{different} from the names of other invariants that we want to open at the same time.
@@ -468,7 +468,7 @@ In order to connect this up to the definitions of \Sref{sec:invariants}, we need
 Any injective mapping $\textlog{namesp\_inj}$ will do; and such a mapping has to exist because $\List(\nat)$ is countable and $\InvName$ is infinite.
 Whenever needed, we (usually implicitly) coerce $\namesp$ to its encoded suffix-closure, \ie to the set of encoded structured invariant names contained in the namespace: \[\namecl\namesp \eqdef \setComp{\iname}{\Exists \namesp'. \iname = \textlog{namesp\_inj}(\namesp' \dplus \namesp)}\]
 
-We will overload the notation for invariant assertions for using namespaces instead of names:
+We will overload the notation for invariant propositions for using namespaces instead of names:
 \[ \knowInv\namesp\prop \eqdef \Exists \iname \in \namecl\namesp. \knowInv\iname{\prop} \]
 We can now derive the following rules (this involves unfolding the definition of fancy updates):
 \begin{mathpar}
@@ -489,11 +489,11 @@ We can now derive the following rules (this involves unfolding the definition of
 
 The two rules \ruleref{inv-open} and \ruleref{inv-open-timeless} above may look a little surprising, in the sense that it is not clear on first sight how they would be applied.
 The rules are the first \emph{accessors} that show up in this document.
-Accessors are assertions of the form
+Accessors are propositions of the form
 \[ \prop \vs[\mask_1][\mask_2] \Exists\var. \propB * (\All\varB. \propB' \vsW[\mask_2][\mask_1] \propC) \]
 
-One way to think about such assertions is as follows:
-Given some accessor, if during our verification we have the assertion $\prop$ and the mask $\mask_1$ available, we can use the accessor to \emph{access} $\propB$ and obtain the witness $\var$.
+One way to think about such propositions is as follows:
+Given some accessor, if during our verification we have the proposition $\prop$ and the mask $\mask_1$ available, we can use the accessor to \emph{access} $\propB$ and obtain the witness $\var$.
 We call this \emph{opening} the accessor, and it changes the mask to $\mask_2$.
 Additionally, opening the accessor provides us with $\All\varB. \propB' \vsW[\mask_2][\mask_1] \propC$, a \emph{linear view shift} (\ie a view shift that can only be used once).
 This linear view shift tells us that in order to \emph{close} the accessor again and go back to mask $\mask_1$, we have to pick some $\varB$ and establish the corresponding $\propB'$.

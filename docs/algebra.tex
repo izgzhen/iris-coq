@@ -149,7 +149,7 @@ Notice also that the core of an RA is a strict generalization of the unit that a
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
-The assertion $\melt \mupd \meltsB$ says that every element $\maybe{\melt_\f}$ compatible with $\melt$ (we also call such elements \emph{frames}), must also be compatible with some $\meltB \in \meltsB$.
+The proposition $\melt \mupd \meltsB$ says that every element $\maybe{\melt_\f}$ compatible with $\melt$ (we also call such elements \emph{frames}), must also be compatible with some $\meltB \in \meltsB$.
 Notice that $\maybe{\melt_\f}$ could be $\mnocore$, so the frame-preserving update can also be applied to elements that have \emph{no} frame.
 Intuitively, this means that whatever assumptions the rest of the program is making about the state of $\gname$, if these assumptions are compatible with $\melt$, then updating to $\meltB$ will not invalidate any of these assumptions.
 Since Iris ensures that the global ghost state is valid, this means that we can soundly update the ghost state from $\melt$ to a non-deterministically picked $\meltB \in \meltsB$.
