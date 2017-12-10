@@ -85,7 +85,7 @@ COFEs are \emph{complete OFEs}, which means that we can take limits of arbitrary
 The function space $\ofe \nfn \cofeB$ is a COFE if $\cofeB$ is a COFE (\ie the domain $\ofe$ can actually be just an OFE).
 
 Completeness is necessary to take fixed-points.
-For once, every \emph{contractive function} $f : \ofe \to \cofeB$ where $\cofeB$ is a COFE and inhabited has a \emph{unique} fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
+For once, every contractive function $f : \cofe \to \cofe$ where $\cofe$ is a COFE and inhabited has a \emph{unique} fixed-point $\fix(f)$ such that $\fix(f) = f(\fix(f))$.
 This also holds if $f^k$ is contractive for an arbitrary $k$.
 Furthermore, by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}, every contractive (bi)functor from $\COFEs$ to $\COFEs$ has a unique\footnote{Uniqueness is not proven in Coq.} fixed-point.
 
