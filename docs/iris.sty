@@ -95,6 +95,9 @@
 
 \newcommand{\nil}{\epsilon}
 
+% displaced dot
+\newcommand{\dispdot}[2][.2ex]{\dot{\raisebox{0pt}[\dimexpr\height+#1][\depth]{$#2$}}}% \dispdot[<displace>]{<stuff>}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MODEL-SPECIFIC SYMBOLS & NOTATION & IDENTIFIERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -217,6 +220,7 @@
 \newcommand{\term}{t}
 \newcommand{\termB}{u}
 
+\newcommand{\venv}{\rho}
 \newcommand{\vctx}{\Gamma}
 \newcommand{\pfctx}{\Theta}
 
@@ -242,7 +246,7 @@
 \newcommand{\fixp}{\mathit{fix}}
 
 %% various pieces of Syntax
-\def\MU #1.{\mu\spac #1.\spac}%
+\def\MU #1.{\mu #1.\spac}%
 \def\Lam #1.{\lambda #1.\spac}%
 
 \newcommand{\proves}{\vdash}
@@ -257,6 +261,8 @@
 
 \NewDocumentCommand\wpre{m O{} m}%
   {\textlog{wp}_{#2}\spac#1\spac{\left\{#3\right\}}}
+
+\newcommand{\stateinterp}{S}
 
 \newcommand{\later}{\mathop{{\triangleright}}}
 \newcommand*{\lateropt}[1]{\mathop{{\later}^{#1}}}
@@ -291,7 +297,7 @@
     }%
   }}%
 \NewDocumentCommand \vs {O{} O{}} {\vsGen[#1]{\Rrightarrow}[#2]}
-\NewDocumentCommand \bvs {O{} O{}} {\vsGen[#1]{\Rrightarrow_{\mathcal{B}}}[#2]}
+\NewDocumentCommand \bvs {O{} O{}} {\vsGen[#1]{\dispdot[0.02ex]{\Rrightarrow}}[#2]}
 \NewDocumentCommand \vsL {O{} O{}} {\vsGen[#1]{\Lleftarrow}[#2]}
 \NewDocumentCommand \vsE {O{} O{}} %
   {\vsGen[#1]{\Lleftarrow\!\!\!\Rrightarrow}[#2]}
@@ -301,7 +307,7 @@
 \NewDocumentCommand \vsW {O{} O{}} {\vsGen[#1]{\vsWand}[#2]}
 
 % for now, the update modality looks like a pvs without masks.
-\NewDocumentCommand \upd {} {\mathop{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}
+\NewDocumentCommand \upd {} {\mathop{\dispdot[-0.2ex]{\mid\kern-0.4ex\Rrightarrow\kern-0.25ex}}}
 
 \NewDocumentCommand\Acc{O{} O{} m m}{\langle #3 \vsE #4  \rangle_{#1}^{#2}}
 
