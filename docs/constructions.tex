@@ -34,7 +34,9 @@ $\UPred(-)$ is a locally non-expansive functor from $\CMRAs$ to $\COFEs$.
 It is worth noting that the above quotient admits canonical
 representatives. More precisely, one can show that every
 equivalence class contains exactly one element $P_0$ such that:
-\[ \All n, \melt.  (\mval(\melt) \nincl{n} P_0(\melt)) \Ra n \in P_0(\melt)  \tagH{UPred-canonical}  \]
+\begin{align*}
+  \All n, \melt.  (\mval(\melt) \nincl{n} P_0(\melt)) \Ra n \in P_0(\melt)  \tagH{UPred-canonical}
+\end{align*}
 Intuitively, this says that $P_0$ trivially holds whenever the resource is invalid.
 Starting from any element $P$, one can find this canonical
 representative by choosing $P_0(\melt) := \setComp{n}{n \in \mval(\melt) \Ra n \in P(\melt)}$.
