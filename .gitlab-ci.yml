@@ -42,7 +42,6 @@ opam:
 
 build-coq.8.7.dev:
   <<: *template
-  stage: build_more
   variables:
     OPAM_PINS: "coq version 8.7.dev"
   artifacts:
