@@ -7,14 +7,14 @@ Set Default Proof Using "Type".
 Export invG.
 Import uPred.
 
-Program Definition fupd_def `{invG Σ}
-    (E1 E2 : coPset) (P : iProp Σ) : iProp Σ :=
-  (wsat ∗ ownE E1 ==∗ ◇ (wsat ∗ ownE E2 ∗ P))%I.
-Definition fupd_aux : seal (@fupd_def). by eexists. Qed.
-Definition fupd := unseal fupd_aux.
-Definition fupd_eq : @fupd = @fupd_def := seal_eq fupd_aux.
-Arguments fupd {_ _} _ _ _%I.
+Class FUpd (A : Type) : Type := fupd : coPset → coPset → A → A.
 Instance: Params (@fupd) 4.
+
+Definition uPred_fupd_def `{invG Σ} (E1 E2 : coPset) (P : iProp Σ) : iProp Σ :=
+  (wsat ∗ ownE E1 ==∗ ◇ (wsat ∗ ownE E2 ∗ P))%I.
+Definition uPred_fupd_aux `{invG Σ} : seal uPred_fupd_def. by eexists. Qed.
+Instance uPred_fupd `{invG Σ} : FUpd (iProp Σ):= unseal uPred_fupd_aux.
+Definition uPred_fupd_eq `{invG Σ} : fupd = uPred_fupd_def := seal_eq uPred_fupd_aux.
 
 Notation "|={ E1 , E2 }=> Q" := (fupd E1 E2 Q)
   (at level 99, E1, E2 at level 50, Q at level 200,
@@ -38,54 +38,54 @@ Section fupd.
 Context `{invG Σ}.
 Implicit Types P Q : iProp Σ.
 
-Global Instance fupd_ne E1 E2 : NonExpansive (@fupd Σ _ E1 E2).
-Proof. rewrite fupd_eq. solve_proper. Qed.
-Global Instance fupd_proper E1 E2 : Proper ((≡) ==> (≡)) (@fupd Σ _ E1 E2).
+Global Instance fupd_ne E1 E2 : NonExpansive (fupd E1 E2).
+Proof. rewrite uPred_fupd_eq. solve_proper. Qed.
+Global Instance fupd_proper E1 E2 : Proper ((≡) ==> (≡)) (fupd E1 E2).
 Proof. apply ne_proper, _. Qed.
 
 Lemma fupd_intro_mask E1 E2 P : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P.
 Proof.
   intros (E1''&->&?)%subseteq_disjoint_union_L.
-  rewrite fupd_eq /fupd_def ownE_op //.
+  rewrite uPred_fupd_eq /uPred_fupd_def ownE_op //.
   by iIntros "$ ($ & $ & HE) !> !> [$ $] !> !>" .
 Qed.
 
 Lemma except_0_fupd E1 E2 P : ◇ (|={E1,E2}=> P) ={E1,E2}=∗ P.
-Proof. rewrite fupd_eq. iIntros ">H [Hw HE]". iApply "H"; by iFrame. Qed.
+Proof. rewrite uPred_fupd_eq. iIntros ">H [Hw HE]". iApply "H"; by iFrame. Qed.
 
 Lemma bupd_fupd E P : (|==> P) ={E}=∗ P.
-Proof. rewrite fupd_eq /fupd_def. by iIntros ">? [$ $] !> !>". Qed.
+Proof. rewrite uPred_fupd_eq. by iIntros ">? [$ $] !> !>". Qed.
 
 Lemma fupd_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ⊢ |={E1,E2}=> Q.
 Proof.
-  rewrite fupd_eq /fupd_def. iIntros (HPQ) "HP HwE".
-  rewrite -HPQ. by iApply "HP".
+  rewrite uPred_fupd_eq. iIntros (HPQ) "HP HwE". rewrite -HPQ. by iApply "HP".
 Qed.
 
 Lemma fupd_trans E1 E2 E3 P : (|={E1,E2}=> |={E2,E3}=> P) ⊢ |={E1,E3}=> P.
 Proof.
-  rewrite fupd_eq /fupd_def. iIntros "HP HwE".
+  rewrite uPred_fupd_eq. iIntros "HP HwE".
   iMod ("HP" with "HwE") as ">(Hw & HE & HP)". iApply "HP"; by iFrame.
 Qed.
 
 Lemma fupd_mask_frame_r' E1 E2 Ef P :
   E1 ## Ef → (|={E1,E2}=> ⌜E2 ## Ef⌝ → P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P.
 Proof.
-  intros. rewrite fupd_eq /fupd_def ownE_op //. iIntros "Hvs (Hw & HE1 &HEf)".
+  intros. rewrite uPred_fupd_eq /uPred_fupd_def ownE_op //.
+  iIntros "Hvs (Hw & HE1 &HEf)".
   iMod ("Hvs" with "[Hw HE1]") as ">($ & HE2 & HP)"; first by iFrame.
   iDestruct (ownE_op' with "[HE2 HEf]") as "[? $]"; first by iFrame.
   iIntros "!> !>". by iApply "HP".
 Qed.
 
 Lemma fupd_frame_r E1 E2 P Q : (|={E1,E2}=> P) ∗ Q ={E1,E2}=∗ P ∗ Q.
-Proof. rewrite fupd_eq /fupd_def. by iIntros "[HwP $]". Qed.
+Proof. rewrite uPred_fupd_eq /uPred_fupd_def. by iIntros "[HwP $]". Qed.
 
 Lemma fupd_plain' E1 E2 E2' P Q `{!Plain P} :
   E1 ⊆ E2 →
   (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
 Proof.
   iIntros ((E3&->&HE)%subseteq_disjoint_union_L) "HQP HQ".
-  rewrite fupd_eq /fupd_def ownE_op //. iIntros "H".
+  rewrite uPred_fupd_eq /uPred_fupd_def ownE_op //. iIntros "H".
   iMod ("HQ" with "H") as ">(Hws & [HE1 HE3] & HQ)"; iModIntro.
   iAssert (◇ P)%I as "#HP".
   { by iMod ("HQP" with "HQ [$]") as "(_ & _ & HP)". }
@@ -94,16 +94,16 @@ Qed.
 
 Lemma later_fupd_plain E P `{!Plain P} : (▷ |={E}=> P) ={E}=∗ ▷ ◇ P.
 Proof.
-  rewrite fupd_eq /fupd_def. iIntros "HP [Hw HE]".
+  rewrite uPred_fupd_eq /uPred_fupd_def. iIntros "HP [Hw HE]".
   iAssert (▷ ◇ P)%I with "[-]" as "#$"; last by iFrame.
   iNext. by iMod ("HP" with "[$]") as "(_ & _ & HP)".
 Qed.
 
 (** * Derived rules *)
-Global Instance fupd_mono' E1 E2 : Proper ((⊢) ==> (⊢)) (@fupd Σ _ E1 E2).
+Global Instance fupd_mono' E1 E2 : Proper ((⊢) ==> (⊢)) (fupd E1 E2).
 Proof. intros P Q; apply fupd_mono. Qed.
 Global Instance fupd_flip_mono' E1 E2 :
-  Proper (flip (⊢) ==> flip (⊢)) (@fupd Σ _ E1 E2).
+  Proper (flip (⊢) ==> flip (⊢)) (fupd E1 E2).
 Proof. intros P Q; apply fupd_mono. Qed.
 
 Lemma fupd_intro E P : P ={E}=∗ P.
