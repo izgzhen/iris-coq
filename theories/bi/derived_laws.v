@@ -2306,12 +2306,12 @@ Section bi_morphims.
   Global Instance bi_mor_mono_flip : Proper (flip (⊢) ==> flip (⊢)) mor.
   Proof. solve_proper. Qed.
 
-  Lemma bi_mor_forall A Φ : mor (@bi_forall _ A Φ) ⊣⊢ (∀ x, mor (Φ x)).
+  Lemma bi_mor_forall A (Φ : A → PROP1) : mor (∀ x, Φ x) ⊣⊢ (∀ x, mor (Φ x)).
   Proof.
     apply bi.equiv_spec; split; [|apply bi_mor_forall_2].
     apply bi.forall_intro=>?. by rewrite bi.forall_elim.
   Qed.
-  Lemma bi_mor_exist A Φ : mor (@bi_exist _ A Φ) ⊣⊢ (∃ x, mor (Φ x)).
+  Lemma bi_mor_exist A (Φ : A → PROP1) : mor (∃ x, Φ x) ⊣⊢ (∃ x, mor (Φ x)).
   Proof.
     apply bi.equiv_spec; split; [apply bi_mor_exist_1|].
     apply bi.exist_elim=>?. by rewrite -bi.exist_intro.

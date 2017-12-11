@@ -342,8 +342,8 @@ Class BiMorphism {PROP1 PROP2 : bi} (f : PROP1 → PROP2) := {
   bi_mor_mono :> Proper ((⊢) ==> (⊢)) f;
   bi_mor_emp : f emp ⊣⊢ emp;
   bi_mor_impl_2 P Q : (f P → f Q)%I ⊢ f (P → Q)%I;
-  bi_mor_forall_2 A Φ : (∀ x, f (Φ x)) ⊢ f (@bi_forall _ A Φ);
-  bi_mor_exist_1 A Φ : f (@bi_exist _ A Φ) ⊢ ∃ x, f (Φ x);
+  bi_mor_forall_2 A (Φ : A → PROP1) : (∀ x, f (Φ x)) ⊢ f (∀ x, Φ x);
+  bi_mor_exist_1 A (Φ : A → PROP1) : f (∃ x, Φ x) ⊢ ∃ x, f (Φ x);
   bi_mor_internal_eq_1 (A : ofeT) (x y : A) : f (x ≡ y) ⊢ (x ≡ y);
   bi_mor_sep P Q : f (P ∗ Q) ⊣⊢ (f P ∗ f Q);
   bi_mor_wand_2 P Q : (f P -∗ f Q) ⊢ f (P -∗ Q);
