@@ -208,7 +208,7 @@ Proof.
   apply impl_intro_l. rewrite left_absorb. auto.
 Qed.
 
-Lemma exists_impl_forall {A} P (Ψ : A → PROP) :
+Lemma exist_impl_forall {A} P (Ψ : A → PROP) :
   ((∃ x : A, Ψ x) → P) ⊣⊢ ∀ x : A, Ψ x → P.
 Proof.
   apply equiv_spec; split.
