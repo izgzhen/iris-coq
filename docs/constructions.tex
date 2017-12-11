@@ -173,7 +173,7 @@ There are no interesting frame-preserving updates for $\agm(\cofe)$, but we can 
 Given an OFE $\cofe$, we define a camera $\exm(\cofe)$ such that at most one $x \in \cofe$ can be owned:
 \begin{align*}
   \exm(\cofe) \eqdef{}& \exinj(\cofe) \mid \mundef \\
-  \mval(\melt) \eqdef{}& \setComp{n}{\melt \neq \mundef}
+  \mval(\melt) \eqdef{}& \setComp{n}{\melt \notnequiv{n} \mundef}
 \end{align*}
 All cases of composition go to $\mundef$.
 \begin{align*}
@@ -196,7 +196,25 @@ We obtain the following frame-preserving update:
   {\exinj(x) \mupd \exinj(y)}
 \end{mathpar}
 
+\subsection{Fractions}
 
+We define an RA structure on the rational numbers in $(0, 1]$ as follows:
+\begin{align*}
+  \fracm \eqdef{}& \fracinj(\mathbb{Q} \cap (0, 1]) \mid \mundef \\
+  \mvalFull(\melt) \eqdef{}& \melt \neq \mundef \\
+  \fracinj(x) \mtimes \fracinj(y) \eqdef{}& \fracinj(x + y) \quad \text{if $x + y \leq 1$} \\
+  \mcore{\fracinj(x)} \eqdef{}& \bot \\
+  \mcore{\mundef} \eqdef{}& \mundef
+\end{align*}
+All remaining cases of composition go to $\mundef$.
+Frequently, we will write just $x$ instead of $\fracinj(x)$.
+
+The most important property of this RA is that $1$ has no frame.
+This is useful in combination with \ruleref{sum-swap}, and also when used with pairs:
+\begin{mathpar}
+  \inferH{pair-frac-change}{}
+  {(1, a) \mupd (1, b)}
+\end{mathpar}
 
 %TODO: These need syncing with Coq
 % \subsection{Finite Powerset Monoid}
@@ -226,53 +244,6 @@ We obtain the following frame-preserving update:
 % 	The other direction works the same way.
 % \end{proof}
 
-
-% \subsection{Fractional monoid}
-% \label{sec:fracm}
-
-% Given a monoid $M$, we define a monoid representing fractional ownership of some piece $\melt \in M$.
-% The idea is to preserve all the frame-preserving update that $M$ could have, while additionally being able to do \emph{any} update if we own the full state (as determined by the fraction being $1$).
-% Let $\fracm{M}$ be the monoid with carrier $(((0, 1] \cap \mathbb{Q}) \times M) \uplus \{\munit\}$ and multiplication
-% \begin{align*}
-%  (q, a) \mtimes (q', a') &\eqdef (q + q', a \mtimes a') \qquad \mbox{if $q+q'\le 1$} \\
-%  (q, a) \mtimes \munit &\eqdef (q,a) \\
-%  \munit \mtimes (q,a) &\eqdef (q,a).
-% \end{align*}
-
-% We get the following frame-preserving update.
-% \begin{mathpar}
-% 	\inferH{FracUpdFull}
-% 		{a, b \in M}
-% 		{(1, a) \mupd (1, b)}
-%   \and\inferH{FracUpdLocal}
-% 	  {a \mupd_M B}
-% 	  {(q, a) \mupd \{q\} \times B}
-% \end{mathpar}
-
-% \begin{proof}[Proof of \ruleref{FracUpdFull}]
-% Assume some $f \sep (1, a)$. This can only be $f = \munit$, so showing $f \sep (1, b)$ is trivial.
-% \end{proof}
-
-% \begin{proof}[Proof of \ruleref{FracUpdLocal}]
-% 	Assume some $f \sep (q, a)$. If $f = \munit$, then $f \sep (q, b)$ is trivial for any $b \in B$. Just pick the one we obtain by choosing $\munit_M$ as the frame for $a$.
-	
-% 	In the interesting case, we have $f = (q_\f, a_\f)$.
-% 	Obtain $b$ such that $b \in B \land b \sep a_\f$.
-% 	Then $(q, b) \sep f$, and we are done.
-% \end{proof}
-
-% $\fracm{M}$ is cancellative if $M$ is cancellative.
-% \begin{proof}[Proof of cancellativitiy]
-% If $\melt_\f = \munit$, we are trivially done.
-% So let $\melt_\f = (q_\f, \melt_\f')$.
-% If $\melt = \munit$, then $\meltB = \munit$ as otherwise the fractions could not match up.
-% Again, we are trivially done.
-% Similar so for $\meltB = \munit$.
-% So let $\melt = (q_a, \melt')$ and $\meltB = (q_b, \meltB')$.
-% We have $(q_\f + q_a, \melt_\f' \mtimes \melt') = (q_\f + q_b, \melt_\f' \mtimes \meltB')$.
-% We have to show $q_a = q_b$ and $\melt' = \meltB'$.
-% The first is trivial, the second follows from cancellativitiy of $M$.
-% \end{proof}
 
 
 \subsection{Authoritative}
