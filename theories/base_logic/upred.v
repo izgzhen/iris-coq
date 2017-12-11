@@ -318,6 +318,7 @@ Definition uPred_cmra_valid_eq :
   @uPred_cmra_valid = @uPred_cmra_valid_def := seal_eq uPred_cmra_valid_aux.
 
 Class BUpd (A : Type) : Type := bupd : A → A.
+Instance : Params (@bupd) 2.
 
 Program Definition uPred_bupd_def {M} (Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ k yf,
