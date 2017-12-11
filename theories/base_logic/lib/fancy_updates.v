@@ -7,32 +7,11 @@ Set Default Proof Using "Type".
 Export invG.
 Import uPred.
 
-Class FUpd (A : Type) : Type := fupd : coPset → coPset → A → A.
-Instance: Params (@fupd) 4.
-
 Definition uPred_fupd_def `{invG Σ} (E1 E2 : coPset) (P : iProp Σ) : iProp Σ :=
   (wsat ∗ ownE E1 ==∗ ◇ (wsat ∗ ownE E2 ∗ P))%I.
 Definition uPred_fupd_aux `{invG Σ} : seal uPred_fupd_def. by eexists. Qed.
 Instance uPred_fupd `{invG Σ} : FUpd (iProp Σ):= unseal uPred_fupd_aux.
 Definition uPred_fupd_eq `{invG Σ} : fupd = uPred_fupd_def := seal_eq uPred_fupd_aux.
-
-Notation "|={ E1 , E2 }=> Q" := (fupd E1 E2 Q)
-  (at level 99, E1, E2 at level 50, Q at level 200,
-   format "|={ E1 , E2 }=>  Q") : bi_scope.
-Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)%I
-  (at level 99, E1,E2 at level 50, Q at level 200,
-   format "P  ={ E1 , E2 }=∗  Q") : bi_scope.
-Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)
-  (at level 99, E1, E2 at level 50, Q at level 200, only parsing) : stdpp_scope.
-
-Notation "|={ E }=> Q" := (fupd E E Q)
-  (at level 99, E at level 50, Q at level 200,
-   format "|={ E }=>  Q") : bi_scope.
-Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)%I
-  (at level 99, E at level 50, Q at level 200,
-   format "P  ={ E }=∗  Q") : bi_scope.
-Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)
-  (at level 99, E at level 50, Q at level 200, only parsing) : stdpp_scope.
 
 Section fupd.
 Context `{invG Σ}.

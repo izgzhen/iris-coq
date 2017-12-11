@@ -317,9 +317,6 @@ Definition uPred_cmra_valid {M A} := unseal uPred_cmra_valid_aux M A.
 Definition uPred_cmra_valid_eq :
   @uPred_cmra_valid = @uPred_cmra_valid_def := seal_eq uPred_cmra_valid_aux.
 
-Class BUpd (A : Type) : Type := bupd : A → A.
-Instance : Params (@bupd) 2.
-
 Program Definition uPred_bupd_def {M} (Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ k yf,
       k ≤ n → ✓{k} (x ⋅ yf) → ∃ x', ✓{k} (x' ⋅ yf) ∧ Q k x' |}.
@@ -570,12 +567,6 @@ Coercion uPred_valid {M} : uPred M → Prop := bi_valid.
 
 (* Latest notation *)
 Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : bi_scope.
-Notation "|==> Q" := (bupd Q)
-  (at level 99, Q at level 200, format "|==>  Q") : bi_scope.
-Notation "P ==∗ Q" := (P ⊢ |==> Q)
-  (at level 99, Q at level 200, only parsing) : stdpp_scope.
-Notation "P ==∗ Q" := (P -∗ |==> Q)%I
-  (at level 99, Q at level 200, format "P  ==∗  Q") : bi_scope.
 
 Module uPred.
 Include uPred_unseal.
