@@ -14,14 +14,14 @@ Changes in and extensions of the theory:
 * Constructions for least and greatest fixed points over monotone predicates
   (defined in the logic of Iris using impredicative quantification).
 * Add a proof of the inverse of `wp_bind`.
-* Support verifying code that might get stuck by distinguishing "non-stuck"
-  vs. "(potentially) stuck" weakest preconditions. (See
-  [Swasey et al., OOPSLA '17] for examples.) The non-stuck `WP e @ E {{ Φ }}`
-  ensures that, as `e` runs, it does not get stuck. The stuck `WP e @ E ?{{ Φ
-  }}` ensures that, as usual, all invariants are preserved while `e` runs, but
-  it permits execution to get stuck. The former implies the latter. The full
-  judgment is `WP e @ s; E {{ Φ }}`, where non-stuck WP uses *stuckness bit* `s
-  = NotStuck` while stuck WP uses `s = MaybeStuck`.
+* [Experimental feature] Support verifying code that might get stuck by
+  distinguishing "non-stuck" vs. "(potentially) stuck" weakest
+  preconditions. (See [Swasey et al., OOPSLA '17] for examples.) The non-stuck
+  `WP e @ E {{ Φ }}` ensures that, as `e` runs, it does not get stuck. The stuck
+  `WP e @ E ?{{ Φ }}` ensures that, as usual, all invariants are preserved while
+  `e` runs, but it permits execution to get stuck. The former implies the
+  latter. The full judgment is `WP e @ s; E {{ Φ }}`, where non-stuck WP uses
+  *stuckness bit* `s = NotStuck` while stuck WP uses `s = MaybeStuck`.
 
 Changes in Coq:
 
