@@ -1,5 +1,35 @@
 \section{Derived Constructions}
 
+\subsection{Cancellable Invariants}
+
+Iris invariants as described in \Sref{sec:invariants} are persistent---once established, they hold forever.
+However, based on them, it is possible to \emph{encode} a form of invariants that can be ``cancelled'' again.
+
+First, we need some ghost state:
+\begin{align*}
+  \textmon{CInvTok} \eqdef{}& \fracm
+\end{align*}
+
+Now we define:
+\begin{align*}
+  \CInvTok{\gname}{q} \eqdef{}& \ownGhost\gname{q} \\
+  \CInv{\gname}{\namesp}{\prop} \eqdef{}& \knowInv\namesp{\prop \lor \ownGhost\gname{1}}
+\end{align*}
+
+It is then straight-forward to prove:
+\begin{mathpar}
+  \inferH{CInv-new}{}
+  {\later\prop \vs[\bot] \Exists \gname. \CInvTok\gname{1} * \always\CInv\gname\namesp\prop}
+
+  \inferH{CInv-acc}{}
+  {\CInv\gname\namesp\prop \proves \Acc[\namesp][\emptyset]{\CInvTok\gname{q}}{\later\prop}}
+
+  \inferH{CInv-cancel}{}
+  {\CInv\gname\namesp\prop \proves \CInvTok\gname{1} \vs[\namesp] \later\prop}
+\end{mathpar}
+
+Cancellable invariants are useful, for example, when reasoning about data structures that will be deallocated:  Every reference to the data structure comes with a fraction of the token, and when all fractions have been gathered, \ruleref{CInv-cancel} is used to cancel the invariant, after which the data structure can be deallocated.
+
 \subsection{Non-atomic (``Thread-Local'') Invariants}
 
 Sometimes it is necessary to maintain invariants that we need to open non-atomically.
@@ -40,16 +70,16 @@ To simplify this construction,we piggy-back into ``normal'' invariants.
 
 We easily obtain:
 \begin{mathpar}
-  \axiom
+  \axiomH{NAInv-new-pool}
   {\TRUE \vs[\bot] \Exists\pid. \NaTok\pid}
 
-  \axiom
+  \axiomH{NAInv-tok-split}
   {\NaTokE\pid{\mask_1 \uplus \mask_2} \Lra \NaTokE\pid{\mask_1} * \NaTokE\pid{\mask_2}}
   
-  \axiom
+  \axiomH{NAInv-new-inv}
   {\later\prop  \vs[\namesp] \always\NaInv\pid\namesp\prop}
 
-  \axiom
+  \axiomH{NAInv-acc}
   {\NaInv\pid\namesp\prop \proves \Acc[\namesp]{\NaTokE\pid\namesp}{\later\prop}}
 \end{mathpar}
 from which we can derive

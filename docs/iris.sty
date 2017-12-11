@@ -409,6 +409,7 @@
 
 % Fraction
 \newcommand{\fracm}{\ensuremath{\textmon{Frac}}}
+\newcommand{\fracinj}{\textlog{frac}}
 
 % Exclusive
 \newcommand{\exm}{\ensuremath{\textmon{Ex}}}
@@ -451,6 +452,10 @@
 
 %% Stored Propositions
 \newcommand{\mapstoprop}{\mathrel{\kern-0.5ex\tikz[baseline=(m)]{\node at (0,0) (m){}; \draw[line cap=round] (0,0.16) -- (0,-0.004);}\kern-1.5ex\Ra}}
+
+%% Cancellable invariants
+\newcommand\CInv[3]{\textlog{CInv}^{#1,#2}(#3)}
+\newcommand*\CInvTok[2]{{[}\textrm{CInv}:#1{]}_{#2}}
 
 %% Non-atomic invariants
 \newcommand*\pid{p}
