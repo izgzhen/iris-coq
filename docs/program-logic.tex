@@ -158,49 +158,52 @@ Finally, we can define the core piece of the program logic, the proposition that
 We assume that everything making up the definition of the language, \ie values, expressions, states, the conversion functions, reduction relation and all their properties, are suitably reflected into the logic (\ie they are part of the signature $\Sig$).
 We further assume (as a parameter) a predicate $\stateinterp : \State \to \iProp$ that interprets the physical state as an Iris proposition.
 This can be instantiated, for example, with ownership of an authoritative RA to tie the physical state to fragments that are used for user-level proofs.
+Finally, weakest precondition takes a parameter $\stuckness \in \set{\NotStuck, \MaybeStuck}$ indicating whether program execution is allowed to get stuck.
 
 \begin{align*}
-  \textdom{wp} \eqdef{}& \MU \textdom{wp}. \Lam \mask, \expr, \pred. \\
+  \textdom{wp}_\stuckness \eqdef{}& \MU \textdom{wp}. \Lam \mask, \expr, \pred. \\
         & (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \pred(\val)) \lor {}\\
         & \Bigl(\toval(\expr) = \bot \land \All \state. \stateinterp(\state) \vsW[\mask][\emptyset] {}\\
-        &\qquad \red(\expr, \state) * \later\All \expr', \state', \vec\expr. (\expr, \state \step \expr', \state', \vec\expr) \vsW[\emptyset][\mask] {}\\
+        &\qquad (s = \NotStuck \Ra \red(\expr, \state)) * \later\All \expr', \state', \vec\expr. (\expr, \state \step \expr', \state', \vec\expr) \vsW[\emptyset][\mask] {}\\
         &\qquad\qquad \stateinterp(\state') * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \vec\expr} \textdom{wp}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
 %  (* value case *)
-  \wpre\expr[\mask]{\Ret\val. \prop} \eqdef{}& \textdom{wp}(\mask, \expr, \Lam\val.\prop)
+  \wpre\expr[\stuckness;\mask]{\Ret\val. \prop} \eqdef{}& \textdom{wp}_\stuckness(\mask, \expr, \Lam\val.\prop)
 \end{align*}
-If we leave away the mask, we assume it to default to $\top$.
+If we leave away the mask $\mask$, we assume it to default to $\top$.
+If we leave away the stuckness $\stuckness$, it defaults to $\NotStuck$.
 
 \paragraph{Laws of weakest precondition.}
 The following rules can all be derived:
 \begin{mathpar}
 \infer[wp-value]
-{}{\prop[\val/\var] \proves \wpre{\val}[\mask]{\Ret\var.\prop}}
+{}{\prop[\val/\var] \proves \wpre{\val}[\stuckness;\mask]{\Ret\var.\prop}}
 
 \infer[wp-mono]
-{\mask_1 \subseteq \mask_2 \and \vctx,\var:\textlog{val}\mid\prop \proves \propB}
-{\vctx\mid\wpre\expr[\mask_1]{\Ret\var.\prop} \proves \wpre\expr[\mask_2]{\Ret\var.\propB}}
+{\mask_1 \subseteq \mask_2 \and \vctx,\var:\textlog{val}\mid\prop \proves \propB \and (\stuckness_2 = \MaybeStuck \lor \stuckness_1 = \stuckness_2)}
+{\vctx\mid\wpre\expr[\stuckness_1;\mask_1]{\Ret\var.\prop} \proves \wpre\expr[\stuckness_2;\mask_2]{\Ret\var.\propB}}
 
 \infer[fup-wp]
-{}{\pvs[\mask] \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
+{}{\pvs[\mask] \wpre\expr[\stuckness;\mask]{\Ret\var.\prop} \proves \wpre\expr[\stuckness;\mask]{\Ret\var.\prop}}
 
 \infer[wp-fup]
-{}{\wpre\expr[\mask]{\Ret\var.\pvs[\mask] \prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
+{}{\wpre\expr[\stuckness;\mask]{\Ret\var.\pvs[\stuckness;\mask] \prop} \proves \wpre\expr[\stuckness;\mask]{\Ret\var.\prop}}
 
 \infer[wp-atomic]
-{\physatomic{\expr}}
-{\pvs[\mask_1][\mask_2] \wpre\expr[\mask_2]{\Ret\var. \pvs[\mask_2][\mask_1]\prop}
- \proves \wpre\expr[\mask_1]{\Ret\var.\prop}}
+{\stuckness = \NotStuck \Ra \atomic(\expr) \and
+ \stuckness = \MaybeStuck \Ra \stronglyAtomic(\expr)}
+{\pvs[\mask_1][\mask_2] \wpre\expr[\stuckness;\mask_2]{\Ret\var. \pvs[\mask_2][\mask_1]\prop}
+ \proves \wpre\expr[\stuckness;\mask_1]{\Ret\var.\prop}}
 
 \infer[wp-frame]
-{}{\propB * \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\propB*\prop}}
+{}{\propB * \wpre\expr[\stuckness;\mask]{\Ret\var.\prop} \proves \wpre\expr[\stuckness;\mask]{\Ret\var.\propB*\prop}}
 
 \infer[wp-frame-step]
 {\toval(\expr) = \bot \and \mask_2 \subseteq \mask_1}
-{\wpre\expr[\mask_2]{\Ret\var.\prop} * \pvs[\mask_1][\mask_2]\later\pvs[\mask_2][\mask_1]\propB \proves \wpre\expr[\mask_1]{\Ret\var.\propB*\prop}}
+{\wpre\expr[\stuckness;\mask_2]{\Ret\var.\prop} * \pvs[\mask_1][\mask_2]\later\pvs[\mask_2][\mask_1]\propB \proves \wpre\expr[\stuckness;\mask_1]{\Ret\var.\propB*\prop}}
 
 \infer[wp-bind]
 {\text{$\lctx$ is a context}}
-{\wpre\expr[\mask]{\Ret\var. \wpre{\lctx(\ofval(\var))}[\mask]{\Ret\varB.\prop}} \proves \wpre{\lctx(\expr)}[\mask]{\Ret\varB.\prop}}
+{\wpre\expr[\stuckness;\mask]{\Ret\var. \wpre{\lctx(\ofval(\var))}[\stuckness;\mask]{\Ret\varB.\prop}} \proves \wpre{\lctx(\expr)}[\stuckness;\mask]{\Ret\varB.\prop}}
 \end{mathpar}
 
 We will also want a rule that connect weakest preconditions to the operational semantics of the language.
@@ -208,7 +211,7 @@ We will also want a rule that connect weakest preconditions to the operational s
   \infer[wp-lift-step]
   {\toval(\expr_1) = \bot}
   { {\begin{inbox} % for some crazy reason, LaTeX is actually sensitive to the space between the "{ {" here and the "} }" below...
-        ~~\All \state_1. \stateinterp(\state_1) \vsW[\mask][\emptyset] \red(\expr_1,\state_1) * {}\\\qquad~~ \later\All \expr_2, \state_2, \vec\expr.  (\expr_1, \state_1 \step \expr_2, \state_2, \vec\expr)  \vsW[\emptyset][\mask] \Bigl(\stateinterp(\state_2) * \wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}
+        ~~\All \state_1. \stateinterp(\state_1) \vsW[\mask][\emptyset] (\stuckness = \NotStuck \Ra \red(\expr_1,\state_1)) * {}\\\qquad~~ \later\All \expr_2, \state_2, \vec\expr.  (\expr_1, \state_1 \step \expr_2, \state_2, \vec\expr)  \vsW[\emptyset][\mask] \Bigl(\stateinterp(\state_2) * \wpre{\expr_2}[\stuckness;\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\stuckness;\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre{\expr_1}[\stuckness;\mask]{\Ret\var.\prop}
       \end{inbox}} }
 \end{mathpar}
 
@@ -245,11 +248,11 @@ There are two properties we are looking for: First of all, the postcondition sho
 Second, a proof of a weakest precondition with any postcondition should imply that the program is \emph{safe}, \ie that it does not get stuck.
 
 \begin{defn}[Adequacy]
-  A program $\expr$ in some initial state $\state$ is \emph{adequate} for a set $V \subseteq \Val$ of legal return values ($\expr, \state \vDash V$) if for all $\tpool', \state'$ such that $([\expr], \state) \tpstep^\ast (\tpool', \state')$ we have
+  A program $\expr$ in some initial state $\state$ is \emph{adequate} for stuckness  $\stuckness$ and a set $V \subseteq \Val$ of legal return values ($\expr, \state \vDash_\stuckness V$) if for all $\tpool', \state'$ such that $([\expr], \state) \tpstep^\ast (\tpool', \state')$ we have
 \begin{enumerate}
-\item Safety: For any $\expr' \in \tpool'$ we have that either $\expr'$ is a
+\item Safety: If $\stuckness = \NotStuck$, then for any $\expr' \in \tpool'$ we have that either $\expr'$ is a
   value, or \(\red(\expr'_i,\state')\):
-  \[ \All\expr'\in\tpool'. \toval(\expr') \neq \bot \lor \red(\expr', \state') \]
+  \[ \stuckness = \NotStuck \Ra \All\expr'\in\tpool'. \toval(\expr') \neq \bot \lor \red(\expr', \state') \]
   Notice that this is stronger than saying that the thread pool can reduce; we actually assert that \emph{every} non-finished thread can take a step.
 \item Legal return value: If $\tpool'_1$ (the main thread) is a value $\val'$, then $\val' \in V$:
   \[ \All \val',\tpool''. \tpool' = [\val'] \dplus \tpool'' \Ra \val' \in V \]
@@ -267,8 +270,8 @@ The signature can of course state arbitrary additional properties of $\pred$, as
 The adequacy statement now reads as follows:
 \begin{align*}
  &\All \mask, \expr, \val, \state.
- \\&( \TRUE \proves {\upd}_\mask \Exists \stateinterp. \stateinterp(\state) * \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
- \\&\expr, \state \vDash V
+ \\&( \TRUE \proves {\upd}_\mask \Exists \stateinterp. \stateinterp(\state) * \wpre{\expr}[\stuckness;\mask]{x.\; \pred(x)}) \Ra
+ \\&\expr, \state \vDash_\stuckness V
 \end{align*}
 Notice that the state invariant $S$ used by the weakest precondition is chosen \emph{after} doing a fancy update, which allows it to depend on the names of ghost variables that are picked in that initial fancy update.
 
@@ -312,7 +315,7 @@ We only give some of the proof rules for Hoare triples here, since we usually do
   {\prop \vs[\mask \uplus \mask'][\mask] \prop' \\
     \hoare{\prop'}{\expr}{\Ret\val.\propB'}[\mask] \\   
    \All\val. \propB' \vs[\mask][\mask \uplus \mask'] \propB \\
-   \physatomic{\expr}
+   \atomic(\expr)
   }
   {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask \uplus \mask']}
 \and
@@ -415,7 +418,7 @@ Using \ruleref{vs-trans} and \ruleref{Ht-atomic} (or the corresponding proof rul
   \inferH{Acc-Ht}
   {\prop \vs[\mask_1][\mask_2] \Exists\var. \propB * (\All\varB. \propB' \vsW[\mask_2][\mask_1] \propC) \and
    \All\var. \hoare{\propB * \prop_F}\expr{\Exists\varB. \propB' * \prop_F}[\mask_2] \and
-   \physatomic\expr}
+   \atomic(\expr)}
   {\hoare{\prop * \prop_F}\expr{\propC * \prop_F}[\mask_1]}
 \end{mathpar}
 

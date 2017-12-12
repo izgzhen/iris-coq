@@ -264,6 +264,10 @@
 
 \newcommand{\stateinterp}{S}
 
+\newcommand\stuckness{s}
+\newcommand\NotStuck{\textlog{NotStuck}}
+\newcommand\MaybeStuck{\textlog{Stuck}}
+
 \newcommand{\later}{\mathop{{\triangleright}}}
 \newcommand*{\lateropt}[1]{\mathop{{\later}^{#1}}}
 \newcommand{\always}{\mathop{\Box}}
@@ -359,7 +363,6 @@
 \newcommand{\inhabited}[1]{\textlog{inhabited}(#1)}
 \newcommand{\timeless}[1]{\textlog{timeless}(#1)}
 \newcommand{\persistent}[1]{\textlog{persistent}(#1)}
-\newcommand{\physatomic}[1]{\textlog{atomic}($#1$)}
 \newcommand{\infinite}{\textlog{infinite}}
 
 \newcommand\InvName{\textdom{InvName}}
@@ -387,6 +390,7 @@
 \newcommand{\toval}{\mathrm{expr\any to\any val}}
 \newcommand{\ofval}{\mathrm{val\any to\any expr}}
 \newcommand{\atomic}{\mathrm{atomic}}
+\newcommand{\stronglyAtomic}{\mathrm{strongly\any atomic}}
 \newcommand{\red}{\mathrm{red}}
 \newcommand{\Lang}{\Lambda}
 
