@@ -526,28 +526,28 @@ End sbi_laws.
 End bi.
 
 (* Typically, embeddings are used to *define* the destination BI.
-   Hence we cannot ask B to be a BI. *)
+   Hence we cannot ask it to be a morphism. *)
 Class BiEmbedding (A B : Type) := bi_embedding : A → B.
 Arguments bi_embedding {_ _ _} _%I : simpl never.
 Notation "⎡ P ⎤" := (bi_embedding P) : bi_scope.
 Instance: Params (@bi_embedding) 3.
 Typeclasses Opaque bi_embedding.
 
-Class BiMorphism {PROP1 PROP2 : bi} (f : PROP1 → PROP2) := {
-  bi_mor_ne :> NonExpansive f;
-  bi_mor_mono :> Proper ((⊢) ==> (⊢)) f;
-  bi_mor_emp : f emp ⊣⊢ emp;
-  bi_mor_impl_2 P Q : (f P → f Q)%I ⊢ f (P → Q)%I;
-  bi_mor_forall_2 A (Φ : A → PROP1) : (∀ x, f (Φ x)) ⊢ f (∀ x, Φ x);
-  bi_mor_exist_1 A (Φ : A → PROP1) : f (∃ x, Φ x) ⊢ ∃ x, f (Φ x);
-  bi_mor_internal_eq_1 (A : ofeT) (x y : A) : f (x ≡ y) ⊢ (x ≡ y);
-  bi_mor_sep P Q : f (P ∗ Q) ⊣⊢ (f P ∗ f Q);
-  bi_mor_wand_2 P Q : (f P -∗ f Q) ⊢ f (P -∗ Q);
-  bi_mor_plainly P : f (bi_plainly P) ⊣⊢ bi_plainly (f P);
-  bi_mor_persistently P : f (bi_persistently P) ⊣⊢ bi_persistently (f P)
+Class BiMorphism (PROP1 PROP2 : bi) `{BiEmbedding PROP1 PROP2} := {
+  bi_mor_ne :> NonExpansive bi_embedding;
+  bi_mor_mono :> Proper ((⊢) ==> (⊢)) bi_embedding;
+  bi_mor_emp : ⎡emp⎤ ⊣⊢ emp;
+  bi_mor_impl_2 P Q : (⎡P⎤ → ⎡Q⎤) ⊢ ⎡P → Q⎤;
+  bi_mor_forall_2 A (Φ : A → PROP1) : (∀ x, ⎡Φ x⎤) ⊢ ⎡∀ x, Φ x⎤;
+  bi_mor_exist_1 A (Φ : A → PROP1) : ⎡∃ x, Φ x⎤ ⊢ ∃ x, ⎡Φ x⎤;
+  bi_mor_internal_eq_1 (A : ofeT) (x y : A) : ⎡x ≡ y⎤ ⊢ x ≡ y;
+  bi_mor_sep P Q : ⎡P ∗ Q⎤ ⊣⊢ ⎡P⎤ ∗ ⎡Q⎤;
+  bi_mor_wand_2 P Q : (⎡P⎤ -∗ ⎡Q⎤) ⊢ ⎡P -∗ Q⎤;
+  bi_mor_plainly P : ⎡bi_plainly P⎤ ⊣⊢ bi_plainly ⎡P⎤;
+  bi_mor_persistently P : ⎡bi_persistently P⎤ ⊣⊢ bi_persistently ⎡P⎤
 }.
 
-Class SbiMorphism {PROP1 PROP2 : sbi} (f : PROP1 → PROP2) := {
-  sbi_mor_bi_mor :> BiMorphism f;
-  sbi_mor_later P : f (▷ P) ⊣⊢ ▷ f P
+Class SbiMorphism (PROP1 PROP2 : sbi) `{BiEmbedding PROP1 PROP2} := {
+  sbi_mor_bi_mor :> BiMorphism PROP1 PROP2;
+  sbi_mor_later P : ⎡▷ P⎤ ⊣⊢ ▷ ⎡P⎤
 }.
