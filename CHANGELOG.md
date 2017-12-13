@@ -7,13 +7,15 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 Changes in and extensions of the theory:
 
-* [Experimental feature] Add new modality: ■ ("plainly").
 * Define `uPred` as a quotient on monotone predicates `M -> SProp`.
+* Get rid of some primitive laws; they can be derived:
+  `True ⊢ □ True` and `□ (P ∧ Q) ⊢ □ (P ∗ Q)`
 * Camera morphisms have to be homomorphisms, not just monotone functions.
 * Add a proof that `f` has a fixed point if `f^k` is contractive.
 * Constructions for least and greatest fixed points over monotone predicates
   (defined in the logic of Iris using impredicative quantification).
 * Add a proof of the inverse of `wp_bind`.
+* [Experimental feature] Add new modality: ■ ("plainly").
 * [Experimental feature] Support verifying code that might get stuck by
   distinguishing "non-stuck" vs. "(potentially) stuck" weakest
   preconditions. (See [Swasey et al., OOPSLA '17] for examples.) The non-stuck
@@ -25,6 +27,18 @@ Changes in and extensions of the theory:
 
 Changes in Coq:
 
+* Move the `prelude` folder to its own project: std++
+* Some extensions/improvements of heap_lang:
+  - Improve handling of pure (non-state-dependent) reductions.
+  - Add fetch-and-add (`FAA`) operation.
+  - Add syntax for all Coq's binary operations on `Z`.
+* Generalize `saved_prop` to let the user choose the location of the type-level
+  later.  Rename the general form to `saved_anything`.  Provide `saved_prop` and
+  `saved_pred` as special cases.
+* Improved big operators:
+  + They are no longer tied to cameras, but work on any monoid
+  + The version of big operations over lists was redefined so that it enjoys
+    more definitional equalities.
 * Rename some things and change notation:
   - The unit of a camera: `empty` -> `unit`, `∅` -> `ε`
   - Disjointness: `⊥` -> `##`
@@ -63,6 +77,8 @@ Changes in Coq:
 ```
 sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscrete\b/CmraDiscrete/g; s/\bCMRAT\b/CmraT/g; s/\bCMRAMixin\b/CmraMixin/g; s/\bUCMRAT\b/UcmraT/g; s/\bUCMRAMixin\b/UcmraMixin/g; s/\bSTS\b/Sts/g' -i $(find -name "*.v")
 ```
+* `PersistentL` and `TimelessL` (persistence and timelessness of lists of
+  propositions) are replaces by `TCForall` from std++.
 * Fix a bunch of consistency issues in the proof mode, and make it overall more
   usable.  In particular:
   - All proof mode tactics start the proof mode if necessary; `iStartProof` is
@@ -84,9 +100,6 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
     behind a type class opaque definition.  Furthermore, this can change the
     name of anonymous identifiers introduced with the "%" pattern.
 * Make `ofe_fun` dependently typed, subsuming `iprod`.  The latter got removed.
-* Generalize `saved_prop` to let the user choose the location of the type-level
-  later.  Rename the general form to `saved_anything`.  Provide `saved_prop` and
-  `saved_pred` as special cases.
 * Define the generic `fill` operation of the `ectxi_language` construct in terms
   of a left fold instead of a right fold. This gives rise to more definitional
   equalities.
@@ -95,25 +108,16 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
   type classes and canonical structures. Also, it now uses explicit mixins. The
   file `program_logic/ectxi_language` contains some documentation on how to
   setup Iris for your language.
-* Improved big operators:
-  + They are no longer tied to cameras, but work on any monoid
-  + The version of big operations over lists was redefined so that it enjoys
-    more definitional equalities.
-* Various improvements to `solve_ndisj`.
-* Some extensions/improvements of heap_lang:
-  - Improve handling of pure (non-state-dependent) reductions.
-  - Add fetch-and-add (`FAA`) operation.
-  - Syntax for all Coq's binary operations on `Z`.
-* Use `Hint Mode` to prevent Coq from making arbitrary guesses in the presence
-  of evars, which often led to divergence. There are a few places where type
-  annotations are now needed.
-* Move the `prelude` folder to its own project: std++
-* The rules `internal_eq_rewrite` and `internal_eq_rewrite_contractive` are now
-  stated in the logic, i.e. they are `iApply` friendly.
 * Restore the original, stronger notion of atomicity alongside the weaker
   notion. These are `Atomic a e` where the stuckness bit `s` indicates whether
   expression `e` is weakly (`a = WeaklyAtomic`) or strongly (`a =
   StronglyAtomic`) atomic.
+* Various improvements to `solve_ndisj`.
+* Use `Hint Mode` to prevent Coq from making arbitrary guesses in the presence
+  of evars, which often led to divergence. There are a few places where type
+  annotations are now needed.
+* The rules `internal_eq_rewrite` and `internal_eq_rewrite_contractive` are now
+  stated in the logic, i.e., they are `iApply`-friendly.
 
 ## Iris 3.0.0 (released 2017-01-11)
 
