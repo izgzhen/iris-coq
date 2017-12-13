@@ -68,7 +68,7 @@ A LaTeX version of the core logic definitions and some derived forms is
 available in [docs/iris.tex](docs/iris.tex).  A compiled PDF version of this
 document is [available online](http://plv.mpi-sws.org/iris/appendix-3.1.pdf).
 
-## Examples
+## Case Studies
 
 The following is a (probably incomplete) list of case studies that use Iris, and
 that should be compatible with this version:
