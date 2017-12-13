@@ -169,6 +169,8 @@ Finally, weakest precondition takes a parameter $\stuckness \in \set{\NotStuck, 
 %  (* value case *)
   \wpre[\stateinterp]\expr[\stuckness;\mask]{\Ret\val. \prop} \eqdef{}& \textdom{wp}(\stateinterp,\stuckness)(\mask, \expr, \Lam\val.\prop)
 \end{align*}
+The $\stateinterp$ will always be set by the context; typically, when instantiating Iris with a language, we also pick the corresponding state interpretation $\stateinterp$.
+All proof rules leave $\stateinterp$ unchanged.
 If we leave away the mask $\mask$, we assume it to default to $\top$.
 If we leave away the stuckness $\stuckness$, it defaults to $\NotStuck$.
 
@@ -211,7 +213,7 @@ We will also want a rule that connect weakest preconditions to the operational s
   \infer[wp-lift-step]
   {\toval(\expr_1) = \bot}
   { {\begin{inbox} % for some crazy reason, LaTeX is actually sensitive to the space between the "{ {" here and the "} }" below...
-        ~~\All \state_1. \stateinterp(\state_1) \vsW[\mask][\emptyset] (\stuckness = \NotStuck \Ra \red(\expr_1,\state_1)) * {}\\\qquad~~ \later\All \expr_2, \state_2, \vec\expr.  (\expr_1, \state_1 \step \expr_2, \state_2, \vec\expr)  \vsW[\emptyset][\mask] \Bigl(\stateinterp(\state_2) * \wpre{\expr_2}[\stuckness;\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\stuckness;\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre{\expr_1}[\stuckness;\mask]{\Ret\var.\prop}
+        ~~\All \state_1. \stateinterp(\state_1) \vsW[\mask][\emptyset] (\stuckness = \NotStuck \Ra \red(\expr_1,\state_1)) * {}\\\qquad~~ \later\All \expr_2, \state_2, \vec\expr.  (\expr_1, \state_1 \step \expr_2, \state_2, \vec\expr)  \vsW[\emptyset][\mask] \Bigl(\stateinterp(\state_2) * \wpre[\stateinterp]{\expr_2}[\stuckness;\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre[\stateinterp]{\expr_\f}[\stuckness;\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre[\stateinterp]{\expr_1}[\stuckness;\mask]{\Ret\var.\prop}
       \end{inbox}} }
 \end{mathpar}
 
@@ -270,7 +272,7 @@ The signature can of course state arbitrary additional properties of $\pred$, as
 The adequacy statement now reads as follows:
 \begin{align*}
  &\All \mask, \expr, \val, \state.
- \\&( \TRUE \proves {\upd}_\mask \Exists \stateinterp. \stateinterp(\state) * \wpre{\expr}[\stuckness;\mask]{x.\; \pred(x)}) \Ra
+ \\&( \TRUE \proves {\upd}_\mask \Exists \stateinterp. \stateinterp(\state) * \wpre[\stateinterp]{\expr}[\stuckness;\mask]{x.\; \pred(x)}) \Ra
  \\&\expr, \state \vDash_\stuckness V
 \end{align*}
 Notice that the state invariant $S$ used by the weakest precondition is chosen \emph{after} doing a fancy update, which allows it to depend on the names of ghost variables that are picked in that initial fancy update.
@@ -281,6 +283,7 @@ Still, for a more traditional presentation, we can easily derive the notion of a
 \[
 \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \wand \wpre{\expr}[\mask]{\Ret\val.\propB})}
 \]
+We assume the state interpretation $\stateinterp$ to be fixed by the context.
 
 We only give some of the proof rules for Hoare triples here, since we usually do all our reasoning directly with weakest preconditions and use Hoare triples only to write specifications.
 \begin{mathparpagebreakable}
