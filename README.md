@@ -71,8 +71,9 @@ document is [available online](http://plv.mpi-sws.org/iris/appendix-3.0.pdf).
 ## For Developers: How to update the std++ dependency
 
 * Do the change in std++, push it.
-* Wait for CI to publish a new std++ version on the opam archive.
-* In Iris, change opam to depend on the new version.
+* Wait for CI to publish a new std++ version on the opam archive, then run
+  `opam update iris-dev`.
+* In Iris, change the `opam` file to depend on the new version.
 * Run `make build-dep` (in Iris) to install the new version of std++.
-* You may have to do `make clean` as Coq will likely complain about .vo file
+  You may have to do `make clean` as Coq will likely complain about .vo file
   mismatches.
