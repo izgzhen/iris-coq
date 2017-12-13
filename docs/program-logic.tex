@@ -161,13 +161,13 @@ This can be instantiated, for example, with ownership of an authoritative RA to 
 Finally, weakest precondition takes a parameter $\stuckness \in \set{\NotStuck, \MaybeStuck}$ indicating whether program execution is allowed to get stuck.
 
 \begin{align*}
-  \textdom{wp}_\stuckness \eqdef{}& \MU \textdom{wp}. \Lam \mask, \expr, \pred. \\
+  \textdom{wp}(\stateinterp, \stuckness) \eqdef{}& \MU \textdom{wp\any rec}. \Lam \mask, \expr, \pred. \\
         & (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \pred(\val)) \lor {}\\
         & \Bigl(\toval(\expr) = \bot \land \All \state. \stateinterp(\state) \vsW[\mask][\emptyset] {}\\
         &\qquad (s = \NotStuck \Ra \red(\expr, \state)) * \later\All \expr', \state', \vec\expr. (\expr, \state \step \expr', \state', \vec\expr) \vsW[\emptyset][\mask] {}\\
-        &\qquad\qquad \stateinterp(\state') * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \vec\expr} \textdom{wp}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
+        &\qquad\qquad \stateinterp(\state') * \textdom{wp\any rec}(\mask, \expr', \pred) * \Sep_{\expr'' \in \vec\expr} \textdom{wp\any rec}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
 %  (* value case *)
-  \wpre\expr[\stuckness;\mask]{\Ret\val. \prop} \eqdef{}& \textdom{wp}_\stuckness(\mask, \expr, \Lam\val.\prop)
+  \wpre[\stateinterp]\expr[\stuckness;\mask]{\Ret\val. \prop} \eqdef{}& \textdom{wp}(\stateinterp,\stuckness)(\mask, \expr, \Lam\val.\prop)
 \end{align*}
 If we leave away the mask $\mask$, we assume it to default to $\top$.
 If we leave away the stuckness $\stuckness$, it defaults to $\NotStuck$.

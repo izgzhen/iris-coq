@@ -246,8 +246,8 @@
 \newcommand{\fixp}{\mathit{fix}}
 
 %% various pieces of Syntax
-\def\MU #1.{\mu #1.\spac}%
-\def\Lam #1.{\lambda #1.\spac}%
+\def\MU #1.{\mu\,#1.\spac}%
+\def\Lam #1.{\lambda\,#1.\spac}%
 
 \newcommand{\proves}{\vdash}
 \newcommand{\provesIff}{\mathrel{\dashv\vdash}}
@@ -259,8 +259,8 @@
 \newcommand{\gmapsto}{\hookrightarrow}%
 \newcommand{\fgmapsto}[1][\mathrm{-}]{\xhookrightarrow{#1}}%
 
-\NewDocumentCommand\wpre{m O{} m}%
-  {\textlog{wp}_{#2}\spac#1\spac{\left\{#3\right\}}}
+\NewDocumentCommand\wpre{o m O{} m}%
+  {\textlog{wp}{\IfValueT{#1}{(#1)}}_{#3}\spac#2\spac{\left\{#4\right\}}}
 
 \newcommand{\stateinterp}{S}
 
