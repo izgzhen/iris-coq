@@ -259,8 +259,8 @@
 \newcommand{\gmapsto}{\hookrightarrow}%
 \newcommand{\fgmapsto}[1][\mathrm{-}]{\xhookrightarrow{#1}}%
 
-\NewDocumentCommand\wpre{o m O{} m}%
-  {\textlog{wp}{\IfValueT{#1}{(#1)}}_{#3}\spac#2\spac{\left\{#4\right\}}}
+\NewDocumentCommand\wpre{O{} m O{} m}%
+  {\textlog{wp}^{#1}_{#3}\spac#2\spac{\left\{#4\right\}}}
 
 \newcommand{\stateinterp}{S}
 
