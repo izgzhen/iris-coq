@@ -2305,6 +2305,16 @@ Section bi_morphims.
   Proof. apply (ne_proper _). Qed.
   Global Instance bi_mor_mono_flip : Proper (flip (⊢) ==> flip (⊢)) bi_embedding.
   Proof. solve_proper. Qed.
+  Global Instance bi_mor_inj : Inj (≡) (≡) bi_embedding.
+  Proof.
+    intros ?? EQ. apply bi.equiv_spec, conj; apply (inj bi_embedding);
+    rewrite EQ //.
+  Qed.
+
+  Lemma bi_mor_valid (P : PROP1) : @bi_embedding PROP1 PROP2 _ P ↔ P.
+  Proof.
+    by rewrite /bi_valid -bi_mor_emp; split=>?; [apply (inj bi_embedding)|f_equiv].
+  Qed.
 
   Lemma bi_mor_forall A (Φ : A → PROP1) : ⎡∀ x, Φ x⎤ ⊣⊢ ∀ x, ⎡Φ x⎤.
   Proof.

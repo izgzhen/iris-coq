@@ -536,6 +536,7 @@ Typeclasses Opaque bi_embedding.
 Class BiMorphism (PROP1 PROP2 : bi) `{BiEmbedding PROP1 PROP2} := {
   bi_mor_ne :> NonExpansive bi_embedding;
   bi_mor_mono :> Proper ((⊢) ==> (⊢)) bi_embedding;
+  bi_mor_entails_inj :> Inj (⊢) (⊢) bi_embedding;
   bi_mor_emp : ⎡emp⎤ ⊣⊢ emp;
   bi_mor_impl_2 P Q : (⎡P⎤ → ⎡Q⎤) ⊢ ⎡P → Q⎤;
   bi_mor_forall_2 A (Φ : A → PROP1) : (∀ x, ⎡Φ x⎤) ⊢ ⎡∀ x, Φ x⎤;

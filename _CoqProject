@@ -91,6 +91,7 @@ theories/proofmode/tactics.v
 theories/proofmode/notation.v
 theories/proofmode/classes.v
 theories/proofmode/class_instances.v
+theories/proofmode/monpred.v
 theories/tests/heap_lang.v
 theories/tests/one_shot.v
 theories/tests/proofmode.v

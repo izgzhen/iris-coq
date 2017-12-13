@@ -65,21 +65,28 @@ Proof. by apply as_valid. Qed.
 Instance as_valid_valid {PROP : bi} (P : PROP) : AsValid (bi_valid P) P | 0.
 Proof. by rewrite /AsValid. Qed.
 
-Instance as_valid_entails {PROP : bi} (P Q : PROP) : AsValid (P ⊢ Q) (P -∗ Q) | 1.
+Instance as_valid_entails {PROP : bi} (P Q : PROP) : AsValid (P ⊢ Q) (P -∗ Q) | 0.
 Proof. split. apply bi.entails_wand. apply bi.wand_entails. Qed.
 
-Instance as_valid_equiv {PROP : bi} (P Q : PROP) : AsValid (P ≡ Q) (P ∗-∗ Q).
+Instance as_valid_equiv {PROP : bi} (P Q : PROP) : AsValid (P ≡ Q) (P ∗-∗ Q) | 0.
 Proof. split. apply bi.equiv_wand_iff. apply bi.wand_iff_equiv. Qed.
 
+Instance as_valid_morphism `{BiMorphism PROP PROP'} (φ : Prop) (P : PROP) :
+  AsValid φ P → AsValid φ ⎡P⎤.
+Proof. rewrite /AsValid=> ->. rewrite bi_mor_valid //. Qed.
+
 (** * Start a proof *)
-Ltac iStartProof :=
+Tactic Notation "iStartProof" uconstr(PROP) :=
   lazymatch goal with
-  | |- envs_entails _ _ => idtac
+  | |- @envs_entails ?PROP' _ _ =>
+    let x := type_term (eq_refl : PROP = PROP') in idtac
   | |- let _ := _ in _ => fail
-  | |- ?φ => eapply (as_valid_2 φ);
+  | |- ?φ => eapply (@as_valid_2 φ PROP);
                [apply _ || fail "iStartProof: not a Bi entailment"
                |apply tac_adequate]
   end.
+
+Tactic Notation "iStartProof" := iStartProof _.
 
 (** * Context manipulation *)
 Tactic Notation "iRename" constr(H1) "into" constr(H2) :=

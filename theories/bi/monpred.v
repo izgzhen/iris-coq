@@ -465,9 +465,10 @@ Proof.
 Qed.
 
 Global Instance monPred_ipure_bi_mor :
-  @BiMorphism PROP (monPredI I PROP) bi_embedding.
+  Inhabited I → @BiMorphism PROP (monPredI I PROP) bi_embedding.
 Proof.
   split; try apply _; unseal; try done.
+  - move =>?? /= [/(_ inhabitant) ?] //.
   - split=>? /=.
     by rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim.
   - split=>? /=.
@@ -497,6 +498,6 @@ Proof.
 Qed.
 
 Global Instance monPred_ipure_sbi_mor :
-  @SbiMorphism PROP (monPredSI I PROP) bi_embedding.
+  Inhabited I → @SbiMorphism PROP (monPredSI I PROP) bi_embedding.
 Proof. split; try apply _. by unseal. Qed.
 End sbi_facts.

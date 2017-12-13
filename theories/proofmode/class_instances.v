@@ -115,6 +115,9 @@ Proof. rewrite /IntoPure=> ->. apply: plainly_elim. Qed.
 Global Instance into_pure_persistently P φ :
   IntoPure P φ → IntoPure (bi_persistently P) φ.
 Proof. rewrite /IntoPure=> ->. apply: persistently_elim. Qed.
+Global Instance into_pure_morphism `{BiMorphism PROP PROP'} P φ :
+  IntoPure P φ → IntoPure ⎡P⎤ φ.
+Proof. rewrite /IntoPure=> ->. by rewrite bi_mor_pure. Qed.
 
 (* FromPure *)
 Global Instance from_pure_pure φ : @FromPure PROP ⌜φ⌝ φ.
@@ -161,6 +164,9 @@ Global Instance from_pure_affinely P φ `{!Affine P} :
 Proof. by rewrite /FromPure affine_affinely. Qed.
 Global Instance from_pure_absorbingly P φ : FromPure P φ → FromPure (bi_absorbingly P) φ.
 Proof. rewrite /FromPure=> <-. by rewrite absorbingly_pure. Qed.
+Global Instance from_pure_morphism `{BiMorphism PROP PROP'} P φ :
+  FromPure P φ → FromPure ⎡P⎤ φ.
+Proof. rewrite /FromPure=> <-. by rewrite bi_mor_pure. Qed.
 
 (* IntoInternalEq *)
 Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
@@ -178,6 +184,10 @@ Proof. rewrite /IntoInternalEq=> ->. by rewrite plainly_elim. Qed.
 Global Instance into_internal_eq_persistently {A : ofeT} (x y : A) P :
   IntoInternalEq P x y → IntoInternalEq (bi_persistently P) x y.
 Proof. rewrite /IntoInternalEq=> ->. by rewrite persistently_elim. Qed.
+Global Instance into_internal_eq_morphism
+       `{BiMorphism PROP PROP'} {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq ⎡P⎤ x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite bi_mor_internal_eq. Qed.
 
 (* IntoPersistent *)
 Global Instance into_persistent_persistently p P Q :
@@ -189,6 +199,11 @@ Qed.
 Global Instance into_persistent_affinely p P Q :
   IntoPersistent p P Q → IntoPersistent p (bi_affinely P) Q | 0.
 Proof. rewrite /IntoPersistent /= => <-. by rewrite affinely_elim. Qed.
+Global Instance into_persistent_morphism `{BiMorphism PROP PROP'} p P Q :
+  IntoPersistent p P Q → IntoPersistent p ⎡P⎤ ⎡Q⎤ | 0.
+Proof.
+  rewrite /IntoPersistent -bi_mor_persistently -bi_mor_persistently_if=> -> //.
+Qed.
 Global Instance into_persistent_here P : IntoPersistent true P P | 1.
 Proof. by rewrite /IntoPersistent. Qed.
 Global Instance into_persistent_persistent P :
@@ -215,6 +230,12 @@ Global Instance from_always_affinely a pe pl P Q :
   FromAlways a pe pl P Q → FromAlways true pe pl (bi_affinely P) Q | 0.
 Proof.
   rewrite /FromAlways /= => <-. destruct a; by rewrite /= ?affinely_idemp.
+Qed.
+Global Instance from_always_morphism `{BiMorphism PROP PROP'} a pe pl P Q :
+  FromAlways a pe pl P Q → FromAlways a pe pl ⎡P⎤ ⎡Q⎤ | 0.
+Proof.
+  rewrite /FromAlways=><-.
+  by rewrite bi_mor_affinely_if bi_mor_persistently_if bi_mor_plainly_if.
 Qed.
 
 (* IntoWand *)
@@ -302,6 +323,12 @@ Proof. by rewrite /IntoWand /= persistently_idemp. Qed.
 Global Instance into_wand_persistently_false `{!BiAffine PROP} q R P Q :
   IntoWand false q R P Q → IntoWand false q (bi_persistently R) P Q.
 Proof. by rewrite /IntoWand persistently_elim. Qed.
+Global Instance into_wand_Morphism `{BiMorphism PROP PROP'} p q R P Q :
+  IntoWand p q R P Q → IntoWand p q ⎡R⎤ ⎡P⎤ ⎡Q⎤.
+Proof.
+  rewrite /IntoWand -!bi_mor_persistently_if -!bi_mor_affinely_if
+          -bi_mor_wand => -> //.
+Qed.
 
 (* FromAnd *)
 Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2 | 100.
@@ -343,6 +370,10 @@ Global Instance from_and_persistently_sep P Q1 Q2 :
   FromAnd (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2) | 11.
 Proof. rewrite /FromAnd=> <-. by rewrite -persistently_and persistently_and_sep. Qed.
 
+Global Instance from_and_morphism `{BiMorphism PROP PROP'} P Q1 Q2 :
+  FromAnd P Q1 Q2 → FromAnd ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
+Proof. by rewrite /FromAnd -bi_mor_and => <-. Qed.
+
 Global Instance from_and_big_sepL_cons_persistent {A} (Φ : nat → A → PROP) x l :
   Persistent (Φ 0 x) →
   FromAnd ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
@@ -378,6 +409,10 @@ Global Instance from_sep_persistently P Q1 Q2 :
   FromSep P Q1 Q2 →
   FromSep (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
 Proof. rewrite /FromSep=> <-. by rewrite persistently_sep_2. Qed.
+
+Global Instance from_sep_morphism `{BiMorphism PROP PROP'} P Q1 Q2 :
+  FromSep P Q1 Q2 → FromSep ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
+Proof. by rewrite /FromSep -bi_mor_sep => <-. Qed.
 
 Global Instance from_sep_big_sepL_cons {A} (Φ : nat → A → PROP) x l :
   FromSep ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
@@ -436,6 +471,12 @@ Proof.
   - by rewrite -persistently_and !persistently_idemp.
   - intros ->. by rewrite persistently_and.
 Qed.
+Global Instance into_and_morphism `{BiMorphism PROP PROP'} p P Q1 Q2 :
+  IntoAnd p P Q1 Q2 → IntoAnd p ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
+Proof.
+  rewrite /IntoAnd -bi_mor_and -!bi_mor_persistently_if
+          -!bi_mor_affinely_if=> -> //.
+Qed.
 
 (* IntoSep *)
 Global Instance into_sep_sep P Q : IntoSep (P ∗ Q) P Q.
@@ -468,6 +509,10 @@ Qed.
 
 Global Instance into_sep_pure φ ψ : @IntoSep PROP ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /IntoSep pure_and persistent_and_sep_1. Qed.
+
+Global Instance into_sep_morphism `{BiMorphism PROP PROP'} P Q1 Q2 :
+  IntoSep P Q1 Q2 → IntoSep ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
+Proof. rewrite /IntoSep -bi_mor_sep=> -> //. Qed.
 
 (* FIXME: This instance is kind of strange, it just gets rid of the bi_affinely. Also, it
 overlaps with `into_sep_affinely_later`, and hence has lower precedence. *)
@@ -515,6 +560,9 @@ Global Instance from_or_persistently P Q1 Q2 :
   FromOr P Q1 Q2 →
   FromOr (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
 Proof. rewrite /FromOr=> <-. by rewrite persistently_or. Qed.
+Global Instance from_or_morphism `{BiMorphism PROP PROP'} P Q1 Q2 :
+  FromOr P Q1 Q2 → FromOr ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
+Proof. by rewrite /FromOr -bi_mor_or => <-. Qed.
 
 (* IntoOr *)
 Global Instance into_or_or P Q : IntoOr (P ∨ Q) P Q.
@@ -534,6 +582,9 @@ Global Instance into_or_persistently P Q1 Q2 :
   IntoOr P Q1 Q2 →
   IntoOr (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
 Proof. rewrite /IntoOr=>->. by rewrite persistently_or. Qed.
+Global Instance into_or_morphism `{BiMorphism PROP PROP'} P Q1 Q2 :
+  IntoOr P Q1 Q2 → IntoOr ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
+Proof. by rewrite /IntoOr -bi_mor_or => <-. Qed.
 
 (* FromExist *)
 Global Instance from_exist_exist {A} (Φ : A → PROP): FromExist (∃ a, Φ a) Φ.
@@ -553,6 +604,9 @@ Proof. rewrite /FromExist=> <-. by rewrite -plainly_exist_2. Qed.
 Global Instance from_exist_persistently {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (bi_persistently P) (λ a, bi_persistently (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite persistently_exist. Qed.
+Global Instance from_exist_morphism `{BiMorphism PROP PROP'} {A} P (Φ : A → PROP) :
+  FromExist P Φ → FromExist ⎡P⎤ (λ a, ⎡Φ a⎤%I).
+Proof. by rewrite /FromExist -bi_mor_exist => <-. Qed.
 
 (* IntoExist *)
 Global Instance into_exist_exist {A} (Φ : A → PROP) : IntoExist (∃ a, Φ a) Φ.
@@ -585,6 +639,9 @@ Proof. rewrite /IntoExist=> HP. by rewrite HP plainly_exist. Qed.
 Global Instance into_exist_persistently {A} P (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (bi_persistently P) (λ a, bi_persistently (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP persistently_exist. Qed.
+Global Instance into_exist_morphism `{BiMorphism PROP PROP'} {A} P (Φ : A → PROP) :
+  IntoExist P Φ → IntoExist ⎡P⎤ (λ a, ⎡Φ a⎤%I).
+Proof. by rewrite /IntoExist -bi_mor_exist => <-. Qed.
 
 (* IntoForall *)
 Global Instance into_forall_forall {A} (Φ : A → PROP) : IntoForall (∀ a, Φ a) Φ.
@@ -598,6 +655,9 @@ Proof. rewrite /IntoForall=> HP. by rewrite HP plainly_forall. Qed.
 Global Instance into_forall_persistently {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (bi_persistently P) (λ a, bi_persistently (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP persistently_forall. Qed.
+Global Instance into_forall_morphism `{BiMorphism PROP PROP'} {A} P (Φ : A → PROP) :
+  IntoForall P Φ → IntoForall ⎡P⎤ (λ a, ⎡Φ a⎤%I).
+Proof. by rewrite /IntoForall -bi_mor_forall => <-. Qed.
 
 (* FromForall *)
 Global Instance from_forall_forall {A} (Φ : A → PROP) :
@@ -635,6 +695,9 @@ Proof. rewrite /FromForall=> <-. by rewrite plainly_forall. Qed.
 Global Instance from_forall_persistently {A} P (Φ : A → PROP) :
   FromForall P Φ → FromForall (bi_persistently P)%I (λ a, bi_persistently (Φ a))%I.
 Proof. rewrite /FromForall=> <-. by rewrite persistently_forall. Qed.
+Global Instance from_forall_morphism `{BiMorphism PROP PROP'} {A} P (Φ : A → PROP) :
+  FromForall P Φ → FromForall ⎡P⎤%I (λ a, ⎡Φ a⎤%I).
+Proof. by rewrite /FromForall -bi_mor_forall => <-. Qed.
 
 (* ElimModal *)
 Global Instance elim_modal_wand P P' Q Q' R :
@@ -671,6 +734,26 @@ Qed.
 Global Instance frame_here_pure p φ Q : FromPure Q φ → Frame p ⌜φ⌝ Q True.
 Proof.
   rewrite /FromPure /Frame=> <-. by rewrite affinely_persistently_if_elim sep_elim_l.
+Qed.
+
+Class MakeMorphism `{BiMorphism PROP PROP'} P (Q : PROP') :=
+  make_morphism : ⎡P⎤ ⊣⊢ Q.
+Arguments MakeMorphism {_ _ _} _%I _%I.
+Global Instance make_morphism_true `{BiMorphism PROP PROP'} :
+  MakeMorphism True True.
+Proof. by rewrite /MakeMorphism bi_mor_pure. Qed.
+Global Instance make_morphism_emp `{BiMorphism PROP PROP'} :
+  MakeMorphism emp emp.
+Proof. by rewrite /MakeMorphism bi_mor_emp. Qed.
+Global Instance make_morphism_default `{BiMorphism PROP PROP'} :
+  MakeMorphism P ⎡P⎤ | 100.
+Proof. by rewrite /MakeMorphism. Qed.
+
+Global Instance frame_morphism `{BiMorphism PROP PROP'} p P Q (Q' : PROP') R :
+  Frame p R P Q → MakeMorphism Q Q' → Frame p ⎡R⎤ ⎡P⎤ Q'.
+Proof.
+  rewrite /Frame /MakeMorphism => <- <-.
+  rewrite bi_mor_sep bi_mor_affinely_if bi_mor_persistently_if => //.
 Qed.
 
 Class MakeSep (P Q PQ : PROP) := make_sep : P ∗ Q ⊣⊢ PQ.
@@ -851,6 +934,9 @@ Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
 (* FromModal *)
 Global Instance from_modal_absorbingly P : FromModal (bi_absorbingly P) P.
 Proof. apply absorbingly_intro. Qed.
+Global Instance from_modal_morphism `{BiMorphism PROP PROP'} P Q :
+  FromModal P Q → FromModal ⎡P⎤ ⎡Q⎤.
+Proof. by rewrite /FromModal=> ->. Qed.
 End bi_instances.
 
 
@@ -1057,6 +1143,9 @@ Global Instance is_except_0_except_0 P : IsExcept0 (◇ P).
 Proof. by rewrite /IsExcept0 except_0_idemp. Qed.
 Global Instance is_except_0_later P : IsExcept0 (▷ P).
 Proof. by rewrite /IsExcept0 except_0_later. Qed.
+Global Instance is_except_0_morphism `{SbiMorphism PROP PROP'} P :
+  IsExcept0 P → IsExcept0 ⎡P⎤.
+Proof. by rewrite /IsExcept0 -sbi_mor_except_0=>->. Qed.
 
 (* FromModal *)
 Global Instance from_modal_later P : FromModal (▷ P) P.
@@ -1084,6 +1173,9 @@ Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_plainly. Qed.
 Global Instance into_except_0_persistently P Q :
   IntoExcept0 P Q → IntoExcept0 (bi_persistently P) (bi_persistently Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_persistently. Qed.
+Global Instance into_except_0_morphism `{SbiMorphism PROP PROP'} P Q :
+  IntoExcept0 P Q → IntoExcept0 ⎡P⎤ ⎡Q⎤.
+Proof. rewrite /IntoExcept0=> ->. by rewrite sbi_mor_except_0. Qed.
 
 (* ElimModal *)
 Global Instance elim_modal_timeless P Q :
@@ -1190,6 +1282,9 @@ Proof. rewrite /IntoLaterN=> ->. by rewrite laterN_plainly. Qed.
 Global Instance into_later_persistently n P Q :
   IntoLaterN n P Q → IntoLaterN n (bi_persistently P) (bi_persistently Q).
 Proof. rewrite /IntoLaterN=> ->. by rewrite laterN_persistently. Qed.
+Global Instance into_later_morphism`{SbiMorphism PROP PROP'} n P Q :
+  IntoLaterN n P Q → IntoLaterN n ⎡P⎤ ⎡Q⎤.
+Proof. rewrite /IntoLaterN=> ->. by rewrite sbi_mor_laterN. Qed.
 
 Global Instance into_laterN_sep_l n P1 P2 Q1 Q2 :
   IntoLaterN' n P1 Q1 → IntoLaterN n P2 Q2 →
@@ -1273,6 +1368,9 @@ Proof. by rewrite /FromLaterN laterN_persistently=> ->. Qed.
 Global Instance from_later_absorbingly n P Q :
   FromLaterN n P Q → FromLaterN n (bi_absorbingly P) (bi_absorbingly Q).
 Proof. by rewrite /FromLaterN laterN_absorbingly=> ->. Qed.
+Global Instance from_later_morphism`{SbiMorphism PROP PROP'} n P Q :
+  FromLaterN n P Q → FromLaterN n ⎡P⎤ ⎡Q⎤.
+Proof. rewrite /FromLaterN=> <-. by rewrite sbi_mor_laterN. Qed.
 
 Global Instance from_later_forall {A} n (Φ Ψ : A → PROP) :
   (∀ x, FromLaterN n (Φ x) (Ψ x)) → FromLaterN n (∀ x, Φ x) (∀ x, Ψ x).
