@@ -71,9 +71,9 @@ Proof. split. apply bi.entails_wand. apply bi.wand_entails. Qed.
 Instance as_valid_equiv {PROP : bi} (P Q : PROP) : AsValid (P ≡ Q) (P ∗-∗ Q) | 0.
 Proof. split. apply bi.equiv_wand_iff. apply bi.wand_iff_equiv. Qed.
 
-Instance as_valid_morphism `{BiMorphism PROP PROP'} (φ : Prop) (P : PROP) :
+Instance as_valid_embed `{BiEmbedding PROP PROP'} (φ : Prop) (P : PROP) :
   AsValid φ P → AsValid φ ⎡P⎤.
-Proof. rewrite /AsValid=> ->. rewrite bi_mor_valid //. Qed.
+Proof. rewrite /AsValid=> ->. rewrite bi_embed_valid //. Qed.
 
 (** * Start a proof *)
 Tactic Notation "iStartProof" uconstr(PROP) :=

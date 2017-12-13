@@ -526,29 +526,29 @@ End sbi_laws.
 End bi.
 
 (* Typically, embeddings are used to *define* the destination BI.
-   Hence we cannot ask it to be a morphism. *)
-Class BiEmbedding (A B : Type) := bi_embedding : A → B.
-Arguments bi_embedding {_ _ _} _%I : simpl never.
-Notation "⎡ P ⎤" := (bi_embedding P) : bi_scope.
-Instance: Params (@bi_embedding) 3.
-Typeclasses Opaque bi_embedding.
+   Hence we cannot ask it to verify the properties of embeddings. *)
+Class BiEmbed (A B : Type) := bi_embed : A → B.
+Arguments bi_embed {_ _ _} _%I : simpl never.
+Notation "⎡ P ⎤" := (bi_embed P) : bi_scope.
+Instance: Params (@bi_embed) 3.
+Typeclasses Opaque bi_embed.
 
-Class BiMorphism (PROP1 PROP2 : bi) `{BiEmbedding PROP1 PROP2} := {
-  bi_mor_ne :> NonExpansive bi_embedding;
-  bi_mor_mono :> Proper ((⊢) ==> (⊢)) bi_embedding;
-  bi_mor_entails_inj :> Inj (⊢) (⊢) bi_embedding;
-  bi_mor_emp : ⎡emp⎤ ⊣⊢ emp;
-  bi_mor_impl_2 P Q : (⎡P⎤ → ⎡Q⎤) ⊢ ⎡P → Q⎤;
-  bi_mor_forall_2 A (Φ : A → PROP1) : (∀ x, ⎡Φ x⎤) ⊢ ⎡∀ x, Φ x⎤;
-  bi_mor_exist_1 A (Φ : A → PROP1) : ⎡∃ x, Φ x⎤ ⊢ ∃ x, ⎡Φ x⎤;
-  bi_mor_internal_eq_1 (A : ofeT) (x y : A) : ⎡x ≡ y⎤ ⊢ x ≡ y;
-  bi_mor_sep P Q : ⎡P ∗ Q⎤ ⊣⊢ ⎡P⎤ ∗ ⎡Q⎤;
-  bi_mor_wand_2 P Q : (⎡P⎤ -∗ ⎡Q⎤) ⊢ ⎡P -∗ Q⎤;
-  bi_mor_plainly P : ⎡bi_plainly P⎤ ⊣⊢ bi_plainly ⎡P⎤;
-  bi_mor_persistently P : ⎡bi_persistently P⎤ ⊣⊢ bi_persistently ⎡P⎤
+Class BiEmbedding (PROP1 PROP2 : bi) `{BiEmbed PROP1 PROP2} := {
+  bi_embed_ne :> NonExpansive bi_embed;
+  bi_embed_mono :> Proper ((⊢) ==> (⊢)) bi_embed;
+  bi_embed_entails_inj :> Inj (⊢) (⊢) bi_embed;
+  bi_embed_emp : ⎡emp⎤ ⊣⊢ emp;
+  bi_embed_impl_2 P Q : (⎡P⎤ → ⎡Q⎤) ⊢ ⎡P → Q⎤;
+  bi_embed_forall_2 A (Φ : A → PROP1) : (∀ x, ⎡Φ x⎤) ⊢ ⎡∀ x, Φ x⎤;
+  bi_embed_exist_1 A (Φ : A → PROP1) : ⎡∃ x, Φ x⎤ ⊢ ∃ x, ⎡Φ x⎤;
+  bi_embed_internal_eq_1 (A : ofeT) (x y : A) : ⎡x ≡ y⎤ ⊢ x ≡ y;
+  bi_embed_sep P Q : ⎡P ∗ Q⎤ ⊣⊢ ⎡P⎤ ∗ ⎡Q⎤;
+  bi_embed_wand_2 P Q : (⎡P⎤ -∗ ⎡Q⎤) ⊢ ⎡P -∗ Q⎤;
+  bi_embed_plainly P : ⎡bi_plainly P⎤ ⊣⊢ bi_plainly ⎡P⎤;
+  bi_embed_persistently P : ⎡bi_persistently P⎤ ⊣⊢ bi_persistently ⎡P⎤
 }.
 
-Class SbiMorphism (PROP1 PROP2 : sbi) `{BiEmbedding PROP1 PROP2} := {
-  sbi_mor_bi_mor :> BiMorphism PROP1 PROP2;
-  sbi_mor_later P : ⎡▷ P⎤ ⊣⊢ ▷ ⎡P⎤
+Class SbiEmbedding (PROP1 PROP2 : sbi) `{BiEmbed PROP1 PROP2} := {
+  sbi_embed_bi_embed :> BiEmbedding PROP1 PROP2;
+  sbi_embed_later P : ⎡▷ P⎤ ⊣⊢ ▷ ⎡P⎤
 }.
