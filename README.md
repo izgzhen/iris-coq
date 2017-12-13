@@ -77,6 +77,8 @@ that should be compatible with this version:
   collect miscellaneous case studies that do not have their own repository.
 * [LambdaRust](https://gitlab.mpi-sws.org/FP/LambdaRust-coq/) is a Coq
   formalization of the core Rust type system.
+* [Iris Atomic](https://gitlab.mpi-sws.org/FP/iris-atomic/) is an experimental
+  formalization of logically atomic triples in Iris.
 
 ## For Developers: How to update the std++ dependency
 
