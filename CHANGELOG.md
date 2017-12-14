@@ -27,7 +27,8 @@ Changes in and extensions of the theory:
 
 Changes in Coq:
 
-* Move the `prelude` folder to its own project: std++
+* Move the `prelude` folder to its own project:
+  [coq-std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
 * Some extensions/improvements of heap_lang:
   - Improve handling of pure (non-state-dependent) reductions.
   - Add fetch-and-add (`FAA`) operation.
