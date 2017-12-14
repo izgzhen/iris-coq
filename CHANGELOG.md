@@ -111,8 +111,8 @@ sed 's/\bPersistentP\b/Persistent/g; s/\bTimelessP\b/Timeless/g; s/\bCMRADiscret
   setup Iris for your language.
 * Restore the original, stronger notion of atomicity alongside the weaker
   notion. These are `Atomic a e` where the stuckness bit `s` indicates whether
-  expression `e` is weakly (`a = WeaklyAtomic`) or strongly (`a =
-  StronglyAtomic`) atomic.
+  expression `e` is weakly (`a = WeaklyAtomic`) or strongly
+  (`a = StronglyAtomic`) atomic.
 * Various improvements to `solve_ndisj`.
 * Use `Hint Mode` to prevent Coq from making arbitrary guesses in the presence
   of evars, which often led to divergence. There are a few places where type
