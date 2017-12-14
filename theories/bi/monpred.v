@@ -1,4 +1,4 @@
-From iris.bi Require Import derived_laws.
+From iris.bi Require Import bi.
 
 (** Definitions. *)
 
