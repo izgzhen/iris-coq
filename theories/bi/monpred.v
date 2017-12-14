@@ -208,6 +208,7 @@ Definition monPred_later_aux {I PROP} : seal (@monPred_later_def I PROP). by eex
 Definition monPred_later {I PROP} := unseal (@monPred_later_aux I PROP).
 Definition monPred_later_eq {I PROP} : @monPred_later I PROP = _ := seal_eq _.
 
+Module MonPred.
 Definition unseal_eqs :=
   (@monPred_and_eq, @monPred_or_eq, @monPred_impl_eq,
    @monPred_forall_eq, @monPred_exist_eq, @monPred_internal_eq_eq,
@@ -224,6 +225,8 @@ Ltac unseal :=
          bi_plainly; simpl;
   unfold monPred_pure, monPred_emp, monPred_plainly; simpl;
   rewrite !unseal_eqs /=.
+End MonPred.
+Import MonPred.
 
 Section canonical_bi.
 Context (I : bi_index) (PROP : bi).
