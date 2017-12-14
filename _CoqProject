@@ -29,6 +29,7 @@ theories/bi/interface.v
 theories/bi/derived_connectives.v
 theories/bi/derived_laws.v
 theories/bi/big_op.v
+theories/bi/updates.v
 theories/bi/bi.v
 theories/bi/tactics.v
 theories/bi/fractional.v
