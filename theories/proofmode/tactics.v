@@ -79,9 +79,9 @@ Proof. rewrite /AsValid=> ->. rewrite bi_embed_valid //. Qed.
 Tactic Notation "iStartProof" uconstr(PROP) :=
   lazymatch goal with
   | |- @envs_entails ?PROP' _ _ =>
-    let x := type_term (eq_refl : PROP = PROP') in idtac
+    let x := type_term (eq_refl : @eq Type PROP PROP') in idtac
   | |- let _ := _ in _ => fail
-  | |- ?φ => eapply (@as_valid_2 φ PROP);
+  | |- ?φ => eapply (λ P : PROP, @as_valid_2 φ _ P);
                [apply _ || fail "iStartProof: not a Bi entailment"
                |apply tac_adequate]
   end.
