@@ -469,7 +469,7 @@ Proof.
 Qed.
 
 Global Instance monPred_bi_embedding :
-  Inhabited I → @BiEmbedding PROP (monPredI I PROP) bi_embed.
+  Inhabited I → BiEmbedding PROP (monPredI I PROP).
 Proof.
   split; try apply _; unseal; try done.
   - move =>?? /= [/(_ inhabitant) ?] //.
@@ -502,6 +502,6 @@ Proof.
 Qed.
 
 Global Instance monPred_sbi_embedding :
-  Inhabited I → @SbiEmbedding PROP (monPredSI I PROP) bi_embed.
+  Inhabited I → SbiEmbedding PROP (monPredSI I PROP).
 Proof. split; try apply _. by unseal. Qed.
 End sbi_facts.
