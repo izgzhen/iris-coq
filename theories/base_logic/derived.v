@@ -58,9 +58,10 @@ Proof.
 Qed.
 
 (** * Derived rules *)
-Global Instance bupd_mono' : Proper ((⊢) ==> (⊢)) (@uPred_bupd M).
+Global Instance bupd_mono' : Proper ((⊢) ==> (⊢)) (@bupd _ (@uPred_bupd M)).
 Proof. intros P Q; apply bupd_mono. Qed.
-Global Instance bupd_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) (@uPred_bupd M).
+Global Instance bupd_flip_mono' :
+  Proper (flip (⊢) ==> flip (⊢)) (@bupd _ (@uPred_bupd M)).
 Proof. intros P Q; apply bupd_mono. Qed.
 Lemma bupd_frame_l R Q : (R ∗ |==> Q) ==∗ R ∗ Q.
 Proof. rewrite !(comm _ R); apply bupd_frame_r. Qed.
@@ -77,7 +78,7 @@ Proof.
 Qed.
 Lemma except_0_bupd P : ◇ (|==> P) ⊢ (|==> ◇ P).
 Proof.
-  rewrite /sbi_except_0. apply or_elim; auto using bupd_mono, or_intro_r.
+  rewrite /sbi_except_0. apply or_elim; eauto using bupd_mono, or_intro_r.
   by rewrite -bupd_intro -or_intro_l.
 Qed.
 

@@ -522,4 +522,5 @@ Proof. eapply (sbi_mixin_later_persistently_2 bi_entails), sbi_sbi_mixin. Qed.
 Lemma later_false_em P : ▷ P ⊢ ▷ False ∨ (▷ False → P).
 Proof. eapply sbi_mixin_later_false_em, sbi_sbi_mixin. Qed.
 End sbi_laws.
+
 End bi.

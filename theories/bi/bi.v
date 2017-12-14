@@ -1,4 +1,4 @@
-From iris.bi Require Export derived_laws big_op.
+From iris.bi Require Export derived_laws big_op updates.
 Set Default Proof Using "Type".
 
 Module Import bi.

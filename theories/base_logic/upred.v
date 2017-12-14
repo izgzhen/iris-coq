@@ -1,5 +1,5 @@
 From iris.algebra Require Export cmra updates.
-From iris.bi Require Export derived_connectives.
+From iris.bi Require Export derived_connectives updates.
 From stdpp Require Import finite.
 Set Default Proof Using "Type".
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
@@ -328,16 +328,17 @@ Next Obligation.
   apply uPred_mono with x'; eauto using cmra_includedN_l.
 Qed.
 Next Obligation. naive_solver. Qed.
-Definition uPred_bupd_aux : seal (@uPred_bupd_def). by eexists. Qed.
-Definition uPred_bupd {M} := unseal uPred_bupd_aux M.
-Definition uPred_bupd_eq : @uPred_bupd = @uPred_bupd_def := seal_eq uPred_bupd_aux.
+Definition uPred_bupd_aux {M} : seal (@uPred_bupd_def M). by eexists. Qed.
+Instance uPred_bupd {M} : BUpd (uPred M) := unseal uPred_bupd_aux.
+Definition uPred_bupd_eq {M} :
+  @bupd _ uPred_bupd = @uPred_bupd_def M := seal_eq uPred_bupd_aux.
 
 Module uPred_unseal.
 Definition unseal_eqs :=
   (uPred_pure_eq, uPred_and_eq, uPred_or_eq, uPred_impl_eq, uPred_forall_eq,
   uPred_exist_eq, uPred_internal_eq_eq, uPred_sep_eq, uPred_wand_eq,
   uPred_plainly_eq, uPred_persistently_eq, uPred_later_eq, uPred_ownM_eq,
-  uPred_cmra_valid_eq, uPred_bupd_eq).
+  uPred_cmra_valid_eq, @uPred_bupd_eq).
 Ltac unseal := (* Coq unfold is used to circumvent bug #5699 in rewrite /foo *)
   unfold bi_emp; simpl;
   unfold uPred_emp, bi_pure, bi_and, bi_or, bi_impl, bi_forall, bi_exist,
@@ -566,12 +567,6 @@ Coercion uPred_valid {M} : uPred M → Prop := bi_valid.
 
 (* Latest notation *)
 Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : bi_scope.
-Notation "|==> Q" := (uPred_bupd Q)
-  (at level 99, Q at level 200, format "|==>  Q") : bi_scope.
-Notation "P ==∗ Q" := (P ⊢ |==> Q)
-  (at level 99, Q at level 200, only parsing) : stdpp_scope.
-Notation "P ==∗ Q" := (P -∗ |==> Q)%I
-  (at level 99, Q at level 200, format "P  ==∗  Q") : bi_scope.
 
 Module uPred.
 Include uPred_unseal.
@@ -599,14 +594,15 @@ Qed.
 Global Instance cmra_valid_proper {A : cmraT} :
   Proper ((≡) ==> (⊣⊢)) (@uPred_cmra_valid M A) := ne_proper _.
 
-Global Instance bupd_ne : NonExpansive (@uPred_bupd M).
+Global Instance bupd_ne : NonExpansive (@bupd _ (@uPred_bupd M)).
 Proof.
   intros n P Q HPQ.
   unseal; split=> n' x; split; intros HP k yf ??;
     destruct (HP k yf) as (x'&?&?); auto;
     exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
 Qed.
-Global Instance bupd_proper : Proper ((≡) ==> (≡)) (@uPred_bupd M) := ne_proper _.
+Global Instance bupd_proper :
+  Proper ((≡) ==> (≡)) (@bupd _ (@uPred_bupd M)) := ne_proper _.
 
 (** BI instances *)
 

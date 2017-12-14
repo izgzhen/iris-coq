@@ -73,7 +73,7 @@ Lemma wp_step e1 σ1 e2 σ2 efs Φ :
   world σ1 ∗ WP e1 {{ Φ }} ==∗ ▷ |==> ◇ (world σ2 ∗ WP e2 {{ Φ }} ∗ wptp efs).
 Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (?) "[(Hw & HE & Hσ) H]".
-  rewrite (val_stuck e1 σ1 e2 σ2 efs) // fupd_eq /fupd_def.
+  rewrite (val_stuck e1 σ1 e2 σ2 efs) // uPred_fupd_eq.
   iMod ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
   iModIntro; iNext.
   iMod ("H" $! e2 σ2 efs with "[%] [$Hw $HE]") as ">($ & $ & $ & $)"; auto.
@@ -125,7 +125,7 @@ Lemma wptp_result n e1 t1 v2 t2 σ1 σ2 φ :
 Proof.
   intros. rewrite wptp_steps // laterN_later. apply: bupd_iter_laterN_mono.
   iDestruct 1 as (e2 t2' ?) "((Hw & HE & _) & H & _)"; simplify_eq.
-  iDestruct (wp_value_inv with "H") as "H". rewrite fupd_eq /fupd_def.
+  iDestruct (wp_value_inv with "H") as "H". rewrite uPred_fupd_eq.
   iMod ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
 Qed.
 
@@ -133,8 +133,8 @@ Lemma wp_safe e σ Φ :
   world σ -∗ WP e {{ Φ }} ==∗ ▷ ⌜is_Some (to_val e) ∨ reducible e σ⌝.
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "(Hw&HE&Hσ) H".
-  destruct (to_val e) as [v|] eqn:?; [eauto 10|].
-  rewrite fupd_eq. iMod ("H" with "Hσ [-]") as ">(?&?&%&?)"; eauto 10 with iFrame.
+  destruct (to_val e) as [v|] eqn:?; [eauto 10|]. rewrite uPred_fupd_eq.
+  iMod ("H" with "Hσ [-]") as ">(?&?&%&?)"; eauto 10 with iFrame.
 Qed.
 
 Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :
@@ -157,7 +157,7 @@ Proof.
   intros ?. rewrite wptp_steps // bupd_iter_frame_l laterN_later.
   apply: bupd_iter_laterN_mono.
   iIntros "[Hback H]"; iDestruct "H" as (e2' t2' ->) "[(Hw&HE&Hσ) _]".
-  rewrite fupd_eq.
+  rewrite uPred_fupd_eq.
   iMod ("Hback" with "Hσ [$Hw $HE]") as "> (_ & _ & $)"; auto.
 Qed.
 End adequacy.
@@ -172,14 +172,14 @@ Proof.
   intros Hwp; split.
   - intros t2 σ2 v2 [n ?]%rtc_nsteps.
     eapply (soundness (M:=iResUR Σ) _ (S (S n))).
-    iMod wsat_alloc as (Hinv) "[Hw HE]".
-    rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
+    iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp _).
+    rewrite uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iApply (@wptp_result _ _ (IrisG _ _ Hinv Istate)); eauto with iFrame.
   - intros t2 σ2 e2 [n ?]%rtc_nsteps ?.
     eapply (soundness (M:=iResUR Σ) _ (S (S n))).
-    iMod wsat_alloc as (Hinv) "[Hw HE]".
-    rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
+    iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp _).
+    rewrite uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iApply (@wptp_safe _ _ (IrisG _ _ Hinv Istate)); eauto with iFrame.
 Qed.
@@ -194,8 +194,8 @@ Theorem wp_invariance Σ Λ `{invPreG Σ} e σ1 t2 σ2 φ :
 Proof.
   intros Hwp [n ?]%rtc_nsteps.
   eapply (soundness (M:=iResUR Σ) _ (S (S n))).
-  iMod wsat_alloc as (Hinv) "[Hw HE]".
-  rewrite {1}fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
+  iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp _).
+  rewrite {1}uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
   iDestruct "Hwp" as (Istate) "(HIstate & Hwp & Hclose)".
   iApply (@wptp_invariance _ _ (IrisG _ _ Hinv Istate)); eauto with iFrame.
 Qed.

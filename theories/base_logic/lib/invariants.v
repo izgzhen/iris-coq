@@ -45,7 +45,7 @@ Qed.
 
 Lemma inv_alloc N E P : ▷ P ={E}=∗ inv N P.
 Proof.
-  rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros "HP [Hw $]".
+  rewrite inv_eq /inv_def uPred_fupd_eq. iIntros "HP [Hw $]".
   iMod (ownI_alloc (∈ (↑N : coPset)) P with "[$HP $Hw]")
     as (i ?) "[$ ?]"; auto using fresh_inv_name.
 Qed.
@@ -53,7 +53,7 @@ Qed.
 Lemma inv_alloc_open N E P :
   ↑N ⊆ E → (|={E, E∖↑N}=> inv N P ∗ (▷P ={E∖↑N, E}=∗ True))%I.
 Proof.
-  rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros (Sub) "[Hw HE]".
+  rewrite inv_eq /inv_def uPred_fupd_eq. iIntros (Sub) "[Hw HE]".
   iMod (ownI_alloc_open (∈ (↑N : coPset)) P with "Hw")
     as (i ?) "(Hw & #Hi & HD)"; auto using fresh_inv_name.
   iAssert (ownE {[i]} ∗ ownE (↑ N ∖ {[i]}) ∗ ownE (E ∖ ↑ N))%I
@@ -72,7 +72,7 @@ Qed.
 Lemma inv_open E N P :
   ↑N ⊆ E → inv N P ={E,E∖↑N}=∗ ▷ P ∗ (▷ P ={E∖↑N,E}=∗ True).
 Proof.
-  rewrite inv_eq /inv_def fupd_eq /fupd_def; iDestruct 1 as (i) "[Hi #HiP]".
+  rewrite inv_eq /inv_def uPred_fupd_eq /uPred_fupd_def; iDestruct 1 as (i) "[Hi #HiP]".
   iDestruct "Hi" as % ?%elem_of_subseteq_singleton.
   rewrite {1 4}(union_difference_L (↑ N) E) // ownE_op; last set_solver.
   rewrite {1 5}(union_difference_L {[ i ]} (↑ N)) // ownE_op; last set_solver.
