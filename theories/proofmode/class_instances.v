@@ -739,8 +739,8 @@ Qed.
 Class MakeMorphism `{BiEmbedding PROP PROP'} P (Q : PROP') :=
   make_embed : ⎡P⎤ ⊣⊢ Q.
 Arguments MakeMorphism {_ _ _} _%I _%I.
-Global Instance make_embed_true `{BiEmbedding PROP PROP'} :
-  MakeMorphism True True.
+Global Instance make_embed_pure `{BiEmbedding PROP PROP'} φ :
+  MakeMorphism ⌜φ⌝ ⌜φ⌝.
 Proof. by rewrite /MakeMorphism bi_embed_pure. Qed.
 Global Instance make_embed_emp `{BiEmbedding PROP PROP'} :
   MakeMorphism emp emp.
