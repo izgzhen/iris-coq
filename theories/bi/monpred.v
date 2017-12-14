@@ -413,6 +413,10 @@ Proof. unseal. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //. Qed
 Lemma monPred_impl_force P Q i : (P → Q) i -∗ (P i → Q i).
 Proof. unseal. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //. Qed.
 
+Lemma monPred_car_embed (P : PROP) (i : I) :
+  (bi_embed (B := monPred _ _) P) i ⊣⊢ P.
+Proof. by unseal. Qed.
+
 Lemma monPred_persistently_if_eq p P i:
   (bi_persistently_if p P) i = bi_persistently_if p (P i).
 Proof. rewrite /bi_persistently_if. unseal. by destruct p. Qed.
