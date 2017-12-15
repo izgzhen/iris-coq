@@ -16,8 +16,50 @@ Arguments MakeMonPredCar _ _%I _%I.
 
 Global Instance make_monPred_car_pure φ i : MakeMonPredCar i ⌜φ⌝ ⌜φ⌝.
 Proof. rewrite /MakeMonPredCar. by unseal. Qed.
+Global Instance make_monPred_car_internal_eq {A : ofeT} (x y : A) i :
+  MakeMonPredCar i (x ≡ y) (x ≡ y).
+Proof. rewrite /MakeMonPredCar. by unseal. Qed.
 Global Instance make_monPred_car_emp i : MakeMonPredCar i emp emp.
 Proof. rewrite /MakeMonPredCar. by unseal. Qed.
+Global Instance make_monPred_car_sep i P 𝓟 Q 𝓠 :
+  MakeMonPredCar i P 𝓟 → MakeMonPredCar i Q 𝓠 →
+  MakeMonPredCar i (P ∗ Q) (𝓟 ∗ 𝓠).
+Proof. rewrite /MakeMonPredCar=><-<-. by unseal. Qed.
+Global Instance make_monPred_car_and i P 𝓟 Q 𝓠 :
+  MakeMonPredCar i P 𝓟 → MakeMonPredCar i Q 𝓠 →
+  MakeMonPredCar i (P ∧ Q) (𝓟 ∧ 𝓠).
+Proof. rewrite /MakeMonPredCar=><-<-. by unseal. Qed.
+Global Instance make_monPred_car_or i P 𝓟 Q 𝓠 :
+  MakeMonPredCar i P 𝓟 → MakeMonPredCar i Q 𝓠 →
+  MakeMonPredCar i (P ∨ Q) (𝓟 ∨ 𝓠).
+Proof. rewrite /MakeMonPredCar=><-<-. by unseal. Qed.
+Global Instance make_monPred_car_forall {A} i (Φ : A → monPred) (Ψ : A → PROP) :
+  (∀ a, MakeMonPredCar i (Φ a) (Ψ a)) → MakeMonPredCar i (∀ a, Φ a) (∀ a, Ψ a).
+Proof. rewrite /MakeMonPredCar=>H. setoid_rewrite <- H. by unseal. Qed.
+Global Instance make_monPred_car_exists {A} i (Φ : A → monPred) (Ψ : A → PROP) :
+  (∀ a, MakeMonPredCar i (Φ a) (Ψ a)) → MakeMonPredCar i (∃ a, Φ a) (∃ a, Ψ a).
+Proof. rewrite /MakeMonPredCar=>H. setoid_rewrite <- H. by unseal. Qed.
+Global Instance make_monPred_car_persistently i P 𝓟 :
+  MakeMonPredCar i P 𝓟 → MakeMonPredCar i (bi_persistently P) (bi_persistently 𝓟).
+Proof. rewrite /MakeMonPredCar=><-. by unseal. Qed.
+Global Instance make_monPred_car_affinely i P 𝓟 :
+  MakeMonPredCar i P 𝓟 → MakeMonPredCar i (bi_affinely P) (bi_affinely 𝓟).
+Proof. rewrite /MakeMonPredCar=><-. by unseal. Qed.
+Global Instance make_monPred_car_absorbingly i P 𝓟 :
+  MakeMonPredCar i P 𝓟 → MakeMonPredCar i (bi_absorbingly P) (bi_absorbingly 𝓟).
+Proof. rewrite /MakeMonPredCar=><-. by unseal. Qed.
+Global Instance make_monPred_car_plainly i P Φ :
+  (∀ j, MakeMonPredCar j P (Φ j)) →
+  MakeMonPredCar i (bi_plainly P) (∀ j, bi_plainly (Φ j)).
+Proof. rewrite /MakeMonPredCar=>H. unseal. by do 3 f_equiv. Qed.
+Global Instance make_monPred_car_persistently_if i P 𝓟 p :
+  MakeMonPredCar i P 𝓟 →
+  MakeMonPredCar i (bi_persistently_if p P) (bi_persistently_if p 𝓟).
+Proof. destruct p; simpl; apply _. Qed.
+Global Instance make_monPred_car_affinely_if i P 𝓟 p :
+  MakeMonPredCar i P 𝓟 →
+  MakeMonPredCar i (bi_affinely_if p P) (bi_affinely_if p 𝓟).
+Proof. destruct p; simpl; apply _. Qed.
 Global Instance make_monPred_car_embed i : MakeMonPredCar i ⎡P⎤ P.
 Proof. rewrite /MakeMonPredCar. by unseal. Qed.
 Global Instance make_monPred_car_in i j : MakeMonPredCar j (monPred_in i) ⌜i ⊑ j⌝.
@@ -25,13 +67,46 @@ Proof. rewrite /MakeMonPredCar. by unseal. Qed.
 Global Instance make_monPred_car_default i P : MakeMonPredCar i P (P i) | 100.
 Proof. by rewrite /MakeMonPredCar. Qed.
 
+Global Instance from_assumption_make_monPred_car_l p i P 𝓟 :
+  MakeMonPredCar i P 𝓟 → FromAssumption p (P i) 𝓟.
+Proof.
+  rewrite /MakeMonPredCar /FromAssumption=><-.
+  apply  bi.affinely_persistently_if_elim.
+Qed.
+Global Instance from_assumption_make_monPred_car_r p i P 𝓟 :
+  MakeMonPredCar i P 𝓟 → FromAssumption p 𝓟 (P i).
+Proof.
+  rewrite /MakeMonPredCar /FromAssumption=><-.
+  apply  bi.affinely_persistently_if_elim.
+Qed.
+
 Global Instance as_valid_monPred_car φ P (Φ : I → PROP) :
-  AsValid φ P → (∀ i, MakeMonPredCar i P (Φ i)) → AsValid φ (∀ i, Φ i).
+  AsValid φ P → (∀ i, MakeMonPredCar i P (Φ i)) → AsValid φ (∀ i, Φ i) | 100.
 Proof.
   rewrite /MakeMonPredCar /AsValid /bi_valid=> -> EQ. setoid_rewrite <-EQ.
   unseal; split.
   - move=>[/= /bi.forall_intro //].
   - move=>H. split=>i. rewrite /= H bi.forall_elim //.
+Qed.
+Global Instance as_valid_monPred_car_wand φ P Q (Φ Ψ : I → PROP) :
+  AsValid φ (P -∗ Q) →
+  (∀ i, MakeMonPredCar i P (Φ i)) → (∀ i, MakeMonPredCar i Q (Ψ i)) →
+  AsValid φ (∀ i, Φ i -∗ Ψ i).
+Proof.
+  rewrite /AsValid /MakeMonPredCar. intros -> EQ1 EQ2.
+  setoid_rewrite <-EQ1. setoid_rewrite <-EQ2. split.
+  - move=>/bi.wand_entails H. setoid_rewrite H. by iIntros (i) "$".
+  - move=>H. apply bi.entails_wand. split=>i. iIntros "H". by iApply H.
+Qed.
+Global Instance as_valid_monPred_car_equiv φ P Q (Φ Ψ : I → PROP) :
+  AsValid φ (P ∗-∗ Q) →
+  (∀ i, MakeMonPredCar i P (Φ i)) → (∀ i, MakeMonPredCar i Q (Ψ i)) →
+  AsValid φ (∀ i, Φ i ∗-∗ Ψ i).
+Proof.
+  rewrite /AsValid /MakeMonPredCar. intros -> EQ1 EQ2.
+  setoid_rewrite <-EQ1. setoid_rewrite <-EQ2. split.
+  - move=>/bi.wand_iff_equiv H. setoid_rewrite H. iIntros. iSplit; iIntros "$".
+  - move=>H. apply bi.equiv_wand_iff. split=>i. by iSplit; iIntros; iApply H.
 Qed.
 
 Global Instance into_pure_monPred_car P φ i :
@@ -66,14 +141,24 @@ Proof.
   by destruct a, pe=><-; try unseal.
 Qed.
 
-Global Instance into_wand_monPred_car p q R P 𝓟 Q 𝓠 i :
-  IntoWand p q R P Q → MakeMonPredCar i P 𝓟 → MakeMonPredCar i Q 𝓠 →
-  IntoWand p q (R i) 𝓟 𝓠.
+(* FIXME : P and Q do not go through MakeMonPredCar, which prevent
+   lazilly unfolding of monPred connectives there.  The reason we
+   cannot do that is that IntoWand is sometimes called with known
+   values, which we do not wnat to replace with existentials.  *)
+Global Instance into_wand_monPred_car p q R P Q i :
+  IntoWand p q R P Q → IntoWand p q (R i) (P i) (Q i).
 Proof.
   rewrite /IntoWand /MakeMonPredCar /bi_affinely_if /bi_persistently_if.
-  destruct p, q=> /bi.wand_elim_l' [/(_ i) H] <- <-; apply bi.wand_intro_r;
+  destruct p, q=> /bi.wand_elim_l' [/(_ i) H]; apply bi.wand_intro_r;
   revert H; unseal; done.
 Qed.
+Global Instance into_wand_wand'_monPred p q P Q 𝓟 𝓠 i :
+  IntoWand' p q ((P -∗ Q) i) 𝓟 𝓠 → IntoWand p q ((P -∗ Q) i) 𝓟 𝓠 | 100.
+Proof. done. Qed.
+Global Instance into_wand_impl'_monPred p q P Q 𝓟 𝓠 i :
+  IntoWand' p q ((P → Q) i) 𝓟 𝓠 → IntoWand p q ((P → Q) i) 𝓟 𝓠 | 100.
+Proof. done. Qed.
+
 Global Instance from_forall_monPred_car_wand P Q (Φ Ψ : I → PROP) i :
   (∀ j, MakeMonPredCar j P (Φ j)) → (∀ j, MakeMonPredCar j Q (Ψ j)) →
   FromForall ((P -∗ Q) i)%I (λ j, ⌜i ⊑ j⌝ → Φ j -∗ Ψ j)%I.
@@ -201,6 +286,16 @@ Global Instance is_except_0_monPred_car i P :
   IsExcept0 P → IsExcept0 (P i).
 Proof. rewrite /IsExcept0=>- [/(_ i)]. by unseal. Qed.
 
+Global Instance make_monPred_car_except_0 i P 𝓠 :
+  MakeMonPredCar i P 𝓠 → MakeMonPredCar i (◇ P)%I (◇ 𝓠)%I.
+Proof. rewrite /MakeMonPredCar=><-. by unseal. Qed.
+Global Instance make_monPred_car_later i P 𝓠 :
+  MakeMonPredCar i P 𝓠 → MakeMonPredCar i (▷ P)%I (▷ 𝓠)%I.
+Proof. rewrite /MakeMonPredCar=><-. by unseal. Qed.
+Global Instance make_monPred_car_laterN i n P 𝓠 :
+  MakeMonPredCar i P 𝓠 → MakeMonPredCar i (▷^n P)%I (▷^n 𝓠)%I.
+Proof. rewrite /MakeMonPredCar=> <-. elim n=>//= ? <-. by unseal. Qed.
+
 Global Instance into_except_0_monPred_car_fwd i P Q 𝓠 :
   IntoExcept0 P Q → MakeMonPredCar i Q 𝓠 → IntoExcept0 (P i) 𝓠.
 Proof. rewrite /IntoExcept0 /MakeMonPredCar=> -> <-. by unseal. Qed.
@@ -211,13 +306,9 @@ Proof. rewrite /IntoExcept0 /MakeMonPredCar=> H <-. rewrite H. by unseal. Qed.
 Global Instance into_later_monPred_car i n P Q 𝓠 :
   IntoLaterN n P Q → MakeMonPredCar i Q 𝓠 → IntoLaterN n (P i) 𝓠.
 Proof.
-  rewrite /IntoLaterN /MakeMonPredCar=> -> <-.
-  induction n as [|? IH]=>//. rewrite /= -IH. by unseal.
+  rewrite /IntoLaterN /MakeMonPredCar=> -> <-. elim n=>//= ? <-. by unseal.
 Qed.
 Global Instance from_later_monPred_car i n P Q 𝓠 :
   FromLaterN n P Q → MakeMonPredCar i Q 𝓠 → FromLaterN n (P i) 𝓠.
-Proof.
-  rewrite /FromLaterN /MakeMonPredCar=> <- <-.
-  induction n as [|? IH]=>//. rewrite /= IH. by unseal.
-Qed.
+Proof. rewrite /FromLaterN /MakeMonPredCar=> <- <-. elim n=>//= ? ->. by unseal. Qed.
 End sbi.
