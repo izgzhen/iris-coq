@@ -1,3 +1,4 @@
+From iris.algebra Require Import monoid.
 From iris.bi Require Import interface derived_laws.
 From stdpp Require Import hlist.
 
@@ -117,6 +118,25 @@ Section bi_embedding.
   Proof. intros ?. by rewrite /Affine (affine P) bi_embed_emp. Qed.
   Global Instance bi_embed_absorbing P : Absorbing P → Absorbing ⎡P⎤.
   Proof. intros ?. by rewrite /Absorbing -bi_embed_absorbingly absorbing. Qed.
+
+  Global Instance bi_embed_and_homomorphism :
+    MonoidHomomorphism bi_and bi_and (≡) bi_embed.
+  Proof.
+    by split; [split|]; try apply _;
+      [setoid_rewrite bi_embed_and|rewrite bi_embed_pure].
+  Qed.
+  Global Instance bi_embed_or_homomorphism :
+    MonoidHomomorphism bi_or bi_or (≡) bi_embed.
+  Proof.
+    by split; [split|]; try apply _;
+      [setoid_rewrite bi_embed_or|rewrite bi_embed_pure].
+  Qed.
+  Global Instance bi_embed_sep_homomorphism :
+    MonoidHomomorphism bi_sep bi_sep (≡) bi_embed.
+  Proof.
+    by split; [split|]; try apply _;
+      [setoid_rewrite bi_embed_sep|rewrite bi_embed_emp].
+  Qed.
 End bi_embedding.
 
 Section sbi_embedding.
