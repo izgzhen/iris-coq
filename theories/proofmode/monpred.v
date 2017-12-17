@@ -81,32 +81,32 @@ Proof.
 Qed.
 
 Global Instance as_valid_monPred_car φ P (Φ : I → PROP) :
-  AsValid φ P → (∀ i, MakeMonPredCar i P (Φ i)) → AsValid φ (∀ i, Φ i) | 100.
+  AsValid φ P → (∀ i, MakeMonPredCar i P (Φ i)) → AsValid' φ (∀ i, Φ i) | 100.
 Proof.
-  rewrite /MakeMonPredCar /AsValid /bi_valid=> -> EQ. setoid_rewrite <-EQ.
-  unseal; split.
+  rewrite /MakeMonPredCar /AsValid' /AsValid /bi_valid=> -> EQ.
+  setoid_rewrite <-EQ. unseal; split.
   - move=>[/= /bi.forall_intro //].
-  - move=>H. split=>i. rewrite /= H bi.forall_elim //.
+  - move=>HP. split=>i. rewrite /= HP bi.forall_elim //.
 Qed.
 Global Instance as_valid_monPred_car_wand φ P Q (Φ Ψ : I → PROP) :
   AsValid φ (P -∗ Q) →
   (∀ i, MakeMonPredCar i P (Φ i)) → (∀ i, MakeMonPredCar i Q (Ψ i)) →
-  AsValid φ (∀ i, Φ i -∗ Ψ i).
+  AsValid' φ (∀ i, Φ i -∗ Ψ i).
 Proof.
-  rewrite /AsValid /MakeMonPredCar. intros -> EQ1 EQ2.
+  rewrite /AsValid' /AsValid /MakeMonPredCar. intros -> EQ1 EQ2.
   setoid_rewrite <-EQ1. setoid_rewrite <-EQ2. split.
-  - move=>/bi.wand_entails H. setoid_rewrite H. by iIntros (i) "$".
-  - move=>H. apply bi.entails_wand. split=>i. iIntros "H". by iApply H.
+  - move=>/bi.wand_entails HP. setoid_rewrite HP. by iIntros (i) "$".
+  - move=>HP. apply bi.entails_wand. split=>i. iIntros "H". by iApply HP.
 Qed.
 Global Instance as_valid_monPred_car_equiv φ P Q (Φ Ψ : I → PROP) :
   AsValid φ (P ∗-∗ Q) →
   (∀ i, MakeMonPredCar i P (Φ i)) → (∀ i, MakeMonPredCar i Q (Ψ i)) →
-  AsValid φ (∀ i, Φ i ∗-∗ Ψ i).
+  AsValid' φ (∀ i, Φ i ∗-∗ Ψ i).
 Proof.
-  rewrite /AsValid /MakeMonPredCar. intros -> EQ1 EQ2.
+  rewrite /AsValid' /AsValid /MakeMonPredCar. intros -> EQ1 EQ2.
   setoid_rewrite <-EQ1. setoid_rewrite <-EQ2. split.
-  - move=>/bi.wand_iff_equiv H. setoid_rewrite H. iIntros. iSplit; iIntros "$".
-  - move=>H. apply bi.equiv_wand_iff. split=>i. by iSplit; iIntros; iApply H.
+  - move=>/bi.wand_iff_equiv HP. setoid_rewrite HP. iIntros. iSplit; iIntros "$".
+  - move=>HP. apply bi.equiv_wand_iff. split=>i. by iSplit; iIntros; iApply HP.
 Qed.
 
 Global Instance into_pure_monPred_car P φ i :

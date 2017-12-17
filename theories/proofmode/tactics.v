@@ -71,9 +71,13 @@ Proof. split. apply bi.entails_wand. apply bi.wand_entails. Qed.
 Instance as_valid_equiv {PROP : bi} (P Q : PROP) : AsValid (P ≡ Q) (P ∗-∗ Q) | 0.
 Proof. split. apply bi.equiv_wand_iff. apply bi.wand_iff_equiv. Qed.
 
+Class AsValid' {PROP : bi} (φ : Prop) (P : PROP) := as_valid' :> AsValid φ P.
+Arguments AsValid' {_} _%type _%I.
+Hint Mode AsValid' ! ! - : typeclass_instances.
+
 Instance as_valid_embed `{BiEmbedding PROP PROP'} (φ : Prop) (P : PROP) :
-  AsValid φ P → AsValid φ ⎡P⎤.
-Proof. rewrite /AsValid=> ->. rewrite bi_embed_valid //. Qed.
+  AsValid φ P → AsValid' φ ⎡P⎤.
+Proof. rewrite /AsValid' /AsValid=> ->. rewrite bi_embed_valid //. Qed.
 
 (** * Start a proof *)
 Tactic Notation "iStartProof" uconstr(PROP) :=
