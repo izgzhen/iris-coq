@@ -15,8 +15,8 @@ If you need to work with Coq 8.5, please check out the
 
 ## Installing via opam
 
-To obtain the latest stable release via opam, you have to add the Coq opam
-repository:
+To obtain the latest stable release via opam (1.2.2 or newer), you have to add
+the Coq opam repository:
 
     opam repo add coq-released https://coq.inria.fr/opam/released
 
@@ -28,8 +28,8 @@ To obtain a development version, add the Iris opam repository:
 
 ## Building from source
 
-When building Iris from source, we recommend to use opam for installing Iris's dependencies.
-This requires the following two repositories:
+When building Iris from source, we recommend to use opam (1.2.2 or newer) for
+installing Iris's dependencies.  This requires the following two repositories:
 
     opam repo add coq-released https://coq.inria.fr/opam/released
     opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git
