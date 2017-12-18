@@ -13,8 +13,23 @@ This version is known to compile with:
 If you need to work with Coq 8.5, please check out the
 [iris-3.0 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.0).
 
-The easiest way to install the correct versions of the dependencies is through
-opam.  You will need the Coq and Iris opam repositories:
+## Installing via opam
+
+To obtain the latest stable release via opam, you have to add the Coq opam
+repository:
+
+    opam repo add coq-released https://coq.inria.fr/opam/released
+
+Then you can do `opam install coq-iris`.
+
+To obtain a development version, add the Iris opam repository:
+
+    opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git
+
+## Building from source
+
+When building Iris from source, we recommend to use opam for installing Iris's dependencies.
+This requires the following two repositories:
 
     opam repo add coq-released https://coq.inria.fr/opam/released
     opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git
@@ -22,16 +37,12 @@ opam.  You will need the Coq and Iris opam repositories:
 Once you got opam set up, run `make build-dep` to install the right versions
 of the dependencies.
 
-## Updating
-
-After doing `git pull`, the development may fail to compile because of outdated
-dependencies.  To fix that, please run `opam update` followed by
-`make build-dep`.
-
-## Building
-
 Run `make -jN` to build the full development, where `N` is the number of your
 CPU cores.
+
+To update Iris, do `git pull`.  After an update, the development may fail to
+compile because of outdated dependencies.  To fix that, please run `opam update`
+followed by `make build-dep`.
 
 ## Directory Structure
 
