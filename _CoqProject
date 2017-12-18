@@ -97,6 +97,7 @@ theories/tests/heap_lang.v
 theories/tests/one_shot.v
 theories/tests/proofmode.v
 theories/tests/proofmode_iris.v
+theories/tests/proofmode_monPred.v
 theories/tests/list_reverse.v
 theories/tests/tree_sum.v
 theories/tests/ipm_paper.v
