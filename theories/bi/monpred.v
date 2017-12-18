@@ -500,7 +500,7 @@ Global Instance monPred_car_timeless P i : Timeless P → Timeless (P i).
 Proof. move => [] /(_ i). unfold Timeless. by unseal. Qed.
 Global Instance monPred_ipure_timeless (P : PROP) :
   Timeless P → @Timeless (monPredSI I PROP) ⎡P⎤%I.
-Proof. intros. split => ? /=. unseal. exact: H. Qed.
+Proof. intros. split => ? /=. by unseal. Qed.
 Global Instance monPred_in_timeless i0 : Timeless (@monPred_in I PROP i0).
 Proof. split => ? /=. unseal. apply timeless, _. Qed.
 Global Instance monPred_all_timeless P :
