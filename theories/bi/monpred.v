@@ -5,10 +5,11 @@ From iris.bi Require Import derived_laws.
 Structure bi_index :=
   BiIndex
     { bi_index_type :> Type;
+      bi_index_inhabited : Inhabited bi_index_type;
       bi_index_rel : SqSubsetEq bi_index_type;
       bi_index_rel_preorder : PreOrder (⊑) }.
 
-Existing Instances bi_index_rel bi_index_rel_preorder.
+Existing Instances bi_index_inhabited bi_index_rel bi_index_rel_preorder.
 
 Section Ofe_Cofe.
 Context {I : bi_index} {PROP : bi}.
@@ -483,9 +484,9 @@ Proof.
   by apply absorbing, bi.forall_absorbing.
 Qed.
 Global Instance monPred_all_affine P :
-  Inhabited I → Affine P → Affine (@monPred_all I PROP P).
+  Affine P → Affine (@monPred_all I PROP P).
 Proof.
-  move=>? []. unfold Affine. unseal=>Hp. split => ?.
+  move=> []. unfold Affine. unseal=>Hp. split => ?.
   by apply affine, bi.forall_affine.
 Qed.
 End bi_facts.
