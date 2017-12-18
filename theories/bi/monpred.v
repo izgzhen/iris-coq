@@ -186,8 +186,8 @@ Definition monPred_persistently_eq : @monPred_persistently = _ := seal_eq _.
 
 Definition monPred_plainly P : monPred := ⎡∀ i, bi_plainly (P i)⎤%I.
 
-Program Definition monPred_in_def (i_0 : I) : monPred :=
-  MonPred (λ i : I, ⌜i_0 ⊑ i⌝%I) _.
+Program Definition monPred_in_def (i0 : I) : monPred :=
+  MonPred (λ i : I, ⌜i0 ⊑ i⌝%I) _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_in_aux : seal (@monPred_in_def). by eexists. Qed.
 Definition monPred_in := unseal (@monPred_in_aux).
@@ -501,7 +501,7 @@ Proof. move => [] /(_ i). unfold Timeless. by unseal. Qed.
 Global Instance monPred_ipure_timeless (P : PROP) :
   Timeless P → @Timeless (monPredSI I PROP) ⎡P⎤%I.
 Proof. intros. split => ? /=. unseal. exact: H. Qed.
-Global Instance monPred_in_timeless V : Timeless (@monPred_in I PROP V).
+Global Instance monPred_in_timeless i0 : Timeless (@monPred_in I PROP i0).
 Proof. split => ? /=. unseal. apply timeless, _. Qed.
 Global Instance monPred_all_timeless P :
   Timeless P → Timeless (@monPred_all I PROP P).
