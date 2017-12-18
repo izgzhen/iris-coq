@@ -11,6 +11,9 @@ Notation "⎡ P ⎤" := (bi_embed P) : bi_scope.
 Instance: Params (@bi_embed) 3.
 Typeclasses Opaque bi_embed.
 
+Hint Mode BiEmbed ! - : typeclass_instances.
+Hint Mode BiEmbed - ! : typeclass_instances.
+
 Class BiEmbedding (PROP1 PROP2 : bi) `{BiEmbed PROP1 PROP2} := {
   bi_embed_ne :> NonExpansive bi_embed;
   bi_embed_mono :> Proper ((⊢) ==> (⊢)) bi_embed;
@@ -33,6 +36,8 @@ Class SbiEmbedding (PROP1 PROP2 : sbi) `{BiEmbed PROP1 PROP2} := {
 
 Section bi_embedding.
   Context `{BiEmbedding PROP1 PROP2}.
+  Local Notation bi_embed := (bi_embed (A:=PROP1) (B:=PROP2)).
+  Implicit Types P Q R : PROP1.
 
   Global Instance bi_embed_proper : Proper ((≡) ==> (≡)) bi_embed.
   Proof. apply (ne_proper _). Qed.
@@ -44,7 +49,7 @@ Section bi_embedding.
     rewrite EQ //.
   Qed.
 
-  Lemma bi_embed_valid (P : PROP1) : @bi_embed PROP1 PROP2 _ P ↔ P.
+  Lemma bi_embed_valid (P : PROP1) : bi_embed P ↔ P.
   Proof.
     by rewrite /bi_valid -bi_embed_emp; split=>?; [apply (inj bi_embed)|f_equiv].
   Qed.
@@ -73,7 +78,7 @@ Section bi_embedding.
     apply bi.equiv_spec; split; [|apply bi_embed_wand_2].
     apply bi.wand_intro_l. by rewrite -bi_embed_sep bi.wand_elim_r.
   Qed.
-  Lemma bi_embed_pure φ : ⎡⌜φ⌝⎤ ⊣⊢ ⌜φ⌝.
+  Lemma bi_embed_pure φ : bi_embed ⌜φ⌝ ⊣⊢ ⌜φ⌝.
   Proof.
     rewrite (@bi.pure_alt PROP1) (@bi.pure_alt PROP2) bi_embed_exist.
     do 2 f_equiv. apply bi.equiv_spec. split; [apply bi.True_intro|].
@@ -81,7 +86,7 @@ Section bi_embedding.
       last apply bi.True_intro.
     apply bi.impl_intro_l. by rewrite right_id.
   Qed.
-  Lemma bi_embed_internal_eq (A : ofeT) (x y : A) : ⎡x ≡ y⎤ ⊣⊢ x ≡ y.
+  Lemma bi_embed_internal_eq (A : ofeT) (x y : A) : bi_embed (x ≡ y) ⊣⊢ x ≡ y.
   Proof.
     apply bi.equiv_spec; split; [apply bi_embed_internal_eq_1|].
     etrans; [apply (bi.internal_eq_rewrite x y (λ y, ⎡x ≡ y⎤%I)); solve_proper|].
@@ -97,10 +102,10 @@ Section bi_embedding.
   Lemma bi_embed_absorbingly P : ⎡bi_absorbingly P⎤ ⊣⊢ bi_absorbingly ⎡P⎤.
   Proof. by rewrite bi_embed_sep bi_embed_pure. Qed.
   Lemma bi_embed_plainly_if P b : ⎡bi_plainly_if b P⎤ ⊣⊢ bi_plainly_if b ⎡P⎤.
-  Proof. destruct b; auto using bi_embed_plainly. Qed.
+  Proof. destruct b; simpl; auto using bi_embed_plainly. Qed.
   Lemma bi_embed_persistently_if P b :
     ⎡bi_persistently_if b P⎤ ⊣⊢ bi_persistently_if b ⎡P⎤.
-  Proof. destruct b; auto using bi_embed_persistently. Qed.
+  Proof. destruct b; simpl; auto using bi_embed_persistently. Qed.
   Lemma bi_embed_affinely_if P b : ⎡bi_affinely_if b P⎤ ⊣⊢ bi_affinely_if b ⎡P⎤.
   Proof. destruct b; simpl; auto using bi_embed_affinely. Qed.
   Lemma bi_embed_hforall {As} (Φ : himpl As PROP1):
@@ -141,6 +146,7 @@ End bi_embedding.
 
 Section sbi_embedding.
   Context `{SbiEmbedding PROP1 PROP2}.
+  Implicit Types P Q R : PROP1.
 
   Lemma sbi_embed_laterN n P : ⎡▷^n P⎤ ⊣⊢ ▷^n ⎡P⎤.
   Proof. induction n=>//=. rewrite sbi_embed_later. by f_equiv. Qed.

@@ -119,7 +119,7 @@ Next Obligation. solve_proper. Qed.
 Definition monPred_embed_def (P : PROP) : monPred := MonPred (λ _, P) _.
 Definition monPred_embed_aux : seal (@monPred_embed_def). by eexists. Qed.
 Global Instance monPred_embed : BiEmbed PROP monPred := unseal monPred_embed_aux.
-Definition monPred_embed_eq : bi_embed = _ := seal_eq _.
+Definition monPred_embed_eq : bi_embed (A:=PROP) = _ := seal_eq _.
 
 Definition monPred_pure (φ : Prop) : monPred := ⎡⌜φ⌝⎤%I.
 Definition monPred_emp : monPred := ⎡emp⎤%I.
