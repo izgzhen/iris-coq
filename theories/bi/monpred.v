@@ -52,9 +52,9 @@ Section Ofe_Cofe_def.
   Definition monPred_ofe_mixin : OfeMixin monPred.
   Proof. by apply (iso_ofe_mixin monPred_sig monPred_sig_equiv monPred_sig_dist). Qed.
 
-  Canonical Structure monPred_ofe := OfeT monPred monPred_ofe_mixin.
+  Canonical Structure monPredC := OfeT monPred monPred_ofe_mixin.
 
-  Global Instance monPred_cofe `{Cofe PROP} : Cofe monPred_ofe.
+  Global Instance monPred_cofe `{Cofe PROP} : Cofe monPredC.
   Proof.
     unshelve refine (iso_cofe_subtype (A:=I-c>PROP) _ MonPred monPred_car _ _ _);
       [apply _|by apply monPred_sig_dist|done|].
@@ -98,7 +98,7 @@ End Ofe_Cofe.
 
 Arguments monPred _ _ : clear implicits.
 Local Existing Instance monPred_mono.
-Arguments monPred_ofe _ _ : clear implicits.
+Arguments monPredC _ _ : clear implicits.
 
 (** BI and SBI structures. *)
 
