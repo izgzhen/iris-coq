@@ -85,6 +85,12 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
   | |- @envs_entails ?PROP' _ _ =>
     let x := type_term (eq_refl : @eq Type PROP PROP') in idtac
   | |- let _ := _ in _ => fail
+
+  (* We eta-expand [as_valid_2], in order to make sure that
+     [iStartProof works] even if [PROP] is the carrier type. In this
+     case, typing this expression will end up unifying PROP with
+     [bi_car _], and hence trigger the canonical structures mechanism
+     to find the corresponding bi. *)
   | |- ?φ => eapply (λ P : PROP, @as_valid_2 φ _ P);
                [apply _ || fail "iStartProof: not a Bi entailment"
                |apply tac_adequate]
