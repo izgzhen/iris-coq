@@ -45,7 +45,7 @@ Section bi_embedding.
   Proof. solve_proper. Qed.
   Global Instance bi_embed_inj : Inj (≡) (≡) bi_embed.
   Proof.
-    intros ?? EQ. apply bi.equiv_spec, conj; apply (inj bi_embed);
+    intros P Q EQ. apply bi.equiv_spec, conj; apply (inj bi_embed);
     rewrite EQ //.
   Qed.
 
