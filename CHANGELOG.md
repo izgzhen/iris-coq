@@ -3,7 +3,7 @@ way the logic is used on paper.  We also mention some significant changes in the
 Coq development, but not every API-breaking change is listed.  Changes marked
 `[#]` still need to be ported to the Iris Documentation LaTeX file(s).
 
-## Iris 3.1.0 (unfinished)
+## Iris 3.1.0 (released 2017-12-19)
 
 Changes in and extensions of the theory:
 
