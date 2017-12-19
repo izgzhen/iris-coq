@@ -6,7 +6,7 @@ Class MakeMonPredCar {I : bi_index} {PROP : bi} (i : I)
       (P : monPred I PROP) (𝓟 : PROP) :=
   make_monPred_car : P i ⊣⊢ 𝓟.
 Arguments MakeMonPredCar {_ _} _ _%I _%I.
-Hint Mode MakeMonPredCar + + - ! -.
+Hint Mode MakeMonPredCar + + - ! - : typeclass_instances.
 
 Section bi.
 Context {I : bi_index} {PROP : bi}.
