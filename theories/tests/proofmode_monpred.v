@@ -27,4 +27,27 @@ Section tests.
   Lemma test_iStartProof_7 P : ((P ≡ P)%I : monPredI).
   Proof. iStartProof PROP. done. Qed.
 
+  Lemma test_intowand_1 P Q : (P -∗ Q) -∗ P -∗ Q.
+  Proof.
+    iStartProof PROP. iIntros (i) "HW". iIntros (j ->) "HP". by iApply "HW".
+  Qed.
+  Lemma test_intowand_2 P Q : (P -∗ Q) -∗ P -∗ Q.
+  Proof.
+    iStartProof PROP. iIntros (i) "HW". iIntros (j ->) "HP".
+    iSpecialize ("HW" with "[HP //]"). done.
+  Qed.
+  Lemma test_intowand_3 P Q : (P -∗ Q) -∗ P -∗ Q.
+  Proof.
+    iStartProof PROP. iIntros (i) "HW". iIntros (j ->) "HP".
+    iSpecialize ("HW" with "HP"). done.
+  Qed.
+  Lemma test_intowand_4 P Q : (P -∗ Q) -∗ ▷ P -∗ ▷ Q.
+  Proof.
+    iStartProof PROP. iIntros (i) "HW". iIntros (j ->) "HP". by iApply "HW".
+  Qed.
+  Lemma test_intowand_5 P Q : (P -∗ Q) -∗ ▷ P -∗ ▷ Q.
+  Proof.
+    iStartProof PROP. iIntros (i) "HW". iIntros (j ->) "HP".
+    iSpecialize ("HW" with "HP"). done.
+  Qed.
 End tests.

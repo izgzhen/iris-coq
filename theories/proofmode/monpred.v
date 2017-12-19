@@ -2,17 +2,20 @@ From iris.bi Require Export monpred.
 From iris.proofmode Require Import tactics.
 Import MonPred.
 
+Class MakeMonPredCar {I : bi_index} {PROP : bi} (i : I)
+      (P : monPred I PROP) (𝓟 : PROP) :=
+  make_monPred_car : P i ⊣⊢ 𝓟.
+Arguments MakeMonPredCar {_ _} _ _%I _%I.
+Hint Mode MakeMonPredCar + + - ! -.
+
 Section bi.
 Context {I : bi_index} {PROP : bi}.
 Local Notation monPred := (monPred I PROP).
+Local Notation MakeMonPredCar := (@MakeMonPredCar I PROP).
 Implicit Types P Q R : monPred.
 Implicit Types 𝓟 𝓠 𝓡 : PROP.
 Implicit Types φ : Prop.
 Implicit Types i j : I.
-
-Class MakeMonPredCar i P 𝓟 :=
-  make_monPred_car : P i ⊣⊢ 𝓟.
-Arguments MakeMonPredCar _ _%I _%I.
 
 Global Instance make_monPred_car_pure φ i : MakeMonPredCar i ⌜φ⌝ ⌜φ⌝.
 Proof. rewrite /MakeMonPredCar. by unseal. Qed.
@@ -141,17 +144,21 @@ Proof.
   by destruct a, pe=><-; try unseal.
 Qed.
 
-(* FIXME : P and Q do not go through MakeMonPredCar, which prevent
-   lazilly unfolding of monPred connectives there.  The reason we
-   cannot do that is that IntoWand is sometimes called with known
-   values, which we do not wnat to replace with existentials.  *)
-Global Instance into_wand_monPred_car p q R P Q i :
-  IntoWand p q R P Q → IntoWand p q (R i) (P i) (Q i).
+Lemma into_wand_monPred_car_unknown_unknown p q R P 𝓟 Q 𝓠 i :
+  IntoWand p q R P Q →  MakeMonPredCar i P 𝓟 → MakeMonPredCar i Q 𝓠 →
+  IntoWand p q (R i) 𝓟 𝓠.
 Proof.
   rewrite /IntoWand /MakeMonPredCar /bi_affinely_if /bi_persistently_if.
-  destruct p, q=> /bi.wand_elim_l' [/(_ i) H]; apply bi.wand_intro_r;
+  destruct p, q=> /bi.wand_elim_l' [/(_ i) H] <- <-; apply bi.wand_intro_r;
   revert H; unseal; done.
 Qed.
+Lemma into_wand_monPred_car_unknown_known p q R P 𝓟 Q i :
+  IntoWand p q R P Q → MakeMonPredCar i P 𝓟 → IntoWand p q (R i) 𝓟 (Q i).
+Proof. intros. eapply into_wand_monPred_car_unknown_unknown=>//. apply _. Qed.
+Lemma into_wand_monPred_car_known_unknown p q R P Q 𝓠 i :
+  IntoWand p q R P Q → MakeMonPredCar i Q 𝓠 → IntoWand p q (R i) (P i) 𝓠.
+Proof. intros. eapply into_wand_monPred_car_unknown_unknown=>//. apply _. Qed.
+
 Global Instance into_wand_wand'_monPred p q P Q 𝓟 𝓠 i :
   IntoWand' p q ((P -∗ Q) i) 𝓟 𝓠 → IntoWand p q ((P -∗ Q) i) 𝓟 𝓠 | 100.
 Proof. done. Qed.
@@ -163,30 +170,36 @@ Global Instance from_forall_monPred_car_wand P Q (Φ Ψ : I → PROP) i :
   (∀ j, MakeMonPredCar j P (Φ j)) → (∀ j, MakeMonPredCar j Q (Ψ j)) →
   FromForall ((P -∗ Q) i)%I (λ j, ⌜i ⊑ j⌝ → Φ j -∗ Ψ j)%I.
 Proof.
-  rewrite /FromForall /MakeMonPredCar. unseal=> H1 H2.
-  setoid_rewrite H1. setoid_rewrite H2. done.
-Qed.
-Global Instance into_forall_monPred_car_wand P Q (Φ Ψ : I → PROP) i :
-  (∀ j, MakeMonPredCar j P (Φ j)) → (∀ j, MakeMonPredCar j Q (Ψ j)) →
-  IntoForall ((P -∗ Q) i) (λ j, ⌜i ⊑ j⌝ → Φ j -∗ Ψ j)%I.
-Proof.
-  rewrite /IntoForall /MakeMonPredCar. unseal=> H1 H2.
-  setoid_rewrite H1. setoid_rewrite H2. done.
+  rewrite /FromForall /MakeMonPredCar. unseal=> H1 H2. do 2 f_equiv.
+  by rewrite H1 H2.
 Qed.
 Global Instance from_forall_monPred_car_impl P Q (Φ Ψ : I → PROP) i :
   (∀ j, MakeMonPredCar j P (Φ j)) → (∀ j, MakeMonPredCar j Q (Ψ j)) →
   FromForall ((P → Q) i)%I (λ j, ⌜i ⊑ j⌝ → Φ j → Ψ j)%I.
 Proof.
-  rewrite /FromForall /MakeMonPredCar. unseal=> H1 H2.
-  setoid_rewrite H1. setoid_rewrite H2. done.
+  rewrite /FromForall /MakeMonPredCar. unseal=> H1 H2. do 2 f_equiv.
+  by rewrite H1 H2 bi.pure_impl_forall.
 Qed.
-Global Instance into_forall_monPred_car_impl P Q (Φ Ψ : I → PROP) i :
-  (∀ j, MakeMonPredCar j P (Φ j)) → (∀ j, MakeMonPredCar j Q (Ψ j)) →
-  IntoForall ((P → Q) i) (λ j, ⌜i ⊑ j⌝ → Φ j → Ψ j)%I.
-Proof.
-  rewrite /IntoForall /MakeMonPredCar. unseal=> H1 H2.
-  setoid_rewrite H1. setoid_rewrite H2. done.
-Qed.
+
+(* FIXME : I disable these instances, because I prefer not adding the
+   corresponding IntoWand instance. Adding the IntoWand instance would
+   be ambiguous, because we want to be abble to iApply without proving
+   view inclusion when they match (i.e., we want to use
+   [into_wand_monPred_car]). *)
+(* Global Instance into_forall_monPred_car_wand P Q (Φ Ψ : I → PROP) i : *)
+(*   (∀ j, MakeMonPredCar j P (Φ j)) → (∀ j, MakeMonPredCar j Q (Ψ j)) → *)
+(*   IntoForall ((P -∗ Q) i) (λ j, ⌜i ⊑ j⌝ → Φ j -∗ Ψ j)%I. *)
+(* Proof. *)
+(*   rewrite /IntoForall /MakeMonPredCar. unseal=> H1 H2. do 2 f_equiv. *)
+(*   by rewrite H1 H2. *)
+(* Qed. *)
+(* Global Instance into_forall_monPred_car_impl P Q (Φ Ψ : I → PROP) i : *)
+(*   (∀ j, MakeMonPredCar j P (Φ j)) → (∀ j, MakeMonPredCar j Q (Ψ j)) → *)
+(*   IntoForall ((P → Q) i) (λ j, ⌜i ⊑ j⌝ → Φ j → Ψ j)%I. *)
+(* Proof. *)
+(*   rewrite /IntoForall /MakeMonPredCar. unseal=> H1 H2. do 2 f_equiv. *)
+(*   by rewrite H1 H2 bi.pure_impl_forall. *)
+(* Qed. *)
 
 Global Instance from_and_monPred_car P Q1 𝓠1 Q2 𝓠2 i :
   FromAnd P Q1 Q2 → MakeMonPredCar i Q1 𝓠1 → MakeMonPredCar i Q2 𝓠2 →
@@ -272,7 +285,24 @@ Global Instance from_modal_monPred_car i P Q 𝓠 :
 Proof. by rewrite /FromModal /MakeMonPredCar=> <- <-. Qed.
 End bi.
 
-Hint Mode MakeMonPredCar + + - ! -.
+(* When P and/or Q are evars when doing typeclass search on [IntoWand
+   (R i) P Q], we use [MakeMonPredCar] in order to normalize the
+   result of unification. However, when they are not evars, we want to
+   propagate the known information through typeclass search. Hence, we
+   do not want to use [MakeMonPredCar].
+
+   As a result, depending on P and Q being evars, we use a different
+   version of [into_wand_monPred_car_xx_xx]. *)
+Hint Extern 3 (IntoWand _ _ (monPred_car _ _) ?P ?Q) =>
+     is_evar P; is_evar Q;
+     eapply @into_wand_monPred_car_unknown_unknown
+     : typeclass_instances.
+Hint Extern 2 (IntoWand _ _ (monPred_car _ _) ?P (monPred_car ?Q _)) =>
+     eapply @into_wand_monPred_car_unknown_known
+     : typeclass_instances.
+Hint Extern 2 (IntoWand _ _ (monPred_car _ _) (monPred_car ?P _) ?Q) =>
+     eapply @into_wand_monPred_car_known_unknown
+     : typeclass_instances.
 
 Section sbi.
 Context {I : bi_index} {PROP : sbi}.
