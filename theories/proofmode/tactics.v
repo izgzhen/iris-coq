@@ -396,8 +396,11 @@ Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
          |typeclasses eauto ||
           let P := match goal with |- IntoForall ?P _ => P end in
           fail "iSpecialize: cannot instantiate" P "with" x
-         |lazymatch goal with (* Force [A] in [ex_intro] to deal with coercions. *)
-          | |- ∃ _ : ?A, _ => refine (@ex_intro A _ x (conj _ _))
+         |match goal with (* Force [A] in [ex_intro] to deal with coercions. *)
+          | |- ∃ _ : ?A, _ => refine (@ex_intro A _ x (conj _ _)); [|]
+          (* If the existentially quantified predicate is non-dependent and [x]
+          is a hole, [refine] will generate an additional goal it. *)
+          | |- ∃ _ : ?A, _ => refine (@ex_intro A _ x (conj _ _));[shelve| |]
           end; [env_reflexivity|go xs]]
     end in
   go xs.

@@ -234,6 +234,50 @@ Lemma test_iIntros_rewrite P (x1 x2 x3 x4 : nat) :
   x1 = x2 → (⌜ x2 = x3 ⌝ ∗ ⌜ x3 ≡ x4 ⌝ ∗ P) -∗ ⌜ x1 = x4 ⌝ ∗ P.
 Proof. iIntros (?) "(-> & -> & $)"; auto. Qed.
 
+(* A bunch of test cases from #127 to establish that tactics behave the same on
+`⌜ φ ⌝ → P` and `∀ _ : φ, P` *)
+Lemma test_forall_nondep_1 (φ : Prop) :
+  φ → (∀ _ : φ, False : uPred M) -∗ False.
+Proof. iIntros (Hφ) "Hφ". by iApply "Hφ". Qed.
+Lemma test_forall_nondep_2 (φ : Prop) :
+  φ → (∀ _ : φ, False : uPred M) -∗ False.
+Proof. iIntros (Hφ) "Hφ". iSpecialize ("Hφ" with "[% //]"). done. Qed.
+Lemma test_forall_nondep_3 (φ : Prop) :
+  φ → (∀ _ : φ, False : uPred M) -∗ False.
+Proof. iIntros (Hφ) "Hφ". unshelve iSpecialize ("Hφ" $! _). done. done. Qed.
+Lemma test_forall_nondep_4 (φ : Prop) :
+  φ → (∀ _ : φ, False : uPred M) -∗ False.
+Proof. iIntros (Hφ) "Hφ". iSpecialize ("Hφ" $! Hφ); done. Qed.
+
+Lemma test_pure_impl_1 (φ : Prop) :
+  φ → (⌜φ⌝ → False : uPred M) -∗ False.
+Proof. iIntros (Hφ) "Hφ". by iApply "Hφ". Qed.
+Lemma test_pure_impl_2 (φ : Prop) :
+  φ → (⌜φ⌝ → False : uPred M) -∗ False.
+Proof. iIntros (Hφ) "Hφ". iSpecialize ("Hφ" with "[% //]"). done. Qed.
+Lemma test_pure_impl_3 (φ : Prop) :
+  φ → (⌜φ⌝ → False : uPred M) -∗ False.
+Proof. iIntros (Hφ) "Hφ". unshelve iSpecialize ("Hφ" $! _). done. done. Qed.
+Lemma test_pure_impl_4 (φ : Prop) :
+  φ → (⌜φ⌝ → False : uPred M) -∗ False.
+Proof. iIntros (Hφ) "Hφ". iSpecialize ("Hφ" $! Hφ). done. Qed.
+
+Lemma test_forall_nondep_impl2 (φ : Prop) P :
+  φ → P -∗ (∀ _ : φ, P -∗ False : uPred M) -∗ False.
+Proof.
+  iIntros (Hφ) "HP Hφ".
+  Fail iSpecialize ("Hφ" with "HP").
+  iSpecialize ("Hφ" with "[% //] HP"). done.
+Qed.
+
+Lemma test_pure_impl2 (φ : Prop) P :
+  φ → P -∗ (⌜φ⌝ → P -∗ False : uPred M) -∗ False.
+Proof.
+  iIntros (Hφ) "HP Hφ".
+  Fail iSpecialize ("Hφ" with "HP").
+  iSpecialize ("Hφ" with "[% //] HP"). done.
+Qed.
+
 (* TODO: This test is broken in Coq 8.6. Should be restored once we drop Coq
 8.6 support. See also issue #108. *)
 (*
