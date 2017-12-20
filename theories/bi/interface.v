@@ -42,7 +42,7 @@ Section bi_mixin.
   Local Infix "-∗" := bi_wand.
   Local Notation "▷ P" := (sbi_later P).
 
-  Record BIMixin := {
+  Record BiMixin := {
     bi_mixin_entails_po : PreOrder bi_entails;
     bi_mixin_equiv_spec P Q : equiv P Q ↔ (P ⊢ Q) ∧ (Q ⊢ P);
 
@@ -141,7 +141,7 @@ Section bi_mixin.
       bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q;
   }.
 
-  Record SBIMixin := {
+  Record SbiMixin := {
     sbi_mixin_later_contractive : Contractive sbi_later;
 
     sbi_mixin_later_eq_1 {A : ofeT} (x y : A) : Next x ≡ Next y ⊢ ▷ (x ≡ y);
@@ -166,7 +166,7 @@ Section bi_mixin.
   }.
 End bi_mixin.
 
-Structure bi := BI {
+Structure bi := Bi {
   bi_car :> Type;
   bi_dist : Dist bi_car;
   bi_equiv : Equiv bi_car;
@@ -184,7 +184,7 @@ Structure bi := BI {
   bi_plainly : bi_car → bi_car;
   bi_persistently : bi_car → bi_car;
   bi_ofe_mixin : OfeMixin bi_car;
-  bi_bi_mixin : BIMixin bi_ofe_mixin bi_entails bi_emp bi_pure bi_and bi_or
+  bi_bi_mixin : BiMixin bi_ofe_mixin bi_entails bi_emp bi_pure bi_and bi_or
                         bi_impl bi_forall bi_exist bi_internal_eq
                         bi_sep bi_wand bi_plainly bi_persistently;
 }.
@@ -224,7 +224,7 @@ Arguments bi_wand {PROP} _%I _%I : simpl never, rename.
 Arguments bi_plainly {PROP} _%I : simpl never, rename.
 Arguments bi_persistently {PROP} _%I : simpl never, rename.
 
-Structure sbi := SBI {
+Structure sbi := Sbi {
   sbi_car :> Type;
   sbi_dist : Dist sbi_car;
   sbi_equiv : Equiv sbi_car;
@@ -243,10 +243,10 @@ Structure sbi := SBI {
   sbi_persistently : sbi_car → sbi_car;
   sbi_later : sbi_car → sbi_car;
   sbi_ofe_mixin : OfeMixin sbi_car;
-  sbi_bi_mixin : BIMixin sbi_ofe_mixin sbi_entails sbi_emp sbi_pure sbi_and
+  sbi_bi_mixin : BiMixin sbi_ofe_mixin sbi_entails sbi_emp sbi_pure sbi_and
                          sbi_or sbi_impl sbi_forall sbi_exist sbi_internal_eq
                          sbi_sep sbi_wand sbi_plainly sbi_persistently;
-  sbi_sbi_mixin : SBIMixin sbi_entails sbi_pure sbi_or sbi_impl
+  sbi_sbi_mixin : SbiMixin sbi_entails sbi_pure sbi_or sbi_impl
                            sbi_forall sbi_exist sbi_internal_eq
                            sbi_sep sbi_plainly sbi_persistently sbi_later;
 }.
