@@ -224,10 +224,11 @@ Proof.
   rewrite /FromAssumption /IntoWand=> HP. by rewrite HP affinely_persistently_if_elim.
 Qed.
 
-Global Instance into_wand_impl_false_false `{!BiAffine PROP} P Q P' :
+Global Instance into_wand_impl_false_false P Q P' :
+  Absorbing P' → Absorbing (P' → Q) →
   FromAssumption false P P' → IntoWand false false (P' → Q) P Q.
 Proof.
-  rewrite /FromAssumption /IntoWand /= => ->. apply wand_intro_r.
+  rewrite /FromAssumption /IntoWand /= => ?? ->. apply wand_intro_r.
   by rewrite sep_and impl_elim_l.
 Qed.
 
@@ -263,6 +264,20 @@ Proof. rewrite /IntoWand=> ?. by rewrite /bi_wand_iff and_elim_l. Qed.
 Global Instance into_wand_and_r p q R1 R2 P' Q' :
   IntoWand p q R2 Q' P' → IntoWand p q (R1 ∧ R2) Q' P'.
 Proof. rewrite /IntoWand=> ?. by rewrite /bi_wand_iff and_elim_r. Qed.
+
+Global Instance into_wand_forall_prop_true p (φ : Prop) P :
+  IntoWand p true (∀ _ : φ, P) ⌜ φ ⌝ P.
+Proof.
+  rewrite /IntoWand (affinely_persistently_if_elim p) /=
+          -impl_wand_affinely_persistently -pure_impl_forall
+          bi.persistently_elim //.
+Qed.
+Global Instance into_wand_forall_prop_false p (φ : Prop) P :
+  Absorbing P → IntoWand p false (∀ _ : φ, P) ⌜ φ ⌝ P.
+Proof.
+  intros ?.
+  rewrite /IntoWand (affinely_persistently_if_elim p) /= pure_wand_forall //.
+Qed.
 
 Global Instance into_wand_forall {A} p q (Φ : A → PROP) P Q x :
   IntoWand p q (Φ x) P Q → IntoWand p q (∀ x, Φ x) P Q.
@@ -1016,6 +1031,18 @@ Proof. rewrite /IntoForall=> HP. by rewrite HP later_forall. Qed.
 Global Instance into_forall_except_0 {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (◇ P) (λ a, ◇ (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP except_0_forall. Qed.
+Global Instance into_forall_impl_pure φ P Q :
+  FromPureT P φ → IntoForall (P → Q) (λ _ : φ, Q).
+Proof.
+  rewrite /FromPureT /FromPure /IntoForall=> -[φ' [-> <-]].
+  by rewrite pure_impl_forall.
+Qed.
+Global Instance into_forall_wand_pure φ P Q :
+  Absorbing Q → FromPureT P φ → IntoForall (P -∗ Q) (λ _ : φ, Q).
+Proof.
+  rewrite /FromPureT /FromPure /IntoForall=> ? -[φ' [-> <-]].
+  by rewrite pure_wand_forall.
+Qed.
 
 (* FromForall *)
 Global Instance from_forall_later {A} P (Φ : A → PROP) :

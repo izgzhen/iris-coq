@@ -49,6 +49,13 @@ Arguments FromPure {_} _%I _%type_scope : simpl never.
 Arguments from_pure {_} _%I _%type_scope {_}.
 Hint Mode FromPure + ! - : typeclass_instances.
 
+Class FromPureT {PROP : bi} (P : PROP) (φ : Type) :=
+  from_pureT : ∃ ψ : Prop, φ = ψ ∧ FromPure P ψ.
+Lemma from_pureT_hint {PROP : bi} (P : PROP) (φ : Prop) : FromPure P φ → FromPureT P φ.
+Proof. by exists φ. Qed.
+Hint Extern 0 (FromPureT _ _) =>
+  notypeclasses refine (from_pureT_hint _ _ _) : typeclass_instances.
+
 Class IntoInternalEq {PROP : bi} {A : ofeT} (P : PROP) (x y : A) :=
   into_internal_eq : P ⊢ x ≡ y.
 Arguments IntoInternalEq {_ _} _%I _%type_scope _%type_scope : simpl never.

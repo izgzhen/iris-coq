@@ -250,4 +250,47 @@ Lemma test_iAlways P Q R :
   □ P -∗ bi_persistently Q → R -∗ bi_persistently (bi_affinely (bi_affinely P)) ∗ □ Q.
 Proof. iIntros "#HP #HQ HR". iSplitL. iAlways. done. iAlways. done. Qed.
 
+(* A bunch of test cases from #127 to establish that tactics behave the same on
+`⌜ φ ⌝ → P` and `∀ _ : φ, P` *)
+Lemma test_forall_nondep_1 (φ : Prop) :
+  φ → (∀ _ : φ, False : PROP) -∗ False.
+Proof. iIntros (Hφ) "Hφ". by iApply "Hφ". Qed.
+Lemma test_forall_nondep_2 (φ : Prop) :
+  φ → (∀ _ : φ, False : PROP) -∗ False.
+Proof. iIntros (Hφ) "Hφ". iSpecialize ("Hφ" with "[% //]"). done. Qed.
+Lemma test_forall_nondep_3 (φ : Prop) :
+  φ → (∀ _ : φ, False : PROP) -∗ False.
+Proof. iIntros (Hφ) "Hφ". unshelve iSpecialize ("Hφ" $! _). done. done. Qed.
+Lemma test_forall_nondep_4 (φ : Prop) :
+  φ → (∀ _ : φ, False : PROP) -∗ False.
+Proof. iIntros (Hφ) "Hφ". iSpecialize ("Hφ" $! Hφ); done. Qed.
+
+Lemma test_pure_impl_1 (φ : Prop) :
+  φ → (⌜φ⌝ → False : PROP) -∗ False.
+Proof. iIntros (Hφ) "Hφ". by iApply "Hφ". Qed.
+Lemma test_pure_impl_2 (φ : Prop) :
+  φ → (⌜φ⌝ → False : PROP) -∗ False.
+Proof. iIntros (Hφ) "Hφ". iSpecialize ("Hφ" with "[% //]"). done. Qed.
+Lemma test_pure_impl_3 (φ : Prop) :
+  φ → (⌜φ⌝ → False : PROP) -∗ False.
+Proof. iIntros (Hφ) "Hφ". unshelve iSpecialize ("Hφ" $! _). done. done. Qed.
+Lemma test_pure_impl_4 (φ : Prop) :
+  φ → (⌜φ⌝ → False : PROP) -∗ False.
+Proof. iIntros (Hφ) "Hφ". iSpecialize ("Hφ" $! Hφ). done. Qed.
+
+Lemma test_forall_nondep_impl2 (φ : Prop) P :
+  φ → P -∗ (∀ _ : φ, P -∗ False : PROP) -∗ False.
+Proof.
+  iIntros (Hφ) "HP Hφ".
+  Fail iSpecialize ("Hφ" with "HP").
+  iSpecialize ("Hφ" with "[% //] HP"). done.
+Qed.
+
+Lemma test_pure_impl2 (φ : Prop) P :
+  φ → P -∗ (⌜φ⌝ → P -∗ False : PROP) -∗ False.
+Proof.
+  iIntros (Hφ) "HP Hφ".
+  Fail iSpecialize ("Hφ" with "HP").
+  iSpecialize ("Hφ" with "[% //] HP"). done.
+Qed.
 End tests.

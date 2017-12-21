@@ -272,7 +272,7 @@ Proof.
     iExists γ1, γ2. iIntros "{$% $#} !>". iSplit; last iSplit; try iPureIntro.
     { by eapply lookup_insert_None. }
     { by apply (lookup_insert_None (delete γ f) γ1 γ2 true). }
-    iNext. iApply (internal_eq_rewrite_contractive with "[Heq] Hbox").
+    iNext. iApply (internal_eq_rewrite_contractive _ _ (λ P, _) with "[Heq] Hbox").
     iNext. iRewrite "Heq". iPureIntro. by rewrite assoc (comm _ Q2).
   - iMod (slice_delete_empty with "Hslice Hbox") as (P') "[Heq Hbox]"; try done.
     iMod (slice_insert_empty with "Hbox") as (γ1 ?) "[#Hslice1 Hbox]".
@@ -280,7 +280,7 @@ Proof.
     iExists γ1, γ2. iIntros "{$% $#} !>". iSplit; last iSplit; try iPureIntro.
     { by eapply lookup_insert_None. }
     { by apply (lookup_insert_None (delete γ f) γ1 γ2 false). }
-    iNext. iApply (internal_eq_rewrite_contractive with "[Heq] Hbox").
+    iNext. iApply (internal_eq_rewrite_contractive _ _ (λ P, _) with "[Heq] Hbox").
     iNext. iRewrite "Heq". iPureIntro. by rewrite assoc (comm _ Q2).
 Qed.
 
@@ -297,14 +297,14 @@ Proof.
     iMod (slice_insert_full _ _ _ _ (Q1 ∗ Q2)%I with "[$HQ1 $HQ2] Hbox")
       as (γ ?) "[#Hslice Hbox]"; first done.
     iExists γ. iIntros "{$% $#} !>". iNext.
-    iApply (internal_eq_rewrite_contractive with "[Heq1 Heq2] Hbox").
+    iApply (internal_eq_rewrite_contractive _ _ (λ P, _) with "[Heq1 Heq2] Hbox").
     iNext. iRewrite "Heq1". iRewrite "Heq2". by rewrite assoc.
   - iMod (slice_delete_empty with "Hslice1 Hbox") as (P1) "(Heq1 & Hbox)"; try done.
     iMod (slice_delete_empty with "Hslice2 Hbox") as (P2) "(Heq2 & Hbox)"; first done.
     { by simplify_map_eq. }
     iMod (slice_insert_empty with "Hbox") as (γ ?) "[#Hslice Hbox]".
     iExists γ. iIntros "{$% $#} !>". iNext.
-    iApply (internal_eq_rewrite_contractive with "[Heq1 Heq2] Hbox").
+    iApply (internal_eq_rewrite_contractive _ _ (λ P, _) with "[Heq1 Heq2] Hbox").
     iNext. iRewrite "Heq1". iRewrite "Heq2". by rewrite assoc.
 Qed.
 End box.
