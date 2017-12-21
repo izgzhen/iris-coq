@@ -54,6 +54,13 @@ Class FromPure {M} (P : uPred M) (φ : Prop) := from_pure : ⌜φ⌝ ⊢ P.
 Arguments from_pure {_} _ _ {_}.
 Hint Mode FromPure + ! - : typeclass_instances.
 
+Class FromPureT {M} (P : uPred M) (φ : Type) :=
+  from_pureT : ∃ ψ : Prop, φ = ψ ∧ FromPure P ψ.
+Lemma from_pureT_hint {M} (P : uPred M) (φ : Prop) : FromPure P φ → FromPureT P φ.
+Proof. by exists φ. Qed.
+Hint Extern 0 (FromPureT _ _) =>
+  notypeclasses refine (from_pureT_hint _ _ _) : typeclass_instances.
+
 Class IntoInternalEq {M} {A : ofeT} (P : uPred M) (x y : A) :=
   into_internal_eq : P ⊢ x ≡ y.
 Arguments into_internal_eq {_ _} _ _ _ {_}.

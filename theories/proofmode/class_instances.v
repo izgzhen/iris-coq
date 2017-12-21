@@ -327,6 +327,13 @@ Global Instance into_wand_iff_r p P P' Q Q' :
   WandWeaken p Q P Q' P' → IntoWand p (P ↔ Q) Q' P'.
 Proof. rewrite /WandWeaken /IntoWand=> <-. apply and_elim_r', impl_wand_1. Qed.
 
+Global Instance into_wand_forall_prop p (φ : Prop) P :
+  IntoWand p (∀ _ : φ, P) ⌜ φ ⌝ P.
+Proof.
+  rewrite /FromAssumption /IntoWand persistently_if_pure -pure_impl_forall.
+  by apply impl_wand_1.
+Qed.
+
 Global Instance into_wand_forall {A} p (Φ : A → uPred M) P Q x :
   IntoWand p (Φ x) P Q → IntoWand p (∀ x, Φ x) P Q.
 Proof. rewrite /IntoWand=> <-. apply forall_elim. Qed.
@@ -775,6 +782,18 @@ Proof. rewrite /IntoForall=> HP. by rewrite HP later_forall. Qed.
 Global Instance into_forall_except_0 {A} P (Φ : A → uPred M) :
   IntoForall P Φ → IntoForall (◇ P) (λ a, ◇ (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP except_0_forall. Qed.
+Global Instance into_forall_impl_pure φ P Q :
+  FromPureT P φ → IntoForall (P → Q) (λ _ : φ, Q).
+Proof.
+  rewrite /FromPureT /FromPure /IntoForall=> -[φ' [-> <-]].
+  by rewrite pure_impl_forall.
+Qed.
+Global Instance into_forall_wand_pure φ P Q :
+  FromPureT P φ → IntoForall (P -∗ Q) (λ _ : φ, Q).
+Proof.
+  rewrite /FromPureT /FromPure /IntoForall=> -[φ' [-> <-]].
+  by rewrite -pure_impl_forall -impl_wand.
+Qed.
 
 (* FromForall *)
 Global Instance from_forall_forall {A} (Φ : A → uPred M) :
