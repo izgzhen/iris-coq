@@ -358,7 +358,7 @@ Import uPred_unseal.
 
 Local Arguments uPred_holds {_} !_ _ _ /.
 
-Lemma uPred_bi_mixin (M : ucmraT) : BIMixin (ofe_mixin_of (uPred M))
+Lemma uPred_bi_mixin (M : ucmraT) : BiMixin (ofe_mixin_of (uPred M))
   uPred_entails uPred_emp uPred_pure uPred_and uPred_or uPred_impl
                 (@uPred_forall M) (@uPred_exist M) (@uPred_internal_eq M)
                 uPred_sep uPred_wand uPred_plainly uPred_persistently.
@@ -518,7 +518,7 @@ Proof.
     exists (core x), x; rewrite ?cmra_core_l; auto.
 Qed.
 
-Lemma uPred_sbi_mixin (M : ucmraT) : SBIMixin
+Lemma uPred_sbi_mixin (M : ucmraT) : SbiMixin
   uPred_entails uPred_pure uPred_or uPred_impl
   (@uPred_forall M) (@uPred_exist M) (@uPred_internal_eq M)
   uPred_sep uPred_plainly uPred_persistently uPred_later.
