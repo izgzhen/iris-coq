@@ -399,7 +399,7 @@ Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
          |match goal with (* Force [A] in [ex_intro] to deal with coercions. *)
           | |- ∃ _ : ?A, _ => refine (@ex_intro A _ x (conj _ _)); [|]
           (* If the existentially quantified predicate is non-dependent and [x]
-          is a hole, [refine] will generate an additional goal it. *)
+          is a hole, [refine] will generate an additional goal. *)
           | |- ∃ _ : ?A, _ => refine (@ex_intro A _ x (conj _ _));[shelve| |]
           end; [env_reflexivity|go xs]]
     end in
