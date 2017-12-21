@@ -6,15 +6,30 @@ This is the Coq development of the [Iris Project](http://iris-project.org).
 
 This version is known to compile with:
 
- - Coq 8.6.1 / 8.7.0
+ - Coq 8.6.1 / 8.7.0 / 8.7.1
  - Ssreflect 1.6.4
- - A development version of [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
+ - [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp) 1.1.0
 
 If you need to work with Coq 8.5, please check out the
 [iris-3.0 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.0).
 
-The easiest way to install the correct versions of the dependencies is through
-opam.  You will need the Coq and Iris opam repositories:
+## Installing via opam
+
+To obtain the latest stable release via opam (1.2.2 or newer), you have to add
+the Coq opam repository:
+
+    opam repo add coq-released https://coq.inria.fr/opam/released
+
+Then you can do `opam install coq-iris`.
+
+To obtain a development version, add the Iris opam repository:
+
+    opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git
+
+## Building from source
+
+When building Iris from source, we recommend to use opam (1.2.2 or newer) for
+installing Iris's dependencies.  This requires the following two repositories:
 
     opam repo add coq-released https://coq.inria.fr/opam/released
     opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git
@@ -22,18 +37,14 @@ opam.  You will need the Coq and Iris opam repositories:
 Once you got opam set up, run `make build-dep` to install the right versions
 of the dependencies.
 
-## Updating
-
-After doing `git pull`, the development may fail to compile because of outdated
-dependencies.  To fix that, please run `opam update` followed by
-`make build-dep`.
-
-## Building Instructions
-
 Run `make -jN` to build the full development, where `N` is the number of your
 CPU cores.
 
-## Structure
+To update Iris, do `git pull`.  After an update, the development may fail to
+compile because of outdated dependencies.  To fix that, please run `opam update`
+followed by `make build-dep`.
+
+## Directory Structure
 
 * The folder [algebra](theories/algebra) contains the COFE and CMRA
   constructions as well as the solver for recursive domain equations.
@@ -66,13 +77,26 @@ CPU cores.
 
 A LaTeX version of the core logic definitions and some derived forms is
 available in [docs/iris.tex](docs/iris.tex).  A compiled PDF version of this
-document is [available online](http://plv.mpi-sws.org/iris/appendix-3.0.pdf).
+document is [available online](http://plv.mpi-sws.org/iris/appendix-3.1.pdf).
+
+## Case Studies
+
+The following is a (probably incomplete) list of case studies that use Iris, and
+that should be compatible with this version:
+
+* [Iris Examples](https://gitlab.mpi-sws.org/FP/iris-examples) is where we
+  collect miscellaneous case studies that do not have their own repository.
+* [LambdaRust](https://gitlab.mpi-sws.org/FP/LambdaRust-coq/) is a Coq
+  formalization of the core Rust type system.
+* [Iris Atomic](https://gitlab.mpi-sws.org/FP/iris-atomic/) is an experimental
+  formalization of logically atomic triples in Iris.
 
 ## For Developers: How to update the std++ dependency
 
 * Do the change in std++, push it.
-* Wait for CI to publish a new std++ version on the opam archive.
-* In Iris, change opam to depend on the new version.
+* Wait for CI to publish a new std++ version on the opam archive, then run
+  `opam update iris-dev`.
+* In Iris, change the `opam` file to depend on the new version.
 * Run `make build-dep` (in Iris) to install the new version of std++.
-* You may have to do `make clean` as Coq will likely complain about .vo file
+  You may have to do `make clean` as Coq will likely complain about .vo file
   mismatches.

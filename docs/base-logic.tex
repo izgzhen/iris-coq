@@ -1,8 +1,8 @@
 \section{Base Logic}
 \label{sec:base-logic}
 
-The base logic is parameterized by an arbitrary CMRA $\monoid$ having a unit $\munit$.
-By \lemref{lem:cmra-unit-total-core}, this means that the core of $\monoid$ is a total function, so we will treat it as such in the following.
+The base logic is parameterized by an arbitrary camera $\monoid$ having a unit $\munit$.
+By \lemref{lem:camera-unit-total-core}, this means that the core of $\monoid$ is a total function, so we will treat it as such in the following.
 This defines the structure of resources that can be owned.
 
 As usual for higher-order logics, you can furthermore pick a \emph{signature} $\Sig = (\SigType, \SigFn, \SigAx)$ to add more types, symbols and axioms to the language.
@@ -193,7 +193,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	\infer{\vctx \proves \wtt{\melt}{\textlog{M}}}
 		{\vctx \proves \wtt{\ownM{\melt}}{\Prop}}
 \and
-	\infer{\vctx \proves \wtt{\melt}{\type} \and \text{$\type$ is a CMRA}}
+	\infer{\vctx \proves \wtt{\melt}{\type} \and \text{$\type$ is a camera}}
 		{\vctx \proves \wtt{\mval(\melt)}{\Prop}}
 \and
 	\infer{\vctx \proves \wtt{\prop}{\Prop}}
@@ -212,13 +212,13 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	}
 \end{mathparpagebreakable}
 
-\subsection{Proof rules}
+\subsection{Proof Rules}
 \label{sec:proof-rules}
 
 The judgment $\vctx \mid \prop \proves \propB$ says that with free variables $\vctx$, proposition $\propB$ holds whenever assumption $\prop$ holds.
 Most of the rules will entirely omit the variable contexts $\vctx$.
 In this case, we assume the same arbitrary context is used for every constituent of the rules.
-%Furthermore, an arbitrary \emph{boxed} assertion context $\always\pfctx$ may be added to every constituent.
+%Furthermore, an arbitrary \emph{boxed} proposition context $\always\pfctx$ may be added to every constituent.
 Axioms $\vctx \mid \prop \provesIff \propB$ indicate that both $\vctx \mid \prop \proves \propB$ and $\vctx \mid \propB \proves \prop$ are proof rules of the logic.
 
 \judgment{\vctx \mid \prop \proves \propB}
@@ -448,7 +448,7 @@ Furthermore, we have the usual $\eta$ and $\beta$ laws for projections, $\textlo
 {\upd\plainly\prop \proves \prop}
 \end{mathpar}
 The premise in \ruleref{upd-update} is a \emph{meta-level} side-condition that has to be proven about $a$ and $B$.
-%\ralf{Trouble is, we don't actually have $\in$ inside the logic...}
+%\ralf{Trouble is, we do not actually have $\in$ inside the logic...}
 
 \subsection{Consistency}
 

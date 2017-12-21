@@ -21,9 +21,14 @@ A \emph{language} $\Lang$ consists of a set \Expr{} of \emph{expressions} (metav
 \end{defn}
 
 \begin{defn}
-  An expression $\expr$ is \emph{atomic} if it reduces in one step to something irreducible:
-  \[ \All\state_1, \expr_2, \state_2, \vec\expr. \expr, \state_1 \step \expr_2, \state_2, \vec\expr \Ra \lnot \red(\expr_2, \state_2) \]
+  An expression $\expr$ is \emph{weakly atomic} if it reduces in one step to something irreducible:
+  \[ \atomic(\expr) \eqdef \All\state_1, \expr_2, \state_2, \vec\expr. \expr, \state_1 \step \expr_2, \state_2, \vec\expr \Ra \lnot \red(\expr_2, \state_2) \]
+  It is \emph{strongly atomic} if it reduces in one step to a value:
+  \[ \stronglyAtomic(\expr) \eqdef \All\state_1, \expr_2, \state_2, \vec\expr. \expr, \state_1 \step \expr_2, \state_2, \vec\expr \Ra \toval(\expr_2) \neq \bot \]
 \end{defn}
+We need two notions of atomicity to accommodate both kinds of weakest preconditions that we will define later:
+If the weakest precondition ensures that the program cannot get stuck, weak atomicity is sufficient.
+Otherwise, we need strong atomicity.
 
 \begin{defn}[Context]
   A function $\lctx : \Expr \to \Expr$ is a \emph{context} if the following conditions are satisfied:
@@ -37,7 +42,7 @@ A \emph{language} $\Lang$ consists of a set \Expr{} of \emph{expressions} (metav
   \end{enumerate}
 \end{defn}
 
-\subsection{Concurrent language}
+\subsection{Concurrent Language}
 
 For any language $\Lang$, we define the corresponding thread-pool semantics.
 

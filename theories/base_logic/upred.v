@@ -11,43 +11,46 @@ Local Hint Extern 10 (_ ≤ _) => omega.
     base_logic.base_logic; that will also give you all the primitive
     and many derived laws for the logic. *)
 
+(* A good way of understanding this definition of the uPred OFE is to
+   consider the OFE uPred0 of monotonous SProp predicates. That is,
+   uPred0 is the OFE of non-expansive functions from M to SProp that
+   are monotonous with respect to CMRA inclusion. This notion of
+   monotonicity has to be stated in the SProp logic. Together with the
+   usual closedness property of SProp, this gives exactly uPred_mono.
+
+   Then, we quotient uPred0 *in the sProp logic* with respect to
+   equivalence on valid elements of M. That is, we quotient with
+   respect to the following *sProp* equivalence relation:
+     P1 ≡ P2 := ∀ x, ✓ x → (P1(x) ↔ P2(x))       (1)
+   When seen from the ambiant logic, obtaining this quotient requires
+   definig both a custom Equiv and Dist.
+
+
+   It is worth noting that this equivalence relation admits canonical
+   representatives. More precisely, one can show that every
+   equivalence class contains exactly one element P0 such that:
+     ∀ x, (✓ x → P0(x)) → P0(x)                 (2)
+   (Again, this assertion has to be understood in sProp). Intuitively,
+   this says that P0 trivially holds whenever the resource is invalid.
+   Starting from any element P, one can find this canonical
+   representative by choosing:
+     P0(x) := ✓ x → P(x)                        (3)
+
+   Hence, as an alternative definition of uPred, we could use the set
+   of canonical representatives (i.e., the subtype of monotonous
+   sProp predicates that verify (2)). This alternative definition would
+   save us from using a quotient. However, the definitions of the various
+   connectives would get more complicated, because we have to make sure
+   they all verify (2), which sometimes requires some adjustments. We
+   would moreover need to prove one more property for every logical
+   connective.
+ *)
+
 Record uPred (M : ucmraT) : Type := IProp {
   uPred_holds :> nat → M → Prop;
 
-  (* [uPred_mono] is used to prove non-expansiveness (guaranteed by
-     [uPred_ne]). Therefore, it is important that we do not restrict
-     it to only valid elements. *)
-  uPred_mono n x1 x2 : uPred_holds n x1 → x1 ≼{n} x2 → uPred_holds n x2;
-
-  (* We have to restrict this to hold only for valid elements,
-     otherwise this condition is no longer limit preserving, and uPred
-     does no longer form a COFE (i.e., [uPred_compl] breaks). This is
-     because the distance and equivalence on this cofe ignores the
-     truth value on invalid elements. This, in turn, is required by
-     the fact that entailment has to ignore invalid elements, which is
-     itself essential for proving [ownM_valid].
-
-     We could, actually, remove this restriction and make this
-     condition apply even to invalid elements: we have proved that
-     uPred is isomorphic to a sub-COFE of the COFE of predicates that
-     are monotonous both with respect to the step index and with
-     respect to x. However, that would essentially require changing
-     (by making it more complicated) the model of many connectives of
-     the logic, which we don't want.
-     This sub-COFE is the sub-COFE of monotonous sProp predicates P
-     such that the following sProp assertion is valid:
-          ∀ x, (V(x) → P(x)) → P(x)
-     Where V is the validity predicate.
-
-     Another way of saying that this is equivalent to this definition of
-     uPred is to notice that our definition of uPred is equivalent to
-     quotienting the COFE of monotonous sProp predicates with the
-     following (sProp) equivalence relation:
-       P1 ≡ P2  :=  ∀ x, V(x) → (P1(x) ↔ P2(x))
-     whose equivalence classes appear to all have one only canonical
-     representative such that ∀ x, (V(x) → P(x)) → P(x).
- *)
-  uPred_closed n1 n2 x : uPred_holds n1 x → n2 ≤ n1 → ✓{n2} x → uPred_holds n2 x
+  uPred_mono n1 n2 x1 x2 :
+    uPred_holds n1 x1 → x1 ≼{n1} x2 → n2 ≤ n1 → uPred_holds n2 x2
 }.
 Arguments uPred_holds {_} _ _ _ : simpl never.
 Add Printing Constructor uPred.
@@ -81,15 +84,17 @@ Section cofe.
   Canonical Structure uPredC : ofeT := OfeT (uPred M) uPred_ofe_mixin.
 
   Program Definition uPred_compl : Compl uPredC := λ c,
-    {| uPred_holds n x := c n n x |}.
-  Next Obligation. naive_solver eauto using uPred_mono. Qed.
+    {| uPred_holds n x := ∀ n', n' ≤ n → ✓{n'}x → c n' n' x |}.
   Next Obligation.
-    intros c n1 n2 x ???; simpl in *.
-    apply (chain_cauchy c n2 n1); eauto using uPred_closed.
+    move=> /= c n1 n2 x1 x2 HP Hx12 Hn12 n3 Hn23 Hv. eapply uPred_mono.
+    eapply HP, cmra_validN_includedN, cmra_includedN_le=>//; lia.
+    eapply cmra_includedN_le=>//; lia. done.
   Qed.
   Global Program Instance uPred_cofe : Cofe uPredC := {| compl := uPred_compl |}.
   Next Obligation.
-    intros n c; split=>i x ??; symmetry; apply (chain_cauchy c i n); auto.
+    intros n c; split=>i x Hin Hv.
+    etrans; [|by symmetry; apply (chain_cauchy c i n)]. split=>H; [by apply H|].
+    repeat intro. apply (chain_cauchy c n' i)=>//. by eapply uPred_mono.
   Qed.
 End cofe.
 Arguments uPredC : clear implicits.
@@ -104,8 +109,24 @@ Proof. by intros x1 x2 Hx; apply uPred_ne, equiv_dist. Qed.
 Lemma uPred_holds_ne {M} (P Q : uPred M) n1 n2 x :
   P ≡{n2}≡ Q → n2 ≤ n1 → ✓{n2} x → Q n1 x → P n2 x.
 Proof.
-  intros [Hne] ???. eapply Hne; try done.
-  eapply uPred_closed; eauto using cmra_validN_le.
+  intros [Hne] ???. eapply Hne; try done. eauto using uPred_mono, cmra_validN_le.
+Qed.
+
+(* Equivalence to the definition of uPred in the appendix. *)
+Lemma uPred_alt {M : ucmraT} (P: nat → M → Prop) :
+  (∀ n1 n2 x1 x2, P n1 x1 → x1 ≼{n1} x2 → n2 ≤ n1 → P n2 x2) ↔
+  ( (∀ x n1 n2, n2 ≤ n1 → P n1 x → P n2 x) (* Pointwise down-closed *)
+  ∧ (∀ n x1 x2, x1 ≡{n}≡ x2 → ∀ m, m ≤ n → P m x1 ↔ P m x2) (* Non-expansive *)
+  ∧ (∀ n x1 x2, x1 ≼{n} x2 → ∀ m, m ≤ n → P m x1 → P m x2) (* Monotonicity *)
+  ).
+Proof.
+  (* Provide this lemma to eauto. *)
+  assert (∀ n1 n2 (x1 x2 : M), n2 ≤ n1 → x1 ≡{n1}≡ x2 → x1 ≼{n2} x2).
+  { intros ????? H. eapply cmra_includedN_le; last done. by rewrite H. }
+  (* Now go ahead. *)
+  split.
+  - intros Hupred. repeat split; eauto using cmra_includedN_le.
+  - intros (Hdown & _ & Hmono) **. eapply Hmono; [done..|]. eapply Hdown; done.
 Qed.
 
 (** functor *)
@@ -113,7 +134,6 @@ Program Definition uPred_map {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CmraMorphism f} (P : uPred M1) :
   uPred M2 := {| uPred_holds n x := P n (f x) |}.
 Next Obligation. naive_solver eauto using uPred_mono, cmra_morphism_monotoneN. Qed.
-Next Obligation. naive_solver eauto using uPred_closed, cmra_morphism_validN. Qed.
 
 Instance uPred_map_ne {M1 M2 : ucmraT} (f : M2 -n> M1)
   `{!CmraMorphism f} n : Proper (dist n ==> dist n) (uPred_map f).
@@ -168,7 +188,7 @@ Qed.
 (** logical entailement *)
 Inductive uPred_entails {M} (P Q : uPred M) : Prop :=
   { uPred_in_entails : ∀ n x, ✓{n} x → P n x → Q n x }.
-Hint Resolve uPred_mono uPred_closed : uPred_def.
+Hint Resolve uPred_mono : uPred_def.
 
 (** logical connectives *)
 Program Definition uPred_pure_def {M} (φ : Prop) : uPred M :=
@@ -199,11 +219,10 @@ Program Definition uPred_impl_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ n' x',
        x ≼ x' → n' ≤ n → ✓{n'} x' → P n' x' → Q n' x' |}.
 Next Obligation.
-  intros M P Q n1 x1 x1' HPQ [x2 Hx1'] n2 x3 [x4 Hx3] ?; simpl in *.
+  intros M P Q n1 n1' x1 x1' HPQ [x2 Hx1'] Hn1 n2 x3 [x4 Hx3] ?; simpl in *.
   rewrite Hx3 (dist_le _ _ _ _ Hx1'); auto. intros ??.
   eapply HPQ; auto. exists (x2 ⋅ x4); by rewrite assoc.
 Qed.
-Next Obligation. intros M P Q [|n1] [|n2] x; auto with lia. Qed.
 Definition uPred_impl_aux : seal (@uPred_impl_def). by eexists. Qed.
 Definition uPred_impl {M} := unseal uPred_impl_aux M.
 Definition uPred_impl_eq :
@@ -235,14 +254,9 @@ Definition uPred_internal_eq_eq:
 Program Definition uPred_sep_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∃ x1 x2, x ≡{n}≡ x1 ⋅ x2 ∧ P n x1 ∧ Q n x2 |}.
 Next Obligation.
-  intros M P Q n x y (x1&x2&Hx&?&?) [z Hy].
+  intros M P Q n1 n2 x y (x1&x2&Hx&?&?) [z Hy] Hn.
   exists x1, (x2 ⋅ z); split_and?; eauto using uPred_mono, cmra_includedN_l.
-  by rewrite Hy Hx assoc.
-Qed.
-Next Obligation.
-  intros M P Q n1 n2 x (x1&x2&Hx&?&?) ?; rewrite {1}(dist_le _ _ _ _ Hx) // =>?.
-  exists x1, x2; ofe_subst; split_and!;
-    eauto using dist_le, uPred_closed, cmra_validN_op_l, cmra_validN_op_r.
+  eapply dist_le, Hn. by rewrite Hy Hx assoc.
 Qed.
 Definition uPred_sep_aux : seal (@uPred_sep_def). by eexists. Qed.
 Definition uPred_sep {M} := unseal uPred_sep_aux M.
@@ -252,11 +266,10 @@ Program Definition uPred_wand_def {M} (P Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ n' x',
        n' ≤ n → ✓{n'} (x ⋅ x') → P n' x' → Q n' (x ⋅ x') |}.
 Next Obligation.
-  intros M P Q n x1 x1' HPQ ? n3 x3 ???; simpl in *.
-  apply uPred_mono with (x1 ⋅ x3);
+  intros M P Q n1 n1' x1 x1' HPQ ? Hn n3 x3 ???; simpl in *.
+  eapply uPred_mono with n3 (x1 ⋅ x3);
     eauto using cmra_validN_includedN, cmra_monoN_r, cmra_includedN_le.
 Qed.
-Next Obligation. naive_solver. Qed.
 Definition uPred_wand_aux : seal (@uPred_wand_def). by eexists. Qed.
 Definition uPred_wand {M} := unseal uPred_wand_aux M.
 Definition uPred_wand_eq :
@@ -267,7 +280,7 @@ Definition uPred_wand_eq :
    because Iris is afine.  The following is easier to work with. *)
 Program Definition uPred_plainly_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := P n ε |}.
-Solve Obligations with naive_solver eauto using uPred_closed, ucmra_unit_validN.
+Solve Obligations with naive_solver eauto using uPred_mono, ucmra_unit_validN.
 Definition uPred_plainly_aux : seal (@uPred_plainly_def). by eexists. Qed.
 Definition uPred_plainly {M} := unseal uPred_plainly_aux M.
 Definition uPred_plainly_eq :
@@ -278,7 +291,6 @@ Program Definition uPred_persistently_def {M} (P : uPred M) : uPred M :=
 Next Obligation.
   intros M; naive_solver eauto using uPred_mono, @cmra_core_monoN.
 Qed.
-Next Obligation. naive_solver eauto using uPred_closed, @cmra_core_validN. Qed.
 Definition uPred_persistently_aux : seal (@uPred_persistently_def). by eexists. Qed.
 Definition uPred_persistently {M} := unseal uPred_persistently_aux M.
 Definition uPred_persistently_eq :
@@ -287,10 +299,7 @@ Definition uPred_persistently_eq :
 Program Definition uPred_later_def {M} (P : uPred M) : uPred M :=
   {| uPred_holds n x := match n return _ with 0 => True | S n' => P n' x end |}.
 Next Obligation.
-  intros M P [|n] x1 x2; eauto using uPred_mono, cmra_includedN_S.
-Qed.
-Next Obligation.
-  intros M P [|n1] [|n2] x; eauto using uPred_closed, cmra_validN_S with lia.
+  intros M P [|n1] [|n2] x1 x2; eauto using uPred_mono, cmra_includedN_S with lia.
 Qed.
 Definition uPred_later_aux : seal (@uPred_later_def). by eexists. Qed.
 Definition uPred_later {M} := unseal uPred_later_aux M.
@@ -300,10 +309,9 @@ Definition uPred_later_eq :
 Program Definition uPred_ownM_def {M : ucmraT} (a : M) : uPred M :=
   {| uPred_holds n x := a ≼{n} x |}.
 Next Obligation.
-  intros M a n x1 x [a' Hx1] [x2 ->].
-  exists (a' ⋅ x2). by rewrite (assoc op) Hx1.
+  intros M a n1 n2 x1 x [a' Hx1] [x2 Hx] Hn. eapply cmra_includedN_le=>//.
+  exists (a' ⋅ x2). by rewrite Hx(assoc op) Hx1.
 Qed.
-Next Obligation. naive_solver eauto using cmra_includedN_le. Qed.
 Definition uPred_ownM_aux : seal (@uPred_ownM_def). by eexists. Qed.
 Definition uPred_ownM {M} := unseal uPred_ownM_aux M.
 Definition uPred_ownM_eq :
@@ -321,13 +329,12 @@ Program Definition uPred_bupd_def {M} (Q : uPred M) : uPred M :=
   {| uPred_holds n x := ∀ k yf,
       k ≤ n → ✓{k} (x ⋅ yf) → ∃ x', ✓{k} (x' ⋅ yf) ∧ Q k x' |}.
 Next Obligation.
-  intros M Q n x1 x2 HQ [x3 Hx] k yf Hk.
+  intros M Q n1 n2 x1 x2 HQ [x3 Hx] Hn k yf Hk.
   rewrite (dist_le _ _ _ _ Hx); last lia. intros Hxy.
   destruct (HQ k (x3 ⋅ yf)) as (x'&?&?); [auto|by rewrite assoc|].
   exists (x' ⋅ x3); split; first by rewrite -assoc.
-  apply uPred_mono with x'; eauto using cmra_includedN_l.
+  eauto using uPred_mono, cmra_includedN_l.
 Qed.
-Next Obligation. naive_solver. Qed.
 Definition uPred_bupd_aux {M} : seal (@uPred_bupd_def M). by eexists. Qed.
 Instance uPred_bupd {M} : BUpd (uPred M) := unseal uPred_bupd_aux.
 Definition uPred_bupd_eq {M} :
@@ -420,7 +427,7 @@ Proof.
     intros P Q R HP HQ. unseal; split=> n x ? [?|?]. by apply HP. by apply HQ.
   - (* (P ∧ Q ⊢ R) → P ⊢ Q → R. *)
     intros P Q R. unseal => HQ; split=> n x ?? n' x' ????. apply HQ;
-      naive_solver eauto using uPred_mono, uPred_closed, cmra_included_includedN.
+      naive_solver eauto using uPred_mono, cmra_included_includedN.
   - (* (P ⊢ Q → R) → P ∧ Q ⊢ R *)
     intros P Q R. unseal=> HP; split=> n x ? [??]. apply HP with n x; auto.
   - (* (∀ a, P ⊢ Ψ a) → P ⊢ ∀ a, Ψ a *)
@@ -463,7 +470,7 @@ Proof.
   - (* (P ∗ Q ⊢ R) → P ⊢ Q -∗ R *)
     intros P Q R. unseal=> HPQR; split=> n x ?? n' x' ???; apply HPQR; auto.
     exists x, x'; split_and?; auto.
-    eapply uPred_closed with n; eauto using cmra_validN_op_l.
+    eapply uPred_mono; eauto using cmra_validN_op_l.
   - (* (P ⊢ Q -∗ R) → P ∗ Q ⊢ R *)
     intros P Q R. unseal=> HPQR. split; intros n x ? (?&?&?&?&?). ofe_subst.
     eapply HPQR; eauto using cmra_validN_op_l.
@@ -480,11 +487,11 @@ Proof.
     split; eapply HPQ; eauto using @ucmra_unit_least.
   - (* (bi_plainly P → bi_persistently Q) ⊢ bi_persistently (bi_plainly P → Q) *)
     unseal; split=> /= n x ? HPQ n' x' ????.
-    eapply uPred_mono with (core x), cmra_included_includedN; auto.
+    eapply uPred_mono with n' (core x)=>//; [|by apply cmra_included_includedN].
     apply (HPQ n' x); eauto using cmra_validN_le.
   - (* (bi_plainly P → bi_plainly Q) ⊢ bi_plainly (bi_plainly P → Q) *)
     unseal; split=> /= n x ? HPQ n' x' ????.
-    eapply uPred_mono with ε, cmra_included_includedN; auto.
+    eapply uPred_mono with n' ε=>//; [|by apply cmra_included_includedN].
     apply (HPQ n' x); eauto using cmra_validN_le.
   - (* P ⊢ bi_plainly emp (ADMISSIBLE) *)
     by unseal.
@@ -529,7 +536,7 @@ Proof.
     unseal=> HP; split=>-[|n] x ??; [done|apply HP; eauto using cmra_validN_S].
   - (* (▷ P → P) ⊢ P *)
     intros P. unseal; split=> n x ? HP; induction n as [|n IH]; [by apply HP|].
-    apply HP, IH, uPred_closed with (S n); eauto using cmra_validN_S.
+    apply HP, IH, uPred_mono with (S n) x; eauto using cmra_validN_S.
   - (* (∀ a, ▷ Φ a) ⊢ ▷ ∀ a, Φ a *)
     intros A Φ. unseal; by split=> -[|n] x.
   - (* (▷ ∃ a, Φ a) ⊢ ▷ False ∨ (∃ a, ▷ Φ a) *)
@@ -554,7 +561,7 @@ Proof.
   - (* ▷ P ⊢ ▷ False ∨ (▷ False → P) *)
     intros P. unseal; split=> -[|n] x ? /= HP; [by left|right].
     intros [|n'] x' ????; [|done].
-    eauto using uPred_closed, uPred_mono, cmra_included_includedN.
+    eauto using uPred_mono, cmra_included_includedN.
 Qed.
 
 Canonical Structure uPredI (M : ucmraT) : bi :=
@@ -682,7 +689,7 @@ Proof. by uPred.unseal. Qed.
 Lemma bupd_intro P : P ==∗ P.
 Proof.
   unseal. split=> n x ? HP k yf ?; exists x; split; first done.
-  apply uPred_closed with n; eauto using cmra_validN_op_l.
+  apply uPred_mono with n x; eauto using cmra_validN_op_l.
 Qed.
 Lemma bupd_mono P Q : (P ⊢ Q) → (|==> P) ==∗ Q.
 Proof.
@@ -698,8 +705,7 @@ Proof.
   destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
   { by rewrite assoc -(dist_le _ _ _ _ Hx); last lia. }
   exists (x' ⋅ x2); split; first by rewrite -assoc.
-  exists x', x2; split_and?; auto.
-  apply uPred_closed with n; eauto 3 using cmra_validN_op_l, cmra_validN_op_r.
+  exists x', x2. eauto using uPred_mono, cmra_validN_op_l, cmra_validN_op_r.
 Qed.
 Lemma bupd_ownM_updateP x (Φ : M → Prop) :
   x ~~>: Φ → uPred_ownM x ==∗ ∃ y, ⌜Φ y⌝ ∧ uPred_ownM y.

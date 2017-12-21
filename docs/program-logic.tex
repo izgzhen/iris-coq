@@ -4,103 +4,7 @@
 
 This section describes how to build a program logic for an arbitrary language (\cf \Sref{sec:language}) on top of the base logic.
 So in the following, we assume that some language $\Lang$ was fixed.
-
-\subsection{Dynamic Composeable Higher-Order Resources}
-\label{sec:composeable-resources}
-
-The base logic described in \Sref{sec:base-logic} works over an arbitrary CMRA $\monoid$ defining the structure of the resources.
-It turns out that we can generalize this further and permit picking CMRAs ``$\iFunc(\Prop)$'' that depend on the structure of assertions themselves.
-Of course, $\Prop$ is just the syntactic type of assertions; for this to make sense we have to look at the semantics.
-
-Furthermore, there is a composability problem with the given logic: if we have one proof performed with CMRA $\monoid_1$, and another proof carried out with a \emph{different} CMRA $\monoid_2$, then the two proofs are actually carried out in two \emph{entirely separate logics} and hence cannot be combined.
-
-Finally, in many cases just having a single ``instance'' of a CMRA available for reasoning is not enough.
-For example, when reasoning about a dynamically allocated data structure, every time a new instance of that data structure is created, we will want a fresh resource governing the state of this particular instance.
-While it would be possible to handle this problem whenever it comes up, it turns out to be useful to provide a general solution.
-
-The purpose of this section is to describe how we solve these issues.
-
-\paragraph{Picking the resources.}
-The key ingredient that we will employ on top of the base logic is to give some more fixed structure to the resources.
-To instantiate the program logic, the user picks a family of locally contractive bifunctors $(\iFunc_i : \OFEs \to \CMRAs)_{i \in \mathcal{I}}$.
-(This is in contrast to the base logic, where the user picks a single, fixed CMRA that has a unit.)
-
-From this, we construct the bifunctor defining the overall resources as follows:
-\begin{align*}
-  \GName \eqdef{}& \nat \\
-  \textdom{ResF}(\ofe^\op, \ofe) \eqdef{}& \prod_{i \in \mathcal I} \GName \fpfn \iFunc_i(\ofe^\op, \ofe)
-\end{align*}
-We will motivate both the use of a product and the finite partial function below.
-$\textdom{ResF}(\ofe^\op, \ofe)$ is a CMRA by lifting the individual CMRAs pointwise, and it has a unit (using the empty finite partial functions).
-Furthermore, since the $\iFunc_i$ are locally contractive, so is $\textdom{ResF}$.
-
-Now we can write down the recursive domain equation:
-\[ \iPreProp \cong \UPred(\textdom{ResF}(\iPreProp, \iPreProp)) \]
-$\iPreProp$ is a COFE defined as the fixed-point of a locally contractive bifunctor.
-This fixed-point exists and is unique\footnote{We have not proven uniqueness in Coq.} by America and Rutten's theorem~\cite{America-Rutten:JCSS89,birkedal:metric-space}.
-We do not need to consider how the object is constructed. 
-We only need the isomorphism, given by
-\begin{align*}
-  \Res &\eqdef \textdom{ResF}(\iPreProp, \iPreProp) \\
-  \iProp &\eqdef \UPred(\Res) \\
-	\wIso &: \iProp \nfn \iPreProp \\
-	\wIso^{-1} &: \iPreProp \nfn \iProp
-\end{align*}
-
-Notice that $\iProp$ is the semantic model of assertions for the base logic described in \Sref{sec:base-logic} with $\Res$:
-\[ \Sem{\Prop} \eqdef \iProp = \UPred(\Res) \]
-Effectively, we just defined a way to instantiate the base logic with $\Res$ as the CMRA of resources, while providing a way for $\Res$ to depend on $\iPreProp$, which is isomorphic to $\Sem\Prop$.
-
-We thus obtain all the rules of \Sref{sec:base-logic}, and furthermore, we can use the maps $\wIso$ and $\wIso^{-1}$ \emph{in the logic} to convert between logical assertions $\Sem\Prop$ and the domain $\iPreProp$ which is used in the construction of $\Res$ -- so from elements of $\iPreProp$, we can construct elements of $\Sem{\textlog M}$, which are the elements that can be owned in our logic.
-
-\paragraph{Proof composability.}
-To make our proofs composeable, we \emph{generalize} our proofs over the family of functors.
-This is possible because we made $\Res$ a \emph{product} of all the CMRAs picked by the user, and because we can actually work with that product ``pointwise''.
-So instead of picking a \emph{concrete} family, proofs will assume to be given an \emph{arbitrary} family of functors, plus a proof that this family \emph{contains the functors they need}.
-Composing two proofs is then merely a matter of conjoining the assumptions they make about the functors.
-Since the logic is entirely parametric in the choice of functors, there is no trouble reasoning without full knowledge of the family of functors.
-
-Only when the top-level proof is completed we will ``close'' the proof by picking a concrete family that contains exactly those functors the proof needs.
-
-\paragraph{Dynamic resources.}
-Finally, the use of finite partial functions lets us have as many instances of any CMRA as we could wish for:
-Because there can only ever be finitely many instances already allocated, it is always possible to create a fresh instance with any desired (valid) starting state.
-This is best demonstrated by giving some proof rules.
-
-So let us first define the notion of ghost ownership that we use in this logic.
-Assuming that the family of functors contains the functor $\Sigma_i$ at index $i$, and furthermore assuming that $\monoid_i = \Sigma_i(\iPreProp, \iPreProp)$, given some $\melt \in \monoid_i$ we define:
-\[ \ownGhost\gname{\melt:\monoid_i} \eqdef \ownM{(\ldots, \emptyset, i:\mapsingleton \gname \melt, \emptyset, \ldots)} \]
-This is ownership of the pair (element of the product over all the functors) that has the empty finite partial function in all components \emph{except for} the component corresponding to index $i$, where we own the element $\melt$ at index $\gname$ in the finite partial function.
-
-We can show the following properties for this form of ownership:
-\begin{mathparpagebreakable}
-  \inferH{res-alloc}{\text{$G$ infinite} \and \melt \in \mval_{M_i}}
-  {  \TRUE \proves \upd \Exists\gname\in G. \ownGhost\gname{\melt : M_i}
-  }
-  \and
-  \inferH{res-update}
-    {\melt \mupd_{M_i} B}
-    {\ownGhost\gname{\melt : M_i} \proves \upd \Exists \meltB\in B. \ownGhost\gname{\meltB : M_i}}
-
-  \inferH{res-empty}
-  {\text{$\munit$ is a unit of $M_i$}}
-  {\TRUE \proves \upd \ownGhost\gname\munit}
-  
-  \axiomH{res-op}
-    {\ownGhost\gname{\melt : M_i} * \ownGhost\gname{\meltB : M_i} \provesIff \ownGhost\gname{\melt\mtimes\meltB : M_i}}
-
-  \axiomH{res-valid}
-    {\ownGhost\gname{\melt : M_i} \Ra \mval_{M_i}(\melt)}
-
-  \inferH{res-timeless}
-    {\text{$\melt$ is a discrete OFE element}}
-    {\timeless{\ownGhost\gname{\melt : M_i}}}
-\end{mathparpagebreakable}
-
-Below, we will always work within (an instance of) the logic as described here.
-Whenever a CMRA is used in a proof, we implicitly assume it to be available in the global family of functors.
-We will typically leave the $M_i$ implicit when asserting ghost ownership, as the type of $\melt$ will be clear from the context.
-
+Furthermore, we work in the logic with higher-order ghost state as described in \Sref{sec:composeable-resources}.
 
 
 \subsection{World Satisfaction, Invariants, Fancy Updates}
@@ -110,7 +14,7 @@ To introduce invariants into our logic, we will define weakest precondition to e
 However, in order to be able to access invariants, we will also have to provide a way to \emph{temporarily disable} (or ``open'') them.
 To this end, we use tokens that manage which invariants are currently enabled.
 
-We assume to have the following four CMRAs available:
+We assume to have the following four cameras available:
 \begin{align*}
   \InvName \eqdef{}& \nat \\
   \textmon{Inv} \eqdef{}& \authm(\InvName \fpfn \agm(\latert \iPreProp)) \\
@@ -119,10 +23,10 @@ We assume to have the following four CMRAs available:
 \end{align*}
 The last two are the tokens used for managing invariants, $\textmon{Inv}$ is the monoid used to manage the invariants themselves.
 
-We assume that at the beginning of the verification, instances named $\gname_{\textmon{State}}$, $\gname_{\textmon{Inv}}$, $\gname_{\textmon{En}}$ and $\gname_{\textmon{Dis}}$ of these CMRAs have been created, such that these names are globally known.
+We assume that at the beginning of the verification, instances named $\gname_{\textmon{State}}$, $\gname_{\textmon{Inv}}$, $\gname_{\textmon{En}}$ and $\gname_{\textmon{Dis}}$ of these cameras have been created, such that these names are globally known.
 
 \paragraph{World Satisfaction.}
-We can now define the assertion $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
+We can now define the proposition $W$ (\emph{world satisfaction}) which ensures that the enabled invariants are actually maintained:
 \begin{align*}
   W \eqdef{}& \Exists I : \InvName \fpfn \Prop.
   \begin{array}[t]{@{} l}
@@ -135,7 +39,7 @@ We can now define the assertion $W$ (\emph{world satisfaction}) which ensures th
 \end{align*}
 
 \paragraph{Invariants.}
-The following assertion states that an invariant with name $\iname$ exists and maintains assertion $\prop$:
+The following proposition states that an invariant with name $\iname$ exists and maintains proposition $\prop$:
 \[ \knowInv\iname\prop \eqdef \ownGhost{\gname_{\textmon{Inv}}}
   {\authfrag \mapsingleton \iname {\aginj(\latertinj(\wIso(\prop)))}} \]
 
@@ -248,55 +152,60 @@ Still, just to give an idea of what view shifts ``are'', here are some proof rul
 
 \subsection{Weakest Precondition}
 
-Finally, we can define the core piece of the program logic, the assertion that reasons about program behavior: Weakest precondition, from which Hoare triples will be derived.
+Finally, we can define the core piece of the program logic, the proposition that reasons about program behavior: Weakest precondition, from which Hoare triples will be derived.
 
 \paragraph{Defining weakest precondition.}
 We assume that everything making up the definition of the language, \ie values, expressions, states, the conversion functions, reduction relation and all their properties, are suitably reflected into the logic (\ie they are part of the signature $\Sig$).
-We further assume (as a parameter) a predicate $I : \State \to \iProp$ that interprets the physical state as an Iris assertion.
+We further assume (as a parameter) a predicate $\stateinterp : \State \to \iProp$ that interprets the physical state as an Iris proposition.
 This can be instantiated, for example, with ownership of an authoritative RA to tie the physical state to fragments that are used for user-level proofs.
+Finally, weakest precondition takes a parameter $\stuckness \in \set{\NotStuck, \MaybeStuck}$ indicating whether program execution is allowed to get stuck.
 
 \begin{align*}
-  \textdom{wp} \eqdef{}& \MU \textdom{wp}. \Lam \mask, \expr, \pred. \\
+  \textdom{wp}(\stateinterp, \stuckness) \eqdef{}& \MU \textdom{wp\any rec}. \Lam \mask, \expr, \pred. \\
         & (\Exists\val. \toval(\expr) = \val \land \pvs[\mask] \pred(\val)) \lor {}\\
-        & \Bigl(\toval(\expr) = \bot \land \All \state. I(\state) \vsW[\mask][\emptyset] {}\\
-        &\qquad \red(\expr, \state) * \later\All \expr', \state', \vec\expr. (\expr, \state \step \expr', \state', \vec\expr) \vsW[\emptyset][\mask] {}\\
-        &\qquad\qquad I(\state') * \textdom{wp}(\mask, \expr', \pred) * \Sep_{\expr'' \in \vec\expr} \textdom{wp}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
+        & \Bigl(\toval(\expr) = \bot \land \All \state. \stateinterp(\state) \vsW[\mask][\emptyset] {}\\
+        &\qquad (s = \NotStuck \Ra \red(\expr, \state)) * \later\All \expr', \state', \vec\expr. (\expr, \state \step \expr', \state', \vec\expr) \vsW[\emptyset][\mask] {}\\
+        &\qquad\qquad \stateinterp(\state') * \textdom{wp\any rec}(\mask, \expr', \pred) * \Sep_{\expr'' \in \vec\expr} \textdom{wp\any rec}(\top, \expr'', \Lam \any. \TRUE)\Bigr) \\
 %  (* value case *)
-  \wpre\expr[\mask]{\Ret\val. \prop} \eqdef{}& \textdom{wp}(\mask, \expr, \Lam\val.\prop)
+  \wpre[\stateinterp]\expr[\stuckness;\mask]{\Ret\val. \prop} \eqdef{}& \textdom{wp}(\stateinterp,\stuckness)(\mask, \expr, \Lam\val.\prop)
 \end{align*}
-If we leave away the mask, we assume it to default to $\top$.
+The $\stateinterp$ will always be set by the context; typically, when instantiating Iris with a language, we also pick the corresponding state interpretation $\stateinterp$.
+All proof rules leave $\stateinterp$ unchanged.
+If we leave away the mask $\mask$, we assume it to default to $\top$.
+If we leave away the stuckness $\stuckness$, it defaults to $\NotStuck$.
 
 \paragraph{Laws of weakest precondition.}
 The following rules can all be derived:
 \begin{mathpar}
 \infer[wp-value]
-{}{\prop[\val/\var] \proves \wpre{\val}[\mask]{\Ret\var.\prop}}
+{}{\prop[\val/\var] \proves \wpre{\val}[\stuckness;\mask]{\Ret\var.\prop}}
 
 \infer[wp-mono]
-{\mask_1 \subseteq \mask_2 \and \vctx,\var:\textlog{val}\mid\prop \proves \propB}
-{\vctx\mid\wpre\expr[\mask_1]{\Ret\var.\prop} \proves \wpre\expr[\mask_2]{\Ret\var.\propB}}
+{\mask_1 \subseteq \mask_2 \and \vctx,\var:\textlog{val}\mid\prop \proves \propB \and (\stuckness_2 = \MaybeStuck \lor \stuckness_1 = \stuckness_2)}
+{\vctx\mid\wpre\expr[\stuckness_1;\mask_1]{\Ret\var.\prop} \proves \wpre\expr[\stuckness_2;\mask_2]{\Ret\var.\propB}}
 
 \infer[fup-wp]
-{}{\pvs[\mask] \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
+{}{\pvs[\mask] \wpre\expr[\stuckness;\mask]{\Ret\var.\prop} \proves \wpre\expr[\stuckness;\mask]{\Ret\var.\prop}}
 
 \infer[wp-fup]
-{}{\wpre\expr[\mask]{\Ret\var.\pvs[\mask] \prop} \proves \wpre\expr[\mask]{\Ret\var.\prop}}
+{}{\wpre\expr[\stuckness;\mask]{\Ret\var.\pvs[\stuckness;\mask] \prop} \proves \wpre\expr[\stuckness;\mask]{\Ret\var.\prop}}
 
 \infer[wp-atomic]
-{\physatomic{\expr}}
-{\pvs[\mask_1][\mask_2] \wpre\expr[\mask_2]{\Ret\var. \pvs[\mask_2][\mask_1]\prop}
- \proves \wpre\expr[\mask_1]{\Ret\var.\prop}}
+{\stuckness = \NotStuck \Ra \atomic(\expr) \and
+ \stuckness = \MaybeStuck \Ra \stronglyAtomic(\expr)}
+{\pvs[\mask_1][\mask_2] \wpre\expr[\stuckness;\mask_2]{\Ret\var. \pvs[\mask_2][\mask_1]\prop}
+ \proves \wpre\expr[\stuckness;\mask_1]{\Ret\var.\prop}}
 
 \infer[wp-frame]
-{}{\propB * \wpre\expr[\mask]{\Ret\var.\prop} \proves \wpre\expr[\mask]{\Ret\var.\propB*\prop}}
+{}{\propB * \wpre\expr[\stuckness;\mask]{\Ret\var.\prop} \proves \wpre\expr[\stuckness;\mask]{\Ret\var.\propB*\prop}}
 
 \infer[wp-frame-step]
 {\toval(\expr) = \bot \and \mask_2 \subseteq \mask_1}
-{\wpre\expr[\mask_2]{\Ret\var.\prop} * \pvs[\mask_1][\mask_2]\later\pvs[\mask_2][\mask_1]\propB \proves \wpre\expr[\mask_1]{\Ret\var.\propB*\prop}}
+{\wpre\expr[\stuckness;\mask_2]{\Ret\var.\prop} * \pvs[\mask_1][\mask_2]\later\pvs[\mask_2][\mask_1]\propB \proves \wpre\expr[\stuckness;\mask_1]{\Ret\var.\propB*\prop}}
 
 \infer[wp-bind]
 {\text{$\lctx$ is a context}}
-{\wpre\expr[\mask]{\Ret\var. \wpre{\lctx(\ofval(\var))}[\mask]{\Ret\varB.\prop}} \proves \wpre{\lctx(\expr)}[\mask]{\Ret\varB.\prop}}
+{\wpre\expr[\stuckness;\mask]{\Ret\var. \wpre{\lctx(\ofval(\var))}[\stuckness;\mask]{\Ret\varB.\prop}} \proves \wpre{\lctx(\expr)}[\stuckness;\mask]{\Ret\varB.\prop}}
 \end{mathpar}
 
 We will also want a rule that connect weakest preconditions to the operational semantics of the language.
@@ -304,7 +213,7 @@ We will also want a rule that connect weakest preconditions to the operational s
   \infer[wp-lift-step]
   {\toval(\expr_1) = \bot}
   { {\begin{inbox} % for some crazy reason, LaTeX is actually sensitive to the space between the "{ {" here and the "} }" below...
-        ~~\All \state_1. I(\state_1) \vsW[\mask][\emptyset] \red(\expr_1,\state_1) * {}\\\qquad~~ \later\All \expr_2, \state_2, \vec\expr.  (\expr_1, \state_1 \step \expr_2, \state_2, \vec\expr)  \vsW[\emptyset][\mask] \Bigl(I(\state_2) * \wpre{\expr_2}[\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre{\expr_\f}[\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre{\expr_1}[\mask]{\Ret\var.\prop}
+        ~~\All \state_1. \stateinterp(\state_1) \vsW[\mask][\emptyset] (\stuckness = \NotStuck \Ra \red(\expr_1,\state_1)) * {}\\\qquad~~ \later\All \expr_2, \state_2, \vec\expr.  (\expr_1, \state_1 \step \expr_2, \state_2, \vec\expr)  \vsW[\emptyset][\mask] \Bigl(\stateinterp(\state_2) * \wpre[\stateinterp]{\expr_2}[\stuckness;\mask]{\Ret\var.\prop} * \Sep_{\expr_\f \in \vec\expr} \wpre[\stateinterp]{\expr_\f}[\stuckness;\top]{\Ret\any.\TRUE}\Bigr)  {}\\\proves \wpre[\stateinterp]{\expr_1}[\stuckness;\mask]{\Ret\var.\prop}
       \end{inbox}} }
 \end{mathpar}
 
@@ -341,11 +250,11 @@ There are two properties we are looking for: First of all, the postcondition sho
 Second, a proof of a weakest precondition with any postcondition should imply that the program is \emph{safe}, \ie that it does not get stuck.
 
 \begin{defn}[Adequacy]
-  A program $\expr$ in some initial state $\state$ is \emph{adequate} for a set $V \subseteq \Val$ of legal return values ($\expr, \state \vDash V$) if for all $\tpool', \state'$ such that $([\expr], \state) \tpstep^\ast (\tpool', \state')$ we have
+  A program $\expr$ in some initial state $\state$ is \emph{adequate} for stuckness  $\stuckness$ and a set $V \subseteq \Val$ of legal return values ($\expr, \state \vDash_\stuckness V$) if for all $\tpool', \state'$ such that $([\expr], \state) \tpstep^\ast (\tpool', \state')$ we have
 \begin{enumerate}
-\item Safety: For any $\expr' \in \tpool'$ we have that either $\expr'$ is a
+\item Safety: If $\stuckness = \NotStuck$, then for any $\expr' \in \tpool'$ we have that either $\expr'$ is a
   value, or \(\red(\expr'_i,\state')\):
-  \[ \All\expr'\in\tpool'. \toval(\expr') \neq \bot \lor \red(\expr', \state') \]
+  \[ \stuckness = \NotStuck \Ra \All\expr'\in\tpool'. \toval(\expr') \neq \bot \lor \red(\expr', \state') \]
   Notice that this is stronger than saying that the thread pool can reduce; we actually assert that \emph{every} non-finished thread can take a step.
 \item Legal return value: If $\tpool'_1$ (the main thread) is a value $\val'$, then $\val' \in V$:
   \[ \All \val',\tpool''. \tpool' = [\val'] \dplus \tpool'' \Ra \val' \in V \]
@@ -363,17 +272,18 @@ The signature can of course state arbitrary additional properties of $\pred$, as
 The adequacy statement now reads as follows:
 \begin{align*}
  &\All \mask, \expr, \val, \state.
- \\&( \TRUE \proves {\upd}_\mask \Exists I. I(\state) * \wpre{\expr}[\mask]{x.\; \pred(x)}) \Ra
- \\&\expr, \state \vDash V
+ \\&( \TRUE \proves {\upd}_\mask \Exists \stateinterp. \stateinterp(\state) * \wpre[\stateinterp]{\expr}[\stuckness;\mask]{x.\; \pred(x)}) \Ra
+ \\&\expr, \state \vDash_\stuckness V
 \end{align*}
 Notice that the state invariant $S$ used by the weakest precondition is chosen \emph{after} doing a fancy update, which allows it to depend on the names of ghost variables that are picked in that initial fancy update.
 
 \paragraph{Hoare triples.}
-It turns out that weakest precondition is actually quite convenient to work with, in particular when perfoming these proofs in Coq.
+It turns out that weakest precondition is actually quite convenient to work with, in particular when performing these proofs in Coq.
 Still, for a more traditional presentation, we can easily derive the notion of a Hoare triple:
 \[
 \hoare{\prop}{\expr}{\Ret\val.\propB}[\mask] \eqdef \always{(\prop \wand \wpre{\expr}[\mask]{\Ret\val.\propB})}
 \]
+We assume the state interpretation $\stateinterp$ to be fixed by the context.
 
 We only give some of the proof rules for Hoare triples here, since we usually do all our reasoning directly with weakest preconditions and use Hoare triples only to write specifications.
 \begin{mathparpagebreakable}
@@ -408,7 +318,7 @@ We only give some of the proof rules for Hoare triples here, since we usually do
   {\prop \vs[\mask \uplus \mask'][\mask] \prop' \\
     \hoare{\prop'}{\expr}{\Ret\val.\propB'}[\mask] \\   
    \All\val. \propB' \vs[\mask][\mask \uplus \mask'] \propB \\
-   \physatomic{\expr}
+   \atomic(\expr)
   }
   {\hoare{\prop}{\expr}{\Ret\val.\propB}[\mask \uplus \mask']}
 \and
@@ -444,7 +354,7 @@ We only give some of the proof rules for Hoare triples here, since we usually do
 \subsection{Invariant Namespaces}
 \label{sec:namespaces}
 
-In \Sref{sec:invariants}, we defined an assertion $\knowInv\iname\prop$ expressing knowledge (\ie the assertion is persistent) that $\prop$ is maintained as invariant with name $\iname$.
+In \Sref{sec:invariants}, we defined a proposition $\knowInv\iname\prop$ expressing knowledge (\ie the proposition is persistent) that $\prop$ is maintained as invariant with name $\iname$.
 The concrete name $\iname$ is picked when the invariant is allocated, so it cannot possibly be statically known -- it will always be a variable that's threaded through everything.
 However, we hardly care about the actual, concrete name.
 All we need to know is that this name is \emph{different} from the names of other invariants that we want to open at the same time.
@@ -470,7 +380,7 @@ In order to connect this up to the definitions of \Sref{sec:invariants}, we need
 Any injective mapping $\textlog{namesp\_inj}$ will do; and such a mapping has to exist because $\List(\nat)$ is countable and $\InvName$ is infinite.
 Whenever needed, we (usually implicitly) coerce $\namesp$ to its encoded suffix-closure, \ie to the set of encoded structured invariant names contained in the namespace: \[\namecl\namesp \eqdef \setComp{\iname}{\Exists \namesp'. \iname = \textlog{namesp\_inj}(\namesp' \dplus \namesp)}\]
 
-We will overload the notation for invariant assertions for using namespaces instead of names:
+We will overload the notation for invariant propositions for using namespaces instead of names:
 \[ \knowInv\namesp\prop \eqdef \Exists \iname \in \namecl\namesp. \knowInv\iname{\prop} \]
 We can now derive the following rules (this involves unfolding the definition of fancy updates):
 \begin{mathpar}
@@ -491,11 +401,11 @@ We can now derive the following rules (this involves unfolding the definition of
 
 The two rules \ruleref{inv-open} and \ruleref{inv-open-timeless} above may look a little surprising, in the sense that it is not clear on first sight how they would be applied.
 The rules are the first \emph{accessors} that show up in this document.
-Accessors are assertions of the form
+Accessors are propositions of the form
 \[ \prop \vs[\mask_1][\mask_2] \Exists\var. \propB * (\All\varB. \propB' \vsW[\mask_2][\mask_1] \propC) \]
 
-One way to think about such assertions is as follows:
-Given some accessor, if during our verification we have the assertion $\prop$ and the mask $\mask_1$ available, we can use the accessor to \emph{access} $\propB$ and obtain the witness $\var$.
+One way to think about such propositions is as follows:
+Given some accessor, if during our verification we have the proposition $\prop$ and the mask $\mask_1$ available, we can use the accessor to \emph{access} $\propB$ and obtain the witness $\var$.
 We call this \emph{opening} the accessor, and it changes the mask to $\mask_2$.
 Additionally, opening the accessor provides us with $\All\varB. \propB' \vsW[\mask_2][\mask_1] \propC$, a \emph{linear view shift} (\ie a view shift that can only be used once).
 This linear view shift tells us that in order to \emph{close} the accessor again and go back to mask $\mask_1$, we have to pick some $\varB$ and establish the corresponding $\propB'$.
@@ -511,7 +421,7 @@ Using \ruleref{vs-trans} and \ruleref{Ht-atomic} (or the corresponding proof rul
   \inferH{Acc-Ht}
   {\prop \vs[\mask_1][\mask_2] \Exists\var. \propB * (\All\varB. \propB' \vsW[\mask_2][\mask_1] \propC) \and
    \All\var. \hoare{\propB * \prop_F}\expr{\Exists\varB. \propB' * \prop_F}[\mask_2] \and
-   \physatomic\expr}
+   \atomic(\expr)}
   {\hoare{\prop * \prop_F}\expr{\propC * \prop_F}[\mask_1]}
 \end{mathpar}
 
@@ -523,7 +433,7 @@ Furthermore, as we construct more sophisticated and more interesting things that
 
 For the special case that $\prop = \propC$ and $\propB = \propB'$, we use the following notation that avoids repetition:
 \[ \Acc[\mask_1][\mask_2]\prop{\Ret x. \propB} \eqdef \prop \vs[\mask_1][\mask_2] \Exists\var. \propB * (\propB \vsW[\mask_2][\mask_1] \prop)  \]
-This accessor is ``idempotent'' in the sense that it doesn't actually change the state.  After applying it, we get our $\prop$ back so we end up where we started.
+This accessor is ``idempotent'' in the sense that it does not actually change the state.  After applying it, we get our $\prop$ back so we end up where we started.
 
 %%% Local Variables:
 %%% mode: latex

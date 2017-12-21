@@ -30,11 +30,11 @@ Import uPred.
 Lemma laterN_big n a x φ: ✓{n} x →  a ≤ n → (▷^a ⌜φ⌝ : uPred M)%I n x → φ.
 Proof.
   induction 2 as [| ?? IHle].
-  - induction a; repeat (rewrite //= || uPred.unseal). 
+  - induction a; repeat (rewrite //= || uPred.unseal).
     intros Hlater. apply IHa; auto using cmra_validN_S.
-    move:Hlater; repeat (rewrite //= || uPred.unseal). 
+    move:Hlater; repeat (rewrite //= || uPred.unseal).
   - intros. apply IHle; auto using cmra_validN_S.
-    eapply uPred_closed; eauto using cmra_validN_S.
+    eapply uPred_mono; eauto using cmra_validN_S.
 Qed.
 
 Lemma laterN_small n a x φ: ✓{n} x →  n < a → (▷^a ⌜φ⌝ : uPred M)%I n x.
@@ -46,15 +46,15 @@ Proof.
   - induction n as [| n IHn]; [| move: IHle];
       repeat (rewrite //= || uPred.unseal).
     red; rewrite //=. intros.
-    eapply (uPred_closed _ _ (S n)); eauto using cmra_validN_S.
+    eapply (uPred_mono _ _ (S n)); eauto using cmra_validN_S.
 Qed.
 
 (* It is easy to show that most of the basic properties of bupd that
-   are used throughout Iris hold for nnupd. 
+   are used throughout Iris hold for nnupd.
 
    In fact, the first three properties that follow hold for any
    modality of the form (- -∗ Q) -∗ Q for arbitrary Q. The situation
-   here is slightly different, because nnupd is of the form 
+   here is slightly different, because nnupd is of the form
    ∀ n, (- -∗ (Q n)) -∗ (Q n), but the proofs carry over straightforwardly.
 
  *)
@@ -77,8 +77,8 @@ Proof.
 Qed.
 Lemma nnupd_ownM_updateP x (Φ : M → Prop) :
   x ~~>: Φ → uPred_ownM x =n=> ∃ y, ⌜Φ y⌝ ∧ uPred_ownM y.
-Proof. 
-  intros Hbupd. split. rewrite /uPred_nnupd. repeat uPred.unseal. 
+Proof.
+  intros Hbupd. split. rewrite /uPred_nnupd. repeat uPred.unseal.
   intros n y ? Hown a.
   red; rewrite //= => n' yf ??.
   inversion Hown as (x'&Hequiv).
@@ -87,18 +87,18 @@ Proof.
   case (decide (a ≤ n')).
   - intros Hle Hwand.
     exfalso. eapply laterN_big; last (uPred.unseal; eapply (Hwand n' (y' ⋅ x'))); eauto.
-    * rewrite comm -assoc. done. 
-    * rewrite comm -assoc. done. 
-    * eexists. split; eapply uPred_mono; red; rewrite //=; eauto.
-  - intros; assert (n' < a). omega.
+    * rewrite comm -assoc. done.
+    * rewrite comm -assoc. done.
+    * exists y'. split=>//. by exists x'.
+ - intros; assert (n' < a). omega.
     move: laterN_small. uPred.unseal.
     naive_solver.
 Qed.
 
 (* However, the transitivity property seems to be much harder to
-   prove. This is surprising, because transitivity does hold for 
+   prove. This is surprising, because transitivity does hold for
    modalities of the form (- -∗ Q) -∗ Q. What goes wrong when we quantify
-   now over n? 
+   now over n?
  *)
 
 Remark nnupd_trans P: (|=n=> |=n=> P) ⊢ (|=n=> P).
@@ -111,7 +111,7 @@ Proof.
   (* Oops -- the exponents of the later modality don't match up! *)
 Abort.
 
-(* Instead, we will need to prove this in the model. We start by showing that 
+(* Instead, we will need to prove this in the model. We start by showing that
    nnupd is the limit of a the following sequence:
 
    (- -∗ False) - ∗ False,
@@ -121,12 +121,12 @@ Abort.
 
    Then, it is easy enough to show that each of the uPreds in this sequence
    is transitive. It turns out that this implies that nnupd is transitive. *)
-   
+
 
 (* The definition of the sequence above: *)
 Fixpoint uPred_nnupd_k {M} k (P: uPred M) : uPred M :=
   ((P -∗ ▷^k False) -∗ ▷^k False) ∧
-  match k with 
+  match k with
     O => True
   | S k' => uPred_nnupd_k k' P
   end.
@@ -138,11 +138,11 @@ Notation "|=n=>_ k Q" := (uPred_nnupd_k k Q)
 (* One direction of the limiting process is easy -- nnupd implies nnupd_k for each k *)
 Lemma nnupd_trunc1 k P: (|=n=> P) ⊢ |=n=>_k P.
 Proof.
-  induction k. 
-  - rewrite /uPred_nnupd_k /uPred_nnupd. 
+  induction k.
+  - rewrite /uPred_nnupd_k /uPred_nnupd.
     rewrite (forall_elim 0) //= right_id //.
   - simpl. apply and_intro; auto.
-    rewrite /uPred_nnupd. 
+    rewrite /uPred_nnupd.
     rewrite (forall_elim (S k)) //=.
 Qed.
 
@@ -191,11 +191,10 @@ Lemma nnupd_nnupd_k_dist k P: (|=n=> P)%I ≡{k}≡ (|=n=>_k P)%I.
              assert (n = S k ∨ n < S k) as [->|] by omega.
              **** eapply laterN_big; eauto; unseal.
                   eapply HnnP; eauto. move: HPF; by unseal.
-             **** move:nnupd_k_elim. unseal. intros Hnnupdk. 
+             **** move:nnupd_k_elim. unseal. intros Hnnupdk.
                   eapply laterN_big; eauto. unseal.
                   eapply (Hnnupdk n k); first omega; eauto.
-                  exists x, x'. split_and!; eauto. eapply uPred_closed; eauto.
-                  eapply cmra_validN_op_l; eauto.
+                  exists x, x'. split_and!; eauto. eapply uPred_mono; eauto.
       ** intros HP. eapply IHk; auto.
          move:HP. unseal. intros (?&?); naive_solver.
 Qed.
@@ -205,13 +204,13 @@ Lemma nnupd_k_intro k P: P ⊢ (|=n=>_k P).
 Proof.
   induction k; rewrite //= ?right_id.
   - apply wand_intro_l. apply wand_elim_l.
-  - apply and_intro; auto. 
+  - apply and_intro; auto.
     apply wand_intro_l. apply wand_elim_l.
 Qed.
 
 Lemma nnupd_k_mono k P Q: (P ⊢ Q) → (|=n=>_k P) ⊢ (|=n=>_k Q).
 Proof.
-  induction k; rewrite //= ?right_id=>HPQ. 
+  induction k; rewrite //= ?right_id=>HPQ.
   - do 2 (apply wand_mono; auto).
   - apply and_mono; auto; do 2 (apply wand_mono; auto).
 Qed.
@@ -229,13 +228,13 @@ Lemma nnupd_k_trans k P: (|=n=>_k |=n=>_k P) ⊢ (|=n=>_k P).
 Proof.
   revert P.
   induction k; intros P.
-  - rewrite //= ?right_id. apply wand_intro_l. 
+  - rewrite //= ?right_id. apply wand_intro_l.
     rewrite {1}(nnupd_k_intro 0 (P -∗ False)%I) //= ?right_id. apply wand_elim_r. 
   - rewrite {2}(nnupd_k_unfold k P).
     apply and_intro.
     * rewrite (nnupd_k_unfold k P). rewrite and_elim_l.
       rewrite nnupd_k_unfold. rewrite and_elim_l.
-      apply wand_intro_l. 
+      apply wand_intro_l.
       rewrite {1}(nnupd_k_intro (S k) (P -∗ ▷^(S k) (False)%I)).
       rewrite nnupd_k_unfold and_elim_l. apply wand_elim_r.
     * do 2 rewrite nnupd_k_weaken //.
@@ -264,8 +263,8 @@ Proof.
   case (decide (a ≤ n')).
   - intros Hle Hwand.
     exfalso. eapply laterN_big; last (uPred.unseal; eapply (Hwand n' x')); eauto.
-    * rewrite comm. done. 
-    * rewrite comm. done. 
+    * rewrite comm. done.
+    * rewrite comm. done.
   - intros; assert (n' < a). omega.
     move: laterN_small. uPred.unseal.
     naive_solver.
@@ -301,23 +300,23 @@ End classical.
 Lemma nnupd_dne φ: (|=n=> ⌜¬¬ φ → φ⌝: uPred M)%I.
 Proof.
   rewrite /uPred_nnupd. apply forall_intro=>n.
-  apply wand_intro_l. rewrite ?right_id. 
+  apply wand_intro_l. rewrite ?right_id.
   assert (∀ φ, ¬¬¬¬φ → ¬¬φ) by naive_solver.
   assert (Hdne: ¬¬ (¬¬φ → φ)) by naive_solver.
   split. unseal. intros n' ?? Hupd.
   case (decide (n' < n)).
   - intros. move: laterN_small. unseal. naive_solver.
-  - intros. assert (n ≤ n'). omega. 
+  - intros. assert (n ≤ n'). omega.
     exfalso. specialize (Hupd n' ε).
     eapply Hdne. intros Hfal.
-    eapply laterN_big; eauto. 
+    eapply laterN_big; eauto.
     unseal. rewrite right_id in Hupd *; naive_solver.
 Qed.
 
 (* Nevertheless, we can prove a weaker form of adequacy (which is equvialent to adequacy
    under classical axioms) directly without passing through the proofs for bupd: *)
 Lemma adequacy_helper1 P n k x:
-  ✓{S n + k} x → ¬¬ (Nat.iter (S n) (λ P, |=n=> ▷ P)%I P (S n + k) x) 
+  ✓{S n + k} x → ¬¬ (Nat.iter (S n) (λ P, |=n=> ▷ P)%I P (S n + k) x)
             → ¬¬ (∃ x', ✓{n + k} (x') ∧ Nat.iter n (λ P, |=n=> ▷ P)%I P (n + k) (x')).
 Proof.
   revert k P x. induction n.
@@ -331,7 +330,7 @@ Proof.
     * intros. move:(laterN_small n' (S k) x' False). rewrite //=. unseal. intros Hsmall. 
       eapply Hsmall; eauto.
     * subst. intros. exfalso. eapply Hf2. exists x'. split; eauto using cmra_validN_S.
-  - intros k P x Hx. rewrite ?Nat_iter_S_r. 
+  - intros k P x Hx. rewrite ?Nat_iter_S_r.
     replace (S (S n) + k) with (S n + (S k)) by omega.
     replace (S n + k) with (n + (S k)) by omega.
     intros. eapply IHn. replace (S n + S k) with (S (S n) + k) by omega. eauto.
@@ -339,7 +338,7 @@ Proof.
 Qed.
 
 Lemma adequacy_helper2 P n k x:
-  ✓{S n + k} x → ¬¬ (Nat.iter (S n) (λ P, |=n=> ▷ P)%I P (S n + k) x) 
+  ✓{S n + k} x → ¬¬ (Nat.iter (S n) (λ P, |=n=> ▷ P)%I P (S n + k) x)
             → ¬¬ (∃ x', ✓{k} (x') ∧ Nat.iter 0 (λ P, |=n=> ▷ P)%I P k (x')).
 Proof.
   revert x. induction n.

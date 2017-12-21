@@ -20,7 +20,7 @@ Section LiftingTests.
     end.
   Qed.
 
-  Definition heap_e  : expr :=
+  Definition heap_e : expr :=
     let: "x" := ref #1 in "x" <- !"x" + #1 ;; !"x".
 
   Lemma heap_e_spec E : WP heap_e @ E {{ v, ⌜v = #2⌝ }}%I.
@@ -62,6 +62,15 @@ Section LiftingTests.
     wp_alloc l''. wp_let. by repeat wp_load.
   Qed.
 
+  Definition heap_e5 : expr :=
+    let: "x" := ref (ref #1) in FAA (!"x") (#10 + #1) + ! !"x".
+
+  Lemma heap_e5_spec E : WP heap_e5 @ E {{ v, ⌜v = #13⌝ }}%I.
+  Proof.
+    rewrite /heap_e5. wp_alloc l. wp_alloc l'. wp_let.
+    wp_load. wp_op. wp_faa. do 2 wp_load. wp_op. done.
+  Qed.
+
   Definition FindPred : val :=
     rec: "pred" "x" "y" :=
       let: "yp" := "y" + #1 in
@@ -96,5 +105,5 @@ Section LiftingTests.
   Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
 End LiftingTests.
 
-Lemma heap_e_adequate σ : adequate heap_e σ (= #2).
+Lemma heap_e_adequate σ : adequate NotStuck heap_e σ (= #2).
 Proof. eapply (heap_adequacy heapΣ)=> ?. by apply heap_e_spec. Qed.

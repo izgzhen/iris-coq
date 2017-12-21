@@ -448,7 +448,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
     lazymatch pats with
     | [] => idtac
     | SForall :: ?pats =>
-       idtac "the * specialization pattern is deprecated because it is applied implicitly";
+       idtac "[IPM] The * specialization pattern is deprecated because it is applied implicitly.";
        go H1 pats
     | SIdent ?H2 :: ?pats =>
        eapply tac_specialize with _ _ H2 _ H1 _ _ _ _; (* (j:=H1) (i:=H2) *)

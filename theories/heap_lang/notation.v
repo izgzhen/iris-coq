@@ -58,16 +58,21 @@ Notation "()" := LitUnit : val_scope.
 Notation "! e" := (Load e%E) (at level 9, right associativity) : expr_scope.
 Notation "'ref' e" := (Alloc e%E)
   (at level 30, right associativity) : expr_scope.
-Notation "- e" := (UnOp MinusUnOp e%E)
-  (at level 35, right associativity) : expr_scope.
-Notation "e1 + e2" := (BinOp PlusOp e1%E e2%E)
-  (at level 50, left associativity) : expr_scope.
-Notation "e1 - e2" := (BinOp MinusOp e1%E e2%E)
-  (at level 50, left associativity) : expr_scope.
-Notation "e1 ≤ e2" := (BinOp LeOp e1%E e2%E) (at level 70) : expr_scope.
-Notation "e1 < e2" := (BinOp LtOp e1%E e2%E) (at level 70) : expr_scope.
-Notation "e1 = e2" := (BinOp EqOp e1%E e2%E) (at level 70) : expr_scope.
-Notation "e1 ≠ e2" := (UnOp NegOp (BinOp EqOp e1%E e2%E)) (at level 70) : expr_scope.
+Notation "- e" := (UnOp MinusUnOp e%E) : expr_scope.
+
+Notation "e1 + e2" := (BinOp PlusOp e1%E e2%E) : expr_scope.
+Notation "e1 - e2" := (BinOp MinusOp e1%E e2%E) : expr_scope.
+Notation "e1 * e2" := (BinOp MultOp e1%E e2%E) : expr_scope.
+Notation "e1 `quot` e2" := (BinOp QuotOp e1%E e2%E) : expr_scope.
+Notation "e1 `rem` e2" := (BinOp RemOp e1%E e2%E) : expr_scope.
+Notation "e1 ≪ e2" := (BinOp ShiftLOp e1%E e2%E) : expr_scope.
+Notation "e1 ≫ e2" := (BinOp ShiftROp e1%E e2%E) : expr_scope.
+
+Notation "e1 ≤ e2" := (BinOp LeOp e1%E e2%E) : expr_scope.
+Notation "e1 < e2" := (BinOp LtOp e1%E e2%E) : expr_scope.
+Notation "e1 = e2" := (BinOp EqOp e1%E e2%E) : expr_scope.
+Notation "e1 ≠ e2" := (UnOp NegOp (BinOp EqOp e1%E e2%E)) : expr_scope.
+
 Notation "~ e" := (UnOp NegOp e%E) (at level 75, right associativity) : expr_scope.
 (* The unicode ← is already part of the notation "_ ← _; _" for bind. *)
 Notation "e1 <- e2" := (Store e1%E e2%E) (at level 80) : expr_scope.
