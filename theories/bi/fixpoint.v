@@ -67,7 +67,7 @@ Section least.
 End least.
 
 Section greatest.
-  Context {PROP : bi} {A : ofeT} (F : (A → PROP) → (A → PROP)) `{!BIMonoPred F}.
+  Context {PROP : bi} {A : ofeT} (F : (A → PROP) → (A → PROP)) `{!BiMonoPred F}.
 
   Global Instance greatest_fixpoint_ne : NonExpansive (bi_greatest_fixpoint F).
   Proof. solve_proper. Qed.
