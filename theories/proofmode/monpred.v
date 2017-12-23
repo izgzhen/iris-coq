@@ -58,10 +58,6 @@ Proof. rewrite /MakeMonPredCar=><-. by unseal. Qed.
 Global Instance make_monPred_car_absorbingly i P 𝓟 :
   MakeMonPredCar i P 𝓟 → MakeMonPredCar i (bi_absorbingly P) (bi_absorbingly 𝓟).
 Proof. rewrite /MakeMonPredCar=><-. by unseal. Qed.
-Global Instance make_monPred_car_plainly i P Φ :
-  (∀ j, MakeMonPredCar j P (Φ j)) →
-  MakeMonPredCar i (bi_plainly P) (∀ j, bi_plainly (Φ j)).
-Proof. rewrite /MakeMonPredCar=>H. unseal. by do 3 f_equiv. Qed.
 Global Instance make_monPred_car_persistently_if i P 𝓟 p :
   MakeMonPredCar i P 𝓟 →
   MakeMonPredCar i (bi_persistently_if p P) (bi_persistently_if p 𝓟).
@@ -251,16 +247,14 @@ Proof.
   rewrite /IntoExist /MakeMonPredCar=>-> H. setoid_rewrite <- H. by unseal.
 Qed.
 
-Global Instance from_forall_monPred_car {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
-  FromForall P Φ → (∀ a, MakeMonPredCar i (Φ a) (Ψ a)) → FromForall (P i) Ψ.
-Proof.
-  rewrite /FromForall /MakeMonPredCar=><- H. setoid_rewrite <- H. by unseal.
-Qed.
-Global Instance into_forall_monPred_car {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
-  IntoForall P Φ → (∀ a, MakeMonPredCar i (Φ a) (Ψ a)) → IntoForall (P i) Ψ.
-Proof.
-  rewrite /IntoForall /MakeMonPredCar=>-> H. setoid_rewrite <- H. by unseal.
-Qed.
+Global Instance foram_forall_monPred_car_plainly i P Φ :
+  (∀ i, MakeMonPredCar i P (Φ i)) →
+  FromForall (bi_plainly P i) (λ j, bi_plainly (Φ j)).
+Proof. rewrite /FromForall /MakeMonPredCar=>H. unseal. do 3 f_equiv. rewrite H //. Qed.
+Global Instance into_forall_monPred_car_plainly i P Φ :
+  (∀ i, MakeMonPredCar i P (Φ i)) →
+  IntoForall (bi_plainly P i) (λ j, bi_plainly (Φ j)).
+Proof. rewrite /IntoForall /MakeMonPredCar=>H. unseal. do 3 f_equiv. rewrite H //. Qed.
 
 Global Instance from_forall_monPred_car_all P (Φ : I → PROP) i :
   (∀ i, MakeMonPredCar i P (Φ i)) → FromForall (monPred_all P i) Φ.
@@ -271,6 +265,17 @@ Global Instance into_forall_monPred_car_all P (Φ : I → PROP) i :
   (∀ i, MakeMonPredCar i P (Φ i)) → IntoForall (monPred_all P i) Φ.
 Proof.
   rewrite /IntoForall /MakeMonPredCar=>H. setoid_rewrite <- H. by unseal.
+Qed.
+
+Global Instance from_forall_monPred_car {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
+  FromForall P Φ → (∀ a, MakeMonPredCar i (Φ a) (Ψ a)) → FromForall (P i) Ψ.
+Proof.
+  rewrite /FromForall /MakeMonPredCar=><- H. setoid_rewrite <- H. by unseal.
+Qed.
+Global Instance into_forall_monPred_car {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
+  IntoForall P Φ → (∀ a, MakeMonPredCar i (Φ a) (Ψ a)) → IntoForall (P i) Ψ.
+Proof.
+  rewrite /IntoForall /MakeMonPredCar=>-> H. setoid_rewrite <- H. by unseal.
 Qed.
 
 (* FIXME : there are two good ways to frame under a call to
