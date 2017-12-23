@@ -40,7 +40,7 @@ Fixpoint env_app {A} (Γapp : env A) (Γ : env A) : option (env A) :=
   match Γapp with
   | Enil => Some Γ
   | Esnoc Γapp i x =>
-     Γ' ← env_app Γapp Γ; 
+     Γ' ← env_app Γapp Γ;
      match Γ' !! i with None => Some (Esnoc Γ' i x) | Some _ => None end
   end.
 

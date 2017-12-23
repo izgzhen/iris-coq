@@ -94,7 +94,7 @@ Section proof.
       + iMod ("Hclose" with "[Hlo Hln Hainv Ht]") as "_".
         { iNext. iExists o, n. iFrame. eauto. }
         iModIntro. wp_let. wp_op. case_bool_decide; [|done].
-        wp_if. 
+        wp_if.
         iApply ("HΦ" with "[-]"). rewrite /locked. iFrame. eauto.
       + iDestruct (own_valid_2 with "Ht Haown") as % [_ ?%gset_disj_valid_op].
         set_solver.
@@ -129,7 +129,7 @@ Section proof.
       iModIntro. wp_if.
       iApply (wait_loop_spec γ (#lo, #ln) with "[-HΦ]").
       + iFrame. rewrite /is_lock; eauto 10.
-      + by iNext. 
+      + by iNext.
     - wp_cas_fail.
       iMod ("Hclose" with "[Hlo' Hln' Hauth Haown]") as "_".
       { iNext. iExists o', n'. by iFrame. }

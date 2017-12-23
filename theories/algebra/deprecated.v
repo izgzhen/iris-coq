@@ -14,7 +14,7 @@ Local Arguments op _ _ _ !_ /.
 Local Arguments pcore _ _ !_ /.
 
 (* This is isomorphic to option, but has a very different RA structure. *)
-Inductive dec_agree (A : Type) : Type := 
+Inductive dec_agree (A : Type) : Type :=
   | DecAgree : A → dec_agree A
   | DecAgreeBot : dec_agree A.
 Arguments DecAgree {_} _.

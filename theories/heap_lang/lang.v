@@ -276,7 +276,7 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   | CaseCtx e1 e2 => Case e e1 e2
   | AllocCtx => Alloc e
   | LoadCtx => Load e
-  | StoreLCtx e2 => Store e e2 
+  | StoreLCtx e2 => Store e e2
   | StoreRCtx v1 => Store (of_val v1) e
   | CasLCtx e1 e2 => CAS e e1 e2
   | CasMCtx v0 e2 => CAS (of_val v0) e e2
@@ -365,11 +365,11 @@ Inductive head_step : expr → state → expr → state → list (expr) → Prop
      head_step (App (Rec f x e1) e2) σ e' σ []
   | UnOpS op e v v' σ :
      to_val e = Some v →
-     un_op_eval op v = Some v' → 
+     un_op_eval op v = Some v' →
      head_step (UnOp op e) σ (of_val v') σ []
   | BinOpS op e1 e2 v1 v2 v' σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     bin_op_eval op v1 v2 = Some v' → 
+     bin_op_eval op v1 v2 = Some v' →
      head_step (BinOp op e1 e2) σ (of_val v') σ []
   | IfTrueS e1 e2 σ :
      head_step (If (Lit $ LitBool true) e1 e2) σ e1 σ []

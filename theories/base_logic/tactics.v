@@ -60,7 +60,7 @@ Module uPred_reflection. Section uPred_reflection.
     match e with
     | ETrue => None
     | EVar n' => if decide (n = n') then Some ETrue else None
-    | ESep e1 e2 => 
+    | ESep e1 e2 =>
        match cancel_go n e1 with
        | Some e1' => Some (ESep e1' e2)
        | None => ESep e1 <$> cancel_go n e2

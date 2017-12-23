@@ -84,7 +84,7 @@ End namespace.
 
 (* The hope is that registering these will suffice to solve most goals
 of the forms:
-- [N1 ## N2] 
+- [N1 ## N2]
 - [↑N1 ⊆ E ∖ ↑N2 ∖ .. ∖ ↑Nn]
 - [E1 ∖ ↑N1 ⊆ E2 ∖ ↑N2 ∖ .. ∖ ↑Nn] *)
 Create HintDb ndisj.

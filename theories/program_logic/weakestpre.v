@@ -237,7 +237,7 @@ Proof.
   iSplitL "He2"; first by iApply ("IH" with "He2"). iClear "Hred Hstep".
   induction efs as [|ef efs IH]; first by iApply big_sepL_nil.
   rewrite !big_sepL_cons. iDestruct "Hefs" as "(Hef & Hefs)".
-  iSplitL "Hef". by iApply ("IH" with "Hef"). exact: IH. 
+  iSplitL "Hef". by iApply ("IH" with "Hef"). exact: IH.
 Qed.
 
 Lemma fupd_wp s E e Φ : (|={E}=> WP e @ s; E {{ Φ }}) ⊢ WP e @ s; E {{ Φ }}.
