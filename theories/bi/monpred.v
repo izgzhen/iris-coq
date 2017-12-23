@@ -97,6 +97,7 @@ Proof. repeat intro. apply equiv_dist=>?. f_equiv=>//. by apply equiv_dist. Qed.
 End Ofe_Cofe.
 
 Arguments monPred _ _ : clear implicits.
+Arguments monPred_car {_ _} _%I _.
 Local Existing Instance monPred_mono.
 Arguments monPredC _ _ : clear implicits.
 

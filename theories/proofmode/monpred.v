@@ -8,6 +8,13 @@ Class MakeMonPredCar {I : bi_index} {PROP : bi} (i : I)
 Arguments MakeMonPredCar {_ _} _ _%I _%I.
 Hint Mode MakeMonPredCar + + - ! - : typeclass_instances.
 
+Class IsBiIndexRel {I : bi_index} (i j : I) := is_bi_index_rel : i ⊑ j.
+Hint Mode IsBiIndexRel + - - : typeclass_instances.
+Instance is_bi_index_rel_refl {I : bi_index} (i : I) : IsBiIndexRel i i | 0.
+Proof. by rewrite /IsBiIndexRel. Qed.
+Hint Extern 1 (IsBiIndexRel _ _) => unfold IsBiIndexRel; assumption
+            : typeclass_instances.
+
 Section bi.
 Context {I : bi_index} {PROP : bi}.
 Local Notation monPred := (monPred I PROP).
@@ -70,16 +77,16 @@ Proof. rewrite /MakeMonPredCar. by unseal. Qed.
 Global Instance make_monPred_car_default i P : MakeMonPredCar i P (P i) | 100.
 Proof. by rewrite /MakeMonPredCar. Qed.
 
-Global Instance from_assumption_make_monPred_car_l p i P 𝓟 :
-  MakeMonPredCar i P 𝓟 → FromAssumption p (P i) 𝓟.
+Global Instance from_assumption_make_monPred_car_l p i j P 𝓟 :
+  MakeMonPredCar i P 𝓟 → IsBiIndexRel j i → FromAssumption p (P j) 𝓟.
 Proof.
-  rewrite /MakeMonPredCar /FromAssumption=><-.
+  rewrite /MakeMonPredCar /FromAssumption /IsBiIndexRel=><- ->.
   apply  bi.affinely_persistently_if_elim.
 Qed.
-Global Instance from_assumption_make_monPred_car_r p i P 𝓟 :
-  MakeMonPredCar i P 𝓟 → FromAssumption p 𝓟 (P i).
+Global Instance from_assumption_make_monPred_car_r p i j P 𝓟 :
+  MakeMonPredCar i P 𝓟 → IsBiIndexRel i j → FromAssumption p 𝓟 (P j).
 Proof.
-  rewrite /MakeMonPredCar /FromAssumption=><-.
+  rewrite /MakeMonPredCar /FromAssumption /IsBiIndexRel=><- ->.
   apply  bi.affinely_persistently_if_elim.
 Qed.
 
@@ -152,12 +159,27 @@ Proof.
   destruct p, q=> /bi.wand_elim_l' [/(_ i) H] <- <-; apply bi.wand_intro_r;
   revert H; unseal; done.
 Qed.
-Lemma into_wand_monPred_car_unknown_known p q R P 𝓟 Q i :
-  IntoWand p q R P Q → MakeMonPredCar i P 𝓟 → IntoWand p q (R i) 𝓟 (Q i).
-Proof. intros. eapply into_wand_monPred_car_unknown_unknown=>//. apply _. Qed.
-Lemma into_wand_monPred_car_known_unknown p q R P Q 𝓠 i :
-  IntoWand p q R P Q → MakeMonPredCar i Q 𝓠 → IntoWand p q (R i) (P i) 𝓠.
-Proof. intros. eapply into_wand_monPred_car_unknown_unknown=>//. apply _. Qed.
+Lemma into_wand_monPred_car_unknown_known p q R P 𝓟 Q i j :
+  IsBiIndexRel i j → IntoWand p q R P Q →
+  MakeMonPredCar j P 𝓟 → IntoWand p q (R i) 𝓟 (Q j).
+Proof.
+  rewrite /IntoWand /IsBiIndexRel /MakeMonPredCar=>-> ? ?.
+  eapply into_wand_monPred_car_unknown_unknown=>//. apply _.
+Qed.
+Lemma into_wand_monPred_car_known_unknown_le p q R P Q 𝓠 i j :
+  IsBiIndexRel i j → IntoWand p q R P Q →
+  MakeMonPredCar j Q 𝓠 → IntoWand p q (R i) (P j) 𝓠.
+Proof.
+  rewrite /IntoWand /IsBiIndexRel /MakeMonPredCar=>-> ? ?.
+  eapply into_wand_monPred_car_unknown_unknown=>//. apply _.
+Qed.
+Lemma into_wand_monPred_car_known_unknown_ge p q R P Q 𝓠 i j :
+  IsBiIndexRel i j → IntoWand p q R P Q →
+  MakeMonPredCar j Q 𝓠 → IntoWand p q (R j) (P i) 𝓠.
+Proof.
+  rewrite /IntoWand /IsBiIndexRel /MakeMonPredCar=>-> ? ?.
+  eapply into_wand_monPred_car_unknown_unknown=>//. apply _.
+Qed.
 
 Global Instance into_wand_wand'_monPred p q P Q 𝓟 𝓠 i :
   IntoWand' p q ((P -∗ Q) i) 𝓟 𝓠 → IntoWand p q ((P -∗ Q) i) 𝓟 𝓠 | 100.
@@ -181,25 +203,12 @@ Proof.
   by rewrite H1 H2 bi.pure_impl_forall.
 Qed.
 
-(* FIXME : I disable these instances, because I prefer not adding the
-   corresponding IntoWand instance. Adding the IntoWand instance would
-   be ambiguous, because we want to be abble to iApply without proving
-   view inclusion when they match (i.e., we want to use
-   [into_wand_monPred_car]). *)
-(* Global Instance into_forall_monPred_car_wand P Q (Φ Ψ : I → PROP) i : *)
-(*   (∀ j, MakeMonPredCar j P (Φ j)) → (∀ j, MakeMonPredCar j Q (Ψ j)) → *)
-(*   IntoForall ((P -∗ Q) i) (λ j, ⌜i ⊑ j⌝ → Φ j -∗ Ψ j)%I. *)
-(* Proof. *)
-(*   rewrite /IntoForall /MakeMonPredCar. unseal=> H1 H2. do 2 f_equiv. *)
-(*   by rewrite H1 H2. *)
-(* Qed. *)
-(* Global Instance into_forall_monPred_car_impl P Q (Φ Ψ : I → PROP) i : *)
-(*   (∀ j, MakeMonPredCar j P (Φ j)) → (∀ j, MakeMonPredCar j Q (Ψ j)) → *)
-(*   IntoForall ((P → Q) i) (λ j, ⌜i ⊑ j⌝ → Φ j → Ψ j)%I. *)
-(* Proof. *)
-(*   rewrite /IntoForall /MakeMonPredCar. unseal=> H1 H2. do 2 f_equiv. *)
-(*   by rewrite H1 H2 bi.pure_impl_forall. *)
-(* Qed. *)
+Global Instance into_forall_monPred_car_index P i :
+  IntoForall (P i) (λ j, ⌜i ⊑ j⌝ → P j)%I | 100.
+Proof.
+  rewrite /IntoForall. setoid_rewrite bi.pure_impl_forall.
+  do 2 apply bi.forall_intro=>?. by f_equiv.
+Qed.
 
 Global Instance from_and_monPred_car P Q1 𝓠1 Q2 𝓠2 i :
   FromAnd P Q1 Q2 → MakeMonPredCar i Q1 𝓠1 → MakeMonPredCar i Q2 𝓠2 →
@@ -267,11 +276,13 @@ Qed.
 (* FIXME : there are two good ways to frame under a call to
    monPred_car. This may cause some backtracking in the typeclass
    search, and hence performance issues. *)
-Global Instance frame_monPred_car i p P Q 𝓠 R :
-  Frame p R P Q → MakeMonPredCar i Q 𝓠 → Frame p (R i) (P i) 𝓠.
+Global Instance frame_monPred_car p P Q 𝓠 R i j :
+  IsBiIndexRel i j → Frame p R P Q → MakeMonPredCar j Q 𝓠 →
+  Frame p (R i) (P j) 𝓠.
 Proof.
-  rewrite /Frame /MakeMonPredCar /bi_affinely_if /bi_persistently_if=> <- <-.
-  by destruct p; unseal.
+  rewrite /Frame /MakeMonPredCar /bi_affinely_if /bi_persistently_if
+          /IsBiIndexRel=> Hij <- <-.
+  by destruct p; rewrite Hij; unseal.
 Qed.
 Global Instance frame_monPred_car_embed i p P Q 𝓠 𝓡 :
   Frame p ⎡𝓡⎤ P Q → MakeMonPredCar i Q 𝓠 → Frame p 𝓡 (P i) 𝓠.
@@ -301,7 +312,10 @@ Hint Extern 2 (IntoWand _ _ (monPred_car _ _) ?P (monPred_car ?Q _)) =>
      eapply @into_wand_monPred_car_unknown_known
      : typeclass_instances.
 Hint Extern 2 (IntoWand _ _ (monPred_car _ _) (monPred_car ?P _) ?Q) =>
-     eapply @into_wand_monPred_car_known_unknown
+     eapply @into_wand_monPred_car_known_unknown_le
+     : typeclass_instances.
+Hint Extern 2 (IntoWand _ _ (monPred_car _ _) (monPred_car ?P _) ?Q) =>
+     eapply @into_wand_monPred_car_known_unknown_ge
      : typeclass_instances.
 
 Section sbi.
