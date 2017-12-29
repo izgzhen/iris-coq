@@ -36,6 +36,7 @@ theories/bi/fractional.v
 theories/bi/counter_examples.v
 theories/bi/fixpoint.v
 theories/bi/monpred.v
+theories/bi/embedding.v
 theories/base_logic/upred.v
 theories/base_logic/derived.v
 theories/base_logic/base_logic.v
@@ -91,10 +92,12 @@ theories/proofmode/tactics.v
 theories/proofmode/notation.v
 theories/proofmode/classes.v
 theories/proofmode/class_instances.v
+theories/proofmode/monpred.v
 theories/tests/heap_lang.v
 theories/tests/one_shot.v
 theories/tests/proofmode.v
 theories/tests/proofmode_iris.v
+theories/tests/proofmode_monpred.v
 theories/tests/list_reverse.v
 theories/tests/tree_sum.v
 theories/tests/ipm_paper.v

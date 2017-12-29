@@ -1,4 +1,4 @@
-From iris.bi Require Import derived_laws.
+From iris.bi Require Import bi.
 
 (** Definitions. *)
 
@@ -97,6 +97,7 @@ Proof. repeat intro. apply equiv_dist=>?. f_equiv=>//. by apply equiv_dist. Qed.
 End Ofe_Cofe.
 
 Arguments monPred _ _ : clear implicits.
+Arguments monPred_car {_ _} _%I _.
 Local Existing Instance monPred_mono.
 Arguments monPredC _ _ : clear implicits.
 
@@ -116,10 +117,10 @@ Program Definition monPred_upclosed (Φ : I → PROP) : monPred :=
   MonPred (λ i, (∀ j, ⌜i ⊑ j⌝ → Φ j)%I) _.
 Next Obligation. solve_proper. Qed.
 
-Definition monPred_ipure_def (P : PROP) : monPred := MonPred (λ _, P) _.
-Definition monPred_ipure_aux : seal (@monPred_ipure_def). by eexists. Qed.
-Global Instance monPred_ipure : BiEmbedding PROP monPred := unseal monPred_ipure_aux.
-Definition monPred_ipure_eq : bi_embedding = _ := seal_eq _.
+Definition monPred_embed_def (P : PROP) : monPred := MonPred (λ _, P) _.
+Definition monPred_embed_aux : seal (@monPred_embed_def). by eexists. Qed.
+Global Instance monPred_embed : BiEmbed PROP monPred := unseal monPred_embed_aux.
+Definition monPred_embed_eq : bi_embed (A:=PROP) = _ := seal_eq _.
 
 Definition monPred_pure (φ : Prop) : monPred := ⎡⌜φ⌝⎤%I.
 Definition monPred_emp : monPred := ⎡emp⎤%I.
@@ -215,7 +216,7 @@ Definition unseal_eqs :=
    @monPred_forall_eq, @monPred_exist_eq, @monPred_internal_eq_eq,
    @monPred_sep_eq, @monPred_wand_eq,
    @monPred_persistently_eq, @monPred_later_eq,
-   @monPred_in_eq, @monPred_all_eq, @monPred_ipure_eq).
+   @monPred_in_eq, @monPred_all_eq, @monPred_embed_eq).
 Ltac unseal :=
   unfold bi_affinely, bi_absorbingly, sbi_except_0, bi_pure, bi_emp,
          monPred_upclosed, bi_and, bi_or, bi_impl, bi_forall, bi_exist,
@@ -372,19 +373,6 @@ Global Instance monPred_car_mono_flip :
   Proper (flip (⊢) ==> flip (⊑) ==> flip (⊢)) (@monPred_car I PROP).
 Proof. solve_proper. Qed.
 
-Global Instance monPred_ipure_ne :
-  NonExpansive (@bi_embedding PROP (monPred I PROP) _).
-Proof. unseal. by split. Qed.
-Global Instance monPred_ipure_proper :
-  Proper ((≡) ==> (≡)) (@bi_embedding PROP (monPred I PROP) _).
-Proof. apply (ne_proper _). Qed.
-Global Instance monPred_ipure_mono :
-  Proper ((⊢) ==> (⊢)) (@bi_embedding PROP (monPred I PROP) _).
-Proof. unseal. by split. Qed.
-Global Instance monPred_ipure_mono_flip :
-  Proper (flip (⊢) ==> flip (⊢)) (@bi_embedding PROP (monPred I PROP) _).
-Proof. solve_proper. Qed.
-
 Global Instance monPred_in_proper (R : relation I) :
   Proper (R ==> R ==> iff) (⊑) → Reflexive R →
   Proper (R ==> (≡)) (@monPred_in I PROP).
@@ -426,6 +414,10 @@ Proof. unseal. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //. Qed
 Lemma monPred_impl_force P Q i : (P → Q) i -∗ (P i → Q i).
 Proof. unseal. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //. Qed.
 
+Lemma monPred_car_embed (P : PROP) (i : I) :
+  (bi_embed (B := monPred _ _) P) i ⊣⊢ P.
+Proof. by unseal. Qed.
+
 Lemma monPred_persistently_if_eq p P i:
   (bi_persistently_if p P) i = bi_persistently_if p (P i).
 Proof. rewrite /bi_persistently_if. unseal. by destruct p. Qed.
@@ -442,19 +434,6 @@ Global Instance monPred_car_absorbing P i : Absorbing P → Absorbing (P i).
 Proof. move => [] /(_ i). unfold Absorbing. by unseal. Qed.
 Global Instance monPred_car_affine P i : Affine P → Affine (P i).
 Proof. move => [] /(_ i). unfold Affine. by unseal. Qed.
-
-Global Instance monPred_ipure_plain (P : PROP) :
-  Plain P → @Plain (monPredI I PROP) ⎡P⎤%I.
-Proof. split => ? /=. unseal. apply bi.forall_intro=>?. apply (plain _). Qed.
-Global Instance monPred_ipure_persistent (P : PROP) :
-  Persistent P → @Persistent (monPredI I PROP) ⎡P⎤%I.
-Proof. split => ? /=. unseal. exact: H. Qed.
-Global Instance monPred_ipure_absorbing (P : PROP) :
-  Absorbing P → @Absorbing (monPredI I PROP) ⎡P⎤%I.
-Proof. unfold Absorbing. split => ? /=. by unseal. Qed.
-Global Instance monPred_ipure_affine (P : PROP) :
-  Affine P → @Affine (monPredI I PROP) ⎡P⎤%I.
-Proof. unfold Affine. split => ? /=. by unseal. Qed.
 
 (* Note that monPred_in is *not* Plain, because it does depend on the
    index. *)
@@ -489,6 +468,18 @@ Proof.
   move=> []. unfold Affine. unseal=>Hp. split => ?.
   by apply affine, bi.forall_affine.
 Qed.
+
+Global Instance monPred_bi_embedding : BiEmbedding PROP (monPredI I PROP).
+Proof.
+  split; try apply _; unseal; try done.
+  - move =>?? /= [/(_ inhabitant) ?] //.
+  - split=>? /=.
+    by rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim.
+  - split=>? /=.
+    by rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim.
+  - intros ?. split => ? /=. apply bi.equiv_spec; split.
+    by apply bi.forall_intro. by rewrite bi.forall_elim.
+Qed.
 End bi_facts.
 
 Section sbi_facts.
@@ -498,7 +489,7 @@ Implicit Types P Q : monPred I PROP.
 
 Global Instance monPred_car_timeless P i : Timeless P → Timeless (P i).
 Proof. move => [] /(_ i). unfold Timeless. by unseal. Qed.
-Global Instance monPred_ipure_timeless (P : PROP) :
+Global Instance monPred_embed_timeless (P : PROP) :
   Timeless P → @Timeless (monPredSI I PROP) ⎡P⎤%I.
 Proof. intros. split => ? /=. by unseal. Qed.
 Global Instance monPred_in_timeless i0 : Timeless (@monPred_in I PROP i0).
@@ -509,4 +500,7 @@ Proof.
   move=>[]. unfold Timeless. unseal=>Hti. split=> ? /=.
   by apply timeless, bi.forall_timeless.
 Qed.
+
+Global Instance monPred_sbi_embedding : SbiEmbedding PROP (monPredSI I PROP).
+Proof. split; try apply _. by unseal. Qed.
 End sbi_facts.
