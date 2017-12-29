@@ -36,6 +36,15 @@ Section base_logic_tests.
 
   Lemma test_iAssert_modality P : (|==> False) -∗ |==> P.
   Proof. iIntros. iAssert False%I with "[> - //]" as %[]. Qed.
+
+  Lemma test_iStartProof_1 P : P -∗ P.
+  Proof. iStartProof. iStartProof. iIntros "$". Qed.
+  Lemma test_iStartProof_2 P : P -∗ P.
+  Proof. iStartProof (uPred _). iStartProof (uPredI _). iIntros "$". Qed.
+  Lemma test_iStartProof_3 P : P -∗ P.
+  Proof. iStartProof (uPredI _). iStartProof (uPredSI _). iIntros "$". Qed.
+  Lemma test_iStartProof_4 P : P -∗ P.
+  Proof. iStartProof (uPredSI _). iStartProof (uPred _). iIntros "$". Qed.
 End base_logic_tests.
 
 Section iris_tests.
