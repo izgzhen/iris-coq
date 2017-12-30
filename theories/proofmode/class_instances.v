@@ -871,7 +871,7 @@ Qed.
 Global Instance elim_modal_timeless_bupd P Q :
   Timeless P → IsExcept0 Q → ElimModal (▷ P) P Q Q.
 Proof.
-  intros. rewrite /ElimModal (except_0_intro (_ -∗ _)) (timelessP P).
+  intros. rewrite /ElimModal (except_0_intro (_ -∗ _)) (timeless P).
   by rewrite -except_0_sep wand_elim_r.
 Qed.
 Global Instance elim_modal_timeless_bupd' p P Q :

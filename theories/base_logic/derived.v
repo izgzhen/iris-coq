@@ -29,8 +29,8 @@ Notation "◇ P" := (uPred_except_0 P)
 Instance: Params (@uPred_except_0) 1.
 Typeclasses Opaque uPred_except_0.
 
-Class Timeless {M} (P : uPred M) := timelessP : ▷ P ⊢ ◇ P.
-Arguments timelessP {_} _ {_}.
+Class Timeless {M} (P : uPred M) := timeless : ▷ P ⊢ ◇ P.
+Arguments timeless {_} _ {_}.
 Hint Mode Timeless + ! : typeclass_instances.
 Instance: Params (@Timeless) 1.
 
@@ -908,7 +908,7 @@ Proof.
 Qed.
 Global Instance valid_timeless {A : cmraT} `{CmraDiscrete A} (a : A) :
   Timeless (✓ a : uPred M)%I.
-Proof. rewrite /Timeless !discrete_valid. apply (timelessP _). Qed.
+Proof. rewrite /Timeless !discrete_valid. apply (timeless _). Qed.
 Global Instance and_timeless P Q: Timeless P → Timeless Q → Timeless (P ∧ Q).
 Proof. intros; rewrite /Timeless except_0_and later_and; auto. Qed.
 Global Instance or_timeless P Q : Timeless P → Timeless Q → Timeless (P ∨ Q).
@@ -951,11 +951,11 @@ Global Instance persistently_if_timeless p P : Timeless P → Timeless (□?p P)
 Proof. destruct p; apply _. Qed.
 Global Instance eq_timeless {A : ofeT} (a b : A) :
   Discrete a → Timeless (a ≡ b : uPred M)%I.
-Proof. intros. rewrite /Timeless !discrete_eq. apply (timelessP _). Qed.
+Proof. intros. rewrite /Timeless !discrete_eq. apply (timeless _). Qed.
 Global Instance ownM_timeless (a : M) : Discrete a → Timeless (uPred_ownM a).
 Proof.
   intros ?. rewrite /Timeless later_ownM. apply exist_elim=> b.
-  rewrite (timelessP (a≡b)) (except_0_intro (uPred_ownM b)) -except_0_and.
+  rewrite (timeless (a≡b)) (except_0_intro (uPred_ownM b)) -except_0_and.
   apply except_0_mono. rewrite internal_eq_sym. apply impl_elim_r'.
   apply: internal_eq_rewrite.
 Qed.
