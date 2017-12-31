@@ -80,6 +80,13 @@ Ltac iStartProof :=
                |apply tac_adequate]
   end.
 
+(** * Simplification *)
+Tactic Notation "iEval" tactic(t) :=
+  try iStartProof;
+  try (eapply tac_eval; [t; reflexivity|]).
+
+Tactic Notation "iSimpl" := iEval simpl.
+
 (** * Context manipulation *)
 Tactic Notation "iRename" constr(H1) "into" constr(H2) :=
   eapply tac_rename with _ H1 H2 _ _; (* (i:=H1) (j:=H2) *)

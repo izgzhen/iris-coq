@@ -413,6 +413,11 @@ Proof.
 Qed.
 
 (** * Basic rules *)
+Lemma tac_eval Δ Q Q' :
+  Q = Q' →
+  envs_entails Δ Q' → envs_entails Δ Q.
+Proof. by intros ->. Qed.
+
 Lemma tac_assumption Δ i p P Q :
   envs_lookup i Δ = Some (p,P) → FromAssumption p P Q →
   envs_entails Δ Q.
