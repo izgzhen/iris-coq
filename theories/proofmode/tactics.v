@@ -85,7 +85,16 @@ Tactic Notation "iEval" tactic(t) :=
   iStartProof;
   eapply tac_eval; [t; reflexivity|].
 
+Tactic Notation "iEval" tactic(t) "in" constr(H) :=
+  iStartProof;
+  eapply tac_eval_in with _ H _ _ _;
+    [env_reflexivity || fail "iEval:" H "not found"
+    |t; reflexivity
+    |env_reflexivity
+    |].
+
 Tactic Notation "iSimpl" := iEval simpl.
+Tactic Notation "iSimpl" "in" constr(H) := iEval simpl in H.
 
 (** * Context manipulation *)
 Tactic Notation "iRename" constr(H1) "into" constr(H2) :=
