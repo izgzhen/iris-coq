@@ -82,8 +82,8 @@ Ltac iStartProof :=
 
 (** * Simplification *)
 Tactic Notation "iEval" tactic(t) :=
-  try iStartProof;
-  try (eapply tac_eval; [t; reflexivity|]).
+  iStartProof;
+  eapply tac_eval; [t; reflexivity|].
 
 Tactic Notation "iSimpl" := iEval simpl.
 
