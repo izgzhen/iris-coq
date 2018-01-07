@@ -570,7 +570,12 @@ Tactic Notation "iIntoValid" open_constr(t) :=
 
 (* The tactic [tac] is called with a temporary fresh name [H]. The argument
 [lazy_tc] denotes whether type class inference on the premises of [lem] should
-be performed before (if false) or after (if true) [tac H] is called. *)
+be performed before (if false) or after (if true) [tac H] is called.
+
+The tactic [iApply] uses laxy type class inference, so that evars can first be
+instantiated by matching with the goal, whereas [iDestruct] does not, because
+eliminations may not be performed when type classes have not been resolved.
+*)
 Tactic Notation "iPoseProofCore" open_constr(lem)
     "as" constr(p) constr(lazy_tc) tactic(tac) :=
   try iStartProof;
