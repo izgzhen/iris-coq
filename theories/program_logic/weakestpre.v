@@ -13,16 +13,14 @@ Notation irisG Λ Σ := (irisG' (state Λ) Σ).
 
 Inductive stuckness := NotStuck | MaybeStuck.
 
-Definition stuckness_le (s1 s2 : stuckness) : bool :=
+Definition stuckness_leb (s1 s2 : stuckness) : bool :=
   match s1, s2 with
   | MaybeStuck, NotStuck => false
   | _, _ => true
   end.
-Instance: PreOrder stuckness_le.
-Proof.
-  split; first by case. move=>s1 s2 s3. by case: s1; case: s2; case: s3.
-Qed.
-Instance: SqSubsetEq stuckness := stuckness_le.
+Instance stuckness_le : SqSubsetEq stuckness := stuckness_leb.
+Instance stuckness_le_po : PreOrder stuckness_le.
+Proof. split; by repeat intros []. Qed.
 
 Definition stuckness_to_atomicity (s : stuckness) : atomicity :=
   if s is MaybeStuck then StronglyAtomic else WeaklyAtomic.
@@ -45,7 +43,7 @@ Proof.
   repeat (f_contractive || f_equiv); apply Hwp.
 Qed.
 
-Definition wp_def `{irisG Λ Σ} s :
+Definition wp_def `{irisG Λ Σ} (s : stuckness) :
   coPset → expr Λ → (val Λ → iProp Σ) → iProp Σ := fixpoint (wp_pre s).
 Definition wp_aux : seal (@wp_def). by eexists. Qed.
 Definition wp := unseal wp_aux.
