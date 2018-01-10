@@ -16,8 +16,8 @@ Context {I : bi_index} {PROP : bi}.
 Implicit Types i : I.
 
 Record monPred :=
-  MonPred { monPred_car :> I → PROP;
-            monPred_mono : Proper ((⊑) ==> (⊢)) monPred_car }.
+  MonPred { monPred_at :> I → PROP;
+            monPred_mono : Proper ((⊑) ==> (⊢)) monPred_at }.
 Local Existing Instance monPred_mono.
 
 Implicit Types P Q : monPred.
@@ -33,7 +33,7 @@ Section Ofe_Cofe_def.
   Instance monPred_dist : Dist monPred := monPred_dist'.
 
   Definition monPred_sig P : { f : I -c> PROP | Proper ((⊑) ==> (⊢)) f } :=
-    exist _ (monPred_car P) (monPred_mono P).
+    exist _ (monPred_at P) (monPred_mono P).
 
   Definition sig_monPred (P' : { f : I -c> PROP | Proper ((⊑) ==> (⊢)) f })
     : monPred :=
@@ -56,7 +56,7 @@ Section Ofe_Cofe_def.
 
   Global Instance monPred_cofe `{Cofe PROP} : Cofe monPredC.
   Proof.
-    unshelve refine (iso_cofe_subtype (A:=I-c>PROP) _ MonPred monPred_car _ _ _);
+    unshelve refine (iso_cofe_subtype (A:=I-c>PROP) _ MonPred monPred_at _ _ _);
       [apply _|by apply monPred_sig_dist|done|].
     intros c i j Hij. apply @limit_preserving;
       [by apply bi.limit_preserving_entails; intros ??|]=>n. by rewrite Hij.
@@ -83,21 +83,21 @@ Proof. eapply (ne_proper _). Qed.
    equivalence relation (and Coq is able to infer the Proper and
    Reflexive instances properly), or any other equivalence relation,
    provided it is compatible with (⊑). *)
-Global Instance monPred_car_ne (R : relation I) :
+Global Instance monPred_at_ne (R : relation I) :
   Proper (R ==> R ==> iff) (⊑) → Reflexive R →
-  ∀ n, Proper (dist n ==> R ==> dist n) monPred_car.
+  ∀ n, Proper (dist n ==> R ==> dist n) monPred_at.
 Proof.
   intros ????? [Hd] ?? HR. rewrite Hd.
   apply equiv_dist, bi.equiv_spec; split; f_equiv; rewrite ->HR; done.
 Qed.
-Global Instance monPred_car_proper (R : relation I) :
+Global Instance monPred_at_proper (R : relation I) :
   Proper (R ==> R ==> iff) (⊑) → Reflexive R →
-  Proper ((≡) ==> R ==> (≡)) monPred_car.
+  Proper ((≡) ==> R ==> (≡)) monPred_at.
 Proof. repeat intro. apply equiv_dist=>?. f_equiv=>//. by apply equiv_dist. Qed.
 End Ofe_Cofe.
 
 Arguments monPred _ _ : clear implicits.
-Arguments monPred_car {_ _} _%I _.
+Arguments monPred_at {_ _} _%I _.
 Local Existing Instance monPred_mono.
 Arguments monPredC _ _ : clear implicits.
 
@@ -366,11 +366,11 @@ Context {I : bi_index} {PROP : bi}.
 Implicit Types i : I.
 Implicit Types P Q : monPred I PROP.
 
-Global Instance monPred_car_mono :
-  Proper ((⊢) ==> (⊑) ==> (⊢)) (@monPred_car I PROP).
+Global Instance monPred_at_mono :
+  Proper ((⊢) ==> (⊑) ==> (⊢)) (@monPred_at I PROP).
 Proof. by move=> ?? [?] ?? ->. Qed.
-Global Instance monPred_car_mono_flip :
-  Proper (flip (⊢) ==> flip (⊑) ==> flip (⊢)) (@monPred_car I PROP).
+Global Instance monPred_at_mono_flip :
+  Proper (flip (⊢) ==> flip (⊑) ==> flip (⊢)) (@monPred_at I PROP).
 Proof. solve_proper. Qed.
 
 Global Instance monPred_in_proper (R : relation I) :
@@ -414,7 +414,7 @@ Proof. unseal. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //. Qed
 Lemma monPred_impl_force P Q i : (P → Q) i -∗ (P i → Q i).
 Proof. unseal. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //. Qed.
 
-Lemma monPred_car_embed (P : PROP) (i : I) :
+Lemma monPred_at_embed (P : PROP) (i : I) :
   (bi_embed (B := monPred _ _) P) i ⊣⊢ P.
 Proof. by unseal. Qed.
 
@@ -426,13 +426,13 @@ Lemma monPred_affinely_if_eq p P i:
   (bi_affinely_if p P) i = bi_affinely_if p (P i).
 Proof. rewrite /bi_affinely_if. destruct p => //. rewrite /bi_affinely. by unseal. Qed.
 
-Global Instance monPred_car_persistent P i : Persistent P → Persistent (P i).
+Global Instance monPred_at_persistent P i : Persistent P → Persistent (P i).
 Proof. move => [] /(_ i). by unseal. Qed.
-Global Instance monPred_car_plain P i : Plain P → Plain (P i).
+Global Instance monPred_at_plain P i : Plain P → Plain (P i).
 Proof. move => [] /(_ i). unfold Plain. unseal. rewrite bi.forall_elim //. Qed.
-Global Instance monPred_car_absorbing P i : Absorbing P → Absorbing (P i).
+Global Instance monPred_at_absorbing P i : Absorbing P → Absorbing (P i).
 Proof. move => [] /(_ i). unfold Absorbing. by unseal. Qed.
-Global Instance monPred_car_affine P i : Affine P → Affine (P i).
+Global Instance monPred_at_affine P i : Affine P → Affine (P i).
 Proof. move => [] /(_ i). unfold Affine. by unseal. Qed.
 
 (* Note that monPred_in is *not* Plain, because it does depend on the
@@ -487,7 +487,7 @@ Context {I : bi_index} {PROP : sbi}.
 Implicit Types i : I.
 Implicit Types P Q : monPred I PROP.
 
-Global Instance monPred_car_timeless P i : Timeless P → Timeless (P i).
+Global Instance monPred_at_timeless P i : Timeless P → Timeless (P i).
 Proof. move => [] /(_ i). unfold Timeless. by unseal. Qed.
 Global Instance monPred_embed_timeless (P : PROP) :
   Timeless P → @Timeless (monPredSI I PROP) ⎡P⎤%I.
