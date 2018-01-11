@@ -199,6 +199,12 @@ Definition monPred_all_def (P : monPred) : monPred :=
 Definition monPred_all_aux : seal (@monPred_all_def). by eexists. Qed.
 Definition monPred_all := unseal (@monPred_all_aux).
 Definition monPred_all_eq : @monPred_all = _ := seal_eq _.
+
+Definition monPred_ex_def (P : monPred) : monPred :=
+  MonPred (λ _ : I, ∃ i, P i)%I _.
+Definition monPred_ex_aux : seal (@monPred_ex_def). by eexists. Qed.
+Definition monPred_ex := unseal (@monPred_ex_aux).
+Definition monPred_ex_eq : @monPred_ex = _ := seal_eq _.
 End Bi.
 
 Typeclasses Opaque monPred_pure monPred_emp monPred_plainly.
@@ -216,7 +222,7 @@ Definition unseal_eqs :=
    @monPred_forall_eq, @monPred_exist_eq, @monPred_internal_eq_eq,
    @monPred_sep_eq, @monPred_wand_eq,
    @monPred_persistently_eq, @monPred_later_eq,
-   @monPred_in_eq, @monPred_all_eq, @monPred_embed_eq).
+   @monPred_in_eq, @monPred_all_eq, @monPred_ex_eq, @monPred_embed_eq).
 Ltac unseal :=
   unfold bi_affinely, bi_absorbingly, sbi_except_0, bi_pure, bi_emp,
          monPred_upclosed, bi_and, bi_or, bi_impl, bi_forall, bi_exist,
@@ -392,6 +398,16 @@ Global Instance monPred_all_mono_flip :
   Proper (flip (⊢) ==> flip (⊢)) (@monPred_all I PROP).
 Proof. solve_proper. Qed.
 
+Global Instance monPred_ex_ne : NonExpansive (@monPred_ex I PROP).
+Proof. unseal. split. solve_proper. Qed.
+Global Instance monPred_ex_proper : Proper ((≡) ==> (≡)) (@monPred_ex I PROP).
+Proof. apply (ne_proper _). Qed.
+Global Instance monPred_ex_mono : Proper ((⊢) ==> (⊢)) (@monPred_ex I PROP).
+Proof. unseal. split. solve_proper. Qed.
+Global Instance monPred_ex_mono_flip :
+  Proper (flip (⊢) ==> flip (⊢)) (@monPred_ex I PROP).
+Proof. solve_proper. Qed.
+
 Global Instance monPred_positive : BiPositive PROP → BiPositive (monPredI I PROP).
 Proof. split => ?. unseal. apply bi_positive. Qed.
 Global Instance monPred_affine : BiAffine PROP → BiAffine (monPredI I PROP).
@@ -469,6 +485,32 @@ Proof.
   by apply affine, bi.forall_affine.
 Qed.
 
+Global Instance monPred_ex_plain P :
+  Plain P → Plain (@monPred_ex I PROP P).
+Proof.
+  move=>[]. unfold Plain. unseal=>Hp. split=>? /=.
+  apply bi.exist_elim=>i. apply bi.forall_intro=>_. rewrite Hp.
+  rewrite (bi.forall_elim i) -bi.exist_intro //.
+Qed.
+Global Instance monPred_ex_persistent P :
+  Persistent P → Persistent (@monPred_ex I PROP P).
+Proof.
+  move=>[]. unfold Persistent. unseal=>Hp. split => ?.
+  by apply persistent, bi.exist_persistent.
+Qed.
+Global Instance monPred_ex_absorbing P :
+  Absorbing P → Absorbing (@monPred_ex I PROP P).
+Proof.
+  move=>[]. unfold Absorbing. unseal=>Hp. split => ?.
+  by apply absorbing, bi.exist_absorbing.
+Qed.
+Global Instance monPred_ex_affine P :
+  Affine P → Affine (@monPred_ex I PROP P).
+Proof.
+  move=> []. unfold Affine. unseal=>Hp. split => ?.
+  by apply affine, bi.exist_affine.
+Qed.
+
 Global Instance monPred_bi_embedding : BiEmbedding PROP (monPredI I PROP).
 Proof.
   split; try apply _; unseal; try done.
@@ -479,6 +521,33 @@ Proof.
     by rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim.
   - intros ?. split => ? /=. apply bi.equiv_spec; split.
     by apply bi.forall_intro. by rewrite bi.forall_elim.
+Qed.
+
+Lemma monPred_all_elim P : monPred_all P ⊢ P.
+Proof. unseal. split=>?. apply bi.forall_elim. Qed.
+Lemma monPred_all_idemp P : monPred_all (monPred_all P) ⊣⊢ monPred_all P.
+Proof.
+  apply bi.equiv_spec; split; [by apply monPred_all_elim|].
+  unseal. split=>i /=. by apply bi.forall_intro=>_.
+Qed.
+
+Lemma monPred_ex_intro P : P ⊢ monPred_ex P.
+Proof. unseal. split=>?. apply bi.exist_intro. Qed.
+Lemma monPred_ex_idemp P : monPred_ex (monPred_ex P) ⊣⊢ monPred_ex P.
+Proof.
+  apply bi.equiv_spec; split; [|by apply monPred_ex_intro].
+  unseal. split=>i /=. by apply bi.exist_elim=>_.
+Qed.
+
+Lemma monPred_in_intro P : P ⊢ ∃ i, monPred_in i ∧ ⎡P i⎤.
+Proof.
+  unseal. split=>i /=.
+  rewrite /= -(bi.exist_intro i). apply bi.and_intro=>//. by apply bi.pure_intro.
+Qed.
+Lemma monPred_in_elim P i : monPred_in i ∧ ⎡P i⎤ ⊢ P .
+Proof.
+  unseal. split=>i' /=.
+  eapply bi.pure_elim; [apply bi.and_elim_l|]=>?. rewrite bi.and_elim_r. by f_equiv.
 Qed.
 End bi_facts.
 
@@ -499,6 +568,12 @@ Global Instance monPred_all_timeless P :
 Proof.
   move=>[]. unfold Timeless. unseal=>Hti. split=> ? /=.
   by apply timeless, bi.forall_timeless.
+Qed.
+Global Instance monPred_ex_timeless P :
+  Timeless P → Timeless (@monPred_ex I PROP P).
+Proof.
+  move=>[]. unfold Timeless. unseal=>Hti. split=> ? /=.
+  by apply timeless, bi.exist_timeless.
 Qed.
 
 Global Instance monPred_sbi_embedding : SbiEmbedding PROP (monPredSI I PROP).
