@@ -267,6 +267,17 @@ Proof.
   rewrite /IntoForall /MakeMonPredAt=>H. setoid_rewrite <- H. by unseal.
 Qed.
 
+Global Instance from_exist_monPred_at_ex P (Φ : I → PROP) i :
+  (∀ i, MakeMonPredAt i P (Φ i)) → FromExist (monPred_ex P i) Φ.
+Proof.
+  rewrite /FromExist /MakeMonPredAt=>H. setoid_rewrite <- H. by unseal.
+Qed.
+Global Instance into_exist_monPred_at_ex P (Φ : I → PROP) i :
+  (∀ i, MakeMonPredAt i P (Φ i)) → IntoExist (monPred_ex P i) Φ.
+Proof.
+  rewrite /IntoExist /MakeMonPredAt=>H. setoid_rewrite <- H. by unseal.
+Qed.
+
 Global Instance from_forall_monPred_at {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
   FromForall P Φ → (∀ a, MakeMonPredAt i (Φ a) (Ψ a)) → FromForall (P i) Ψ.
 Proof.
