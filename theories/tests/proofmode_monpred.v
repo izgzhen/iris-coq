@@ -2,7 +2,7 @@ From iris.proofmode Require Import tactics monpred.
 From iris.base_logic Require Import base_logic lib.invariants.
 
 Section tests.
-  Context {I : bi_index} {PROP : sbi}.
+  Context {I : biIndex} {PROP : sbi}.
   Local Notation monPred := (monPred I PROP).
   Local Notation monPredI := (monPredI I PROP).
   Local Notation monPredSI := (monPredSI I PROP).

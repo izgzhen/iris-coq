@@ -2,7 +2,7 @@ From iris.bi Require Import bi.
 
 (** Definitions. *)
 
-Structure bi_index :=
+Structure biIndex :=
   BiIndex
     { bi_index_type :> Type;
       bi_index_inhabited : Inhabited bi_index_type;
@@ -12,7 +12,7 @@ Structure bi_index :=
 Existing Instances bi_index_inhabited bi_index_rel bi_index_rel_preorder.
 
 Section Ofe_Cofe.
-Context {I : bi_index} {PROP : bi}.
+Context {I : biIndex} {PROP : bi}.
 Implicit Types i : I.
 
 Record monPred :=
@@ -104,7 +104,7 @@ Arguments monPredC _ _ : clear implicits.
 (** BI and SBI structures. *)
 
 Section Bi.
-Context {I : bi_index} {PROP : bi}.
+Context {I : biIndex} {PROP : bi}.
 Implicit Types i : I.
 Notation monPred := (monPred I PROP).
 Implicit Types P Q : monPred.
@@ -203,7 +203,7 @@ End Bi.
 
 Typeclasses Opaque monPred_pure monPred_emp monPred_plainly.
 
-Program Definition monPred_later_def {I : bi_index} {PROP : sbi}
+Program Definition monPred_later_def {I : biIndex} {PROP : sbi}
         (P : monPred I PROP) : monPred I PROP := MonPred (λ i, ▷ (P i))%I _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_later_aux {I PROP} : seal (@monPred_later_def I PROP). by eexists. Qed.
@@ -231,7 +231,7 @@ End MonPred.
 Import MonPred.
 
 Section canonical_bi.
-Context (I : bi_index) (PROP : bi).
+Context (I : biIndex) (PROP : bi).
 
 Lemma monPred_bi_mixin : BiMixin (@monPred_ofe_mixin I PROP)
   monPred_entails monPred_emp monPred_pure monPred_and monPred_or
@@ -322,7 +322,7 @@ Canonical Structure monPredI : bi :=
 End canonical_bi.
 
 Section canonical_sbi.
-Context (I : bi_index) (PROP : sbi).
+Context (I : biIndex) (PROP : sbi).
 
 Lemma monPred_sbi_mixin :
   SbiMixin (PROP:=monPred I PROP) monPred_entails monPred_pure monPred_or
@@ -362,7 +362,7 @@ End canonical_sbi.
 (** Primitive facts that cannot be deduced from the BI structure. *)
 
 Section bi_facts.
-Context {I : bi_index} {PROP : bi}.
+Context {I : biIndex} {PROP : bi}.
 Implicit Types i : I.
 Implicit Types P Q : monPred I PROP.
 
@@ -483,7 +483,7 @@ Qed.
 End bi_facts.
 
 Section sbi_facts.
-Context {I : bi_index} {PROP : sbi}.
+Context {I : biIndex} {PROP : sbi}.
 Implicit Types i : I.
 Implicit Types P Q : monPred I PROP.
 

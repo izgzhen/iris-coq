@@ -2,21 +2,21 @@ From iris.bi Require Export monpred.
 From iris.proofmode Require Import tactics.
 Import MonPred.
 
-Class MakeMonPredAt {I : bi_index} {PROP : bi} (i : I)
+Class MakeMonPredAt {I : biIndex} {PROP : bi} (i : I)
       (P : monPred I PROP) (𝓟 : PROP) :=
   make_monPred_at : P i ⊣⊢ 𝓟.
 Arguments MakeMonPredAt {_ _} _ _%I _%I.
 Hint Mode MakeMonPredAt + + - ! - : typeclass_instances.
 
-Class IsBiIndexRel {I : bi_index} (i j : I) := is_bi_index_rel : i ⊑ j.
+Class IsBiIndexRel {I : biIndex} (i j : I) := is_bi_index_rel : i ⊑ j.
 Hint Mode IsBiIndexRel + - - : typeclass_instances.
-Instance is_bi_index_rel_refl {I : bi_index} (i : I) : IsBiIndexRel i i | 0.
+Instance is_bi_index_rel_refl {I : biIndex} (i : I) : IsBiIndexRel i i | 0.
 Proof. by rewrite /IsBiIndexRel. Qed.
 Hint Extern 1 (IsBiIndexRel _ _) => unfold IsBiIndexRel; assumption
             : typeclass_instances.
 
 Section bi.
-Context {I : bi_index} {PROP : bi}.
+Context {I : biIndex} {PROP : bi}.
 Local Notation monPred := (monPred I PROP).
 Local Notation MakeMonPredAt := (@MakeMonPredAt I PROP).
 Implicit Types P Q R : monPred.
@@ -324,7 +324,7 @@ Hint Extern 2 (IntoWand _ _ (monPred_at _ _) (monPred_at ?P _) ?Q) =>
      : typeclass_instances.
 
 Section sbi.
-Context {I : bi_index} {PROP : sbi}.
+Context {I : biIndex} {PROP : sbi}.
 Local Notation monPred := (monPred I PROP).
 Implicit Types P Q R : monPred.
 Implicit Types 𝓟 𝓠 𝓡 : PROP.
