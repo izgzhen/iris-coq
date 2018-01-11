@@ -86,6 +86,13 @@ Proof.
   apply  bi.affinely_persistently_if_elim.
 Qed.
 
+Global Instance from_assumption_make_monPred_all P Q :
+  FromAssumption p P Q → FromAssumption p (monPred_all P) Q.
+Proof. intros ?. by rewrite /FromAssumption monPred_all_elim. Qed.
+Global Instance from_assumption_make_monPred_ex P Q :
+  FromAssumption p P Q → FromAssumption p P (monPred_ex Q).
+Proof. intros ?. by rewrite /FromAssumption -monPred_ex_intro. Qed.
+
 Global Instance as_valid_monPred_at φ P (Φ : I → PROP) :
   AsValid φ P → (∀ i, MakeMonPredAt i P (Φ i)) → AsValid' φ (∀ i, Φ i) | 100.
 Proof.
