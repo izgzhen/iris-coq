@@ -899,7 +899,10 @@ Tactic Notation "iNext" open_constr(n) :=
   iStartProof;
   let P := match goal with |- envs_entails _ ?P => P end in
   try lazymatch n with 0 => fail 1 "iNext: cannot strip 0 laters" end;
-  eapply (tac_next _ _ n);
+  (* apply is sometimes confused wrt. canonical structures search.
+     refine should us the other unification algorithm, which should
+     not have this issue. *)
+  notypeclasses refine (coq_tactics.tac_next _ _ n _ _ _ _ _);
     [apply _ || fail "iNext:" P "does not contain" n "laters"
     |lazymatch goal with
      | |- IntoLaterNEnvs 0 _ _ => fail "iNext:" P "does not contain laters"
@@ -1558,7 +1561,10 @@ Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
 (** * Löb Induction *)
 Tactic Notation "iLöbCore" "as" constr (IH) :=
   iStartProof;
-  eapply tac_löb with _ IH;
+  (* apply is sometimes confused wrt. canonical structures search.
+     refine should us the other unification algorithm, which should
+     not have this issue. *)
+  notypeclasses refine (tac_löb _ _ IH _ _ _ _);
     [reflexivity || fail "iLöb: spatial context not empty, this should not happen"
     |env_reflexivity || fail "iLöb:" IH "not fresh"|].
 
