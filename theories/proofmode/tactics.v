@@ -390,7 +390,7 @@ resolved at arbitrary moments. It seems that tactics like `apply`, `split` and
 triggered too eagerly, this tactic uses `refine` at various places instead of
 `apply`.
 
-TODO: Investigate what really is going on. Is there a related to Cog bug #5752?
+TODO: Investigate what really is going on. Is there a related to Cog bug #4969?
 When should holes in an `open_constr` be resolved?
 *)
 Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
