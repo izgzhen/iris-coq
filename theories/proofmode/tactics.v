@@ -383,15 +383,11 @@ Notation "( H $! x1 .. xn 'with' pat )" :=
 Notation "( H 'with' pat )" := (ITrm H hnil pat) (at level 0).
 
 (*
-There is some hacky stuff going on here (most probably there is a Coq bug).
-Holes -- like unresolved type class instances -- in the argument `xs` are
-resolved at arbitrary moments. It seems that tactics like `apply`, `split` and
-`eexists` trigger type class search to resolve these holes. To avoid TC being
-triggered too eagerly, this tactic uses `refine` at various places instead of
-`apply`.
-
-TODO: Investigate what really is going on. Is there a related to Cog bug #4969?
-When should holes in an `open_constr` be resolved?
+There is some hacky stuff going on here: because of Coq bug #6583, unresolved
+type classes in the arguments `xs` are resolved at arbitrary moments. Tactics
+like `apply`, `split` and `eexists` wrongly trigger type class search to resolve
+these holes. To avoid TC being triggered too eagerly, this tactic uses `refine`
+at most places instead of `apply`.
 *)
 Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
   let rec go xs :=
