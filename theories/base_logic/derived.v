@@ -40,30 +40,10 @@ Proof.
   rewrite affine_affinely. intros; apply (anti_symm _); first by rewrite persistently_elim.
   apply:persistently_cmra_valid_1.
 Qed.
-
-(** * Derived rules *)
-Global Instance bupd_mono' : Proper ((⊢) ==> (⊢)) (@bupd _ (@uPred_bupd M)).
-Proof. intros P Q; apply bupd_mono. Qed.
-Global Instance bupd_flip_mono' :
-  Proper (flip (⊢) ==> flip (⊢)) (@bupd _ (@uPred_bupd M)).
-Proof. intros P Q; apply bupd_mono. Qed.
-Lemma bupd_frame_l R Q : (R ∗ |==> Q) ==∗ R ∗ Q.
-Proof. rewrite !(comm _ R); apply bupd_frame_r. Qed.
-Lemma bupd_wand_l P Q : (P -∗ Q) ∗ (|==> P) ==∗ Q.
-Proof. by rewrite bupd_frame_l wand_elim_l. Qed.
-Lemma bupd_wand_r P Q : (|==> P) ∗ (P -∗ Q) ==∗ Q.
-Proof. by rewrite bupd_frame_r wand_elim_r. Qed.
-Lemma bupd_sep P Q : (|==> P) ∗ (|==> Q) ==∗ P ∗ Q.
-Proof. by rewrite bupd_frame_r bupd_frame_l bupd_trans. Qed.
 Lemma bupd_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |==> uPred_ownM y.
 Proof.
   intros; rewrite (bupd_ownM_updateP _ (y =)); last by apply cmra_update_updateP.
   by apply bupd_mono, exist_elim=> y'; apply pure_elim_l=> ->.
-Qed.
-Lemma except_0_bupd P : ◇ (|==> P) ⊢ (|==> ◇ P).
-Proof.
-  rewrite /sbi_except_0. apply or_elim; eauto using bupd_mono, or_intro_r.
-  by rewrite -bupd_intro -or_intro_l.
 Qed.
 
 (* Timeless instances *)
@@ -83,12 +63,6 @@ Qed.
 Global Instance cmra_valid_plain {A : cmraT} (a : A) :
   Plain (✓ a : uPred M)%I.
 Proof. rewrite /Persistent. apply plainly_cmra_valid_1. Qed.
-
-Lemma bupd_affinely_plainly P : (|==> ■ P) ⊢ P.
-Proof. by rewrite affine_affinely bupd_plainly. Qed.
-
-Lemma bupd_plain P `{!Plain P} : (|==> P) ⊢ P.
-Proof. by rewrite -{1}(plain_plainly P) bupd_plainly. Qed.
 
 (* Persistence *)
 Global Instance cmra_valid_persistent {A : cmraT} (a : A) :

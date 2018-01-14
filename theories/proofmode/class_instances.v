@@ -73,6 +73,10 @@ Global Instance from_assumption_forall {A} p (Φ : A → PROP) Q x :
   FromAssumption p (Φ x) Q → FromAssumption p (∀ x, Φ x) Q.
 Proof. rewrite /FromAssumption=> <-. by rewrite forall_elim. Qed.
 
+Global Instance from_assumption_bupd `{BUpdFacts PROP} p P Q :
+  FromAssumption p P Q → FromAssumption p P (|==> Q).
+Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
+
 (* IntoPure *)
 Global Instance into_pure_pure φ : @IntoPure PROP ⌜φ⌝ φ.
 Proof. by rewrite /IntoPure. Qed.
@@ -167,6 +171,10 @@ Proof. rewrite /FromPure=> <-. by rewrite absorbingly_pure. Qed.
 Global Instance from_pure_embed `{BiEmbedding PROP PROP'} P φ :
   FromPure P φ → FromPure ⎡P⎤ φ.
 Proof. rewrite /FromPure=> <-. by rewrite bi_embed_pure. Qed.
+
+Global Instance from_pure_bupd `{BUpdFacts PROP} P φ :
+  FromPure P φ → FromPure (|==> P) φ.
+Proof. rewrite /FromPure=> ->. apply bupd_intro. Qed.
 
 (* IntoInternalEq *)
 Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
@@ -330,6 +338,27 @@ Proof.
           -bi_embed_wand => -> //.
 Qed.
 
+Global Instance into_wand_bupd `{BUpdFacts PROP} p q R P Q :
+  IntoWand false false R P Q → IntoWand p q (|==> R) (|==> P) (|==> Q).
+Proof.
+  rewrite /IntoWand /= => HR. rewrite !affinely_persistently_if_elim HR.
+  apply wand_intro_l. by rewrite bupd_sep wand_elim_r.
+Qed.
+
+Global Instance into_wand_bupd_persistent `{BUpdFacts PROP} p q R P Q :
+  IntoWand false q R P Q → IntoWand p q (|==> R) P (|==> Q).
+Proof.
+  rewrite /IntoWand /= => HR. rewrite affinely_persistently_if_elim HR.
+  apply wand_intro_l. by rewrite bupd_frame_l wand_elim_r.
+Qed.
+
+Global Instance into_wand_bupd_args `{BUpdFacts PROP} p q R P Q :
+  IntoWand p false R P Q → IntoWand' p q R (|==> P) (|==> Q).
+Proof.
+  rewrite /IntoWand' /IntoWand /= => ->.
+  apply wand_intro_l. by rewrite affinely_persistently_if_elim bupd_wand_r.
+Qed.
+
 (* FromAnd *)
 Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2 | 100.
 Proof. by rewrite /FromAnd. Qed.
@@ -421,6 +450,10 @@ Global Instance from_sep_big_sepL_app {A} (Φ : nat → A → PROP) l1 l2 :
   FromSep ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
 Proof. by rewrite /FromSep big_opL_app. Qed.
+
+Global Instance from_sep_bupd `{BUpdFacts PROP} P Q1 Q2 :
+  FromSep P Q1 Q2 → FromSep (|==> P) (|==> Q1) (|==> Q2).
+Proof. rewrite /FromSep=><-. apply bupd_sep. Qed.
 
 (* IntoAnd *)
 Global Instance into_and_and p P Q : IntoAnd p (P ∧ Q) P Q | 10.
@@ -563,6 +596,12 @@ Proof. rewrite /FromOr=> <-. by rewrite persistently_or. Qed.
 Global Instance from_or_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
 Proof. by rewrite /FromOr -bi_embed_or => <-. Qed.
+Global Instance from_or_bupd `{BUpdFacts PROP} P Q1 Q2 :
+  FromOr P Q1 Q2 → FromOr (|==> P) (|==> Q1) (|==> Q2).
+Proof.
+  rewrite /FromOr=><-.
+  apply or_elim; apply bupd_mono; auto using or_intro_l, or_intro_r.
+Qed.
 
 (* IntoOr *)
 Global Instance into_or_or P Q : IntoOr (P ∨ Q) P Q.
@@ -607,6 +646,11 @@ Proof. rewrite /FromExist=> <-. by rewrite persistently_exist. Qed.
 Global Instance from_exist_embed `{BiEmbedding PROP PROP'} {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist ⎡P⎤ (λ a, ⎡Φ a⎤%I).
 Proof. by rewrite /FromExist -bi_embed_exist => <-. Qed.
+Global Instance from_exist_bupd `{BUpdFacts PROP} {A} P (Φ : A → PROP) :
+  FromExist P Φ → FromExist (|==> P) (λ a, |==> Φ a)%I.
+Proof.
+  rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
+Qed.
 
 (* IntoExist *)
 Global Instance into_exist_exist {A} (Φ : A → PROP) : IntoExist (∃ a, Φ a) Φ.
@@ -711,9 +755,19 @@ Global Instance elim_modal_forall {A} P P' (Φ Ψ : A → PROP) :
 Proof.
   rewrite /ElimModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
 Qed.
-Global Instance elim_modal_absorbingly P Q : Absorbing Q → ElimModal (bi_absorbingly P) P Q Q.
+(* We use this proxy type class to make sure that the instance is only
+   used when we know that Pabs is not an existential, so that this
+   instance is only triggered when a [bi_absorbingly] modality
+   actually appears, thanks to the [Hint Mode] lower in this
+   file. Otherwise, this instance is too generic and gets used in
+   irrelevant contexts. *)
+Class ElimModalAbsorbingly Pabs P Q :=
+  elim_modal_absorbingly :> ElimModal Pabs P Q Q.
+Global Instance elim_modal_absorbingly_here P Q :
+  Absorbing Q → ElimModalAbsorbingly (bi_absorbingly P) P Q.
 Proof.
-  rewrite /ElimModal=> H. by rewrite absorbingly_sep_l wand_elim_r absorbing_absorbingly.
+  rewrite /ElimModalAbsorbingly /ElimModal=> H.
+  by rewrite absorbingly_sep_l wand_elim_r absorbing_absorbingly.
 Qed.
 
 (* AddModal *)
@@ -728,6 +782,8 @@ Global Instance add_modal_forall {A} P P' (Φ : A → PROP) :
 Proof.
   rewrite /AddModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
 Qed.
+Global Instance add_modal_bupd `{BUpdFacts PROP} P Q : AddModal (|==> P) P (|==> Q).
+Proof. by rewrite /AddModal bupd_frame_r wand_elim_r bupd_trans. Qed.
 
 (* Frame *)
 Global Instance frame_here_absorbing p R : Absorbing R → Frame p R R True | 0.
@@ -944,14 +1000,32 @@ Global Instance frame_forall {A} p R (Φ Ψ : A → PROP) :
   (∀ a, Frame p R (Φ a) (Ψ a)) → Frame p R (∀ x, Φ x) (∀ x, Ψ x).
 Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
 
+Global Instance frame_bupd `{BUpdFacts PROP} p R P Q :
+  Frame p R P Q → Frame p R (|==> P) (|==> Q).
+Proof. rewrite /Frame=><-. by rewrite bupd_frame_l. Qed.
+
 (* FromModal *)
 Global Instance from_modal_absorbingly P : FromModal (bi_absorbingly P) P.
 Proof. apply absorbingly_intro. Qed.
 Global Instance from_modal_embed `{BiEmbedding PROP PROP'} P Q :
   FromModal P Q → FromModal ⎡P⎤ ⎡Q⎤.
 Proof. by rewrite /FromModal=> ->. Qed.
+Global Instance from_modal_bupd `{BUpdFacts PROP} P : FromModal (|==> P) P.
+Proof. apply bupd_intro. Qed.
+
+(* ElimModal *)
+Global Instance elim_modal_bupd `{BUpdFacts PROP} P Q :
+  ElimModal (|==> P) P (|==> Q) (|==> Q).
+Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
+Global Instance elim_modal_bupd_plain_goal `{BUpdFacts PROP} P Q :
+  Plain Q → ElimModal (|==> P) P Q Q.
+Proof. intros. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_plain. Qed.
+Global Instance elim_modal_bupd_plain `{BUpdFacts PROP} P Q :
+  Plain P → ElimModal (|==> P) P Q Q.
+Proof. intros. by rewrite /ElimModal bupd_plain wand_elim_r. Qed.
 End bi_instances.
 
+Hint Mode ElimModalAbsorbingly + ! - - : typeclass_instances.
 
 Section sbi_instances.
 Context {PROP : sbi}.
@@ -967,6 +1041,9 @@ Proof. rewrite /FromAssumption=>->. apply laterN_intro. Qed.
 Global Instance from_assumption_except_0 p P Q :
   FromAssumption p P Q → FromAssumption p P (◇ Q)%I.
 Proof. rewrite /FromAssumption=>->. apply except_0_intro. Qed.
+Global Instance from_assumption_fupd `{FUpdFacts PROP} E p P Q :
+  FromAssumption p P (|==> Q) → FromAssumption p P (|={E}=> Q)%I.
+Proof. rewrite /FromAssumption=>->. apply bupd_fupd. Qed.
 
 (* FromPure *)
 Global Instance from_pure_later P φ : FromPure P φ → FromPure (▷ P) φ.
@@ -975,6 +1052,9 @@ Global Instance from_pure_laterN n P φ : FromPure P φ → FromPure (▷^n P) �
 Proof. rewrite /FromPure=> ->. apply laterN_intro. Qed.
 Global Instance from_pure_except_0 P φ : FromPure P φ → FromPure (◇ P) φ.
 Proof. rewrite /FromPure=> ->. apply except_0_intro. Qed.
+Global Instance from_pure_fupd `{FUpdFacts PROP} E P φ :
+  FromPure P φ → FromPure (|={E}=> P) φ.
+Proof. rewrite /FromPure. intros <-. apply fupd_intro. Qed.
 
 (* IntoWand *)
 Global Instance into_wand_later p q R P Q :
@@ -1007,6 +1087,26 @@ Proof.
              (laterN_intro _ (□?p R)%I) -laterN_wand HR.
 Qed.
 
+Global Instance into_wand_fupd `{FUpdFacts PROP} E p q R P Q :
+  IntoWand false false R P Q →
+  IntoWand p q (|={E}=> R) (|={E}=> P) (|={E}=> Q).
+Proof.
+  rewrite /IntoWand /= => HR. rewrite !affinely_persistently_if_elim HR.
+  apply wand_intro_l. by rewrite fupd_sep wand_elim_r.
+Qed.
+Global Instance into_wand_fupd_persistent `{FUpdFacts PROP} E1 E2 p q R P Q :
+  IntoWand false q R P Q → IntoWand p q (|={E1,E2}=> R) P (|={E1,E2}=> Q).
+Proof.
+  rewrite /IntoWand /= => HR. rewrite affinely_persistently_if_elim HR.
+  apply wand_intro_l. by rewrite fupd_frame_l wand_elim_r.
+Qed.
+Global Instance into_wand_fupd_args `{FUpdFacts PROP} E1 E2 p q R P Q :
+  IntoWand p false R P Q → IntoWand' p q R (|={E1,E2}=> P) (|={E1,E2}=> Q).
+Proof.
+  rewrite /IntoWand' /IntoWand /= => ->.
+  apply wand_intro_l. by rewrite affinely_persistently_if_elim fupd_wand_r.
+Qed.
+
 (* FromAnd *)
 Global Instance from_and_later P Q1 Q2 :
   FromAnd P Q1 Q2 → FromAnd (▷ P) (▷ Q1) (▷ Q2).
@@ -1028,6 +1128,9 @@ Proof. rewrite /FromSep=> <-. by rewrite laterN_sep. Qed.
 Global Instance from_sep_except_0 P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (◇ P) (◇ Q1) (◇ Q2).
 Proof. rewrite /FromSep=><-. by rewrite except_0_sep. Qed.
+Global Instance from_sep_fupd `{FUpdFacts PROP} E P Q1 Q2 :
+  FromSep P Q1 Q2 → FromSep (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
+Proof. rewrite /FromSep =><-. apply fupd_sep. Qed.
 
 (* IntoAnd *)
 Global Instance into_and_later p P Q1 Q2 :
@@ -1085,6 +1188,12 @@ Proof. rewrite /FromOr=><-. by rewrite laterN_or. Qed.
 Global Instance from_or_except_0 P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (◇ P) (◇ Q1) (◇ Q2).
 Proof. rewrite /FromOr=><-. by rewrite except_0_or. Qed.
+Global Instance from_or_fupd `{FUpdFacts PROP} E1 E2 P Q1 Q2 :
+  FromOr P Q1 Q2 → FromOr (|={E1,E2}=> P) (|={E1,E2}=> Q1) (|={E1,E2}=> Q2).
+Proof.
+  rewrite /FromOr=><-. apply or_elim; apply fupd_mono;
+                         [apply bi.or_intro_l|apply bi.or_intro_r].
+Qed.
 
 (* IntoOr *)
 Global Instance into_or_later P Q1 Q2 :
@@ -1111,6 +1220,11 @@ Qed.
 Global Instance from_exist_except_0 {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (◇ P) (λ a, ◇ (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite except_0_exist_2. Qed.
+Global Instance from_exist_fupd `{FUpdFacts PROP} {A} E1 E2 P (Φ : A → PROP) :
+  FromExist P Φ → FromExist (|={E1,E2}=> P) (λ a, |={E1,E2}=> Φ a)%I.
+Proof.
+  rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
+Qed.
 
 (* IntoExist *)
 Global Instance into_exist_later {A} P (Φ : A → PROP) :
@@ -1159,12 +1273,22 @@ Proof. by rewrite /IsExcept0 except_0_later. Qed.
 Global Instance is_except_0_embed `{SbiEmbedding PROP PROP'} P :
   IsExcept0 P → IsExcept0 ⎡P⎤.
 Proof. by rewrite /IsExcept0 -sbi_embed_except_0=>->. Qed.
+Global Instance is_except_0_bupd `{BUpdFacts PROP} P : IsExcept0 P → IsExcept0 (|==> P).
+Proof.
+  rewrite /IsExcept0=> HP.
+  by rewrite -{2}HP -(except_0_idemp P) -except_0_bupd -(except_0_intro P).
+Qed.
+Global Instance is_except_0_fupd `{FUpdFacts PROP} E1 E2 P :
+  IsExcept0 (|={E1,E2}=> P).
+Proof. by rewrite /IsExcept0 except_0_fupd. Qed.
 
 (* FromModal *)
 Global Instance from_modal_later P : FromModal (▷ P) P.
 Proof. apply later_intro. Qed.
 Global Instance from_modal_except_0 P : FromModal (◇ P) P.
 Proof. apply except_0_intro. Qed.
+Global Instance from_modal_fupd E P `{FUpdFacts PROP} : FromModal (|={E}=> P) P.
+Proof. rewrite /FromModal. apply fupd_intro. Qed.
 
 (* IntoExcept0 *)
 Global Instance into_except_0_except_0 P : IntoExcept0 (◇ P) P.
@@ -1197,6 +1321,14 @@ Proof.
   intros. rewrite /ElimModal (except_0_intro (_ -∗ _)%I).
   by rewrite (into_except_0 P) -except_0_sep wand_elim_r.
 Qed.
+Global Instance elim_modal_bupd_fupd `{FUpdFacts PROP} E1 E2 P Q :
+  ElimModal (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q) | 10.
+Proof.
+  by rewrite /ElimModal (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
+Qed.
+Global Instance elim_modal_fupd_fupd `{FUpdFacts PROP} E1 E2 E3 P Q :
+  ElimModal (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
+Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 
 (* AddModal *)
 (* High priority to add a ▷ rather than a ◇ when P is timeless. *)
@@ -1222,6 +1354,9 @@ Proof.
   intros. rewrite /AddModal (except_0_intro (_ -∗ _)%I).
   by rewrite -except_0_sep wand_elim_r except_0_later.
 Qed.
+Global Instance add_modal_fupd `{FUpdFacts PROP} E1 E2 P Q :
+  AddModal (|={E1}=> P) P (|={E1,E2}=> Q).
+Proof. by rewrite /AddModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 
 (* Frame *)
 Class MakeLater (P lP : PROP) := make_later : ▷ P ⊣⊢ lP.
@@ -1238,6 +1373,10 @@ Proof.
   rewrite /Frame /MakeLater /IntoLaterN=>-> <- <- /=.
   by rewrite later_affinely_persistently_if_2 later_sep.
 Qed.
+
+Global Instance frame_fupd `{FUpdFacts PROP} p E1 E2 R P Q :
+  Frame p R P Q → Frame p R (|={E1,E2}=> P) (|={E1,E2}=> Q).
+Proof. rewrite /Frame=><-. by rewrite fupd_frame_l. Qed.
 
 Class MakeLaterN (n : nat) (P lP : PROP) := make_laterN : ▷^n P ⊣⊢ lP.
 Arguments MakeLaterN _%nat _%I _%I.
