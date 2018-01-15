@@ -72,6 +72,9 @@ Global Instance make_monPred_at_in i j : MakeMonPredAt j (monPred_in i) ⌜i ⊑
 Proof. rewrite /MakeMonPredAt. by unseal. Qed.
 Global Instance make_monPred_at_default i P : MakeMonPredAt i P (P i) | 100.
 Proof. by rewrite /MakeMonPredAt. Qed.
+Global Instance make_monPred_at_bupd `{BUpdFacts PROP} i P 𝓟 :
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|==> P)%I (|==> 𝓟)%I.
+Proof. by rewrite /MakeMonPredAt monPred_bupd_at=> <-. Qed.
 
 Global Instance from_assumption_make_monPred_at_l p i j P 𝓟 :
   MakeMonPredAt i P 𝓟 → IsBiIndexRel j i → FromAssumption p (P j) 𝓟.
@@ -362,6 +365,9 @@ Proof. rewrite /MakeMonPredAt=><-. by unseal. Qed.
 Global Instance make_monPred_at_laterN i n P 𝓠 :
   MakeMonPredAt i P 𝓠 → MakeMonPredAt i (▷^n P)%I (▷^n 𝓠)%I.
 Proof. rewrite /MakeMonPredAt=> <-. elim n=>//= ? <-. by unseal. Qed.
+Global Instance make_monPred_at_fupd `{FUpdFacts PROP} i E1 E2 P 𝓟 :
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|={E1,E2}=> P)%I (|={E1,E2}=> 𝓟)%I.
+Proof. by rewrite /MakeMonPredAt monPred_fupd_at=> <-. Qed.
 
 Global Instance into_except_0_monPred_at_fwd i P Q 𝓠 :
   IntoExcept0 P Q → MakeMonPredAt i Q 𝓠 → IntoExcept0 (P i) 𝓠.
