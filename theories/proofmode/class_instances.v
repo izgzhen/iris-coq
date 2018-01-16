@@ -842,7 +842,7 @@ Proof.
   rewrite /ElimModal=> H. apply wand_intro_r.
   by rewrite wand_curry -assoc (comm _ P') -wand_curry wand_elim_l.
 Qed.
-Global Instance forall_modal_wand {A} P P' (Φ Ψ : A → uPred M) :
+Global Instance elim_modal_forall {A} P P' (Φ Ψ : A → uPred M) :
   (∀ x, ElimModal P P' (Φ x) (Ψ x)) → ElimModal P P' (∀ x, Φ x) (∀ x, Ψ x).
 Proof.
   rewrite /ElimModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
