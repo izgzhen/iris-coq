@@ -868,16 +868,16 @@ Proof.
   intros. rewrite /ElimModal (except_0_intro (_ -∗ _)).
   by rewrite -except_0_sep wand_elim_r.
 Qed.
-Global Instance elim_modal_timeless_bupd P Q :
+Global Instance elim_modal_later_timeless P Q :
   Timeless P → IsExcept0 Q → ElimModal (▷ P) P Q Q.
 Proof.
   intros. rewrite /ElimModal (except_0_intro (_ -∗ _)) (timeless P).
   by rewrite -except_0_sep wand_elim_r.
 Qed.
-Global Instance elim_modal_timeless_bupd' p P Q :
+Global Instance elim_modal_later_if_timeless p P Q :
   Timeless P → IsExcept0 Q → ElimModal (▷?p P) P Q Q.
 Proof.
-  destruct p; simpl; auto using elim_modal_timeless_bupd.
+  destruct p; simpl; auto using elim_modal_later_timeless.
   intros _ _. by rewrite /ElimModal wand_elim_r.
 Qed.
 
@@ -895,6 +895,30 @@ Proof.
 Qed.
 Global Instance add_modal_bupd P Q : AddModal (|==> P) P (|==> Q).
 Proof. by rewrite /AddModal bupd_frame_r wand_elim_r bupd_trans. Qed.
+
+(* High priority to add a ▷ rather than a ◇ when P is timeless. *)
+Global Instance add_modal_later_except_0 P Q :
+  Timeless P → AddModal (▷ P) P (◇ Q) | 0.
+Proof.
+  intros. rewrite /AddModal (except_0_intro (_ -∗ _)) (timeless P).
+  by rewrite -except_0_sep wand_elim_r except_0_idemp.
+Qed.
+Global Instance add_modal_later P Q :
+  Timeless P → AddModal (▷ P) P (▷ Q) | 0.
+Proof.
+  intros. rewrite /AddModal (except_0_intro (_ -∗ _)) (timeless P).
+  by rewrite -except_0_sep wand_elim_r except_0_later.
+Qed.
+Global Instance add_modal_except_0 P Q : AddModal (◇ P) P (◇ Q).
+Proof.
+  intros. rewrite /AddModal (except_0_intro (_ -∗ _)).
+  by rewrite -except_0_sep wand_elim_r except_0_idemp.
+Qed.
+Global Instance add_modal_except_0_later P Q : AddModal (◇ P) P (▷ Q).
+Proof.
+  intros. rewrite /AddModal (except_0_intro (_ -∗ _)).
+  by rewrite -except_0_sep wand_elim_r except_0_later.
+Qed.
 
 (** IsExcept0 *)
 Global Instance is_except_0_except_0 P : IsExcept0 (◇ P).
