@@ -9,8 +9,12 @@ Structure biIndex :=
       bi_index_inhabited : Inhabited bi_index_type;
       bi_index_rel : SqSubsetEq bi_index_type;
       bi_index_rel_preorder : PreOrder (⊑) }.
-
 Existing Instances bi_index_inhabited bi_index_rel bi_index_rel_preorder.
+
+(* TODO : all the use cases of this have a bi_index with a bottom
+   element. Should we add this to the structure? *)
+Class BiIndexBottom {I : biIndex} (bot : I) :=
+  bi_index_bot i : bot ⊑ i.
 
 Section Ofe_Cofe.
 Context {I : biIndex} {PROP : bi}.
@@ -393,6 +397,7 @@ Section bi_facts.
 Context {I : biIndex} {PROP : bi}.
 Local Notation monPredI := (monPredI I PROP).
 Local Notation monPred_at := (@monPred_at I PROP).
+Local Notation BiIndexBottom := (@BiIndexBottom I).
 Implicit Types i : I.
 Implicit Types P Q : monPredI.
 
@@ -439,14 +444,10 @@ Proof. split => ?. unseal. apply bi_positive. Qed.
 Global Instance monPred_affine : BiAffine PROP → BiAffine monPredI.
 Proof. split => ?. unseal. by apply affine. Qed.
 
-(* (∀ x, bottom ⊑ x) cannot be infered using typeclasses. So this is
-  not an instance. One should explicitely make an instance from this
-  lemma for each instantiation of monPred. *)
-Lemma monPred_plainly_exist (bottom : I) :
-  (∀ x, bottom ⊑ x) → BiPlainlyExist PROP → BiPlainlyExist monPredI.
+Global Instance monPred_plainly_exist `{BiIndexBottom bot} :
+  BiPlainlyExist PROP → BiPlainlyExist monPredI.
 Proof.
-  intros ????. unseal. split=>? /=.
-  rewrite (bi.forall_elim bottom) plainly_exist_1. do 2 f_equiv.
+  split=>?/=. unseal. rewrite (bi.forall_elim bot) plainly_exist_1. do 2 f_equiv.
   apply bi.forall_intro=>?. by do 2 f_equiv.
 Qed.
 
@@ -603,12 +604,33 @@ Lemma monPred_impl_force i P Q : (P → Q) i -∗ (P i → Q i).
 Proof. unseal. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //. Qed.
 
 (* Laws for monPred_all. *)
+Local Notation monPred_all := (@monPred_all I PROP).
 Lemma monPred_all_elim P : monPred_all P ⊢ P.
 Proof. unseal. split=>?. apply bi.forall_elim. Qed.
 Lemma monPred_all_idemp P : monPred_all (monPred_all P) ⊣⊢ monPred_all P.
 Proof.
   apply bi.equiv_spec; split; [by apply monPred_all_elim|].
   unseal. split=>i /=. by apply bi.forall_intro=>_.
+Qed.
+
+Lemma monPred_all_and P Q : monPred_all (P ∧ Q) ⊣⊢ monPred_all P ∧ monPred_all Q.
+Proof.
+  unseal. split=>i. apply bi.equiv_spec; split=>/=.
+  - apply bi.and_intro; do 2 f_equiv. apply bi.and_elim_l. apply bi.and_elim_r.
+  - apply bi.forall_intro=>?. by rewrite !bi.forall_elim.
+Qed.
+Lemma monPred_all_sep_2 P Q : monPred_all P ∗ monPred_all Q ⊢ monPred_all (P ∗ Q).
+Proof. unseal. split=>i /=. apply bi.forall_intro=>?. by rewrite !bi.forall_elim. Qed.
+Lemma monPred_all_sep `{BiIndexBottom bot} P Q :
+  monPred_all (P ∗ Q) ⊣⊢ monPred_all P ∗ monPred_all Q.
+Proof.
+  apply bi.equiv_spec, conj, monPred_all_sep_2. unseal. split=>i /=.
+  rewrite (bi.forall_elim bot). by f_equiv; apply bi.forall_intro=>j; f_equiv.
+Qed.
+Lemma monPred_all_embed (P : PROP) : monPred_all ⎡P⎤ ⊣⊢ ⎡P⎤.
+Proof.
+  apply bi.equiv_spec; split; unseal; split=>i /=.
+  by rewrite (bi.forall_elim inhabitant). by apply bi.forall_intro.
 Qed.
 
 Lemma monPred_ex_intro P : P ⊢ monPred_ex P.
@@ -671,6 +693,52 @@ Proof. apply (big_opS_commute (flip monPred_at i)). Qed.
 Lemma monPred_at_big_sepMS `{Countable A} i (Φ : A → monPredI) (X : gmultiset A) :
   ([∗ mset] y ∈ X, Φ y) i ⊣⊢ ([∗ mset] y ∈ X, Φ y i).
 Proof. apply (big_opMS_commute (flip monPred_at i)). Qed.
+
+Global Instance monPred_all_monoid_and_homomorphism :
+  MonoidHomomorphism bi_and bi_and (≡) monPred_all.
+Proof.
+  split; [split|]; try apply _. apply monPred_all_and. apply monPred_all_embed.
+Qed.
+Global Instance monPred_all_monoid_sep_entails_homomorphism :
+  MonoidHomomorphism bi_sep bi_sep (flip (⊢)) monPred_all.
+Proof.
+  split; [split|]; try apply _. apply monPred_all_sep_2. by rewrite monPred_all_embed.
+Qed.
+Global Instance monPred_all_monoid_sep_homomorphism `{BiIndexBottom bot} :
+  MonoidHomomorphism bi_sep bi_sep (≡) monPred_all.
+Proof.
+  split; [split|]; try apply _. apply monPred_all_sep. by rewrite monPred_all_embed.
+Qed.
+
+Lemma monPred_all_big_sepL_entails {A} (Φ : nat → A → monPredI) l :
+  ([∗ list] k↦x ∈ l, monPred_all (Φ k x)) ⊢ monPred_all ([∗ list] k↦x ∈ l, Φ k x).
+Proof. apply (big_opL_commute monPred_all (R:=flip (⊢))). Qed.
+Lemma monPred_all_big_sepM_entails
+      `{Countable K} {A} (Φ : K → A → monPredI) (m : gmap K A) :
+  ([∗ map] k↦x ∈ m, monPred_all (Φ k x)) ⊢ monPred_all ([∗ map] k↦x ∈ m, Φ k x).
+Proof. apply (big_opM_commute monPred_all (R:=flip (⊢))). Qed.
+Lemma monPred_all_big_sepS_entails `{Countable A} (Φ : A → monPredI) (X : gset A) :
+  ([∗ set] y ∈ X, monPred_all (Φ y)) ⊢ monPred_all ([∗ set] y ∈ X, Φ y).
+Proof. apply (big_opS_commute monPred_all (R:=flip (⊢))). Qed.
+Lemma monPred_all_big_sepMS_entails `{Countable A} (Φ : A → monPredI) (X : gmultiset A) :
+  ([∗ mset] y ∈ X, monPred_all (Φ y)) ⊢ monPred_all ([∗ mset] y ∈ X, Φ y).
+Proof. apply (big_opMS_commute monPred_all (R:=flip (⊢))). Qed.
+
+Lemma monPred_all_big_sepL `{BiIndexBottom bot} {A} (Φ : nat → A → monPredI) l :
+  monPred_all ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, monPred_all (Φ k x)).
+Proof. apply (big_opL_commute _). Qed.
+Lemma monPred_all_big_sepM `{BiIndexBottom bot} `{Countable K} {A}
+      (Φ : K → A → monPredI) (m : gmap K A) :
+  monPred_all ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, monPred_all (Φ k x)).
+Proof. apply (big_opM_commute _). Qed.
+Lemma monPred_all_big_sepS `{BiIndexBottom bot} `{Countable A}
+      (Φ : A → monPredI) (X : gset A) :
+  monPred_all ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, monPred_all (Φ y)).
+Proof. apply (big_opS_commute _). Qed.
+Lemma monPred_all_big_sepMS `{BiIndexBottom bot} `{Countable A}
+      (Φ : A → monPredI) (X : gmultiset A) :
+  monPred_all ([∗ mset] y ∈ X, Φ y) ⊣⊢  ([∗ mset] y ∈ X, monPred_all (Φ y)).
+Proof. apply (big_opMS_commute _). Qed.
 End bi_facts.
 
 Section sbi_facts.
