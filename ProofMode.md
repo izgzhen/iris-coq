@@ -150,11 +150,22 @@ Induction
   variables `x1 ... xn`, the hypotheses given by the selection pattern `selpat`,
   and the spatial context.
 
-Rewriting
----------
+Rewriting / simplification
+--------------------------
 
-- `iRewrite pm_trm` : rewrite an equality in the conclusion.
-- `iRewrite pm_trm in "H"` : rewrite an equality in the hypothesis `H`.
+- `iRewrite pm_trm` / `iRewrite pm_trm in "H"` : rewrite using an internal
+  equality in the proof mode goal / hypothesis `H`.
+- `iEval (tac)` / `iEval (tac) in H` : performs a tactic `tac` on the proof mode
+  goal / hypothesis `H`. The tactic `tac` should be a reduction or rewriting
+  tactic like `simpl`, `cbv`, `lazy`, `rewrite` or `setoid_rewrite`. The `iEval`
+  tactic is implemented by running `tac` on `?evar ⊢ P` / `P ⊢ ?evar` where `P`
+  is the proof goal / hypothesis `H`. After running `tac`, `?evar` is unified
+  with the resulting `P`, which in turn becomes the new proof mode goal /
+  hypothesis `H`.
+  Note that parentheses around `tac` are needed.
+- `iSimpl` / `iSimpl in H` : performs `simpl` on the proof mode goal /
+  hypothesis `H`. This is a shorthand for `iEval (simpl)`.
+
 
 Iris
 ----
