@@ -189,10 +189,17 @@ Class ElimModal {PROP : bi} (P P' : PROP) (Q Q' : PROP) :=
 Arguments ElimModal {_} _%I _%I _%I _%I : simpl never.
 Arguments elim_modal {_} _%I _%I _%I _%I {_}.
 Hint Mode ElimModal + ! - ! - : typeclass_instances.
-Hint Mode ElimModal + - ! - ! : typeclass_instances.
 
-Lemma elim_modal_dummy {PROP : bi} (P Q : PROP) : ElimModal P P Q Q.
-Proof. by rewrite /ElimModal wand_elim_r. Qed.
+(* Used by the specialization pattern [ > ] in [iSpecialize] and [iAssert] to
+add a modality to the goal corresponding to a premise/asserted proposition. *)
+Class AddModal {PROP : bi} (P P' : PROP) (Q : PROP) :=
+  add_modal : P ∗ (P' -∗ Q) ⊢ Q.
+Arguments AddModal {_} _%I _%I _%I : simpl never.
+Arguments add_modal {_} _%I _%I _%I {_}.
+Hint Mode AddModal + - ! ! : typeclass_instances.
+
+Lemma add_modal_id {PROP : bi} (P Q : PROP) : AddModal P P Q.
+Proof. by rewrite /AddModal wand_elim_r. Qed.
 
 Class IsCons {A} (l : list A) (x : A) (k : list A) := is_cons : l = x :: k.
 Class IsApp {A} (l k1 k2 : list A) := is_app : l = k1 ++ k2.

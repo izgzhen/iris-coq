@@ -82,7 +82,7 @@ Section sts.
     sts_own γ s1 T ==∗ sts_own γ s2 T.
   Proof.
     intros ??. apply own_update, sts_update_frag_up; [|done..].
-    intros Hdisj. apply sts.closed_up. done. 
+    intros Hdisj. apply sts.closed_up. done.
   Qed.
 
   Lemma sts_own_weaken_tok γ s T1 T2 :

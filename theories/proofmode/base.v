@@ -27,7 +27,7 @@ Definition ascii_beq (x y : ascii) : bool :=
     beq x5 y5 && beq x6 y6 && beq x7 y7 && beq x8 y8.
 
 Fixpoint string_beq (s1 s2 : string) : bool :=
-  match s1, s2 with 
+  match s1, s2 with
   | "", "" => true
   | String a1 s1, String a2 s2 => ascii_beq a1 a2 && string_beq s1 s2
   | _, _ => false

@@ -55,7 +55,7 @@ Section mono_proof.
     - iDestruct (own_valid_2 with "Hγ Hγf")
         as %[?%mnat_included _]%auth_valid_discrete_2.
       iMod (own_update_2 with "Hγ Hγf") as "[Hγ Hγf]".
-      { apply auth_update, (mnat_local_update _ _ (S c)); auto. } 
+      { apply auth_update, (mnat_local_update _ _ (S c)); auto. }
       wp_cas_suc. iMod ("Hclose" with "[Hl Hγ]") as "_".
       { iNext. iExists (S c). rewrite Nat2Z.inj_succ Z.add_1_l. by iFrame. }
       iModIntro. wp_if. iApply "HΦ"; iExists γ; repeat iSplit; eauto.

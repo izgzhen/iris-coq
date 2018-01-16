@@ -98,6 +98,13 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
 
 Tactic Notation "iStartProof" := iStartProof _.
 
+(** * Simplification *)
+Tactic Notation "iEval" tactic(t) :=
+  try iStartProof;
+  try (eapply tac_eval; [t; reflexivity|]).
+
+Tactic Notation "iSimpl" := iEval simpl.
+
 (** * Context manipulation *)
 Tactic Notation "iRename" constr(H1) "into" constr(H2) :=
   eapply tac_rename with _ H1 H2 _ _; (* (i:=H1) (j:=H2) *)
@@ -430,15 +437,11 @@ Notation "( H $! x1 .. xn 'with' pat )" :=
 Notation "( H 'with' pat )" := (ITrm H hnil pat) (at level 0).
 
 (*
-There is some hacky stuff going on here (most probably there is a Coq bug).
-Holes -- like unresolved type class instances -- in the argument `xs` are
-resolved at arbitrary moments. It seems that tactics like `apply`, `split` and
-`eexists` trigger type class search to resolve these holes. To avoid TC being
-triggered too eagerly, this tactic uses `refine` at various places instead of
-`apply`.
-
-TODO: Investigate what really is going on. Is there a related to Cog bug #5752?
-When should holes in an `open_constr` be resolved?
+There is some hacky stuff going on here: because of Coq bug #6583, unresolved
+type classes in the arguments `xs` are resolved at arbitrary moments. Tactics
+like `apply`, `split` and `eexists` wrongly trigger type class search to resolve
+these holes. To avoid TC being triggered too eagerly, this tactic uses `refine`
+at most places instead of `apply`.
 *)
 Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
   let rec go xs :=
@@ -508,7 +511,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |lazymatch m with
-          | GSpatial => apply elim_modal_dummy
+          | GSpatial => apply add_modal_id
           | GModal => apply _ || fail "iSpecialize: goal not a modality"
           end
          |env_reflexivity ||
@@ -531,7 +534,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |lazymatch m with
-          | GSpatial => apply elim_modal_dummy
+          | GSpatial => apply add_modal_id
           | GModal => apply _ || fail "iSpecialize: goal not a modality"
           end
          |iFrame "∗ #"; apply tac_unlock ||
@@ -625,7 +628,12 @@ Tactic Notation "iIntoValid" open_constr(t) :=
 
 (* The tactic [tac] is called with a temporary fresh name [H]. The argument
 [lazy_tc] denotes whether type class inference on the premises of [lem] should
-be performed before (if false) or after (if true) [tac H] is called. *)
+be performed before (if false) or after (if true) [tac H] is called.
+
+The tactic [iApply] uses laxy type class inference, so that evars can first be
+instantiated by matching with the goal, whereas [iDestruct] does not, because
+eliminations may not be performed when type classes have not been resolved.
+*)
 Tactic Notation "iPoseProofCore" open_constr(lem)
     "as" constr(p) constr(lazy_tc) tactic(tac) :=
   try iStartProof;
@@ -1659,7 +1667,7 @@ Tactic Notation "iAssertCore" open_constr(Q)
      | false =>
        eapply tac_assert with _ _ _ lr Hs' H Q _;
          [lazymatch m with
-          | GSpatial => apply elim_modal_dummy
+          | GSpatial => apply add_modal_id
           | GModal => apply _ || fail "iAssert: goal not a modality"
           end
          |env_reflexivity ||

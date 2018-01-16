@@ -311,7 +311,7 @@ Proof. done. Qed.
 Lemma sts_frag_up_valid s T : ✓ sts_frag_up s T ↔ tok s ## T.
 Proof.
   split.
-  - move=>/sts_frag_valid [H _]. apply H, elem_of_up. 
+  - move=>/sts_frag_valid [H _]. apply H, elem_of_up.
   - intros. apply sts_frag_valid; split. by apply closed_up. set_solver.
 Qed.
 

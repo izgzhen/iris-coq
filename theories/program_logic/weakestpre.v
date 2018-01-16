@@ -236,7 +236,7 @@ Proof.
   iSplitL "He2"; first by iApply ("IH" with "He2"). iClear "Hred Hstep".
   induction efs as [|ef efs IH]; first by iApply big_sepL_nil.
   rewrite !big_sepL_cons. iDestruct "Hefs" as "(Hef & Hefs)".
-  iSplitL "Hef". by iApply ("IH" with "Hef"). exact: IH. 
+  iSplitL "Hef". by iApply ("IH" with "Hef"). exact: IH.
 Qed.
 
 Lemma fupd_wp s E e Φ : (|={E}=> WP e @ s; E {{ Φ }}) ⊢ WP e @ s; E {{ Φ }}.
@@ -392,10 +392,13 @@ Section proofmode_classes.
     ElimModal (|={E}=> P) P (WP e @ s; E {{ Φ }}) (WP e @ s; E {{ Φ }}).
   Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_wp. Qed.
 
-  (* lower precedence, if possible, it should persistently pick elim_upd_fupd_wp *)
   Global Instance elim_modal_fupd_wp_atomic s E1 E2 e P Φ :
     Atomic (stuckness_to_atomicity s) e →
     ElimModal (|={E1,E2}=> P) P
-            (WP e @ s; E1 {{ Φ }}) (WP e @ s; E2 {{ v, |={E2,E1}=> Φ v }})%I | 100.
+            (WP e @ s; E1 {{ Φ }}) (WP e @ s; E2 {{ v, |={E2,E1}=> Φ v }})%I.
   Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r wp_atomic. Qed.
+
+  Global Instance add_modal_fupd_wp s E e P Φ :
+    AddModal (|={E}=> P) P (WP e @ s; E {{ Φ }}).
+  Proof. by rewrite /AddModal fupd_frame_r wand_elim_r fupd_wp. Qed.
 End proofmode_classes.

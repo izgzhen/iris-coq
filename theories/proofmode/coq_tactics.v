@@ -450,6 +450,11 @@ Proof.
 Qed.
 
 (** * Basic rules *)
+Lemma tac_eval Δ Q Q' :
+  Q = Q' →
+  envs_entails Δ Q' → envs_entails Δ Q.
+Proof. by intros ->. Qed.
+
 Class AffineEnv (Γ : env PROP) := affine_env : Forall Affine Γ.
 Global Instance affine_env_nil : AffineEnv Enil.
 Proof. constructor. Qed.
@@ -731,8 +736,7 @@ Qed.
 
 Lemma tac_specialize_assert Δ Δ' Δ1 Δ2' j q neg js R P1 P2 P1' Q :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
-  IntoWand q false R P1 P2 →
-  ElimModal P1' P1 Q Q →
+  IntoWand q false R P1 P2 → AddModal P1' P1 Q →
   (''(Δ1,Δ2) ← envs_split (if neg is true then Right else Left) js Δ';
     Δ2' ← envs_app false (Esnoc Enil j P2) Δ2;
     Some (Δ1,Δ2')) = Some (Δ1,Δ2') → (* does not preserve position of [j] *)
@@ -743,7 +747,7 @@ Proof.
     destruct (envs_app _ _ _) eqn:?; simplify_eq/=.
   rewrite envs_lookup_sound // envs_split_sound //.
   rewrite (envs_app_singleton_sound Δ2) //; simpl.
-  rewrite HP1 into_wand /= -(elim_modal P1' P1 Q Q). cancel [P1'].
+  rewrite HP1 into_wand /= -(add_modal P1' P1 Q). cancel [P1'].
   apply wand_intro_l. by rewrite assoc !wand_elim_r.
 Qed.
 
@@ -753,14 +757,14 @@ Proof. by unlock. Qed.
 Lemma tac_specialize_frame Δ Δ' j q R P1 P2 P1' Q Q' :
   envs_lookup_delete j Δ = Some (q, R, Δ') →
   IntoWand q false R P1 P2 →
-  ElimModal P1' P1 Q Q →
+  AddModal P1' P1 Q →
   envs_entails Δ' (P1' ∗ locked Q') →
   Q' = (P2 -∗ Q)%I →
   envs_entails Δ Q.
 Proof.
   rewrite /envs_entails. intros [? ->]%envs_lookup_delete_Some ?? HPQ ->.
   rewrite envs_lookup_sound //. rewrite HPQ -lock.
-  rewrite into_wand -{2}(elim_modal P1' P1 Q Q). cancel [P1'].
+  rewrite into_wand -{2}(add_modal P1' P1 Q). cancel [P1'].
   apply wand_intro_l. by rewrite assoc !wand_elim_r.
 Qed.
 
@@ -847,7 +851,7 @@ Proof.
 Qed.
 
 Lemma tac_assert Δ Δ1 Δ2 Δ2' neg js j P P' Q :
-  ElimModal P' P Q Q →
+  AddModal P' P Q →
   envs_split (if neg is true then Right else Left) js Δ = Some (Δ1,Δ2) →
   envs_app false (Esnoc Enil j P) Δ2 = Some Δ2' →
   envs_entails Δ1 P' → envs_entails Δ2' Q → envs_entails Δ Q.

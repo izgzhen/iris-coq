@@ -22,7 +22,7 @@ Record DraMixin A `{Equiv A, Core A, Disjoint A, Op A, Valid A} := {
   mixin_dra_core_disjoint_l x : ✓ x → core x ## x;
   mixin_dra_core_l x : ✓ x → core x ⋅ x ≡ x;
   mixin_dra_core_idemp x : ✓ x → core (core x) ≡ core x;
-  mixin_dra_core_mono x y : 
+  mixin_dra_core_mono x y :
     ∃ z, ✓ x → ✓ y → x ## y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ## z
 }.
 Structure draT := DraT {
@@ -81,7 +81,7 @@ Section dra_mixin.
   Proof. apply (mixin_dra_core_l _ (dra_mixin A)). Qed.
   Lemma dra_core_idemp x : ✓ x → core (core x) ≡ core x.
   Proof. apply (mixin_dra_core_idemp _ (dra_mixin A)). Qed.
-  Lemma dra_core_mono x y : 
+  Lemma dra_core_mono x y :
     ∃ z, ✓ x → ✓ y → x ## y → core (x ⋅ y) ≡ core x ⋅ z ∧ ✓ z ∧ core x ## z.
   Proof. apply (mixin_dra_core_mono _ (dra_mixin A)). Qed.
 End dra_mixin.
@@ -209,7 +209,7 @@ Proof.
     assert (✓ y) by (rewrite EQ; by apply dra_op_valid).
     split; first done. exists (to_validity z). split; first split.
     + intros _. simpl. by split_and!.
-    + intros _. setoid_subst. by apply dra_op_valid. 
+    + intros _. setoid_subst. by apply dra_op_valid.
     + intros _. rewrite /= EQ //.
 Qed.
 *)

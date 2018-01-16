@@ -229,7 +229,7 @@ Proof.
   revert P.
   induction k; intros P.
   - rewrite //= ?right_id. apply wand_intro_l.
-    rewrite {1}(nnupd_k_intro 0 (P -∗ False)%I) //= ?right_id. apply wand_elim_r. 
+    rewrite {1}(nnupd_k_intro 0 (P -∗ False)%I) //= ?right_id. apply wand_elim_r.
   - rewrite {2}(nnupd_k_unfold k P).
     apply and_intro.
     * rewrite (nnupd_k_unfold k P). rewrite and_elim_l.
@@ -292,9 +292,9 @@ Qed.
 End classical.
 
 (* We might wonder whether we can prove an adequacy lemma for nnupd. We could combine
-   the adequacy lemma for bupd with the previous result to get adquacy for nnupd, but 
+   the adequacy lemma for bupd with the previous result to get adquacy for nnupd, but
    this would rely on the classical axiom we needed to prove the equivalence! Can
-   we establish adequacy without axioms? Unfortunately not, because adequacy for 
+   we establish adequacy without axioms? Unfortunately not, because adequacy for
    nnupd would imply double negation elimination, which is classical: *)
 
 Lemma nnupd_dne φ: (|=n=> ⌜¬¬ φ → φ⌝: uPred M)%I.
@@ -327,7 +327,7 @@ Proof.
     intros Hf3. eapply Hf3; eauto.
     intros ??? Hx'. rewrite left_id in Hx' *=> Hx'.
     assert (n' < S k ∨ n' = S k) as [|] by omega.
-    * intros. move:(laterN_small n' (S k) x' False). rewrite //=. unseal. intros Hsmall. 
+    * intros. move:(laterN_small n' (S k) x' False). rewrite //=. unseal. intros Hsmall.
       eapply Hsmall; eauto.
     * subst. intros. exfalso. eapply Hf2. exists x'. split; eauto using cmra_validN_S.
   - intros k P x Hx. rewrite ?Nat_iter_S_r.

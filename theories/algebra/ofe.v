@@ -7,7 +7,7 @@ Set Primitive Projections.
     category, and mathematically speaking, the entire development lives
     in this category. However, we will generally prefer to work with raw
     Coq functions plus some registered Proper instances for non-expansiveness.
-    This makes writing such functions much easier. It turns out that it many 
+    This makes writing such functions much easier. It turns out that it many
     cases, we do not even need non-expansiveness.
 *)
 

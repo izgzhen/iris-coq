@@ -10,7 +10,7 @@ Lemma tac_wp_expr_eval `{heapG Σ} Δ s E Φ e e' :
   envs_entails Δ (WP e' @ s; E {{ Φ }}) → envs_entails Δ (WP e @ s; E {{ Φ }}).
 Proof. by intros ->. Qed.
 
-Ltac wp_expr_eval t :=
+Tactic Notation "wp_expr_eval" tactic(t) :=
   try iStartProof;
   try (eapply tac_wp_expr_eval; [t; reflexivity|]).
 
@@ -33,7 +33,10 @@ Lemma tac_wp_value `{heapG Σ} Δ s E Φ e v :
   envs_entails Δ (Φ v) → envs_entails Δ (WP e @ s; E {{ Φ }}).
 Proof. rewrite /envs_entails=> ? ->. by apply wp_value. Qed.
 
-Ltac wp_value_head := eapply tac_wp_value; [apply _|lazy beta].
+Ltac wp_value_head :=
+  eapply tac_wp_value;
+    [apply _
+    |iEval (lazy beta; simpl of_val)].
 
 Tactic Notation "wp_pure" open_constr(efoc) :=
   iStartProof;

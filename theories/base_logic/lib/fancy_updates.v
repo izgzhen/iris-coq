@@ -204,17 +204,18 @@ Section proofmode_classes.
   Global Instance from_modal_fupd E P : FromModal (|={E}=> P) P.
   Proof. rewrite /FromModal. apply fupd_intro. Qed.
 
-  (* Put a lower priority compared to [elim_modal_fupd_fupd], so that
-     it is not taken when the first parameter is not specified (in
-     spec. patterns). *)
   Global Instance elim_modal_bupd_fupd E1 E2 P Q :
-    ElimModal (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q) | 10.
+    ElimModal (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q).
   Proof.
     by rewrite /ElimModal (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
   Qed.
   Global Instance elim_modal_fupd_fupd E1 E2 E3 P Q :
     ElimModal (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
   Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
+
+  Global Instance add_modal_fupd E1 E2 P Q :
+    AddModal (|={E1}=> P) P (|={E1,E2}=> Q).
+  Proof. by rewrite /AddModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 End proofmode_classes.
 
 Hint Extern 2 (coq_tactics.envs_entails _ (|={_}=> _)) => iModIntro.

@@ -706,7 +706,7 @@ Proof.
   rewrite /ElimModal=> H. apply wand_intro_r.
   by rewrite wand_curry -assoc (comm _ P') -wand_curry wand_elim_l.
 Qed.
-Global Instance forall_modal_wand {A} P P' (Φ Ψ : A → PROP) :
+Global Instance elim_modal_forall {A} P P' (Φ Ψ : A → PROP) :
   (∀ x, ElimModal P P' (Φ x) (Ψ x)) → ElimModal P P' (∀ x, Φ x) (∀ x, Ψ x).
 Proof.
   rewrite /ElimModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
@@ -714,6 +714,19 @@ Qed.
 Global Instance elim_modal_absorbingly P Q : Absorbing Q → ElimModal (bi_absorbingly P) P Q Q.
 Proof.
   rewrite /ElimModal=> H. by rewrite absorbingly_sep_l wand_elim_r absorbing_absorbingly.
+Qed.
+
+(* AddModal *)
+Global Instance add_modal_wand P P' Q R :
+  AddModal P P' Q → AddModal P P' (R -∗ Q).
+Proof.
+  rewrite /AddModal=> H. apply wand_intro_r.
+  by rewrite wand_curry -assoc (comm _ P') -wand_curry wand_elim_l.
+Qed.
+Global Instance add_modal_forall {A} P P' (Φ : A → PROP) :
+  (∀ x, AddModal P P' (Φ x)) → AddModal P P' (∀ x, Φ x).
+Proof.
+  rewrite /AddModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
 Qed.
 
 (* Frame *)
