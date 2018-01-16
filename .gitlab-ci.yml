@@ -40,10 +40,10 @@ opam:
   except:
   - triggers
 
-build-coq.8.7.dev:
+build-coq.8.7.1:
   <<: *template
   variables:
-    OPAM_PINS: "coq version 8.7.dev"
+    OPAM_PINS: "coq version 8.7.1"
   artifacts:
     paths:
     - build-time.txt
