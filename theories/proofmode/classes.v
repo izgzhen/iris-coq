@@ -236,10 +236,16 @@ Class ElimModal {M} (P P' : uPred M) (Q Q' : uPred M) :=
   elim_modal : P ∗ (P' -∗ Q') ⊢ Q.
 Arguments elim_modal {_} _ _ _ _ {_}.
 Hint Mode ElimModal + ! - ! - : typeclass_instances.
-Hint Mode ElimModal + - ! - ! : typeclass_instances.
 
-Lemma elim_modal_dummy {M} (P Q : uPred M) : ElimModal P P Q Q.
-Proof. by rewrite /ElimModal wand_elim_r. Qed.
+(* Used by the specialization pattern [ > ] in [iSpecialize] and [iAssert] to
+add a modality to the goal corresponding to a premise/asserted proposition. *)
+Class AddModal {M} (P P' : uPred M) (Q : uPred M) :=
+  add_modal : P ∗ (P' -∗ Q) ⊢ Q.
+Arguments add_modal {_} _ _ _ {_}.
+Hint Mode AddModal + - ! ! : typeclass_instances.
+
+Lemma add_modal_id {M} (P Q : uPred M) : AddModal P P Q.
+Proof. by rewrite /AddModal wand_elim_r. Qed.
 
 Class IsExcept0 {M} (Q : uPred M) := is_except_0 : ◇ Q ⊢ Q.
 Arguments is_except_0 {_} _ {_}.

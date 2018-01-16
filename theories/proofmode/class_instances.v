@@ -881,6 +881,22 @@ Proof.
   intros _ _. by rewrite /ElimModal wand_elim_r.
 Qed.
 
+(* AddModal *)
+Global Instance add_modal_wand P P' Q R :
+  AddModal P P' Q → AddModal P P' (R -∗ Q).
+Proof.
+  rewrite /AddModal=> H. apply wand_intro_r.
+  by rewrite wand_curry -assoc (comm _ P') -wand_curry wand_elim_l.
+Qed.
+Global Instance add_modal_forall {A} P P' (Φ : A → uPred M) :
+  (∀ x, AddModal P P' (Φ x)) → AddModal P P' (∀ x, Φ x).
+Proof.
+  rewrite /AddModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
+Qed.
+Global Instance add_modal_bupd P Q : AddModal (|==> P) P (|==> Q).
+Proof. by rewrite /AddModal bupd_frame_r wand_elim_r bupd_trans. Qed.
+
+(** IsExcept0 *)
 Global Instance is_except_0_except_0 P : IsExcept0 (◇ P).
 Proof. by rewrite /IsExcept0 except_0_idemp. Qed.
 Global Instance is_except_0_later P : IsExcept0 (▷ P).
