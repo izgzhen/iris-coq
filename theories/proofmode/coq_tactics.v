@@ -414,13 +414,15 @@ Qed.
 
 (** * Basic rules *)
 Lemma tac_eval Δ Q Q' :
-  (Q' ⊢ Q) →
+  (∀ (Q'':=Q'), Q'' ⊢ Q) → (* We introduce [Q''] as a let binding so that
+    tactics like `reflexivity` as called by [rewrite //] do not eagerly unify
+    it with [Q]. See [test_iEval] in [tests/proofmode]. *)
   envs_entails Δ Q' → envs_entails Δ Q.
 Proof. by intros <-. Qed.
 
 Lemma tac_eval_in Δ Δ' i p P P' Q :
   envs_lookup i Δ = Some (p, P) →
-  (P ⊢ P') →
+  (∀ (P'':=P'), P ⊢ P') →
   envs_simple_replace i p (Esnoc Enil i P') Δ  = Some Δ' →
   envs_entails Δ' Q → envs_entails Δ Q.
 Proof.

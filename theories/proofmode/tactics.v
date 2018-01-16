@@ -83,13 +83,14 @@ Ltac iStartProof :=
 (** * Simplification *)
 Tactic Notation "iEval" tactic(t) :=
   iStartProof;
-  eapply tac_eval; [t; reflexivity|].
+  eapply tac_eval;
+    [let x := fresh in intros x; t; unfold x; reflexivity|].
 
 Tactic Notation "iEval" tactic(t) "in" constr(H) :=
   iStartProof;
   eapply tac_eval_in with _ H _ _ _;
     [env_reflexivity || fail "iEval:" H "not found"
-    |t; reflexivity
+    |let x := fresh in intros x; t; unfold x; reflexivity
     |env_reflexivity
     |].
 
