@@ -1198,6 +1198,31 @@ Proof.
   by rewrite (into_except_0 P) -except_0_sep wand_elim_r.
 Qed.
 
+(* AddModal *)
+(* High priority to add a ▷ rather than a ◇ when P is timeless. *)
+Global Instance add_modal_later_except_0 P Q :
+  Timeless P → AddModal (▷ P) P (◇ Q) | 0.
+Proof.
+  intros. rewrite /AddModal (except_0_intro (_ -∗ _)%I) (timeless P).
+  by rewrite -except_0_sep wand_elim_r except_0_idemp.
+Qed.
+Global Instance add_modal_later P Q :
+  Timeless P → AddModal (▷ P) P (▷ Q) | 0.
+Proof.
+  intros. rewrite /AddModal (except_0_intro (_ -∗ _)%I) (timeless P).
+  by rewrite -except_0_sep wand_elim_r except_0_later.
+Qed.
+Global Instance add_modal_except_0 P Q : AddModal (◇ P) P (◇ Q) | 1.
+Proof.
+  intros. rewrite /AddModal (except_0_intro (_ -∗ _)%I).
+  by rewrite -except_0_sep wand_elim_r except_0_idemp.
+Qed.
+Global Instance add_modal_except_0_later P Q : AddModal (◇ P) P (▷ Q) | 1.
+Proof.
+  intros. rewrite /AddModal (except_0_intro (_ -∗ _)%I).
+  by rewrite -except_0_sep wand_elim_r except_0_later.
+Qed.
+
 (* Frame *)
 Class MakeLater (P lP : PROP) := make_later : ▷ P ⊣⊢ lP.
 Arguments MakeLater _%I _%I.
