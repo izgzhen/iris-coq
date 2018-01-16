@@ -456,7 +456,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |lazymatch m with
-          | GSpatial => apply elim_modal_dummy
+          | GSpatial => apply add_modal_id
           | GModal => apply _ || fail "iSpecialize: goal not a modality"
           end
          |env_reflexivity ||
@@ -479,7 +479,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |lazymatch m with
-          | GSpatial => apply elim_modal_dummy
+          | GSpatial => apply add_modal_id
           | GModal => apply _ || fail "iSpecialize: goal not a modality"
           end
          |iFrame "∗ #"; apply tac_unlock ||
@@ -1588,7 +1588,7 @@ Tactic Notation "iAssertCore" open_constr(Q)
      | false =>
        eapply tac_assert with _ _ _ lr Hs' H Q _;
          [lazymatch m with
-          | GSpatial => apply elim_modal_dummy
+          | GSpatial => apply add_modal_id
           | GModal => apply _ || fail "iAssert: goal not a modality"
           end
          |env_reflexivity ||
