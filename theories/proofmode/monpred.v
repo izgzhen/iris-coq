@@ -1,6 +1,5 @@
 From iris.bi Require Export monpred.
 From iris.proofmode Require Import tactics.
-Import MonPred.
 
 Class MakeMonPredAt {I : biIndex} {PROP : bi} (i : I)
       (P : monPred I PROP) (𝓟 : PROP) :=
@@ -25,39 +24,39 @@ Implicit Types φ : Prop.
 Implicit Types i j : I.
 
 Global Instance make_monPred_at_pure φ i : MakeMonPredAt i ⌜φ⌝ ⌜φ⌝.
-Proof. rewrite /MakeMonPredAt. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_pure. Qed.
 Global Instance make_monPred_at_internal_eq {A : ofeT} (x y : A) i :
   MakeMonPredAt i (x ≡ y) (x ≡ y).
-Proof. rewrite /MakeMonPredAt. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_internal_eq. Qed.
 Global Instance make_monPred_at_emp i : MakeMonPredAt i emp emp.
-Proof. rewrite /MakeMonPredAt. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_emp. Qed.
 Global Instance make_monPred_at_sep i P 𝓟 Q 𝓠 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i Q 𝓠 →
   MakeMonPredAt i (P ∗ Q) (𝓟 ∗ 𝓠).
-Proof. rewrite /MakeMonPredAt=><-<-. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_sep=><-<-. Qed.
 Global Instance make_monPred_at_and i P 𝓟 Q 𝓠 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i Q 𝓠 →
   MakeMonPredAt i (P ∧ Q) (𝓟 ∧ 𝓠).
-Proof. rewrite /MakeMonPredAt=><-<-. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_and=><-<-. Qed.
 Global Instance make_monPred_at_or i P 𝓟 Q 𝓠 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i Q 𝓠 →
   MakeMonPredAt i (P ∨ Q) (𝓟 ∨ 𝓠).
-Proof. rewrite /MakeMonPredAt=><-<-. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_or=><-<-. Qed.
 Global Instance make_monPred_at_forall {A} i (Φ : A → monPred) (Ψ : A → PROP) :
   (∀ a, MakeMonPredAt i (Φ a) (Ψ a)) → MakeMonPredAt i (∀ a, Φ a) (∀ a, Ψ a).
-Proof. rewrite /MakeMonPredAt=>H. setoid_rewrite <- H. by unseal. Qed.
+Proof. rewrite /MakeMonPredAt monPred_at_forall=>H. by setoid_rewrite <- H. Qed.
 Global Instance make_monPred_at_exists {A} i (Φ : A → monPred) (Ψ : A → PROP) :
   (∀ a, MakeMonPredAt i (Φ a) (Ψ a)) → MakeMonPredAt i (∃ a, Φ a) (∃ a, Ψ a).
-Proof. rewrite /MakeMonPredAt=>H. setoid_rewrite <- H. by unseal. Qed.
+Proof. rewrite /MakeMonPredAt monPred_at_exist=>H. by setoid_rewrite <- H. Qed.
 Global Instance make_monPred_at_persistently i P 𝓟 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i (bi_persistently P) (bi_persistently 𝓟).
-Proof. rewrite /MakeMonPredAt=><-. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_persistently=><-. Qed.
 Global Instance make_monPred_at_affinely i P 𝓟 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i (bi_affinely P) (bi_affinely 𝓟).
-Proof. rewrite /MakeMonPredAt=><-. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_affinely=><-. Qed.
 Global Instance make_monPred_at_absorbingly i P 𝓟 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i (bi_absorbingly P) (bi_absorbingly 𝓟).
-Proof. rewrite /MakeMonPredAt=><-. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_absorbingly=><-. Qed.
 Global Instance make_monPred_at_persistently_if i P 𝓟 p :
   MakeMonPredAt i P 𝓟 →
   MakeMonPredAt i (bi_persistently_if p P) (bi_persistently_if p 𝓟).
@@ -66,15 +65,15 @@ Global Instance make_monPred_at_affinely_if i P 𝓟 p :
   MakeMonPredAt i P 𝓟 →
   MakeMonPredAt i (bi_affinely_if p P) (bi_affinely_if p 𝓟).
 Proof. destruct p; simpl; apply _. Qed.
-Global Instance make_monPred_at_embed i : MakeMonPredAt i ⎡P⎤ P.
-Proof. rewrite /MakeMonPredAt. by unseal. Qed.
+Global Instance make_monPred_at_embed i 𝓟 : MakeMonPredAt i ⎡𝓟⎤ 𝓟.
+Proof. by rewrite /MakeMonPredAt monPred_at_embed. Qed.
 Global Instance make_monPred_at_in i j : MakeMonPredAt j (monPred_in i) ⌜i ⊑ j⌝.
-Proof. rewrite /MakeMonPredAt. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_in. Qed.
 Global Instance make_monPred_at_default i P : MakeMonPredAt i P (P i) | 100.
 Proof. by rewrite /MakeMonPredAt. Qed.
 Global Instance make_monPred_at_bupd `{BUpdFacts PROP} i P 𝓟 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|==> P)%I (|==> 𝓟)%I.
-Proof. by rewrite /MakeMonPredAt monPred_bupd_at=> <-. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_bupd=> <-. Qed.
 
 Global Instance from_assumption_make_monPred_at_l p i j P 𝓟 :
   MakeMonPredAt i P 𝓟 → IsBiIndexRel j i → FromAssumption p (P j) 𝓟.
@@ -100,9 +99,9 @@ Global Instance as_valid_monPred_at φ P (Φ : I → PROP) :
   AsValid φ P → (∀ i, MakeMonPredAt i P (Φ i)) → AsValid' φ (∀ i, Φ i) | 100.
 Proof.
   rewrite /MakeMonPredAt /AsValid' /AsValid /bi_valid=> -> EQ.
-  setoid_rewrite <-EQ. unseal; split.
-  - move=>[/= /bi.forall_intro //].
-  - move=>HP. split=>i. rewrite /= HP bi.forall_elim //.
+  setoid_rewrite <-EQ. split.
+  - move=>[H]. apply bi.forall_intro=>i. rewrite -H. by rewrite monPred_at_emp.
+  - move=>HP. split=>i. rewrite monPred_at_emp HP bi.forall_elim //.
 Qed.
 Global Instance as_valid_monPred_at_wand φ P Q (Φ Ψ : I → PROP) :
   AsValid φ (P -∗ Q) →
@@ -125,36 +124,32 @@ Proof.
   - move=>HP. apply bi.equiv_wand_iff. split=>i. by iSplit; iIntros; iApply HP.
 Qed.
 
-Global Instance into_pure_monPred_at P φ i :
-  IntoPure P φ → IntoPure (P i) φ.
-Proof. rewrite /IntoPure=>->. by unseal. Qed.
-Global Instance from_pure_monPred_at P φ i :
-  FromPure P φ → FromPure (P i) φ.
-Proof. rewrite /FromPure=><-. by unseal. Qed.
-Global Instance into_pure_monPred_in i j :
-  @IntoPure PROP (monPred_in i j) (i ⊑ j).
-Proof. rewrite /IntoPure. by unseal. Qed.
-Global Instance from_pure_monPred_in i j :
-  @FromPure PROP (monPred_in i j) (i ⊑ j).
-Proof. rewrite /FromPure. by unseal. Qed.
+Global Instance into_pure_monPred_at P φ i : IntoPure P φ → IntoPure (P i) φ.
+Proof. rewrite /IntoPure=>->. by rewrite monPred_at_pure. Qed.
+Global Instance from_pure_monPred_at P φ i : FromPure P φ → FromPure (P i) φ.
+Proof. rewrite /FromPure=><-. by rewrite monPred_at_pure. Qed.
+Global Instance into_pure_monPred_in i j : @IntoPure PROP (monPred_in i j) (i ⊑ j).
+Proof. by rewrite /IntoPure monPred_at_in. Qed.
+Global Instance from_pure_monPred_in i j : @FromPure PROP (monPred_in i j) (i ⊑ j).
+Proof. by rewrite /FromPure monPred_at_in. Qed.
 
 Global Instance into_internal_eq_monPred_at {A : ofeT} (x y : A) P i :
   IntoInternalEq P x y → IntoInternalEq (P i) x y.
-Proof. rewrite /IntoInternalEq=> ->. by unseal. Qed.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite monPred_at_internal_eq. Qed.
 
 Global Instance into_persistent_monPred_at p P Q 𝓠 i :
   IntoPersistent p P Q → MakeMonPredAt i Q 𝓠 → IntoPersistent p (P i) 𝓠 | 0.
 Proof.
-  rewrite /IntoPersistent /MakeMonPredAt /bi_persistently_if.
-  unseal=>-[/(_ i) ?] <-. by destruct p.
+  rewrite /IntoPersistent /MakeMonPredAt  =>-[/(_ i) ?] <-.
+  by rewrite -monPred_at_persistently -monPred_at_persistently_if.
 Qed.
 
 Global Instance from_always_monPred_at a pe P Q 𝓠 i :
   FromAlways a pe false P Q → MakeMonPredAt i Q 𝓠 →
   FromAlways a pe false (P i) 𝓠 | 0.
 Proof.
-  rewrite /FromAlways /MakeMonPredAt /bi_persistently_if /bi_affinely_if=><-.
-  by destruct a, pe=><-; try unseal.
+  rewrite /FromAlways /MakeMonPredAt /bi_persistently_if /bi_affinely_if=><- /=.
+  destruct a, pe=><- /=; by rewrite ?monPred_at_affinely ?monPred_at_persistently.
 Qed.
 
 Lemma into_wand_monPred_at_unknown_unknown p q R P 𝓟 Q 𝓠 i :
@@ -163,7 +158,7 @@ Lemma into_wand_monPred_at_unknown_unknown p q R P 𝓟 Q 𝓠 i :
 Proof.
   rewrite /IntoWand /MakeMonPredAt /bi_affinely_if /bi_persistently_if.
   destruct p, q=> /bi.wand_elim_l' [/(_ i) H] <- <-; apply bi.wand_intro_r;
-  revert H; unseal; done.
+  revert H; by rewrite monPred_at_sep ?monPred_at_affinely ?monPred_at_persistently.
 Qed.
 Lemma into_wand_monPred_at_unknown_known p q R P 𝓟 Q i j :
   IsBiIndexRel i j → IntoWand p q R P Q →
@@ -198,14 +193,14 @@ Global Instance from_forall_monPred_at_wand P Q (Φ Ψ : I → PROP) i :
   (∀ j, MakeMonPredAt j P (Φ j)) → (∀ j, MakeMonPredAt j Q (Ψ j)) →
   FromForall ((P -∗ Q) i)%I (λ j, ⌜i ⊑ j⌝ → Φ j -∗ Ψ j)%I.
 Proof.
-  rewrite /FromForall /MakeMonPredAt. unseal=> H1 H2. do 2 f_equiv.
+  rewrite /FromForall /MakeMonPredAt monPred_at_wand=> H1 H2. do 2 f_equiv.
   by rewrite H1 H2.
 Qed.
 Global Instance from_forall_monPred_at_impl P Q (Φ Ψ : I → PROP) i :
   (∀ j, MakeMonPredAt j P (Φ j)) → (∀ j, MakeMonPredAt j Q (Ψ j)) →
   FromForall ((P → Q) i)%I (λ j, ⌜i ⊑ j⌝ → Φ j → Ψ j)%I.
 Proof.
-  rewrite /FromForall /MakeMonPredAt. unseal=> H1 H2. do 2 f_equiv.
+  rewrite /FromForall /MakeMonPredAt monPred_at_impl=> H1 H2. do 2 f_equiv.
   by rewrite H1 H2 bi.pure_impl_forall.
 Qed.
 
@@ -219,84 +214,97 @@ Qed.
 Global Instance from_and_monPred_at P Q1 𝓠1 Q2 𝓠2 i :
   FromAnd P Q1 Q2 → MakeMonPredAt i Q1 𝓠1 → MakeMonPredAt i Q2 𝓠2 →
   FromAnd (P i) 𝓠1 𝓠2.
-Proof. rewrite /FromAnd /MakeMonPredAt /MakeMonPredAt=> <- <- <-. by unseal. Qed.
+Proof.
+  rewrite /FromAnd /MakeMonPredAt /MakeMonPredAt=> <- <- <-.
+  by rewrite monPred_at_and.
+Qed.
 Global Instance into_and_monPred_at p P Q1 𝓠1 Q2 𝓠2 i :
   IntoAnd p P Q1 Q2 → MakeMonPredAt i Q1 𝓠1 → MakeMonPredAt i Q2 𝓠2 →
   IntoAnd p (P i) 𝓠1 𝓠2.
 Proof.
   rewrite /IntoAnd /MakeMonPredAt /bi_affinely_if /bi_persistently_if.
-  destruct p=>-[/(_ i) H] <- <-; revert H; unseal; done.
+  destruct p=>-[/(_ i) H] <- <-; revert H;
+  by rewrite ?monPred_at_affinely ?monPred_at_persistently monPred_at_and.
 Qed.
 
 Global Instance from_sep_monPred_at P Q1 𝓠1 Q2 𝓠2 i :
   FromSep P Q1 Q2 → MakeMonPredAt i Q1 𝓠1 → MakeMonPredAt i Q2 𝓠2 →
   FromSep (P i) 𝓠1 𝓠2.
-Proof. rewrite /FromSep /MakeMonPredAt=> <- <- <-. by unseal. Qed.
+Proof. rewrite /FromSep /MakeMonPredAt=> <- <- <-. by rewrite monPred_at_sep. Qed.
 Global Instance into_sep_monPred_at P Q1 𝓠1 Q2 𝓠2 i :
   IntoSep P Q1 Q2 → MakeMonPredAt i Q1 𝓠1 → MakeMonPredAt i Q2 𝓠2 →
   IntoSep (P i) 𝓠1 𝓠2.
-Proof. rewrite /IntoSep /MakeMonPredAt=> -> <- <-. by unseal. Qed.
-
+Proof. rewrite /IntoSep /MakeMonPredAt=> -> <- <-. by rewrite monPred_at_sep. Qed.
 Global Instance from_or_monPred_at P Q1 𝓠1 Q2 𝓠2 i :
   FromOr P Q1 Q2 → MakeMonPredAt i Q1 𝓠1 → MakeMonPredAt i Q2 𝓠2 →
   FromOr (P i) 𝓠1 𝓠2.
-Proof. rewrite /FromOr /MakeMonPredAt=> <- <- <-. by unseal. Qed.
+Proof. rewrite /FromOr /MakeMonPredAt=> <- <- <-. by rewrite monPred_at_or. Qed.
 Global Instance into_or_monPred_at P Q1 𝓠1 Q2 𝓠2 i :
   IntoOr P Q1 Q2 → MakeMonPredAt i Q1 𝓠1 → MakeMonPredAt i Q2 𝓠2 →
   IntoOr (P i) 𝓠1 𝓠2.
-Proof. rewrite /IntoOr /MakeMonPredAt=> -> <- <-. by unseal. Qed.
+Proof. rewrite /IntoOr /MakeMonPredAt=> -> <- <-. by rewrite monPred_at_or. Qed.
 
 Global Instance from_exist_monPred_at {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
   FromExist P Φ → (∀ a, MakeMonPredAt i (Φ a) (Ψ a)) → FromExist (P i) Ψ.
 Proof.
-  rewrite /FromExist /MakeMonPredAt=><- H. setoid_rewrite <- H. by unseal.
+  rewrite /FromExist /MakeMonPredAt=><- H. setoid_rewrite <- H.
+  by rewrite monPred_at_exist.
 Qed.
 Global Instance into_exist_monPred_at {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
   IntoExist P Φ → (∀ a, MakeMonPredAt i (Φ a) (Ψ a)) → IntoExist (P i) Ψ.
 Proof.
-  rewrite /IntoExist /MakeMonPredAt=>-> H. setoid_rewrite <- H. by unseal.
+  rewrite /IntoExist /MakeMonPredAt=>-> H. setoid_rewrite <- H.
+  by rewrite monPred_at_exist.
 Qed.
 
 Global Instance foram_forall_monPred_at_plainly i P Φ :
   (∀ i, MakeMonPredAt i P (Φ i)) →
   FromForall (bi_plainly P i) (λ j, bi_plainly (Φ j)).
-Proof. rewrite /FromForall /MakeMonPredAt=>H. unseal. do 3 f_equiv. rewrite H //. Qed.
+Proof.
+  rewrite /FromForall /MakeMonPredAt=>H. rewrite monPred_at_plainly.
+  by setoid_rewrite H.
+Qed.
 Global Instance into_forall_monPred_at_plainly i P Φ :
   (∀ i, MakeMonPredAt i P (Φ i)) →
   IntoForall (bi_plainly P i) (λ j, bi_plainly (Φ j)).
-Proof. rewrite /IntoForall /MakeMonPredAt=>H. unseal. do 3 f_equiv. rewrite H //. Qed.
+Proof.
+  rewrite /IntoForall /MakeMonPredAt=>H. rewrite monPred_at_plainly.
+  by setoid_rewrite H.
+Qed.
 
 Global Instance from_forall_monPred_at_all P (Φ : I → PROP) i :
   (∀ i, MakeMonPredAt i P (Φ i)) → FromForall (monPred_all P i) Φ.
 Proof.
-  rewrite /FromForall /MakeMonPredAt=>H. setoid_rewrite <- H. by unseal.
+  rewrite /FromForall /MakeMonPredAt monPred_at_all=>H. by setoid_rewrite <- H.
 Qed.
 Global Instance into_forall_monPred_at_all P (Φ : I → PROP) i :
   (∀ i, MakeMonPredAt i P (Φ i)) → IntoForall (monPred_all P i) Φ.
 Proof.
-  rewrite /IntoForall /MakeMonPredAt=>H. setoid_rewrite <- H. by unseal.
+  rewrite /IntoForall /MakeMonPredAt monPred_at_all=>H. by setoid_rewrite <- H.
 Qed.
 
 Global Instance from_exist_monPred_at_ex P (Φ : I → PROP) i :
   (∀ i, MakeMonPredAt i P (Φ i)) → FromExist (monPred_ex P i) Φ.
 Proof.
-  rewrite /FromExist /MakeMonPredAt=>H. setoid_rewrite <- H. by unseal.
+  rewrite /FromExist /MakeMonPredAt monPred_at_ex=>H. by setoid_rewrite <- H.
 Qed.
 Global Instance into_exist_monPred_at_ex P (Φ : I → PROP) i :
   (∀ i, MakeMonPredAt i P (Φ i)) → IntoExist (monPred_ex P i) Φ.
 Proof.
-  rewrite /IntoExist /MakeMonPredAt=>H. setoid_rewrite <- H. by unseal.
+  rewrite /IntoExist /MakeMonPredAt monPred_at_ex=>H. by setoid_rewrite <- H.
 Qed.
 
 Global Instance from_forall_monPred_at {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
   FromForall P Φ → (∀ a, MakeMonPredAt i (Φ a) (Ψ a)) → FromForall (P i) Ψ.
 Proof.
-  rewrite /FromForall /MakeMonPredAt=><- H. setoid_rewrite <- H. by unseal.
+  rewrite /FromForall /MakeMonPredAt=><- H. setoid_rewrite <- H.
+  by rewrite monPred_at_forall.
 Qed.
 Global Instance into_forall_monPred_at {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
   IntoForall P Φ → (∀ a, MakeMonPredAt i (Φ a) (Ψ a)) → IntoForall (P i) Ψ.
 Proof.
-  rewrite /IntoForall /MakeMonPredAt=>-> H. setoid_rewrite <- H. by unseal.
+  rewrite /IntoForall /MakeMonPredAt=>-> H. setoid_rewrite <- H.
+  by rewrite monPred_at_forall.
 Qed.
 
 (* FIXME : there are two good ways to frame under a call to
@@ -308,13 +316,14 @@ Global Instance frame_monPred_at p P Q 𝓠 R i j :
 Proof.
   rewrite /Frame /MakeMonPredAt /bi_affinely_if /bi_persistently_if
           /IsBiIndexRel=> Hij <- <-.
-  by destruct p; rewrite Hij; unseal.
+  destruct p; by rewrite Hij monPred_at_sep ?monPred_at_affinely ?monPred_at_persistently.
 Qed.
 Global Instance frame_monPred_at_embed i p P Q 𝓠 𝓡 :
   Frame p ⎡𝓡⎤ P Q → MakeMonPredAt i Q 𝓠 → Frame p 𝓡 (P i) 𝓠.
 Proof.
   rewrite /Frame /MakeMonPredAt /bi_affinely_if /bi_persistently_if=> <- <-.
-  by destruct p; unseal.
+  destruct p; by rewrite monPred_at_sep ?monPred_at_affinely
+                         ?monPred_at_persistently monPred_at_embed.
 Qed.
 
 Global Instance from_modal_monPred_at i P Q 𝓠 :
@@ -337,16 +346,15 @@ Proof. by rewrite /AddModal !monPred_bupd_embed. Qed.
 Global Instance elim_modal_at_bupd_goal `{BUpdFacts PROP} 𝓟 𝓟' Q Q' i :
   ElimModal 𝓟 𝓟' (|==> Q i) (|==> Q' i) →
   ElimModal 𝓟 𝓟' ((|==> Q) i) ((|==> Q') i).
-Proof. by rewrite /ElimModal !monPred_bupd_at. Qed.
+Proof. by rewrite /ElimModal !monPred_at_bupd. Qed.
 Global Instance elim_modal_at_bupd_hyp `{BUpdFacts PROP} P 𝓟' 𝓠 𝓠' i:
   ElimModal (|==> P i) 𝓟' 𝓠 𝓠' →
   ElimModal ((|==> P) i) 𝓟' 𝓠 𝓠'.
-Proof. by rewrite /ElimModal monPred_bupd_at. Qed.
+Proof. by rewrite /ElimModal monPred_at_bupd. Qed.
 
 Global Instance add_modal_at_bupd_goal `{BUpdFacts PROP} 𝓟 𝓟' Q i :
   AddModal 𝓟 𝓟' (|==> Q i)%I → AddModal 𝓟 𝓟' ((|==> Q) i).
-Proof. by rewrite /AddModal !monPred_bupd_at. Qed.
-
+Proof. by rewrite /AddModal !monPred_at_bupd. Qed.
 End bi.
 
 (* When P and/or Q are evars when doing typeclass search on [IntoWand
@@ -381,36 +389,40 @@ Implicit Types i j : I.
 
 Global Instance is_except_0_monPred_at i P :
   IsExcept0 P → IsExcept0 (P i).
-Proof. rewrite /IsExcept0=>- [/(_ i)]. by unseal. Qed.
+Proof. rewrite /IsExcept0=>- [/(_ i)]. by rewrite monPred_at_except_0. Qed.
 
 Global Instance make_monPred_at_except_0 i P 𝓠 :
   MakeMonPredAt i P 𝓠 → MakeMonPredAt i (◇ P)%I (◇ 𝓠)%I.
-Proof. rewrite /MakeMonPredAt=><-. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_except_0=><-. Qed.
 Global Instance make_monPred_at_later i P 𝓠 :
   MakeMonPredAt i P 𝓠 → MakeMonPredAt i (▷ P)%I (▷ 𝓠)%I.
-Proof. rewrite /MakeMonPredAt=><-. by unseal. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_later=><-. Qed.
 Global Instance make_monPred_at_laterN i n P 𝓠 :
   MakeMonPredAt i P 𝓠 → MakeMonPredAt i (▷^n P)%I (▷^n 𝓠)%I.
-Proof. rewrite /MakeMonPredAt=> <-. elim n=>//= ? <-. by unseal. Qed.
+Proof. rewrite /MakeMonPredAt=> <-. elim n=>//= ? <-. by rewrite monPred_at_later. Qed.
 Global Instance make_monPred_at_fupd `{FUpdFacts PROP} i E1 E2 P 𝓟 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|={E1,E2}=> P)%I (|={E1,E2}=> 𝓟)%I.
-Proof. by rewrite /MakeMonPredAt monPred_fupd_at=> <-. Qed.
+Proof. by rewrite /MakeMonPredAt monPred_at_fupd=> <-. Qed.
 
 Global Instance into_except_0_monPred_at_fwd i P Q 𝓠 :
   IntoExcept0 P Q → MakeMonPredAt i Q 𝓠 → IntoExcept0 (P i) 𝓠.
-Proof. rewrite /IntoExcept0 /MakeMonPredAt=> -> <-. by unseal. Qed.
+Proof. rewrite /IntoExcept0 /MakeMonPredAt=> -> <-. by rewrite monPred_at_except_0. Qed.
 Global Instance into_except_0_monPred_at_bwd i P 𝓟 Q :
   IntoExcept0 P Q → MakeMonPredAt i P 𝓟 → IntoExcept0 𝓟 (Q i).
-Proof. rewrite /IntoExcept0 /MakeMonPredAt=> H <-. rewrite H. by unseal. Qed.
+Proof. rewrite /IntoExcept0 /MakeMonPredAt=> H <-. by rewrite H monPred_at_except_0. Qed.
 
 Global Instance into_later_monPred_at i n P Q 𝓠 :
   IntoLaterN n P Q → MakeMonPredAt i Q 𝓠 → IntoLaterN n (P i) 𝓠.
 Proof.
-  rewrite /IntoLaterN /MakeMonPredAt=> -> <-. elim n=>//= ? <-. by unseal.
+  rewrite /IntoLaterN /MakeMonPredAt=> -> <-. elim n=>//= ? <-.
+   by rewrite monPred_at_later.
 Qed.
 Global Instance from_later_monPred_at i n P Q 𝓠 :
   FromLaterN n P Q → MakeMonPredAt i Q 𝓠 → FromLaterN n (P i) 𝓠.
-Proof. rewrite /FromLaterN /MakeMonPredAt=> <- <-. elim n=>//= ? ->. by unseal. Qed.
+Proof.
+  rewrite /FromLaterN /MakeMonPredAt=> <- <-. elim n=>//= ? ->.
+  by rewrite monPred_at_later.
+Qed.
 
 Global Instance elim_modal_embed_fupd_goal `{FUpdFacts PROP} E1 E2 E3 P P' 𝓠 𝓠' :
   ElimModal P P' (|={E1,E3}=> ⎡𝓠⎤)%I (|={E2,E3}=> ⎡𝓠'⎤)%I →
@@ -428,13 +440,13 @@ Proof. by rewrite /AddModal !monPred_fupd_embed. Qed.
 Global Instance elim_modal_at_fupd_goal `{FUpdFacts PROP} E1 E2 E3 𝓟 𝓟' Q Q' i :
   ElimModal 𝓟 𝓟' (|={E1,E3}=> Q i) (|={E2,E3}=> Q' i) →
   ElimModal 𝓟 𝓟' ((|={E1,E3}=> Q) i) ((|={E2,E3}=> Q') i).
-Proof. by rewrite /ElimModal !monPred_fupd_at. Qed.
+Proof. by rewrite /ElimModal !monPred_at_fupd. Qed.
 Global Instance elim_modal_at_fupd_hyp `{FUpdFacts PROP} E1 E2 P 𝓟' 𝓠 𝓠' i :
   ElimModal (|={E1,E2}=> P i) 𝓟' 𝓠 𝓠' →
   ElimModal ((|={E1,E2}=> P) i) 𝓟' 𝓠 𝓠'.
-Proof. by rewrite /ElimModal monPred_fupd_at. Qed.
+Proof. by rewrite /ElimModal monPred_at_fupd. Qed.
 
 Global Instance add_modal_at_fupd_goal `{FUpdFacts PROP} E1 E2 𝓟 𝓟' Q i :
   AddModal 𝓟 𝓟' (|={E1,E2}=> Q i) → AddModal 𝓟 𝓟' ((|={E1,E2}=> Q) i).
-Proof. by rewrite /AddModal !monPred_fupd_at. Qed.
+Proof. by rewrite /AddModal !monPred_at_fupd. Qed.
 End sbi.

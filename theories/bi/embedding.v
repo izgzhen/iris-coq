@@ -1,5 +1,5 @@
 From iris.algebra Require Import monoid.
-From iris.bi Require Import interface derived_laws.
+From iris.bi Require Import interface derived_laws big_op.
 From stdpp Require Import hlist.
 
 (* Embeddings are often used to *define* the connectives of the
@@ -143,6 +143,19 @@ Section bi_embedding.
     by split; [split|]; try apply _;
       [setoid_rewrite bi_embed_sep|rewrite bi_embed_emp].
   Qed.
+
+  Lemma bi_embed_big_sepL {A} (Φ : nat → A → PROP1) l :
+    ⎡[∗ list] k↦x ∈ l, Φ k x⎤ ⊣⊢ [∗ list] k↦x ∈ l, ⎡Φ k x⎤.
+  Proof. apply (big_opL_commute _). Qed.
+  Lemma bi_embed_big_sepM `{Countable K} {A} (Φ : K → A → PROP1) (m : gmap K A) :
+    ⎡[∗ map] k↦x ∈ m, Φ k x⎤ ⊣⊢ [∗ map] k↦x ∈ m, ⎡Φ k x⎤.
+  Proof. apply (big_opM_commute _). Qed.
+  Lemma bi_embed_big_sepS `{Countable A} (Φ : A → PROP1) (X : gset A) :
+    ⎡[∗ set] y ∈ X, Φ y⎤ ⊣⊢ [∗ set] y ∈ X, ⎡Φ y⎤.
+  Proof. apply (big_opS_commute _). Qed.
+  Lemma bi_embed_big_sepMS `{Countable A} (Φ : A → PROP1) (X : gmultiset A) :
+    ⎡[∗ mset] y ∈ X, Φ y⎤ ⊣⊢ [∗ mset] y ∈ X, ⎡Φ y⎤.
+  Proof. apply (big_opMS_commute _). Qed.
 End bi_embedding.
 
 Section sbi_embedding.
