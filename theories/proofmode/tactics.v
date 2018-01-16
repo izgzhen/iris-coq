@@ -96,6 +96,14 @@ Tactic Notation "iEval" tactic(t) "in" constr(H) :=
 Tactic Notation "iSimpl" := iEval simpl.
 Tactic Notation "iSimpl" "in" constr(H) := iEval simpl in H.
 
+(* It would be nice to also have an `iSsrRewrite`, however, for this we need to
+pass arguments to Ssreflect's `rewrite` like `/= foo /bar` in Ltac, see:
+
+  https://sympa.inria.fr/sympa/arc/coq-club/2018-01/msg00000.html
+
+PMP told me (= Robbert) in person that this is not possible today, but may be
+possible in Ltac2. *)
+
 (** * Context manipulation *)
 Tactic Notation "iRename" constr(H1) "into" constr(H2) :=
   eapply tac_rename with _ H1 H2 _ _; (* (i:=H1) (j:=H2) *)
