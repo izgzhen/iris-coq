@@ -909,12 +909,12 @@ Proof.
   intros. rewrite /AddModal (except_0_intro (_ -∗ _)) (timeless P).
   by rewrite -except_0_sep wand_elim_r except_0_later.
 Qed.
-Global Instance add_modal_except_0 P Q : AddModal (◇ P) P (◇ Q).
+Global Instance add_modal_except_0 P Q : AddModal (◇ P) P (◇ Q) | 1.
 Proof.
   intros. rewrite /AddModal (except_0_intro (_ -∗ _)).
   by rewrite -except_0_sep wand_elim_r except_0_idemp.
 Qed.
-Global Instance add_modal_except_0_later P Q : AddModal (◇ P) P (▷ Q).
+Global Instance add_modal_except_0_later P Q : AddModal (◇ P) P (▷ Q) | 1.
 Proof.
   intros. rewrite /AddModal (except_0_intro (_ -∗ _)).
   by rewrite -except_0_sep wand_elim_r except_0_later.
