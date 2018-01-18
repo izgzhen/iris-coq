@@ -1,5 +1,5 @@
 (** This file is essentially a bunch of testcases. *)
-From iris.program_logic Require Export weakestpre hoare.
+From iris.program_logic Require Export weakestpre total_weakestpre.
 From iris.heap_lang Require Export lang.
 From iris.heap_lang Require Import adequacy.
 From iris.heap_lang Require Import proofmode notation.
@@ -34,7 +34,7 @@ Section LiftingTests.
     let: "y" := ref #1 in
     "x" <- !"x" + #1 ;; !"x".
 
-  Lemma heap_e2_spec E : WP heap_e2 @ E {{ v, ⌜v = #2⌝ }}%I.
+  Lemma heap_e2_spec E : WP heap_e2 @ E [{ v, ⌜v = #2⌝ }]%I.
   Proof.
     iIntros "". rewrite /heap_e2.
     wp_alloc l. wp_let. wp_alloc l'. wp_let.
@@ -46,7 +46,7 @@ Section LiftingTests.
     let: "f" := λ: "z", "z" + #1 in
     if: "x" then "f" #0 else "f" #1.
 
-  Lemma heap_e3_spec E : WP heap_e3 @ E {{ v, ⌜v = #1⌝ }}%I.
+  Lemma heap_e3_spec E : WP heap_e3 @ E [{ v, ⌜v = #1⌝ }]%I.
   Proof.
     iIntros "". rewrite /heap_e3.
     by repeat (wp_pure _).
@@ -56,7 +56,7 @@ Section LiftingTests.
     let: "x" := (let: "y" := ref (ref #1) in ref "y") in
     ! ! !"x".
 
-  Lemma heap_e4_spec : WP heap_e4 {{ v, ⌜ v = #1 ⌝ }}%I.
+  Lemma heap_e4_spec : WP heap_e4 [{ v, ⌜ v = #1 ⌝ }]%I.
   Proof.
     rewrite /heap_e4. wp_alloc l. wp_alloc l'. wp_let.
     wp_alloc l''. wp_let. by repeat wp_load.
@@ -65,7 +65,7 @@ Section LiftingTests.
   Definition heap_e5 : expr :=
     let: "x" := ref (ref #1) in FAA (!"x") (#10 + #1) + ! !"x".
 
-  Lemma heap_e5_spec E : WP heap_e5 @ E {{ v, ⌜v = #13⌝ }}%I.
+  Lemma heap_e5_spec E : WP heap_e5 @ E [{ v, ⌜v = #13⌝ }]%I.
   Proof.
     rewrite /heap_e5. wp_alloc l. wp_alloc l'. wp_let.
     wp_load. wp_op. wp_faa. do 2 wp_load. wp_op. done.
@@ -81,16 +81,17 @@ Section LiftingTests.
 
   Lemma FindPred_spec n1 n2 E Φ :
     n1 < n2 →
-    Φ #(n2 - 1) -∗ WP FindPred #n2 #n1 @ E {{ Φ }}.
+    Φ #(n2 - 1) -∗ WP FindPred #n2 #n1 @ E [{ Φ }].
   Proof.
-    iIntros (Hn) "HΦ". iLöb as "IH" forall (n1 Hn).
+    iIntros (Hn) "HΦ".
+    iInduction (Z.gt_wf n2 n1) as [n1' _] "IH" forall (Hn).
     wp_rec. wp_let. wp_op. wp_let.
     wp_op; case_bool_decide; wp_if.
-    - iApply ("IH" with "[%] HΦ"). omega.
-    - by assert (n1 = n2 - 1) as -> by omega.
+    - iApply ("IH" with "[%] [%] HΦ"); omega.
+    - by assert (n1' = n2 - 1) as -> by omega.
   Qed.
 
-  Lemma Pred_spec n E Φ : ▷ Φ #(n - 1) -∗ WP Pred #n @ E {{ Φ }}.
+  Lemma Pred_spec n E Φ : Φ #(n - 1) -∗ WP Pred #n @ E [{ Φ }].
   Proof.
     iIntros "HΦ". wp_lam.
     wp_op. case_bool_decide; wp_if.
@@ -101,7 +102,7 @@ Section LiftingTests.
   Qed.
 
   Lemma Pred_user E :
-    (WP let: "x" := Pred #42 in Pred "x" @ E {{ v, ⌜v = #40⌝ }})%I.
+    WP let: "x" := Pred #42 in Pred "x" @ E [{ v, ⌜v = #40⌝ }]%I.
   Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
 End LiftingTests.
 

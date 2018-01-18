@@ -56,12 +56,16 @@ theories/base_logic/lib/fancy_updates_from_vs.v
 theories/program_logic/adequacy.v
 theories/program_logic/lifting.v
 theories/program_logic/weakestpre.v
+theories/program_logic/total_weakestpre.v
+theories/program_logic/total_adequacy.v
 theories/program_logic/hoare.v
 theories/program_logic/language.v
 theories/program_logic/ectx_language.v
 theories/program_logic/ectxi_language.v
 theories/program_logic/ectx_lifting.v
 theories/program_logic/ownp.v
+theories/program_logic/total_lifting.v
+theories/program_logic/total_ectx_lifting.v
 theories/heap_lang/lang.v
 theories/heap_lang/tactics.v
 theories/heap_lang/lifting.v
@@ -75,6 +79,7 @@ theories/heap_lang/lib/ticket_lock.v
 theories/heap_lang/lib/counter.v
 theories/heap_lang/proofmode.v
 theories/heap_lang/adequacy.v
+theories/heap_lang/total_adequacy.v
 theories/proofmode/base.v
 theories/proofmode/tokens.v
 theories/proofmode/coq_tactics.v
