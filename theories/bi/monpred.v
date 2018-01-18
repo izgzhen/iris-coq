@@ -395,11 +395,12 @@ End canonical_sbi.
 
 Section bi_facts.
 Context {I : biIndex} {PROP : bi}.
+Local Notation monPred := (monPred I PROP).
 Local Notation monPredI := (monPredI I PROP).
 Local Notation monPred_at := (@monPred_at I PROP).
 Local Notation BiIndexBottom := (@BiIndexBottom I).
 Implicit Types i : I.
-Implicit Types P Q : monPredI.
+Implicit Types P Q : monPred.
 
 (** Instances *)
 
@@ -565,9 +566,9 @@ Lemma monPred_at_or i P Q : (P ∨ Q) i ⊣⊢ P i ∨ Q i.
 Proof. by unseal. Qed.
 Lemma monPred_at_impl i P Q : (P → Q) i ⊣⊢ ∀ j, ⌜i ⊑ j⌝ → P j → Q j.
 Proof. by unseal. Qed.
-Lemma monPred_at_forall {A} i (Φ : A → monPredI) : (∀ x, Φ x) i ⊣⊢ ∀ x, Φ x i.
+Lemma monPred_at_forall {A} i (Φ : A → monPred) : (∀ x, Φ x) i ⊣⊢ ∀ x, Φ x i.
 Proof. by unseal. Qed.
-Lemma monPred_at_exist {A} i (Φ : A → monPredI) : (∃ x, Φ x) i ⊣⊢ ∃ x, Φ x i.
+Lemma monPred_at_exist {A} i (Φ : A → monPred) : (∃ x, Φ x) i ⊣⊢ ∃ x, Φ x i.
 Proof. by unseal. Qed.
 Lemma monPred_at_sep i P Q : (P ∗ Q) i ⊣⊢ P i ∗ Q i.
 Proof. by unseal. Qed.
@@ -743,9 +744,10 @@ End bi_facts.
 
 Section sbi_facts.
 Context {I : biIndex} {PROP : sbi}.
+Local Notation monPred := (monPred I PROP).
 Local Notation monPredSI := (monPredSI I PROP).
 Implicit Types i : I.
-Implicit Types P Q : monPredSI.
+Implicit Types P Q : monPred.
 
 Global Instance monPred_at_timeless P i : Timeless P → Timeless (P i).
 Proof. move => [] /(_ i). unfold Timeless. by unseal. Qed.
@@ -810,7 +812,7 @@ Lemma monPred_at_except_0 i P : (◇ P) i ⊣⊢ ◇ P i.
 Proof. by unseal. Qed.
 
 Lemma monPred_fupd_embed `{FUpdFacts PROP} E1 E2 (P : PROP) :
-  ⎡|={E1,E2}=> P⎤ ⊣⊢ fupd E1 E2 (PROP:=monPred I PROP) ⎡P⎤.
+  ⎡|={E1,E2}=> P⎤ ⊣⊢ fupd E1 E2 (PROP:=monPred) ⎡P⎤.
 Proof.
   unseal. split=>i /=. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
   - by do 2 apply bi.forall_intro=>?.

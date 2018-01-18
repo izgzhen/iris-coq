@@ -50,4 +50,9 @@ Section tests.
     iStartProof PROP. iIntros (i) "HW". iIntros (j ->) "HP".
     iSpecialize ("HW" with "HP"). done.
   Qed.
+
+  Lemma test_apply_in_elim (P : monPredI) (i : I) : monPred_in i ∧ ⎡ P i ⎤ -∗ P.
+  Proof.
+    iIntros. by iApply monPred_in_elim.
+  Qed.
 End tests.
