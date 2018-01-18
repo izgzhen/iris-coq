@@ -1,3 +1,4 @@
+From stdpp Require Import coPset.
 From iris.bi Require Import bi.
 
 (** Definitions. *)
@@ -205,16 +206,43 @@ Definition monPred_ex_def (P : monPred) : monPred :=
 Definition monPred_ex_aux : seal (@monPred_ex_def). by eexists. Qed.
 Definition monPred_ex := unseal (@monPred_ex_aux).
 Definition monPred_ex_eq : @monPred_ex = _ := seal_eq _.
+
+
+Definition monPred_bupd_def `{BUpd PROP} (P : monPred) : monPred :=
+  (* monPred_upclosed is not actually needed, since bupd is always
+     monotone. However, this depends on BUpdFacts, and we do not want
+     this definition to depend on BUpdFacts to avoid having proofs
+     terms in logical terms. *)
+  monPred_upclosed (λ i, |==> P i)%I.
+Definition monPred_bupd_aux `{BUpd PROP} : seal monPred_bupd_def. by eexists. Qed.
+Global Instance monPred_bupd `{BUpd PROP} : BUpd _ := unseal monPred_bupd_aux.
+Definition monPred_bupd_eq `{BUpd PROP} : @bupd monPred _ = _ := seal_eq _.
 End Bi.
 
 Typeclasses Opaque monPred_pure monPred_emp monPred_plainly.
 
-Program Definition monPred_later_def {I : biIndex} {PROP : sbi}
-        (P : monPred I PROP) : monPred I PROP := MonPred (λ i, ▷ (P i))%I _.
+Section Sbi.
+Context {I : biIndex} {PROP : sbi}.
+Implicit Types i : I.
+Notation monPred := (monPred I PROP).
+Implicit Types P Q : monPred.
+
+Program Definition monPred_later_def P : monPred := MonPred (λ i, ▷ (P i))%I _.
 Next Obligation. solve_proper. Qed.
-Definition monPred_later_aux {I PROP} : seal (@monPred_later_def I PROP). by eexists. Qed.
-Definition monPred_later {I PROP} := unseal (@monPred_later_aux I PROP).
-Definition monPred_later_eq {I PROP} : @monPred_later I PROP = _ := seal_eq _.
+Definition monPred_later_aux : seal monPred_later_def. by eexists. Qed.
+Definition monPred_later := unseal monPred_later_aux.
+Definition monPred_later_eq : monPred_later = _ := seal_eq _.
+
+Definition monPred_fupd_def `{FUpd PROP} (E1 E2 : coPset) (P : monPred) : monPred :=
+  (* monPred_upclosed is not actually needed, since fupd is always
+     monotone. However, this depends on FUpdFacts, and we do not want
+     this definition to depend on FUpdFacts to avoid having proofs
+     terms in logical terms. *)
+  monPred_upclosed (λ i, |={E1,E2}=> P i)%I.
+Definition monPred_fupd_aux `{FUpd PROP} : seal monPred_fupd_def. by eexists. Qed.
+Global Instance monPred_fupd `{FUpd PROP} : FUpd _ := unseal monPred_fupd_aux.
+Definition monPred_fupd_eq `{FUpd PROP} : @fupd monPred _ = _ := seal_eq _.
+End Sbi.
 
 Module MonPred.
 Definition unseal_eqs :=
@@ -222,7 +250,8 @@ Definition unseal_eqs :=
    @monPred_forall_eq, @monPred_exist_eq, @monPred_internal_eq_eq,
    @monPred_sep_eq, @monPred_wand_eq,
    @monPred_persistently_eq, @monPred_later_eq,
-   @monPred_in_eq, @monPred_all_eq, @monPred_ex_eq, @monPred_embed_eq).
+   @monPred_in_eq, @monPred_all_eq, @monPred_ex_eq, @monPred_embed_eq,
+   @monPred_bupd_eq, @monPred_fupd_eq).
 Ltac unseal :=
   unfold bi_affinely, bi_absorbingly, sbi_except_0, bi_pure, bi_emp,
          monPred_upclosed, bi_and, bi_or, bi_impl, bi_forall, bi_exist,
@@ -549,6 +578,35 @@ Proof.
   unseal. split=>i' /=.
   eapply bi.pure_elim; [apply bi.and_elim_l|]=>?. rewrite bi.and_elim_r. by f_equiv.
 Qed.
+
+Global Instance monPred_bupd_facts `{BUpdFacts PROP} : BUpdFacts (monPredI I PROP).
+Proof.
+  split; unseal; unfold monPred_bupd_def, monPred_upclosed.
+  - intros n P Q HPQ. split=>/= i. by repeat f_equiv.
+  - intros P. split=>/= i. apply bi.forall_intro=>?. rewrite bi.pure_impl_forall.
+    apply bi.forall_intro=><-. apply bupd_intro.
+  - intros P Q HPQ. split=>/= i. by repeat f_equiv.
+  - intros P. split=>/= i. do 3 f_equiv. rewrite -(bupd_trans (P _))
+      bi.forall_elim bi.pure_impl_forall bi.forall_elim //.
+  - intros P Q. split=> /= i. apply bi.forall_intro=>?.
+    rewrite bi.pure_impl_forall. apply bi.forall_intro=><-.
+    rewrite -bupd_frame_r bi.forall_elim bi.pure_impl_forall bi.forall_elim //.
+  - intros P. split=> /= i. rewrite bi.forall_elim bi.pure_impl_forall
+      bi.forall_elim // -bi.plainly_forall bupd_plainly bi.forall_elim //.
+Qed.
+Lemma monPred_bupd_at `{BUpdFacts PROP} P i : (|==> P) i ⊣⊢ |==> P i.
+Proof.
+  unseal. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
+  - rewrite !bi.forall_elim //.
+  - do 2 apply bi.forall_intro=>?. by do 2 f_equiv.
+Qed.
+Lemma monPred_bupd_embed `{BUpdFacts PROP} (P : PROP) :
+  ⎡|==> P⎤ ⊣⊢ bupd (PROP:=monPred I PROP) ⎡P⎤.
+Proof.
+  unseal. split=>i /=. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
+  - by do 2 apply bi.forall_intro=>?.
+  - rewrite !bi.forall_elim //.
+Qed.
 End bi_facts.
 
 Section sbi_facts.
@@ -578,4 +636,46 @@ Qed.
 
 Global Instance monPred_sbi_embedding : SbiEmbedding PROP (monPredSI I PROP).
 Proof. split; try apply _. by unseal. Qed.
+
+Global Instance monPred_fupd_facts `{FUpdFacts PROP} : FUpdFacts (monPredSI I PROP).
+Proof.
+  split; first apply _; unseal; unfold monPred_fupd_def, monPred_upclosed.
+  - intros E1 E2 n P Q HPQ. split=>/= i. by repeat f_equiv.
+  - intros E1 E2 P HE12. split=>/= i.
+    do 2 setoid_rewrite bi.pure_impl_forall. do 2 apply bi.forall_intro=>?.
+    rewrite (fupd_intro_mask E1 E2 (P i)) //. f_equiv.
+    do 2 apply bi.forall_intro=>?. do 2 f_equiv. by etrans.
+  - intros E P. split=>/= i. by setoid_rewrite bupd_fupd.
+  - intros E1 E2 P. split=>/= i. etrans; [apply bi.equiv_entails, bi.except_0_forall|].
+    do 2 f_equiv. rewrite bi.pure_impl_forall bi.except_0_forall. do 2 f_equiv.
+    by apply except_0_fupd.
+  - intros E1 E2 P Q HPQ. split=>/= i. by repeat f_equiv.
+  - intros E1 E2 E3 P. split=>/= i. do 3 f_equiv. rewrite -(fupd_trans _ _ _ (P _))
+      bi.forall_elim bi.pure_impl_forall bi.forall_elim //.
+  - intros E1 E2 Ef P HE1f. split=>/= i. do 3 f_equiv. rewrite -fupd_mask_frame_r' //
+      bi.forall_elim bi.pure_impl_forall bi.forall_elim //.
+  - intros E1 E2 P Q. split=>/= i. setoid_rewrite bi.pure_impl_forall.
+    do 2 setoid_rewrite bi.sep_forall_r. setoid_rewrite fupd_frame_r.
+    by repeat f_equiv.
+  - intros E1 E2 E2' P Q ? HE12. split=>/= i. repeat setoid_rewrite bi.pure_impl_forall.
+    do 4 f_equiv. rewrite 4?bi.forall_elim // fupd_plain' //.
+    apply bi.wand_intro_r. rewrite bi.wand_elim_l. do 2 apply bi.forall_intro=>?.
+    repeat f_equiv=>//. do 2 apply bi.forall_intro=>?. repeat f_equiv. by etrans.
+  - intros E P ?. split=>/= i. setoid_rewrite bi.pure_impl_forall.
+    do 2 setoid_rewrite bi.later_forall. do 4 f_equiv. apply later_fupd_plain, _.
+Qed.
+Lemma monPred_fupd_at `{FUpdFacts PROP} E1 E2 P i :
+  (|={E1,E2}=> P) i ⊣⊢ |={E1,E2}=> P i.
+Proof.
+  unseal. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
+  - rewrite !bi.forall_elim //.
+  - do 2 apply bi.forall_intro=>?. by do 2 f_equiv.
+Qed.
+Lemma monPred_fupd_embed `{FUpdFacts PROP} E1 E2 (P : PROP) :
+  ⎡|={E1,E2}=> P⎤ ⊣⊢ fupd E1 E2 (PROP:=monPred I PROP) ⎡P⎤.
+Proof.
+  unseal. split=>i /=. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
+  - by do 2 apply bi.forall_intro=>?.
+  - rewrite !bi.forall_elim //.
+Qed.
 End sbi_facts.

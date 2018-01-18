@@ -601,16 +601,6 @@ Qed.
 Global Instance cmra_valid_proper {A : cmraT} :
   Proper ((≡) ==> (⊣⊢)) (@uPred_cmra_valid M A) := ne_proper _.
 
-Global Instance bupd_ne : NonExpansive (@bupd _ (@uPred_bupd M)).
-Proof.
-  intros n P Q HPQ.
-  unseal; split=> n' x; split; intros HP k yf ??;
-    destruct (HP k yf) as (x'&?&?); auto;
-    exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
-Qed.
-Global Instance bupd_proper :
-  Proper ((≡) ==> (≡)) (@bupd _ (@uPred_bupd M)) := ne_proper _.
-
 (** BI instances *)
 
 Global Instance uPred_affine : BiAffine (uPredI M) | 0.
@@ -686,27 +676,29 @@ Lemma ofe_fun_validI `{Finite A} {B : A → ucmraT} (g : ofe_fun B) :
 Proof. by uPred.unseal. Qed.
 
 (* Basic update modality *)
-Lemma bupd_intro P : P ==∗ P.
+Global Instance bupd_facts : BUpdFacts (uPredI M).
 Proof.
-  unseal. split=> n x ? HP k yf ?; exists x; split; first done.
-  apply uPred_mono with n x; eauto using cmra_validN_op_l.
+  split.
+  - intros n P Q HPQ.
+    unseal; split=> n' x; split; intros HP k yf ??;
+    destruct (HP k yf) as (x'&?&?); auto;
+    exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
+  - unseal. split=> n x ? HP k yf ?; exists x; split; first done.
+    apply uPred_mono with n x; eauto using cmra_validN_op_l.
+  - unseal. intros HPQ; split=> n x ? HP k yf ??.
+    destruct (HP k yf) as (x'&?&?); eauto.
+    exists x'; split; eauto using uPred_in_entails, cmra_validN_op_l.
+  - unseal; split; naive_solver.
+  - unseal. split; intros n x ? (x1&x2&Hx&HP&?) k yf ??.
+    destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
+    { by rewrite assoc -(dist_le _ _ _ _ Hx); last lia. }
+    exists (x' ⋅ x2); split; first by rewrite -assoc.
+    exists x', x2. eauto using uPred_mono, cmra_validN_op_l, cmra_validN_op_r.
+  - unseal; split => n x Hnx /= Hng.
+    destruct (Hng n ε) as [? [_ Hng']]; try rewrite right_id; auto.
+    eapply uPred_mono; eauto using ucmra_unit_leastN.
 Qed.
-Lemma bupd_mono P Q : (P ⊢ Q) → (|==> P) ==∗ Q.
-Proof.
-  unseal. intros HPQ; split=> n x ? HP k yf ??.
-  destruct (HP k yf) as (x'&?&?); eauto.
-  exists x'; split; eauto using uPred_in_entails, cmra_validN_op_l.
-Qed.
-Lemma bupd_trans P : (|==> |==> P) ==∗ P.
-Proof. unseal; split; naive_solver. Qed.
-Lemma bupd_frame_r P R : (|==> P) ∗ R ==∗ P ∗ R.
-Proof.
-  unseal. split; intros n x ? (x1&x2&Hx&HP&?) k yf ??.
-  destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
-  { by rewrite assoc -(dist_le _ _ _ _ Hx); last lia. }
-  exists (x' ⋅ x2); split; first by rewrite -assoc.
-  exists x', x2. eauto using uPred_mono, cmra_validN_op_l, cmra_validN_op_r.
-Qed.
+
 Lemma bupd_ownM_updateP x (Φ : M → Prop) :
   x ~~>: Φ → uPred_ownM x ==∗ ∃ y, ⌜Φ y⌝ ∧ uPred_ownM y.
 Proof.
@@ -715,12 +707,6 @@ Proof.
   { rewrite /= assoc -(dist_le _ _ _ _ Hx); auto. }
   exists (y ⋅ x3); split; first by rewrite -assoc.
   exists y; eauto using cmra_includedN_l.
-Qed.
-Lemma bupd_plainly P : (|==> bi_plainly P) ⊢ P.
-Proof.
-  unseal; split => n x Hnx /= Hng.
-  destruct (Hng n ε) as [? [_ Hng']]; try rewrite right_id; auto.
-  eapply uPred_mono; eauto using ucmra_unit_leastN.
 Qed.
 End uPred.
 End uPred.

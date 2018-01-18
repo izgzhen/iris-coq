@@ -72,6 +72,9 @@ Global Instance make_monPred_at_in i j : MakeMonPredAt j (monPred_in i) ⌜i ⊑
 Proof. rewrite /MakeMonPredAt. by unseal. Qed.
 Global Instance make_monPred_at_default i P : MakeMonPredAt i P (P i) | 100.
 Proof. by rewrite /MakeMonPredAt. Qed.
+Global Instance make_monPred_at_bupd `{BUpdFacts PROP} i P 𝓟 :
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|==> P)%I (|==> 𝓟)%I.
+Proof. by rewrite /MakeMonPredAt monPred_bupd_at=> <-. Qed.
 
 Global Instance from_assumption_make_monPred_at_l p i j P 𝓟 :
   MakeMonPredAt i P 𝓟 → IsBiIndexRel j i → FromAssumption p (P j) 𝓟.
@@ -317,6 +320,33 @@ Qed.
 Global Instance from_modal_monPred_at i P Q 𝓠 :
   FromModal P Q → MakeMonPredAt i Q 𝓠 → FromModal (P i) 𝓠.
 Proof. by rewrite /FromModal /MakeMonPredAt=> <- <-. Qed.
+
+Global Instance elim_modal_embed_bupd_goal `{BUpdFacts PROP} P P' 𝓠 𝓠' :
+  ElimModal P P' (|==> ⎡𝓠⎤)%I (|==> ⎡𝓠'⎤)%I →
+  ElimModal P P' ⎡|==> 𝓠⎤ ⎡|==> 𝓠'⎤.
+Proof. by rewrite /ElimModal !monPred_bupd_embed. Qed.
+Global Instance elim_modal_embed_bupd_hyp `{BUpdFacts PROP} 𝓟 P' Q Q' :
+  ElimModal (|==> ⎡𝓟⎤)%I P' Q Q' →
+  ElimModal ⎡|==> 𝓟⎤ P' Q Q'.
+Proof. by rewrite /ElimModal monPred_bupd_embed. Qed.
+
+Global Instance add_modal_embed_bupd_goal `{BUpdFacts PROP} P P' 𝓠 :
+  AddModal P P' (|==> ⎡𝓠⎤)%I → AddModal P P' ⎡|==> 𝓠⎤.
+Proof. by rewrite /AddModal !monPred_bupd_embed. Qed.
+
+Global Instance elim_modal_at_bupd_goal `{BUpdFacts PROP} 𝓟 𝓟' Q Q' i :
+  ElimModal 𝓟 𝓟' (|==> Q i) (|==> Q' i) →
+  ElimModal 𝓟 𝓟' ((|==> Q) i) ((|==> Q') i).
+Proof. by rewrite /ElimModal !monPred_bupd_at. Qed.
+Global Instance elim_modal_at_bupd_hyp `{BUpdFacts PROP} P 𝓟' 𝓠 𝓠' i:
+  ElimModal (|==> P i) 𝓟' 𝓠 𝓠' →
+  ElimModal ((|==> P) i) 𝓟' 𝓠 𝓠'.
+Proof. by rewrite /ElimModal monPred_bupd_at. Qed.
+
+Global Instance add_modal_at_bupd_goal `{BUpdFacts PROP} 𝓟 𝓟' Q i :
+  AddModal 𝓟 𝓟' (|==> Q i)%I → AddModal 𝓟 𝓟' ((|==> Q) i).
+Proof. by rewrite /AddModal !monPred_bupd_at. Qed.
+
 End bi.
 
 (* When P and/or Q are evars when doing typeclass search on [IntoWand
@@ -362,6 +392,9 @@ Proof. rewrite /MakeMonPredAt=><-. by unseal. Qed.
 Global Instance make_monPred_at_laterN i n P 𝓠 :
   MakeMonPredAt i P 𝓠 → MakeMonPredAt i (▷^n P)%I (▷^n 𝓠)%I.
 Proof. rewrite /MakeMonPredAt=> <-. elim n=>//= ? <-. by unseal. Qed.
+Global Instance make_monPred_at_fupd `{FUpdFacts PROP} i E1 E2 P 𝓟 :
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|={E1,E2}=> P)%I (|={E1,E2}=> 𝓟)%I.
+Proof. by rewrite /MakeMonPredAt monPred_fupd_at=> <-. Qed.
 
 Global Instance into_except_0_monPred_at_fwd i P Q 𝓠 :
   IntoExcept0 P Q → MakeMonPredAt i Q 𝓠 → IntoExcept0 (P i) 𝓠.
@@ -378,4 +411,30 @@ Qed.
 Global Instance from_later_monPred_at i n P Q 𝓠 :
   FromLaterN n P Q → MakeMonPredAt i Q 𝓠 → FromLaterN n (P i) 𝓠.
 Proof. rewrite /FromLaterN /MakeMonPredAt=> <- <-. elim n=>//= ? ->. by unseal. Qed.
+
+Global Instance elim_modal_embed_fupd_goal `{FUpdFacts PROP} E1 E2 E3 P P' 𝓠 𝓠' :
+  ElimModal P P' (|={E1,E3}=> ⎡𝓠⎤)%I (|={E2,E3}=> ⎡𝓠'⎤)%I →
+  ElimModal P P' ⎡|={E1,E3}=> 𝓠⎤ ⎡|={E2,E3}=> 𝓠'⎤.
+Proof. by rewrite /ElimModal !monPred_fupd_embed. Qed.
+Global Instance elim_modal_embed_fupd_hyp `{FUpdFacts PROP} E1 E2 𝓟 P' Q Q' :
+  ElimModal (|={E1,E2}=> ⎡𝓟⎤)%I P' Q Q' →
+  ElimModal ⎡|={E1,E2}=> 𝓟⎤ P' Q Q'.
+Proof. by rewrite /ElimModal monPred_fupd_embed. Qed.
+
+Global Instance add_modal_embed_fupd_goal `{FUpdFacts PROP} E1 E2 P P' 𝓠 :
+  AddModal P P' (|={E1,E2}=> ⎡𝓠⎤)%I → AddModal P P' ⎡|={E1,E2}=> 𝓠⎤.
+Proof. by rewrite /AddModal !monPred_fupd_embed. Qed.
+
+Global Instance elim_modal_at_fupd_goal `{FUpdFacts PROP} E1 E2 E3 𝓟 𝓟' Q Q' i :
+  ElimModal 𝓟 𝓟' (|={E1,E3}=> Q i) (|={E2,E3}=> Q' i) →
+  ElimModal 𝓟 𝓟' ((|={E1,E3}=> Q) i) ((|={E2,E3}=> Q') i).
+Proof. by rewrite /ElimModal !monPred_fupd_at. Qed.
+Global Instance elim_modal_at_fupd_hyp `{FUpdFacts PROP} E1 E2 P 𝓟' 𝓠 𝓠' i :
+  ElimModal (|={E1,E2}=> P i) 𝓟' 𝓠 𝓠' →
+  ElimModal ((|={E1,E2}=> P) i) 𝓟' 𝓠 𝓠'.
+Proof. by rewrite /ElimModal monPred_fupd_at. Qed.
+
+Global Instance add_modal_at_fupd_goal `{FUpdFacts PROP} E1 E2 𝓟 𝓟' Q i :
+  AddModal 𝓟 𝓟' (|={E1,E2}=> Q i) → AddModal 𝓟 𝓟' ((|={E1,E2}=> Q) i).
+Proof. by rewrite /AddModal !monPred_fupd_at. Qed.
 End sbi.
