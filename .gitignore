@@ -1,6 +1,7 @@
 *.vo
 *.vio
 *.v.d
+.coqdeps.d
 *.glob
 *.cache
 *.aux
