@@ -11,8 +11,10 @@ Structure biIndex :=
       bi_index_rel_preorder : PreOrder (⊑) }.
 Existing Instances bi_index_inhabited bi_index_rel bi_index_rel_preorder.
 
-(* TODO : all the use cases of this have a bi_index with a bottom
-   element. Should we add this to the structure? *)
+(* We may want to instantiate monPred with the reflexivity relation in
+   the case where there is no relevent order. In that case, there is
+   no bottom element, so that we do not want to force any BI index to
+   have one. *)
 Class BiIndexBottom {I : biIndex} (bot : I) :=
   bi_index_bot i : bot ⊑ i.
 
