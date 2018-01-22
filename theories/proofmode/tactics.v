@@ -623,7 +623,7 @@ Tactic Notation "iIntoValid" open_constr(t) :=
       let e' := eval unfold e in e in clear e; go (t e')
     | _ =>
       let tT' := eval cbv zeta in tT in apply (as_valid_1 tT');
-        [apply _ || fail "iPoseProof: not a uPred"|exact t]
+        [apply _ || fail "iPoseProof: not a BI assertion"|exact t]
     end in
   go t.
 
