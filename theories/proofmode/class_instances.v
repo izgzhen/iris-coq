@@ -1410,13 +1410,22 @@ Qed.
 
 (* IntoLater *)
 Global Instance into_laterN_later n P Q :
-  IntoLaterN n P Q → IntoLaterN' (S n) (▷ P) Q.
+  IntoLaterN n P Q → IntoLaterN' (S n) (▷ P) Q | 0.
 Proof. by rewrite /IntoLaterN' /IntoLaterN =>->. Qed.
-Global Instance into_laterN_laterN n P : IntoLaterN' n (▷^n P) P.
+Global Instance into_laterN_later_further n P Q :
+  IntoLaterN' n P Q → IntoLaterN' n (▷ P) (▷ Q) | 1000.
+Proof. rewrite /IntoLaterN' /IntoLaterN =>->. by rewrite -laterN_later. Qed.
+
+Global Instance into_laterN_laterN n P : IntoLaterN' n (▷^n P) P | 0.
 Proof. by rewrite /IntoLaterN' /IntoLaterN. Qed.
 Global Instance into_laterN_laterN_plus n m P Q :
-  IntoLaterN m P Q → IntoLaterN' (n + m) (▷^n P) Q.
+  IntoLaterN m P Q → IntoLaterN' (n + m) (▷^n P) Q | 1.
 Proof. rewrite /IntoLaterN' /IntoLaterN=>->. by rewrite laterN_plus. Qed.
+Global Instance into_laterN_laterN_further n m P Q :
+  IntoLaterN' m P Q → IntoLaterN' m (▷^n P) (▷^n Q) | 1000.
+Proof.
+  rewrite /IntoLaterN' /IntoLaterN=>->. by rewrite -!laterN_plus Nat.add_comm.
+Qed.
 
 Global Instance into_laterN_and_l n P1 P2 Q1 Q2 :
   IntoLaterN' n P1 Q1 → IntoLaterN n P2 Q2 →

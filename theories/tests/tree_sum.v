@@ -1,4 +1,4 @@
-From iris.program_logic Require Export weakestpre.
+From iris.program_logic Require Export weakestpre total_weakestpre.
 From iris.heap_lang Require Export lang.
 From iris.proofmode Require Export tactics.
 From iris.heap_lang Require Import proofmode notation.
@@ -35,9 +35,9 @@ Definition sum' : val := λ: "t",
   !"l".
 
 Lemma sum_loop_wp `{!heapG Σ} v t l (n : Z) :
-  {{{ l ↦ #n ∗ is_tree v t }}}
+  [[{ l ↦ #n ∗ is_tree v t }]]
     sum_loop v #l
-  {{{ RET #(); l ↦ #(sum t + n) ∗ is_tree v t }}}.
+  [[{ RET #(); l ↦ #(sum t + n) ∗ is_tree v t }]].
 Proof.
   iIntros (Φ) "[Hl Ht] HΦ".
   iInduction t as [n'|tl ? tr] "IH" forall (v l n Φ); simpl; wp_rec; wp_let.
@@ -55,7 +55,7 @@ Proof.
 Qed.
 
 Lemma sum_wp `{!heapG Σ} v t :
-  {{{ is_tree v t }}} sum' v {{{ RET #(sum t); is_tree v t }}}.
+  [[{ is_tree v t }]] sum' v [[{ RET #(sum t); is_tree v t }]].
 Proof.
   iIntros (Φ) "Ht HΦ". rewrite /sum' /=.
   wp_let. wp_alloc l as "Hl". wp_let.

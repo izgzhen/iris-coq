@@ -293,4 +293,11 @@ Proof.
   Fail iSpecialize ("Hφ" with "HP").
   iSpecialize ("Hφ" with "[% //] HP"). done.
 Qed.
+
+Lemma test_iNext_laterN_later P n : ▷ ▷^n P ⊢ ▷^n ▷ P.
+Proof. iIntros "H". iNext. by iNext. Qed.
+Lemma test_iNext_later_laterN P n : ▷^n ▷ P ⊢ ▷ ▷^n P.
+Proof. iIntros "H". iNext. by iNext. Qed.
+Lemma test_iNext_laterN_laterN P n1 n2 : ▷ ▷^n1 ▷^n2 P ⊢ ▷^n1 ▷^n2 ▷ P.
+Proof. iIntros "H". iNext. iNext. by iNext. Qed.
 End tests.

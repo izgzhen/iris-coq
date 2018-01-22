@@ -246,7 +246,7 @@ Hint Mode IntoExcept0 + - ! : typeclass_instances.
   progress, i.e. its instances should actually strip a later.
 
 The point of using the auxilary class [IntoLaterN'] is to ensure that the
-default instance is not applied deeply in the term, which may cause in too many
+default instance is not applied deeply in the term, which may result in too many
 definitions being unfolded (see issue #55).
 
 For binary connectives we have the following instances:
@@ -259,7 +259,7 @@ IntoLaterN' n P P'       IntoLaterN n Q Q'
 
       IntoLaterN' n Q Q'
 -------------------------------
-IntoLaterN n (P /\ Q) (P /\ Q')
+IntoLaterN' n (P /\ Q) (P /\ Q')
 >>
 *)
 Class IntoLaterN {PROP : sbi} (n : nat) (P Q : PROP) := into_laterN : P ⊢ ▷^n Q.
