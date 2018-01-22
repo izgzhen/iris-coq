@@ -57,27 +57,28 @@ Tactic Notation "iMatchHyp" tactic1(tac) :=
 Class AsValid {PROP : bi} (φ : Prop) (P : PROP) := as_valid : φ ↔ P.
 Arguments AsValid {_} _%type _%I.
 
+Class AsValid0 {PROP : bi} (φ : Prop) (P : PROP) :=
+  as_valid_here : AsValid φ P.
+Arguments AsValid0 {_} _%type _%I.
+Existing Instance as_valid_here | 0.
+
 Lemma as_valid_1 (φ : Prop) {PROP : bi} (P : PROP) `{!AsValid φ P} : φ → P.
 Proof. by apply as_valid. Qed.
 Lemma as_valid_2 (φ : Prop) {PROP : bi} (P : PROP) `{!AsValid φ P} : P → φ.
 Proof. by apply as_valid. Qed.
 
-Instance as_valid_valid {PROP : bi} (P : PROP) : AsValid (bi_valid P) P | 0.
+Instance as_valid_valid {PROP : bi} (P : PROP) : AsValid0 (bi_valid P) P | 0.
 Proof. by rewrite /AsValid. Qed.
 
-Instance as_valid_entails {PROP : bi} (P Q : PROP) : AsValid (P ⊢ Q) (P -∗ Q) | 0.
+Instance as_valid_entails {PROP : bi} (P Q : PROP) : AsValid0 (P ⊢ Q) (P -∗ Q).
 Proof. split. apply bi.entails_wand. apply bi.wand_entails. Qed.
 
-Instance as_valid_equiv {PROP : bi} (P Q : PROP) : AsValid (P ≡ Q) (P ∗-∗ Q) | 0.
+Instance as_valid_equiv {PROP : bi} (P Q : PROP) : AsValid0 (P ≡ Q) (P ∗-∗ Q).
 Proof. split. apply bi.equiv_wand_iff. apply bi.wand_iff_equiv. Qed.
 
-Class AsValid' {PROP : bi} (φ : Prop) (P : PROP) := as_valid' :> AsValid φ P.
-Arguments AsValid' {_} _%type _%I.
-Hint Mode AsValid' ! ! - : typeclass_instances.
-
 Instance as_valid_embed `{BiEmbedding PROP PROP'} (φ : Prop) (P : PROP) :
-  AsValid φ P → AsValid' φ ⎡P⎤.
-Proof. rewrite /AsValid' /AsValid=> ->. rewrite bi_embed_valid //. Qed.
+  AsValid0 φ P → AsValid φ ⎡P⎤.
+Proof. rewrite /AsValid0 /AsValid=> ->. rewrite bi_embed_valid //. Qed.
 
 (** * Start a proof *)
 Tactic Notation "iStartProof" uconstr(PROP) :=
