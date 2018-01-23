@@ -805,23 +805,23 @@ Proof.
   rewrite /FromPure /Frame=> <-. by rewrite affinely_persistently_if_elim sep_elim_l.
 Qed.
 
-Class MakeMorphism `{BiEmbedding PROP PROP'} P (Q : PROP') :=
+Class MakeEmbed `{BiEmbedding PROP PROP'} P (Q : PROP') :=
   make_embed : ⎡P⎤ ⊣⊢ Q.
-Arguments MakeMorphism {_ _ _} _%I _%I.
+Arguments MakeEmbed {_ _ _} _%I _%I.
 Global Instance make_embed_pure `{BiEmbedding PROP PROP'} φ :
-  MakeMorphism ⌜φ⌝ ⌜φ⌝.
-Proof. by rewrite /MakeMorphism bi_embed_pure. Qed.
+  MakeEmbed ⌜φ⌝ ⌜φ⌝.
+Proof. by rewrite /MakeEmbed bi_embed_pure. Qed.
 Global Instance make_embed_emp `{BiEmbedding PROP PROP'} :
-  MakeMorphism emp emp.
-Proof. by rewrite /MakeMorphism bi_embed_emp. Qed.
+  MakeEmbed emp emp.
+Proof. by rewrite /MakeEmbed bi_embed_emp. Qed.
 Global Instance make_embed_default `{BiEmbedding PROP PROP'} :
-  MakeMorphism P ⎡P⎤ | 100.
-Proof. by rewrite /MakeMorphism. Qed.
+  MakeEmbed P ⎡P⎤ | 100.
+Proof. by rewrite /MakeEmbed. Qed.
 
 Global Instance frame_embed `{BiEmbedding PROP PROP'} p P Q (Q' : PROP') R :
-  Frame p R P Q → MakeMorphism Q Q' → Frame p ⎡R⎤ ⎡P⎤ Q'.
+  Frame p R P Q → MakeEmbed Q Q' → Frame p ⎡R⎤ ⎡P⎤ Q'.
 Proof.
-  rewrite /Frame /MakeMorphism => <- <-.
+  rewrite /Frame /MakeEmbed => <- <-.
   rewrite bi_embed_sep bi_embed_affinely_if bi_embed_persistently_if => //.
 Qed.
 
