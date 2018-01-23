@@ -1,7 +1,3 @@
-ifeq "$(COQBIN)" ""
-  COQBIN=$(dir $(shell which coqtop))/
-endif
-
 # Forward most targets to Coq makefile (with some trick to make this phony)
 %: Makefile.coq phony
 	+@make -f Makefile.coq $@
