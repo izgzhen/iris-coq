@@ -81,15 +81,37 @@ Instance as_valid_embed `{BiEmbedding PROP PROP'} (φ : Prop) (P : PROP) :
 Proof. rewrite /AsValid0 /AsValid=> ->. rewrite bi_embed_valid //. Qed.
 
 (** * Start a proof *)
+Tactic Notation "iStartProof" :=
+  lazymatch goal with
+  | |- envs_entails _ _ => idtac
+
+  (* In the case the goal starts with a let, we want [iIntros (x)] to
+     not unfold the variable, but instead introduce it as with Coq's
+     intros.*)
+  | |- let _ := _ in _ => fail
+
+  | |- ?φ => eapply (as_valid_2 φ);
+               [apply _ || fail "iStartProof: not a Bi entailment"
+               |apply tac_adequate]
+  end.
+
+(* Same as above, with 2 differences :
+   - We can specify a BI in which we want the proof to be done
+   - If the goal starts with a let or a ∀, they are automatically
+     introduced. *)
 Tactic Notation "iStartProof" uconstr(PROP) :=
   lazymatch goal with
   | |- @envs_entails ?PROP' _ _ =>
+    (* This cannot be shared with the other [iStartProof], because
+    type_term has a non-negligeable performance impact. *)
     let x := type_term (eq_refl : @eq Type PROP PROP') in idtac
-  | |- let _ := _ in _ => fail
+
+  | |- let _ := _ in _ => intro
+  | |- ∀ _, _ => intro
 
   (* We eta-expand [as_valid_2], in order to make sure that
-     [iStartProof works] even if [PROP] is the carrier type. In this
-     case, typing this expression will end up unifying PROP with
+     [iStartProof PROP] works even if [PROP] is the carrier type. In
+     this case, typing this expression will end up unifying PROP with
      [bi_car _], and hence trigger the canonical structures mechanism
      to find the corresponding bi. *)
   | |- ?φ => eapply (λ P : PROP, @as_valid_2 φ _ P);
@@ -97,7 +119,6 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
                |apply tac_adequate]
   end.
 
-Tactic Notation "iStartProof" := iStartProof _.
 
 (** * Simplification *)
 Tactic Notation "iEval" tactic(t) :=
