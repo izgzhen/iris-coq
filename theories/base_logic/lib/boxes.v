@@ -209,7 +209,7 @@ Lemma box_fill E f P :
 Proof.
   iIntros (?) "H HP"; iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists Φ; iSplitR; first by rewrite big_opM_fmap.
-  rewrite internal_eq_iff later_iff big_opM_commute.
+  iEval (rewrite internal_eq_iff later_iff big_opM_commute) in "HeqP".
   iDestruct ("HeqP" with "HP") as "HP".
   iCombine "Hf" "HP" as "Hf".
   rewrite -big_opM_opM big_opM_fmap; iApply (fupd_big_sepM _ _ f).

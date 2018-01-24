@@ -285,6 +285,13 @@ Proof. iIntros "H". iNext. by iNext. Qed.
 Lemma test_iNext_laterN_laterN P n1 n2 : ▷ ▷^n1 ▷^n2 P ⊢ ▷^n1 ▷^n2 ▷ P.
 Proof. iIntros "H". iNext. iNext. by iNext. Qed.
 
+Lemma test_iEval x y : ⌜ (y + x)%nat = 1 ⌝ -∗ ⌜ S (x + y) = 2%nat ⌝ : uPred M.
+Proof.
+  iIntros (H).
+  iEval (rewrite (Nat.add_comm x y) // H).
+  done.
+Qed.
+
 (* TODO: This test is broken in Coq 8.6. Should be restored once we drop Coq
 8.6 support. See also issue #108. *)
 (*
