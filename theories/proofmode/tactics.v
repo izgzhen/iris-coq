@@ -58,12 +58,6 @@ Tactic Notation "iMatchHyp" tactic1(tac) :=
 Tactic Notation "iStartProof" :=
   lazymatch goal with
   | |- envs_entails _ _ => idtac
-
-  (* In the case the goal starts with a let, we want [iIntros (x)] to
-     not unfold the variable, but instead introduce it as with Coq's
-     intros.*)
-  | |- let _ := _ in _ => fail
-
   | |- ?φ => eapply (as_valid_2 φ);
                [apply _ || fail "iStartProof: not a Bi entailment"
                |apply tac_adequate]
@@ -80,9 +74,6 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
     type_term has a non-negligeable performance impact. *)
     let x := type_term (eq_refl : @eq Type PROP PROP') in idtac
 
-  | |- let _ := _ in _ => intro
-  | |- ∀ _, _ => intro
-
   (* We eta-expand [as_valid_2], in order to make sure that
      [iStartProof PROP] works even if [PROP] is the carrier type. In
      this case, typing this expression will end up unifying PROP with
@@ -96,8 +87,7 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
 
 (** * Simplification *)
 Tactic Notation "iEval" tactic(t) :=
-  try iStartProof;
-  try (eapply tac_eval; [t; reflexivity|]).
+  iStartProof; try (eapply tac_eval; [t; reflexivity|]).
 
 Tactic Notation "iSimpl" := iEval simpl.
 
@@ -150,7 +140,7 @@ Tactic Notation "iClear" constr(Hs) :=
     | ESelPure :: ?Hs => clear; go Hs
     | ESelIdent _ ?H :: ?Hs => iClearHyp H; go Hs
     end in
-  let Hs := iElaborateSelPat Hs in go Hs.
+  let Hs := iElaborateSelPat Hs in iStartProof; go Hs.
 
 Tactic Notation "iClear" "(" ident_list(xs) ")" constr(Hs) :=
   iClear Hs; clear xs.
@@ -253,12 +243,14 @@ Local Ltac iFrameFinish :=
   end.
 
 Local Ltac iFramePure t :=
+  iStartProof;
   let φ := type of t in
   eapply (tac_frame_pure _ _ _ _ t);
     [apply _ || fail "iFrame: cannot frame" φ
     |iFrameFinish].
 
 Local Ltac iFrameHyp H :=
+  iStartProof;
   eapply tac_frame with _ H _ _ _;
     [env_reflexivity || fail "iFrame:" H "not found"
     |apply _ ||
@@ -270,6 +262,7 @@ Local Ltac iFrameAnyPure :=
   repeat match goal with H : _ |- _ => iFramePure H end.
 
 Local Ltac iFrameAnyPersistent :=
+  iStartProof;
   let rec go Hs :=
     match Hs with [] => idtac | ?H :: ?Hs => repeat iFrameHyp H; go Hs end in
   match goal with
@@ -278,6 +271,7 @@ Local Ltac iFrameAnyPersistent :=
   end.
 
 Local Ltac iFrameAnySpatial :=
+  iStartProof;
   let rec go Hs :=
     match Hs with [] => idtac | ?H :: ?Hs => try iFrameHyp H; go Hs end in
   match goal with
@@ -342,16 +336,20 @@ Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
 
 (** * Basic introduction tactics *)
 Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
-  try iStartProof;
-  lazymatch goal with
-  | |- envs_entails _ _ =>
-    eapply tac_forall_intro;
-      [apply _ ||
-       let P := match goal with |- FromForall ?P _ => P end in
-       fail "iIntro: cannot turn" P "into a universal quantifier"
-      |lazy beta; intros x]
-  | |- _ => intros x
-  end.
+  (* In the case the goal starts with an [let x := _ in _], we do not
+     want to unfold x and start the proof mode. Instead, we want to
+     use intros. So [iStartProof] has to be called only if [intros]
+     fails *)
+  intros x ||
+    (iStartProof;
+     lazymatch goal with
+     | |- envs_entails _ _ =>
+       eapply tac_forall_intro;
+       [apply _ ||
+              let P := match goal with |- FromForall ?P _ => P end in
+              fail "iIntro: cannot turn" P "into a universal quantifier"
+       |lazy beta; intros x]
+     end).
 
 Local Tactic Notation "iIntro" constr(H) :=
   iStartProof;
@@ -394,11 +392,10 @@ Local Tactic Notation "iIntro" "#" constr(H) :=
   | fail "iIntro: nothing to introduce" ].
 
 Local Tactic Notation "iIntro" "_" :=
-  try iStartProof;
   first
-  [ (* (?Q → _) *) apply tac_impl_intro_drop
+  [ (* (?Q → _) *) iStartProof; apply tac_impl_intro_drop
   | (* (_ -∗ _) *)
-    apply tac_wand_intro_drop;
+    iStartProof; apply tac_wand_intro_drop;
       [apply _ ||
        let P := match goal with |- TCOr (Affine ?P) _ => P end in
        fail 1 "iIntro:" P "not affine and the goal not absorbing"
@@ -407,18 +404,25 @@ Local Tactic Notation "iIntro" "_" :=
   | fail 1 "iIntro: nothing to introduce" ].
 
 Local Tactic Notation "iIntroForall" :=
-  try iStartProof;
   lazymatch goal with
   | |- ∀ _, ?P => fail (* actually an →, this is handled by iIntro below *)
   | |- ∀ _, _ => intro
-  | |- envs_entails _ (∀ x : _, _) => let x' := fresh x in iIntro (x')
+  | |- let _ := _ in _ => intro
+  | |- _ =>
+    iStartProof;
+    lazymatch goal with
+    | |- envs_entails _ (∀ x : _, _) => let x' := fresh x in iIntro (x')
+    end
   end.
 Local Tactic Notation "iIntro" :=
-  try iStartProof;
   lazymatch goal with
   | |- _ → ?P => intro
-  | |- envs_entails _ (_ -∗ _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
-  | |- envs_entails _ (_ → _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
+  | |- _ =>
+    iStartProof;
+    lazymatch goal with
+    | |- envs_entails _ (_ -∗ _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
+    | |- envs_entails _ (_ → _) => iIntro (?) || let H := iFresh in iIntro #H || iIntro H
+    end
   end.
 
 (** * Specialize *)
@@ -632,7 +636,7 @@ eliminations may not be performed when type classes have not been resolved.
 *)
 Tactic Notation "iPoseProofCore" open_constr(lem)
     "as" constr(p) constr(lazy_tc) tactic(tac) :=
-  try iStartProof;
+  iStartProof;
   let Htmp := iFresh in
   let t := lazymatch lem with ITrm ?t ?xs ?pat => t | _ => lem end in
   let t := lazymatch type of t with string => constr:(INamed t) | _ => t end in
@@ -1011,32 +1015,36 @@ Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
 
 (** * Introduction tactic *)
 Tactic Notation "iIntros" constr(pat) :=
-  let rec go pats :=
+  let rec go pats startproof :=
     lazymatch pats with
-    | [] => idtac
+    | [] =>
+      lazymatch startproof with
+      | true => iStartProof
+      | false => idtac
+      end
     (* Optimizations to avoid generating fresh names *)
-    | IPureElim :: ?pats => iIntro (?); go pats
-    | IAlwaysElim (IIdent ?H) :: ?pats => iIntro #H; go pats
-    | IDrop :: ?pats => iIntro _; go pats
-    | IIdent ?H :: ?pats => iIntro H; go pats
+    | IPureElim :: ?pats => iIntro (?); go pats startproof
+    | IAlwaysElim (IIdent ?H) :: ?pats => iIntro #H; go pats false
+    | IDrop :: ?pats => iIntro _; go pats startproof
+    | IIdent ?H :: ?pats => iIntro H; go pats startproof
     (* Introduction patterns that can only occur at the top-level *)
-    | IPureIntro :: ?pats => iPureIntro; go pats
-    | IAlwaysIntro :: ?pats => iAlways; go pats
-    | IModalIntro :: ?pats => iModIntro; go pats
-    | IForall :: ?pats => repeat iIntroForall; go pats
-    | IAll :: ?pats => repeat (iIntroForall || iIntro); go pats
+    | IPureIntro :: ?pats => iPureIntro; go pats false
+    | IAlwaysIntro :: ?pats => iAlways; go pats false
+    | IModalIntro :: ?pats => iModIntro; go pats false
+    | IForall :: ?pats => repeat iIntroForall; go pats startproof
+    | IAll :: ?pats => repeat (iIntroForall || iIntro); go pats startproof
     (* Clearing and simplifying introduction patterns *)
-    | ISimpl :: ?pats => simpl; go pats
-    | IClear ?H :: ?pats => iClear H; go pats
-    | IClearFrame ?H :: ?pats => iFrame H; go pats
-    | IDone :: ?pats => try done; go pats
+    | ISimpl :: ?pats => simpl; go pats startproof
+    | IClear ?H :: ?pats => iClear H; go pats false
+    | IClearFrame ?H :: ?pats => iFrame H; go pats false
+    | IDone :: ?pats => try done; go pats startproof
     (* Introduction + destruct *)
     | IAlwaysElim ?pat :: ?pats =>
-       let H := iFresh in iIntro #H; iDestructHyp H as pat; go pats
+       let H := iFresh in iIntro #H; iDestructHyp H as pat; go pats false
     | ?pat :: ?pats =>
-       let H := iFresh in iIntro H; iDestructHyp H as pat; go pats
+       let H := iFresh in iIntro H; iDestructHyp H as pat; go pats false
     end
-  in let pats := intro_pat.parse pat in try iStartProof; go pats.
+  in let pats := intro_pat.parse pat in go pats true.
 Tactic Notation "iIntros" := iIntros [IAll].
 
 Tactic Notation "iIntros" "(" simple_intropattern(x1) ")" :=

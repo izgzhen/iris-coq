@@ -15,7 +15,7 @@ Lemma tac_twp_expr_eval `{heapG Σ} Δ s E Φ e e' :
 Proof. by intros ->. Qed.
 
 Tactic Notation "wp_expr_eval" tactic(t) :=
-  try iStartProof;
+  iStartProof;
   try (first [eapply tac_wp_expr_eval|eapply tac_twp_expr_eval];
        [t; reflexivity|]).
 
