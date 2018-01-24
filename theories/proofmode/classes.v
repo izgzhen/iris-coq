@@ -280,6 +280,19 @@ Arguments FromLaterN {_} _%nat_scope _%I _%I.
 Arguments from_laterN {_} _%nat_scope _%I _%I {_}.
 Hint Mode FromLaterN + - ! - : typeclass_instances.
 
+Class AsValid {PROP : bi} (φ : Prop) (P : PROP) := as_valid : φ ↔ P.
+Arguments AsValid {_} _%type _%I.
+
+Class AsValid0 {PROP : bi} (φ : Prop) (P : PROP) :=
+  as_valid_here : AsValid φ P.
+Arguments AsValid0 {_} _%type _%I.
+Existing Instance as_valid_here | 0.
+
+Lemma as_valid_1 (φ : Prop) {PROP : bi} (P : PROP) `{!AsValid φ P} : φ → P.
+Proof. by apply as_valid. Qed.
+Lemma as_valid_2 (φ : Prop) {PROP : bi} (P : PROP) `{!AsValid φ P} : P → φ.
+Proof. by apply as_valid. Qed.
+
 (* We make sure that tactics that perform actions on *specific* hypotheses or
 parts of the goal look through the [tc_opaque] connective, which is used to make
 definitions opaque for type class search. For example, when using `iDestruct`,
