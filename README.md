@@ -73,11 +73,14 @@ followed by `make build-dep`.
   infrastructure. Users of the Iris Coq library should *not* depend on these
   modules; they may change or disappear without any notice.
 
-## Documentation
+## Further Documentation
 
-A LaTeX version of the core logic definitions and some derived forms is
-available in [docs/iris.tex](docs/iris.tex).  A compiled PDF version of this
-document is [available online](http://plv.mpi-sws.org/iris/appendix-3.1.pdf).
+* A LaTeX version of the core logic definitions and some derived forms is
+  available in [docs/iris.tex](docs/iris.tex).  A compiled PDF version of this
+  document is [available online](http://plv.mpi-sws.org/iris/appendix-3.1.pdf).
+* Information on how to set up your editor for unicode input and output is
+  collected in [Editor.md](Editor.md).
+* The Iris Proof Mode (IPM) is documented at [ProofMode.md](ProofMode.md)
 
 ## Case Studies
 
