@@ -64,4 +64,9 @@ Section tests.
   Proof.
     iStartProof. iIntros (n) "$".
   Qed.
+
+  Lemma test_embed_wand (P Q : PROP) : (⎡P⎤ -∗ ⎡Q⎤) -∗ ⎡P -∗ Q⎤ : monPred.
+  Proof.
+    iIntros "H HP". by iApply "H".
+  Qed.
 End tests.
