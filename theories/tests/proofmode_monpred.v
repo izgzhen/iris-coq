@@ -55,4 +55,13 @@ Section tests.
   Proof.
     iIntros. by iApply monPred_in_elim.
   Qed.
+
+  Lemma test_iStartProof_forall_1 (Φ : nat → monPredI) : ∀ n, Φ n -∗ Φ n.
+  Proof.
+    iStartProof PROP. iIntros (n i) "$".
+  Qed.
+  Lemma test_iStartProof_forall_2 (Φ : nat → monPredI) : ∀ n, Φ n -∗ Φ n.
+  Proof.
+    iStartProof. iIntros (n) "$".
+  Qed.
 End tests.

@@ -1024,12 +1024,21 @@ Global Instance elim_modal_bupd_plain `{BUpdFacts PROP} P Q :
   Plain P → ElimModal (|==> P) P Q Q.
 Proof. intros. by rewrite /ElimModal bupd_plain wand_elim_r. Qed.
 
+(* AsValid *)
 Global Instance as_valid_valid {PROP : bi} (P : PROP) : AsValid0 (bi_valid P) P | 0.
 Proof. by rewrite /AsValid. Qed.
 Global Instance as_valid_entails {PROP : bi} (P Q : PROP) : AsValid0 (P ⊢ Q) (P -∗ Q).
 Proof. split. apply bi.entails_wand. apply bi.wand_entails. Qed.
 Global Instance as_valid_equiv {PROP : bi} (P Q : PROP) : AsValid0 (P ≡ Q) (P ∗-∗ Q).
 Proof. split. apply bi.equiv_wand_iff. apply bi.wand_iff_equiv. Qed.
+
+Global Instance as_valid_forall {A : Type} (φ : A → Prop) (P : A → PROP) :
+  (∀ x, AsValid (φ x) (P x)) → AsValid (∀ x, φ x) (∀ x, P x).
+Proof.
+  rewrite /AsValid=>H1. split=>H2.
+  - apply bi.forall_intro=>?. apply H1, H2.
+  - intros x. apply H1. revert H2. by rewrite (bi.forall_elim x).
+Qed.
 
 Global Instance as_valid_embed `{BiEmbedding PROP PROP'} (φ : Prop) (P : PROP) :
   AsValid0 φ P → AsValid φ ⎡P⎤.
