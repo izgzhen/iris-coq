@@ -133,6 +133,8 @@ Definition monPred_pure (φ : Prop) : monPred := tc_opaque ⎡⌜φ⌝⎤%I.
 Definition monPred_emp : monPred := tc_opaque ⎡emp⎤%I.
 Definition monPred_internal_eq (A : ofeT) (a b : A) : monPred := tc_opaque ⎡a ≡ b⎤%I.
 Definition monPred_plainly P : monPred := tc_opaque ⎡∀ i, bi_plainly (P i)⎤%I.
+Definition monPred_all (P : monPred) : monPred := tc_opaque ⎡∀ i, P i⎤%I.
+Definition monPred_ex (P : monPred) : monPred := tc_opaque ⎡∃ i, P i⎤%I.
 
 Program Definition monPred_and_def P Q : monPred :=
   MonPred (λ i, P i ∧ Q i)%I _.
@@ -195,18 +197,6 @@ Definition monPred_in_aux : seal (@monPred_in_def). by eexists. Qed.
 Definition monPred_in := unseal (@monPred_in_aux).
 Definition monPred_in_eq : @monPred_in = _ := seal_eq _.
 
-Definition monPred_all_def (P : monPred) : monPred :=
-  MonPred (λ _ : I, ∀ i, P i)%I _.
-Definition monPred_all_aux : seal (@monPred_all_def). by eexists. Qed.
-Definition monPred_all := unseal (@monPred_all_aux).
-Definition monPred_all_eq : @monPred_all = _ := seal_eq _.
-
-Definition monPred_ex_def (P : monPred) : monPred :=
-  MonPred (λ _ : I, ∃ i, P i)%I _.
-Definition monPred_ex_aux : seal (@monPred_ex_def). by eexists. Qed.
-Definition monPred_ex := unseal (@monPred_ex_aux).
-Definition monPred_ex_eq : @monPred_ex = _ := seal_eq _.
-
 Definition monPred_bupd_def `{BUpd PROP} (P : monPred) : monPred :=
   (* monPred_upclosed is not actually needed, since bupd is always
      monotone. However, this depends on BUpdFacts, and we do not want
@@ -248,14 +238,14 @@ Definition unseal_eqs :=
   (@monPred_and_eq, @monPred_or_eq, @monPred_impl_eq,
    @monPred_forall_eq, @monPred_exist_eq,
    @monPred_sep_eq, @monPred_wand_eq,
-   @monPred_persistently_eq, @monPred_later_eq,
-   @monPred_in_eq, @monPred_all_eq, @monPred_ex_eq, @monPred_embed_eq,
-   @monPred_bupd_eq, @monPred_fupd_eq).
+   @monPred_persistently_eq, @monPred_later_eq, @monPred_in_eq,
+   @monPred_embed_eq, @monPred_bupd_eq, @monPred_fupd_eq).
 Ltac unseal :=
   unfold bi_affinely, bi_absorbingly, sbi_except_0, bi_pure, bi_emp,
-         monPred_upclosed, bi_and, bi_or, bi_impl, bi_forall, bi_exist,
-         bi_internal_eq, bi_sep, bi_wand, bi_persistently, bi_affinely,
-         sbi_later; simpl;
+         monPred_all, monPred_ex, monPred_upclosed, bi_and, bi_or,
+         bi_impl, bi_forall, bi_exist, bi_internal_eq, bi_sep, bi_wand,
+         bi_persistently, bi_affinely, sbi_later;
+  simpl;
   unfold sbi_emp, sbi_pure, sbi_and, sbi_or, sbi_impl, sbi_forall, sbi_exist,
          sbi_internal_eq, sbi_sep, sbi_wand, sbi_persistently, sbi_plainly,
          bi_plainly; simpl;
@@ -422,26 +412,6 @@ Proof. unseal. split. solve_proper. Qed.
 Global Instance monPred_in_mono_flip : Proper ((⊑) ==> flip (⊢)) (@monPred_in I PROP).
 Proof. solve_proper. Qed.
 
-Global Instance monPred_all_ne : NonExpansive (@monPred_all I PROP).
-Proof. unseal. split. solve_proper. Qed.
-Global Instance monPred_all_proper : Proper ((≡) ==> (≡)) (@monPred_all I PROP).
-Proof. apply (ne_proper _). Qed.
-Global Instance monPred_all_mono : Proper ((⊢) ==> (⊢)) (@monPred_all I PROP).
-Proof. unseal. split. solve_proper. Qed.
-Global Instance monPred_all_mono_flip :
-  Proper (flip (⊢) ==> flip (⊢)) (@monPred_all I PROP).
-Proof. solve_proper. Qed.
-
-Global Instance monPred_ex_ne : NonExpansive (@monPred_ex I PROP).
-Proof. unseal. split. solve_proper. Qed.
-Global Instance monPred_ex_proper : Proper ((≡) ==> (≡)) (@monPred_ex I PROP).
-Proof. apply (ne_proper _). Qed.
-Global Instance monPred_ex_mono : Proper ((⊢) ==> (⊢)) (@monPred_ex I PROP).
-Proof. unseal. split. solve_proper. Qed.
-Global Instance monPred_ex_mono_flip :
-  Proper (flip (⊢) ==> flip (⊢)) (@monPred_ex I PROP).
-Proof. solve_proper. Qed.
-
 Global Instance monPred_positive : BiPositive PROP → BiPositive monPredI.
 Proof. split => ?. unseal. apply bi_positive. Qed.
 Global Instance monPred_affine : BiAffine PROP → BiAffine monPredI.
@@ -472,56 +442,6 @@ Global Instance monPred_in_absorbing V :
   Absorbing (@monPred_in I PROP V).
 Proof. unfold Absorbing. unseal. split=> ? /=. apply absorbing, _. Qed.
 
-Global Instance monPred_all_plain P : Plain P → Plain (@monPred_all I PROP P).
-Proof.
-  move=>[]. unfold Plain. unseal=>Hp. split=>? /=.
-  apply bi.forall_intro=>i. rewrite {1}(bi.forall_elim i) Hp.
-  by rewrite bi.plainly_forall.
-Qed.
-Global Instance monPred_all_persistent P :
-  Persistent P → Persistent (@monPred_all I PROP P).
-Proof.
-  move=>[]. unfold Persistent. unseal=>Hp. split => ?.
-  by apply persistent, bi.forall_persistent.
-Qed.
-Global Instance monPred_all_absorbing P :
-  Absorbing P → Absorbing (@monPred_all I PROP P).
-Proof.
-  move=>[]. unfold Absorbing. unseal=>Hp. split => ?.
-  by apply absorbing, bi.forall_absorbing.
-Qed.
-Global Instance monPred_all_affine P :
-  Affine P → Affine (@monPred_all I PROP P).
-Proof.
-  move=> []. unfold Affine. unseal=>Hp. split => ?.
-  by apply affine, bi.forall_affine.
-Qed.
-
-Global Instance monPred_ex_plain P :
-  Plain P → Plain (@monPred_ex I PROP P).
-Proof.
-  move=>[]. unfold Plain. unseal=>Hp. split=>? /=.
-  apply bi.exist_elim=>i. apply bi.forall_intro=>_. rewrite Hp.
-  rewrite (bi.forall_elim i) -bi.exist_intro //.
-Qed.
-Global Instance monPred_ex_persistent P :
-  Persistent P → Persistent (@monPred_ex I PROP P).
-Proof.
-  move=>[]. unfold Persistent. unseal=>Hp. split => ?.
-  by apply persistent, bi.exist_persistent.
-Qed.
-Global Instance monPred_ex_absorbing P :
-  Absorbing P → Absorbing (@monPred_ex I PROP P).
-Proof.
-  move=>[]. unfold Absorbing. unseal=>Hp. split => ?.
-  by apply absorbing, bi.exist_absorbing.
-Qed.
-Global Instance monPred_ex_affine P :
-  Affine P → Affine (@monPred_ex I PROP P).
-Proof.
-  move=> []. unfold Affine. unseal=>Hp. split => ?.
-  by apply affine, bi.exist_affine.
-Qed.
 
 Global Instance monPred_bi_embedding : BiEmbedding PROP monPredI.
 Proof.
@@ -550,6 +470,51 @@ Proof.
   - intros P. split=> /= i. rewrite bi.forall_elim bi.pure_impl_forall
       bi.forall_elim // -bi.plainly_forall bupd_plainly bi.forall_elim //.
 Qed.
+
+Global Instance monPred_all_ne : NonExpansive (@monPred_all I PROP).
+Proof. rewrite /monPred_all /tc_opaque. solve_proper. Qed.
+Global Instance monPred_all_proper : Proper ((≡) ==> (≡)) (@monPred_all I PROP).
+Proof. apply (ne_proper _). Qed.
+Global Instance monPred_all_mono : Proper ((⊢) ==> (⊢)) (@monPred_all I PROP).
+Proof. rewrite /monPred_all /tc_opaque. solve_proper. Qed.
+Global Instance monPred_all_mono_flip :
+  Proper (flip (⊢) ==> flip (⊢)) (@monPred_all I PROP).
+Proof. solve_proper. Qed.
+
+Global Instance monPred_all_plain P : Plain P → Plain (@monPred_all I PROP P).
+Proof. unfold monPred_all, tc_opaque. apply _. Qed.
+Global Instance monPred_all_persistent P :
+  Persistent P → Persistent (@monPred_all I PROP P).
+Proof. unfold monPred_all, tc_opaque. apply _. Qed.
+Global Instance monPred_all_absorbing P :
+  Absorbing P → Absorbing (@monPred_all I PROP P).
+Proof. unfold monPred_all, tc_opaque. apply _. Qed.
+Global Instance monPred_all_affine P :
+  Affine P → Affine (@monPred_all I PROP P).
+Proof. unfold monPred_all, tc_opaque. apply _. Qed.
+
+Global Instance monPred_ex_ne : NonExpansive (@monPred_ex I PROP).
+Proof. rewrite /monPred_ex /tc_opaque. solve_proper. Qed.
+Global Instance monPred_ex_proper : Proper ((≡) ==> (≡)) (@monPred_ex I PROP).
+Proof. apply (ne_proper _). Qed.
+Global Instance monPred_ex_mono : Proper ((⊢) ==> (⊢)) (@monPred_ex I PROP).
+Proof. rewrite /monPred_ex /tc_opaque. solve_proper. Qed.
+Global Instance monPred_ex_mono_flip :
+  Proper (flip (⊢) ==> flip (⊢)) (@monPred_ex I PROP).
+Proof. solve_proper. Qed.
+
+Global Instance monPred_ex_plain P :
+  Plain P → Plain (@monPred_ex I PROP P).
+Proof. unfold monPred_ex, tc_opaque. apply _. Qed.
+Global Instance monPred_ex_persistent P :
+  Persistent P → Persistent (@monPred_ex I PROP P).
+Proof. unfold monPred_ex, tc_opaque. apply _. Qed.
+Global Instance monPred_ex_absorbing P :
+  Absorbing P → Absorbing (@monPred_ex I PROP P).
+Proof. unfold monPred_ex, tc_opaque. apply _. Qed.
+Global Instance monPred_ex_affine P :
+  Affine P → Affine (@monPred_ex I PROP P).
+Proof. unfold monPred_ex, tc_opaque. apply _. Qed.
 
 (** monPred_at unfolding laws *)
 Lemma monPred_at_embed i (P : PROP) : monPred_at ⎡P⎤ i ⊣⊢ P.
