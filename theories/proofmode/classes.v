@@ -117,6 +117,16 @@ Instance into_wand_impl' {PROP : bi} p q (P Q P' Q' : PROP) :
   IntoWand' p q (P → Q) P' Q' → IntoWand p q (P → Q) P' Q' | 100.
 Proof. done. Qed.
 
+Class FromWand {PROP : bi} (P Q1 Q2 : PROP) := from_wand : (Q1 -∗ Q2) ⊢ P.
+Arguments FromWand {_} _%I _%I _%I : simpl never.
+Arguments from_wand {_} _%I _%I _%I {_}.
+Hint Mode FromWand + ! - - : typeclass_instances.
+
+Class FromImpl {PROP : bi} (P Q1 Q2 : PROP) := from_impl : (Q1 → Q2) ⊢ P.
+Arguments FromImpl {_} _%I _%I _%I : simpl never.
+Arguments from_impl {_} _%I _%I _%I {_}.
+Hint Mode FromImpl + ! - - : typeclass_instances.
+
 Class FromSep {PROP : bi} (P Q1 Q2 : PROP) := from_sep : Q1 ∗ Q2 ⊢ P.
 Arguments FromSep {_} _%I _%I _%I : simpl never.
 Arguments from_sep {_} _%I _%I _%I {_}.
@@ -315,6 +325,8 @@ Instance from_pure_tc_opaque {PROP : bi} (P : PROP) φ :
   FromPure P φ → FromPure (tc_opaque P) φ := id.
 Instance from_laterN_tc_opaque {PROP : sbi} n (P Q : PROP) :
   FromLaterN n P Q → FromLaterN n (tc_opaque P) Q := id.
+Instance from_wand_tc_opaque {PROP : bi} (P Q1 Q2 : PROP) :
+  FromWand P Q1 Q2 → FromWand (tc_opaque P) Q1 Q2 := id.
 Instance into_wand_tc_opaque {PROP : bi} p q (R P Q : PROP) :
   IntoWand p q R P Q → IntoWand p q (tc_opaque R) P Q := id.
 (* Higher precedence than [from_and_sep] so that [iCombine] does not loop. *)

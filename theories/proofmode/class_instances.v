@@ -359,6 +359,20 @@ Proof.
   apply wand_intro_l. by rewrite affinely_persistently_if_elim bupd_wand_r.
 Qed.
 
+(* FromWand *)
+Global Instance from_wand_wand P1 P2 : FromWand (P1 -∗ P2) P1 P2.
+Proof. by rewrite /FromWand. Qed.
+Global Instance from_wand_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
+  FromWand P Q1 Q2 → FromWand ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
+Proof. by rewrite /FromWand -bi_embed_wand => <-. Qed.
+
+(* FromImpl *)
+Global Instance from_impl_impl P1 P2 : FromImpl (P1 → P2) P1 P2.
+Proof. by rewrite /FromImpl. Qed.
+Global Instance from_impl_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
+  FromImpl P Q1 Q2 → FromImpl ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
+Proof. by rewrite /FromImpl -bi_embed_impl => <-. Qed.
+
 (* FromAnd *)
 Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2 | 100.
 Proof. by rewrite /FromAnd. Qed.

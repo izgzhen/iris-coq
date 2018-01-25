@@ -355,8 +355,9 @@ Local Tactic Notation "iIntro" constr(H) :=
   iStartProof;
   first
   [ (* (?Q → _) *)
-    eapply tac_impl_intro with _ H _; (* (i:=H) *)
-      [env_cbv; apply _ ||
+    eapply tac_impl_intro with _ H _ _ _; (* (i:=H) *)
+      [apply _
+      |env_cbv; apply _ ||
        let P := lazymatch goal with |- Persistent ?P => P end in
        fail 1 "iIntro: introducing non-persistent" H ":" P
               "into non-empty spatial context"
@@ -364,8 +365,9 @@ Local Tactic Notation "iIntro" constr(H) :=
       |apply _
       |]
   | (* (_ -∗ _) *)
-    eapply tac_wand_intro with _ H; (* (i:=H) *)
-      [env_reflexivity || fail 1 "iIntro:" H "not fresh"
+    eapply tac_wand_intro with _ H _ _; (* (i:=H) *)
+      [apply _
+      | env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
   | fail "iIntro: nothing to introduce" ].
 
@@ -373,15 +375,17 @@ Local Tactic Notation "iIntro" "#" constr(H) :=
   iStartProof;
   first
   [ (* (?P → _) *)
-    eapply tac_impl_intro_persistent with _ H _; (* (i:=H) *)
-      [apply _ ||
+    eapply tac_impl_intro_persistent with _ H _ _ _; (* (i:=H) *)
+      [apply _
+      |apply _ ||
        let P := match goal with |- IntoPersistent _ ?P _ => P end in
        fail 1 "iIntro:" P "not persistent"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
   | (* (?P -∗ _) *)
-    eapply tac_wand_intro_persistent with _ H _; (* (i:=H) *)
-      [apply _ ||
+    eapply tac_wand_intro_persistent with _ H _ _ _; (* (i:=H) *)
+      [ apply _
+      | apply _ ||
        let P := match goal with |- IntoPersistent _ ?P _ => P end in
        fail 1 "iIntro:" P "not persistent"
       |apply _ ||
@@ -393,10 +397,13 @@ Local Tactic Notation "iIntro" "#" constr(H) :=
 
 Local Tactic Notation "iIntro" "_" :=
   first
-  [ (* (?Q → _) *) iStartProof; apply tac_impl_intro_drop
+  [ (* (?Q → _) *)
+    iStartProof; eapply tac_impl_intro_drop;
+    [ apply _ | ]
   | (* (_ -∗ _) *)
-    iStartProof; apply tac_wand_intro_drop;
-      [apply _ ||
+    iStartProof; eapply tac_wand_intro_drop;
+      [ apply _
+      | apply _ ||
        let P := match goal with |- TCOr (Affine ?P) _ => P end in
        fail 1 "iIntro:" P "not affine and the goal not absorbing"
       |]
