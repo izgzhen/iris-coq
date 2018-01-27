@@ -838,6 +838,13 @@ Proof.
   rewrite /Frame /MakeEmbed => <- <-.
   rewrite bi_embed_sep bi_embed_affinely_if bi_embed_persistently_if => //.
 Qed.
+Global Instance frame_pure_embed `{BiEmbedding PROP PROP'} p P Q (Q' : PROP') φ :
+  Frame p ⌜φ⌝ P Q → MakeEmbed Q Q' → Frame p ⌜φ⌝ ⎡P⎤ Q'.
+Proof. rewrite /Frame /MakeEmbed -bi_embed_pure. apply (frame_embed p P Q). Qed.
+Global Instance frame_eq_embed `{BiEmbedding PROP PROP'} p P Q (Q' : PROP')
+       {A : ofeT} (a b : A) :
+  Frame p (a ≡ b) P Q → MakeEmbed Q Q' → Frame p (a ≡ b) ⎡P⎤ Q'.
+Proof. rewrite /Frame /MakeEmbed -bi_embed_internal_eq. apply (frame_embed p P Q). Qed.
 
 Class MakeSep (P Q PQ : PROP) := make_sep : P ∗ Q ⊣⊢ PQ.
 Arguments MakeSep _%I _%I _%I.
