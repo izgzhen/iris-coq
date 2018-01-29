@@ -22,8 +22,15 @@ Next, add the following to your `~/.emacs` to configure an input method based on
 (require 'math-symbol-lists)
 ; Automatically use math input method for Coq files
 (add-hook 'coq-mode-hook (lambda () (set-input-method "math")))
-; Use math input method for the minibuffer
-(add-hook 'minibuffer-setup-hook (lambda () (set-input-method "math")))
+; Input method for the minibuffer
+(defun my-inherit-input-method ()
+  "Inherit input method from `minibuffer-selected-window'."
+  (let* ((win (minibuffer-selected-window))
+         (buf (and win (window-buffer win))))
+    (when buf
+      (activate-input-method (buffer-local-value 'current-input-method buf)))))
+(add-hook 'minibuffer-setup-hook #'my-inherit-input-method)
+; Define the actual input method
 (quail-define-package "math" "UTF-8" "Ω" t)
 (quail-define-rules ; add whatever extra rules you want to define here...
  ("\\mult"   ?⋅)
