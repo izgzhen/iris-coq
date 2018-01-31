@@ -1,24 +1,9 @@
 From iris.proofmode Require Export classes.
 From iris.algebra Require Import gmap.
-From stdpp Require Import gmultiset.
+From stdpp Require Import gmultiset nat_cancel.
 From iris.base_logic Require Import big_op tactics.
 Set Default Proof Using "Type".
 Import uPred.
-
-(* FIXME: Move to stdpp *)
-(* A conditional at the type class level. Note that [TCIf P Q R] is not the same
-as [TCOr (TCAnd P Q) R]: the latter will backtrack to [R] if it fails to
-establish [R], i.e. does not have the behavior of a conditional. Furthermore,
-note that [TCOr (TCAnd P Q) (TCAnd (TCNot P) R)] would not work; we generally
-would not be able to proof the negation of [P]. *)
-Inductive TCIf (P Q R : Prop) :=
-  | TCIf_true : P → Q → TCIf P Q R
-  | TCIf_false : R → TCIf P Q R.
-Existing Class TCIf.
-
-Hint Extern 0 (TCIf _ _ _) =>
-  first [apply TCIf_true; [apply _|]
-        |apply TCIf_false] : typeclass_instances.
 
 Section classes.
 Context {M : ucmraT}.
@@ -182,22 +167,41 @@ Global Instance from_always_plainly P : FromAlways true (■ P) P.
 Proof. by rewrite /FromAlways. Qed.
 
 (* IntoLater *)
-Global Instance into_laterN_later n P Q :
-  MaybeIntoLaterN n P Q → IntoLaterN (S n) (▷ P) Q | 0.
-Proof. by rewrite /IntoLaterN /MaybeIntoLaterN =>->. Qed.
-Global Instance into_laterN_later_further n P Q :
-  IntoLaterN n P Q → IntoLaterN n (▷ P) (▷ Q) | 1000.
-Proof. rewrite /IntoLaterN /MaybeIntoLaterN =>->. by rewrite -laterN_later. Qed.
-
-Global Instance into_laterN_laterN n P : IntoLaterN n (▷^n P) P | 0.
+Class MakeLaterN (n : nat) (P lP : uPred M) := make_laterN : ▷^n P ⊣⊢ lP.
+Global Instance make_laterN_true n : MakeLaterN n True True | 0.
+Proof. by rewrite /MakeLaterN laterN_True. Qed.
+Global Instance make_laterN_0 P : MakeLaterN 0 P P | 0.
 Proof. done. Qed.
-Global Instance into_laterN_laterN_plus n m P Q :
-  MaybeIntoLaterN m P Q → IntoLaterN (n + m) (▷^n P) Q | 1.
-Proof. rewrite /IntoLaterN /MaybeIntoLaterN=>->. by rewrite laterN_plus. Qed.
-Global Instance into_laterN_laterN_further n m P Q :
-  IntoLaterN m P Q → IntoLaterN m (▷^n P) (▷^n Q) | 1000.
+Global Instance make_laterN_1 P : MakeLaterN 1 P (▷ P) | 2.
+Proof. done. Qed.
+Global Instance make_laterN_default P : MakeLaterN n P (▷^n P) | 100.
+Proof. done. Qed.
+
+Global Instance into_laterN_0 P : IntoLaterN 0 P P.
+Proof. done. Qed.
+Global Instance into_laterN_later n n' m' P Q lQ :
+  NatCancel n 1 n' m' →
+  (** If canceling has failed (i.e. [1 = m']), we should make progress deeper
+  into [P], as such, we continue with the [IntoLaterN] class, which is required
+  to make progress. If canceling has succeeded, we do not need to make further
+  progress, but there may still be a left-over (i.e. [n']) to cancel more deeply
+  into [P], as such, we continue with [MaybeIntoLaterN]. *)
+  TCIf (TCEq 1 m') (IntoLaterN n' P Q) (MaybeIntoLaterN n' P Q) →
+  MakeLaterN m' Q lQ →
+  IntoLaterN n (▷ P) lQ | 2.
 Proof.
-  rewrite /IntoLaterN /MaybeIntoLaterN=>->. by rewrite -!laterN_plus Nat.add_comm.
+  rewrite /MakeLaterN /IntoLaterN /MaybeIntoLaterN /NatCancel.
+  move=> Hn [_ ->|->] <-;
+    by rewrite -later_laterN -laterN_plus -Hn Nat.add_comm.
+Qed.
+Global Instance into_laterN_laterN n m n' m' P Q lQ :
+  NatCancel n m n' m' →
+  TCIf (TCEq m m') (IntoLaterN n' P Q) (MaybeIntoLaterN n' P Q) →
+  MakeLaterN m' Q lQ →
+  IntoLaterN n (▷^m P) lQ | 1.
+Proof.
+  rewrite /MakeLaterN /IntoLaterN /MaybeIntoLaterN /NatCancel.
+  move=> Hn [_ ->|->] <-; by rewrite -!laterN_plus -Hn Nat.add_comm.
 Qed.
 
 Global Instance into_laterN_and_l n P1 P2 Q1 Q2 :
@@ -646,31 +650,19 @@ Proof.
   by rewrite and_sep_l assoc (comm _ P1) -assoc -(and_sep_l P1) impl_elim_r.
 Qed.
 
-Class MakeLater (P lP : uPred M) := make_later : ▷ P ⊣⊢ lP.
-Global Instance make_later_true : MakeLater True True.
-Proof. by rewrite /MakeLater later_True. Qed.
-Global Instance make_later_default P : MakeLater P (▷ P) | 100.
-Proof. done. Qed.
-
 Global Instance frame_later p R R' P Q Q' :
   NoBackTrack (MaybeIntoLaterN 1 R' R) →
-  Frame p R P Q → MakeLater Q Q' → Frame p R' (▷ P) Q'.
+  Frame p R P Q → MakeLaterN 1 Q Q' → Frame p R' (▷ P) Q'.
 Proof.
-  rewrite /Frame /MakeLater /MaybeIntoLaterN=>-[->] <- <-.
+  rewrite /Frame /MakeLaterN /MaybeIntoLaterN=>-[->] <- <-.
   by rewrite persistently_if_later later_sep.
 Qed.
-
-Class MakeLaterN (n : nat) (P lP : uPred M) := make_laterN : ▷^n P ⊣⊢ lP.
-Global Instance make_laterN_true n : MakeLaterN n True True.
-Proof. by rewrite /MakeLaterN laterN_True. Qed.
-Global Instance make_laterN_default P : MakeLaterN n P (▷^n P) | 100.
-Proof. done. Qed.
 
 Global Instance frame_laterN p n R R' P Q Q' :
   NoBackTrack (MaybeIntoLaterN n R' R) →
   Frame p R P Q → MakeLaterN n Q Q' → Frame p R' (▷^n P) Q'.
 Proof.
-  rewrite /Frame /MakeLater /MaybeIntoLaterN=>-[->] <- <-.
+  rewrite /Frame /MakeLaterN /MaybeIntoLaterN=>-[->] <- <-.
   by rewrite persistently_if_laterN laterN_sep.
 Qed.
 
