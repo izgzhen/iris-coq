@@ -179,7 +179,7 @@ In writing $\vctx, x:\type$, we presuppose that $x$ is not already declared in $
 	\infer{
 		\vctx, \var:\type \proves \wtt{\term}{\type} \and
 		\text{$\var$ is guarded in $\term$} \and
-		\text{$\type$ is complete}
+		\text{$\type$ is complete and inhabited}
 	}{
 		\vctx \proves \wtt{\MU \var:\type. \term}{\type}
 	}
