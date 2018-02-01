@@ -47,8 +47,8 @@ Section proofs.
   Proof.
     iIntros "#HPQ". rewrite /na_inv. iDestruct 1 as (i ?) "#Hinv".
     iExists i. iSplit; first done. iApply (inv_iff with "[] Hinv").
-    iNext. iAlways. iSplit; (iIntros "[[? Ho]|?]";
-      [iLeft; iFrame "Ho"; by iApply "HPQ"|by iRight]).
+    iNext; iAlways.
+    iSplit; iIntros "[[? Ho]|$]"; iLeft; iFrame "Ho"; by iApply "HPQ".
   Qed.
 
   Lemma na_alloc : (|==> ∃ p, na_own p ⊤)%I.
