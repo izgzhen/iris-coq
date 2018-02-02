@@ -615,6 +615,20 @@ Proof.
   by rewrite assoc (comm _ P1) -assoc wand_elim_r.
 Qed.
 
+Global Instance frame_impl_persistent R P1 P2 Q2 :
+  Frame true R P2 Q2 → Frame true R (P1 → P2) (P1 → Q2).
+Proof.
+  rewrite /Frame /==> ?. apply impl_intro_l.
+  by rewrite -and_sep_l assoc (comm _ P1) -assoc impl_elim_r and_sep_l.
+Qed.
+Global Instance frame_impl R P1 P2 Q2 :
+  Persistent P1 →
+  Frame false R P2 Q2 → Frame false R (P1 → P2) (P1 → Q2).
+Proof.
+  rewrite /Frame /==> ??. apply impl_intro_l.
+  by rewrite and_sep_l assoc (comm _ P1) -assoc -(and_sep_l P1) impl_elim_r.
+Qed.
+
 Class MakeLater (P lP : uPred M) := make_later : ▷ P ⊣⊢ lP.
 Global Instance make_later_true : MakeLater True True.
 Proof. by rewrite /MakeLater later_True. Qed.
