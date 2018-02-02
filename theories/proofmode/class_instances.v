@@ -565,12 +565,14 @@ Global Instance make_and_true_r P : MakeAnd P True P.
 Proof. by rewrite /MakeAnd right_id. Qed.
 Global Instance make_and_default P Q : MakeAnd P Q (P ∧ Q) | 100.
 Proof. done. Qed.
-Global Instance frame_and_l p R P1 P2 Q Q' :
-  Frame p R P1 Q → MakeAnd Q P2 Q' → Frame p R (P1 ∧ P2) Q' | 9.
-Proof. rewrite /Frame /MakeAnd => <- <-; eauto 10 with I. Qed.
-Global Instance frame_and_r p R P1 P2 Q Q' :
-  Frame p R P2 Q → MakeAnd P1 Q Q' → Frame p R (P1 ∧ P2) Q' | 10.
-Proof. rewrite /Frame /MakeAnd => <- <-; eauto 10 with I. Qed.
+
+Global Instance frame_and p progress1 progress2 R P1 P2 Q1 Q2 Q' :
+  MaybeFrame p R P1 Q1 progress1 →
+  MaybeFrame p R P2 Q2 progress2 →
+  TCEq (progress1 || progress2) true →
+  MakeAnd Q1 Q2 Q' →
+  Frame p R (P1 ∧ P2) Q' | 9.
+Proof. rewrite /MaybeFrame /Frame /MakeAnd => <- <- _ <-; eauto 10 with I. Qed.
 
 Class MakeOr (P Q PQ : uPred M) := make_or : P ∨ Q ⊣⊢ PQ.
 Global Instance make_or_true_l P : MakeOr True P True.

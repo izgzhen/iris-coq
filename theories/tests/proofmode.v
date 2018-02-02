@@ -102,7 +102,7 @@ Proof. iIntros "[H [? _]]". by iFrame. Qed.
 
 Lemma test_iFrame_pure (x y z : M) :
   ✓ x → ⌜y ≡ z⌝ -∗ (✓ x ∧ ✓ x ∧ y ≡ z : uPred M).
-Proof. iIntros (Hv) "Hxy". by iFrame (Hv Hv) "Hxy". Qed.
+Proof. iIntros (Hv) "Hxy". iFrame (Hv) "Hxy". Qed.
 
 Lemma test_iFrame_disjunction_1 P1 P2 Q1 Q2 :
   □ P1 -∗ Q2 -∗ P2 -∗ (P1 ∗ P2 ∗ False ∨ P2) ∗ (Q1 ∨ Q2).
