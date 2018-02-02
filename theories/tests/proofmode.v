@@ -110,6 +110,13 @@ Proof. iIntros "#HP1 HQ2 HP2". iFrame "HP1 HQ2 HP2". Qed.
 Lemma test_iFrame_disjunction_2 P : P -∗ (True ∨ True) ∗ P.
 Proof. iIntros "HP". iFrame "HP". auto. Qed.
 
+Lemma test_iFrame_conjunction_1 P Q :
+  P -∗ Q -∗ (P ∗ Q) ∧ (P ∗ Q).
+Proof. iIntros "HP HQ". iFrame "HP HQ". Qed.
+Lemma test_iFrame_conjunction_2 P Q :
+  P -∗ Q -∗ (P ∧ P) ∗ (Q ∧ Q).
+Proof. iIntros "HP HQ". iFrame "HP HQ". Qed.
+
 Lemma test_iAssert_persistent P Q : P -∗ Q -∗ True.
 Proof.
   iIntros "HP HQ".
