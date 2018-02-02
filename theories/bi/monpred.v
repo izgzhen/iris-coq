@@ -131,7 +131,6 @@ Definition monPred_embed_eq : bi_embed (A:=PROP) = _ := seal_eq _.
 
 Definition monPred_pure (φ : Prop) : monPred := tc_opaque ⎡⌜φ⌝⎤%I.
 Definition monPred_emp : monPred := tc_opaque ⎡emp⎤%I.
-Definition monPred_internal_eq (A : ofeT) (a b : A) : monPred := tc_opaque ⎡a ≡ b⎤%I.
 Definition monPred_plainly P : monPred := tc_opaque ⎡∀ i, bi_plainly (P i)⎤%I.
 Definition monPred_all (P : monPred) : monPred := tc_opaque ⎡∀ i, P i⎤%I.
 Definition monPred_ex (P : monPred) : monPred := tc_opaque ⎡∃ i, P i⎤%I.
@@ -216,6 +215,8 @@ Implicit Types i : I.
 Notation monPred := (monPred I PROP).
 Implicit Types P Q : monPred.
 
+Definition monPred_internal_eq (A : ofeT) (a b : A) : monPred := tc_opaque ⎡a ≡ b⎤%I.
+
 Program Definition monPred_later_def P : monPred := MonPred (λ i, ▷ (P i))%I _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_later_aux : seal monPred_later_def. by eexists. Qed.
@@ -243,7 +244,7 @@ Definition unseal_eqs :=
 Ltac unseal :=
   unfold bi_affinely, bi_absorbingly, sbi_except_0, bi_pure, bi_emp,
          monPred_all, monPred_ex, monPred_upclosed, bi_and, bi_or,
-         bi_impl, bi_forall, bi_exist, bi_internal_eq, bi_sep, bi_wand,
+         bi_impl, bi_forall, bi_exist, sbi_internal_eq, bi_sep, bi_wand,
          bi_persistently, bi_affinely, sbi_later;
   simpl;
   unfold sbi_emp, sbi_pure, sbi_and, sbi_or, sbi_impl, sbi_forall, sbi_exist,
@@ -257,13 +258,12 @@ Import MonPred.
 Section canonical_bi.
 Context (I : biIndex) (PROP : bi).
 
-Lemma monPred_bi_mixin : BiMixin (@monPred_ofe_mixin I PROP)
+Lemma monPred_bi_mixin : BiMixin (PROP:=monPred I PROP)
   monPred_entails monPred_emp monPred_pure monPred_and monPred_or
-  monPred_impl monPred_forall monPred_exist monPred_internal_eq
-  monPred_sep monPred_wand monPred_plainly monPred_persistently.
+  monPred_impl monPred_forall monPred_exist monPred_sep monPred_wand
+  monPred_plainly monPred_persistently.
 Proof.
-  split; try unseal;
-    try by (repeat intro; split=> ? /=; repeat f_equiv).
+  split; try unseal; try by (split=> ? /=; repeat f_equiv).
   - split.
     + intros P. by split.
     + intros P Q R [H1] [H2]. split => ?. by rewrite H1 H2.
@@ -289,13 +289,6 @@ Proof.
   - intros A Ψ. split=> i. by apply: bi.forall_elim.
   - intros A Ψ a. split=> i. by rewrite /= -bi.exist_intro.
   - intros A Ψ Q HΨ. split=> i. apply bi.exist_elim => a. by apply HΨ.
-  - intros A P a. split=> i. by apply bi.internal_eq_refl.
-  - intros A a b Ψ ?. split=> i /=.
-    setoid_rewrite bi.pure_impl_forall. do 2 apply bi.forall_intro => ?.
-    erewrite (bi.internal_eq_rewrite _ _ (flip Ψ _)) => //=. solve_proper.
-  - intros A1 A2 f g. split=> i. by apply bi.fun_ext.
-  - intros A P x y. split=> i. by apply bi.sig_eq.
-  - intros A a b ?. split=> i. by apply bi.discrete_eq_1.
   - intros P P' Q Q' [?] [?]. split=> i. by apply bi.sep_mono.
   - intros P. split=> i. by apply bi.emp_sep_1.
   - intros P. split=> i. by apply bi.emp_sep_2.
@@ -313,11 +306,6 @@ Proof.
   - intros A Ψ. split=> i /=. apply bi.forall_intro=> j.
     rewrite bi.plainly_forall. apply bi.forall_intro=> a.
     by rewrite !bi.forall_elim.
-  - intros P Q. split=> i /=.
-    rewrite <-(sig_monPred_sig P), <-(sig_monPred_sig Q), <-(bi.f_equiv _).
-    rewrite -bi.sig_equivI /= -bi.fun_ext. f_equiv=> j.
-    rewrite -bi.prop_ext !(bi.forall_elim j) !bi.pure_impl_forall
-            !bi.forall_elim //.
   - intros P Q. split=> i /=. repeat setoid_rewrite bi.pure_impl_forall.
     repeat setoid_rewrite <-bi.plainly_forall.
     repeat setoid_rewrite bi.persistently_forall. do 4 f_equiv.
@@ -341,21 +329,35 @@ Qed.
 Canonical Structure monPredI : bi :=
   Bi (monPred I PROP) monPred_dist monPred_equiv monPred_entails monPred_emp
      monPred_pure monPred_and monPred_or monPred_impl monPred_forall
-     monPred_exist monPred_internal_eq monPred_sep monPred_wand monPred_plainly
-     monPred_persistently monPred_ofe_mixin monPred_bi_mixin.
+     monPred_exist monPred_sep monPred_wand monPred_plainly monPred_persistently
+     monPred_ofe_mixin monPred_bi_mixin.
 End canonical_bi.
 
 Section canonical_sbi.
 Context (I : biIndex) (PROP : sbi).
 
 Lemma monPred_sbi_mixin :
-  SbiMixin (PROP:=monPred I PROP) monPred_entails monPred_pure monPred_or
-           monPred_impl monPred_forall monPred_exist monPred_internal_eq
-           monPred_sep monPred_plainly monPred_persistently monPred_later.
+  SbiMixin (PROP:=monPred I PROP) monPred_ofe_mixin monPred_entails monPred_pure
+           monPred_and monPred_or monPred_impl monPred_forall monPred_exist
+           monPred_sep monPred_plainly monPred_persistently monPred_internal_eq
+           monPred_later.
 Proof.
   split; unseal.
   - intros n P Q HPQ. split=> i /=.
     apply bi.later_contractive. destruct n as [|n]=> //. by apply HPQ.
+  - by split=> ? /=; repeat f_equiv.
+  - intros A P a. split=> i. by apply bi.internal_eq_refl.
+  - intros A a b Ψ ?. split=> i /=.
+    setoid_rewrite bi.pure_impl_forall. do 2 apply bi.forall_intro => ?.
+    erewrite (bi.internal_eq_rewrite _ _ (flip Ψ _)) => //=. solve_proper.
+  - intros A1 A2 f g. split=> i. by apply bi.fun_ext.
+  - intros A P x y. split=> i. by apply bi.sig_eq.
+  - intros A a b ?. split=> i. by apply bi.discrete_eq_1.
+  - intros P Q. split=> i /=.
+    rewrite <-(sig_monPred_sig P), <-(sig_monPred_sig Q), <-(bi.f_equiv _).
+    rewrite -bi.sig_equivI /= -bi.fun_ext. f_equiv=> j.
+    rewrite -bi.prop_ext !(bi.forall_elim j) !bi.pure_impl_forall
+            !bi.forall_elim //.
   - intros A x y. split=> i. by apply bi.later_eq_1.
   - intros A x y. split=> i. by apply bi.later_eq_2.
   - intros P Q [?]. split=> i. by apply bi.later_mono.
@@ -378,8 +380,8 @@ Qed.
 Canonical Structure monPredSI : sbi :=
   Sbi (monPred I PROP) monPred_dist monPred_equiv monPred_entails monPred_emp
       monPred_pure monPred_and monPred_or monPred_impl monPred_forall
-      monPred_exist monPred_internal_eq monPred_sep monPred_wand monPred_plainly
-      monPred_persistently monPred_later monPred_ofe_mixin
+      monPred_exist monPred_sep monPred_wand monPred_plainly
+      monPred_persistently monPred_internal_eq monPred_later monPred_ofe_mixin
       (bi_bi_mixin _) monPred_sbi_mixin.
 End canonical_sbi.
 
@@ -523,8 +525,6 @@ Lemma monPred_at_pure i (φ : Prop) : monPred_at ⌜φ⌝ i ⊣⊢ ⌜φ⌝.
 Proof. by apply monPred_at_embed. Qed.
 Lemma monPred_at_emp i : monPred_at emp i ⊣⊢ emp.
 Proof. by apply monPred_at_embed. Qed.
-Lemma monPred_at_internal_eq {A : ofeT} i (a b : A) : monPred_at (a ≡ b) i ⊣⊢ a ≡ b.
-Proof. by apply monPred_at_embed. Qed.
 Lemma monPred_at_plainly i P : bi_plainly P i ⊣⊢ ∀ j, bi_plainly (P j).
 Proof. by apply monPred_at_embed. Qed.
 Lemma monPred_at_and i P Q : (P ∧ Q) i ⊣⊢ P i ∧ Q i.
@@ -618,15 +618,6 @@ Lemma monPred_in_elim P i : monPred_in i ∧ ⎡P i⎤ ⊢ P .
 Proof.
   unseal. split=>i' /=.
   eapply bi.pure_elim; [apply bi.and_elim_l|]=>?. rewrite bi.and_elim_r. by f_equiv.
-Qed.
-
-Lemma monPred_equivI {PROP' : bi} P Q :
-  bi_internal_eq (PROP:=PROP') P Q ⊣⊢ ∀ i, P i ≡ Q i.
-Proof.
-  apply bi.equiv_spec. split.
-  - apply bi.forall_intro=>?. apply (bi.f_equiv (flip monPred_at _)).
-  - by rewrite -{2}(sig_monPred_sig P) -{2}(sig_monPred_sig Q)
-               -bi.f_equiv -bi.sig_equivI !bi.ofe_fun_equivI.
 Qed.
 
 Lemma monPred_bupd_embed `{BUpdFacts PROP} (P : PROP) :
@@ -734,7 +725,7 @@ Proof.
 Qed.
 
 Global Instance monPred_sbi_embedding : SbiEmbedding PROP monPredSI.
-Proof. split; try apply _. by unseal. Qed.
+Proof. split; try apply _; by unseal. Qed.
 
 Global Instance monPred_fupd_facts `{FUpdFacts PROP} : FUpdFacts monPredSI.
 Proof.
@@ -766,6 +757,9 @@ Qed.
 
 (** Unfolding lemmas *)
 
+Lemma monPred_at_internal_eq {A : ofeT} i (a b : A) :
+  @monPred_at I PROP (a ≡ b) i ⊣⊢ a ≡ b.
+Proof. by apply monPred_at_embed. Qed.
 Lemma monPred_at_later i P : (▷ P) i ⊣⊢ ▷ P i.
 Proof. by unseal. Qed.
 Lemma monPred_at_fupd `{FUpdFacts PROP} i E1 E2 P :
@@ -784,5 +778,14 @@ Proof.
   unseal. split=>i /=. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
   - by do 2 apply bi.forall_intro=>?.
   - rewrite !bi.forall_elim //.
+Qed.
+
+Lemma monPred_equivI {PROP' : sbi} P Q :
+  sbi_internal_eq (PROP:=PROP') P Q ⊣⊢ ∀ i, P i ≡ Q i.
+Proof.
+  apply bi.equiv_spec. split.
+  - apply bi.forall_intro=>?. apply (bi.f_equiv (flip monPred_at _)).
+  - by rewrite -{2}(sig_monPred_sig P) -{2}(sig_monPred_sig Q)
+               -bi.f_equiv -bi.sig_equivI !bi.ofe_fun_equivI.
 Qed.
 End sbi_facts.

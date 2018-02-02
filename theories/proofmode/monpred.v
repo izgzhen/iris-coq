@@ -25,9 +25,6 @@ Implicit Types i j : I.
 
 Global Instance make_monPred_at_pure φ i : MakeMonPredAt i ⌜φ⌝ ⌜φ⌝.
 Proof. by rewrite /MakeMonPredAt monPred_at_pure. Qed.
-Global Instance make_monPred_at_internal_eq {A : ofeT} (x y : A) i :
-  MakeMonPredAt i (x ≡ y) (x ≡ y).
-Proof. by rewrite /MakeMonPredAt monPred_at_internal_eq. Qed.
 Global Instance make_monPred_at_emp i : MakeMonPredAt i emp emp.
 Proof. by rewrite /MakeMonPredAt monPred_at_emp. Qed.
 Global Instance make_monPred_at_sep i P 𝓟 Q 𝓠 :
@@ -132,10 +129,6 @@ Global Instance into_pure_monPred_in i j : @IntoPure PROP (monPred_in i j) (i �
 Proof. by rewrite /IntoPure monPred_at_in. Qed.
 Global Instance from_pure_monPred_in i j : @FromPure PROP (monPred_in i j) (i ⊑ j).
 Proof. by rewrite /FromPure monPred_at_in. Qed.
-
-Global Instance into_internal_eq_monPred_at {A : ofeT} (x y : A) P i :
-  IntoInternalEq P x y → IntoInternalEq (P i) x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite monPred_at_internal_eq. Qed.
 
 Global Instance into_persistent_monPred_at p P Q 𝓠 i :
   IntoPersistent p P Q → MakeMonPredAt i Q 𝓠 → IntoPersistent p (P i) 𝓠 | 0.
@@ -391,6 +384,9 @@ Global Instance is_except_0_monPred_at i P :
   IsExcept0 P → IsExcept0 (P i).
 Proof. rewrite /IsExcept0=>- [/(_ i)]. by rewrite monPred_at_except_0. Qed.
 
+Global Instance make_monPred_at_internal_eq {A : ofeT} (x y : A) i :
+  @MakeMonPredAt I PROP i (x ≡ y) (x ≡ y).
+Proof. by rewrite /MakeMonPredAt monPred_at_internal_eq. Qed.
 Global Instance make_monPred_at_except_0 i P 𝓠 :
   MakeMonPredAt i P 𝓠 → MakeMonPredAt i (◇ P)%I (◇ 𝓠)%I.
 Proof. by rewrite /MakeMonPredAt monPred_at_except_0=><-. Qed.
@@ -403,6 +399,10 @@ Proof. rewrite /MakeMonPredAt=> <-. elim n=>//= ? <-. by rewrite monPred_at_late
 Global Instance make_monPred_at_fupd `{FUpdFacts PROP} i E1 E2 P 𝓟 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|={E1,E2}=> P)%I (|={E1,E2}=> 𝓟)%I.
 Proof. by rewrite /MakeMonPredAt monPred_at_fupd=> <-. Qed.
+
+Global Instance into_internal_eq_monPred_at {A : ofeT} (x y : A) P i :
+  IntoInternalEq P x y → IntoInternalEq (P i) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite monPred_at_internal_eq. Qed.
 
 Global Instance into_except_0_monPred_at_fwd i P Q 𝓠 :
   IntoExcept0 P Q → MakeMonPredAt i Q 𝓠 → IntoExcept0 (P i) 𝓠.

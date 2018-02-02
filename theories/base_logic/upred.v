@@ -349,7 +349,7 @@ Definition unseal_eqs :=
 Ltac unseal := (* Coq unfold is used to circumvent bug #5699 in rewrite /foo *)
   unfold bi_emp; simpl;
   unfold uPred_emp, bi_pure, bi_and, bi_or, bi_impl, bi_forall, bi_exist,
-  bi_internal_eq, bi_sep, bi_wand, bi_plainly, bi_persistently, sbi_later; simpl;
+  bi_sep, bi_wand, bi_plainly, bi_persistently, sbi_internal_eq, sbi_later; simpl;
   unfold sbi_emp, sbi_pure, sbi_and, sbi_or, sbi_impl, sbi_forall, sbi_exist,
   sbi_internal_eq, sbi_sep, sbi_wand, sbi_plainly, sbi_persistently; simpl;
   rewrite !unseal_eqs /=.
@@ -358,10 +358,11 @@ Import uPred_unseal.
 
 Local Arguments uPred_holds {_} !_ _ _ /.
 
-Lemma uPred_bi_mixin (M : ucmraT) : BiMixin (ofe_mixin_of (uPred M))
-  uPred_entails uPred_emp uPred_pure uPred_and uPred_or uPred_impl
-                (@uPred_forall M) (@uPred_exist M) (@uPred_internal_eq M)
-                uPred_sep uPred_wand uPred_plainly uPred_persistently.
+Lemma uPred_bi_mixin (M : ucmraT) :
+  BiMixin
+    uPred_entails uPred_emp uPred_pure uPred_and uPred_or uPred_impl
+    (@uPred_forall M) (@uPred_exist M) uPred_sep uPred_wand uPred_plainly
+    uPred_persistently.
 Proof.
   split.
   - (* PreOrder uPred_entails *)
@@ -403,10 +404,6 @@ Proof.
   - (* NonExpansive uPred_persistently *)
     intros n P1 P2 HP.
     unseal; split=> n' x; split; apply HP; eauto using @cmra_core_validN.
-  - (* NonExpansive2 (@uPred_internal_eq M A) *)
-    intros A n x x' Hx y y' Hy; split=> n' z; unseal; split; intros; simpl in *.
-    + by rewrite -(dist_le _ _ _ _ Hx) -?(dist_le _ _ _ _ Hy); auto.
-    + by rewrite (dist_le _ _ _ _ Hx) ?(dist_le _ _ _ _ Hy); auto.
   - (* φ → P ⊢ ⌜φ⌝ *)
     intros P φ ?. unseal; by split.
   - (* (φ → True ⊢ P) → ⌜φ⌝ ⊢ P *)
@@ -438,17 +435,6 @@ Proof.
     intros A Ψ a. unseal; split=> n x ??; by exists a.
   - (* (∀ a, Ψ a ⊢ Q) → (∃ a, Ψ a) ⊢ Q *)
     intros A Ψ Q. unseal; intros HΨ; split=> n x ? [a ?]; by apply HΨ with a.
-  - (* P ⊢ a ≡ a *)
-    intros A P a. unseal; by split=> n x ?? /=.
-  - (* a ≡ b ⊢ Ψ a → Ψ b *)
-    intros A a b Ψ Hnonexp.
-    unseal; split=> n x ? Hab n' x' ??? HΨ. eapply Hnonexp with n a; auto.
-  - (* (∀ x, f x ≡ g x) ⊢ f ≡ g *)
-    by unseal.
-  - (* `x ≡ `y ⊢ x ≡ y *)
-    by unseal.
-  - (* Discrete a → a ≡ b ⊣⊢ ⌜a ≡ b⌝ *)
-    intros A a b ?. unseal; split=> n x ?; by apply (discrete_iff n).
   - (* (P ⊢ Q) → (P' ⊢ Q') → P ∗ P' ⊢ Q ∗ Q' *)
     intros P P' Q Q' HQ HQ'; unseal.
     split; intros n' x ? (x1&x2&?&?&?); exists x1,x2; ofe_subst x;
@@ -482,9 +468,6 @@ Proof.
     unseal; split=> n x ?? //.
   - (* (∀ a, bi_plainly (Ψ a)) ⊢ bi_plainly (∀ a, Ψ a) *)
     by unseal.
-  - (* bi_plainly ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q *)
-    unseal; split=> n x ? /= HPQ; split=> n' x' ? HP;
-    split; eapply HPQ; eauto using @ucmra_unit_least.
   - (* (bi_plainly P → bi_persistently Q) ⊢ bi_persistently (bi_plainly P → Q) *)
     unseal; split=> /= n x ? HPQ n' x' ????.
     eapply uPred_mono with n' (core x)=>//; [|by apply cmra_included_includedN].
@@ -518,15 +501,33 @@ Proof.
     exists (core x), x; rewrite ?cmra_core_l; auto.
 Qed.
 
-Lemma uPred_sbi_mixin (M : ucmraT) : SbiMixin
-  uPred_entails uPred_pure uPred_or uPred_impl
-  (@uPred_forall M) (@uPred_exist M) (@uPred_internal_eq M)
-  uPred_sep uPred_plainly uPred_persistently uPred_later.
+Lemma uPred_sbi_mixin (M : ucmraT) : SbiMixin uPred_ofe_mixin
+  uPred_entails uPred_pure uPred_and uPred_or uPred_impl
+  (@uPred_forall M) (@uPred_exist M) uPred_sep uPred_plainly uPred_persistently
+  (@uPred_internal_eq M) uPred_later.
 Proof.
   split.
   - (* Contractive sbi_later *)
     unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try omega.
     apply HPQ; eauto using cmra_validN_S.
+  - (* NonExpansive2 (@uPred_internal_eq M A) *)
+    intros A n x x' Hx y y' Hy; split=> n' z; unseal; split; intros; simpl in *.
+    + by rewrite -(dist_le _ _ _ _ Hx) -?(dist_le _ _ _ _ Hy); auto.
+    + by rewrite (dist_le _ _ _ _ Hx) ?(dist_le _ _ _ _ Hy); auto.
+  - (* P ⊢ a ≡ a *)
+    intros A P a. unseal; by split=> n x ?? /=.
+  - (* a ≡ b ⊢ Ψ a → Ψ b *)
+    intros A a b Ψ Hnonexp.
+    unseal; split=> n x ? Hab n' x' ??? HΨ. eapply Hnonexp with n a; auto.
+  - (* (∀ x, f x ≡ g x) ⊢ f ≡ g *)
+    by unseal.
+  - (* `x ≡ `y ⊢ x ≡ y *)
+    by unseal.
+  - (* Discrete a → a ≡ b ⊣⊢ ⌜a ≡ b⌝ *)
+    intros A a b ?. unseal; split=> n x ?; by apply (discrete_iff n).
+  - (* bi_plainly ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q *)
+    unseal; split=> n x ? /= HPQ; split=> n' x' ? HP;
+    split; eapply HPQ; eauto using @ucmra_unit_least.
   - (* Next x ≡ Next y ⊢ ▷ (x ≡ y) *)
     by unseal.
   - (* ▷ (x ≡ y) ⊢ Next x ≡ Next y *)
@@ -638,7 +639,7 @@ Lemma ownM_unit : bi_valid (uPred_ownM (ε:M)).
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
 Lemma later_ownM (a : M) : ▷ uPred_ownM a ⊢ ∃ b, uPred_ownM b ∧ ▷ (a ≡ b).
 Proof.
-  rewrite /bi_and /sbi_later /bi_exist /bi_internal_eq /=; unseal.
+  rewrite /bi_and /sbi_later /bi_exist /sbi_internal_eq /=; unseal.
   split=> -[|n] x /= ? Hax; first by eauto using ucmra_unit_leastN.
   destruct Hax as [y ?].
   destruct (cmra_extend n x a y) as (a'&y'&Hx&?&?); auto using cmra_validN_S.

@@ -56,7 +56,7 @@ Proof. by exists φ. Qed.
 Hint Extern 0 (FromPureT _ _) =>
   notypeclasses refine (from_pureT_hint _ _ _) : typeclass_instances.
 
-Class IntoInternalEq {PROP : bi} {A : ofeT} (P : PROP) (x y : A) :=
+Class IntoInternalEq {PROP : sbi} {A : ofeT} (P : PROP) (x y : A) :=
   into_internal_eq : P ⊢ x ≡ y.
 Arguments IntoInternalEq {_ _} _%I _%type_scope _%type_scope : simpl never.
 Arguments into_internal_eq {_ _} _%I _%type_scope _%type_scope {_}.

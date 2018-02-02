@@ -81,10 +81,6 @@ Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
 Global Instance into_pure_pure φ : @IntoPure PROP ⌜φ⌝ φ.
 Proof. by rewrite /IntoPure. Qed.
 
-Global Instance into_pure_eq {A : ofeT} (a b : A) :
-  Discrete a → @IntoPure M (a ≡ b) (a ≡ b).
-Proof. intros. by rewrite /IntoPure discrete_eq. Qed.
-
 Global Instance into_pure_pure_and (φ1 φ2 : Prop) P1 P2 :
   IntoPure P1 φ1 → IntoPure P2 φ2 → IntoPure (P1 ∧ P2) (φ1 ∧ φ2).
 Proof. rewrite /IntoPure pure_and. by intros -> ->. Qed.
@@ -126,10 +122,6 @@ Proof. rewrite /IntoPure=> ->. by rewrite bi_embed_pure. Qed.
 (* FromPure *)
 Global Instance from_pure_pure φ : @FromPure PROP ⌜φ⌝ φ.
 Proof. by rewrite /FromPure. Qed.
-Global Instance from_pure_internal_eq {A : ofeT} (a b : A) :
-  @FromPure PROP (a ≡ b) (a ≡ b).
-Proof. by rewrite /FromPure pure_internal_eq. Qed.
-
 Global Instance from_pure_pure_and (φ1 φ2 : Prop) P1 P2 :
   FromPure P1 φ1 → FromPure P2 φ2 → FromPure (P1 ∧ P2) (φ1 ∧ φ2).
 Proof. rewrite /FromPure pure_and. by intros -> ->. Qed.
@@ -175,27 +167,6 @@ Proof. rewrite /FromPure=> <-. by rewrite bi_embed_pure. Qed.
 Global Instance from_pure_bupd `{BUpdFacts PROP} P φ :
   FromPure P φ → FromPure (|==> P) φ.
 Proof. rewrite /FromPure=> ->. apply bupd_intro. Qed.
-
-(* IntoInternalEq *)
-Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
-  @IntoInternalEq PROP A (x ≡ y) x y.
-Proof. by rewrite /IntoInternalEq. Qed.
-Global Instance into_internal_eq_affinely {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (bi_affinely P) x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite affinely_elim. Qed.
-Global Instance into_internal_eq_absorbingly {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (bi_absorbingly P) x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite absorbingly_internal_eq. Qed.
-Global Instance into_internal_eq_plainly {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (bi_plainly P) x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite plainly_elim. Qed.
-Global Instance into_internal_eq_persistently {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (bi_persistently P) x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite persistently_elim. Qed.
-Global Instance into_internal_eq_embed
-       `{BiEmbedding PROP PROP'} {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq ⎡P⎤ x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite bi_embed_internal_eq. Qed.
 
 (* IntoPersistent *)
 Global Instance into_persistent_persistently p P Q :
@@ -841,10 +812,6 @@ Qed.
 Global Instance frame_pure_embed `{BiEmbedding PROP PROP'} p P Q (Q' : PROP') φ :
   Frame p ⌜φ⌝ P Q → MakeEmbed Q Q' → Frame p ⌜φ⌝ ⎡P⎤ Q'.
 Proof. rewrite /Frame /MakeEmbed -bi_embed_pure. apply (frame_embed p P Q). Qed.
-Global Instance frame_eq_embed `{BiEmbedding PROP PROP'} p P Q (Q' : PROP')
-       {A : ofeT} (a b : A) :
-  Frame p (a ≡ b) P Q → MakeEmbed Q Q' → Frame p (a ≡ b) ⎡P⎤ Q'.
-Proof. rewrite /Frame /MakeEmbed -bi_embed_internal_eq. apply (frame_embed p P Q). Qed.
 
 Class MakeSep (P Q PQ : PROP) := make_sep : P ∗ Q ⊣⊢ PQ.
 Arguments MakeSep _%I _%I _%I.
@@ -1087,6 +1054,9 @@ Global Instance from_assumption_fupd `{FUpdFacts PROP} E p P Q :
 Proof. rewrite /FromAssumption=>->. apply bupd_fupd. Qed.
 
 (* FromPure *)
+Global Instance from_pure_internal_eq {A : ofeT} (a b : A) :
+  @FromPure PROP (a ≡ b) (a ≡ b).
+Proof. by rewrite /FromPure pure_internal_eq. Qed.
 Global Instance from_pure_later P φ : FromPure P φ → FromPure (▷ P) φ.
 Proof. rewrite /FromPure=> ->. apply later_intro. Qed.
 Global Instance from_pure_laterN n P φ : FromPure P φ → FromPure (▷^n P) φ.
@@ -1096,6 +1066,11 @@ Proof. rewrite /FromPure=> ->. apply except_0_intro. Qed.
 Global Instance from_pure_fupd `{FUpdFacts PROP} E P φ :
   FromPure P φ → FromPure (|={E}=> P) φ.
 Proof. rewrite /FromPure. intros <-. apply fupd_intro. Qed.
+
+(* IntoPure *)
+Global Instance into_pure_eq {A : ofeT} (a b : A) :
+  Discrete a → @IntoPure PROP (a ≡ b) (a ≡ b).
+Proof. intros. by rewrite /IntoPure discrete_eq. Qed.
 
 (* IntoWand *)
 Global Instance into_wand_later p q R P Q :
@@ -1331,6 +1306,27 @@ Proof. apply except_0_intro. Qed.
 Global Instance from_modal_fupd E P `{FUpdFacts PROP} : FromModal (|={E}=> P) P.
 Proof. rewrite /FromModal. apply fupd_intro. Qed.
 
+(* IntoInternalEq *)
+Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
+  @IntoInternalEq PROP A (x ≡ y) x y.
+Proof. by rewrite /IntoInternalEq. Qed.
+Global Instance into_internal_eq_affinely {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (bi_affinely P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite affinely_elim. Qed.
+Global Instance into_internal_eq_absorbingly {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (bi_absorbingly P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite absorbingly_internal_eq. Qed.
+Global Instance into_internal_eq_plainly {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (bi_plainly P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite plainly_elim. Qed.
+Global Instance into_internal_eq_persistently {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (bi_persistently P) x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite persistently_elim. Qed.
+Global Instance into_internal_eq_embed
+       `{SbiEmbedding PROP PROP'} {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq ⎡P⎤ x y.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite sbi_embed_internal_eq. Qed.
+
 (* IntoExcept0 *)
 Global Instance into_except_0_except_0 P : IntoExcept0 (◇ P) P.
 Proof. by rewrite /IntoExcept0. Qed.
@@ -1400,6 +1396,11 @@ Global Instance add_modal_fupd `{FUpdFacts PROP} E1 E2 P Q :
 Proof. by rewrite /AddModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 
 (* Frame *)
+Global Instance frame_eq_embed `{SbiEmbedding PROP PROP'} p P Q (Q' : PROP')
+       {A : ofeT} (a b : A) :
+  Frame p (a ≡ b) P Q → MakeEmbed Q Q' → Frame p (a ≡ b) ⎡P⎤ Q'.
+Proof. rewrite /Frame /MakeEmbed -sbi_embed_internal_eq. apply (frame_embed p P Q). Qed.
+
 Class MakeLater (P lP : PROP) := make_later : ▷ P ⊣⊢ lP.
 Arguments MakeLater _%I _%I.
 

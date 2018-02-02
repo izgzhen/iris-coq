@@ -22,7 +22,6 @@ Class BiEmbedding (PROP1 PROP2 : bi) `{BiEmbed PROP1 PROP2} := {
   bi_embed_impl_2 P Q : (⎡P⎤ → ⎡Q⎤) ⊢ ⎡P → Q⎤;
   bi_embed_forall_2 A (Φ : A → PROP1) : (∀ x, ⎡Φ x⎤) ⊢ ⎡∀ x, Φ x⎤;
   bi_embed_exist_1 A (Φ : A → PROP1) : ⎡∃ x, Φ x⎤ ⊢ ∃ x, ⎡Φ x⎤;
-  bi_embed_internal_eq_1 (A : ofeT) (x y : A) : ⎡x ≡ y⎤ ⊢ x ≡ y;
   bi_embed_sep P Q : ⎡P ∗ Q⎤ ⊣⊢ ⎡P⎤ ∗ ⎡Q⎤;
   bi_embed_wand_2 P Q : (⎡P⎤ -∗ ⎡Q⎤) ⊢ ⎡P -∗ Q⎤;
   bi_embed_plainly P : ⎡bi_plainly P⎤ ⊣⊢ bi_plainly ⎡P⎤;
@@ -31,6 +30,7 @@ Class BiEmbedding (PROP1 PROP2 : bi) `{BiEmbed PROP1 PROP2} := {
 
 Class SbiEmbedding (PROP1 PROP2 : sbi) `{BiEmbed PROP1 PROP2} := {
   sbi_embed_bi_embed :> BiEmbedding PROP1 PROP2;
+  sbi_embed_internal_eq_1 (A : ofeT) (x y : A) : ⎡x ≡ y⎤ ⊢ x ≡ y;
   sbi_embed_later P : ⎡▷ P⎤ ⊣⊢ ▷ ⎡P⎤
 }.
 
@@ -86,13 +86,6 @@ Section bi_embedding.
     rewrite -(_ : (emp → emp : PROP1) ⊢ True) ?bi_embed_impl;
       last apply bi.True_intro.
     apply bi.impl_intro_l. by rewrite right_id.
-  Qed.
-  Lemma bi_embed_internal_eq (A : ofeT) (x y : A) : ⎡x ≡ y⎤ ⊣⊢ x ≡ y.
-  Proof.
-    apply bi.equiv_spec; split; [apply bi_embed_internal_eq_1|].
-    etrans; [apply (bi.internal_eq_rewrite x y (λ y, ⎡x ≡ y⎤%I)); solve_proper|].
-    rewrite -(bi.internal_eq_refl True%I) bi_embed_pure.
-    eapply bi.impl_elim; [done|]. apply bi.True_intro.
   Qed.
   Lemma bi_embed_iff P Q : ⎡P ↔ Q⎤ ⊣⊢ (⎡P⎤ ↔ ⎡Q⎤).
   Proof. by rewrite bi_embed_and !bi_embed_impl. Qed.
@@ -162,6 +155,13 @@ Section sbi_embedding.
   Context `{SbiEmbedding PROP1 PROP2}.
   Implicit Types P Q R : PROP1.
 
+  Lemma sbi_embed_internal_eq (A : ofeT) (x y : A) : ⎡x ≡ y⎤ ⊣⊢ x ≡ y.
+  Proof.
+    apply bi.equiv_spec; split; [apply sbi_embed_internal_eq_1|].
+    etrans; [apply (bi.internal_eq_rewrite x y (λ y, ⎡x ≡ y⎤%I)); solve_proper|].
+    rewrite -(bi.internal_eq_refl True%I) bi_embed_pure.
+    eapply bi.impl_elim; [done|]. apply bi.True_intro.
+  Qed.
   Lemma sbi_embed_laterN n P : ⎡▷^n P⎤ ⊣⊢ ▷^n ⎡P⎤.
   Proof. induction n=>//=. rewrite sbi_embed_later. by f_equiv. Qed.
   Lemma sbi_embed_except_0 P : ⎡◇ P⎤ ⊣⊢ ◇ ⎡P⎤.

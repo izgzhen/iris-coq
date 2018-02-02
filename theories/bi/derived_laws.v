@@ -68,8 +68,6 @@ Proof.
   intros Φ1 Φ2 HΦ. apply equiv_dist=> n.
   apply exist_ne=> x. apply equiv_dist, HΦ.
 Qed.
-Global Instance internal_eq_proper (A : ofeT) :
-  Proper ((≡) ==> (≡) ==> (⊣⊢)) (@bi_internal_eq PROP A) := ne_proper_2 _.
 Global Instance plainly_proper :
   Proper ((⊣⊢) ==> (⊣⊢)) (@bi_plainly PROP) := ne_proper _.
 Global Instance persistently_proper :
@@ -273,84 +271,6 @@ Global Instance iff_proper :
 Lemma iff_refl Q P : Q ⊢ P ↔ P.
 Proof. rewrite /bi_iff; apply and_intro; apply impl_intro_l; auto. Qed.
 
-(* Equality stuff *)
-Hint Resolve internal_eq_refl.
-Lemma equiv_internal_eq {A : ofeT} P (a b : A) : a ≡ b → P ⊢ a ≡ b.
-Proof. intros ->. auto. Qed.
-Lemma internal_eq_rewrite' {A : ofeT} a b (Ψ : A → PROP) P
-  {HΨ : NonExpansive Ψ} : (P ⊢ a ≡ b) → (P ⊢ Ψ a) → P ⊢ Ψ b.
-Proof.
-  intros Heq HΨa. rewrite -(idemp bi_and P) {1}Heq HΨa.
-  apply impl_elim_l'. by apply internal_eq_rewrite.
-Qed.
-
-Lemma internal_eq_sym {A : ofeT} (a b : A) : a ≡ b ⊢ b ≡ a.
-Proof. apply (internal_eq_rewrite' a b (λ b, b ≡ a)%I); auto. Qed.
-Lemma internal_eq_iff P Q : P ≡ Q ⊢ P ↔ Q.
-Proof. apply (internal_eq_rewrite' P Q (λ Q, P ↔ Q))%I; auto using iff_refl. Qed.
-
-Lemma f_equiv {A B : ofeT} (f : A → B) `{!NonExpansive f} x y :
-  x ≡ y ⊢ f x ≡ f y.
-Proof. apply (internal_eq_rewrite' x y (λ y, f x ≡ f y)%I); auto. Qed.
-
-Lemma prod_equivI {A B : ofeT} (x y : A * B) : x ≡ y ⊣⊢ x.1 ≡ y.1 ∧ x.2 ≡ y.2.
-Proof.
-  apply (anti_symm _).
-  - apply and_intro; apply f_equiv; apply _.
-  - rewrite {3}(surjective_pairing x) {3}(surjective_pairing y).
-    apply (internal_eq_rewrite' (x.1) (y.1) (λ a, (x.1,x.2) ≡ (a,y.2))%I); auto.
-    apply (internal_eq_rewrite' (x.2) (y.2) (λ b, (x.1,x.2) ≡ (x.1,b))%I); auto.
-Qed.
-Lemma sum_equivI {A B : ofeT} (x y : A + B) :
-  x ≡ y ⊣⊢
-    match x, y with
-    | inl a, inl a' => a ≡ a' | inr b, inr b' => b ≡ b' | _, _ => False
-    end.
-Proof.
-  apply (anti_symm _).
-  - apply (internal_eq_rewrite' x y (λ y,
-             match x, y with
-             | inl a, inl a' => a ≡ a' | inr b, inr b' => b ≡ b' | _, _ => False
-             end)%I); auto.
-    destruct x; auto.
-  - destruct x as [a|b], y as [a'|b']; auto; apply f_equiv, _.
-Qed.
-Lemma option_equivI {A : ofeT} (x y : option A) :
-  x ≡ y ⊣⊢ match x, y with
-           | Some a, Some a' => a ≡ a' | None, None => True | _, _ => False
-           end.
-Proof.
-  apply (anti_symm _).
-  - apply (internal_eq_rewrite' x y (λ y,
-             match x, y with
-             | Some a, Some a' => a ≡ a' | None, None => True | _, _ => False
-             end)%I); auto.
-    destruct x; auto.
-  - destruct x as [a|], y as [a'|]; auto. apply f_equiv, _.
-Qed.
-
-Lemma sig_equivI {A : ofeT} (P : A → Prop) (x y : sig P) : `x ≡ `y ⊣⊢ x ≡ y.
-Proof. apply (anti_symm _). apply sig_eq. apply f_equiv, _. Qed.
-
-Lemma ofe_fun_equivI {A} {B : A → ofeT} (f g : ofe_fun B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
-Proof.
-  apply (anti_symm _); auto using fun_ext.
-  apply (internal_eq_rewrite' f g (λ g, ∀ x : A, f x ≡ g x)%I); auto.
-  intros n h h' Hh; apply forall_ne=> x; apply internal_eq_ne; auto.
-Qed.
-Lemma ofe_morC_equivI {A B : ofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
-Proof.
-  apply (anti_symm _).
-  - apply (internal_eq_rewrite' f g (λ g, ∀ x : A, f x ≡ g x)%I); auto.
-  - rewrite -(ofe_fun_equivI (ofe_mor_car _ _ f) (ofe_mor_car _ _ g)).
-    set (h1 (f : A -n> B) :=
-      exist (λ f : A -c> B, NonExpansive (f : A → B)) f (ofe_mor_ne A B f)).
-    set (h2 (f : sigC (λ f : A -c> B, NonExpansive (f : A → B))) :=
-      @CofeMor A B (`f) (proj2_sig f)).
-    assert (∀ f, h2 (h1 f) = f) as Hh by (by intros []).
-    assert (NonExpansive h2) by (intros ??? EQ; apply EQ).
-    by rewrite -{2}[f]Hh -{2}[g]Hh -f_equiv -sig_equivI.
-Qed.
 
 (* BI Stuff *)
 Hint Resolve sep_mono.
@@ -577,13 +497,6 @@ Proof.
     apply wand_intro_l. rewrite (forall_elim Hφ) comm. by apply absorbing.
 Qed.
 
-Lemma pure_internal_eq {A : ofeT} (x y : A) : ⌜x ≡ y⌝ ⊢ x ≡ y.
-Proof. apply pure_elim'=> ->. apply internal_eq_refl. Qed.
-Lemma discrete_eq {A : ofeT} (a b : A) : Discrete a → a ≡ b ⊣⊢ ⌜a ≡ b⌝.
-Proof.
-  intros. apply (anti_symm _); auto using discrete_eq_1, pure_internal_eq.
-Qed.
-
 (* Properties of the affinely modality *)
 Global Instance affinely_ne : NonExpansive (@bi_affinely PROP).
 Proof. solve_proper. Qed.
@@ -685,13 +598,6 @@ Proof. apply forall_intro=> a. by rewrite (forall_elim a). Qed.
 Lemma absorbingly_exist {A} (Φ : A → PROP) :
   bi_absorbingly (∃ a, Φ a) ⊣⊢ ∃ a, bi_absorbingly (Φ a).
 Proof. by rewrite /bi_absorbingly sep_exist_l. Qed.
-
-Lemma absorbingly_internal_eq {A : ofeT} (x y : A) : bi_absorbingly (x ≡ y) ⊣⊢ x ≡ y.
-Proof.
-  apply (anti_symm _), absorbingly_intro.
-  apply wand_elim_r', (internal_eq_rewrite' x y (λ y, True -∗ x ≡ y)%I); auto.
-  apply wand_intro_l, internal_eq_refl.
-Qed.
 
 Lemma absorbingly_sep P Q : bi_absorbingly (P ∗ Q) ⊣⊢ bi_absorbingly P ∗ bi_absorbingly Q.
 Proof. by rewrite -{1}absorbingly_idemp /bi_absorbingly !assoc -!(comm _ P) !assoc. Qed.
@@ -901,15 +807,6 @@ Proof. by rewrite !(comm _ P) persistently_and_sep_l_1. Qed.
 Lemma persistently_emp_intro P : P ⊢ bi_persistently emp.
 Proof. by rewrite -plainly_elim_persistently -plainly_emp_intro. Qed.
 
-Lemma persistently_internal_eq {A : ofeT} (a b : A) :
-  bi_persistently (a ≡ b) ⊣⊢ a ≡ b.
-Proof.
-  apply (anti_symm (⊢)).
-  { by rewrite persistently_elim_absorbingly absorbingly_internal_eq. }
-  apply (internal_eq_rewrite' a b (λ b, bi_persistently (a ≡ b))%I); auto.
-  rewrite -(internal_eq_refl emp%I a). apply persistently_emp_intro.
-Qed.
-
 Lemma persistently_True_emp : bi_persistently True ⊣⊢ bi_persistently emp.
 Proof. apply (anti_symm _); auto using persistently_emp_intro. Qed.
 Lemma persistently_and_sep P Q : bi_persistently (P ∧ Q) ⊢ bi_persistently (P ∗ Q).
@@ -1106,14 +1003,6 @@ Lemma plainly_and_sep_l_1 P Q : bi_plainly P ∧ Q ⊢ bi_plainly P ∗ Q.
 Proof. by rewrite -{1}(left_id emp%I _ Q%I) plainly_and_sep_assoc and_elim_l. Qed.
 Lemma plainly_and_sep_r_1 P Q : P ∧ bi_plainly Q ⊢ P ∗ bi_plainly Q.
 Proof. by rewrite !(comm _ P) plainly_and_sep_l_1. Qed.
-
-Lemma plainly_internal_eq {A:ofeT} (a b : A) : bi_plainly (a ≡ b) ⊣⊢ a ≡ b.
-Proof.
-  apply (anti_symm (⊢)).
-  { by rewrite plainly_elim_absorbingly absorbingly_internal_eq. }
-  apply (internal_eq_rewrite' a b (λ  b, bi_plainly (a ≡ b))%I); [solve_proper|done|].
-  rewrite -(internal_eq_refl True%I a) plainly_pure; auto.
-Qed.
 
 Lemma plainly_True_emp : bi_plainly True ⊣⊢ bi_plainly emp.
 Proof. apply (anti_symm _); auto using plainly_emp_intro. Qed.
@@ -1564,13 +1453,6 @@ Lemma plain_plainly P `{!Plain P, !Absorbing P} : bi_plainly P ⊣⊢ P.
 Proof. apply (anti_symm _), plain_plainly_2, _. apply plainly_elim, _. Qed.
 Lemma plainly_intro P Q `{!Plain P} : (P ⊢ Q) → P ⊢ bi_plainly Q.
 Proof. by intros <-. Qed.
-Lemma plainly_alt P : bi_plainly P ⊣⊢ P ≡ True.
-Proof.
-  apply (anti_symm (⊢)).
-  - rewrite -prop_ext. apply plainly_mono, and_intro; apply impl_intro_r; auto.
-  - rewrite internal_eq_sym (internal_eq_rewrite _ _ bi_plainly).
-    by rewrite plainly_pure True_impl.
-Qed.
 
 (* Affine instances *)
 Global Instance emp_affine_l : Affine (emp%I : PROP).
@@ -1614,9 +1496,6 @@ Proof.
   rewrite persistent_and_affinely_sep_l_1 absorbingly_sep_r.
   by rewrite -persistent_and_affinely_sep_l impl_elim_r.
 Qed.
-Global Instance internal_eq_absorbing {A : ofeT} (x y : A) :
-  Absorbing (x ≡ y : PROP)%I.
-Proof. by rewrite /Absorbing absorbingly_internal_eq. Qed.
 
 Global Instance sep_absorbing_l P Q : Absorbing P → Absorbing (P ∗ Q).
 Proof. intros. by rewrite /Absorbing -absorbingly_sep_l absorbing. Qed.
@@ -1666,10 +1545,6 @@ Proof.
   intros. rewrite /Persistent persistently_exist.
   apply exist_mono=> x. by rewrite -!persistent.
 Qed.
-
-Global Instance internal_eq_persistent {A : ofeT} (a b : A) :
-  Persistent (a ≡ b : PROP)%I.
-Proof. by intros; rewrite /Persistent persistently_internal_eq. Qed.
 
 Global Instance impl_persistent P Q :
   Absorbing P → Plain P → Persistent Q → Persistent (P → Q).
@@ -1722,10 +1597,6 @@ Global Instance exist_plain {A} (Ψ : A → PROP) :
 Proof.
   intros. rewrite /Plain -plainly_exist_2. apply exist_mono=> x. by rewrite -plain.
 Qed.
-
-Global Instance internal_eq_plain {A : ofeT} (a b : A) :
-  Plain (a ≡ b : PROP)%I.
-Proof. by intros; rewrite /Plain plainly_internal_eq. Qed.
 
 Global Instance impl_plain P Q :
   Absorbing P → Plain P → Plain Q → Plain (P → Q).
@@ -1888,10 +1759,140 @@ Notation "P ⊣⊢ Q" := (equiv (A:=bi_car PROP) P%I Q%I).
 Hint Resolve or_elim or_intro_l' or_intro_r' True_intro False_elim.
 Hint Resolve and_elim_l' and_elim_r' and_intro forall_intro.
 
+Global Instance internal_eq_proper (A : ofeT) :
+  Proper ((≡) ==> (≡) ==> (⊣⊢)) (@sbi_internal_eq PROP A) := ne_proper_2 _.
 Global Instance later_proper :
   Proper ((⊣⊢) ==> (⊣⊢)) (@sbi_later PROP) := ne_proper _.
 
 (* Equality *)
+Hint Resolve internal_eq_refl.
+Hint Extern 100 (NonExpansive _) => solve_proper.
+
+Lemma equiv_internal_eq {A : ofeT} P (a b : A) : a ≡ b → P ⊢ a ≡ b.
+Proof. intros ->. auto. Qed.
+Lemma internal_eq_rewrite' {A : ofeT} a b (Ψ : A → PROP) P
+  {HΨ : NonExpansive Ψ} : (P ⊢ a ≡ b) → (P ⊢ Ψ a) → P ⊢ Ψ b.
+Proof.
+  intros Heq HΨa. rewrite -(idemp bi_and P) {1}Heq HΨa.
+  apply impl_elim_l'. by apply internal_eq_rewrite.
+Qed.
+
+Lemma internal_eq_sym {A : ofeT} (a b : A) : a ≡ b ⊢ b ≡ a.
+Proof. apply (internal_eq_rewrite' a b (λ b, b ≡ a)%I); auto. Qed.
+Lemma internal_eq_iff P Q : P ≡ Q ⊢ P ↔ Q.
+Proof. apply (internal_eq_rewrite' P Q (λ Q, P ↔ Q))%I; auto using iff_refl. Qed.
+
+Lemma f_equiv {A B : ofeT} (f : A → B) `{!NonExpansive f} x y :
+  x ≡ y ⊢ f x ≡ f y.
+Proof. apply (internal_eq_rewrite' x y (λ y, f x ≡ f y)%I); auto. Qed.
+
+Lemma prod_equivI {A B : ofeT} (x y : A * B) : x ≡ y ⊣⊢ x.1 ≡ y.1 ∧ x.2 ≡ y.2.
+Proof.
+  apply (anti_symm _).
+  - apply and_intro; apply f_equiv; apply _.
+  - rewrite {3}(surjective_pairing x) {3}(surjective_pairing y).
+    apply (internal_eq_rewrite' (x.1) (y.1) (λ a, (x.1,x.2) ≡ (a,y.2))%I); auto.
+    apply (internal_eq_rewrite' (x.2) (y.2) (λ b, (x.1,x.2) ≡ (x.1,b))%I); auto.
+Qed.
+Lemma sum_equivI {A B : ofeT} (x y : A + B) :
+  x ≡ y ⊣⊢
+    match x, y with
+    | inl a, inl a' => a ≡ a' | inr b, inr b' => b ≡ b' | _, _ => False
+    end.
+Proof.
+  apply (anti_symm _).
+  - apply (internal_eq_rewrite' x y (λ y,
+             match x, y with
+             | inl a, inl a' => a ≡ a' | inr b, inr b' => b ≡ b' | _, _ => False
+             end)%I); auto.
+    destruct x; auto.
+  - destruct x as [a|b], y as [a'|b']; auto; apply f_equiv, _.
+Qed.
+Lemma option_equivI {A : ofeT} (x y : option A) :
+  x ≡ y ⊣⊢ match x, y with
+           | Some a, Some a' => a ≡ a' | None, None => True | _, _ => False
+           end.
+Proof.
+  apply (anti_symm _).
+  - apply (internal_eq_rewrite' x y (λ y,
+             match x, y with
+             | Some a, Some a' => a ≡ a' | None, None => True | _, _ => False
+             end)%I); auto.
+    destruct x; auto.
+  - destruct x as [a|], y as [a'|]; auto. apply f_equiv, _.
+Qed.
+
+Lemma sig_equivI {A : ofeT} (P : A → Prop) (x y : sig P) : `x ≡ `y ⊣⊢ x ≡ y.
+Proof. apply (anti_symm _). apply sig_eq. apply f_equiv, _. Qed.
+
+Lemma ofe_fun_equivI {A} {B : A → ofeT} (f g : ofe_fun B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
+Proof.
+  apply (anti_symm _); auto using fun_ext.
+  apply (internal_eq_rewrite' f g (λ g, ∀ x : A, f x ≡ g x)%I); auto.
+  intros n h h' Hh; apply forall_ne=> x; apply internal_eq_ne; auto.
+Qed.
+Lemma ofe_morC_equivI {A B : ofeT} (f g : A -n> B) : f ≡ g ⊣⊢ ∀ x, f x ≡ g x.
+Proof.
+  apply (anti_symm _).
+  - apply (internal_eq_rewrite' f g (λ g, ∀ x : A, f x ≡ g x)%I); auto.
+  - rewrite -(ofe_fun_equivI (ofe_mor_car _ _ f) (ofe_mor_car _ _ g)).
+    set (h1 (f : A -n> B) :=
+      exist (λ f : A -c> B, NonExpansive (f : A → B)) f (ofe_mor_ne A B f)).
+    set (h2 (f : sigC (λ f : A -c> B, NonExpansive (f : A → B))) :=
+      @CofeMor A B (`f) (proj2_sig f)).
+    assert (∀ f, h2 (h1 f) = f) as Hh by (by intros []).
+    assert (NonExpansive h2) by (intros ??? EQ; apply EQ).
+    by rewrite -{2}[f]Hh -{2}[g]Hh -f_equiv -sig_equivI.
+Qed.
+
+Lemma pure_internal_eq {A : ofeT} (x y : A) : ⌜x ≡ y⌝ ⊢ x ≡ y.
+Proof. apply pure_elim'=> ->. apply internal_eq_refl. Qed.
+Lemma discrete_eq {A : ofeT} (a b : A) : Discrete a → a ≡ b ⊣⊢ ⌜a ≡ b⌝.
+Proof.
+  intros. apply (anti_symm _); auto using discrete_eq_1, pure_internal_eq.
+Qed.
+
+Lemma absorbingly_internal_eq {A : ofeT} (x y : A) : bi_absorbingly (x ≡ y) ⊣⊢ x ≡ y.
+Proof.
+  apply (anti_symm _), absorbingly_intro.
+  apply wand_elim_r', (internal_eq_rewrite' x y (λ y, True -∗ x ≡ y)%I); auto.
+  apply wand_intro_l, internal_eq_refl.
+Qed.
+Lemma persistently_internal_eq {A : ofeT} (a b : A) :
+  bi_persistently (a ≡ b) ⊣⊢ a ≡ b.
+Proof.
+  apply (anti_symm (⊢)).
+  { by rewrite persistently_elim_absorbingly absorbingly_internal_eq. }
+  apply (internal_eq_rewrite' a b (λ b, bi_persistently (a ≡ b))%I); auto.
+  rewrite -(internal_eq_refl emp%I a). apply persistently_emp_intro.
+Qed.
+Lemma plainly_internal_eq {A:ofeT} (a b : A) : bi_plainly (a ≡ b) ⊣⊢ a ≡ b.
+Proof.
+  apply (anti_symm (⊢)).
+  { by rewrite plainly_elim_absorbingly absorbingly_internal_eq. }
+  apply (internal_eq_rewrite' a b (λ  b, bi_plainly (a ≡ b))%I); [solve_proper|done|].
+  rewrite -(internal_eq_refl True%I a) plainly_pure; auto.
+Qed.
+
+Lemma plainly_alt P : bi_plainly P ⊣⊢ P ≡ True.
+Proof.
+  apply (anti_symm (⊢)).
+  - rewrite -prop_ext. apply plainly_mono, and_intro; apply impl_intro_r; auto.
+  - rewrite internal_eq_sym (internal_eq_rewrite _ _ bi_plainly).
+    by rewrite plainly_pure True_impl.
+Qed.
+
+Global Instance internal_eq_absorbing {A : ofeT} (x y : A) :
+  Absorbing (x ≡ y : PROP)%I.
+Proof. by rewrite /Absorbing absorbingly_internal_eq. Qed.
+Global Instance internal_eq_plain {A : ofeT} (a b : A) :
+  Plain (a ≡ b : PROP)%I.
+Proof. by intros; rewrite /Plain plainly_internal_eq. Qed.
+Global Instance internal_eq_persistent {A : ofeT} (a b : A) :
+  Persistent (a ≡ b : PROP)%I.
+Proof. by intros; rewrite /Persistent persistently_internal_eq. Qed.
+
+(* Equality under a later. *)
 Lemma internal_eq_rewrite_contractive {A : ofeT} a b (Ψ : A → PROP)
   {HΨ : Contractive Ψ} : ▷ (a ≡ b) ⊢ Ψ a → Ψ b.
 Proof.
