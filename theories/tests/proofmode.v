@@ -142,7 +142,7 @@ Proof.
   iSpecialize ("H" $! _ [#10]). done.
 Qed.
 
-Lemma test_eauto_iFramE P Q R `{!Persistent R} :
+Lemma test_eauto_iFrame P Q R `{!Persistent R} :
   P -∗ Q -∗ R -∗ R ∗ Q ∗ P ∗ R ∨ False.
 Proof. eauto 10 with iFrame. Qed.
 
