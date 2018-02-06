@@ -386,7 +386,15 @@ Canonical Structure monPredSI : sbi :=
       monPred_exist monPred_sep monPred_wand monPred_plainly
       monPred_persistently monPred_internal_eq monPred_later monPred_ofe_mixin
       (bi_bi_mixin _) monPred_sbi_mixin.
+
 End canonical_sbi.
+
+Class Absolute {I : biIndex} {PROP : bi} (P : monPred I PROP) :=
+  absolute_at V1 V2 : P V1 -∗ P V2.
+Arguments Absolute {_ _} _%I.
+Arguments absolute_at {_ _} _%I {_}.
+Hint Mode Absolute + + ! : typeclass_instances.
+Instance: Params (@Absolute) 2.
 
 (** Primitive facts that cannot be deduced from the BI structure. *)
 
@@ -606,25 +614,22 @@ Proof.
   unseal. split=>i /=. by apply bi.exist_elim=>_.
 Qed.
 
-Class Absolute P := absolute_at V1 V2 : P V1 -∗ P V2.
-Arguments Absolute _%I.
-Arguments absolute_at _%I {_}.
-Lemma absolute_absolutely P `{Absolute P} : P ⊢ ∀ᵢ P.
+Lemma absolute_absolutely P `{!Absolute P} : P ⊢ ∀ᵢ P.
 Proof.
   rewrite /monPred_absolutely /= bi_embed_forall. apply bi.forall_intro=>?.
   split=>?. unseal. apply absolute_at, _.
 Qed.
-Lemma absolute_relatively P `{Absolute P} : ∃ᵢ P ⊢ P.
+Lemma absolute_relatively P `{!Absolute P} : ∃ᵢ P ⊢ P.
 Proof.
   rewrite /monPred_relatively /= bi_embed_exist. apply bi.exist_elim=>?.
   split=>?. unseal. apply absolute_at, _.
 Qed.
 
-Global Instance emb_absolute (P : PROP) : Absolute ⎡P⎤.
+Global Instance emb_absolute (P : PROP) : @Absolute I PROP ⎡P⎤.
 Proof. intros ??. by unseal. Qed.
-Global Instance pure_absolute φ : Absolute ⌜φ⌝.
+Global Instance pure_absolute φ : @Absolute I PROP ⌜φ⌝.
 Proof. apply emb_absolute. Qed.
-Global Instance emp_absolute : Absolute emp.
+Global Instance emp_absolute : @Absolute I PROP emp.
 Proof. apply emb_absolute. Qed.
 Global Instance plainly_absolute P : Absolute (bi_plainly P).
 Proof. apply emb_absolute. Qed.
@@ -633,11 +638,11 @@ Proof. apply emb_absolute. Qed.
 Global Instance monPred_relatively_absolute P : Absolute (∃ᵢ P).
 Proof. apply emb_absolute. Qed.
 
-Global Instance and_absolute P Q `{Absolute P, Absolute Q} : Absolute (P ∧ Q).
+Global Instance and_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P ∧ Q).
 Proof. intros ??. unseal. by rewrite !(absolute_at _ V1 V2). Qed.
-Global Instance or_absolute P Q `{Absolute P, Absolute Q} : Absolute (P ∨ Q).
+Global Instance or_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P ∨ Q).
 Proof. intros ??. by rewrite !monPred_at_or !(absolute_at _ V1 V2). Qed.
-Global Instance impl_absolute P Q `{Absolute P, Absolute Q} : Absolute (P → Q).
+Global Instance impl_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P → Q).
 Proof.
   intros ??. unseal. rewrite (bi.forall_elim V1) bi.pure_impl_forall.
   rewrite bi.forall_elim //. apply bi.forall_intro=>V'.
@@ -645,41 +650,41 @@ Proof.
   rewrite (absolute_at Q V1). by rewrite (absolute_at P V').
 Qed.
 Global Instance forall_absolute {A} Φ {H : ∀ x : A, Absolute (Φ x)} :
-  Absolute (∀ x, Φ x)%I.
+  @Absolute I PROP (∀ x, Φ x)%I.
 Proof. intros ??. unseal. do 2 f_equiv. by apply absolute_at. Qed.
 Global Instance exists_absolute {A} Φ {H : ∀ x : A, Absolute (Φ x)} :
-  Absolute (∀ x, Φ x)%I.
+  @Absolute I PROP (∀ x, Φ x)%I.
 Proof. intros ??. unseal. do 2 f_equiv. by apply absolute_at. Qed.
 
-Global Instance sep_absolute P Q `{Absolute P, Absolute Q} : Absolute (P ∗ Q).
+Global Instance sep_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P ∗ Q).
 Proof. intros ??. unseal. by rewrite !(absolute_at _ V1 V2). Qed.
-Global Instance wand_absolute P Q `{Absolute P, Absolute Q} : Absolute (P -∗ Q).
+Global Instance wand_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P -∗ Q).
 Proof.
   intros ??. unseal. rewrite (bi.forall_elim V1) bi.pure_impl_forall.
   rewrite bi.forall_elim //. apply bi.forall_intro=>V'.
   rewrite bi.pure_impl_forall. apply bi.forall_intro=>_.
   rewrite (absolute_at Q V1). by rewrite (absolute_at P V').
 Qed.
-Global Instance persistently_absolute P `{Absolute P} :
+Global Instance persistently_absolute P `{!Absolute P} :
   Absolute (bi_persistently P).
 Proof. intros ??. unseal. by rewrite absolute_at. Qed.
 
-Global Instance bupd_absolute `{BUpdFacts PROP} P `{Absolute P} :
+Global Instance bupd_absolute `{BUpdFacts PROP} P `{!Absolute P} :
   Absolute (|==> P)%I.
 Proof. intros ??. by rewrite !monPred_at_bupd absolute_at. Qed.
 
-Global Instance affinely_absolute P `{Absolute P} : Absolute (bi_affinely P).
+Global Instance affinely_absolute P `{!Absolute P} : Absolute (bi_affinely P).
 Proof. rewrite /bi_affinely. apply _. Qed.
-Global Instance absorbingly_absolute P `{Absolute P} :
+Global Instance absorbingly_absolute P `{!Absolute P} :
   Absolute (bi_absorbingly P).
 Proof. rewrite /bi_absorbingly. apply _. Qed.
-Global Instance plainly_if_absolute P p `{Absolute P} :
+Global Instance plainly_if_absolute P p `{!Absolute P} :
   Absolute (bi_plainly_if p P).
 Proof. rewrite /bi_plainly_if. destruct p; apply _. Qed.
-Global Instance persistently_if_absolute P p `{Absolute P} :
+Global Instance persistently_if_absolute P p `{!Absolute P} :
   Absolute (bi_persistently_if p P).
 Proof. rewrite /bi_persistently_if. destruct p; apply _. Qed.
-Global Instance affinely_if_absolute P p `{Absolute P} :
+Global Instance affinely_if_absolute P p `{!Absolute P} :
   Absolute (bi_affinely_if p P).
 Proof. rewrite /bi_affinely_if. destruct p; apply _. Qed.
 
@@ -715,16 +720,16 @@ Global Instance monPred_at_monoid_sep_homomorphism :
   MonoidHomomorphism bi_sep bi_sep (≡) (flip monPred_at i).
 Proof. split; [split|]; try apply _. apply monPred_at_sep. apply monPred_at_emp. Qed.
 
-Lemma monPred_at_big_sepL {A} i (Φ : nat → A → monPredI) l :
+Lemma monPred_at_big_sepL {A} i (Φ : nat → A → monPred) l :
   ([∗ list] k↦x ∈ l, Φ k x) i ⊣⊢ [∗ list] k↦x ∈ l, Φ k x i.
 Proof. apply (big_opL_commute (flip monPred_at i)). Qed.
-Lemma monPred_at_big_sepM `{Countable K} {A} i (Φ : K → A → monPredI) (m : gmap K A) :
+Lemma monPred_at_big_sepM `{Countable K} {A} i (Φ : K → A → monPred) (m : gmap K A) :
   ([∗ map] k↦x ∈ m, Φ k x) i ⊣⊢ [∗ map] k↦x ∈ m, Φ k x i.
 Proof. apply (big_opM_commute (flip monPred_at i)). Qed.
-Lemma monPred_at_big_sepS `{Countable A} i (Φ : A → monPredI) (X : gset A) :
+Lemma monPred_at_big_sepS `{Countable A} i (Φ : A → monPred) (X : gset A) :
   ([∗ set] y ∈ X, Φ y) i ⊣⊢ [∗ set] y ∈ X, Φ y i.
 Proof. apply (big_opS_commute (flip monPred_at i)). Qed.
-Lemma monPred_at_big_sepMS `{Countable A} i (Φ : A → monPredI) (X : gmultiset A) :
+Lemma monPred_at_big_sepMS `{Countable A} i (Φ : A → monPred) (X : gmultiset A) :
   ([∗ mset] y ∈ X, Φ y) i ⊣⊢ ([∗ mset] y ∈ X, Φ y i).
 Proof. apply (big_opMS_commute (flip monPred_at i)). Qed.
 
@@ -747,48 +752,48 @@ Proof.
     by rewrite monPred_absolutely_embed.
 Qed.
 
-Lemma monPred_absolutely_big_sepL_entails {A} (Φ : nat → A → monPredI) l :
+Lemma monPred_absolutely_big_sepL_entails {A} (Φ : nat → A → monPred) l :
   ([∗ list] k↦x ∈ l, ∀ᵢ (Φ k x)) ⊢ ∀ᵢ ([∗ list] k↦x ∈ l, Φ k x).
 Proof. apply (big_opL_commute monPred_absolutely (R:=flip (⊢))). Qed.
 Lemma monPred_absolutely_big_sepM_entails
-      `{Countable K} {A} (Φ : K → A → monPredI) (m : gmap K A) :
+      `{Countable K} {A} (Φ : K → A → monPred) (m : gmap K A) :
   ([∗ map] k↦x ∈ m, ∀ᵢ (Φ k x)) ⊢ ∀ᵢ ([∗ map] k↦x ∈ m, Φ k x).
 Proof. apply (big_opM_commute monPred_absolutely (R:=flip (⊢))). Qed.
-Lemma monPred_absolutely_big_sepS_entails `{Countable A} (Φ : A → monPredI) (X : gset A) :
+Lemma monPred_absolutely_big_sepS_entails `{Countable A} (Φ : A → monPred) (X : gset A) :
   ([∗ set] y ∈ X, ∀ᵢ (Φ y)) ⊢ ∀ᵢ ([∗ set] y ∈ X, Φ y).
 Proof. apply (big_opS_commute monPred_absolutely (R:=flip (⊢))). Qed.
-Lemma monPred_absolutely_big_sepMS_entails `{Countable A} (Φ : A → monPredI) (X : gmultiset A) :
+Lemma monPred_absolutely_big_sepMS_entails `{Countable A} (Φ : A → monPred) (X : gmultiset A) :
   ([∗ mset] y ∈ X, ∀ᵢ (Φ y)) ⊢ ∀ᵢ ([∗ mset] y ∈ X, Φ y).
 Proof. apply (big_opMS_commute monPred_absolutely (R:=flip (⊢))). Qed.
 
-Lemma monPred_absolutely_big_sepL `{BiIndexBottom bot} {A} (Φ : nat → A → monPredI) l :
+Lemma monPred_absolutely_big_sepL `{BiIndexBottom bot} {A} (Φ : nat → A → monPred) l :
   ∀ᵢ ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, ∀ᵢ (Φ k x)).
 Proof. apply (big_opL_commute _). Qed.
 Lemma monPred_absolutely_big_sepM `{BiIndexBottom bot} `{Countable K} {A}
-      (Φ : K → A → monPredI) (m : gmap K A) :
+      (Φ : K → A → monPred) (m : gmap K A) :
   ∀ᵢ ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, ∀ᵢ (Φ k x)).
 Proof. apply (big_opM_commute _). Qed.
 Lemma monPred_absolutely_big_sepS `{BiIndexBottom bot} `{Countable A}
-      (Φ : A → monPredI) (X : gset A) :
+      (Φ : A → monPred) (X : gset A) :
   ∀ᵢ ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ∀ᵢ (Φ y)).
 Proof. apply (big_opS_commute _). Qed.
 Lemma monPred_absolutely_big_sepMS `{BiIndexBottom bot} `{Countable A}
-      (Φ : A → monPredI) (X : gmultiset A) :
+      (Φ : A → monPred) (X : gmultiset A) :
   ∀ᵢ ([∗ mset] y ∈ X, Φ y) ⊣⊢  ([∗ mset] y ∈ X, ∀ᵢ (Φ y)).
 Proof. apply (big_opMS_commute _). Qed.
 
 Global Instance big_sepL_absolute {A} (l : list A) Φ `{∀ n x, Absolute (Φ n x)} :
-  Absolute ([∗ list] n↦x ∈ l, Φ n x)%I.
+  @Absolute I PROP ([∗ list] n↦x ∈ l, Φ n x)%I.
 Proof. generalize dependent Φ. induction l=>/=; apply _. Qed.
 Global Instance big_sepM_absolute `{Countable K} {A}
-       (Φ : K → A → monPredI) (m : gmap K A) `{∀ k x, Absolute (Φ k x)} :
+       (Φ : K → A → monPred) (m : gmap K A) `{∀ k x, Absolute (Φ k x)} :
   Absolute ([∗ map] k↦x ∈ m, Φ k x)%I.
 Proof. intros ??. rewrite !monPred_at_big_sepM. do 3 f_equiv. by apply absolute_at. Qed.
-Global Instance big_sepS_absolute `{Countable A} (Φ : A → monPredI)
+Global Instance big_sepS_absolute `{Countable A} (Φ : A → monPred)
        (X : gset A) `{∀ y, Absolute (Φ y)} :
   Absolute ([∗ set] y ∈ X, Φ y)%I.
 Proof. intros ??. rewrite !monPred_at_big_sepS. do 2 f_equiv. by apply absolute_at. Qed.
-Global Instance big_sepMS_absolute `{Countable A} (Φ : A → monPredI)
+Global Instance big_sepMS_absolute `{Countable A} (Φ : A → monPred)
        (X : gmultiset A) `{∀ y, Absolute (Φ y)} :
   Absolute ([∗ mset] y ∈ X, Φ y)%I.
 Proof. intros ??. rewrite !monPred_at_big_sepMS. do 2 f_equiv. by apply absolute_at. Qed.
