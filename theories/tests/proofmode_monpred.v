@@ -51,10 +51,8 @@ Section tests.
     iSpecialize ("HW" with "HP"). done.
   Qed.
 
-  Lemma test_apply_in_elim (P : monPredI) (i : I) : monPred_in i ∧ ⎡ P i ⎤ -∗ P.
-  Proof.
-    iIntros. by iApply monPred_in_elim.
-  Qed.
+  Lemma test_apply_in_elim (P : monPredI) (i : I) : monPred_in i -∗ ⎡ P i ⎤ → P.
+  Proof. iIntros. by iApply monPred_in_elim. Qed.
 
   Lemma test_iStartProof_forall_1 (Φ : nat → monPredI) : ∀ n, Φ n -∗ Φ n.
   Proof.

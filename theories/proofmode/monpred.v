@@ -85,12 +85,12 @@ Proof.
   apply  bi.affinely_persistently_if_elim.
 Qed.
 
-Global Instance from_assumption_make_monPred_all P Q :
-  FromAssumption p P Q → FromAssumption p (monPred_all P) Q.
-Proof. intros ?. by rewrite /FromAssumption monPred_all_elim. Qed.
-Global Instance from_assumption_make_monPred_ex P Q :
-  FromAssumption p P Q → FromAssumption p P (monPred_ex Q).
-Proof. intros ?. by rewrite /FromAssumption -monPred_ex_intro. Qed.
+Global Instance from_assumption_make_monPred_absolutely P Q :
+  FromAssumption p P Q → FromAssumption p (∀ᵢ P) Q.
+Proof. intros ?. by rewrite /FromAssumption monPred_absolutely_elim. Qed.
+Global Instance from_assumption_make_monPred_relatively P Q :
+  FromAssumption p P Q → FromAssumption p P (∃ᵢ Q).
+Proof. intros ?. by rewrite /FromAssumption -monPred_relatively_intro. Qed.
 
 Global Instance as_valid_monPred_at φ P (Φ : I → PROP) :
   AsValid0 φ P → (∀ i, MakeMonPredAt i P (Φ i)) → AsValid φ (∀ i, Φ i) | 100.
@@ -265,24 +265,24 @@ Proof.
   by setoid_rewrite H.
 Qed.
 
-Global Instance from_forall_monPred_at_all P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → FromForall (monPred_all P i) Φ.
+Global Instance from_forall_monPred_at_absolutely P (Φ : I → PROP) i :
+  (∀ i, MakeMonPredAt i P (Φ i)) → FromForall ((∀ᵢ P) i)%I Φ.
 Proof.
-  rewrite /FromForall /MakeMonPredAt monPred_at_all=>H. by setoid_rewrite <- H.
+  rewrite /FromForall /MakeMonPredAt monPred_at_absolutely=>H. by setoid_rewrite <- H.
 Qed.
-Global Instance into_forall_monPred_at_all P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → IntoForall (monPred_all P i) Φ.
+Global Instance into_forall_monPred_at_absolutely P (Φ : I → PROP) i :
+  (∀ i, MakeMonPredAt i P (Φ i)) → IntoForall ((∀ᵢ P) i) Φ.
 Proof.
-  rewrite /IntoForall /MakeMonPredAt monPred_at_all=>H. by setoid_rewrite <- H.
+  rewrite /IntoForall /MakeMonPredAt monPred_at_absolutely=>H. by setoid_rewrite <- H.
 Qed.
 
 Global Instance from_exist_monPred_at_ex P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → FromExist (monPred_ex P i) Φ.
+  (∀ i, MakeMonPredAt i P (Φ i)) → FromExist ((∃ᵢ P) i) Φ.
 Proof.
   rewrite /FromExist /MakeMonPredAt monPred_at_ex=>H. by setoid_rewrite <- H.
 Qed.
 Global Instance into_exist_monPred_at_ex P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → IntoExist (monPred_ex P i) Φ.
+  (∀ i, MakeMonPredAt i P (Φ i)) → IntoExist ((∃ᵢ P) i) Φ.
 Proof.
   rewrite /IntoExist /MakeMonPredAt monPred_at_ex=>H. by setoid_rewrite <- H.
 Qed.
