@@ -587,12 +587,23 @@ Proof.
   unseal. split=>i /=. by apply bi.forall_intro=>_.
 Qed.
 
+Lemma monPred_absolutely_forall {A} (Φ : A → monPred) : ∀ᵢ (∀ x, Φ x) ⊣⊢ ∀ x, ∀ᵢ (Φ x).
+Proof.
+  unseal. split=>i. apply bi.equiv_spec; split=>/=;
+    do 2 apply bi.forall_intro=>?; by do 2 rewrite bi.forall_elim.
+Qed.
 Lemma monPred_absolutely_and P Q : ∀ᵢ (P ∧ Q) ⊣⊢ ∀ᵢ P ∧ ∀ᵢ Q.
 Proof.
   unseal. split=>i. apply bi.equiv_spec; split=>/=.
   - apply bi.and_intro; do 2 f_equiv. apply bi.and_elim_l. apply bi.and_elim_r.
   - apply bi.forall_intro=>?. by rewrite !bi.forall_elim.
 Qed.
+Lemma monPred_absolutely_exist {A} (Φ : A → monPred) :
+  (∃ x, ∀ᵢ (Φ x)) ⊢ ∀ᵢ (∃ x, (Φ x)).
+Proof. apply bi.exist_elim=>?. f_equiv. apply bi.exist_intro. Qed.
+Lemma monPred_absolutely_or P Q : (∀ᵢ P) ∨ (∀ᵢ Q) ⊢ ∀ᵢ (P ∨ Q).
+Proof. apply bi.or_elim; f_equiv. apply bi.or_intro_l. apply bi.or_intro_r. Qed.
+
 Lemma monPred_absolutely_sep_2 P Q : ∀ᵢ P ∗ ∀ᵢ Q ⊢ ∀ᵢ (P ∗ Q).
 Proof. unseal. split=>i /=. apply bi.forall_intro=>?. by rewrite !bi.forall_elim. Qed.
 Lemma monPred_absolutely_sep `{BiIndexBottom bot} P Q : ∀ᵢ (P ∗ Q) ⊣⊢ ∀ᵢ P ∗ ∀ᵢ Q.
@@ -608,6 +619,27 @@ Qed.
 
 Lemma monPred_relatively_intro P : P ⊢ ∃ᵢ P.
 Proof. unseal. split=>?. apply bi.exist_intro. Qed.
+
+Lemma monPred_relatively_forall {A} (Φ : A → monPred) :
+  (∃ᵢ (∀ x, Φ x)) ⊢ ∀ x, ∃ᵢ (Φ x).
+Proof. apply bi.forall_intro=>?. f_equiv. apply bi.forall_elim. Qed.
+Lemma monPred_relatively_and P Q : ∃ᵢ (P ∧ Q) ⊢ (∃ᵢ P) ∧ (∃ᵢ Q).
+Proof. apply bi.and_intro; f_equiv. apply bi.and_elim_l. apply bi.and_elim_r. Qed.
+Lemma monPred_relatively_exist {A} (Φ : A → monPred) : ∃ᵢ (∃ x, Φ x) ⊣⊢ ∃ x, ∃ᵢ (Φ x).
+Proof.
+  unseal. split=>i. apply bi.equiv_spec; split=>/=;
+    do 2 apply bi.exist_elim=>?; by do 2 rewrite -bi.exist_intro.
+Qed.
+Lemma monPred_relatively_or P Q : ∃ᵢ (P ∨ Q) ⊣⊢ ∃ᵢ P ∨ ∃ᵢ Q.
+Proof.
+  unseal. split=>i. apply bi.equiv_spec; split=>/=.
+  - apply bi.exist_elim=>?. by rewrite -!bi.exist_intro.
+  - apply bi.or_elim; do 2 f_equiv. apply bi.or_intro_l. apply bi.or_intro_r.
+Qed.
+
+Lemma monPred_relatively_sep P Q : ∃ᵢ (P ∗ Q) ⊢ ∃ᵢ P ∗ ∃ᵢ Q.
+Proof. unseal. split=>i /=. apply bi.exist_elim=>?. by rewrite -!bi.exist_intro. Qed.
+
 Lemma monPred_relatively_idemp P : ∃ᵢ (∃ᵢ P) ⊣⊢ ∃ᵢ P.
 Proof.
   apply bi.equiv_spec; split; [|by apply monPred_relatively_intro].
