@@ -635,7 +635,7 @@ Global Instance plainly_absolute P : Absolute (bi_plainly P).
 Proof. apply emb_absolute. Qed.
 Global Instance absolutely_absolute P : Absolute (∀ᵢ P).
 Proof. apply emb_absolute. Qed.
-Global Instance monPred_relatively_absolute P : Absolute (∃ᵢ P).
+Global Instance relatively_absolute P : Absolute (∃ᵢ P).
 Proof. apply emb_absolute. Qed.
 
 Global Instance and_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P ∧ Q).
@@ -653,7 +653,7 @@ Global Instance forall_absolute {A} Φ {H : ∀ x : A, Absolute (Φ x)} :
   @Absolute I PROP (∀ x, Φ x)%I.
 Proof. intros ??. unseal. do 2 f_equiv. by apply absolute_at. Qed.
 Global Instance exists_absolute {A} Φ {H : ∀ x : A, Absolute (Φ x)} :
-  @Absolute I PROP (∀ x, Φ x)%I.
+  @Absolute I PROP (∃ x, Φ x)%I.
 Proof. intros ??. unseal. do 2 f_equiv. by apply absolute_at. Qed.
 
 Global Instance sep_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P ∗ Q).
