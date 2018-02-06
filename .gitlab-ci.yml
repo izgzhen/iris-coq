@@ -20,6 +20,7 @@ variables:
   - 'time make -k -j$CPU_CORES TIMED=y 2>&1 | tee build-log.txt'
   - 'if fgrep Axiom build-log.txt >/dev/null; then exit 1; fi'
   - 'cat build-log.txt | egrep "[a-zA-Z0-9_/-]+ \((real|user): [0-9]" | tee build-time.txt'
+  - 'if test -n "$VALIDATE"; then make validate; fi'
   cache:
     key: "$CI_JOB_NAME"
     paths:
@@ -50,11 +51,12 @@ reverse-deps:
   except:
   - triggers
 
-build-coq.8.7.dev:
+build-coq.dev:
   <<: *template
   stage: build_more
   variables:
-    OPAM_PINS: "coq version 8.7.dev   coq-mathcomp-ssreflect version dev"
+    OPAM_PINS: "coq version dev   coq-mathcomp-ssreflect version dev"
+    VALIDATE: "1"
   except:
   - triggers
 
