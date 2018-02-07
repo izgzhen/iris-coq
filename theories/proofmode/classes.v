@@ -68,6 +68,22 @@ Arguments IntoPersistent {_} _ _%I _%I : simpl never.
 Arguments into_persistent {_} _ _%I _%I {_}.
 Hint Mode IntoPersistent + + ! - : typeclass_instances.
 
+(* The `iAlways` tactic is not tied to `persistently` and `affinely`, but can be
+instantiated with a variety of comonadic (always-style) modalities.
+
+In order to plug in an always-style modality, one has to decide for both the
+persistent and spatial what action should be performed upon introducing the
+modality:
+
+- Introduction is only allowed when the context is empty.
+- Introduction is only allowed when all hypotheses satisfy some predicate
+  `C : PROP → Prop` (where `C` should be a type class).
+- Introduction will only keep the hypotheses that satisfy some predicate
+  `C : PROP → Prop` (where `C` should be a type class).
+- Introduction will clear the context.
+- Introduction will keep the context as-if.
+
+Formally, these actions correspond to the following inductive type: *)
 Inductive always_intro_spec (PROP : bi) :=
   | AIEnvIsEmpty
   | AIEnvForall (C : PROP → Prop)
@@ -80,6 +96,8 @@ Arguments AIEnvFilter {_} _.
 Arguments AIEnvClear {_}.
 Arguments AIEnvId {_}.
 
+(* An always-style modality is then a record packing together the modality with
+the laws it should satisfy to justify the given actions for both contexts: *)
 Record always_modality_mixin {PROP : bi} (M : PROP → PROP)
     (pspec sspec : always_intro_spec PROP) := {
   always_modality_mixin_persistent :
