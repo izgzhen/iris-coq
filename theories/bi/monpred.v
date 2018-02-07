@@ -488,9 +488,11 @@ Global Instance monPred_absolutely_ne : NonExpansive (@monPred_absolutely I PROP
 Proof. rewrite /monPred_absolutely /=. solve_proper. Qed.
 Global Instance monPred_absolutely_proper : Proper ((≡) ==> (≡)) (@monPred_absolutely I PROP).
 Proof. apply (ne_proper _). Qed.
-Global Instance monPred_absolutely_mono : Proper ((⊢) ==> (⊢)) (@monPred_absolutely I PROP).
+Lemma monPred_absolutely_mono P Q : (P ⊢ Q) → (∀ᵢ P ⊢ ∀ᵢ Q).
 Proof. rewrite /monPred_absolutely /=. solve_proper. Qed.
-Global Instance monPred_absolutely_mono_flip :
+Global Instance monPred_absolutely_mono' : Proper ((⊢) ==> (⊢)) (@monPred_absolutely I PROP).
+Proof. rewrite /monPred_absolutely /=. solve_proper. Qed.
+Global Instance monPred_absolutely_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@monPred_absolutely I PROP).
 Proof. solve_proper. Qed.
 
@@ -510,9 +512,11 @@ Global Instance monPred_relatively_ne : NonExpansive (@monPred_relatively I PROP
 Proof. rewrite /monPred_relatively /=. solve_proper. Qed.
 Global Instance monPred_relatively_proper : Proper ((≡) ==> (≡)) (@monPred_relatively I PROP).
 Proof. apply (ne_proper _). Qed.
-Global Instance monPred_relatively_mono : Proper ((⊢) ==> (⊢)) (@monPred_relatively I PROP).
+Lemma monPred_relatively_mono P Q : (P ⊢ Q) → (∃ᵢ P ⊢ ∃ᵢ Q).
 Proof. rewrite /monPred_relatively /=. solve_proper. Qed.
-Global Instance monPred_relatively_mono_flip :
+Global Instance monPred_relatively_mono' : Proper ((⊢) ==> (⊢)) (@monPred_relatively I PROP).
+Proof. rewrite /monPred_relatively /=. solve_proper. Qed.
+Global Instance monPred_relatively_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@monPred_relatively I PROP).
 Proof. solve_proper. Qed.
 
