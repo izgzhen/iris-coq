@@ -27,6 +27,8 @@ Record monPred :=
             monPred_mono : Proper ((⊑) ==> (⊢)) monPred_at }.
 Local Existing Instance monPred_mono.
 
+Bind Scope monPred with bi.
+
 Implicit Types P Q : monPred.
 
 (** Ofe + Cofe instances  *)
@@ -207,6 +209,8 @@ Global Instance monPred_bupd `{BUpd PROP} : BUpd _ := unseal monPred_bupd_aux.
 Definition monPred_bupd_eq `{BUpd PROP} : @bupd monPred _ = _ := seal_eq _.
 End Bi.
 
+Arguments monPred_absolutely {_ _} _%I.
+Arguments monPred_relatively {_ _} _%I.
 Notation "'∀ᵢ' P" := (monPred_absolutely P) (at level 20, right associativity) : bi_scope.
 Notation "'∃ᵢ' P" := (monPred_relatively P) (at level 20, right associativity) : bi_scope.
 
