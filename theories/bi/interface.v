@@ -112,20 +112,27 @@ Section bi_mixin.
     bi_mixin_plainly_absorbing P Q : bi_plainly P ∗ Q ⊢ bi_plainly P;
 
     (* Persistently *)
+    (* In the ordered RA model: `core` is monotone *)
     bi_mixin_persistently_mono P Q :
       (P ⊢ Q) → bi_persistently P ⊢ bi_persistently Q;
+    (* In the ordered RA model: `core` is idempotent *)
     bi_mixin_persistently_idemp_2 P :
       bi_persistently P ⊢ bi_persistently (bi_persistently P);
     bi_mixin_plainly_persistently_1 P :
       bi_plainly (bi_persistently P) ⊢ bi_plainly P;
+
+    (* In the ordered RA model [P ⊢ □ emp] (which can currently still be derived
+    from the plainly axioms, which will be removed): `ε ≼ core x` *)
 
     bi_mixin_persistently_forall_2 {A} (Ψ : A → PROP) :
       (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a);
     bi_mixin_persistently_exist_1 {A} (Ψ : A → PROP) :
       bi_persistently (∃ a, Ψ a) ⊢ ∃ a, bi_persistently (Ψ a);
 
+    (* In the ordered RA model: [x ≼ₑₓₜ y → core x ≼ core y] *)
     bi_mixin_persistently_absorbing P Q :
       bi_persistently P ∗ Q ⊢ bi_persistently P;
+    (* In the ordered RA model: [ε ≼ core x] *)
     bi_mixin_persistently_and_sep_elim P Q :
       bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q;
   }.
