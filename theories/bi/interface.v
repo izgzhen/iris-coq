@@ -92,6 +92,7 @@ Section bi_mixin.
     bi_mixin_wand_elim_l' P Q R : (P ⊢ Q -∗ R) → P ∗ Q ⊢ R;
 
     (* Plainly *)
+    (* Note: plainly is about to be removed from this interface *)
     bi_mixin_plainly_mono P Q : (P ⊢ Q) → bi_plainly P ⊢ bi_plainly Q;
     bi_mixin_plainly_elim_persistently P : bi_plainly P ⊢ bi_persistently P;
     bi_mixin_plainly_idemp_2 P : bi_plainly P ⊢ bi_plainly (bi_plainly P);
