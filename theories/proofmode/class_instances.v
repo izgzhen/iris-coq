@@ -5,6 +5,21 @@ From iris.base_logic Require Import big_op tactics.
 Set Default Proof Using "Type".
 Import uPred.
 
+(* FIXME: Move to stdpp *)
+(* A conditional at the type class level. Note that [TCIf P Q R] is not the same
+as [TCOr (TCAnd P Q) R]: the latter will backtrack to [R] if it fails to
+establish [R], i.e. does not have the behavior of a conditional. Furthermore,
+note that [TCOr (TCAnd P Q) (TCAnd (TCNot P) R)] would not work; we generally
+would not be able to proof the negation of [P]. *)
+Inductive TCIf (P Q R : Prop) :=
+  | TCIf_true : P → Q → TCIf P Q R
+  | TCIf_false : R → TCIf P Q R.
+Existing Class TCIf.
+
+Hint Extern 0 (TCIf _ _ _) =>
+  first [apply TCIf_true; [apply _|]
+        |apply TCIf_false] : typeclass_instances.
+
 Section classes.
 Context {M : ucmraT}.
 Implicit Types P Q R : uPred M.
