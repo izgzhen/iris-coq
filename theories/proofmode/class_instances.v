@@ -532,8 +532,8 @@ Proof. by rewrite /MakeSep right_id. Qed.
 Global Instance make_sep_default P Q : MakeSep P Q (P ∗ Q) | 100.
 Proof. done. Qed.
 
-Global Instance frame_sep_persistent_l R P1 P2 Q1 Q2 Q' :
-  Frame true R P1 Q1 → MaybeFrame true R P2 Q2 → MakeSep Q1 Q2 Q' →
+Global Instance frame_sep_persistent_l progress R P1 P2 Q1 Q2 Q' :
+  Frame true R P1 Q1 → MaybeFrame true R P2 Q2 progress → MakeSep Q1 Q2 Q' →
   Frame true R (P1 ∗ P2) Q' | 9.
 Proof.
   rewrite /Frame /MaybeFrame /MakeSep /= => <- <- <-.
@@ -565,12 +565,14 @@ Global Instance make_and_true_r P : MakeAnd P True P.
 Proof. by rewrite /MakeAnd right_id. Qed.
 Global Instance make_and_default P Q : MakeAnd P Q (P ∧ Q) | 100.
 Proof. done. Qed.
-Global Instance frame_and_l p R P1 P2 Q Q' :
-  Frame p R P1 Q → MakeAnd Q P2 Q' → Frame p R (P1 ∧ P2) Q' | 9.
-Proof. rewrite /Frame /MakeAnd => <- <-; eauto 10 with I. Qed.
-Global Instance frame_and_r p R P1 P2 Q Q' :
-  Frame p R P2 Q → MakeAnd P1 Q Q' → Frame p R (P1 ∧ P2) Q' | 10.
-Proof. rewrite /Frame /MakeAnd => <- <-; eauto 10 with I. Qed.
+
+Global Instance frame_and p progress1 progress2 R P1 P2 Q1 Q2 Q' :
+  MaybeFrame p R P1 Q1 progress1 →
+  MaybeFrame p R P2 Q2 progress2 →
+  TCEq (progress1 || progress2) true →
+  MakeAnd Q1 Q2 Q' →
+  Frame p R (P1 ∧ P2) Q' | 9.
+Proof. rewrite /MaybeFrame /Frame /MakeAnd => <- <- _ <-; eauto 10 with I. Qed.
 
 Class MakeOr (P Q PQ : uPred M) := make_or : P ∨ Q ⊣⊢ PQ.
 Global Instance make_or_true_l P : MakeOr True P True.
@@ -580,26 +582,53 @@ Proof. by rewrite /MakeOr right_absorb. Qed.
 Global Instance make_or_default P Q : MakeOr P Q (P ∨ Q) | 100.
 Proof. done. Qed.
 
-Global Instance frame_or_persistent_l R P1 P2 Q1 Q2 Q :
-  Frame true R P1 Q1 → MaybeFrame true R P2 Q2 → MakeOr Q1 Q2 Q →
-  Frame true R (P1 ∨ P2) Q | 9.
-Proof. rewrite /Frame /MakeOr => <- <- <-. by rewrite -sep_or_l. Qed.
-Global Instance frame_or_persistent_r R P1 P2 Q1 Q2 Q :
-  MaybeFrame true R P2 Q2 → MakeOr P1 Q2 Q →
-  Frame true R (P1 ∨ P2) Q | 10.
-Proof.
-  rewrite /Frame /MaybeFrame /MakeOr => <- <-. by rewrite sep_or_l sep_elim_r.
-Qed.
-Global Instance frame_or R P1 P2 Q1 Q2 Q :
-  Frame false R P1 Q1 → Frame false R P2 Q2 → MakeOr Q1 Q2 Q →
-  Frame false R (P1 ∨ P2) Q.
-Proof. rewrite /Frame /MakeOr => <- <- <-. by rewrite -sep_or_l. Qed.
+(* We could in principle write the instance [frame_or_spatial] by a bunch of
+instances, i.e. (omitting the parameter [p = false]):
+
+  Frame R P1 Q1 → Frame R P2 Q2 → Frame R (P1 ∨ P2) (Q1 ∨ Q2)
+  Frame R P1 True → Frame R (P1 ∨ P2) P2
+  Frame R P2 True → Frame R (P1 ∨ P2) P1
+
+The problem here is that Coq will try to infer [Frame R P1 ?] and [Frame R P2 ?]
+multiple times, whereas the current solution makes sure that said inference
+appears at most once.
+
+If Coq would memorize the results of type class resolution, the solution with
+multiple instances would be preferred (and more Prolog-like). *)
+Global Instance frame_or_spatial progress1 progress2 R P1 P2 Q1 Q2 Q :
+  MaybeFrame false R P1 Q1 progress1 → MaybeFrame false R P2 Q2 progress2 →
+  TCOr (TCEq (progress1 && progress2) true) (TCOr
+    (TCAnd (TCEq progress1 true) (TCEq Q1 True%I))
+    (TCAnd (TCEq progress2 true) (TCEq Q2 True%I))) →
+  MakeOr Q1 Q2 Q →
+  Frame false R (P1 ∨ P2) Q | 9.
+Proof. rewrite /Frame /MakeOr => <- <- _ <-. by rewrite -sep_or_l. Qed.
+
+Global Instance frame_or_persistent progress1 progress2 R P1 P2 Q1 Q2 Q :
+  MaybeFrame true R P1 Q1 progress1 → MaybeFrame true R P2 Q2 progress2 →
+  TCEq (progress1 || progress2) true →
+  MakeOr Q1 Q2 Q → Frame true R (P1 ∨ P2) Q | 9.
+Proof. rewrite /Frame /MakeOr => <- <- _ <-. by rewrite -sep_or_l. Qed.
 
 Global Instance frame_wand p R P1 P2 Q2 :
   Frame p R P2 Q2 → Frame p R (P1 -∗ P2) (P1 -∗ Q2).
 Proof.
   rewrite /Frame=> ?. apply wand_intro_l.
   by rewrite assoc (comm _ P1) -assoc wand_elim_r.
+Qed.
+
+Global Instance frame_impl_persistent R P1 P2 Q2 :
+  Frame true R P2 Q2 → Frame true R (P1 → P2) (P1 → Q2).
+Proof.
+  rewrite /Frame /==> ?. apply impl_intro_l.
+  by rewrite -and_sep_l assoc (comm _ P1) -assoc impl_elim_r and_sep_l.
+Qed.
+Global Instance frame_impl R P1 P2 Q2 :
+  Persistent P1 →
+  Frame false R P2 Q2 → Frame false R (P1 → P2) (P1 → Q2).
+Proof.
+  rewrite /Frame /==> ??. apply impl_intro_l.
+  by rewrite and_sep_l assoc (comm _ P1) -assoc -(and_sep_l P1) impl_elim_r.
 Qed.
 
 Class MakeLater (P lP : uPred M) := make_later : ▷ P ⊣⊢ lP.

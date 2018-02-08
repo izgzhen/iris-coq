@@ -190,14 +190,19 @@ Class Frame {M} (p : bool) (R P Q : uPred M) := frame : □?p R ∗ Q ⊢ P.
 Arguments frame {_ _} _ _ _ {_}.
 Hint Mode Frame + + ! ! - : typeclass_instances.
 
-Class MaybeFrame {M} (p : bool) (R P Q : uPred M) := maybe_frame : □?p R ∗ Q ⊢ P.
+(* The boolean [progress] indicates whether actual framing has been performed.
+If it is [false], then the default instance [maybe_frame_default] below has been
+used. *)
+Class MaybeFrame {M} (p : bool) (R P Q : uPred M) (progress : bool) :=
+  maybe_frame : □?p R ∗ Q ⊢ P.
 Arguments maybe_frame {_} _ _ _ {_}.
-Hint Mode MaybeFrame + + ! ! - : typeclass_instances.
+Hint Mode MaybeFrame + + ! ! - - : typeclass_instances.
 
 Instance maybe_frame_frame {M} p (R P Q : uPred M) :
-  Frame p R P Q → MaybeFrame p R P Q.
+  Frame p R P Q → MaybeFrame p R P Q true.
 Proof. done. Qed.
-Instance maybe_frame_default {M} p (R P : uPred M) : MaybeFrame p R P P | 100.
+Instance maybe_frame_default {M} p (R P : uPred M) :
+  MaybeFrame p R P P false | 100.
 Proof. apply sep_elim_r. Qed.
 
 Class FromOr {M} (P Q1 Q2 : uPred M) := from_or : Q1 ∨ Q2 ⊢ P.
