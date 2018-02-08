@@ -291,12 +291,17 @@ Proof.
   iSpecialize ("Hφ" with "[% //] HP"). done.
 Qed.
 
-Lemma test_iNext_laterN_later P n : ▷ ▷^n P ⊢ ▷^n ▷ P.
+Lemma test_iNext_laterN_later P n : ▷ ▷^n P -∗ ▷^n ▷ P.
 Proof. iIntros "H". iNext. by iNext. Qed.
-Lemma test_iNext_later_laterN P n : ▷^n ▷ P ⊢ ▷ ▷^n P.
+Lemma test_iNext_later_laterN P n : ▷^n ▷ P -∗ ▷ ▷^n P.
 Proof. iIntros "H". iNext. by iNext. Qed.
-Lemma test_iNext_laterN_laterN P n1 n2 : ▷ ▷^n1 ▷^n2 P ⊢ ▷^n1 ▷^n2 ▷ P.
+Lemma test_iNext_plus_1 P n1 n2 : ▷ ▷^n1 ▷^n2 P -∗ ▷^n1 ▷^n2 ▷ P.
 Proof. iIntros "H". iNext. iNext. by iNext. Qed.
+Lemma test_iNext_plus_2 P n m : ▷^n ▷^m P -∗ ▷^(n+m) P.
+Proof. iIntros "H". iNext. done. Qed.
+Lemma test_iNext_plus_3 P Q n m k :
+  ▷^m ▷^(2 + S n + k) P -∗ ▷^m ▷ ▷^(2 + S n) Q -∗ ▷^k ▷ ▷^(S (S n + S m)) (P ∗ Q).
+Proof. iIntros "H1 H2". iNext. iNext. iNext. iFrame. Qed.
 
 Lemma test_iEval x y : ⌜ (y + x)%nat = 1 ⌝ -∗ ⌜ S (x + y) = 2%nat ⌝ : uPred M.
 Proof.
