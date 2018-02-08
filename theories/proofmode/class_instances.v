@@ -609,9 +609,10 @@ Global Instance make_later_default P : MakeLater P (▷ P) | 100.
 Proof. done. Qed.
 
 Global Instance frame_later p R R' P Q Q' :
-  IntoLaterN 1 R' R → Frame p R P Q → MakeLater Q Q' → Frame p R' (▷ P) Q'.
+  NoBackTrack (IntoLaterN 1 R' R) →
+  Frame p R P Q → MakeLater Q Q' → Frame p R' (▷ P) Q'.
 Proof.
-  rewrite /Frame /MakeLater /IntoLaterN=>-> <- <-.
+  rewrite /Frame /MakeLater /IntoLaterN=>-[->] <- <-.
   by rewrite persistently_if_later later_sep.
 Qed.
 
@@ -622,9 +623,10 @@ Global Instance make_laterN_default P : MakeLaterN n P (▷^n P) | 100.
 Proof. done. Qed.
 
 Global Instance frame_laterN p n R R' P Q Q' :
-  IntoLaterN n R' R → Frame p R P Q → MakeLaterN n Q Q' → Frame p R' (▷^n P) Q'.
+  NoBackTrack (IntoLaterN n R' R) →
+  Frame p R P Q → MakeLaterN n Q Q' → Frame p R' (▷^n P) Q'.
 Proof.
-  rewrite /Frame /MakeLater /IntoLaterN=>-> <- <-.
+  rewrite /Frame /MakeLater /IntoLaterN=>-[->] <- <-.
   by rewrite persistently_if_laterN laterN_sep.
 Qed.
 
