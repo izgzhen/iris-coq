@@ -67,4 +67,11 @@ Section tests.
   Proof.
     iIntros "H HP". by iApply "H".
   Qed.
+
+  Lemma test_absolutely P Q : ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ ∀ᵢ (P ∗ Q).
+  Proof. iIntros "#? HP HQ". iAlways. by iSplitL "HP". Qed.
+
+  Lemma test_absolutely_affine `{BiAffine PROP} P Q R :
+    ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
+  Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
 End tests.

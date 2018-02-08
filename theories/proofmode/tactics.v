@@ -903,10 +903,18 @@ Local Tactic Notation "iExistDestruct" constr(H)
 Tactic Notation "iAlways":=
   iStartProof;
   eapply tac_always_intro;
-    [apply _ (* || fail "iAlways: the goal is not a persistently modality" *)
-    |env_cbv; apply _ ||
-     fail "iAlways: spatial context contains non-affine hypotheses"
-    |apply _
+    [apply _  ||
+     fail "iAlways: the goal is not an always-style modality"
+    |hnf; env_cbv; apply _ ||
+     lazymatch goal with
+     | |- TCAnd (TCForall ?C _) _ => fail "iAlways: persistent context does not satisfy" C
+     | |- TCAnd (TCEq _ Enil) _ => fail "iAlways: persistent context is non-empty"
+     end
+    |hnf; env_cbv; apply _ ||
+     lazymatch goal with
+     | |- TCAnd (TCForall ?C _) _ => fail "iAlways: spatial context does not satisfy" C
+     | |- TCAnd (TCEq _ Enil) _ => fail "iAlways: spatial context is non-empty"
+     end
     |env_cbv].
 
 (** * Later *)

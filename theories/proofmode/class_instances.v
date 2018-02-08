@@ -3,6 +3,56 @@ From iris.bi Require Import bi tactics.
 Set Default Proof Using "Type".
 Import bi.
 
+Section always_modalities.
+  Context {PROP : bi}.
+  Lemma always_modality_persistently_mixin :
+    always_modality_mixin (@bi_persistently PROP) AIEnvId AIEnvClear.
+  Proof.
+    split; eauto using equiv_entails_sym, persistently_intro, persistently_mono,
+      persistently_and, persistently_sep_2 with typeclass_instances.
+  Qed.
+  Definition always_modality_persistently :=
+    AlwaysModality _ always_modality_persistently_mixin.
+
+  Lemma always_modality_affinely_mixin :
+    always_modality_mixin (@bi_affinely PROP) AIEnvId (AIEnvForall Affine).
+  Proof.
+    split; eauto using equiv_entails_sym, affinely_intro, affinely_mono,
+      affinely_and, affinely_sep_2 with typeclass_instances.
+  Qed.
+  Definition always_modality_affinely :=
+    AlwaysModality _ always_modality_affinely_mixin.
+
+  Lemma always_modality_affinely_persistently_mixin :
+    always_modality_mixin (λ P : PROP, □ P)%I AIEnvId AIEnvIsEmpty.
+  Proof.
+    split; eauto using equiv_entails_sym, affinely_persistently_emp,
+      affinely_mono, persistently_mono, affinely_persistently_idemp,
+      affinely_persistently_and, affinely_persistently_sep_2 with typeclass_instances.
+  Qed.
+  Definition always_modality_affinely_persistently :=
+    AlwaysModality _ always_modality_affinely_persistently_mixin.
+
+  Lemma always_modality_plainly_mixin :
+    always_modality_mixin (@bi_plainly PROP) (AIEnvForall Plain) AIEnvClear.
+  Proof.
+    split; eauto using equiv_entails_sym, plainly_intro, plainly_mono,
+      plainly_and, plainly_sep_2 with typeclass_instances.
+  Qed.
+  Definition always_modality_plainly :=
+    AlwaysModality _ always_modality_plainly_mixin.
+
+  Lemma always_modality_affinely_plainly_mixin :
+    always_modality_mixin (λ P : PROP, ■ P)%I (AIEnvForall Plain) AIEnvIsEmpty.
+  Proof.
+    split; eauto using equiv_entails_sym, affinely_plainly_emp, affinely_intro,
+      plainly_intro, affinely_mono, plainly_mono, affinely_plainly_idemp,
+      affinely_plainly_and, affinely_plainly_sep_2 with typeclass_instances.
+  Qed.
+  Definition always_modality_affinely_plainly :=
+    AlwaysModality _ always_modality_affinely_plainly_mixin.
+End always_modalities.
+
 Section bi_instances.
 Context {PROP : bi}.
 Implicit Types P Q R : PROP.
@@ -190,31 +240,53 @@ Global Instance into_persistent_persistent P :
 Proof. intros. by rewrite /IntoPersistent. Qed.
 
 (* FromAlways *)
-Global Instance from_always_here P : FromAlways false false false P P | 1.
+Global Instance from_always_affinely P :
+  FromAlways always_modality_affinely (bi_affinely P) P | 2.
 Proof. by rewrite /FromAlways. Qed.
-Global Instance from_always_plainly a pe pl P Q :
-  FromAlways a pe pl P Q → FromAlways false true true (bi_plainly P) Q | 0.
+
+Global Instance from_always_persistently P :
+  FromAlways always_modality_persistently (bi_persistently P) P | 2.
+Proof. by rewrite /FromAlways. Qed.
+Global Instance from_always_affinely_persistently P :
+  FromAlways always_modality_affinely_persistently (□ P) P | 1.
+Proof. by rewrite /FromAlways. Qed.
+Global Instance from_always_affinely_persistently_affine_bi P :
+  BiAffine PROP → FromAlways always_modality_persistently (□ P) P | 0.
+Proof. intros. by rewrite /FromAlways /= affine_affinely. Qed.
+
+Global Instance from_always_plainly P :
+  FromAlways always_modality_plainly (bi_plainly P) P | 2.
+Proof. by rewrite /FromAlways. Qed.
+Global Instance from_always_affinely_plainly P :
+  FromAlways always_modality_affinely_plainly (■ P) P | 1.
+Proof. by rewrite /FromAlways. Qed.
+Global Instance from_always_affinely_plainly_affine_bi P :
+  BiAffine PROP → FromAlways always_modality_plainly (■ P) P | 0.
+Proof. intros. by rewrite /FromAlways /= affine_affinely. Qed.
+
+Global Instance from_always_affinely_embed `{BiEmbedding PROP PROP'} P Q :
+  FromAlways always_modality_affinely P Q →
+  FromAlways always_modality_affinely ⎡P⎤ ⎡Q⎤.
+Proof. rewrite /FromAlways /= =><-. by rewrite bi_embed_affinely. Qed.
+Global Instance from_always_persistently_embed `{BiEmbedding PROP PROP'} P Q :
+  FromAlways always_modality_persistently P Q →
+  FromAlways always_modality_persistently ⎡P⎤ ⎡Q⎤.
+Proof. rewrite /FromAlways /= =><-. by rewrite bi_embed_persistently. Qed.
+Global Instance from_always_affinely_persistently_embed `{BiEmbedding PROP PROP'} P Q :
+  FromAlways always_modality_affinely_persistently P Q →
+  FromAlways always_modality_affinely_persistently ⎡P⎤ ⎡Q⎤.
 Proof.
-  rewrite /FromAlways /= => <-.
-  destruct a, pe, pl; rewrite /= ?persistently_affinely ?plainly_affinely
-       !persistently_plainly ?plainly_idemp ?plainly_persistently //.
+  rewrite /FromAlways /= =><-. by rewrite bi_embed_affinely bi_embed_persistently.
 Qed.
-Global Instance from_always_persistently a pe pl P Q :
-  FromAlways a pe pl P Q → FromAlways false true pl (bi_persistently P) Q | 0.
+Global Instance from_always_plainly_embed `{BiEmbedding PROP PROP'} P Q :
+  FromAlways always_modality_plainly P Q →
+  FromAlways always_modality_plainly ⎡P⎤ ⎡Q⎤.
+Proof. rewrite /FromAlways /= =><-. by rewrite bi_embed_plainly. Qed.
+Global Instance from_always_affinely_plainly_embed `{BiEmbedding PROP PROP'} P Q :
+  FromAlways always_modality_affinely_plainly P Q →
+  FromAlways always_modality_affinely_plainly ⎡P⎤ ⎡Q⎤.
 Proof.
-  rewrite /FromAlways /= => <-.
-  destruct a, pe; rewrite /= ?persistently_affinely ?persistently_idemp //.
-Qed.
-Global Instance from_always_affinely a pe pl P Q :
-  FromAlways a pe pl P Q → FromAlways true pe pl (bi_affinely P) Q | 0.
-Proof.
-  rewrite /FromAlways /= => <-. destruct a; by rewrite /= ?affinely_idemp.
-Qed.
-Global Instance from_always_embed `{BiEmbedding PROP PROP'} a pe pl P Q :
-  FromAlways a pe pl P Q → FromAlways a pe pl ⎡P⎤ ⎡Q⎤ | 0.
-Proof.
-  rewrite /FromAlways=><-.
-  by rewrite bi_embed_affinely_if bi_embed_persistently_if bi_embed_plainly_if.
+  rewrite /FromAlways /= =><-. by rewrite bi_embed_affinely bi_embed_plainly.
 Qed.
 
 (* IntoWand *)
