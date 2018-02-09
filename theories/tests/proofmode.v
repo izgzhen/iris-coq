@@ -311,6 +311,10 @@ Proof.
   done.
 Qed.
 
+Lemma test_iNext_fail P Q a b c d e f g h i j:
+  ▷^(a + b) ▷^(c + d + e) P -∗ ▷^(f + g + h + i + j) True.
+Proof. iIntros "H". iNext. done. Qed.
+
 Lemma test_iEval x y : ⌜ (y + x)%nat = 1 ⌝ -∗ ⌜ S (x + y) = 2%nat ⌝ : uPred M.
 Proof.
   iIntros (H).
