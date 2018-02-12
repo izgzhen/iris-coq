@@ -369,29 +369,29 @@ Global Instance from_modal_monPred_at i P Q 𝓠 :
   FromModal P Q → MakeMonPredAt i Q 𝓠 → FromModal (P i) 𝓠.
 Proof. by rewrite /FromModal /MakeMonPredAt=> <- <-. Qed.
 
-Global Instance elim_modal_embed_bupd_goal `{BUpdFacts PROP} P P' 𝓠 𝓠' :
-  ElimModal P P' (|==> ⎡𝓠⎤)%I (|==> ⎡𝓠'⎤)%I →
-  ElimModal P P' ⎡|==> 𝓠⎤ ⎡|==> 𝓠'⎤.
+Global Instance elim_modal_embed_bupd_goal `{BUpdFacts PROP} φ P P' 𝓠 𝓠' :
+  ElimModal φ P P' (|==> ⎡𝓠⎤)%I (|==> ⎡𝓠'⎤)%I →
+  ElimModal φ P P' ⎡|==> 𝓠⎤ ⎡|==> 𝓠'⎤.
 Proof. by rewrite /ElimModal !monPred_bupd_embed. Qed.
-Global Instance elim_modal_embed_bupd_hyp `{BUpdFacts PROP} 𝓟 P' Q Q' :
-  ElimModal (|==> ⎡𝓟⎤)%I P' Q Q' →
-  ElimModal ⎡|==> 𝓟⎤ P' Q Q'.
+Global Instance elim_modal_embed_bupd_hyp `{BUpdFacts PROP} φ 𝓟 P' Q Q' :
+  ElimModal φ (|==> ⎡𝓟⎤)%I P' Q Q' →
+  ElimModal φ ⎡|==> 𝓟⎤ P' Q Q'.
 Proof. by rewrite /ElimModal monPred_bupd_embed. Qed.
 
 Global Instance add_modal_embed_bupd_goal `{BUpdFacts PROP} P P' 𝓠 :
   AddModal P P' (|==> ⎡𝓠⎤)%I → AddModal P P' ⎡|==> 𝓠⎤.
 Proof. by rewrite /AddModal !monPred_bupd_embed. Qed.
 
-Global Instance elim_modal_at_bupd_goal `{BUpdFacts PROP} 𝓟 𝓟' Q Q' i :
-  ElimModal 𝓟 𝓟' (|==> Q i) (|==> Q' i) →
-  ElimModal 𝓟 𝓟' ((|==> Q) i) ((|==> Q') i).
+Global Instance elim_modal_at_bupd_goal `{BUpdFacts PROP} φ 𝓟 𝓟' Q Q' i :
+  ElimModal φ 𝓟 𝓟' (|==> Q i) (|==> Q' i) →
+  ElimModal φ 𝓟 𝓟' ((|==> Q) i) ((|==> Q') i).
 Proof. by rewrite /ElimModal !monPred_at_bupd. Qed.
-Global Instance elim_modal_at_bupd_hyp `{BUpdFacts PROP} P 𝓟' 𝓠 𝓠' i:
-  ElimModal (|==> P i) 𝓟' 𝓠 𝓠' →
-  ElimModal ((|==> P) i) 𝓟' 𝓠 𝓠'.
+Global Instance elim_modal_at_bupd_hyp `{BUpdFacts PROP} φ P 𝓟' 𝓠 𝓠' i:
+  ElimModal φ (|==> P i) 𝓟' 𝓠 𝓠' →
+  ElimModal φ ((|==> P) i) 𝓟' 𝓠 𝓠'.
 Proof. by rewrite /ElimModal monPred_at_bupd. Qed.
 
-Global Instance add_modal_at_bupd_goal `{BUpdFacts PROP} 𝓟 𝓟' Q i :
+Global Instance add_modal_at_bupd_goal `{BUpdFacts PROP} φ 𝓟 𝓟' Q i :
   AddModal 𝓟 𝓟' (|==> Q i)%I → AddModal 𝓟 𝓟' ((|==> Q) i).
 Proof. by rewrite /AddModal !monPred_at_bupd. Qed.
 End bi.
@@ -470,26 +470,26 @@ Proof.
   by rewrite monPred_at_later.
 Qed.
 
-Global Instance elim_modal_embed_fupd_goal `{FUpdFacts PROP} E1 E2 E3 P P' 𝓠 𝓠' :
-  ElimModal P P' (|={E1,E3}=> ⎡𝓠⎤)%I (|={E2,E3}=> ⎡𝓠'⎤)%I →
-  ElimModal P P' ⎡|={E1,E3}=> 𝓠⎤ ⎡|={E2,E3}=> 𝓠'⎤.
+Global Instance elim_modal_embed_fupd_goal `{FUpdFacts PROP} φ E1 E2 E3 P P' 𝓠 𝓠' :
+  ElimModal φ P P' (|={E1,E3}=> ⎡𝓠⎤)%I (|={E2,E3}=> ⎡𝓠'⎤)%I →
+  ElimModal φ P P' ⎡|={E1,E3}=> 𝓠⎤ ⎡|={E2,E3}=> 𝓠'⎤.
 Proof. by rewrite /ElimModal !monPred_fupd_embed. Qed.
-Global Instance elim_modal_embed_fupd_hyp `{FUpdFacts PROP} E1 E2 𝓟 P' Q Q' :
-  ElimModal (|={E1,E2}=> ⎡𝓟⎤)%I P' Q Q' →
-  ElimModal ⎡|={E1,E2}=> 𝓟⎤ P' Q Q'.
+Global Instance elim_modal_embed_fupd_hyp `{FUpdFacts PROP} φ E1 E2 𝓟 P' Q Q' :
+  ElimModal φ (|={E1,E2}=> ⎡𝓟⎤)%I P' Q Q' →
+  ElimModal φ ⎡|={E1,E2}=> 𝓟⎤ P' Q Q'.
 Proof. by rewrite /ElimModal monPred_fupd_embed. Qed.
 
 Global Instance add_modal_embed_fupd_goal `{FUpdFacts PROP} E1 E2 P P' 𝓠 :
   AddModal P P' (|={E1,E2}=> ⎡𝓠⎤)%I → AddModal P P' ⎡|={E1,E2}=> 𝓠⎤.
 Proof. by rewrite /AddModal !monPred_fupd_embed. Qed.
 
-Global Instance elim_modal_at_fupd_goal `{FUpdFacts PROP} E1 E2 E3 𝓟 𝓟' Q Q' i :
-  ElimModal 𝓟 𝓟' (|={E1,E3}=> Q i) (|={E2,E3}=> Q' i) →
-  ElimModal 𝓟 𝓟' ((|={E1,E3}=> Q) i) ((|={E2,E3}=> Q') i).
+Global Instance elim_modal_at_fupd_goal `{FUpdFacts PROP} φ E1 E2 E3 𝓟 𝓟' Q Q' i :
+  ElimModal φ 𝓟 𝓟' (|={E1,E3}=> Q i) (|={E2,E3}=> Q' i) →
+  ElimModal φ 𝓟 𝓟' ((|={E1,E3}=> Q) i) ((|={E2,E3}=> Q') i).
 Proof. by rewrite /ElimModal !monPred_at_fupd. Qed.
-Global Instance elim_modal_at_fupd_hyp `{FUpdFacts PROP} E1 E2 P 𝓟' 𝓠 𝓠' i :
-  ElimModal (|={E1,E2}=> P i) 𝓟' 𝓠 𝓠' →
-  ElimModal ((|={E1,E2}=> P) i) 𝓟' 𝓠 𝓠'.
+Global Instance elim_modal_at_fupd_hyp `{FUpdFacts PROP} φ E1 E2 P 𝓟' 𝓠 𝓠' i :
+  ElimModal φ (|={E1,E2}=> P i) 𝓟' 𝓠 𝓠' →
+  ElimModal φ ((|={E1,E2}=> P) i) 𝓟' 𝓠 𝓠'.
 Proof. by rewrite /ElimModal monPred_at_fupd. Qed.
 
 Global Instance add_modal_at_fupd_goal `{FUpdFacts PROP} E1 E2 𝓟 𝓟' Q i :

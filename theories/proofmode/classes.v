@@ -321,11 +321,11 @@ Arguments FromModal {_} _%I _%I : simpl never.
 Arguments from_modal {_} _%I _%I {_}.
 Hint Mode FromModal + ! - : typeclass_instances.
 
-Class ElimModal {PROP : bi} (P P' : PROP) (Q Q' : PROP) :=
-  elim_modal : P ∗ (P' -∗ Q') ⊢ Q.
-Arguments ElimModal {_} _%I _%I _%I _%I : simpl never.
-Arguments elim_modal {_} _%I _%I _%I _%I {_}.
-Hint Mode ElimModal + ! - ! - : typeclass_instances.
+Class ElimModal {PROP : bi} (φ : Prop) (P P' : PROP) (Q Q' : PROP) :=
+  elim_modal : φ → P ∗ (P' -∗ Q') ⊢ Q.
+Arguments ElimModal {_} _ _%I _%I _%I _%I : simpl never.
+Arguments elim_modal {_} _ _%I _%I _%I _%I {_}.
+Hint Mode ElimModal + - ! - ! - : typeclass_instances.
 
 (* Used by the specialization pattern [ > ] in [iSpecialize] and [iAssert] to
 add a modality to the goal corresponding to a premise/asserted proposition. *)
@@ -473,5 +473,5 @@ Instance into_forall_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (tc_opaque P) Φ := id.
 Instance from_modal_tc_opaque {PROP : bi} (P Q : PROP) :
   FromModal P Q → FromModal (tc_opaque P) Q := id.
-Instance elim_modal_tc_opaque {PROP : bi} (P P' Q Q' : PROP) :
-  ElimModal P P' Q Q' → ElimModal (tc_opaque P) P' Q Q' := id.
+Instance elim_modal_tc_opaque {PROP : bi} φ (P P' Q Q' : PROP) :
+  ElimModal φ P P' Q Q' → ElimModal φ (tc_opaque P) P' Q Q' := id.

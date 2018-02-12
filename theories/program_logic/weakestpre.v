@@ -376,16 +376,16 @@ Section proofmode_classes.
   Proof. by rewrite /IsExcept0 -{2}fupd_wp -except_0_fupd -fupd_intro. Qed.
 
   Global Instance elim_modal_bupd_wp s E e P Φ :
-    ElimModal (|==> P) P (WP e @ s; E {{ Φ }}) (WP e @ s; E {{ Φ }}).
+    ElimModal True (|==> P) P (WP e @ s; E {{ Φ }}) (WP e @ s; E {{ Φ }}).
   Proof. by rewrite /ElimModal (bupd_fupd E) fupd_frame_r wand_elim_r fupd_wp. Qed.
 
   Global Instance elim_modal_fupd_wp s E e P Φ :
-    ElimModal (|={E}=> P) P (WP e @ s; E {{ Φ }}) (WP e @ s; E {{ Φ }}).
+    ElimModal True (|={E}=> P) P (WP e @ s; E {{ Φ }}) (WP e @ s; E {{ Φ }}).
   Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_wp. Qed.
 
   Global Instance elim_modal_fupd_wp_atomic s E1 E2 e P Φ :
     Atomic (stuckness_to_atomicity s) e →
-    ElimModal (|={E1,E2}=> P) P
+    ElimModal True (|={E1,E2}=> P) P
             (WP e @ s; E1 {{ Φ }}) (WP e @ s; E2 {{ v, |={E2,E1}=> Φ v }})%I.
   Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r wp_atomic. Qed.
 

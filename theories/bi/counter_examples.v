@@ -29,7 +29,7 @@ Module savedprop. Section savedprop.
 
   Instance bupd_mono' : Proper ((⊢) ==> (⊢)) bupd.
   Proof. intros P Q ?. by apply bupd_mono. Qed.
-  Instance elim_modal_bupd P Q : ElimModal (|==> P) P (|==> Q) (|==> Q).
+  Instance elim_modal_bupd P Q : ElimModal True (|==> P) P (|==> Q) (|==> Q).
   Proof. by rewrite /ElimModal bupd_frame_r bi.wand_elim_r bupd_trans. Qed.
 
   (** A bad recursive reference: "Assertion with name [i] does not hold" *)
@@ -127,10 +127,10 @@ Module inv. Section inv.
   Lemma fupd_frame_r E P Q : fupd E P ∗ Q ⊢ fupd E (P ∗ Q).
   Proof. by rewrite comm fupd_frame_l comm. Qed.
 
-  Global Instance elim_fupd_fupd E P Q : ElimModal (fupd E P) P (fupd E Q) (fupd E Q).
+  Global Instance elim_fupd_fupd E P Q : ElimModal True (fupd E P) P (fupd E Q) (fupd E Q).
   Proof. by rewrite /ElimModal fupd_frame_r bi.wand_elim_r fupd_fupd. Qed.
 
-  Global Instance elim_fupd0_fupd1 P Q : ElimModal (fupd M0 P) P (fupd M1 Q) (fupd M1 Q).
+  Global Instance elim_fupd0_fupd1 P Q : ElimModal True (fupd M0 P) P (fupd M1 Q) (fupd M1 Q).
   Proof.
     by rewrite /ElimModal fupd_frame_r bi.wand_elim_r fupd_mask_mono fupd_fupd.
   Qed.
