@@ -15,7 +15,7 @@ clean: Makefile.coq
 # Create Coq Makefile. POSIX awk can't do in-place editing, but coq_makefile wants the real
 # filename, so we do some file gymnastics.
 Makefile.coq: _CoqProject Makefile awk.Makefile
-	coq_makefile -f _CoqProject -o Makefile.coq
+	"$(COQBIN)coq_makefile" -f _CoqProject -o Makefile.coq
 	mv Makefile.coq Makefile.coq.tmp && awk -f awk.Makefile Makefile.coq.tmp > Makefile.coq && rm Makefile.coq.tmp
 
 # Install build-dependencies
