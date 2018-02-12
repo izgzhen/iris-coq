@@ -473,7 +473,5 @@ Instance into_forall_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (tc_opaque P) Φ := id.
 Instance from_modal_tc_opaque {PROP : bi} (P Q : PROP) :
   FromModal P Q → FromModal (tc_opaque P) Q := id.
-(* Higher precedence than [elim_modal_timeless], so that [iAssert] does not
-   loop (see test [test_iAssert_modality] in proofmode.v). *)
 Instance elim_modal_tc_opaque {PROP : bi} (P P' Q Q' : PROP) :
-  ElimModal P P' Q Q' → ElimModal (tc_opaque P) P' Q Q' | 100 := id.
+  ElimModal P P' Q Q' → ElimModal (tc_opaque P) P' Q Q' := id.

@@ -812,18 +812,10 @@ Global Instance elim_modal_forall {A} P P' (Φ Ψ : A → PROP) :
 Proof.
   rewrite /ElimModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
 Qed.
-(* We use this proxy type class to make sure that the instance is only
-   used when we know that Pabs is not an existential, so that this
-   instance is only triggered when a [bi_absorbingly] modality
-   actually appears, thanks to the [Hint Mode] lower in this
-   file. Otherwise, this instance is too generic and gets used in
-   irrelevant contexts. *)
-Class ElimModalAbsorbingly Pabs P Q :=
-  elim_modal_absorbingly :> ElimModal Pabs P Q Q.
 Global Instance elim_modal_absorbingly_here P Q :
-  Absorbing Q → ElimModalAbsorbingly (bi_absorbingly P) P Q.
+  Absorbing Q → ElimModal (bi_absorbingly P) P Q Q.
 Proof.
-  rewrite /ElimModalAbsorbingly /ElimModal=> H.
+  rewrite /ElimModal=> H.
   by rewrite absorbingly_sep_l wand_elim_r absorbing_absorbingly.
 Qed.
 
@@ -1104,8 +1096,6 @@ Global Instance as_valid_embed `{BiEmbedding PROP PROP'} (φ : Prop) (P : PROP) 
   AsValid0 φ P → AsValid φ ⎡P⎤.
 Proof. rewrite /AsValid0 /AsValid=> ->. rewrite bi_embed_valid //. Qed.
 End bi_instances.
-
-Hint Mode ElimModalAbsorbingly + ! - - : typeclass_instances.
 
 Section sbi_instances.
 Context {PROP : sbi}.
