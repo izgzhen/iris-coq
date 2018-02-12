@@ -300,4 +300,18 @@ Lemma test_iNext_later_laterN P n : ▷^n ▷ P ⊢ ▷ ▷^n P.
 Proof. iIntros "H". iNext. by iNext. Qed.
 Lemma test_iNext_laterN_laterN P n1 n2 : ▷ ▷^n1 ▷^n2 P ⊢ ▷^n1 ▷^n2 ▷ P.
 Proof. iIntros "H". iNext. iNext. by iNext. Qed.
+
+Lemma test_specialize_affine_pure (φ : Prop) P :
+  φ → (bi_affinely ⌜φ⌝ -∗ P) ⊢ P.
+Proof.
+  iIntros (Hφ) "H". by iSpecialize ("H" with "[% //]").
+Qed.
+
+Lemma test_assert_affine_pure (φ : Prop) P :
+  φ → P ⊢ P ∗ bi_affinely ⌜φ⌝.
+Proof. iIntros (Hφ). iAssert (bi_affinely ⌜φ⌝) with "[%]" as "$"; auto. Qed.
+Lemma test_assert_pure (φ : Prop) P :
+  φ → P ⊢ P ∗ ⌜φ⌝.
+Proof. iIntros (Hφ). iAssert ⌜φ⌝%I with "[%]" as "$"; auto. Qed.
+
 End tests.
