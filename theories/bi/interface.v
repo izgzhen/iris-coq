@@ -42,6 +42,16 @@ Section bi_mixin.
   Local Notation "x ≡ y" := (sbi_internal_eq _ x y).
   Local Notation "▷ P" := (sbi_later P).
 
+  (** * Axioms for a general BI (logic of bunched implications) *)
+
+  (** The following axioms are satisifed by both affine and linear BIs, and BIs
+  that combine both kinds of resources. In particular, we have an "ordered RA"
+  model satisfying all these axioms. For this model, we extend RAs with an
+  arbitrary partial order, and up-close resources wrt. that order (instead of
+  extension order).  We demand composition to be monotone wrt. the order.  We
+  define [emp := λ r, ε ≼ r]; persisently is still defined with the core: [□ P
+  := λ r, P (core r)].  *)
+
   Record BiMixin := {
     bi_mixin_entails_po : PreOrder bi_entails;
     bi_mixin_equiv_spec P Q : equiv P Q ↔ (P ⊢ Q) ∧ (Q ⊢ P);
