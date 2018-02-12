@@ -31,10 +31,10 @@ Global Instance into_pure_cmra_valid `{CmraDiscrete A} (a : A) :
   @IntoPure (uPredI M) (✓ a) (✓ a).
 Proof. by rewrite /IntoPure discrete_valid. Qed.
 
-Global Instance from_pure_cmra_valid {A : cmraT} af (a : A) :
-  @FromPure (uPredI M) af (✓ a) (✓ a).
+Global Instance from_pure_cmra_valid {A : cmraT} (a : A) :
+  @FromPure (uPredI M) (✓ a) (✓ a).
 Proof.
-  rewrite /FromPure. eapply bi.pure_elim; [by apply affinely_if_elim|]=> ?.
+  rewrite /FromPure. eapply bi.pure_elim; [done|]=> ?.
   rewrite -cmra_valid_intro //. by apply pure_intro.
 Qed.
 

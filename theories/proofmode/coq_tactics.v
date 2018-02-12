@@ -520,8 +520,8 @@ Proof.
 Qed.
 
 (** * Pure *)
-Lemma tac_pure_intro Δ Q φ : FromPure false Q φ → φ → envs_entails Δ Q.
-Proof. intros ??. rewrite /envs_entails -(from_pure _ Q). by apply pure_intro. Qed.
+Lemma tac_pure_intro Δ Q φ : FromPure Q φ → φ → envs_entails Δ Q.
+Proof. intros ??. rewrite /envs_entails -(from_pure Q). by apply pure_intro. Qed.
 
 Lemma tac_pure Δ Δ' i p P φ Q :
   envs_lookup_delete i Δ = Some (p, P, Δ') →
@@ -821,14 +821,13 @@ Qed.
 Lemma tac_specialize_assert_pure Δ Δ' j q R P1 P2 φ Q :
   envs_lookup j Δ = Some (q, R) →
   IntoWand q true R P1 P2 →
-  FromPure true P1 φ →
+  FromPure P1 φ →
   envs_simple_replace j q (Esnoc Enil j P2) Δ = Some Δ' →
   φ → envs_entails Δ' Q → envs_entails Δ Q.
 Proof.
   rewrite /envs_entails=> ????? <-. rewrite envs_simple_replace_singleton_sound //=.
-  rewrite -affinely_persistently_if_idemp into_wand /= -(from_pure _ P1).
-  rewrite pure_True //= persistently_affinely persistently_pure
-          affinely_True_emp affinely_emp.
+  rewrite -affinely_persistently_if_idemp into_wand /= -(from_pure P1).
+  rewrite pure_True // persistently_pure affinely_True_emp affinely_emp.
   by rewrite emp_wand wand_elim_r.
 Qed.
 
@@ -927,14 +926,14 @@ Proof.
 Qed.
 
 Lemma tac_assert_pure Δ Δ' j P P' φ Q :
-  FromPure true P φ →
+  FromPure P φ →
   FromAffinely P' P →
   envs_app false (Esnoc Enil j P') Δ = Some Δ' →
   φ → envs_entails Δ' Q → envs_entails Δ Q.
 Proof.
   rewrite /envs_entails => ???? <-. rewrite envs_app_singleton_sound //=.
-  rewrite -(from_affinely P') -(from_pure _ P) pure_True //.
-  by rewrite affinely_idemp affinely_True_emp affinely_emp emp_wand.
+  rewrite -(from_affinely P') -(from_pure P) pure_True //.
+  by rewrite affinely_True_emp affinely_emp emp_wand.
 Qed.
 
 Lemma tac_pose_proof Δ Δ' j P Q :

@@ -230,7 +230,7 @@ Tactic Notation "iPureIntro" :=
   iStartProof;
   eapply tac_pure_intro;
     [apply _ ||
-     let P := match goal with |- FromPure _ ?P _ => P end in
+     let P := match goal with |- FromPure ?P _ => P end in
      fail "iPureIntro:" P "not pure"
     |].
 
@@ -494,7 +494,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
          |solve_to_wand H1
          |apply _ ||
-          let Q := match goal with |- FromPure _ ?Q _ => Q end in
+          let Q := match goal with |- FromPure ?Q _ => Q end in
           fail "iSpecialize:" Q "not pure"
          |env_reflexivity
          |done_if d (*goal*)
@@ -1663,10 +1663,10 @@ Tactic Notation "iAssertCore" open_constr(Q)
   let Hs := spec_pat.parse Hs in
   lazymatch Hs with
   | [SPureGoal ?d] =>
-     eapply tac_assert_pure with _ H Q _ _;
-       [apply _ || fail "iAssert:" Q "not pure"
+     eapply tac_assert_pure with _ H Q _;
+       [env_reflexivity
+       |apply _ || fail "iAssert:" Q "not pure"
        |apply _
-       |env_reflexivity
        |done_if d (*goal*)
        |tac H]
   | [SGoal (SpecGoal GPersistent _ ?Hs_frame [] ?d)] =>
