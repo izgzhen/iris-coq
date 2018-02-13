@@ -1138,14 +1138,15 @@ Lemma tac_modal_intro Δ P Q :
   FromModal P Q → envs_entails Δ Q → envs_entails Δ P.
 Proof. by rewrite /envs_entails /FromModal=> <- ->. Qed.
 
-Lemma tac_modal_elim Δ Δ' i p P' P Q Q' :
+Lemma tac_modal_elim Δ Δ' i p φ P' P Q Q' :
   envs_lookup i Δ = Some (p, P) →
-  ElimModal P P' Q Q' →
+  ElimModal φ P P' Q Q' →
+  φ →
   envs_replace i p false (Esnoc Enil i P') Δ = Some Δ' →
   envs_entails Δ' Q' → envs_entails Δ Q.
 Proof.
-  rewrite /envs_entails => ??? HΔ. rewrite envs_replace_singleton_sound //=.
-  rewrite HΔ affinely_persistently_if_elim. by apply elim_modal.
+  rewrite /envs_entails => ???? HΔ. rewrite envs_replace_singleton_sound //=.
+  rewrite HΔ affinely_persistently_if_elim. by eapply elim_modal.
 Qed.
 End bi_tactics.
 

@@ -801,29 +801,21 @@ Global Instance from_forall_embed `{BiEmbedding PROP PROP'} {A} P (Φ : A → PR
 Proof. by rewrite /FromForall -bi_embed_forall => <-. Qed.
 
 (* ElimModal *)
-Global Instance elim_modal_wand P P' Q Q' R :
-  ElimModal P P' Q Q' → ElimModal P P' (R -∗ Q) (R -∗ Q').
+Global Instance elim_modal_wand φ P P' Q Q' R :
+  ElimModal φ P P' Q Q' → ElimModal φ P P' (R -∗ Q) (R -∗ Q').
 Proof.
-  rewrite /ElimModal=> H. apply wand_intro_r.
-  by rewrite wand_curry -assoc (comm _ P') -wand_curry wand_elim_l.
+  rewrite /ElimModal=> H Hφ. apply wand_intro_r.
+  rewrite wand_curry -assoc (comm _ P') -wand_curry wand_elim_l; auto.
 Qed.
-Global Instance elim_modal_forall {A} P P' (Φ Ψ : A → PROP) :
-  (∀ x, ElimModal P P' (Φ x) (Ψ x)) → ElimModal P P' (∀ x, Φ x) (∀ x, Ψ x).
+Global Instance elim_modal_forall {A} φ P P' (Φ Ψ : A → PROP) :
+  (∀ x, ElimModal φ P P' (Φ x) (Ψ x)) → ElimModal φ P P' (∀ x, Φ x) (∀ x, Ψ x).
 Proof.
-  rewrite /ElimModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
+  rewrite /ElimModal=> H ?. apply forall_intro=> a. rewrite (forall_elim a); auto.
 Qed.
-(* We use this proxy type class to make sure that the instance is only
-   used when we know that Pabs is not an existential, so that this
-   instance is only triggered when a [bi_absorbingly] modality
-   actually appears, thanks to the [Hint Mode] lower in this
-   file. Otherwise, this instance is too generic and gets used in
-   irrelevant contexts. *)
-Class ElimModalAbsorbingly Pabs P Q :=
-  elim_modal_absorbingly :> ElimModal Pabs P Q Q.
 Global Instance elim_modal_absorbingly_here P Q :
-  Absorbing Q → ElimModalAbsorbingly (bi_absorbingly P) P Q.
+  Absorbing Q → ElimModal True (bi_absorbingly P) P Q Q.
 Proof.
-  rewrite /ElimModalAbsorbingly /ElimModal=> H.
+  rewrite /ElimModal=> H.
   by rewrite absorbingly_sep_l wand_elim_r absorbing_absorbingly.
 Qed.
 
@@ -1075,13 +1067,13 @@ Proof. apply bupd_intro. Qed.
 
 (* ElimModal *)
 Global Instance elim_modal_bupd `{BUpdFacts PROP} P Q :
-  ElimModal (|==> P) P (|==> Q) (|==> Q).
+  ElimModal True (|==> P) P (|==> Q) (|==> Q).
 Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
 Global Instance elim_modal_bupd_plain_goal `{BUpdFacts PROP} P Q :
-  Plain Q → ElimModal (|==> P) P Q Q.
+  Plain Q → ElimModal True (|==> P) P Q Q.
 Proof. intros. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_plain. Qed.
 Global Instance elim_modal_bupd_plain `{BUpdFacts PROP} P Q :
-  Plain P → ElimModal (|==> P) P Q Q.
+  Plain P → ElimModal True (|==> P) P Q Q.
 Proof. intros. by rewrite /ElimModal bupd_plain wand_elim_r. Qed.
 
 (* AsValid *)
@@ -1104,8 +1096,6 @@ Global Instance as_valid_embed `{BiEmbedding PROP PROP'} (φ : Prop) (P : PROP) 
   AsValid0 φ P → AsValid φ ⎡P⎤.
 Proof. rewrite /AsValid0 /AsValid=> ->. rewrite bi_embed_valid //. Qed.
 End bi_instances.
-
-Hint Mode ElimModalAbsorbingly + ! - - : typeclass_instances.
 
 Section sbi_instances.
 Context {PROP : sbi}.
@@ -1425,18 +1415,18 @@ Proof. rewrite /IntoExcept0=> ->. by rewrite sbi_embed_except_0. Qed.
 
 (* ElimModal *)
 Global Instance elim_modal_timeless P Q :
-  IntoExcept0 P P' → IsExcept0 Q → ElimModal P P' Q Q.
+  IntoExcept0 P P' → IsExcept0 Q → ElimModal True P P' Q Q.
 Proof.
   intros. rewrite /ElimModal (except_0_intro (_ -∗ _)%I).
   by rewrite (into_except_0 P) -except_0_sep wand_elim_r.
 Qed.
 Global Instance elim_modal_bupd_fupd `{FUpdFacts PROP} E1 E2 P Q :
-  ElimModal (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q) | 10.
+  ElimModal True (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q) | 10.
 Proof.
   by rewrite /ElimModal (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
 Qed.
 Global Instance elim_modal_fupd_fupd `{FUpdFacts PROP} E1 E2 E3 P Q :
-  ElimModal (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
+  ElimModal True (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
 Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 
 (* AddModal *)
