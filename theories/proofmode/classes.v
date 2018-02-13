@@ -43,18 +43,32 @@ Proof. by exists φ. Qed.
 Hint Extern 0 (IntoPureT _ _) =>
   notypeclasses refine (into_pureT_hint _ _ _) : typeclass_instances.
 
-Class FromPure {PROP : bi} (P : PROP) (φ : Prop) :=
-  from_pure : ⌜φ⌝ ⊢ P.
-Arguments FromPure {_} _%I _%type_scope : simpl never.
-Arguments from_pure {_} _%I _%type_scope {_}.
-Hint Mode FromPure + ! - : typeclass_instances.
+(* [FromPure] is used when introducing a pure assertion. It is used by
+   iPure, the "[%]" specialization pattern, and the [with "[%]"]
+   pattern when using [iAssert].
 
-Class FromPureT {PROP : bi} (P : PROP) (φ : Type) :=
-  from_pureT : ∃ ψ : Prop, φ = ψ ∧ FromPure P ψ.
-Lemma from_pureT_hint {PROP : bi} (P : PROP) (φ : Prop) : FromPure P φ → FromPureT P φ.
+   The [a] Boolean asserts whether we introduce the pure assertion in
+   an affine way or in an absorbing way. When [FromPure true P φ] is
+   derived, then [FromPure false P φ] can always be derived too. We
+   use [true] for specialization patterns and [false] for the [iPure]
+   tactic.
+
+   This Boolean is not needed for [IntoPure], because in the case of
+   [IntoPure], we can have the same behavior by asking that [P] be
+   [Affine]. *)
+Class FromPure {PROP : bi} (a : bool) (P : PROP) (φ : Prop) :=
+  from_pure : bi_affinely_if a ⌜φ⌝ ⊢ P.
+Arguments FromPure {_} _ _%I _%type_scope : simpl never.
+Arguments from_pure {_} _ _%I _%type_scope {_}.
+Hint Mode FromPure + + ! - : typeclass_instances.
+
+Class FromPureT {PROP : bi} (a : bool) (P : PROP) (φ : Type) :=
+  from_pureT : ∃ ψ : Prop, φ = ψ ∧ FromPure a P ψ.
+Lemma from_pureT_hint {PROP : bi} (a : bool) (P : PROP) (φ : Prop) :
+  FromPure a P φ → FromPureT a P φ.
 Proof. by exists φ. Qed.
-Hint Extern 0 (FromPureT _ _) =>
-  notypeclasses refine (from_pureT_hint _ _ _) : typeclass_instances.
+Hint Extern 0 (FromPureT _ _ _) =>
+  notypeclasses refine (from_pureT_hint _ _ _ _) : typeclass_instances.
 
 Class IntoInternalEq {PROP : sbi} {A : ofeT} (P : PROP) (x y : A) :=
   into_internal_eq : P ⊢ x ≡ y.
@@ -448,8 +462,8 @@ with the exception of:
 *)
 Instance into_pure_tc_opaque {PROP : bi} (P : PROP) φ :
   IntoPure P φ → IntoPure (tc_opaque P) φ := id.
-Instance from_pure_tc_opaque {PROP : bi} (P : PROP) φ :
-  FromPure P φ → FromPure (tc_opaque P) φ := id.
+Instance from_pure_tc_opaque {PROP : bi} (a : bool) (P : PROP) φ :
+  FromPure a P φ → FromPure a (tc_opaque P) φ := id.
 Instance from_laterN_tc_opaque {PROP : sbi} n (P Q : PROP) :
   FromLaterN n P Q → FromLaterN n (tc_opaque P) Q := id.
 Instance from_wand_tc_opaque {PROP : bi} (P Q1 Q2 : PROP) :
