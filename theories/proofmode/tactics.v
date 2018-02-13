@@ -628,8 +628,8 @@ Tactic Notation "iIntoValid" open_constr(t) :=
       let e := fresh in evar (e:id T);
       let e' := eval unfold e in e in clear e; go (t e')
     | _ =>
-      let tT' := eval cbv zeta in tT in apply (as_valid_1 tT');
-        [apply _ || fail "iPoseProof: not a BI assertion"|exact t]
+      let tT' := eval cbv zeta in tT in eapply (as_valid_1 tT');
+        [solve [ typeclasses eauto with typeclass_instances ] || fail "iPoseProof: not a BI assertion"|exact t]
     end in
   go t.
 
