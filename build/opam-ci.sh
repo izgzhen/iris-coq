@@ -63,5 +63,6 @@ echo "[opam-ci] Installing build-dependencies"
 make build-dep OPAMFLAGS=-y
 
 # done
+set +x
 echo
 coqc -v
