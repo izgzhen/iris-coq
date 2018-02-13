@@ -1249,3 +1249,7 @@ Proof.
   by rewrite affinely_persistently_sep_2 wand_elim_r affinely_elim.
 Qed.
 End sbi_tactics.
+
+(* We make [envs_entails] opaque, so that it does not get unfolded by
+   the proofmode's own tactics, such as [iIntros (?)]. *)
+Opaque envs_entails.
