@@ -3,6 +3,7 @@ From iris.bi Require Import interface derived_laws big_op.
 
 Class BUpd (PROP : Type) : Type := bupd : PROP → PROP.
 Instance : Params (@bupd) 2.
+Hint Mode BUpd ! : typeclass_instances.
 
 Notation "|==> Q" := (bupd Q)
   (at level 99, Q at level 200, format "|==>  Q") : bi_scope.
@@ -13,6 +14,7 @@ Notation "P ==∗ Q" := (P -∗ |==> Q)%I
 
 Class FUpd (PROP : Type) : Type := fupd : coPset → coPset → PROP → PROP.
 Instance: Params (@fupd) 4.
+Hint Mode FUpd ! : typeclass_instances.
 
 Notation "|={ E1 , E2 }=> Q" := (fupd E1 E2 Q)
   (at level 99, E1, E2 at level 50, Q at level 200,
@@ -56,17 +58,20 @@ Class BUpdFacts (PROP : bi) `{BUpd PROP} : Prop :=
     bupd_trans P : (|==> |==> P) ==∗ P;
     bupd_frame_r P R : (|==> P) ∗ R ==∗ P ∗ R;
     bupd_plainly P : (|==> bi_plainly P) -∗ P }.
+Hint Mode BUpdFacts ! - : typeclass_instances.
 
 Section bupd_derived.
   Context `{BUpdFacts PROP}.
+  Implicit Types (P Q R: PROP).
 
-  Global Instance bupd_proper : Proper ((≡) ==> (≡)) bupd := ne_proper _.
+  (* FIXME: Removing the `PROP:=` diverges. *)
+  Global Instance bupd_proper : Proper ((≡) ==> (≡)) (bupd (PROP:=PROP)) := ne_proper _.
 
   (** BUpd derived rules *)
 
-  Global Instance bupd_mono' : Proper ((⊢) ==> (⊢)) bupd.
+  Global Instance bupd_mono' : Proper ((⊢) ==> (⊢)) (bupd (PROP:=PROP)).
   Proof. intros P Q; apply bupd_mono. Qed.
-  Global Instance bupd_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) bupd.
+  Global Instance bupd_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) (bupd (PROP:=PROP)).
   Proof. intros P Q; apply bupd_mono. Qed.
 
   Lemma bupd_frame_l R Q : (R ∗ |==> Q) ==∗ R ∗ Q.
@@ -110,23 +115,25 @@ Class FUpdFacts (PROP : sbi) `{BUpd PROP, FUpd PROP} : Prop :=
       E1 ⊆ E2 →
       (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P;
     later_fupd_plain E P `{!Plain P} : (▷ |={E}=> P) ={E}=∗ ▷ ◇ P }.
+Hint Mode FUpdFacts ! - - : typeclass_instances.
 
 Section fupd_derived.
   Context `{FUpdFacts PROP}.
+  Implicit Types (P Q R: PROP).
 
-  Global Instance fupd_proper E1 E2 : Proper ((≡) ==> (≡)) (fupd E1 E2) := ne_proper _.
+  Global Instance fupd_proper E1 E2 : Proper ((≡) ==> (≡)) (fupd (PROP:=PROP) E1 E2) := ne_proper _.
 
   (** FUpd derived rules *)
 
-  Global Instance fupd_mono' E1 E2 : Proper ((⊢) ==> (⊢)) (fupd E1 E2).
+  Global Instance fupd_mono' E1 E2 : Proper ((⊢) ==> (⊢)) (fupd (PROP:=PROP) E1 E2).
   Proof. intros P Q; apply fupd_mono. Qed.
   Global Instance fupd_flip_mono' E1 E2 :
-    Proper (flip (⊢) ==> flip (⊢)) (fupd E1 E2).
+    Proper (flip (⊢) ==> flip (⊢)) (fupd (PROP:=PROP) E1 E2).
   Proof. intros P Q; apply fupd_mono. Qed.
 
   Lemma fupd_intro E P : P ={E}=∗ P.
   Proof. rewrite -bupd_fupd. apply bupd_intro. Qed.
-  Lemma fupd_intro_mask' E1 E2 : E2 ⊆ E1 → (|={E1,E2}=> |={E2,E1}=> emp)%I.
+  Lemma fupd_intro_mask' E1 E2 : E2 ⊆ E1 → (|={E1,E2}=> |={E2,E1}=> emp : PROP)%I.
   Proof. exact: fupd_intro_mask. Qed.
   Lemma fupd_except_0 E1 E2 P : (|={E1,E2}=> ◇ P) ={E1,E2}=∗ P.
   Proof. by rewrite {1}(fupd_intro E2 P) except_0_fupd fupd_trans. Qed.
