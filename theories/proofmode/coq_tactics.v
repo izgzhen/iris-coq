@@ -474,17 +474,17 @@ Instance affine_env_spatial Δ :
   AffineEnv (env_spatial Δ) → Affine ([∗] env_spatial Δ).
 Proof. intros H. induction H; simpl; apply _. Qed.
 
-Lemma tac_emp_intro Δ : AffineEnv (env_spatial Δ) → of_envs Δ ⊢ emp.
-Proof. intros. by rewrite (affine (of_envs Δ)). Qed.
+Lemma tac_emp_intro Δ : AffineEnv (env_spatial Δ) → envs_entails Δ emp.
+Proof. intros. by rewrite envs_entails_eq (affine (of_envs Δ)). Qed.
 
 Lemma tac_assumption Δ Δ' i p P Q :
   envs_lookup_delete i Δ = Some (p,P,Δ') →
   FromAssumption p P Q →
   (if env_spatial_is_nil Δ' then TCTrue
    else TCOr (Absorbing Q) (AffineEnv (env_spatial Δ'))) →
-  of_envs Δ ⊢ Q.
+  envs_entails Δ Q.
 Proof.
-  intros ?? H. rewrite envs_lookup_delete_sound //.
+  intros ?? H. rewrite envs_entails_eq envs_lookup_delete_sound //.
   destruct (env_spatial_is_nil Δ') eqn:?.
   - by rewrite (env_spatial_is_nil_affinely_persistently Δ') // sep_elim_l.
   - rewrite from_assumption. destruct H; by rewrite sep_elim_l.
