@@ -43,15 +43,15 @@ Proof. by exists φ. Qed.
 Hint Extern 0 (IntoPureT _ _) =>
   notypeclasses refine (into_pureT_hint _ _ _) : typeclass_instances.
 
-(** [FromPure] is used when introducing a pure assertion. It is used by
-    iPure, the "[%]" specialization pattern, and the [with "[%]"]
+(** [FromPure] is used when introducing a pure assertion. It is used
+    by iPure, the "[%]" specialization pattern, and the [with "[%]"]
     pattern when using [iAssert].
 
     The [a] Boolean asserts whether we introduce the pure assertion in
     an affine way or in an absorbing way. When [FromPure true P φ] is
     derived, then [FromPure false P φ] can always be derived too. We
-    use [true] for specialization patterns and [false] for the [iPure]
-    tactic.
+    use [true] for specialization patterns and [false] for the
+    [iPureIntro] tactic.
 
     This Boolean is not needed for [IntoPure], because in the case of
     [IntoPure], we can have the same behavior by asking that [P] be
