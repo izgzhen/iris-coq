@@ -110,4 +110,17 @@ Section proofs.
       + iFrame. iApply "Hclose". iNext. iLeft. by iFrame.
     - iDestruct (na_own_disjoint with "Htoki Htoki2") as %?. set_solver.
   Qed.
+
+  Global Instance into_inv_na p N P : IntoInv (na_inv p N P) N.
+  Global Instance elim_inv_na p F E N P P' Q Q':
+    ElimModal True (|={E}=> (▷ P ∗ na_own p (F∖↑N)) ∗ (▷ P ∗ na_own p (F∖↑N) ={E}=∗ na_own p F))%I
+              P' Q Q' →
+    ElimInv (↑N ⊆ E ∧ ↑N ⊆ F) N (na_inv p N P) [na_own p F] P' Q Q'.
+  Proof.
+    rewrite /ElimInv/ElimModal.
+    iIntros (Helim (?&?)) "(#H1&(Hown&_)&H2)".
+    iApply Helim; auto. iFrame "H2".
+    iMod (na_inv_open p E F N P with "[#] [Hown]") as "(HP&Hown&Hclose)"; auto. 
+    by iFrame.
+  Qed.
 End proofs.
