@@ -89,10 +89,7 @@ Section tests.
   Lemma test_apply_fupd_intro_mask E1 E2 P :
     E2 ⊆ E1 → P -∗ |={E1,E2}=> |={E2,E1}=> P.
   Proof.
-    iIntros.
-    (* FIXME : a (PROP:=...) is needed. See #146. *)
-    Fail iApply fupd_intro_mask.
-    by iApply (fupd_intro_mask (PROP:=monPredSI)).
+    iIntros. iApply fupd_intro_mask.
   Qed.
   Lemma test_apply_fupd_intro_mask_2 E1 E2 P :
     E2 ⊆ E1 → P -∗ |={E1,E2}=> |={E2,E1}=> P.

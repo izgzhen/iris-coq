@@ -103,18 +103,19 @@ Qed.
 Class FUpdFacts (PROP : sbi) `{BUpd PROP, FUpd PROP} : Prop :=
   { fupd_bupd_facts :> BUpdFacts PROP;
     fupd_ne E1 E2 :> NonExpansive (fupd E1 E2);
-    fupd_intro_mask E1 E2 P : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P;
-    bupd_fupd E P : (|==> P) ={E}=∗ P;
-    except_0_fupd E1 E2 P : ◇ (|={E1,E2}=> P) ={E1,E2}=∗ P;
-    fupd_mono E1 E2 P Q : (P ⊢ Q) → (|={E1,E2}=> P) ⊢ |={E1,E2}=> Q;
-    fupd_trans E1 E2 E3 P : (|={E1,E2}=> |={E2,E3}=> P) ⊢ |={E1,E3}=> P;
-    fupd_mask_frame_r' E1 E2 Ef P :
+    fupd_intro_mask E1 E2 (P : PROP) : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P;
+    bupd_fupd E (P : PROP) : (|==> P) ={E}=∗ P;
+    except_0_fupd E1 E2 (P : PROP) : ◇ (|={E1,E2}=> P) ={E1,E2}=∗ P;
+    fupd_mono E1 E2 (P Q : PROP) : (P ⊢ Q) → (|={E1,E2}=> P) ⊢ |={E1,E2}=> Q;
+    fupd_trans E1 E2 E3 (P : PROP) : (|={E1,E2}=> |={E2,E3}=> P) ⊢ |={E1,E3}=> P;
+    fupd_mask_frame_r' E1 E2 Ef (P : PROP) :
       E1 ## Ef → (|={E1,E2}=> ⌜E2 ## Ef⌝ → P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P;
-    fupd_frame_r E1 E2 P Q : (|={E1,E2}=> P) ∗ Q ={E1,E2}=∗ P ∗ Q;
-    fupd_plain' E1 E2 E2' P Q `{!Plain P} :
+    fupd_frame_r E1 E2 (P Q : PROP) : (|={E1,E2}=> P) ∗ Q ={E1,E2}=∗ P ∗ Q;
+    fupd_plain' E1 E2 E2' (P Q : PROP) `{!Plain P} :
       E1 ⊆ E2 →
       (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P;
-    later_fupd_plain E P `{!Plain P} : (▷ |={E}=> P) ={E}=∗ ▷ ◇ P }.
+    later_fupd_plain E (P : PROP) `{!Plain P} : (▷ |={E}=> P) ={E}=∗ ▷ ◇ P }.
+
 Hint Mode FUpdFacts ! - - : typeclass_instances.
 
 Section fupd_derived.
