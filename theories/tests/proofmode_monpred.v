@@ -88,13 +88,10 @@ Section tests.
 
   Lemma test_apply_fupd_intro_mask E1 E2 P :
     E2 ⊆ E1 → P -∗ |={E1,E2}=> |={E2,E1}=> P.
-  Proof.
-    iIntros. iApply fupd_intro_mask.
-  Qed.
+  Proof. iIntros. by iApply fupd_intro_mask. Qed.
   Lemma test_apply_fupd_intro_mask_2 E1 E2 P :
     E2 ⊆ E1 → P -∗ |={E1,E2}=> |={E2,E1}=> P.
   Proof.
-    iIntros. iFrame.
-    by iApply fupd_intro_mask'. (* But no annotation is needed here *)
+    iIntros. iFrame. by iApply fupd_intro_mask'.
   Qed.
 End tests.
