@@ -75,10 +75,16 @@ Section tests.
     ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
   Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
 
-  (* We do not use section variables to avoid coq bug #5735. *)
-  Instance BU : BUpd PROP. Admitted.
-  Instance FU : FUpd PROP. Admitted.
-  Instance FUF : FUpdFacts PROP. Admitted.
+  (* This is a hack to avoid avoid coq bug #5735: sections variables
+     ignore hint modes. So we assume the instances in a way that
+     cannot be used by type class resolution, and then declare the
+     instance. as such. *)
+  Context (BU0 : BUpd PROP * unit).
+  Instance BU : BUpd PROP := fst BU0.
+  Context (FU0 : FUpd PROP * unit).
+  Instance FU : FUpd PROP := fst FU0.
+  Context (FUF0 : FUpdFacts PROP * unit).
+  Instance FUF : FUpdFacts PROP := fst FUF0.
 
   Lemma test_apply_fupd_intro_mask E1 E2 P :
     E2 ⊆ E1 → P -∗ |={E1,E2}=> |={E2,E1}=> P.
