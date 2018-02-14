@@ -677,7 +677,7 @@ Lemma ofe_fun_validI `{Finite A} {B : A → ucmraT} (g : ofe_fun B) :
 Proof. by uPred.unseal. Qed.
 
 (* Basic update modality *)
-Global Instance bupd_facts : BUpdFacts (uPredI M).
+Global Instance bupd_facts : BUpdFacts (uPredSI M).
 Proof.
   split.
   - intros n P Q HPQ.

@@ -51,13 +51,13 @@ Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I
 
 (** BUpd facts  *)
 
-Class BUpdFacts (PROP : bi) `{BUpd PROP} : Prop :=
+Class BUpdFacts (PROP : sbi) `{BUpd PROP} : Prop :=
   { bupd_ne :> NonExpansive bupd;
-    bupd_intro P : P ==∗ P;
-    bupd_mono P Q : (P ⊢ Q) → (|==> P) ==∗ Q;
-    bupd_trans P : (|==> |==> P) ==∗ P;
-    bupd_frame_r P R : (|==> P) ∗ R ==∗ P ∗ R;
-    bupd_plainly P : (|==> bi_plainly P) -∗ P }.
+    bupd_intro (P : PROP) : P ==∗ P;
+    bupd_mono (P Q : PROP) : (P ⊢ Q) → (|==> P) ==∗ Q;
+    bupd_trans (P : PROP) : (|==> |==> P) ==∗ P;
+    bupd_frame_r (P R : PROP) : (|==> P) ∗ R ==∗ P ∗ R;
+    bupd_plainly (P : PROP) : (|==> bi_plainly P) -∗ P }.
 Hint Mode BUpdFacts ! - : typeclass_instances.
 
 Section bupd_derived.
