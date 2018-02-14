@@ -816,6 +816,7 @@ Implicit Types P Q : monPred.
 Global Instance monPred_bupd_facts `{BUpdFacts PROP} : BUpdFacts monPredSI.
 Proof.
   split; unseal; unfold monPred_bupd_def, monPred_upclosed.
+  (* Note: Notation is somewhat broken here. *)
   - intros n P Q HPQ. split=>/= i. by repeat f_equiv.
   - intros P. split=>/= i. apply bi.forall_intro=>?. rewrite bi.pure_impl_forall.
     apply bi.forall_intro=><-. apply bupd_intro.
@@ -868,6 +869,7 @@ Proof. split; try apply _; by unseal. Qed.
 Global Instance monPred_fupd_facts `{FUpdFacts PROP} : FUpdFacts monPredSI.
 Proof.
   split; first apply _; unseal; unfold monPred_fupd_def, monPred_upclosed.
+  (* Note: Notation is somewhat broken here. *)
   - intros E1 E2 n P Q HPQ. split=>/= i. by repeat f_equiv.
   - intros E1 E2 P HE12. split=>/= i.
     do 2 setoid_rewrite bi.pure_impl_forall. do 2 apply bi.forall_intro=>?.
