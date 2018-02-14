@@ -629,6 +629,11 @@ Tactic Notation "iIntoValid" open_constr(t) :=
       let e' := eval unfold e in e in clear e; go (t e')
     | _ =>
       let tT' := eval cbv zeta in tT in eapply (as_valid_1 tT');
+        (* Doing [apply _] here fails because that will try to solve all evars
+        whose type is a typeclass, in dependency order (according to Matthieu).
+        If one fails, it aborts.  However, we rely on progress on the main goal
+        ([AsValid ...])  to unify some of these evars and hence enable progress
+        elsewhere.  With [typeclasses eauto], that seems to work better. *)
         [solve [ typeclasses eauto with typeclass_instances ] || fail "iPoseProof: not a BI assertion"|exact t]
     end in
   go t.
