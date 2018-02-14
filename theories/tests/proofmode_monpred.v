@@ -74,4 +74,24 @@ Section tests.
   Lemma test_absolutely_affine `{BiAffine PROP} P Q R :
     ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
   Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
+
+  (* We do not use section variables to avoid coq bug #5735. *)
+  Instance BU : BUpd PROP. Admitted.
+  Instance FU : FUpd PROP. Admitted.
+  Instance FUF : FUpdFacts PROP. Admitted.
+
+  Lemma test_apply_fupd_intro_mask E1 E2 P :
+    E2 ⊆ E1 → P -∗ |={E1,E2}=> |={E2,E1}=> P.
+  Proof.
+    iIntros.
+    (* FIXME : a (PROP:=...) is needed. See #146. *)
+    Fail iApply fupd_intro_mask.
+    by iApply (fupd_intro_mask (PROP:=monPredSI)).
+  Qed.
+  Lemma test_apply_fupd_intro_mask_2 E1 E2 P :
+    E2 ⊆ E1 → P -∗ |={E1,E2}=> |={E2,E1}=> P.
+  Proof.
+    iIntros. iFrame.
+    by iApply fupd_intro_mask'. (* But no annotation is needed here *)
+  Qed.
 End tests.
