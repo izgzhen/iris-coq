@@ -62,7 +62,7 @@ Hint Mode BUpdFacts ! - : typeclass_instances.
 
 Section bupd_derived.
   Context `{BUpdFacts PROP}.
-  Implicit Types (P Q R: PROP).
+  Implicit Types P Q R: PROP.
 
   (* FIXME: Removing the `PROP:=` diverges. *)
   Global Instance bupd_proper : Proper ((≡) ==> (≡)) (bupd (PROP:=PROP)) := ne_proper _.
@@ -119,7 +119,7 @@ Hint Mode FUpdFacts ! - - : typeclass_instances.
 
 Section fupd_derived.
   Context `{FUpdFacts PROP}.
-  Implicit Types (P Q R: PROP).
+  Implicit Types P Q R: PROP.
 
   Global Instance fupd_proper E1 E2 : Proper ((≡) ==> (≡)) (fupd (PROP:=PROP) E1 E2) := ne_proper _.
 
