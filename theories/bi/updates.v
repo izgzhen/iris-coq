@@ -133,7 +133,7 @@ Section fupd_derived.
 
   Lemma fupd_intro E P : P ={E}=∗ P.
   Proof. rewrite -bupd_fupd. apply bupd_intro. Qed.
-  Lemma fupd_intro_mask' E1 E2 : E2 ⊆ E1 → (|={E1,E2}=> |={E2,E1}=> emp : PROP)%I.
+  Lemma fupd_intro_mask' E1 E2 : E2 ⊆ E1 → (|={E1,E2}=> |={E2,E1}=> bi_emp (PROP:=PROP))%I.
   Proof. exact: fupd_intro_mask. Qed.
   Lemma fupd_except_0 E1 E2 P : (|={E1,E2}=> ◇ P) ={E1,E2}=∗ P.
   Proof. by rewrite {1}(fupd_intro E2 P) except_0_fupd fupd_trans. Qed.
