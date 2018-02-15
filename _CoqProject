@@ -32,11 +32,11 @@ theories/bi/big_op.v
 theories/bi/updates.v
 theories/bi/bi.v
 theories/bi/tactics.v
-theories/bi/fractional.v
 theories/bi/counter_examples.v
 theories/bi/fixpoint.v
 theories/bi/monpred.v
 theories/bi/embedding.v
+theories/bi/lib/fractional.v
 theories/base_logic/upred.v
 theories/base_logic/derived.v
 theories/base_logic/base_logic.v
