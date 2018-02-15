@@ -229,7 +229,8 @@ Tactic Notation "iEmpIntro" :=
 Tactic Notation "iPureIntro" :=
   iStartProof;
   eapply tac_pure_intro;
-    [apply _ ||
+    [env_reflexivity
+    |apply _ ||
      let P := match goal with |- FromPure _ ?P _ => P end in
      fail "iPureIntro:" P "not pure"
     |].

@@ -524,8 +524,14 @@ Proof.
 Qed.
 
 (** * Pure *)
-Lemma tac_pure_intro Δ Q φ : FromPure false Q φ → φ → envs_entails Δ Q.
-Proof. intros ??. rewrite envs_entails_eq -(from_pure _ Q). by apply pure_intro. Qed.
+Lemma tac_pure_intro Δ Q φ af :
+  env_spatial_is_nil Δ = af → FromPure af Q φ → φ → envs_entails Δ Q.
+Proof.
+  intros ???. rewrite envs_entails_eq -(from_pure _ Q). destruct af.
+  - rewrite env_spatial_is_nil_affinely_persistently //=. f_equiv.
+    by apply pure_intro.
+  - by apply pure_intro.
+Qed.
 
 Lemma tac_pure Δ Δ' i p P φ Q :
   envs_lookup_delete i Δ = Some (p, P, Δ') →
