@@ -524,6 +524,8 @@ Proof.
 Qed.
 
 (** * Pure *)
+(* This relies on the invariant that [FromPure false] implies
+   [FromPure true] *)
 Lemma tac_pure_intro Δ Q φ af :
   env_spatial_is_nil Δ = af → FromPure af Q φ → φ → envs_entails Δ Q.
 Proof.
