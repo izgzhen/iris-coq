@@ -5,7 +5,7 @@ stages:
   - reverse-deps
 
 variables:
-  CPU_CORES: "9"
+  CPU_CORES: "10"
 
 .template: &template
   stage: build
