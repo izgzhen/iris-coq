@@ -620,7 +620,7 @@ a goal [P] for non-dependent arguments [x_i : P]. *)
 Tactic Notation "iIntoValid" open_constr(t) :=
   let rec go t :=
     let tT := type of t in
-    lazymatch eval hnf in tT with
+    lazymatch tT with
     | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H); clear H]
     | ∀ _ : ?T, _ =>
       (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
