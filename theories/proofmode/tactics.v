@@ -620,8 +620,28 @@ The tactic instantiates each dependent argument [x_i] with an evar and generates
 a goal [P] for non-dependent arguments [x_i : P]. *)
 Tactic Notation "iIntoValid" open_constr(t) :=
   let rec go t :=
+    (* We try two reduction tactics for the type of t before trying to
+       specialize it. We first try the head normal form in order to
+       unfold all the definition that could hide an entailment.  Then,
+       we try the much weaker [eval cbv zeta], because entailment is
+       not necessarilly opaque, and could be unfolded by [hnf].
+
+       However, for calling type class search, we only use [cbv zeta]
+       in order to make sure we do not unfold [bi_valid]. *)
     let tT := type of t in
-    let tT := eval cbv zeta in tT in (* In the case tT contains let-bindings. *)
+    first
+      [ let tT' := eval hnf in tT in go_specilize t tT'
+      | let tT' := eval cbv zeta in tT in go_specilize t tT'
+      | let tT' := eval cbv zeta in tT in
+        eapply (as_valid_1 tT);
+          (* Doing [apply _] here fails because that will try to solve all evars
+          whose type is a typeclass, in dependency order (according to Matthieu).
+          If one fails, it aborts.  However, we rely on progress on the main goal
+          ([AsValid ...])  to unify some of these evars and hence enable progress
+          elsewhere.  With [typeclasses eauto], that seems to work better. *)
+          [solve [ typeclasses eauto with typeclass_instances ] ||
+                   fail "iPoseProof: not a BI assertion"|exact t]]
+  with go_specilize t tT :=
     lazymatch tT with                (* We do not use hnf of tT, because, if
                                         entailment is not opaque, then it would
                                         unfold it. *)
@@ -631,15 +651,8 @@ Tactic Notation "iIntoValid" open_constr(t) :=
       (* This is a workarround for Coq bug #6583. *)
       let e := fresh in evar (e:id T);
       let e' := eval unfold e in e in clear e; go (t e')
-    | _ =>
-      eapply (as_valid_1 tT);
-        (* Doing [apply _] here fails because that will try to solve all evars
-        whose type is a typeclass, in dependency order (according to Matthieu).
-        If one fails, it aborts.  However, we rely on progress on the main goal
-        ([AsValid ...])  to unify some of these evars and hence enable progress
-        elsewhere.  With [typeclasses eauto], that seems to work better. *)
-        [solve [ typeclasses eauto with typeclass_instances ] || fail "iPoseProof: not a BI assertion"|exact t]
-    end in
+    end
+  in
   go t.
 
 (* The tactic [tac] is called with a temporary fresh name [H]. The argument

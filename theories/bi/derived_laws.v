@@ -35,7 +35,7 @@ Lemma entails_equiv_l P Q R : (P ⊣⊢ Q) → (Q ⊢ R) → (P ⊢ R).
 Proof. by intros ->. Qed.
 Lemma entails_equiv_r P Q R : (P ⊢ Q) → (Q ⊣⊢ R) → (P ⊢ R).
 Proof. by intros ? <-. Qed.
- Global Instance bi_valid_proper : Proper ((⊣⊢) ==> iff) (@bi_valid PROP).
+Global Instance bi_valid_proper : Proper ((⊣⊢) ==> iff) (@bi_valid PROP).
 Proof. solve_proper. Qed.
 Global Instance bi_valid_mono : Proper ((⊢) ==> impl) (@bi_valid PROP).
 Proof. solve_proper. Qed.
