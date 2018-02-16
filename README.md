@@ -10,7 +10,10 @@ This version is known to compile with:
  - A development version of [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
 
 If you need to work with Coq 8.5, please check out the
-[iris-3.0 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.0).
+[iris-3.0 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.0).  For
+Coq 8.6, the
+[iris-3.1 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.1) should
+still work.
 
 ## Installing via opam
 
