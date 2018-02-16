@@ -2,7 +2,6 @@ image: ralfjung/opam-ci:latest
 
 stages:
   - build
-  - reverse-deps
 
 variables:
   CPU_CORES: "10"
@@ -32,16 +31,7 @@ variables:
   - /^ci/
   except:
   - triggers
-
-reverse-deps:
-  stage: reverse-deps
-  script:
-  # Send a trigger to reverse dependencies to have them tested
-  - curl --fail -X POST -F "token=$IRIS_EXAMPLES_SECRET" -F "ref=master" -F "variables[IRIS_REV]=$CI_COMMIT_SHA" https://gitlab.mpi-sws.org/api/v4/projects/615/trigger/pipeline
-  only:
-  - master
-  except:
-  - triggers
+  - schedules
 
 ## Build jobs
 
