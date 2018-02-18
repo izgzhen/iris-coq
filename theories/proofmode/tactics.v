@@ -630,8 +630,8 @@ Tactic Notation "iIntoValid" open_constr(t) :=
        in order to make sure we do not unfold [bi_valid]. *)
     let tT := type of t in
     first
-      [ let tT' := eval hnf in tT in go_specilize t tT'
-      | let tT' := eval cbv zeta in tT in go_specilize t tT'
+      [ let tT' := eval hnf in tT in go_specialize t tT'
+      | let tT' := eval cbv zeta in tT in go_specialize t tT'
       | let tT' := eval cbv zeta in tT in
         eapply (as_valid_1 tT);
           (* Doing [apply _] here fails because that will try to solve all evars
@@ -641,7 +641,7 @@ Tactic Notation "iIntoValid" open_constr(t) :=
           elsewhere.  With [typeclasses eauto], that seems to work better. *)
           [solve [ typeclasses eauto with typeclass_instances ] ||
                    fail "iPoseProof: not a BI assertion"|exact t]]
-  with go_specilize t tT :=
+  with go_specialize t tT :=
     lazymatch tT with                (* We do not use hnf of tT, because, if
                                         entailment is not opaque, then it would
                                         unfold it. *)
