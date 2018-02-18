@@ -7,8 +7,10 @@ Definition atomic_wp `{irisG Λ Σ} {A B : Type}
   (e: expr Λ) (* expression *)
   (α: A → iProp Σ) (* atomic pre-condition *)
   (β: A → B → iProp Σ) (* atomic post-condition *)
-  (Ei Eo: coPset) (* inside/outside masks *)
+  (Eo Em : coPset) (* outside/module masks *)
   (f: A → B → val Λ) (* Turn the return data into the return value *)
   : iProp Σ :=
-    (∀ Φ, atomic_shift α β Ei Eo (λ x y, Φ (f x y)) -∗
+    (∀ Φ, atomic_update α β Eo Em (λ x y, Φ (f x y)) -∗
           WP e {{ Φ }})%I.
+(* Note: To add a private postcondition, use
+   atomic_shift α β Eo Em (λ x y, POST x y -∗ Φ (f x y)) *)
