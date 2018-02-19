@@ -559,48 +559,54 @@ introduction pattern, which will be coerced into [true] when it solely contains
 In case the specialization pattern in [t] states that the modality of the goal
 should be kept for one of the premises (i.e. [>[H1 .. Hn]] is used) then [p]
 defaults to [false] (i.e. spatial hypotheses are not preserved). *)
-Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
+Tactic Notation "iSpecializeCore" open_constr(H)
+    "with" open_constr(xs) open_constr(pat) "as" constr(p) :=
   let p := intro_pat_persistent p in
-  let t :=
-    match type of t with
-    | string => constr:(ITrm (INamed t) hnil "")
-    | ident => constr:(ITrm t hnil "")
-    | _ => t
-    end in
-  lazymatch t with
-  | ITrm ?H ?xs ?pat =>
-    let pat := spec_pat.parse pat in
-    let H := lazymatch type of H with string => constr:(INamed H) | _ => H end in
-    iSpecializeArgs H xs;
+  let pat := spec_pat.parse pat in
+  let H :=
     lazymatch type of H with
-    | ident =>
-      (* The lemma [tac_specialize_persistent_helper] allows one to use all
-      spatial hypotheses for both proving the premises of the lemma we
-      specialize as well as those of the remaining goal. We can only use it when
-      the result of the specialization is persistent, and no modality is
-      eliminated. As an optimization, we do not use this when only universal
-      quantifiers are instantiated. *)
-      let pat := spec_pat.parse pat in
-      lazymatch eval compute in
-        (p && bool_decide (pat ≠ []) && negb (existsb spec_pat_modal pat)) with
-      | true =>
-         (* FIXME: do something reasonable when the BI is not affine *)
-         eapply tac_specialize_persistent_helper with _ H _ _ _ _;
-           [env_reflexivity || fail "iSpecialize:" H "not found"
-           |iSpecializePat H pat; last (iExact H)
-           |apply _ ||
-            let Q := match goal with |- IntoPersistent _ ?Q _ => Q end in
-            fail "iSpecialize:" Q "not persistent"
-           |env_cbv; apply _ ||
-            let Q := match goal with |- TCAnd _ (Affine ?Q) => Q end in
-            fail "iSpecialize:" Q "not affine"
-           |env_reflexivity
-           |(* goal *)]
-      | false => iSpecializePat H pat
-      end
-    | _ => fail "iSpecialize:" H "should be a hypothesis, use iPoseProof instead"
+    | string => constr:(INamed H)
+    | _ => H
+    end in
+  iSpecializeArgs H xs;
+  lazymatch type of H with
+  | ident =>
+    (* The lemma [tac_specialize_persistent_helper] allows one to use all
+    spatial hypotheses for both proving the premises of the lemma we
+    specialize as well as those of the remaining goal. We can only use it when
+    the result of the specialization is persistent, and no modality is
+    eliminated. As an optimization, we do not use this when only universal
+    quantifiers are instantiated. *)
+    let pat := spec_pat.parse pat in
+    lazymatch eval compute in
+      (p && bool_decide (pat ≠ []) && negb (existsb spec_pat_modal pat)) with
+    | true =>
+       (* FIXME: do something reasonable when the BI is not affine *)
+       eapply tac_specialize_persistent_helper with _ H _ _ _ _;
+         [env_reflexivity || fail "iSpecialize:" H "not found"
+         |iSpecializePat H pat; last (iExact H)
+         |apply _ ||
+          let Q := match goal with |- IntoPersistent _ ?Q _ => Q end in
+          fail "iSpecialize:" Q "not persistent"
+         |env_cbv; apply _ ||
+          let Q := match goal with |- TCAnd _ (Affine ?Q) => Q end in
+          fail "iSpecialize:" Q "not affine"
+         |env_reflexivity
+         |(* goal *)]
+    | false => iSpecializePat H pat
     end
-  | _ => fail "iSpecialize:" t "should be a proof mode term"
+  | _ => fail "iSpecialize:" H "should be a hypothesis, use iPoseProof instead"
+  end.
+
+Tactic Notation "iSpecializeCore" open_constr(t) "as" constr(p) :=
+  lazymatch type of t with
+  | string => iSpecializeCore t with hnil "" as p
+  | ident => iSpecializeCore t with hnil "" as p
+  | _ =>
+    lazymatch t with
+    | ITrm ?H ?xs ?pat => iSpecializeCore H with xs pat as p
+    | _ => fail "iSpecialize:" t "should be a proof mode term"
+    end
   end.
 
 Tactic Notation "iSpecialize" open_constr(t) :=
