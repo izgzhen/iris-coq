@@ -3,7 +3,9 @@ From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 Import uPred.
 
-(** The "core" of an assertion is its maximal persistent part. *)
+(** The "core" of an assertion is its maximal persistent part,
+    i.e. the conjunction of all persistent assertions that are weaker
+    than P (as in, implied by P). *)
 Definition coreP {M : ucmraT} (P : uPred M) : uPred M :=
   (∀ Q, ■ (P → □ Q) → □ Q)%I.
 Instance: Params (@coreP) 1.
