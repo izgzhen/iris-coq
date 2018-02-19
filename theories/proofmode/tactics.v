@@ -115,7 +115,7 @@ Ltac iElaborateSelPat pat :=
        let Δ' := eval env_cbv in (envs_clear_spatial Δ) in
        go pat Δ' ((ESelIdent false <$> Hs') ++ Hs)
     | SelIdent ?H :: ?pat =>
-       lazymatch eval env_cbv in (envs_lookup_delete H Δ) with
+       lazymatch eval env_cbv in (envs_lookup_delete false H Δ) with
        | Some (?p,_,?Δ') => go pat Δ' (ESelIdent p H :: Hs)
        | None => fail "iElaborateSelPat:" H "not found"
        end
@@ -165,9 +165,9 @@ Tactic Notation "iAssumptionCore" :=
      first [is_evar i; fail 1 | env_reflexivity]
   | |- envs_lookup ?i (Envs ?Γp ?Γs) = Some (_, ?P) =>
      is_evar i; first [find Γp i P | find Γs i P]; env_reflexivity
-  | |- envs_lookup_delete ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
+  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
      first [is_evar i; fail 1 | env_reflexivity]
-  | |- envs_lookup_delete ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
+  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
      is_evar i; first [find Γp i P | find Γs i P]; env_reflexivity
   end.
 
