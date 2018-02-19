@@ -1903,5 +1903,4 @@ Hint Extern 1 (envs_entails _ (_ ∨ _)) => iRight.
 Hint Extern 1 (envs_entails _ (|==> _)) => iModIntro.
 Hint Extern 2 (envs_entails _ (|={_}=> _)) => iModIntro.
 
-
 Hint Extern 2 (envs_entails _ (_ ∗ _)) => progress iFrame : iFrame.
