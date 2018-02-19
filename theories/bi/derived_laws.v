@@ -1193,6 +1193,9 @@ Proof. solve_proper. Qed.
 
 Lemma affinely_if_mono p P Q : (P ⊢ Q) → bi_affinely_if p P ⊢ bi_affinely_if p Q.
 Proof. by intros ->. Qed.
+Lemma affinely_if_flag_mono (p q : bool) P :
+  (q → p) → bi_affinely_if p P ⊢ bi_affinely_if q P.
+Proof. destruct p, q; naive_solver auto using affinely_elim. Qed.
 
 Lemma affinely_if_elim p P : bi_affinely_if p P ⊢ P.
 Proof. destruct p; simpl; auto using affinely_elim. Qed.
@@ -1266,6 +1269,9 @@ Proof. destruct p; simpl; auto using persistently_idemp. Qed.
 (* Conditional affinely persistently *)
 Lemma affinely_persistently_if_mono p P Q : (P ⊢ Q) → □?p P ⊢ □?p Q.
 Proof. by intros ->. Qed.
+Lemma affinely_persistently_if_flag_mono (p q : bool) P :
+  (q → p) → □?p P ⊢ □?q P.
+Proof. destruct p, q; naive_solver auto using affinely_persistently_elim. Qed.
 
 Lemma affinely_persistently_if_elim p P : □?p P ⊢ P.
 Proof. destruct p; simpl; auto using affinely_persistently_elim. Qed.
