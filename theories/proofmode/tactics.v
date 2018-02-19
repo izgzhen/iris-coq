@@ -1687,56 +1687,15 @@ only contains `#` or `%` patterns at the top-level, and [false] otherwise. *)
 Tactic Notation "iAssertCore" open_constr(Q)
     "with" constr(Hs) "as" constr(p) tactic(tac) :=
   iStartProof;
-  let p := intro_pat_persistent p in
+  let pats := spec_pat.parse Hs in
+  lazymatch pats with
+  | [_] => idtac
+  | _ => fail "iAssert: exactly one specialization pattern should be given"
+  end;
   let H := iFresh in
-  let Hs := spec_pat.parse Hs in
-  lazymatch Hs with
-  | [SPureGoal ?d] =>
-     eapply tac_assert_pure with _ H Q _ _;
-       [apply _ || fail "iAssert:" Q "not pure"
-       |apply _
-       |env_reflexivity
-       |done_if d (*goal*)
-       |tac H]
-  | [SGoal (SpecGoal GPersistent _ ?Hs_frame [] ?d)] =>
-     eapply tac_assert_persistent with _ _ _ true [] H Q _;
-       [env_reflexivity
-       |apply _ || fail "iAssert:" Q "not persistent"
-       |apply _
-       |env_reflexivity
-       |iFrame Hs_frame; done_if d (*goal*)
-       |tac H]
-  | [SGoal (SpecGoal GPersistent false ?Hs_frame _ ?d)] =>
-     fail "iAssert: cannot select hypotheses for persistent proposition"
-  | [SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs ?d)] =>
-     let Hs' := eval cbv in (if lr then Hs else Hs_frame ++ Hs) in
-     let p' := eval cbv in (match m with GModal => false | _ => p end) in
-     lazymatch p' with
-     | false =>
-       eapply tac_assert with _ _ _ lr Hs' H Q _;
-         [lazymatch m with
-          | GSpatial => apply add_modal_id
-          | GModal => apply _ || fail "iAssert: goal not a modality"
-          end
-         |env_reflexivity ||
-          let Hs' := iMissingHyps Hs' in
-          fail "iAssert: hypotheses" Hs' "not found"
-         |env_reflexivity
-         |iFrame Hs_frame; done_if d (*goal*)
-         |tac H]
-     | true =>
-       eapply tac_assert_persistent with _ _ _ lr Hs' H Q _;
-         [env_reflexivity ||
-          let Hs' := iMissingHyps Hs' in
-          fail "iAssert: hypotheses" Hs' "not found"
-         |apply _ || fail "iAssert:" Q "not persistent"
-         |apply _
-         |env_reflexivity
-         |done_if d (*goal*)
-         |tac H]
-     end
-  | ?pat => fail "iAssert: invalid pattern" pat
-  end.
+  eapply tac_assert with _ H Q;
+    [env_reflexivity
+    |iSpecializeCore H with hnil pats as p; [..|tac H]].
 
 Tactic Notation "iAssertCore" open_constr(Q) "as" constr(p) tactic(tac) :=
   let p := intro_pat_persistent p in

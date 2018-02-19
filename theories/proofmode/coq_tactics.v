@@ -913,40 +913,12 @@ Proof.
   by rewrite -{1}persistently_idemp !affinely_persistently_elim impl_elim_r.
 Qed.
 
-Lemma tac_assert Δ Δ1 Δ2 Δ2' neg js j P P' Q :
-  AddModal P' P Q →
-  envs_split (if neg is true then Right else Left) js Δ = Some (Δ1,Δ2) →
-  envs_app false (Esnoc Enil j P) Δ2 = Some Δ2' →
-  envs_entails Δ1 P' → envs_entails Δ2' Q → envs_entails Δ Q.
+Lemma tac_assert Δ Δ' j P Q :
+  envs_app true (Esnoc Enil j (P -∗ P)%I) Δ = Some Δ' →
+  envs_entails Δ' Q → envs_entails Δ Q.
 Proof.
-  rewrite envs_entails_eq=>??? HP HQ. rewrite envs_split_sound //.
-  rewrite (envs_app_singleton_sound Δ2) //; simpl. by rewrite HP HQ.
-Qed.
-
-Lemma tac_assert_persistent Δ Δ1 Δ2 Δ' neg js j P P' Q :
-  envs_split (if neg is true then Right else Left) js Δ = Some (Δ1,Δ2) →
-  Persistent P →
-  FromAffinely P' P →
-  envs_app false (Esnoc Enil j P') Δ = Some Δ' →
-  envs_entails Δ1 P → envs_entails Δ' Q → envs_entails Δ Q.
-Proof.
-  rewrite envs_entails_eq => ???? HP <-.
-  rewrite -(idemp bi_and (of_envs Δ)) {1}envs_split_sound //.
-  rewrite HP. rewrite (persistent_persistently_2 P) sep_elim_l.
-  rewrite persistently_and_affinely_sep_l -affinely_idemp.
-  rewrite affinely_persistently_elim from_affinely envs_app_singleton_sound //=.
-  by rewrite wand_elim_r.
-Qed.
-
-Lemma tac_assert_pure Δ Δ' j P P' φ Q :
-  FromPure true P φ →
-  FromAffinely P' P →
-  envs_app false (Esnoc Enil j P') Δ = Some Δ' →
-  φ → envs_entails Δ' Q → envs_entails Δ Q.
-Proof.
-  rewrite envs_entails_eq => ???? <-. rewrite envs_app_singleton_sound //=.
-  rewrite -(from_affinely P') -(from_pure _ P) pure_True //.
-  by rewrite affinely_idemp affinely_True_emp affinely_emp emp_wand.
+  rewrite envs_entails_eq=> ? <-. rewrite (envs_app_singleton_sound Δ) //; simpl.
+  by rewrite -(entails_wand P) // affinely_persistently_emp emp_wand.
 Qed.
 
 Lemma tac_pose_proof Δ Δ' j P Q :
@@ -1244,7 +1216,7 @@ Lemma tac_next Δ Δ' n Q Q' :
   envs_entails Δ' Q' → envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq => ?? HQ.
-    by rewrite -(from_laterN n Q) into_laterN_env_sound HQ.
+  by rewrite -(from_laterN n Q) into_laterN_env_sound HQ.
 Qed.
 
 Lemma tac_löb Δ Δ' i Q :
