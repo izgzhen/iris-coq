@@ -694,10 +694,6 @@ Proof.
 Qed.
 
 (** * Implication and wand *)
-Lemma envs_app_singleton_sound_foo Δ Δ' p j Q :
-  envs_app p (Esnoc Enil j Q) Δ = Some Δ' → of_envs Δ ∗ □?p Q ⊢ of_envs Δ'.
-Proof. intros. apply wand_elim_l'. eapply envs_app_singleton_sound. eauto. Qed.
-
 Lemma tac_impl_intro Δ Δ' i P P' Q R :
   FromImpl R P Q →
   (if env_spatial_is_nil Δ then TCTrue else Persistent P) →
