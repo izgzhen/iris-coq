@@ -890,7 +890,7 @@ Proof.
   rewrite HQ. destruct p; simpl; auto using wand_elim_r.
 Qed.
 
-Class IntoIH {PROP : bi} (φ : Prop) (Δ : envs PROP) (Q : PROP) :=
+Class IntoIH (φ : Prop) (Δ : envs PROP) (Q : PROP) :=
   into_ih : φ → of_envs Δ ⊢ Q.
 Global Instance into_ih_entails Δ Q : IntoIH (envs_entails Δ Q) Δ Q.
 Proof. by rewrite envs_entails_eq /IntoIH. Qed.
