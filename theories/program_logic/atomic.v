@@ -1,6 +1,6 @@
 From iris.program_logic Require Export weakestpre.
 From iris.proofmode Require Import tactics classes.
-From iris.bi.lib Require Import atomic.
+From iris.bi.lib Require Export atomic.
 Set Default Proof Using "Type".
 
 Definition atomic_wp `{irisG Λ Σ} {A B : Type}
@@ -13,4 +13,4 @@ Definition atomic_wp `{irisG Λ Σ} {A B : Type}
     (∀ Φ, atomic_update α β Eo Em (λ x y, Φ (f x y)) -∗
           WP e {{ Φ }})%I.
 (* Note: To add a private postcondition, use
-   atomic_shift α β Eo Em (λ x y, POST x y -∗ Φ (f x y)) *)
+   atomic_update α β Eo Em (λ x y, POST x y -∗ Φ (f x y)) *)

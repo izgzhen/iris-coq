@@ -85,6 +85,7 @@ theories/heap_lang/lib/lock.v
 theories/heap_lang/lib/spin_lock.v
 theories/heap_lang/lib/ticket_lock.v
 theories/heap_lang/lib/counter.v
+theories/heap_lang/lib/atomic_heap.v
 theories/heap_lang/proofmode.v
 theories/heap_lang/adequacy.v
 theories/heap_lang/total_adequacy.v
