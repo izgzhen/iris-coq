@@ -11,6 +11,7 @@ Structure atomic_heap Σ `{!heapG Σ} := AtomicHeap {
   alloc : val;
   load : val;
   store : val;
+  cas : val;
   (* -- predicates -- *)
   (* name is used to associate locked with is_lock *)
   mapsto (l : loc) (q: Qp) (v : val) : iProp Σ;
@@ -31,6 +32,12 @@ Structure atomic_heap Σ `{!heapG Σ} := AtomicHeap {
               (λ v (_:()), mapsto l 1 w)
               ⊤ ∅
               (λ _ _, #()%V);
+  cas_spec (l : loc) (w1 w2 : val) :
+    atomic_wp (cas (#l, w1, w2))%E
+              (λ v, mapsto l 1 v)
+              (λ v (_:()), if decide (v = w1) then mapsto l 1 w2 else mapsto l 1 v)
+              ⊤ ∅
+              (λ v _, #(if decide (v = w1) then true else false)%V);
 }.
 
 (** Proof that the primitive physical operations of heap_lang satisfy said interface. *)
@@ -40,6 +47,8 @@ Definition primitive_load : val :=
   λ: "l", !"l".
 Definition primitive_store : val :=
   λ: "p", (Fst "p") <- (Snd "p").
+Definition primitive_cas : val :=
+  λ: "p", CAS (Fst (Fst "p")) (Snd (Fst "p")) (Snd "p").
 
 Section proof.
   Context `{!heapG Σ}.
@@ -74,8 +83,22 @@ Section proof.
     wp_store. iMod ("Hclose" $! () with "H↦"). done.
   Qed.
 
+  Lemma primitive_cas_spec (l : loc) (w1 w2 : val) :
+    atomic_wp (primitive_cas (#l, w1, w2))%E
+              (λ v, l ↦ v)%I
+              (λ v (_:()), if decide (v = w1) then l ↦ w2 else l ↦ v)%I
+              ⊤ ∅
+              (λ v _, #(if decide (v = w1) then true else false)%V).
+  Proof.
+    iIntros (Φ) "Aupd". wp_let. repeat wp_proj.
+    iMod (aupd_acc with "Aupd") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
+    destruct (decide (v = w1)) as [Hv|Hv]; [wp_cas_suc|wp_cas_fail];
+    iMod ("Hclose" $! () with "H↦"); done.
+  Qed.
+
   Definition primitive_atomic_heap : atomic_heap Σ :=
     {| alloc_spec := primitive_alloc_spec;
        load_spec := primitive_load_spec;
-       store_spec := primitive_store_spec |}.
+       store_spec := primitive_store_spec;
+       cas_spec := primitive_cas_spec |}.
 End proof.
