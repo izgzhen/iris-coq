@@ -7,7 +7,9 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 Changes in and extensions of the theory:
 
-* [#] Weakestpre for total program correctness.
+* [#] Add weakest preconditions for total program correctness.
+* [#] "(Potentially) stuck" weakest preconditions are no longer considered
+  experimental.
 
 Changes in Coq:
 
