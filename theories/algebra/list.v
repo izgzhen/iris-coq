@@ -212,14 +212,12 @@ Section cmra.
     - intros n l1 l2. rewrite !list_lookup_validN.
       setoid_rewrite list_lookup_op. eauto using cmra_validN_op_l.
     - intros n l.
-      induction l as [|x l IH]=> -[|y1 l1] [|y2 l2] Hl Heq;
-        (try by exfalso; inversion Heq).
+      induction l as [|x l IH]=> -[|y1 l1] [|y2 l2] Hl; inversion_clear 1.
       + by exists [], [].
-      + exists [], (x :: l); inversion Heq; by repeat constructor.
-      + exists (x :: l), []; inversion Heq; by repeat constructor.
-      + destruct (IH l1 l2) as (l1'&l2'&?&?&?),
-          (cmra_extend n x y1 y2) as (y1'&y2'&?&?&?);
-          [by inversion_clear Heq; inversion_clear Hl..|].
+      + exists [], (x :: l); by repeat constructor.
+      + exists (x :: l), []; by repeat constructor.
+      + inversion_clear Hl. destruct (IH l1 l2) as (l1'&l2'&?&?&?),
+          (cmra_extend n x y1 y2) as (y1'&y2'&?&?&?); simplify_eq/=; auto.
         exists (y1' :: l1'), (y2' :: l2'); repeat constructor; auto.
   Qed.
   Canonical Structure listR := CmraT (list A) list_cmra_mixin.

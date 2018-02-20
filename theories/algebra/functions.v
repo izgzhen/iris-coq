@@ -8,7 +8,7 @@ Definition ofe_fun_insert `{EqDecision A} {B : A → ofeT}
   match decide (x = x') with left H => eq_rect _ B y _ H | right _ => f x' end.
 Instance: Params (@ofe_fun_insert) 5.
 
-Definition ofe_fun_singleton `{EqDecision A} {B : A → ucmraT}
+Definition ofe_fun_singleton `{Finite A} {B : A → ucmraT}
   (x : A) (y : B x) : ofe_fun B := ofe_fun_insert x y ε.
 Instance: Params (@ofe_fun_singleton) 5.
 
@@ -48,7 +48,7 @@ Section ofe.
 End ofe.
 
 Section cmra.
-  Context `{EqDecision A} {B : A → ucmraT}.
+  Context `{Finite A} {B : A → ucmraT}.
   Implicit Types x : A.
   Implicit Types f g : ofe_fun B.
 
