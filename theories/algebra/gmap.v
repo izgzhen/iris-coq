@@ -147,30 +147,16 @@ Proof.
     rewrite !lookup_core. by apply cmra_core_mono.
   - intros n m1 m2 Hm i; apply cmra_validN_op_l with (m2 !! i).
     by rewrite -lookup_op.
-  - intros n m. induction m as [|i x m Hi IH] using map_ind=> m1 m2 Hmv Hm.
-    { eexists ∅, ∅. split_and!=> -i; symmetry; symmetry in Hm; move: Hm=> /(_ i);
-        rewrite !lookup_op !lookup_empty ?dist_None op_None; intuition. }
-    destruct (IH (delete i m1) (delete i m2)) as (m1'&m2'&Hm'&Hm1'&Hm2').
-    { intros j; move: Hmv=> /(_ j). destruct (decide (i = j)) as [->|].
-      + intros _. by rewrite Hi.
-      + by rewrite lookup_insert_ne. }
-    { intros j; move: Hm=> /(_ j); destruct (decide (i = j)) as [->|].
-      + intros _. by rewrite lookup_op !lookup_delete Hi.
-      + by rewrite !lookup_op lookup_insert_ne // !lookup_delete_ne. }
-    destruct (cmra_extend n (Some x) (m1 !! i) (m2 !! i)) as (y1&y2&?&?&?).
-    { move: Hmv=> /(_ i). by rewrite lookup_insert. }
-    { move: Hm=> /(_ i). by rewrite lookup_insert lookup_op. }
-    exists (partial_alter (λ _, y1) i m1'), (partial_alter (λ _, y2) i m2').
-    split_and!.
-    + intros j. destruct (decide (i = j)) as [->|].
-      * by rewrite lookup_insert lookup_op !lookup_partial_alter.
-      * by rewrite lookup_insert_ne // Hm' !lookup_op !lookup_partial_alter_ne.
-    + intros j. destruct (decide (i = j)) as [->|].
-      * by rewrite lookup_partial_alter.
-      * by rewrite lookup_partial_alter_ne // Hm1' lookup_delete_ne.
-    + intros j. destruct (decide (i = j)) as [->|].
-      * by rewrite lookup_partial_alter.
-      * by rewrite lookup_partial_alter_ne // Hm2' lookup_delete_ne.
+  - intros n m y1 y2 Hm Heq.
+    refine ((λ FUN, _) (λ i, cmra_extend n (m !! i) (y1 !! i) (y2 !! i) (Hm i) _));
+      last by rewrite -lookup_op.
+    exists (map_imap (λ i _, projT1 (FUN i)) y1).
+    exists (map_imap (λ i _, proj1_sig (projT2 (FUN i))) y2).
+    split; [|split]=>i; rewrite ?lookup_op !lookup_imap;
+    destruct (FUN i) as (z1i&z2i&Hmi&Hz1i&Hz2i)=>/=.
+    + destruct (y1 !! i), (y2 !! i); inversion Hz1i; inversion Hz2i; subst=>//.
+    + revert Hz1i. case: (y1!!i)=>[?|] //.
+    + revert Hz2i. case: (y2!!i)=>[?|] //.
 Qed.
 Canonical Structure gmapR := CmraT (gmap K A) gmap_cmra_mixin.
 
