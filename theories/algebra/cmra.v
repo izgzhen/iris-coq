@@ -61,7 +61,7 @@ Section mixin.
     mixin_cmra_validN_op_l n x y : ✓{n} (x ⋅ y) → ✓{n} x;
     mixin_cmra_extend n x y1 y2 :
       ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-      ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2
+      { z1 : A & { z2 | x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2 } }
   }.
 End mixin.
 
@@ -135,7 +135,7 @@ Section cmra_mixin.
   Proof. apply (mixin_cmra_validN_op_l _ (cmra_mixin A)). Qed.
   Lemma cmra_extend n x y1 y2 :
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-    ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2.
+    { z1 : A & { z2 | x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2 } }.
   Proof. apply (mixin_cmra_extend _ (cmra_mixin A)). Qed.
 End cmra_mixin.
 
@@ -722,7 +722,7 @@ Section cmra_total.
   Context (validN_op_l : ∀ n (x y : A), ✓{n} (x ⋅ y) → ✓{n} x).
   Context (extend : ∀ n (x y1 y2 : A),
     ✓{n} x → x ≡{n}≡ y1 ⋅ y2 →
-    ∃ z1 z2, x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2).
+    { z1 : A & { z2 | x ≡ z1 ⋅ z2 ∧ z1 ≡{n}≡ y1 ∧ z2 ≡{n}≡ y2 } }).
   Lemma cmra_total_mixin : CmraMixin A.
   Proof using Type*.
     split; auto.
@@ -1311,7 +1311,7 @@ Section option.
         eauto using cmra_validN_op_l.
     - intros n ma mb1 mb2.
       destruct ma as [a|], mb1 as [b1|], mb2 as [b2|]; intros Hx Hx';
-        inversion_clear Hx'; auto.
+        (try by exfalso; inversion Hx'); (try (apply (inj Some) in Hx')).
       + destruct (cmra_extend n a b1 b2) as (c1&c2&?&?&?); auto.
         by exists (Some c1), (Some c2); repeat constructor.
       + by exists (Some a), None; repeat constructor.
@@ -1475,7 +1475,7 @@ Qed.
 
 (* Dependently-typed functions over a finite discrete domain *)
 Section ofe_fun_cmra.
-  Context `{Hfin : Finite A} {B : A → ucmraT}.
+  Context {A: Type} {B : A → ucmraT}.
   Implicit Types f g : ofe_fun B.
 
   Instance ofe_fun_op : Op (ofe_fun B) := λ f g x, f x ⋅ g x.
@@ -1486,14 +1486,17 @@ Section ofe_fun_cmra.
   Definition ofe_fun_lookup_op f g x : (f ⋅ g) x = f x ⋅ g x := eq_refl.
   Definition ofe_fun_lookup_core f x : (core f) x = core (f x) := eq_refl.
 
-  Lemma ofe_fun_included_spec (f g : ofe_fun B) : f ≼ g ↔ ∀ x, f x ≼ g x.
-  Proof using Hfin.
-    split; [by intros [h Hh] x; exists (h x); rewrite /op /ofe_fun_op (Hh x)|].
-    intros [h ?]%finite_choice. by exists h.
+  Lemma ofe_fun_included_spec_1 (f g : ofe_fun B) x : f ≼ g → f x ≼ g x.
+  Proof. by intros [h Hh]; exists (h x); rewrite /op /ofe_fun_op (Hh x). Qed.
+
+  Lemma ofe_fun_included_spec `{Hfin : Finite A} (f g : ofe_fun B) : f ≼ g ↔ ∀ x, f x ≼ g x.
+  Proof.
+    split; [by intros; apply ofe_fun_included_spec_1|].
+    intros [h ?]%finite_choice; by exists h.
   Qed.
 
   Lemma ofe_fun_cmra_mixin : CmraMixin (ofe_fun B).
-  Proof using Hfin.
+  Proof.
     apply cmra_total_mixin.
     - eauto.
     - by intros n f1 f2 f3 Hf x; rewrite ofe_fun_lookup_op (Hf x).
@@ -1507,16 +1510,16 @@ Section ofe_fun_cmra.
     - by intros f1 f2 x; rewrite ofe_fun_lookup_op comm.
     - by intros f x; rewrite ofe_fun_lookup_op ofe_fun_lookup_core cmra_core_l.
     - by intros f x; rewrite ofe_fun_lookup_core cmra_core_idemp.
-    - intros f1 f2; rewrite !ofe_fun_included_spec=> Hf x.
-      by rewrite ofe_fun_lookup_core; apply cmra_core_mono, Hf.
+    - intros f1 f2 Hf12. exists (core f2)=>x. rewrite ofe_fun_lookup_op.
+      apply (ofe_fun_included_spec_1 _ _ x), (cmra_core_mono (f1 x)) in Hf12.
+      rewrite !ofe_fun_lookup_core. destruct Hf12 as [? ->].
+      rewrite assoc -cmra_core_dup //.
     - intros n f1 f2 Hf x; apply cmra_validN_op_l with (f2 x), Hf.
     - intros n f f1 f2 Hf Hf12.
-      destruct (finite_choice (λ x (yy : B x * B x),
-        f x ≡ yy.1 ⋅ yy.2 ∧ yy.1 ≡{n}≡ f1 x ∧ yy.2 ≡{n}≡ f2 x)) as [gg Hgg].
-      { intros x. specialize (Hf12 x).
-        destruct (cmra_extend n (f x) (f1 x) (f2 x)) as (y1&y2&?&?&?); eauto.
-        exists (y1,y2); eauto. }
-      exists (λ x, (gg x).1), (λ x, (gg x).2). split_and!=> -?; naive_solver.
+      assert (FUN := λ x, cmra_extend n (f x) (f1 x) (f2 x) (Hf x) (Hf12 x)).
+      exists (λ x, projT1 (FUN x)), (λ x, proj1_sig (projT2 (FUN x))).
+      split; [|split]=>x; [rewrite ofe_fun_lookup_op| |];
+      by destruct (FUN x) as (?&?&?&?&?).
   Qed.
   Canonical Structure ofe_funR := CmraT (ofe_fun B) ofe_fun_cmra_mixin.
 
@@ -1537,11 +1540,10 @@ Section ofe_fun_cmra.
   Proof. intros ? f Hf x. by apply: discrete. Qed.
 End ofe_fun_cmra.
 
-Arguments ofe_funR {_ _ _} _.
-Arguments ofe_funUR {_ _ _} _.
+Arguments ofe_funR {_} _.
+Arguments ofe_funUR {_} _.
 
-Instance ofe_fun_map_cmra_morphism
-    `{Finite A} {B1 B2 : A → ucmraT} (f : ∀ x, B1 x → B2 x) :
+Instance ofe_fun_map_cmra_morphism {A} {B1 B2 : A → ucmraT} (f : ∀ x, B1 x → B2 x) :
   (∀ x, CmraMorphism (f x)) → CmraMorphism (ofe_fun_map f).
 Proof.
   split; first apply _.
@@ -1550,23 +1552,22 @@ Proof.
   - intros g1 g2 i. by rewrite /ofe_fun_map ofe_fun_lookup_op cmra_morphism_op.
 Qed.
 
-Program Definition ofe_funURF `{Finite C} (F : C → urFunctor) : urFunctor := {|
+Program Definition ofe_funURF {C} (F : C → urFunctor) : urFunctor := {|
   urFunctor_car A B := ofe_funUR (λ c, urFunctor_car (F c) A B);
   urFunctor_map A1 A2 B1 B2 fg := ofe_funC_map (λ c, urFunctor_map (F c) fg)
 |}.
 Next Obligation.
-  intros C ?? F A1 A2 B1 B2 n ?? g.
-  by apply ofe_funC_map_ne=>?; apply urFunctor_ne.
+  intros C F A1 A2 B1 B2 n ?? g. by apply ofe_funC_map_ne=>?; apply urFunctor_ne.
 Qed.
 Next Obligation.
-  intros C ?? F A B g; simpl. rewrite -{2}(ofe_fun_map_id g).
+  intros C F A B g; simpl. rewrite -{2}(ofe_fun_map_id g).
   apply ofe_fun_map_ext=> y; apply urFunctor_id.
 Qed.
 Next Obligation.
-  intros C ?? F A1 A2 A3 B1 B2 B3 f1 f2 f1' f2' g. rewrite /=-ofe_fun_map_compose.
+  intros C F A1 A2 A3 B1 B2 B3 f1 f2 f1' f2' g. rewrite /=-ofe_fun_map_compose.
   apply ofe_fun_map_ext=>y; apply urFunctor_compose.
 Qed.
-Instance ofe_funURF_contractive `{Finite C} (F : C → urFunctor) :
+Instance ofe_funURF_contractive {C} (F : C → urFunctor) :
   (∀ c, urFunctorContractive (F c)) → urFunctorContractive (ofe_funURF F).
 Proof.
   intros ? A1 A2 B1 B2 n ?? g.
