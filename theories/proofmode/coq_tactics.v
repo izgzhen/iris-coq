@@ -900,6 +900,16 @@ Proof.
        (into_persistent _ R) sep_elim_r persistently_and_affinely_sep_l wand_elim_r.
 Qed.
 
+(* A special version of [tac_assumption] that does not do any of the
+[FromAssumption] magic. *)
+Lemma tac_specialize_persistent_helper_done Δ i q P :
+  envs_lookup i Δ = Some (q,P) →
+  envs_entails Δ (bi_absorbingly P).
+Proof.
+  rewrite envs_entails_eq /bi_absorbingly=> /envs_lookup_sound=> ->.
+  rewrite affinely_persistently_if_elim comm. f_equiv; auto.
+Qed.
+
 Lemma tac_revert Δ Δ' i p P Q :
   envs_lookup_delete true i Δ = Some (p,P,Δ') →
   envs_entails Δ' ((if p then □ P else P)%I -∗ Q) →

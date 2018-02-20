@@ -94,6 +94,11 @@ Proof.
   done.
 Qed.
 
+Lemma test_iAssert_persistently P : □ P -∗ True.
+Proof.
+  iIntros "HP". iAssert (□ P)%I with "[# //]" as "#H". done.
+Qed.
+
 Lemma test_iSpecialize_auto_frame P Q R :
   (P -∗ True -∗ True -∗ Q -∗ R) -∗ P -∗ Q -∗ R.
 Proof. iIntros "H ? HQ". by iApply ("H" with "[$]"). Qed.

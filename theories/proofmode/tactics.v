@@ -615,7 +615,9 @@ Tactic Notation "iSpecializeCore" open_constr(H)
        (* FIXME: do something reasonable when the BI is not affine *)
        eapply tac_specialize_persistent_helper with _ H _ _ _ _;
          [env_reflexivity || fail "iSpecialize:" H "not found"
-         |iSpecializePat H pat; last (iExact H)
+         |iSpecializePat H pat;
+           [..
+           |eapply tac_specialize_persistent_helper_done with H _; env_reflexivity]
          |apply _ ||
           let Q := match goal with |- IntoPersistent _ ?Q _ => Q end in
           fail "iSpecialize:" Q "not persistent"
