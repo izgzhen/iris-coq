@@ -12,6 +12,9 @@ Changes in and extensions of the theory:
 Changes in Coq:
 
 * Rename `timelessP` -> `timeless` (projection of the `Timeless` class)
+* The CMRA axiom `cmra_extend` is now stated in `Type`, using `sigT` instead
+  of in `Prop` using `exists`. This makes it possible to define the functionnal
+  CMRA even for an infinite domain.
 
 ## Iris 3.1.0 (released 2017-12-19)
 
