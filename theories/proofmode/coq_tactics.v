@@ -817,6 +817,10 @@ Proof.
   apply wand_intro_l. by rewrite assoc !wand_elim_r.
 Qed.
 
+Lemma tac_unlock_emp Δ Q : envs_entails Δ Q → envs_entails Δ (emp ∗ locked Q).
+Proof. rewrite envs_entails_eq=> ->. by rewrite -lock left_id. Qed.
+Lemma tac_unlock_True Δ Q : envs_entails Δ Q → envs_entails Δ (True ∗ locked Q).
+Proof. rewrite envs_entails_eq=> ->. by rewrite -lock -True_sep_2. Qed.
 Lemma tac_unlock Δ Q : envs_entails Δ Q → envs_entails Δ (locked Q).
 Proof. by unlock. Qed.
 

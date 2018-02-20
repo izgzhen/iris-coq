@@ -553,8 +553,11 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
           | GSpatial => apply add_modal_id
           | GModal => apply _ || fail "iSpecialize: goal not a modality"
           end
-         |iFrame "∗ #"; apply tac_unlock ||
-          fail "iSpecialize: premise cannot be solved by framing"
+         |first
+            [apply tac_unlock_emp
+            |apply tac_unlock_True
+            |iFrame "∗ #"; apply tac_unlock
+            |fail "iSpecialize: premise cannot be solved by framing"]
          |reflexivity]; iIntro H1; go H1 pats
     end in let pats := spec_pat.parse pat in go H pats.
 
