@@ -476,7 +476,7 @@ Hint Mode IntoInv + ! - : typeclass_instances.
 
 (* Input: `Pinv`;
    - `Pinv`, an invariant assertion
-   - `Ps_aux` is a list of additional assertions needed for opening an invariant;
+   - `Pin` the additional assertions needed for opening an invariant;
    - `Pout` is the assertion obtained by opening the invariant;
    - `Q` is a goal on which iInv may be invoked;
    - `Q'` is the transformed goal that must be proved after opening the invariant.
@@ -486,9 +486,8 @@ Hint Mode IntoInv + ! - : typeclass_instances.
    is not a clearly associated instance of ElimModal of the right form
    (e.g. to handle Iris 2.0 usage of iInv).
 *)
-Class ElimInv {PROP : bi} (φ: Prop) (N: namespace)
-      (Pinv : PROP) (Ps_aux: list PROP) (Pout Q Q': PROP) :=
-  elim_inv : φ → Pinv ∗ [∗] Ps_aux ∗ (Pout -∗ Q') ⊢ Q.
+Class ElimInv {PROP : bi} (φ : Prop) (N : namespace) (Pinv Pin Pout Q Q' : PROP) :=
+  elim_inv : φ → Pinv ∗ Pin ∗ (Pout -∗ Q') ⊢ Q.
 Arguments ElimInv {_} _ _ _  _%I _%I _%I _%I : simpl never.
 Arguments elim_inv {_} _ _ _%I _%I _%I _%I _%I _%I.
 Hint Mode ElimInv + - - ! - - - - : typeclass_instances.

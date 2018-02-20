@@ -82,7 +82,7 @@ Section iris_tests.
       ={⊤}=∗ cinv_own γ p1 ∗ cinv_own γ p2  ∗ ▷ P.
   Proof.
     iIntros "(#?&Hown1&Hown2)".
-    iInv N as "(#HP&Hown2)" "Hclose".
+    iInv N with "[Hown2 //]" as "(#HP&Hown2)" "Hclose".
     iMod ("Hclose" with "HP").
     iModIntro. iFrame. by iNext.
   Qed.

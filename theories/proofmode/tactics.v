@@ -215,14 +215,6 @@ Tactic Notation "iAssumption" :=
            |fail "iAssumption:" Q "not found"]
   end.
 
-Tactic Notation "iAssumptionListCore" :=
-  repeat match goal with
-  | |- envs_lookup_delete_list _ ?ils ?p = Some (_, ?P :: ?Ps, _) =>
-    eapply envs_lookup_delete_list_cons; [by iAssumptionCore |]
-  | |- envs_lookup_delete_list _ ?ils ?p = Some (_, [], _) =>
-    eapply envs_lookup_delete_list_nil
-  end.
-
 (** * False *)
 Tactic Notation "iExFalso" := apply tac_ex_falso.
 
@@ -1886,33 +1878,27 @@ Tactic Notation "iAssumptionInv" constr(N) :=
      is_evar i; first [find Γp i P | find Γs i P]; env_reflexivity
   end.
 
-Tactic Notation "iInvCore" constr(N) "with" constr(Hs) "as" tactic(tac) constr(Hclose) :=
-  let hd_id := fresh "hd_id" in evar (hd_id: ident);
-  let hd_id := eval unfold hd_id in hd_id in
-  let Htmp1 := iFresh in
-  let Htmp2 := iFresh in
-  let patback := intro_pat.parse_one Hclose in
-  eapply tac_inv_elim with _ _ (hd_id :: Hs) Htmp1 _ _ N _  _ _ _;
-  first eapply envs_lookup_delete_list_cons; swap 2 3;
-    [ iAssumptionInv N || fail "iInv: invariant" N "not found"
-    | apply _ ||
+Tactic Notation "iInvCore" constr(N) "with" constr(pats) "as" tactic(tac) constr(Hclose) :=
+  iStartProof;
+  let H := iFresh in
+  eapply tac_inv_elim with _ _ H _ N _ _ _ _ _;
+    [iAssumptionInv N || fail "iInv: invariant" N "not found"
+    |apply _ ||
      let I := match goal with |- ElimInv _ ?N ?I  _ _ _ _ => I end in
      fail "iInv: cannot eliminate invariant " I " with namespace " N
-    | iAssumptionListCore || fail "iInv: other assumptions not found"
-    | try (split_and?; solve [ fast_done | solve_ndisj ])
-    | env_reflexivity |];
-  let pat := constr:(IList [[IIdent Htmp2; patback]]) in
-  iDestruct Htmp1 as pat;
-  tac Htmp2.
+    |try (split_and?; solve [ fast_done | solve_ndisj ])
+    |let R := fresh in intros R; eexists; split; [env_reflexivity|];
+     iSpecializePat H pats; last (
+       iApplyHyp H; clear R;
+       iIntros H; (* H was spatial, so it's gone due to the apply and we can reuse the name *)
+       let patclose := intro_pat.parse_one Hclose in
+       let patintro := constr:(IList [[IIdent H; patclose]]) in
+       iDestructHyp H as patintro;
+       tac H
+     )].
 
 Tactic Notation "iInvCore" constr(N) "as" tactic(tac) constr(Hclose) :=
-  let tl_ids := fresh "tl_ids" in evar (tl_ids: list ident);
-  let tl_ids := eval unfold tl_ids in tl_ids in
-  iInvCore N with tl_ids as (fun H => tac H) Hclose.
-Tactic Notation "iInvCoreParse" constr(N) "with" constr(Hs) "as" tactic(tac) constr(Hclose) :=
-  let Hs := words Hs in
-  let Hs := eval vm_compute in (INamed <$> Hs) in
-  iInvCore N with Hs as (fun H => tac H) Hclose.
+  iInvCore N with "[$]" as ltac:(tac) Hclose.
 
 Tactic Notation "iInv" constr(N) "as" constr(pat) constr(Hclose) :=
    iInvCore N as (fun H => iDestructHyp H as pat) Hclose.
@@ -1931,21 +1917,21 @@ Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
     constr(pat) constr(Hclose) :=
    iInvCore N as (fun H => iDestructHyp H as (x1 x2 x3 x4) pat) Hclose.
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" constr(pat) constr(Hclose) :=
-   iInvCoreParse N with Hs as (fun H => iDestructHyp H as pat) Hclose.
+   iInvCore N with Hs as (fun H => iDestructHyp H as pat) Hclose.
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1) ")"
     constr(pat) constr(Hclose) :=
-   iInvCoreParse N with Hs as (fun H => iDestructHyp H as (x1) pat) Hclose.
+   iInvCore N with Hs as (fun H => iDestructHyp H as (x1) pat) Hclose.
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) constr(Hclose) :=
-   iInvCoreParse N with Hs as (fun H => iDestructHyp H as (x1 x2) pat) Hclose.
+   iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2) pat) Hclose.
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")"
     constr(pat) constr(Hclose) :=
-   iInvCoreParse N with Hs as (fun H => iDestructHyp H as (x1 x2 x3) pat) Hclose.
+   iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2 x3) pat) Hclose.
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) constr(Hclose) :=
-   iInvCoreParse N with Hs as (fun H => iDestructHyp H as (x1 x2 x3 x4) pat) Hclose.
+   iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2 x3 x4) pat) Hclose.
 
 Hint Extern 0 (_ ⊢ _) => iStartProof.
 

@@ -1171,17 +1171,19 @@ Proof.
 Qed.
 
 (** * Invariants *)
-Lemma tac_inv_elim Δ1 Δ2 Δ3 js j p φ N P' P Ps Q Q' :
-  envs_lookup_delete_list false js Δ1 = Some (p, P :: Ps, Δ2) →
-  ElimInv φ N P Ps P' Q Q' →
+Lemma tac_inv_elim Δ Δ' i j φ N p P Pin Pout Q Q' :
+  envs_lookup_delete false i Δ = Some (p, P, Δ') →
+  ElimInv φ N P Pin Pout Q Q' →
   φ →
-  envs_app false (Esnoc Enil j P') Δ2 = Some Δ3 →
-  envs_entails Δ3 Q' → envs_entails Δ1 Q.
+  (∀ R, ∃ Δ'',
+    envs_app false (Esnoc Enil j (Pin -∗ (Pout -∗ Q') -∗ R)%I) Δ' = Some Δ'' ∧
+    envs_entails Δ'' R) →
+  envs_entails Δ Q.
 Proof.
-  rewrite envs_entails_eq => ???? HΔ. rewrite envs_lookup_delete_list_sound //.
-  rewrite envs_app_singleton_sound //=.
-  rewrite HΔ //= affinely_persistently_if_elim //=.
-  rewrite -sep_assoc. by eapply elim_inv.
+  rewrite envs_entails_eq=> /envs_lookup_delete_Some [? ->] ?? /(_ Q) [Δ'' [? <-]].
+  rewrite (envs_lookup_sound' _ false) // envs_app_singleton_sound //; simpl.
+  apply wand_elim_r', wand_mono; last done.
+  apply wand_intro_r, wand_intro_r. rewrite affinely_persistently_if_elim -assoc. auto.
 Qed.
 End bi_tactics.
 

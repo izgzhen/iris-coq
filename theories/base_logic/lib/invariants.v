@@ -98,13 +98,11 @@ Global Instance into_inv_inv N P : IntoInv (inv N P) N.
 
 Global Instance elim_inv_inv E N P P' Q Q' :
   ElimModal True (|={E,E∖↑N}=> ▷ P ∗ (▷ P ={E∖↑N,E}=∗ True))%I P' Q Q' →
-  ElimInv (↑N ⊆ E) N (inv N P) [] P' Q Q'.
+  ElimInv (↑N ⊆ E) N (inv N P) True P' Q Q'.
 Proof.
-  rewrite /ElimInv/ElimModal.
-  iIntros (Helim ?) "(#H1&_&H2)".
+  rewrite /ElimInv /ElimModal. iIntros (Helim ?) "(#H1&_&H2)".
   iApply Helim; auto; iFrame.
-  iMod (inv_open _ N with "[#]") as "(HP&Hclose)"; auto. 
-  iFrame. by iModIntro.
+  iMod (inv_open _ N with "[#]") as "(HP&Hclose)"; auto with iFrame.
 Qed.
 
 Lemma inv_open_timeless E N P `{!Timeless P} :
