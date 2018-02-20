@@ -115,7 +115,7 @@ Section proofs.
   Global Instance elim_inv_na p F E N P P' Q Q':
     ElimModal True (|={E}=> (▷ P ∗ na_own p (F∖↑N)) ∗ (▷ P ∗ na_own p (F∖↑N) ={E}=∗ na_own p F))%I
               P' Q Q' →
-    ElimInv (↑N ⊆ E ∧ ↑N ⊆ F) N (na_inv p N P) (na_own p F) P' Q Q'.
+    ElimInv (↑N ⊆ E ∧ ↑N ⊆ F) (na_inv p N P) (na_own p F) P' Q Q'.
   Proof.
     rewrite /ElimInv /ElimModal. iIntros (Helim (?&?)) "(#H1&Hown&H2)".
     iApply Helim; auto. iFrame "H2".

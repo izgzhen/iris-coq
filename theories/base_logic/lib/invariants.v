@@ -98,7 +98,7 @@ Global Instance into_inv_inv N P : IntoInv (inv N P) N.
 
 Global Instance elim_inv_inv E N P P' Q Q' :
   ElimModal True (|={E,E∖↑N}=> ▷ P ∗ (▷ P ={E∖↑N,E}=∗ True))%I P' Q Q' →
-  ElimInv (↑N ⊆ E) N (inv N P) True P' Q Q'.
+  ElimInv (↑N ⊆ E) (inv N P) True P' Q Q'.
 Proof.
   rewrite /ElimInv /ElimModal. iIntros (Helim ?) "(#H1&_&H2)".
   iApply Helim; auto; iFrame.

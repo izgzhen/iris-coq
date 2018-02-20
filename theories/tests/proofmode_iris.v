@@ -144,4 +144,47 @@ Section iris_tests.
     iInv N as "HP" "Hclose".
     iMod ("Hclose" with "[$HP]"). auto.
   Qed.
+
+  (* test selection by hypothesis name instead of namespace *)
+  Lemma test_iInv_9 t N1 N2 N3 E1 E2 P:
+    ↑N3 ⊆ E1 →
+    inv N1 P ∗ na_inv t N3 (bi_persistently P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
+      ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
+  Proof.
+    iIntros (?) "(#?&#HInv&#?&Hown1&Hown2)".
+    iInv "HInv" with "Hown1" as "(#HP&Hown1)" "Hclose".
+    iMod ("Hclose" with "[$HP $Hown1]").
+    iModIntro. iFrame. by iNext.
+  Qed.
+
+  (* test selection by hypothesis name instead of namespace *)
+  Lemma test_iInv_10 t N1 N2 N3 E1 E2 P:
+    ↑N3 ⊆ E1 →
+    inv N1 P ∗ na_inv t N3 (bi_persistently P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
+      ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
+  Proof.
+    iIntros (?) "(#?&#HInv&#?&Hown1&Hown2)".
+    iInv "HInv" as "(#HP&Hown1)" "Hclose".
+    iMod ("Hclose" with "[$HP $Hown1]").
+    iModIntro. iFrame. by iNext.
+  Qed.
+
+  (* test selection by ident name *)
+  Lemma test_iInv_11 N P: inv N (bi_persistently P) ={⊤}=∗ ▷ P.
+  Proof.
+    let H := iFresh in
+    (iIntros H; iInv H as "#H2" "Hclose").
+    iMod ("Hclose" with "H2").
+    iModIntro. by iNext.
+  Qed.
+
+  (* error messages *)
+  Lemma test_iInv_12 N P: inv N (bi_persistently P) ={⊤}=∗ True.
+  Proof.
+    iIntros "H".
+    Fail iInv 34 as "#H2" "Hclose".
+    Fail iInv nroot as "#H2" "Hclose".
+    Fail iInv "H2" as "#H2" "Hclose".
+    done.
+  Qed.
 End iris_tests.

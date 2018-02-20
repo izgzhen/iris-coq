@@ -1171,9 +1171,9 @@ Proof.
 Qed.
 
 (** * Invariants *)
-Lemma tac_inv_elim Δ Δ' i j φ N p P Pin Pout Q Q' :
+Lemma tac_inv_elim Δ Δ' i j φ p P Pin Pout Q Q' :
   envs_lookup_delete false i Δ = Some (p, P, Δ') →
-  ElimInv φ N P Pin Pout Q Q' →
+  ElimInv φ P Pin Pout Q Q' →
   φ →
   (∀ R, ∃ Δ'',
     envs_app false (Esnoc Enil j (Pin -∗ (Pout -∗ Q') -∗ R)%I) Δ' = Some Δ'' ∧

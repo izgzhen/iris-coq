@@ -94,7 +94,7 @@ Section proofs.
   Global Instance into_inv_cinv N γ P : IntoInv (cinv N γ P) N.
   Global Instance elim_inv_cinv p γ E N P P' Q Q' :
     ElimModal True (|={E,E∖↑N}=> (▷ P ∗ cinv_own γ p) ∗ (▷ P ={E∖↑N,E}=∗ True))%I P' Q Q' →
-    ElimInv (↑N ⊆ E) N (cinv N γ P) (cinv_own γ p) P' Q Q'.
+    ElimInv (↑N ⊆ E) (cinv N γ P) (cinv_own γ p) P' Q Q'.
   Proof.
     rewrite /ElimInv /ElimModal. iIntros (Helim ?) "(#H1&Hown&H2)".
     iApply Helim; auto. iFrame "H2".

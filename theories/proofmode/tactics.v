@@ -1865,7 +1865,7 @@ Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1)
 Tactic Notation "iMod" open_constr(lem) "as" "%" simple_intropattern(pat) :=
   iDestructCore lem as false (fun H => iModCore H; iPure H as pat).
 
-(** * Assert *)
+(** * Invariant *)
 
 (* Finds a hypothesis in the context that is an invariant with
    namespace [N].  To do so, we check whether for each hypothesis
@@ -1874,7 +1874,8 @@ Tactic Notation "iAssumptionInv" constr(N) :=
   let rec find Γ i P :=
     lazymatch Γ with
     | Esnoc ?Γ ?j ?P' =>
-      first [assert (IntoInv P' N) by apply _; unify P P'; unify i j|find Γ i P]
+      first [(let H := constr:(_: IntoInv P' N) in
+             unify P P'; unify i j)|find Γ i P]
     end in
   match goal with
   | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
@@ -1883,14 +1884,31 @@ Tactic Notation "iAssumptionInv" constr(N) :=
      is_evar i; first [find Γp i P | find Γs i P]; env_reflexivity
   end.
 
-Tactic Notation "iInvCore" constr(N) "with" constr(pats) "as" tactic(tac) constr(Hclose) :=
+(* The argument [select] is the namespace [N] or hypothesis name ["H"] of the
+invariant. *)
+Tactic Notation "iInvCore" constr(select) "with" constr(pats) "as" tactic(tac) constr(Hclose) :=
   iStartProof;
+  let pats := spec_pat.parse pats in
+  lazymatch pats with
+  | [_] => idtac
+  | _ => fail "iInv: exactly one specialization pattern should be given"
+  end;
   let H := iFresh in
-  eapply tac_inv_elim with _ _ H _ N _ _ _ _ _;
-    [iAssumptionInv N || fail "iInv: invariant" N "not found"
-    |apply _ ||
-     let I := match goal with |- ElimInv _ ?N ?I  _ _ _ _ => I end in
-     fail "iInv: cannot eliminate invariant " I " with namespace " N
+  lazymatch type of select with
+  | string =>
+     eapply tac_inv_elim with _ select H _ _ _ _ _ _;
+     first by (iAssumptionCore || fail "iInv: invariant" select "not found")
+  | ident  =>
+     eapply tac_inv_elim with _ select H _ _ _ _ _ _;
+     first by (iAssumptionCore || fail "iInv: invariant" select "not found")
+  | namespace =>
+     eapply tac_inv_elim with _ _ H _ _ _ _ _ _;
+     first by (iAssumptionInv select || fail "iInv: invariant" select "not found")
+  | _ => fail "iInv: selector" select "is not of the right type "
+  end;
+    [apply _ ||
+     let I := match goal with |- ElimInv _ ?I  _ _ _ _ => I end in
+     fail "iInv: cannot eliminate invariant " I
     |try (split_and?; solve [ fast_done | solve_ndisj ])
     |let R := fresh in intros R; eexists; split; [env_reflexivity|];
      iSpecializePat H pats; last (
@@ -1900,7 +1918,7 @@ Tactic Notation "iInvCore" constr(N) "with" constr(pats) "as" tactic(tac) constr
        let patintro := constr:(IList [[IIdent H; patclose]]) in
        iDestructHyp H as patintro;
        tac H
-     )].
+    )].
 
 Tactic Notation "iInvCore" constr(N) "as" tactic(tac) constr(Hclose) :=
   iInvCore N with "[$]" as ltac:(tac) Hclose.

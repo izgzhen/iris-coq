@@ -487,11 +487,11 @@ Hint Mode IntoInv + ! - : typeclass_instances.
    is not a clearly associated instance of ElimModal of the right form
    (e.g. to handle Iris 2.0 usage of iInv).
 *)
-Class ElimInv {PROP : bi} (φ : Prop) (N : namespace) (Pinv Pin Pout Q Q' : PROP) :=
+Class ElimInv {PROP : bi} (φ : Prop) (Pinv Pin Pout Q Q' : PROP) :=
   elim_inv : φ → Pinv ∗ Pin ∗ (Pout -∗ Q') ⊢ Q.
-Arguments ElimInv {_} _ _ _  _%I _%I _%I _%I : simpl never.
+Arguments ElimInv {_} _ _ _%I _%I _%I _%I : simpl never.
 Arguments elim_inv {_} _ _ _%I _%I _%I _%I _%I _%I.
-Hint Mode ElimInv + - - ! - - - - : typeclass_instances.
+Hint Mode ElimInv + - ! - - - - : typeclass_instances.
 
 (* We make sure that tactics that perform actions on *specific* hypotheses or
 parts of the goal look through the [tc_opaque] connective, which is used to make
