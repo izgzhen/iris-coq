@@ -1865,6 +1865,11 @@ Tactic Notation "iMod" open_constr(lem) "as" "(" simple_intropattern(x1)
 Tactic Notation "iMod" open_constr(lem) "as" "%" simple_intropattern(pat) :=
   iDestructCore lem as false (fun H => iModCore H; iPure H as pat).
 
+(** * Assert *)
+
+(* Finds a hypothesis in the context that is an invariant with
+   namespace [N].  To do so, we check whether for each hypothesis
+   ["H":P] we can find an instance of [IntoInv P N] *)
 Tactic Notation "iAssumptionInv" constr(N) :=
   let rec find Γ i P :=
     lazymatch Γ with

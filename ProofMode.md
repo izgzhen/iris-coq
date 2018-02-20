@@ -170,8 +170,11 @@ Rewriting / simplification
 Iris
 ----
 
-- `iInv N as (x1 ... xn) "ipat" "Hclose"` : open the invariant `N`, the update
-  for closing the invariant is put in a hypothesis named `Hclose`.
+- `iInv (N with "selpat") as (x1 ... xn) "ipat" "Hclose"` : open the invariant
+  `N`. The selection pattern `selpat` is used for any auxiliary assertions
+  needed to open the invariant (e.g. for cancelable or non-atomic
+  invariants). The update for closing the invariant is put in a hypothesis named
+  `Hclose`.
 
 Miscellaneous
 -------------

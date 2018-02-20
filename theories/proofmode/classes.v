@@ -468,18 +468,19 @@ Proof. by apply as_valid. Qed.
 Lemma as_valid_2 (φ : Prop) {PROP : bi} (P : PROP) `{!AsValid φ P} : P → φ.
 Proof. by apply as_valid. Qed.
 
-(* Input: `P`; Outputs: `N`,
-   Extracts the namespace associated with an invariant assertion. Used for `iInv`. *)
+(* Input: [P]; Outputs: [N],
+   Extracts the namespace associated with an invariant assertion. Used for [iInv]. *)
 Class IntoInv {PROP : bi} (P: PROP) (N: namespace).
 Arguments IntoInv {_} _%I _.
 Hint Mode IntoInv + ! - : typeclass_instances.
 
-(* Input: `Pinv`;
-   - `Pinv`, an invariant assertion
-   - `Pin` the additional assertions needed for opening an invariant;
-   - `Pout` is the assertion obtained by opening the invariant;
-   - `Q` is a goal on which iInv may be invoked;
-   - `Q'` is the transformed goal that must be proved after opening the invariant.
+(* Input: [Pinv]
+   Arguments:
+   - [Pinv] is an invariant assertion
+   - [Pin] is an additional assertion needed for opening an invariant
+   - [Pout] is the assertion obtained by opening the invariant
+   - [Q] is a goal on which iInv may be invoked
+   - [Q'] is the transformed goal that must be proved after opening the invariant.
 
    There are similarities to the definition of ElimModal, however we
    want to be general enough to support uses in settings where there
