@@ -475,6 +475,14 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
     apply _ ||
     let P := match goal with |- IntoWand _ _ ?P _ _ => P end in
     fail "iSpecialize:" P "not an implication/wand" in
+  let solve_done d :=
+    lazymatch d with
+    | true =>
+       done ||
+       let Q := match goal with |- envs_entails _ ?Q => Q end in
+       fail "iSpecialize: cannot solve" Q "using done"
+    | false => idtac
+    end in
   let rec go H1 pats :=
     lazymatch pats with
     | [] => idtac
@@ -498,7 +506,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
           let Q := match goal with |- FromPure _ ?Q _ => Q end in
           fail "iSpecialize:" Q "not pure"
          |env_reflexivity
-         |done_if d (*goal*)
+         |solve_done d (*goal*)
          |go H1 pats]
     | SGoal (SpecGoal GPersistent false ?Hs_frame [] ?d) :: ?pats =>
        eapply tac_specialize_assert_persistent with _ _ H1 _ _ _ _ _;
@@ -509,7 +517,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
           fail "iSpecialize:" Q "not persistent"
          |apply _
          |env_reflexivity
-         |iFrame Hs_frame; done_if d (*goal*)
+         |iFrame Hs_frame; solve_done d (*goal*)
          |go H1 pats]
     | SGoal (SpecGoal GPersistent _ _ _ _) :: ?pats =>
        fail "iSpecialize: cannot select hypotheses for persistent premise"
@@ -525,7 +533,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          |env_reflexivity ||
           let Hs' := iMissingHyps Hs' in
           fail "iSpecialize: hypotheses" Hs' "not found"
-         |iFrame Hs_frame; done_if d (*goal*)
+         |iFrame Hs_frame; solve_done d (*goal*)
          |go H1 pats]
     | SAutoFrame GPersistent :: ?pats =>
        eapply tac_specialize_assert_persistent with _ _ H1 _ _ _ _;
