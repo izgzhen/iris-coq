@@ -43,6 +43,14 @@ Section proofs.
   Global Instance na_inv_persistent p N P : Persistent (na_inv p N P).
   Proof. rewrite /na_inv; apply _. Qed.
 
+  Lemma na_inv_iff p N P Q : ▷ □ (P ↔ Q) -∗ na_inv p N P -∗ na_inv p N Q.
+  Proof.
+    iIntros "#HPQ". rewrite /na_inv. iDestruct 1 as (i ?) "#Hinv".
+    iExists i. iSplit; first done. iApply (inv_iff with "[] Hinv").
+    iNext. iAlways. iSplit; (iIntros "[[? Ho]|?]";
+      [iLeft; iFrame "Ho"; by iApply "HPQ"|by iRight]).
+  Qed.
+
   Lemma na_alloc : (|==> ∃ p, na_own p ⊤)%I.
   Proof. by apply own_alloc. Qed.
 
