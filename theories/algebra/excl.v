@@ -87,7 +87,7 @@ Proof.
   - by intros [?|] [?|] [?|]; constructor.
   - by intros [?|] [?|]; constructor.
   - by intros n [?|] [?|].
-  - intros n x [?|] [?|] ?; inversion_clear 1; eauto.
+  - intros n x [?|] [?|] ? Hx; eexists _, _; inversion_clear Hx; eauto.
 Qed.
 Canonical Structure exclR := CmraT (excl A) excl_cmra_mixin.
 

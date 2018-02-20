@@ -672,7 +672,7 @@ Lemma option_validI {A : cmraT} (mx : option A) :
   ✓ mx ⊣⊢ match mx with Some x => ✓ x | None => True : uPred M end.
 Proof. unseal. by destruct mx. Qed.
 
-Lemma ofe_fun_validI `{Finite A} {B : A → ucmraT} (g : ofe_fun B) :
+Lemma ofe_fun_validI `{B : A → ucmraT} (g : ofe_fun B) :
   (✓ g : uPred M) ⊣⊢ ∀ i, ✓ g i.
 Proof. by uPred.unseal. Qed.
 
