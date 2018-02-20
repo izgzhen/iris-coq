@@ -367,20 +367,24 @@ Arguments Frame {_} _ _%I _%I _%I.
 Arguments frame {_ _} _%I _%I _%I {_}.
 Hint Mode Frame + + ! ! - : typeclass_instances.
 
-Class MaybeFrame {PROP : bi} (p : bool) (R P Q : PROP) :=
+(* The boolean [progress] indicates whether actual framing has been performed.
+If it is [false], then the default instance [maybe_frame_default] below has been
+used. *)
+Class MaybeFrame {PROP : bi} (p : bool) (R P Q : PROP) (progress : bool) :=
   maybe_frame : □?p R ∗ Q ⊢ P.
-Arguments MaybeFrame {_} _ _%I _%I _%I.
-Arguments maybe_frame {_} _%I _%I _%I {_}.
-Hint Mode MaybeFrame + + ! ! - : typeclass_instances.
+Arguments MaybeFrame {_} _ _%I _%I _%I _.
+Arguments maybe_frame {_} _ _%I _%I _%I _ {_}.
+Hint Mode MaybeFrame + + ! ! - - : typeclass_instances.
 
 Instance maybe_frame_frame {PROP : bi} p (R P Q : PROP) :
-  Frame p R P Q → MaybeFrame p R P Q.
+  Frame p R P Q → MaybeFrame p R P Q true.
 Proof. done. Qed.
+
 Instance maybe_frame_default_persistent {PROP : bi} (R P : PROP) :
-  MaybeFrame true R P P | 100.
+  MaybeFrame true R P P false | 100.
 Proof. intros. rewrite /MaybeFrame /=. by rewrite sep_elim_r. Qed.
 Instance maybe_frame_default {PROP : bi} (R P : PROP) :
-  TCOr (Affine R) (Absorbing P) → MaybeFrame false R P P | 100.
+  TCOr (Affine R) (Absorbing P) → MaybeFrame false R P P false | 100.
 Proof. intros. rewrite /MaybeFrame /=. apply: sep_elim_r. Qed.
 
 Class IntoExcept0 {PROP : sbi} (P Q : PROP) := into_except_0 : P ⊢ ◇ Q.
@@ -389,42 +393,50 @@ Arguments into_except_0 {_} _%I _%I {_}.
 Hint Mode IntoExcept0 + ! - : typeclass_instances.
 Hint Mode IntoExcept0 + - ! : typeclass_instances.
 
-(* The class [IntoLaterN] has only two instances:
+(* The class [MaybeIntoLaterN] has only two instances:
 
-- The default instance [IntoLaterN n P P], i.e. [▷^n P -∗ P]
-- The instance [IntoLaterN' n P Q → IntoLaterN n P Q], where [IntoLaterN']
-  is identical to [IntoLaterN], but computationally is supposed to make
-  progress, i.e. its instances should actually strip a later.
+- The default instance [MaybeIntoLaterN n P P], i.e. [▷^n P -∗ P]
+- The instance [IntoLaterN n P Q → MaybeIntoLaterN n P Q], where [IntoLaterN]
+  is identical to [MaybeIntoLaterN], but is supposed to make progress, i.e. it
+  should actually strip a later.
 
-The point of using the auxilary class [IntoLaterN'] is to ensure that the
-default instance is not applied deeply in the term, which may result in too many
-definitions being unfolded (see issue #55).
+The point of using the auxilary class [IntoLaterN] is to ensure that the
+default instance is not applied deeply inside a term, which may result in too
+many definitions being unfolded (see issue #55).
 
 For binary connectives we have the following instances:
 
 <<
-IntoLaterN' n P P'       IntoLaterN n Q Q'
+IntoLaterN n P P'       MaybeIntoLaterN n Q Q'
 ------------------------------------------
-     IntoLaterN' n (P /\ Q) (P' /\ Q')
+     IntoLaterN n (P /\ Q) (P' /\ Q')
 
 
-      IntoLaterN' n Q Q'
+      IntoLaterN n Q Q'
 -------------------------------
-IntoLaterN' n (P /\ Q) (P /\ Q')
+IntoLaterN n (P /\ Q) (P /\ Q')
 >>
 *)
-Class IntoLaterN {PROP : sbi} (n : nat) (P Q : PROP) := into_laterN : P ⊢ ▷^n Q.
+Class MaybeIntoLaterN {PROP : sbi} (n : nat) (P Q : PROP) :=
+  maybe_into_laterN : P ⊢ ▷^n Q.
+Arguments MaybeIntoLaterN {_} _%nat_scope _%I _%I.
+Arguments maybe_into_laterN {_} _%nat_scope _%I _%I {_}.
+Hint Mode MaybeIntoLaterN + - - - : typeclass_instances.
+
+Class IntoLaterN {PROP : sbi} (n : nat) (P Q : PROP) :=
+  into_laterN :> MaybeIntoLaterN n P Q.
 Arguments IntoLaterN {_} _%nat_scope _%I _%I.
-Arguments into_laterN {_} _%nat_scope _%I _%I {_}.
-Hint Mode IntoLaterN + - - - : typeclass_instances.
+Hint Mode IntoLaterN + - ! - : typeclass_instances.
 
-Class IntoLaterN' {PROP : sbi} (n : nat) (P Q : PROP) :=
-  into_laterN' :> IntoLaterN n P Q.
-Arguments IntoLaterN' {_} _%nat_scope _%I _%I.
-Hint Mode IntoLaterN' + - ! - : typeclass_instances.
-
-Instance into_laterN_default {PROP : sbi} n (P : PROP) : IntoLaterN n P P | 1000.
+Instance maybe_into_laterN_default {PROP : sbi} n (P : PROP) :
+  MaybeIntoLaterN n P P | 1000.
 Proof. apply laterN_intro. Qed.
+(* In the case both parameters are evars and n=0, we have to stop the
+   search and unify both evars immediately instead of looping using
+   other instances. *)
+Instance maybe_into_laterN_default_0 {PROP : sbi} (P : PROP) :
+  MaybeIntoLaterN 0 P P | 0.
+Proof. apply _. Qed.
 
 Class FromLaterN {PROP : sbi} (n : nat) (P Q : PROP) := from_laterN : ▷^n Q ⊢ P.
 Arguments FromLaterN {_} _%nat_scope _%I _%I.
@@ -457,7 +469,7 @@ with the exception of:
 
 - [FromAssumption] used by [iAssumption]
 - [Frame] and [MaybeFrame] used by [iFrame]
-- [IntoLaterN] and [FromLaterN] used by [iNext]
+- [MaybeIntoLaterN] and [FromLaterN] used by [iNext]
 - [IntoPersistent] used by [iPersistent]
 *)
 Instance into_pure_tc_opaque {PROP : bi} (P : PROP) φ :

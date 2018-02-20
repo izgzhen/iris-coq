@@ -92,7 +92,7 @@ Section proof.
     wp_load. destruct (decide (x = o)) as [->|Hneq].
     - iDestruct "Ha" as "[Hainv [[Ho HR] | Haown]]".
       + iMod ("Hclose" with "[Hlo Hln Hainv Ht]") as "_".
-        { iNext. iExists o, n. iFrame. eauto. }
+        { iNext. iExists o, n. iFrame. }
         iModIntro. wp_let. wp_op. case_bool_decide; [|done].
         wp_if.
         iApply ("HΦ" with "[-]"). rewrite /locked. iFrame. eauto.

@@ -116,6 +116,20 @@ Lemma test_iFrame_pure {A : ofeT} (φ : Prop) (y z : A) :
   φ → bi_affinely ⌜y ≡ z⌝ -∗ (⌜ φ ⌝ ∧ ⌜ φ ⌝ ∧ y ≡ z : PROP).
 Proof. iIntros (Hv) "#Hxy". iFrame (Hv) "Hxy". Qed.
 
+Lemma test_iFrame_disjunction_1 P1 P2 Q1 Q2 :
+  BiAffine PROP →
+  □ P1 -∗ Q2 -∗ P2 -∗ (P1 ∗ P2 ∗ False ∨ P2) ∗ (Q1 ∨ Q2).
+Proof. intros ?. iIntros "#HP1 HQ2 HP2". iFrame "HP1 HQ2 HP2". Qed.
+Lemma test_iFrame_disjunction_2 P : P -∗ (True ∨ True) ∗ P.
+Proof. iIntros "HP". iFrame "HP". auto. Qed.
+
+Lemma test_iFrame_conjunction_1 P Q :
+  P -∗ Q -∗ (P ∗ Q) ∧ (P ∗ Q).
+Proof. iIntros "HP HQ". iFrame "HP HQ". Qed.
+Lemma test_iFrame_conjunction_2 P Q :
+  P -∗ Q -∗ (P ∧ P) ∗ (Q ∧ Q).
+Proof. iIntros "HP HQ". iFrame "HP HQ". Qed.
+
 Lemma test_iAssert_modality P : ◇ False -∗ ▷ P.
 Proof.
   iIntros "HF".
@@ -294,12 +308,29 @@ Proof.
   iSpecialize ("Hφ" with "[% //] HP"). done.
 Qed.
 
-Lemma test_iNext_laterN_later P n : ▷ ▷^n P ⊢ ▷^n ▷ P.
+Lemma test_iNext_laterN_later P n : ▷ ▷^n P -∗ ▷^n ▷ P.
 Proof. iIntros "H". iNext. by iNext. Qed.
-Lemma test_iNext_later_laterN P n : ▷^n ▷ P ⊢ ▷ ▷^n P.
+Lemma test_iNext_later_laterN P n : ▷^n ▷ P -∗ ▷ ▷^n P.
 Proof. iIntros "H". iNext. by iNext. Qed.
-Lemma test_iNext_laterN_laterN P n1 n2 : ▷ ▷^n1 ▷^n2 P ⊢ ▷^n1 ▷^n2 ▷ P.
+Lemma test_iNext_plus_1 P n1 n2 : ▷ ▷^n1 ▷^n2 P -∗ ▷^n1 ▷^n2 ▷ P.
 Proof. iIntros "H". iNext. iNext. by iNext. Qed.
+Lemma test_iNext_plus_2 P n m : ▷^n ▷^m P -∗ ▷^(n+m) P.
+Proof. iIntros "H". iNext. done. Qed.
+Lemma test_iNext_plus_3 P Q n m k :
+  ▷^m ▷^(2 + S n + k) P -∗ ▷^m ▷ ▷^(2 + S n) Q -∗ ▷^k ▷ ▷^(S (S n + S m)) (P ∗ Q).
+Proof. iIntros "H1 H2". iNext. iNext. iNext. iFrame. Qed.
+
+Lemma test_iNext_unfold P Q n m (R := (▷^n P)%I) :
+  R ⊢ ▷^m True.
+Proof.
+  iIntros "HR". iNext.
+  match goal with |-  context [ R ] => idtac | |- _ => fail end.
+  done.
+Qed.
+
+Lemma test_iNext_fail P Q a b c d e f g h i j:
+  ▷^(a + b) ▷^(c + d + e) P -∗ ▷^(f + g + h + i + j) True.
+Proof. iIntros "H". iNext. done. Qed.
 
 Lemma test_specialize_affine_pure (φ : Prop) P :
   φ → (bi_affinely ⌜φ⌝ -∗ P) ⊢ P.
