@@ -27,7 +27,7 @@ Ltac wp_expr_simpl_subst := wp_expr_eval simpl_subst.
 Lemma tac_wp_pure `{heapG Σ} Δ Δ' s E e1 e2 φ Φ :
   PureExec φ e1 e2 →
   φ →
-  IntoLaterNEnvs 1 Δ Δ' →
+  MaybeIntoLaterNEnvs 1 Δ Δ' →
   envs_entails Δ' (WP e2 @ s; E {{ Φ }}) →
   envs_entails Δ (WP e1 @ s; E {{ Φ }}).
 Proof.
@@ -141,7 +141,7 @@ Implicit Types Δ : envs (iResUR Σ).
 
 Lemma tac_wp_alloc Δ Δ' s E j K e v Φ :
   IntoVal e v →
-  IntoLaterNEnvs 1 Δ Δ' →
+  MaybeIntoLaterNEnvs 1 Δ Δ' →
   (∀ l, ∃ Δ'',
     envs_app false (Esnoc Enil j (l ↦ v)) Δ' = Some Δ'' ∧
     envs_entails Δ'' (WP fill K (Lit (LitLoc l)) @ s; E {{ Φ }})) →
@@ -168,7 +168,7 @@ Proof.
 Qed.
 
 Lemma tac_wp_load Δ Δ' s E i K l q v Φ :
-  IntoLaterNEnvs 1 Δ Δ' →
+  MaybeIntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I →
   envs_entails Δ' (WP fill K (of_val v) @ s; E {{ Φ }}) →
   envs_entails Δ (WP fill K (Load (Lit (LitLoc l))) @ s; E {{ Φ }}).
@@ -191,7 +191,7 @@ Qed.
 
 Lemma tac_wp_store Δ Δ' Δ'' s E i K l v e v' Φ :
   IntoVal e v' →
-  IntoLaterNEnvs 1 Δ Δ' →
+  MaybeIntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v')) Δ' = Some Δ'' →
   envs_entails Δ'' (WP fill K (Lit LitUnit) @ s; E {{ Φ }}) →
@@ -216,7 +216,7 @@ Qed.
 
 Lemma tac_wp_cas_fail Δ Δ' s E i K l q v e1 v1 e2 Φ :
   IntoVal e1 v1 → AsVal e2 →
-  IntoLaterNEnvs 1 Δ Δ' →
+  MaybeIntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
   envs_entails Δ' (WP fill K (Lit (LitBool false)) @ s; E {{ Φ }}) →
   envs_entails Δ (WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ s; E {{ Φ }}).
@@ -238,7 +238,7 @@ Qed.
 
 Lemma tac_wp_cas_suc Δ Δ' Δ'' s E i K l v e1 v1 e2 v2 Φ :
   IntoVal e1 v1 → IntoVal e2 v2 →
-  IntoLaterNEnvs 1 Δ Δ' →
+  MaybeIntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →
   envs_entails Δ'' (WP fill K (Lit (LitBool true)) @ s; E {{ Φ }}) →
@@ -263,7 +263,7 @@ Qed.
 
 Lemma tac_wp_faa Δ Δ' Δ'' s E i K l i1 e2 i2 Φ :
   IntoVal e2 (LitV (LitInt i2)) →
-  IntoLaterNEnvs 1 Δ Δ' →
+  MaybeIntoLaterNEnvs 1 Δ Δ' →
   envs_lookup i Δ' = Some (false, l ↦ LitV (LitInt i1))%I →
   envs_simple_replace i false (Esnoc Enil i (l ↦ LitV (LitInt (i1 + i2)))) Δ' = Some Δ'' →
   envs_entails Δ'' (WP fill K (Lit (LitInt i1)) @ s; E {{ Φ }}) →

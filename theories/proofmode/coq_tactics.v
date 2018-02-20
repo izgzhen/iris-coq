@@ -472,27 +472,27 @@ Lemma tac_pure_revert Δ φ Q : envs_entails Δ (⌜φ⌝ → Q) → (φ → env
 Proof. rewrite /envs_entails. intros HΔ ?. by rewrite HΔ pure_True // left_id. Qed.
 
 (** * Later *)
-Class IntoLaterNEnv (n : nat) (Γ1 Γ2 : env (uPred M)) :=
-  into_laterN_env : env_Forall2 (IntoLaterN n) Γ1 Γ2.
-Class IntoLaterNEnvs (n : nat) (Δ1 Δ2 : envs M) := {
-  into_later_persistent: IntoLaterNEnv n (env_persistent Δ1) (env_persistent Δ2);
-  into_later_spatial: IntoLaterNEnv n (env_spatial Δ1) (env_spatial Δ2)
+Class MaybeIntoLaterNEnv (n : nat) (Γ1 Γ2 : env (uPred M)) :=
+  into_laterN_env : env_Forall2 (MaybeIntoLaterN n) Γ1 Γ2.
+Class MaybeIntoLaterNEnvs (n : nat) (Δ1 Δ2 : envs M) := {
+  into_later_persistent: MaybeIntoLaterNEnv n (env_persistent Δ1) (env_persistent Δ2);
+  into_later_spatial: MaybeIntoLaterNEnv n (env_spatial Δ1) (env_spatial Δ2)
 }.
 
-Global Instance into_laterN_env_nil n : IntoLaterNEnv n Enil Enil.
+Global Instance into_laterN_env_nil n : MaybeIntoLaterNEnv n Enil Enil.
 Proof. constructor. Qed.
 Global Instance into_laterN_env_snoc n Γ1 Γ2 i P Q :
-  IntoLaterNEnv n Γ1 Γ2 → IntoLaterN n P Q →
-  IntoLaterNEnv n (Esnoc Γ1 i P) (Esnoc Γ2 i Q).
+  MaybeIntoLaterNEnv n Γ1 Γ2 → MaybeIntoLaterN n P Q →
+  MaybeIntoLaterNEnv n (Esnoc Γ1 i P) (Esnoc Γ2 i Q).
 Proof. by constructor. Qed.
 
 Global Instance into_laterN_envs n Γp1 Γp2 Γs1 Γs2 :
-  IntoLaterNEnv n Γp1 Γp2 → IntoLaterNEnv n Γs1 Γs2 →
-  IntoLaterNEnvs n (Envs Γp1 Γs1) (Envs Γp2 Γs2).
+  MaybeIntoLaterNEnv n Γp1 Γp2 → MaybeIntoLaterNEnv n Γs1 Γs2 →
+  MaybeIntoLaterNEnvs n (Envs Γp1 Γs1) (Envs Γp2 Γs2).
 Proof. by split. Qed.
 
 Lemma into_laterN_env_sound n Δ1 Δ2 :
-  IntoLaterNEnvs n Δ1 Δ2 → of_envs Δ1 ⊢ ▷^n (of_envs Δ2).
+  MaybeIntoLaterNEnvs n Δ1 Δ2 → of_envs Δ1 ⊢ ▷^n (of_envs Δ2).
 Proof.
   intros [Hp Hs]; rewrite /of_envs /= !laterN_sep -persistently_laterN.
   repeat apply sep_mono; try apply persistently_mono.
@@ -503,7 +503,7 @@ Proof.
 Qed.
 
 Lemma tac_next Δ Δ' n Q Q' :
-  FromLaterN n Q Q' → IntoLaterNEnvs n Δ Δ' →
+  FromLaterN n Q Q' → MaybeIntoLaterNEnvs n Δ Δ' →
   envs_entails Δ' Q' → envs_entails Δ Q.
 Proof.
   rewrite /envs_entails=> ?? HQ.

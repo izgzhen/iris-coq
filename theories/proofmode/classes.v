@@ -76,40 +76,42 @@ Class FromAlways {M} (p : bool) (P Q : uPred M) :=
 Arguments from_always {_} _ _ _ {_}.
 Hint Mode FromAlways + - ! - : typeclass_instances.
 
-(* The class [IntoLaterN] has only two instances:
+(* The class [MaybeIntoLaterN] has only two instances:
 
-- The default instance [IntoLaterN n P P], i.e. [▷^n P -∗ P]
-- The instance [IntoLaterN' n P Q → IntoLaterN n P Q], where [IntoLaterN']
-  is identical to [IntoLaterN], but computationally is supposed to make
-  progress, i.e. its instances should actually strip a later.
+- The default instance [MaybeIntoLaterN n P P], i.e. [▷^n P -∗ P]
+- The instance [IntoLaterN n P Q → MaybeIntoLaterN n P Q], where [IntoLaterN]
+  is identical to [MaybeIntoLaterN], but is supposed to make progress, i.e. it
+  should actually strip a later.
 
-The point of using the auxilary class [IntoLaterN'] is to ensure that the
-default instance is not applied deeply in the term, which may result in too many
-definitions being unfolded (see issue #55).
+The point of using the auxilary class [IntoLaterN] is to ensure that the
+default instance is not applied deeply inside a term, which may result in too
+many definitions being unfolded (see issue #55).
 
 For binary connectives we have the following instances:
 
 <<
-IntoLaterN' n P P'       IntoLaterN n Q Q'
+IntoLaterN n P P'       MaybeIntoLaterN n Q Q'
 ------------------------------------------
-     IntoLaterN' n (P /\ Q) (P' /\ Q')
+     IntoLaterN n (P /\ Q) (P' /\ Q')
 
 
-      IntoLaterN' n Q Q'
+      IntoLaterN n Q Q'
 -------------------------------
-IntoLaterN' n (P /\ Q) (P /\ Q')
+IntoLaterN n (P /\ Q) (P /\ Q')
 >>
 *)
-Class IntoLaterN {M} (n : nat) (P Q : uPred M) := into_laterN : P ⊢ ▷^n Q.
+Class MaybeIntoLaterN {M} (n : nat) (P Q : uPred M) :=
+  maybe_into_laterN : P ⊢ ▷^n Q.
+Arguments maybe_into_laterN {_} _ _ _ {_}.
+Hint Mode MaybeIntoLaterN + - - - : typeclass_instances.
+
+Class IntoLaterN {M} (n : nat) (P Q : uPred M) :=
+  into_laterN :> MaybeIntoLaterN n P Q.
 Arguments into_laterN {_} _ _ _ {_}.
-Hint Mode IntoLaterN + - - - : typeclass_instances.
+Hint Mode IntoLaterN + - ! - : typeclass_instances.
 
-Class IntoLaterN' {M} (n : nat) (P Q : uPred M) :=
-  into_laterN' :> IntoLaterN n P Q.
-Arguments into_laterN' {_} _ _ _ {_}.
-Hint Mode IntoLaterN' + - ! - : typeclass_instances.
-
-Instance into_laterN_default {M} n (P : uPred M) : IntoLaterN n P P | 1000.
+Instance maybe_into_laterN_default {M} n (P : uPred M) :
+  MaybeIntoLaterN n P P | 1000.
 Proof. apply laterN_intro. Qed.
 
 Class FromLaterN {M} (n : nat) (P Q : uPred M) := from_laterN : ▷^n Q ⊢ P.
@@ -279,7 +281,7 @@ with the exception of:
 
 - [FromAssumption] used by [iAssumption]
 - [Frame] used by [iFrame]
-- [IntoLaterN] and [FromLaterN] used by [iNext]
+- [MaybeIntoLaterN] and [FromLaterN] used by [iNext]
 - [IntoPersistent] used by [iPersistent]
 *)
 Instance into_pure_tc_opaque {M} (P : uPred M) φ :
