@@ -1871,17 +1871,14 @@ Tactic Notation "iMod" open_constr(lem) "as" "%" simple_intropattern(pat) :=
    namespace [N].  To do so, we check whether for each hypothesis
    ["H":P] we can find an instance of [IntoInv P N] *)
 Tactic Notation "iAssumptionInv" constr(N) :=
-  let rec find Γ i P :=
+  let rec find Γ i :=
     lazymatch Γ with
     | Esnoc ?Γ ?j ?P' =>
-      first [(let H := constr:(_: IntoInv P' N) in
-             unify P P'; unify i j)|find Γ i P]
+      first [let H := constr:(_: IntoInv P' N) in unify i j|find Γ i]
     end in
-  match goal with
-  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
-     first [is_evar i; fail 1 | env_reflexivity]
-  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
-     is_evar i; first [find Γp i P | find Γs i P]; env_reflexivity
+  lazymatch goal with
+  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs) = Some _ =>
+     first [find Γp i|find Γs i]; env_reflexivity
   end.
 
 (* The argument [select] is the namespace [N] or hypothesis name ["H"] of the
