@@ -6,18 +6,19 @@ Set Default Proof Using "Type".
 Import uPred.
 
 Lemma tac_wp_expr_eval `{heapG Σ} Δ s E Φ e e' :
-  e = e' →
+  (∀ (e'':=e'), e = e'') →
   envs_entails Δ (WP e' @ s; E {{ Φ }}) → envs_entails Δ (WP e @ s; E {{ Φ }}).
 Proof. by intros ->. Qed.
 Lemma tac_twp_expr_eval `{heapG Σ} Δ s E Φ e e' :
-  e = e' →
+  (∀ (e'':=e'), e = e'') →
   envs_entails Δ (WP e' @ s; E [{ Φ }]) → envs_entails Δ (WP e @ s; E [{ Φ }]).
 Proof. by intros ->. Qed.
 
 Tactic Notation "wp_expr_eval" tactic(t) :=
   iStartProof;
   try (first [eapply tac_wp_expr_eval|eapply tac_twp_expr_eval];
-       [t; reflexivity|]).
+       [let x := fresh in intros x; t; unfold x; reflexivity
+       |]).
 
 Ltac wp_expr_simpl := wp_expr_eval simpl.
 Ltac wp_expr_simpl_subst := wp_expr_eval simpl_subst.

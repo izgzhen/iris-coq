@@ -5,6 +5,10 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 ## Iris master
 
+Changes in and extensions of the theory:
+
+* [#] Weakestpre for total program correctness.
+
 Changes in Coq:
 
 * Rename `timelessP` -> `timeless` (projection of the `Timeless` class)

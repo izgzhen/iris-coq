@@ -314,4 +314,10 @@ Lemma test_assert_pure (φ : Prop) P :
   φ → P ⊢ P ∗ ⌜φ⌝.
 Proof. iIntros (Hφ). iAssert ⌜φ⌝%I with "[%]" as "$"; auto. Qed.
 
+Lemma test_iEval x y : ⌜ (y + x)%nat = 1 ⌝ -∗ ⌜ S (x + y) = 2%nat ⌝ : PROP.
+Proof.
+  iIntros (H).
+  iEval (rewrite (Nat.add_comm x y) // H).
+  done.
+Qed.
 End tests.

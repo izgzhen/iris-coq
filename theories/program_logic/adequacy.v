@@ -128,7 +128,7 @@ Lemma wptp_result s n e1 t1 v2 t2 σ1 σ2 φ :
 Proof.
   intros. rewrite wptp_steps // laterN_later. apply: bupd_iter_laterN_mono.
   iDestruct 1 as (e2 t2' ?) "((Hw & HE & _) & H & _)"; simplify_eq.
-  iDestruct (wp_value_inv with "H") as "H". rewrite uPred_fupd_eq.
+  iDestruct (wp_value_inv' with "H") as "H". rewrite uPred_fupd_eq.
   iMod ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
 Qed.
 

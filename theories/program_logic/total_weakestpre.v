@@ -222,7 +222,7 @@ Qed.
 
 Lemma twp_value' s E Φ v : Φ v -∗ WP of_val v @ s; E [{ Φ }].
 Proof. iIntros "HΦ". rewrite twp_unfold /twp_pre to_of_val. auto. Qed.
-Lemma twp_value_inv s E Φ v : WP of_val v @ s; E [{ Φ }] ={E}=∗ Φ v.
+Lemma twp_value_inv' s E Φ v : WP of_val v @ s; E [{ Φ }] ={E}=∗ Φ v.
 Proof. by rewrite twp_unfold /twp_pre to_of_val. Qed.
 
 Lemma twp_strong_mono s1 s2 E1 E2 e Φ Ψ :
@@ -267,7 +267,7 @@ Proof.
     + iMod ("H" with "[$]") as "[H _]". iDestruct "H" as %(? & ? & ? & ?).
       by edestruct (atomic _ _ _ _ Hstep).
   - destruct (atomic _ _ _ _ Hstep) as [v <-%of_to_val].
-    iMod (twp_value_inv with "H") as ">H". iFrame "Hphy". by iApply twp_value'.
+    iMod (twp_value_inv' with "H") as ">H". iFrame "Hphy". by iApply twp_value'.
 Qed.
 
 Lemma twp_bind K `{!LanguageCtx K} s E e Φ :
@@ -348,6 +348,8 @@ Lemma twp_value_fupd' s E Φ v : (|={E}=> Φ v) -∗ WP of_val v @ s; E [{ Φ }]
 Proof. intros. by rewrite -twp_fupd -twp_value'. Qed.
 Lemma twp_value_fupd s E Φ e v `{!IntoVal e v} : (|={E}=> Φ v) -∗ WP e @ s; E [{ Φ }].
 Proof. intros. rewrite -twp_fupd -twp_value //. Qed.
+Lemma twp_value_inv s E Φ e v `{!IntoVal e v} : WP e @ s; E [{ Φ }] ={E}=∗ Φ v.
+Proof. intros; rewrite -(of_to_val e v) //; by apply twp_value_inv'. Qed.
 
 Lemma twp_frame_l s E e Φ R : R ∗ WP e @ s; E [{ Φ }] -∗ WP e @ s; E [{ v, R ∗ Φ v }].
 Proof. iIntros "[? H]". iApply (twp_strong_mono with "H"); auto with iFrame. Qed.

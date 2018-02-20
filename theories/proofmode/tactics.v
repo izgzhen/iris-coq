@@ -87,9 +87,29 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
 
 (** * Simplification *)
 Tactic Notation "iEval" tactic(t) :=
-  iStartProof; try (eapply tac_eval; [t; reflexivity|]).
+  iStartProof;
+  eapply tac_eval;
+    [let x := fresh in intros x; t; unfold x; reflexivity
+    |].
+
+Tactic Notation "iEval" tactic(t) "in" constr(H) :=
+  iStartProof;
+  eapply tac_eval_in with _ H _ _ _;
+    [env_reflexivity || fail "iEval:" H "not found"
+    |let x := fresh in intros x; t; unfold x; reflexivity
+    |env_reflexivity
+    |].
 
 Tactic Notation "iSimpl" := iEval simpl.
+Tactic Notation "iSimpl" "in" constr(H) := iEval simpl in H.
+
+(* It would be nice to also have an `iSsrRewrite`, however, for this we need to
+pass arguments to Ssreflect's `rewrite` like `/= foo /bar` in Ltac, see:
+
+  https://sympa.inria.fr/sympa/arc/coq-club/2018-01/msg00000.html
+
+PMP told me (= Robbert) in person that this is not possible today, but may be
+possible in Ltac2. *)
 
 (** * Context manipulation *)
 Tactic Notation "iRename" constr(H1) "into" constr(H2) :=
