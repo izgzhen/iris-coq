@@ -22,6 +22,7 @@ Changes in Coq:
   - `IntoLaterN'` → `IntoLaterN` (this one _should_ strip a later)
   - `IntoLaterNEnv` → `MaybeIntoLaterNEnv`
   - `IntoLaterNEnvs` → `MaybeIntoLaterNEnvs`
+* `namespaces` has been moved to std++.
 
 ## Iris 3.1.0 (released 2017-12-19)
 

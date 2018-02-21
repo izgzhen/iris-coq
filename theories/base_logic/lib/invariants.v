@@ -1,4 +1,5 @@
-From iris.base_logic.lib Require Export fancy_updates namespaces.
+From iris.base_logic.lib Require Export fancy_updates.
+From stdpp Require Export  namespaces.
 From iris.base_logic.lib Require Import wsat.
 From iris.algebra Require Import gmap.
 From iris.proofmode Require Import tactics coq_tactics intro_patterns.
