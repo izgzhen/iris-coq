@@ -673,6 +673,15 @@ Proof. apply (anti_symm _); auto using True_sep_2. Qed.
 Lemma sep_True P `{!Absorbing P} : P ∗ True ⊣⊢ P.
 Proof. by rewrite comm True_sep. Qed.
 
+Lemma True_emp_iff_BiAffine :
+  BiAffine PROP ↔ (True ⊢ emp).
+Proof.
+  split.
+  - intros ?. exact: affine.
+  - rewrite /BiAffine /Affine=>Hemp ?. rewrite -Hemp.
+    exact: True_intro.
+Qed.
+
 Section bi_affine.
   Context `{BiAffine PROP}.
 
