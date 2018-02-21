@@ -648,11 +648,11 @@ Qed.
 Lemma sep_elim_r P Q `{H : TCOr (Affine P) (Absorbing Q)} : P ∗ Q ⊢ Q.
 Proof. by rewrite comm sep_elim_l. Qed.
 
-Lemma sep_and P Q
-    `{HPQ : TCOr (TCAnd (Affine P) (Affine Q)) (TCAnd (Absorbing P) (Absorbing Q))} :
+Lemma sep_and P Q :
+  TCOr (Affine P) (Absorbing Q) → TCOr (Absorbing P) (Affine Q) →
   P ∗ Q ⊢ P ∧ Q.
 Proof.
-  destruct HPQ as [[??]|[??]];
+  intros [?|?] [?|?];
     apply and_intro; apply: sep_elim_l || apply: sep_elim_r.
 Qed.
 

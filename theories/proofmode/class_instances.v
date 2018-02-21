@@ -477,7 +477,7 @@ Proof. intros. by rewrite /FromAnd big_opL_app persistent_and_sep_1. Qed.
 Global Instance from_sep_sep P1 P2 : FromSep (P1 ∗ P2) P1 P2 | 100.
 Proof. by rewrite /FromSep. Qed.
 Global Instance from_sep_and P1 P2 :
-  TCOr (TCAnd (Affine P1) (Affine P2)) (TCAnd (Absorbing P1) (Absorbing P2)) →
+  TCOr (Affine P1) (Absorbing P2) → TCOr (Absorbing P1) (Affine P2) →
   FromSep (P1 ∧ P2) P1 P2 | 101.
 Proof. intros. by rewrite /FromSep sep_and. Qed.
 
@@ -532,7 +532,7 @@ Proof.
   by rewrite /IntoAnd /= persistently_sep -and_sep_persistently persistently_and.
 Qed.
 Global Instance into_and_sep_affine P Q :
-  TCOr (TCAnd (Affine P) (Affine Q)) (TCAnd (Absorbing P) (Absorbing Q)) →
+  TCOr (Affine P) (Absorbing Q) → TCOr (Absorbing P) (Affine Q) →
   IntoAnd true (P ∗ Q) P Q.
 Proof. intros. by rewrite /IntoAnd /= sep_and. Qed.
 
@@ -621,10 +621,10 @@ Global Instance into_sep_plainly `{BiPositive PROP} P Q1 Q2 :
 Proof. rewrite /IntoSep /= => ->. by rewrite plainly_sep. Qed.
 Global Instance into_sep_plainly_affine P Q1 Q2 :
   IntoSep P Q1 Q2 →
-  TCOr (TCAnd (Affine Q1) (Affine Q2)) (TCAnd (Absorbing Q1) (Absorbing Q2)) →
+  TCOr (Affine Q1) (Absorbing Q2) → TCOr (Absorbing Q1) (Affine Q2) →
   IntoSep (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
 Proof.
-  rewrite /IntoSep /= => -> ?. by rewrite sep_and plainly_and plainly_and_sep_l_1.
+  rewrite /IntoSep /= => -> ??. by rewrite sep_and plainly_and plainly_and_sep_l_1.
 Qed.
 
 Global Instance into_sep_persistently `{BiPositive PROP} P Q1 Q2 :
@@ -633,18 +633,18 @@ Global Instance into_sep_persistently `{BiPositive PROP} P Q1 Q2 :
 Proof. rewrite /IntoSep /= => ->. by rewrite persistently_sep. Qed.
 Global Instance into_sep_persistently_affine P Q1 Q2 :
   IntoSep P Q1 Q2 →
-  TCOr (TCAnd (Affine Q1) (Affine Q2)) (TCAnd (Absorbing Q1) (Absorbing Q2)) →
+  TCOr (Affine Q1) (Absorbing Q2) → TCOr (Absorbing Q1) (Affine Q2) →
   IntoSep (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
 Proof.
-  rewrite /IntoSep /= => -> ?.
+  rewrite /IntoSep /= => -> ??.
   by rewrite sep_and persistently_and persistently_and_sep_l_1.
 Qed.
 Global Instance into_sep_affinely_persistently_affine P Q1 Q2 :
   IntoSep P Q1 Q2 →
-  TCOr (TCAnd (Affine Q1) (Affine Q2)) (TCAnd (Absorbing Q1) (Absorbing Q2)) →
+  TCOr (Affine Q1) (Absorbing Q2) → TCOr (Absorbing Q1) (Affine Q2) →
   IntoSep (□ P) (□ Q1) (□ Q2).
 Proof.
-  rewrite /IntoSep /= => -> ?.
+  rewrite /IntoSep /= => -> ??.
   by rewrite sep_and affinely_persistently_and and_sep_affinely_persistently.
 Qed.
 
