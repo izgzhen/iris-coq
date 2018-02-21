@@ -41,10 +41,10 @@ build-coq.dev:
     OPAM_PINS: "coq version dev"
     VALIDATE: "1"
 
-build-coq.8.7.1:
+build-coq.8.7.2:
   <<: *template
   variables:
-    OPAM_PINS: "coq version 8.7.1"
+    OPAM_PINS: "coq version 8.7.2"
     OPAM_PKG: "coq-iris"
   tags:
   - fp-timing
@@ -52,3 +52,8 @@ build-coq.8.7.1:
     paths:
     - build-time.txt
     - build-env.txt
+
+build-coq.8.7.1:
+  <<: *template
+  variables:
+    OPAM_PINS: "coq version 8.7.1"
