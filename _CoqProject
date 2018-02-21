@@ -47,7 +47,6 @@ theories/base_logic/deprecated.v
 theories/base_logic/lib/iprop.v
 theories/base_logic/lib/own.v
 theories/base_logic/lib/saved_prop.v
-theories/base_logic/lib/namespaces.v
 theories/base_logic/lib/wsat.v
 theories/base_logic/lib/invariants.v
 theories/base_logic/lib/fancy_updates.v

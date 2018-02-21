@@ -7,11 +7,22 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 Changes in and extensions of the theory:
 
-* [#] Weakestpre for total program correctness.
+* [#] Add weakest preconditions for total program correctness.
+* [#] "(Potentially) stuck" weakest preconditions are no longer considered
+  experimental.
 
 Changes in Coq:
 
 * Rename `timelessP` -> `timeless` (projection of the `Timeless` class)
+* The CMRA axiom `cmra_extend` is now stated in `Type`, using `sigT` instead of
+  in `Prop` using `exists`. This makes it possible to define the function space
+  CMRA even for an infinite domain.
+* Rename proof mode type classes for laters:
+  - `IntoLaterN` → `MaybeIntoLaterN` (this one _may_ strip a later)
+  - `IntoLaterN'` → `IntoLaterN` (this one _should_ strip a later)
+  - `IntoLaterNEnv` → `MaybeIntoLaterNEnv`
+  - `IntoLaterNEnvs` → `MaybeIntoLaterNEnvs`
+* `namespaces` has been moved to std++.
 
 ## Iris 3.1.0 (released 2017-12-19)
 
