@@ -531,6 +531,10 @@ Global Instance into_and_sep `{BiPositive PROP} P Q : IntoAnd true (P ∗ Q) P Q
 Proof.
   by rewrite /IntoAnd /= persistently_sep -and_sep_persistently persistently_and.
 Qed.
+Global Instance into_and_sep_affine P Q :
+  TCOr (TCAnd (Affine P) (Affine Q)) (TCAnd (Absorbing P) (Absorbing Q)) →
+  IntoAnd true (P ∗ Q) P Q.
+Proof. intros. by rewrite /IntoAnd /= sep_and. Qed.
 
 Global Instance into_and_pure p φ ψ : @IntoAnd PROP p ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /IntoAnd pure_and affinely_persistently_if_and. Qed.
@@ -595,7 +599,6 @@ Proof.
   - by rewrite persistent_and_affinely_sep_r_1.
 Qed.
 
-
 Global Instance into_sep_pure φ ψ : @IntoSep PROP ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /IntoSep pure_and persistent_and_sep_1. Qed.
 
@@ -603,19 +606,47 @@ Global Instance into_sep_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
 Proof. rewrite /IntoSep -bi_embed_sep=> -> //. Qed.
 
-(* FIXME: This instance is kind of strange, it just gets rid of the bi_affinely. Also, it
-overlaps with `into_sep_affinely_later`, and hence has lower precedence. *)
-Global Instance into_sep_affinely P Q1 Q2 :
+Global Instance into_sep_affinely `{BiPositive PROP} P Q1 Q2 :
+  IntoSep P Q1 Q2 → IntoSep (bi_affinely P) (bi_affinely Q1) (bi_affinely Q2) | 0.
+Proof. rewrite /IntoSep /= => ->. by rewrite affinely_sep. Qed.
+(* FIXME: This instance is kind of strange, it just gets rid of the bi_affinely.
+Also, it overlaps with `into_sep_affinely_later`, and hence has lower
+precedence. *)
+Global Instance into_sep_affinely_trim P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep (bi_affinely P) Q1 Q2 | 20.
 Proof. rewrite /IntoSep /= => ->. by rewrite affinely_elim. Qed.
 
 Global Instance into_sep_plainly `{BiPositive PROP} P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
 Proof. rewrite /IntoSep /= => ->. by rewrite plainly_sep. Qed.
+Global Instance into_sep_plainly_affine P Q1 Q2 :
+  IntoSep P Q1 Q2 →
+  TCOr (TCAnd (Affine Q1) (Affine Q2)) (TCAnd (Absorbing Q1) (Absorbing Q2)) →
+  IntoSep (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
+Proof.
+  rewrite /IntoSep /= => -> ?. by rewrite sep_and plainly_and plainly_and_sep_l_1.
+Qed.
+
 Global Instance into_sep_persistently `{BiPositive PROP} P Q1 Q2 :
   IntoSep P Q1 Q2 →
   IntoSep (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
 Proof. rewrite /IntoSep /= => ->. by rewrite persistently_sep. Qed.
+Global Instance into_sep_persistently_affine P Q1 Q2 :
+  IntoSep P Q1 Q2 →
+  TCOr (TCAnd (Affine Q1) (Affine Q2)) (TCAnd (Absorbing Q1) (Absorbing Q2)) →
+  IntoSep (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
+Proof.
+  rewrite /IntoSep /= => -> ?.
+  by rewrite sep_and persistently_and persistently_and_sep_l_1.
+Qed.
+Global Instance into_sep_affinely_persistently_affine P Q1 Q2 :
+  IntoSep P Q1 Q2 →
+  TCOr (TCAnd (Affine Q1) (Affine Q2)) (TCAnd (Absorbing Q1) (Absorbing Q2)) →
+  IntoSep (□ P) (□ Q1) (□ Q2).
+Proof.
+  rewrite /IntoSep /= => -> ?.
+  by rewrite sep_and affinely_persistently_and and_sep_affinely_persistently.
+Qed.
 
 (* We use [IsCons] and [IsApp] to make sure that [frame_big_sepL_cons] and
 [frame_big_sepL_app] cannot be applied repeatedly often when having
@@ -1261,10 +1292,10 @@ Proof. rewrite /IntoSep=> ->. by rewrite except_0_sep. Qed.
 
 (* FIXME: This instance is overly specific, generalize it. *)
 Global Instance into_sep_affinely_later `{!Timeless (emp%I : PROP)} P Q1 Q2 :
-  Affine Q1 → Affine Q2 → IntoSep P Q1 Q2 →
+  IntoSep P Q1 Q2 → Affine Q1 → Affine Q2 →
   IntoSep (bi_affinely (▷ P)) (bi_affinely (▷ Q1)) (bi_affinely (▷ Q2)).
 Proof.
-  rewrite /IntoSep /= => ?? ->.
+  rewrite /IntoSep /= => -> ??.
   rewrite -{1}(affine_affinely Q1) -{1}(affine_affinely Q2) later_sep !later_affinely_1.
   rewrite -except_0_sep /sbi_except_0 affinely_or. apply or_elim, affinely_elim.
   rewrite -(idemp bi_and (bi_affinely (▷ False))%I) persistent_and_sep_1.
