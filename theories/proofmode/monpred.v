@@ -21,9 +21,10 @@ Context {I : biIndex} {PROP : bi}.
     always_modality_mixin (@monPred_absolutely I PROP)
       (AIEnvFilter Absolute) (AIEnvForall Absolute).
   Proof.
-    split; eauto using bi.equiv_entails_sym, absolute_absolutely,
-       monPred_absolutely_mono, monPred_absolutely_and,
-       monPred_absolutely_sep_2 with typeclass_instances.
+    split; intros; try match goal with H : TCDiag _ _ _ |- _ => destruct H end;
+      eauto using bi.equiv_entails_sym, absolute_absolutely,
+        monPred_absolutely_mono, monPred_absolutely_and,
+        monPred_absolutely_sep_2 with typeclass_instances.
   Qed.
   Definition always_modality_absolutely :=
     AlwaysModality _ always_modality_absolutely_mixin.
@@ -33,9 +34,10 @@ Context {I : biIndex} {PROP : bi}.
     always_modality_mixin (@monPred_absolutely I PROP)
       (AIEnvFilter Absolute) (AIEnvFilter Absolute).
   Proof.
-    split; eauto using bi.equiv_entails_sym, absolute_absolutely,
-       monPred_absolutely_mono, monPred_absolutely_and,
-       monPred_absolutely_sep_2 with typeclass_instances.
+    split; split_and?; intros; try match goal with H : TCDiag _ _ _ |- _ => destruct H end;
+      eauto using bi.equiv_entails_sym, absolute_absolutely,
+        monPred_absolutely_mono, monPred_absolutely_and,
+        monPred_absolutely_sep_2 with typeclass_instances.
   Qed.
   Definition always_modality_absolutely_filter_spatial `{BiAffine PROP} :=
     AlwaysModality _ always_modality_absolutely_filter_spatial_mixin.

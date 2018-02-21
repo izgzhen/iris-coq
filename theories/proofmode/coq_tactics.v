@@ -584,23 +584,24 @@ Lemma tac_pure_revert Δ φ Q : envs_entails Δ (⌜φ⌝ → Q) → (φ → env
 Proof. rewrite envs_entails_eq. intros HΔ ?. by rewrite HΔ pure_True // left_id. Qed.
 
 (** * Always modalities *)
-Class FilterPersistentEnv
-    (M : always_modality PROP) (C : PROP → Prop) (Γ1 Γ2 : env PROP) := {
-  filter_persistent_env :
-    (∀ P, C P → □ P ⊢ M (□ P)) →
+(** Transforming *)
+Class TransformPersistentEnv
+    (M : always_modality PROP) (C : PROP → PROP → Prop) (Γ1 Γ2 : env PROP) := {
+  transform_persistent_env :
+    (∀ P Q, C P Q → □ P ⊢ M (□ Q)) →
     □ ([∧] Γ1) ⊢ M (□ ([∧] Γ2));
-  filter_persistent_env_wf : env_wf Γ1 → env_wf Γ2;
-  filter_persistent_env_dom i : Γ1 !! i = None → Γ2 !! i = None;
+  transform_persistent_env_wf : env_wf Γ1 → env_wf Γ2;
+  transform_persistent_env_dom i : Γ1 !! i = None → Γ2 !! i = None;
 }.
-Global Instance filter_persistent_env_nil M C : FilterPersistentEnv M C Enil Enil.
+Global Instance transform_persistent_env_nil M C : TransformPersistentEnv M C Enil Enil.
 Proof.
   split=> // HC /=. rewrite !persistently_pure !affinely_True_emp.
   by rewrite affinely_emp -always_modality_emp.
 Qed.
-Global Instance filter_persistent_env_snoc M (C : PROP → Prop) Γ Γ' i P :
-  C P →
-  FilterPersistentEnv M C Γ Γ' →
-  FilterPersistentEnv M C (Esnoc Γ i P) (Esnoc Γ' i P).
+Global Instance transform_persistent_env_snoc M (C : PROP → PROP → Prop) Γ Γ' i P Q :
+  C P Q →
+  TransformPersistentEnv M C Γ Γ' →
+  TransformPersistentEnv M C (Esnoc Γ i P) (Esnoc Γ' i Q).
 Proof.
   intros ? [HΓ Hwf Hdom]; split; simpl.
   - intros HC. rewrite affinely_persistently_and HC // HΓ //.
@@ -608,9 +609,9 @@ Proof.
   - inversion 1; constructor; auto.
   - intros j. destruct (ident_beq _ _); naive_solver.
 Qed.
-Global Instance filter_persistent_env_snoc_not M (C : PROP → Prop) Γ Γ' i P :
-  FilterPersistentEnv M C Γ Γ' →
-  FilterPersistentEnv M C (Esnoc Γ i P) Γ' | 100.
+Global Instance transform_persistent_env_snoc_not M (C : PROP → PROP → Prop) Γ Γ' i P :
+  TransformPersistentEnv M C Γ Γ' →
+  TransformPersistentEnv M C (Esnoc Γ i P) Γ' | 100.
 Proof.
   intros [HΓ Hwf Hdom]; split; simpl.
   - intros HC. by rewrite and_elim_r HΓ.
@@ -618,20 +619,20 @@ Proof.
   - intros j. destruct (ident_beq _ _); naive_solver.
 Qed.
 
-Class FilterSpatialEnv
-    (M : always_modality PROP) (C : PROP → Prop) (Γ1 Γ2 : env PROP) := {
-  filter_spatial_env :
-    (∀ P, C P → P ⊢ M P) → (∀ P, Absorbing (M P)) →
+Class TransformSpatialEnv
+    (M : always_modality PROP) (C : PROP → PROP → Prop) (Γ1 Γ2 : env PROP) := {
+  transform_spatial_env :
+    (∀ P Q, C P Q → P ⊢ M Q) → (∀ P, Absorbing (M P)) →
     ([∗] Γ1) ⊢ M ([∗] Γ2);
-  filter_spatial_env_wf : env_wf Γ1 → env_wf Γ2;
-  filter_spatial_env_dom i : Γ1 !! i = None → Γ2 !! i = None;
+  transform_spatial_env_wf : env_wf Γ1 → env_wf Γ2;
+  transform_spatial_env_dom i : Γ1 !! i = None → Γ2 !! i = None;
 }.
-Global Instance filter_spatial_env_nil M C : FilterSpatialEnv M C Enil Enil.
+Global Instance transform_spatial_env_nil M C : TransformSpatialEnv M C Enil Enil.
 Proof. split=> // HC /=. by rewrite -always_modality_emp. Qed.
-Global Instance filter_spatial_env_snoc M (C : PROP → Prop) Γ Γ' i P :
-  C P →
-  FilterSpatialEnv M C Γ Γ' →
-  FilterSpatialEnv M C (Esnoc Γ i P) (Esnoc Γ' i P).
+Global Instance transform_spatial_env_snoc M (C : PROP → PROP → Prop) Γ Γ' i P Q :
+  C P Q →
+  TransformSpatialEnv M C Γ Γ' →
+  TransformSpatialEnv M C (Esnoc Γ i P) (Esnoc Γ' i Q).
 Proof.
   intros ? [HΓ Hwf Hdom]; split; simpl.
   - intros HC ?. by rewrite {1}(HC P) // HΓ // always_modality_sep.
@@ -639,9 +640,9 @@ Proof.
   - intros j. destruct (ident_beq _ _); naive_solver.
 Qed.
 
-Global Instance filter_spatial_env_snoc_not M (C : PROP → Prop) Γ Γ' i P :
-  FilterSpatialEnv M C Γ Γ' →
-  FilterSpatialEnv M C (Esnoc Γ i P) Γ' | 100.
+Global Instance transform_spatial_env_snoc_not M (C : PROP → PROP → Prop) Γ Γ' i P :
+  TransformSpatialEnv M C Γ Γ' →
+  TransformSpatialEnv M C (Esnoc Γ i P) Γ' | 100.
 Proof.
   intros [HΓ Hwf Hdom]; split; simpl.
   - intros HC ?. by rewrite HΓ // sep_elim_r.
@@ -649,28 +650,29 @@ Proof.
   - intros j. destruct (ident_beq _ _); naive_solver.
 Qed.
 
+(** The actual tactic *)
 Ltac tac_always_cases :=
   simplify_eq/=;
   repeat match goal with
   | H : TCAnd _ _ |- _ => destruct H
   | H : TCEq ?x _ |- _ => inversion H; subst x; clear H
   | H : TCForall _ _ |- _ => apply TCForall_Forall in H
-  | H : FilterPersistentEnv _ _ _ _ |- _ => destruct H
-  | H : FilterSpatialEnv _ _ _ _ |- _ => destruct H
+  | H : TransformPersistentEnv _ _ _ _ |- _ => destruct H
+  | H : TransformSpatialEnv _ _ _ _ |- _ => destruct H
   end; simpl; auto using Enil_wf.
 
 Lemma tac_always_intro Γp Γs Γp' Γs' M Q Q' :
   FromAlways M Q' Q →
   match always_modality_persistent_spec M with
   | AIEnvForall C => TCAnd (TCForall C (env_to_list Γp)) (TCEq Γp Γp')
-  | AIEnvFilter C => FilterPersistentEnv M C Γp Γp'
+  | AIEnvTransform C => TransformPersistentEnv M C Γp Γp'
   | AIEnvIsEmpty => TCAnd (TCEq Γp Enil) (TCEq Γp' Enil)
   | AIEnvClear => TCEq Γp' Enil
   | AIEnvId => TCEq Γp Γp'
   end →
   match always_modality_spatial_spec M with
   | AIEnvForall C => TCAnd (TCForall C (env_to_list Γs)) (TCEq Γs Γs')
-  | AIEnvFilter C => FilterSpatialEnv M C Γs Γs'
+  | AIEnvTransform C => TransformSpatialEnv M C Γs Γs'
   | AIEnvIsEmpty => TCAnd (TCEq Γs Enil) (TCEq Γs' Enil)
   | AIEnvClear => TCEq Γs' Enil
   | AIEnvId => TCEq Γs Γs'
@@ -689,15 +691,15 @@ Proof.
     + by rewrite {1}affinely_elim_emp (always_modality_emp M)
         persistently_True_emp affinely_persistently_emp.
     + eauto using always_modality_persistent_forall_big_and.
-    + eauto using always_modality_persistent_filter.
+    + eauto using always_modality_persistent_transform.
     + by rewrite {1}affinely_elim_emp (always_modality_emp M)
         persistently_True_emp affinely_persistently_emp.
     + eauto using always_modality_persistent_id.
   - destruct (always_modality_spatial_spec M) eqn:?; tac_always_cases.
     + by rewrite -always_modality_emp.
     + eauto using always_modality_spatial_forall_big_sep.
-    + eauto using always_modality_spatial_filter,
-        always_modality_spatial_filter_absorbing.
+    + eauto using always_modality_spatial_transform,
+        always_modality_spatial_transform_absorbing.
     + rewrite -(always_modality_spatial_clear M) // -always_modality_emp.
       by rewrite -absorbingly_True_emp absorbingly_pure -True_intro.
     + by destruct (always_modality_spatial_id M).

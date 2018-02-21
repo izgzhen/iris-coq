@@ -93,23 +93,28 @@ modality:
 - Introduction is only allowed when the context is empty.
 - Introduction is only allowed when all hypotheses satisfy some predicate
   `C : PROP → Prop` (where `C` should be a type class).
-- Introduction will only keep the hypotheses that satisfy some predicate
-  `C : PROP → Prop` (where `C` should be a type class).
+- Introduction will transform each hypotheses using a type class
+  `C : PROP → PROP → Prop`, where the first parameter is the input and the
+  second parameter is the output. Hypotheses that cannot be transformed (i.e.
+  for which no instance of `C` can be found) will be cleared.
 - Introduction will clear the context.
 - Introduction will keep the context as-if.
 
 Formally, these actions correspond to the following inductive type: *)
+
 Inductive always_intro_spec (PROP : bi) :=
   | AIEnvIsEmpty
   | AIEnvForall (C : PROP → Prop)
-  | AIEnvFilter (C : PROP → Prop)
+  | AIEnvTransform (C : PROP → PROP → Prop)
   | AIEnvClear
   | AIEnvId.
 Arguments AIEnvIsEmpty {_}.
 Arguments AIEnvForall {_} _.
-Arguments AIEnvFilter {_} _.
+Arguments AIEnvTransform {_} _.
 Arguments AIEnvClear {_}.
 Arguments AIEnvId {_}.
+
+Notation AIEnvFilter C := (AIEnvTransform (TCDiag C)).
 
 (* An always-style modality is then a record packing together the modality with
 the laws it should satisfy to justify the given actions for both contexts: *)
@@ -118,7 +123,8 @@ Record always_modality_mixin {PROP : bi} (M : PROP → PROP)
   always_modality_mixin_persistent :
     match pspec with
     | AIEnvIsEmpty => True
-    | AIEnvForall C | AIEnvFilter C => ∀ P, C P → □ P ⊢ M (□ P)
+    | AIEnvForall C => ∀ P, C P → □ P ⊢ M (□ P)
+    | AIEnvTransform C => ∀ P Q, C P Q → □ P ⊢ M (□ Q)
     | AIEnvClear => True
     | AIEnvId => ∀ P, □ P ⊢ M (□ P)
     end;
@@ -126,7 +132,7 @@ Record always_modality_mixin {PROP : bi} (M : PROP → PROP)
     match sspec with
     | AIEnvIsEmpty => True
     | AIEnvForall C => ∀ P, C P → P ⊢ M P
-    | AIEnvFilter C => (∀ P, C P → P ⊢ M P) ∧ (∀ P, Absorbing (M P))
+    | AIEnvTransform C => (∀ P Q, C P Q → P ⊢ M Q) ∧ (∀ P, Absorbing (M P))
     | AIEnvClear => ∀ P, Absorbing (M P)
     | AIEnvId => False
     end;
@@ -154,8 +160,8 @@ Section always_modality.
   Lemma always_modality_persistent_forall C P :
     always_modality_persistent_spec M = AIEnvForall C → C P → □ P ⊢ M (□ P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_persistent_filter C P :
-    always_modality_persistent_spec M = AIEnvFilter C → C P → □ P ⊢ M (□ P).
+  Lemma always_modality_persistent_transform C P Q :
+    always_modality_persistent_spec M = AIEnvTransform C → C P Q → □ P ⊢ M (□ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma always_modality_persistent_id P :
     always_modality_persistent_spec M = AIEnvId → □ P ⊢ M (□ P).
@@ -163,11 +169,11 @@ Section always_modality.
   Lemma always_modality_spatial_forall C P :
     always_modality_spatial_spec M = AIEnvForall C → C P → P ⊢ M P.
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_filter C P :
-    always_modality_spatial_spec M = AIEnvFilter C → C P → P ⊢ M P.
+  Lemma always_modality_spatial_transform C P Q :
+    always_modality_spatial_spec M = AIEnvTransform C → C P Q → P ⊢ M Q.
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_filter_absorbing C P :
-    always_modality_spatial_spec M = AIEnvFilter C → Absorbing (M P).
+  Lemma always_modality_spatial_transform_absorbing C P :
+    always_modality_spatial_spec M = AIEnvTransform C → Absorbing (M P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma always_modality_spatial_clear P :
     always_modality_spatial_spec M = AIEnvClear → Absorbing (M P).
