@@ -24,21 +24,21 @@ Structure atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
     atomic_wp (load #l)%E
               (λ '(v, q), mapsto l q v)
               (λ '(v, q) (_:()), mapsto l q v)
-              ⊤ ∅
+              ⊤ ⊤
               (λ '(v, q) _, v);
   store_spec (l : loc) (e : expr) (w : val) :
     IntoVal e w →
     atomic_wp (store (#l, e))%E
               (λ v, mapsto l 1 v)
               (λ v (_:()), mapsto l 1 w)
-              ⊤ ∅
+              ⊤ ⊤
               (λ _ _, #()%V);
   cas_spec (l : loc) (e1 e2 : expr) (w1 w2 : val) :
     IntoVal e1 w1 → IntoVal e2 w2 →
     atomic_wp (cas (#l, e1, e2))%E
               (λ v, mapsto l 1 v)
               (λ v (_:()), if decide (v = w1) then mapsto l 1 w2 else mapsto l 1 v)
-              ⊤ ∅
+              ⊤ ⊤
               (λ v _, #(if decide (v = w1) then true else false)%V);
 }.
 Arguments atomic_heap _ {_}.
@@ -66,7 +66,7 @@ Section proof.
     atomic_wp (primitive_load #l)%E
               (λ '(v, q), l ↦{q} v)%I
               (λ '(v, q) (_:()), l ↦{q} v)%I
-              ⊤ ∅
+              ⊤ ⊤
               (λ '(v, q) _, v).
   Proof.
     iIntros (Φ) "Aupd". wp_let.
@@ -79,7 +79,7 @@ Section proof.
     atomic_wp (primitive_store (#l, e))%E
               (λ v, l ↦ v)%I
               (λ v (_:()), l ↦ w)%I
-              ⊤ ∅
+              ⊤ ⊤
               (λ _ _, #()%V).
   Proof.
     iIntros (<-%of_to_val Φ) "Aupd". wp_let. wp_proj. wp_proj.
@@ -92,7 +92,7 @@ Section proof.
     atomic_wp (primitive_cas (#l, e1, e2))%E
               (λ v, l ↦ v)%I
               (λ v (_:()), if decide (v = w1) then l ↦ w2 else l ↦ v)%I
-              ⊤ ∅
+              ⊤ ⊤
               (λ v _, #(if decide (v = w1) then true else false)%V).
   Proof.
     iIntros (<-%of_to_val <-%of_to_val Φ) "Aupd". wp_let. repeat wp_proj.
