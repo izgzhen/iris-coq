@@ -49,8 +49,9 @@ Section bi_mixin.
   model satisfying all these axioms. For this model, we extend RAs with an
   arbitrary partial order, and up-close resources wrt. that order (instead of
   extension order).  We demand composition to be monotone wrt. the order: [x1 ≼
-  x2 → x1 ⋅ y ≼ x2 ⋅ y].  We define [emp := λ r, ε ≼ r]; persisently is still
-  defined with the core: [□ P := λ r, P (core r)].  *)
+  x2 → x1 ⋅ y ≼ x2 ⋅ y].  We define [emp := λ r, ε ≼ r]; persistently is still
+  defined with the core: [persistently P := λ r, P (core r)].  This is uplcosed
+  because the core is monotone.  *)
 
   Record BiMixin := {
     bi_mixin_entails_po : PreOrder bi_entails;
@@ -110,9 +111,9 @@ Section bi_mixin.
     bi_mixin_plainly_forall_2 {A} (Ψ : A → PROP) :
       (∀ a, bi_plainly (Ψ a)) ⊢ bi_plainly (∀ a, Ψ a);
 
-    (* The following two laws are very similar, and indeed they hold
-       not just for □ and ■, but for any modality defined as
-       `M P n x := ∀ y, R x y → P n y`. *)
+    (* The following two laws are very similar, and indeed they hold not just
+       for persistently and plainly, but for any modality defined as `M P n x :=
+       ∀ y, R x y → P n y`. *)
     bi_mixin_persistently_impl_plainly P Q :
       (bi_plainly P → bi_persistently Q) ⊢ bi_persistently (bi_plainly P → Q);
     bi_mixin_plainly_impl_plainly P Q :
@@ -122,7 +123,7 @@ Section bi_mixin.
     bi_mixin_plainly_absorbing P Q : bi_plainly P ∗ Q ⊢ bi_plainly P;
 
     (* Persistently *)
-    (* In the ordered RA model: `core` is monotone *)
+    (* In the ordered RA model: Holds without further assumptions. *)
     bi_mixin_persistently_mono P Q :
       (P ⊢ Q) → bi_persistently P ⊢ bi_persistently Q;
     (* In the ordered RA model: `core` is idempotent *)
@@ -131,15 +132,16 @@ Section bi_mixin.
     bi_mixin_plainly_persistently_1 P :
       bi_plainly (bi_persistently P) ⊢ bi_plainly P;
 
-    (* In the ordered RA model [P ⊢ □ emp] (which can currently still be derived
-    from the plainly axioms, which will be removed): `ε ≼ core x` *)
+    (* In the ordered RA model [P ⊢ persisently emp] (which can currently still
+    be derived from the plainly axioms, which will be removed): `ε ≼ core x` *)
 
     bi_mixin_persistently_forall_2 {A} (Ψ : A → PROP) :
       (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a);
     bi_mixin_persistently_exist_1 {A} (Ψ : A → PROP) :
       bi_persistently (∃ a, Ψ a) ⊢ ∃ a, bi_persistently (Ψ a);
 
-    (* In the ordered RA model: [x ≼ₑₓₜ y → core x ≼ core y] *)
+    (* In the ordered RA model: [core x ≼ core (x ⋅ y)].
+       Note that this implies that the core is monotone. *)
     bi_mixin_persistently_absorbing P Q :
       bi_persistently P ∗ Q ⊢ bi_persistently P;
     (* In the ordered RA model: [x ⋅ core x = core x]. *)

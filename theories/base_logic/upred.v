@@ -496,7 +496,7 @@ Proof.
     intros P Q. move: (uPred_persistently P)=> P'.
     unseal; split; intros n x ? (x1&x2&?&?&_); ofe_subst;
       eauto using uPred_mono, cmra_includedN_l.
-  - (* bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q *)
+  - (* bi_persistently P ∧ Q ⊢ P ∗ Q *)
     intros P Q. unseal; split=> n x ? [??]; simpl in *.
     exists (core x), x; rewrite ?cmra_core_l; auto.
 Qed.
