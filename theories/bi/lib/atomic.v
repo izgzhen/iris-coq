@@ -10,8 +10,8 @@ Definition atomic_shift {PROP: sbi} `{!FUpd PROP} {A B : Type}
   (P : PROP) (* pre-condition *)
   (Q : A → B → PROP) (* post-condition *)
   : PROP :=
-    (□ (∀ E, ⌜Eo ⊆ E⌝ -∗ ▷ P ={E, E∖Em}=∗ ∃ x, α x ∗
-          ((α x ={E∖Em, E}=∗ ▷ P) ∧ (∀ y, β x y ={E∖Em, E}=∗ Q x y)))
+    (□ (∀ E, ⌜Eo ⊆ E⌝ -∗ P ={E, E∖Em}=∗ ∃ x, α x ∗
+          ((α x ={E∖Em, E}=∗ P) ∧ (∀ y, β x y ={E∖Em, E}=∗ Q x y)))
     )%I.
 
 Definition atomic_update {PROP: sbi} `{!FUpd PROP} {A B : Type}
@@ -21,7 +21,7 @@ Definition atomic_update {PROP: sbi} `{!FUpd PROP} {A B : Type}
   (Q : A → B → PROP) (* post-condition *)
   : PROP :=
     tc_opaque (
-      ∃ (F P : PROP), F ∗ ▷ P ∗ atomic_shift α β Eo Em P (λ x y, F -∗ Q x y)
+      ∃ (F P : PROP), F ∗ ▷ P ∗ atomic_shift α β Eo Em (▷ P) (λ x y, F -∗ Q x y)
     )%I.
 
 Section lemmas.

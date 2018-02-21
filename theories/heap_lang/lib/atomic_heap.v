@@ -6,7 +6,7 @@ From iris.heap_lang Require Import proofmode notation.
 Set Default Proof Using "Type".
 
 (** A general logically atomic interface for a heap. *)
-Structure atomic_heap Σ `{!heapG Σ} := AtomicHeap {
+Structure atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
   (* -- operations -- *)
   alloc : val;
   load : val;
@@ -26,19 +26,22 @@ Structure atomic_heap Σ `{!heapG Σ} := AtomicHeap {
               (λ '(v, q) (_:()), mapsto l q v)
               ⊤ ∅
               (λ '(v, q) _, v);
-  store_spec (l : loc) (w : val) :
-    atomic_wp (store (#l, w))%E
+  store_spec (l : loc) (e : expr) (w : val) :
+    IntoVal e w →
+    atomic_wp (store (#l, e))%E
               (λ v, mapsto l 1 v)
               (λ v (_:()), mapsto l 1 w)
               ⊤ ∅
               (λ _ _, #()%V);
-  cas_spec (l : loc) (w1 w2 : val) :
-    atomic_wp (cas (#l, w1, w2))%E
+  cas_spec (l : loc) (e1 e2 : expr) (w1 w2 : val) :
+    IntoVal e1 w1 → IntoVal e2 w2 →
+    atomic_wp (cas (#l, e1, e2))%E
               (λ v, mapsto l 1 v)
               (λ v (_:()), if decide (v = w1) then mapsto l 1 w2 else mapsto l 1 v)
               ⊤ ∅
               (λ v _, #(if decide (v = w1) then true else false)%V);
 }.
+Arguments atomic_heap _ {_}.
 
 (** Proof that the primitive physical operations of heap_lang satisfy said interface. *)
 Definition primitive_alloc : val :=
@@ -71,26 +74,28 @@ Section proof.
     wp_load. iMod ("Hclose" $! () with "H↦"). done.
   Qed.
 
-  Lemma primitive_store_spec (l : loc) (w : val) :
-    atomic_wp (primitive_store (#l, w))%E
+  Lemma primitive_store_spec (l : loc) (e : expr) (w : val) :
+    IntoVal e w →
+    atomic_wp (primitive_store (#l, e))%E
               (λ v, l ↦ v)%I
               (λ v (_:()), l ↦ w)%I
               ⊤ ∅
               (λ _ _, #()%V).
   Proof.
-    iIntros (Φ) "Aupd". wp_let. wp_proj. wp_proj.
+    iIntros (<-%of_to_val Φ) "Aupd". wp_let. wp_proj. wp_proj.
     iMod (aupd_acc with "Aupd") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
     wp_store. iMod ("Hclose" $! () with "H↦"). done.
   Qed.
 
-  Lemma primitive_cas_spec (l : loc) (w1 w2 : val) :
-    atomic_wp (primitive_cas (#l, w1, w2))%E
+  Lemma primitive_cas_spec (l : loc) e1 e2 (w1 w2 : val) :
+    IntoVal e1 w1 → IntoVal e2 w2 →
+    atomic_wp (primitive_cas (#l, e1, e2))%E
               (λ v, l ↦ v)%I
               (λ v (_:()), if decide (v = w1) then l ↦ w2 else l ↦ v)%I
               ⊤ ∅
               (λ v _, #(if decide (v = w1) then true else false)%V).
   Proof.
-    iIntros (Φ) "Aupd". wp_let. repeat wp_proj.
+    iIntros (<-%of_to_val <-%of_to_val Φ) "Aupd". wp_let. repeat wp_proj.
     iMod (aupd_acc with "Aupd") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
     destruct (decide (v = w1)) as [Hv|Hv]; [wp_cas_suc|wp_cas_fail];
     iMod ("Hclose" $! () with "H↦"); done.

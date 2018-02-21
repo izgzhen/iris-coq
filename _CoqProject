@@ -78,6 +78,9 @@ theories/heap_lang/lang.v
 theories/heap_lang/tactics.v
 theories/heap_lang/lifting.v
 theories/heap_lang/notation.v
+theories/heap_lang/proofmode.v
+theories/heap_lang/adequacy.v
+theories/heap_lang/total_adequacy.v
 theories/heap_lang/lib/spawn.v
 theories/heap_lang/lib/par.v
 theories/heap_lang/lib/assert.v
@@ -86,9 +89,7 @@ theories/heap_lang/lib/spin_lock.v
 theories/heap_lang/lib/ticket_lock.v
 theories/heap_lang/lib/counter.v
 theories/heap_lang/lib/atomic_heap.v
-theories/heap_lang/proofmode.v
-theories/heap_lang/adequacy.v
-theories/heap_lang/total_adequacy.v
+theories/heap_lang/lib/increment.v
 theories/proofmode/base.v
 theories/proofmode/tokens.v
 theories/proofmode/coq_tactics.v
