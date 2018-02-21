@@ -1124,7 +1124,7 @@ Qed.
 
 Lemma affinely_persistently_sep_dup P : □ P ⊣⊢ □ P ∗ □ P.
 Proof.
-  by rewrite -persistently_and_affinely_sep_l affinely_and_r affinely_and idemp.
+  by rewrite -persistently_and_affinely_sep_l affinely_and_r idemp.
 Qed.
 
 Lemma impl_wand_affinely_persistently P Q : (bi_persistently P → Q) ⊣⊢ (□ P -∗ Q).

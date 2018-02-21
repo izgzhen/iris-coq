@@ -48,9 +48,9 @@ Section bi_mixin.
   that combine both kinds of resources. In particular, we have an "ordered RA"
   model satisfying all these axioms. For this model, we extend RAs with an
   arbitrary partial order, and up-close resources wrt. that order (instead of
-  extension order).  We demand composition to be monotone wrt. the order.  We
-  define [emp := λ r, ε ≼ r]; persisently is still defined with the core: [□ P
-  := λ r, P (core r)].  *)
+  extension order).  We demand composition to be monotone wrt. the order: [x1 ≼
+  x2 → x1 ⋅ y ≼ x2 ⋅ y].  We define [emp := λ r, ε ≼ r]; persisently is still
+  defined with the core: [□ P := λ r, P (core r)].  *)
 
   Record BiMixin := {
     bi_mixin_entails_po : PreOrder bi_entails;
@@ -142,7 +142,7 @@ Section bi_mixin.
     (* In the ordered RA model: [x ≼ₑₓₜ y → core x ≼ core y] *)
     bi_mixin_persistently_absorbing P Q :
       bi_persistently P ∗ Q ⊢ bi_persistently P;
-    (* In the ordered RA model: [ε ≼ core x] *)
+    (* In the ordered RA model: [x ⋅ core x = core x], AND [ε ≼ core x]. *)
     bi_mixin_persistently_and_sep_elim P Q :
       bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q;
   }.
