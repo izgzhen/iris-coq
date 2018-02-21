@@ -60,9 +60,19 @@ Section iris_tests.
     by iApply inv_alloc.
   Qed.
 
-  Lemma test_iInv_1 N P: inv N (bi_persistently P) ={⊤}=∗ ▷ P.
+  Lemma test_iInv_0 N P: inv N (bi_persistently P) ={⊤}=∗ ▷ P.
   Proof.
     iIntros "#H".
+    iInv N as "#H2" "Hclose".
+    iMod ("Hclose" with "H2").
+    iModIntro. by iNext.
+  Qed.
+
+  Lemma test_iInv_1 N E P:
+    ↑N ⊆ E →
+    inv N (bi_persistently P) ={E}=∗ ▷ P.
+  Proof.
+    iIntros (?) "#H".
     iInv N as "#H2" "Hclose".
     iMod ("Hclose" with "H2").
     iModIntro. by iNext.
@@ -186,5 +196,15 @@ Section iris_tests.
     Fail iInv nroot as "#H2" "Hclose".
     Fail iInv "H2" as "#H2" "Hclose".
     done.
+  Qed.
+
+  (* test destruction of existentials when opening an invariant *)
+  Lemma test_iInv_13 N:
+    inv N (∃ (v1 v2 v3 : nat), emp ∗ emp ∗ emp) ={⊤}=∗ ▷ emp.
+  Proof.
+    iIntros "H"; iInv "H" as (v1 v2 v3) "(?&?&_)" "Hclose".
+    iMod ("Hclose" with "[]").
+    { iNext; iExists O; done. }
+    iModIntro. by iNext.
   Qed.
 End iris_tests.
