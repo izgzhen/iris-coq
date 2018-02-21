@@ -721,11 +721,57 @@ Proof.
   by rewrite /bi_absorbingly comm persistently_absorbing.
 Qed.
 
+Lemma persistently_forall {A} (Ψ : A → PROP) :
+  bi_persistently (∀ a, Ψ a) ⊣⊢ ∀ a, bi_persistently (Ψ a).
+Proof.
+  apply (anti_symm _); auto using persistently_forall_2.
+  apply forall_intro=> x. by rewrite (forall_elim x).
+Qed.
+Lemma persistently_exist {A} (Ψ : A → PROP) :
+  bi_persistently (∃ a, Ψ a) ⊣⊢ ∃ a, bi_persistently (Ψ a).
+Proof.
+  apply (anti_symm _); auto using persistently_exist_1.
+  apply exist_elim=> x. by rewrite (exist_intro x).
+Qed.
+Lemma persistently_and P Q :
+  bi_persistently (P ∧ Q) ⊣⊢ bi_persistently P ∧ bi_persistently Q.
+Proof. rewrite !and_alt persistently_forall. by apply forall_proper=> -[]. Qed.
+Lemma persistently_or P Q :
+  bi_persistently (P ∨ Q) ⊣⊢ bi_persistently P ∨ bi_persistently Q.
+Proof. rewrite !or_alt persistently_exist. by apply exist_proper=> -[]. Qed.
+Lemma persistently_impl P Q :
+  bi_persistently (P → Q) ⊢ bi_persistently P → bi_persistently Q.
+Proof.
+  apply impl_intro_l; rewrite -persistently_and.
+  apply persistently_mono, impl_elim with P; auto.
+Qed.
+
+Lemma persistently_emp_intro P : P ⊢ bi_persistently emp.
+Proof. by rewrite -plainly_elim_persistently -plainly_emp_intro. Qed.
+
+Lemma persistently_True_emp : bi_persistently True ⊣⊢ bi_persistently emp.
+Proof. apply (anti_symm _); auto using persistently_emp_intro. Qed.
+
+Lemma persistently_and_emp P :
+  bi_persistently P ⊣⊢ bi_persistently (emp ∧ P).
+Proof.
+  apply (anti_symm (⊢)); last by rewrite and_elim_r.
+  rewrite persistently_and. apply and_intro; last done.
+  apply persistently_emp_intro.
+Qed.
+
+Lemma persistently_and_sep_elim_emp P Q :
+  bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q.
+Proof.
+  rewrite persistently_and_emp.
+  apply persistently_and_sep_elim.
+Qed.
+
 Lemma persistently_and_sep_assoc P Q R :
   bi_persistently P ∧ (Q ∗ R) ⊣⊢ (bi_persistently P ∧ Q) ∗ R.
 Proof.
   apply (anti_symm (⊢)).
-  - rewrite {1}persistently_idemp_2 persistently_and_sep_elim assoc.
+  - rewrite {1}persistently_idemp_2 persistently_and_sep_elim_emp assoc.
     apply sep_mono_l, and_intro.
     + by rewrite and_elim_r persistently_absorbing.
     + by rewrite and_elim_l left_id.
@@ -734,7 +780,7 @@ Proof.
     + by rewrite and_elim_r.
 Qed.
 Lemma persistently_and_emp_elim P : emp ∧ bi_persistently P ⊢ P.
-Proof. by rewrite comm persistently_and_sep_elim right_id and_elim_r. Qed.
+Proof. by rewrite comm persistently_and_sep_elim_emp right_id and_elim_r. Qed.
 Lemma persistently_elim_absorbingly P : bi_persistently P ⊢ bi_absorbingly P.
 Proof.
   rewrite -(right_id True%I _ (bi_persistently _)%I) -{1}(left_id emp%I _ True%I).
@@ -762,30 +808,6 @@ Proof.
   trans (∀ x : False, bi_persistently True : PROP)%I; [by apply forall_intro|].
   rewrite persistently_forall_2. auto using persistently_mono, pure_intro.
 Qed.
-Lemma persistently_forall {A} (Ψ : A → PROP) :
-  bi_persistently (∀ a, Ψ a) ⊣⊢ ∀ a, bi_persistently (Ψ a).
-Proof.
-  apply (anti_symm _); auto using persistently_forall_2.
-  apply forall_intro=> x. by rewrite (forall_elim x).
-Qed.
-Lemma persistently_exist {A} (Ψ : A → PROP) :
-  bi_persistently (∃ a, Ψ a) ⊣⊢ ∃ a, bi_persistently (Ψ a).
-Proof.
-  apply (anti_symm _); auto using persistently_exist_1.
-  apply exist_elim=> x. by rewrite (exist_intro x).
-Qed.
-Lemma persistently_and P Q :
-  bi_persistently (P ∧ Q) ⊣⊢ bi_persistently P ∧ bi_persistently Q.
-Proof. rewrite !and_alt persistently_forall. by apply forall_proper=> -[]. Qed.
-Lemma persistently_or P Q :
-  bi_persistently (P ∨ Q) ⊣⊢ bi_persistently P ∨ bi_persistently Q.
-Proof. rewrite !or_alt persistently_exist. by apply exist_proper=> -[]. Qed.
-Lemma persistently_impl P Q :
-  bi_persistently (P → Q) ⊢ bi_persistently P → bi_persistently Q.
-Proof.
-  apply impl_intro_l; rewrite -persistently_and.
-  apply persistently_mono, impl_elim with P; auto.
-Qed.
 
 Lemma persistently_sep_dup P :
   bi_persistently P ⊣⊢ bi_persistently P ∗ bi_persistently P.
@@ -804,11 +826,6 @@ Qed.
 Lemma persistently_and_sep_r_1 P Q : P ∧ bi_persistently Q ⊢ P ∗ bi_persistently Q.
 Proof. by rewrite !(comm _ P) persistently_and_sep_l_1. Qed.
 
-Lemma persistently_emp_intro P : P ⊢ bi_persistently emp.
-Proof. by rewrite -plainly_elim_persistently -plainly_emp_intro. Qed.
-
-Lemma persistently_True_emp : bi_persistently True ⊣⊢ bi_persistently emp.
-Proof. apply (anti_symm _); auto using persistently_emp_intro. Qed.
 Lemma persistently_and_sep P Q : bi_persistently (P ∧ Q) ⊢ bi_persistently (P ∗ Q).
 Proof.
   rewrite persistently_and.
@@ -939,7 +956,7 @@ Lemma absorbingly_plainly P : bi_absorbingly (bi_plainly P) ⊣⊢ bi_plainly P.
 Proof. by rewrite -(persistently_plainly P) absorbingly_persistently. Qed.
 
 Lemma plainly_and_sep_elim P Q : bi_plainly P ∧ Q -∗ (emp ∧ P) ∗ Q.
-Proof. by rewrite plainly_elim_persistently persistently_and_sep_elim. Qed.
+Proof. by rewrite plainly_elim_persistently persistently_and_sep_elim_emp. Qed.
 Lemma plainly_and_sep_assoc P Q R :
   bi_plainly P ∧ (Q ∗ R) ⊣⊢ (bi_plainly P ∧ Q) ∗ R.
 Proof. by rewrite -(persistently_plainly P) persistently_and_sep_assoc. Qed.

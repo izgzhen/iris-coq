@@ -142,9 +142,9 @@ Section bi_mixin.
     (* In the ordered RA model: [x ≼ₑₓₜ y → core x ≼ core y] *)
     bi_mixin_persistently_absorbing P Q :
       bi_persistently P ∗ Q ⊢ bi_persistently P;
-    (* In the ordered RA model: [x ⋅ core x = core x], AND [ε ≼ core x]. *)
+    (* In the ordered RA model: [x ⋅ core x = core x]. *)
     bi_mixin_persistently_and_sep_elim P Q :
-      bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q;
+      bi_persistently P ∧ Q ⊢ P ∗ Q;
   }.
 
   Record SbiMixin := {
@@ -464,8 +464,8 @@ Proof. eapply bi_mixin_persistently_exist_1, bi_bi_mixin. Qed.
 
 Lemma persistently_absorbing P Q : bi_persistently P ∗ Q ⊢ bi_persistently P.
 Proof. eapply (bi_mixin_persistently_absorbing bi_entails), bi_bi_mixin. Qed.
-Lemma persistently_and_sep_elim P Q : bi_persistently P ∧ Q ⊢ (emp ∧ P) ∗ Q.
-Proof. eapply bi_mixin_persistently_and_sep_elim, bi_bi_mixin. Qed.
+Lemma persistently_and_sep_elim P Q : bi_persistently P ∧ Q ⊢ P ∗ Q.
+Proof. eapply (bi_mixin_persistently_and_sep_elim bi_entails), bi_bi_mixin. Qed.
 End bi_laws.
 
 Section sbi_laws.
