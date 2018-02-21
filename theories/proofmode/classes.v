@@ -538,3 +538,7 @@ Instance from_modal_tc_opaque {PROP : bi} (P Q : PROP) :
   FromModal P Q → FromModal (tc_opaque P) Q := id.
 Instance elim_modal_tc_opaque {PROP : bi} φ (P P' Q Q' : PROP) :
   ElimModal φ P P' Q Q' → ElimModal φ (tc_opaque P) P' Q Q' := id.
+Instance into_inv_tc_opaque {PROP : bi} (P : PROP) N :
+  IntoInv P N → IntoInv (tc_opaque P) N := id.
+Instance elim_inv_tc_opaque {PROP : bi} φ (Pinv Pin Pout Q Q' : PROP) :
+  ElimInv φ Pinv Pin Pout Q Q' → ElimInv φ (tc_opaque Pinv) Pin Pout Q Q' := id.
