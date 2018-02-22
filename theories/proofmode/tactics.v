@@ -961,31 +961,32 @@ Local Tactic Notation "iExistDestruct" constr(H)
     [env_reflexivity || fail "iExistDestruct:" Hx "not fresh"
     |revert y; intros x].
 
-(** * Always *)
-Tactic Notation "iAlways":=
+(** * Modality introduction *)
+Tactic Notation "iModIntro":=
   iStartProof;
-  eapply tac_always_intro;
+  eapply tac_modal_intro;
     [apply _  ||
-     fail "iAlways: the goal is not an always-style modality"
+     fail "iModIntro: the goal is not a modality"
     |hnf; env_cbv;
      apply _ ||
      lazymatch goal with
-     | |- TCAnd (TCForall ?C _) _ => fail "iAlways: persistent context does not satisfy" C
-     | |- TCAnd (TCEq _ Enil) _ => fail "iAlways: persistent context is non-empty"
+     | |- TCAnd (TCForall ?C _) _ => fail "iModIntro: persistent context does not satisfy" C
+     | |- TCAnd (TCEq _ Enil) _ => fail "iModIntro: persistent context is non-empty"
      end
     |hnf; env_cbv;
      lazymatch goal with
      | |- ∃ _, TransformSpatialEnv _ _ _ _ _ ∧ _ =>
         eexists; split;
           [apply _
-          |apply _ || fail "iAlways: cannot filter spatial context when goal is not absorbing"]
+          |apply _ || fail "iModIntro: cannot filter spatial context when goal is not absorbing"]
      | |- TCAnd (TCForall ?C _) _ =>
-        apply _ || fail "iAlways: spatial context does not satisfy" C
+        apply _ || fail "iModIntro: spatial context does not satisfy" C
      | |- TCAnd (TCEq _ Enil) _ =>
-        apply _ || fail "iAlways: spatial context is non-empty"
+        apply _ || fail "iModIntro: spatial context is non-empty"
      | |- _ => apply _
      end
     |env_cbv].
+Tactic Notation "iAlways" := iModIntro.
 
 (** * Later *)
 Tactic Notation "iNext" open_constr(n) :=
@@ -1006,13 +1007,6 @@ Tactic Notation "iNext" open_constr(n) :=
 Tactic Notation "iNext":= iNext _.
 
 (** * Update modality *)
-Tactic Notation "iModIntro" :=
-  iStartProof;
-  eapply tac_modal_intro;
-    [apply _ ||
-     let P := match goal with |- FromModal ?P _ => P end in
-     fail "iModIntro:" P "not a modality"|].
-
 Tactic Notation "iModCore" constr(H) :=
   eapply tac_modal_elim with _ H _ _ _ _ _;
     [env_reflexivity || fail "iMod:" H "not found"

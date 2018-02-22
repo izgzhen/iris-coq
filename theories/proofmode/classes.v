@@ -83,12 +83,11 @@ Arguments IntoPersistent {_} _ _%I _%I : simpl never.
 Arguments into_persistent {_} _ _%I _%I {_}.
 Hint Mode IntoPersistent + + ! - : typeclass_instances.
 
-(* The `iAlways` tactic is not tied to `persistently` and `affinely`, but can be
-instantiated with a variety of comonadic (always-style) modalities.
+(* The `iModIntro` tactic is not tied the Iris modalities, but can be
+instantiated with a variety of modalities.
 
-In order to plug in an always-style modality, one has to decide for both the
-persistent and spatial what action should be performed upon introducing the
-modality:
+In order to plug in a modality, one has to decide for both the persistent and
+spatial what action should be performed upon introducing the modality:
 
 - Introduction is only allowed when the context is empty.
 - Introduction is only allowed when all hypotheses satisfy some predicate
@@ -102,125 +101,124 @@ modality:
 
 Formally, these actions correspond to the following inductive type: *)
 
-Inductive always_intro_spec (PROP : bi) :=
-  | AIEnvIsEmpty
-  | AIEnvForall (C : PROP → Prop)
-  | AIEnvTransform (C : PROP → PROP → Prop)
-  | AIEnvClear
-  | AIEnvId.
-Arguments AIEnvIsEmpty {_}.
-Arguments AIEnvForall {_} _.
-Arguments AIEnvTransform {_} _.
-Arguments AIEnvClear {_}.
-Arguments AIEnvId {_}.
+Inductive modality_intro_spec (PROP : bi) :=
+  | MIEnvIsEmpty
+  | MIEnvForall (C : PROP → Prop)
+  | MIEnvTransform (C : PROP → PROP → Prop)
+  | MIEnvClear
+  | MIEnvId.
+Arguments MIEnvIsEmpty {_}.
+Arguments MIEnvForall {_} _.
+Arguments MIEnvTransform {_} _.
+Arguments MIEnvClear {_}.
+Arguments MIEnvId {_}.
 
-Notation AIEnvFilter C := (AIEnvTransform (TCDiag C)).
+Notation MIEnvFilter C := (MIEnvTransform (TCDiag C)).
 
-(* An always-style modality is then a record packing together the modality with
-the laws it should satisfy to justify the given actions for both contexts: *)
-Record always_modality_mixin {PROP : bi} (M : PROP → PROP)
-    (pspec sspec : always_intro_spec PROP) := {
-  always_modality_mixin_persistent :
+(* A modality is then a record packing together the modality with the laws it
+should satisfy to justify the given actions for both contexts: *)
+Record modality_mixin {PROP : bi} (M : PROP → PROP)
+    (pspec sspec : modality_intro_spec PROP) := {
+  modality_mixin_persistent :
     match pspec with
-    | AIEnvIsEmpty => True
-    | AIEnvForall C => (∀ P, C P → □ P ⊢ M (□ P)) ∧ (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q))
-    | AIEnvTransform C => (∀ P Q, C P Q → □ P ⊢ M (□ Q)) ∧ (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q))
-    | AIEnvClear => True
-    | AIEnvId => ∀ P, □ P ⊢ M (□ P)
+    | MIEnvIsEmpty => True
+    | MIEnvForall C => (∀ P, C P → □ P ⊢ M (□ P)) ∧ (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q))
+    | MIEnvTransform C => (∀ P Q, C P Q → □ P ⊢ M (□ Q)) ∧ (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q))
+    | MIEnvClear => True
+    | MIEnvId => ∀ P, □ P ⊢ M (□ P)
     end;
-  always_modality_mixin_spatial :
+  modality_mixin_spatial :
     match sspec with
-    | AIEnvIsEmpty => True
-    | AIEnvForall C => ∀ P, C P → P ⊢ M P
-    | AIEnvTransform C => (∀ P Q, C P Q → P ⊢ M Q)
-    | AIEnvClear => ∀ P, Absorbing (M P)
-    | AIEnvId => ∀ P, P ⊢ M P
+    | MIEnvIsEmpty => True
+    | MIEnvForall C => ∀ P, C P → P ⊢ M P
+    | MIEnvTransform C => (∀ P Q, C P Q → P ⊢ M Q)
+    | MIEnvClear => ∀ P, Absorbing (M P)
+    | MIEnvId => ∀ P, P ⊢ M P
     end;
-  always_modality_mixin_emp : emp ⊢ M emp;
-  always_modality_mixin_mono P Q : (P ⊢ Q) → M P ⊢ M Q;
-  always_modality_mixin_sep P Q : M P ∗ M Q ⊢ M (P ∗ Q)
+  modality_mixin_emp : emp ⊢ M emp;
+  modality_mixin_mono P Q : (P ⊢ Q) → M P ⊢ M Q;
+  modality_mixin_sep P Q : M P ∗ M Q ⊢ M (P ∗ Q)
 }.
 
-Record always_modality (PROP : bi) := AlwaysModality {
-  always_modality_car :> PROP → PROP;
-  always_modality_persistent_spec : always_intro_spec PROP;
-  always_modality_spatial_spec : always_intro_spec PROP;
-  always_modality_mixin_of : always_modality_mixin
-    always_modality_car
-    always_modality_persistent_spec always_modality_spatial_spec
+Record modality (PROP : bi) := Modality {
+  modality_car :> PROP → PROP;
+  modality_persistent_spec : modality_intro_spec PROP;
+  modality_spatial_spec : modality_intro_spec PROP;
+  modality_mixin_of :
+    modality_mixin modality_car modality_persistent_spec modality_spatial_spec
 }.
-Arguments AlwaysModality {_} _ {_ _} _.
-Arguments always_modality_persistent_spec {_} _.
-Arguments always_modality_spatial_spec {_} _.
+Arguments Modality {_} _ {_ _} _.
+Arguments modality_persistent_spec {_} _.
+Arguments modality_spatial_spec {_} _.
 
-Section always_modality.
-  Context {PROP} (M : always_modality PROP).
+Section modality.
+  Context {PROP} (M : modality PROP).
 
-  Lemma always_modality_persistent_forall C P :
-    always_modality_persistent_spec M = AIEnvForall C → C P → □ P ⊢ M (□ P).
+  Lemma modality_persistent_forall C P :
+    modality_persistent_spec M = MIEnvForall C → C P → □ P ⊢ M (□ P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_and_forall C P Q :
-    always_modality_persistent_spec M = AIEnvForall C → M P ∧ M Q ⊢ M (P ∧ Q).
+  Lemma modality_and_forall C P Q :
+    modality_persistent_spec M = MIEnvForall C → M P ∧ M Q ⊢ M (P ∧ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_persistent_transform C P Q :
-    always_modality_persistent_spec M = AIEnvTransform C → C P Q → □ P ⊢ M (□ Q).
+  Lemma modality_persistent_transform C P Q :
+    modality_persistent_spec M = MIEnvTransform C → C P Q → □ P ⊢ M (□ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_and_transform C P Q :
-    always_modality_persistent_spec M = AIEnvTransform C → M P ∧ M Q ⊢ M (P ∧ Q).
+  Lemma modality_and_transform C P Q :
+    modality_persistent_spec M = MIEnvTransform C → M P ∧ M Q ⊢ M (P ∧ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_persistent_id P :
-    always_modality_persistent_spec M = AIEnvId → □ P ⊢ M (□ P).
+  Lemma modality_persistent_id P :
+    modality_persistent_spec M = MIEnvId → □ P ⊢ M (□ P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_forall C P :
-    always_modality_spatial_spec M = AIEnvForall C → C P → P ⊢ M P.
+  Lemma modality_spatial_forall C P :
+    modality_spatial_spec M = MIEnvForall C → C P → P ⊢ M P.
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_transform C P Q :
-    always_modality_spatial_spec M = AIEnvTransform C → C P Q → P ⊢ M Q.
+  Lemma modality_spatial_transform C P Q :
+    modality_spatial_spec M = MIEnvTransform C → C P Q → P ⊢ M Q.
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_clear P :
-    always_modality_spatial_spec M = AIEnvClear → Absorbing (M P).
+  Lemma modality_spatial_clear P :
+    modality_spatial_spec M = MIEnvClear → Absorbing (M P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_id P :
-    always_modality_spatial_spec M = AIEnvId → P ⊢ M P.
+  Lemma modality_spatial_id P :
+    modality_spatial_spec M = MIEnvId → P ⊢ M P.
   Proof. destruct M as [??? []]; naive_solver. Qed.
 
-  Lemma always_modality_emp : emp ⊢ M emp.
-  Proof. eapply always_modality_mixin_emp, always_modality_mixin_of. Qed.
-  Lemma always_modality_mono P Q : (P ⊢ Q) → M P ⊢ M Q.
-  Proof. eapply always_modality_mixin_mono, always_modality_mixin_of. Qed.
-  Lemma always_modality_sep P Q : M P ∗ M Q ⊢ M (P ∗ Q).
-  Proof. eapply always_modality_mixin_sep, always_modality_mixin_of. Qed.
-  Global Instance always_modality_mono' : Proper ((⊢) ==> (⊢)) M.
-  Proof. intros P Q. apply always_modality_mono. Qed.
-  Global Instance always_modality_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) M.
-  Proof. intros P Q. apply always_modality_mono. Qed.
-  Global Instance always_modality_proper : Proper ((≡) ==> (≡)) M.
-  Proof. intros P Q. rewrite !equiv_spec=> -[??]; eauto using always_modality_mono. Qed.
+  Lemma modality_emp : emp ⊢ M emp.
+  Proof. eapply modality_mixin_emp, modality_mixin_of. Qed.
+  Lemma modality_mono P Q : (P ⊢ Q) → M P ⊢ M Q.
+  Proof. eapply modality_mixin_mono, modality_mixin_of. Qed.
+  Lemma modality_sep P Q : M P ∗ M Q ⊢ M (P ∗ Q).
+  Proof. eapply modality_mixin_sep, modality_mixin_of. Qed.
+  Global Instance modality_mono' : Proper ((⊢) ==> (⊢)) M.
+  Proof. intros P Q. apply modality_mono. Qed.
+  Global Instance modality_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) M.
+  Proof. intros P Q. apply modality_mono. Qed.
+  Global Instance modality_proper : Proper ((≡) ==> (≡)) M.
+  Proof. intros P Q. rewrite !equiv_spec=> -[??]; eauto using modality_mono. Qed.
 
-  Lemma always_modality_persistent_forall_big_and C Ps :
-    always_modality_persistent_spec M = AIEnvForall C →
+  Lemma modality_persistent_forall_big_and C Ps :
+    modality_persistent_spec M = MIEnvForall C →
     Forall C Ps → □ [∧] Ps ⊢ M (□ [∧] Ps).
   Proof.
     induction 2 as [|P Ps ? _ IH]; simpl.
-    - by rewrite persistently_pure affinely_True_emp affinely_emp -always_modality_emp.
-    - rewrite affinely_persistently_and -always_modality_and_forall // -IH.
-      by rewrite {1}(always_modality_persistent_forall _ P).
+    - by rewrite persistently_pure affinely_True_emp affinely_emp -modality_emp.
+    - rewrite affinely_persistently_and -modality_and_forall // -IH.
+      by rewrite {1}(modality_persistent_forall _ P).
   Qed.
-  Lemma always_modality_spatial_forall_big_sep C Ps :
-    always_modality_spatial_spec M = AIEnvForall C →
+  Lemma modality_spatial_forall_big_sep C Ps :
+    modality_spatial_spec M = MIEnvForall C →
     Forall C Ps → [∗] Ps ⊢ M ([∗] Ps).
   Proof.
     induction 2 as [|P Ps ? _ IH]; simpl.
-    - by rewrite -always_modality_emp.
-    - by rewrite -always_modality_sep -IH {1}(always_modality_spatial_forall _ P).
+    - by rewrite -modality_emp.
+    - by rewrite -modality_sep -IH {1}(modality_spatial_forall _ P).
   Qed.
-End always_modality.
+End modality.
 
-Class FromAlways {PROP : bi} (M : always_modality PROP) (P Q : PROP) :=
-  from_always : M Q ⊢ P.
-Arguments FromAlways {_} _ _%I _%I : simpl never.
-Arguments from_always {_} _ _%I _%I {_}.
-Hint Mode FromAlways + - ! - : typeclass_instances.
+Class FromModal {PROP : bi} (M : modality PROP) (P Q : PROP) :=
+  from_modal : M Q ⊢ P.
+Arguments FromModal {_} _ _%I _%I : simpl never.
+Arguments from_modal {_} _ _%I _%I {_}.
+Hint Mode FromModal + - ! - : typeclass_instances.
 
 Class FromAffinely {PROP : bi} (P Q : PROP) :=
   from_affinely : bi_affinely Q ⊢ P.
@@ -337,11 +335,6 @@ Class IsExcept0 {PROP : sbi} (Q : PROP) := is_except_0 : ◇ Q ⊢ Q.
 Arguments IsExcept0 {_} _%I : simpl never.
 Arguments is_except_0 {_} _%I {_}.
 Hint Mode IsExcept0 + ! : typeclass_instances.
-
-Class FromModal {PROP : bi} (P Q : PROP) := from_modal : Q ⊢ P.
-Arguments FromModal {_} _%I _%I : simpl never.
-Arguments from_modal {_} _%I _%I {_}.
-Hint Mode FromModal + ! - : typeclass_instances.
 
 Class ElimModal {PROP : bi} (φ : Prop) (P P' : PROP) (Q Q' : PROP) :=
   elim_modal : φ → P ∗ (P' -∗ Q') ⊢ Q.
@@ -645,8 +638,8 @@ Instance into_exist_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (tc_opaque P) Φ := id.
 Instance into_forall_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (tc_opaque P) Φ := id.
-Instance from_modal_tc_opaque {PROP : bi} (P Q : PROP) :
-  FromModal P Q → FromModal (tc_opaque P) Q := id.
+Instance from_modal_tc_opaque {PROP : bi} M (P Q : PROP) :
+  FromModal M P Q → FromModal M (tc_opaque P) Q := id.
 Instance elim_modal_tc_opaque {PROP : bi} φ (P P' Q Q' : PROP) :
   ElimModal φ P P' Q Q' → ElimModal φ (tc_opaque P) P' Q Q' := id.
 Instance into_inv_tc_opaque {PROP : bi} (P : PROP) N :
