@@ -720,7 +720,8 @@ Proof.
       eauto using always_modality_spatial_transform.
   + rewrite -HQ' /= right_id comm -{2}(always_modality_spatial_clear M) //.
     by rewrite (True_intro ([∗] Γs)%I).
-  + by destruct (always_modality_spatial_id M).
+  + rewrite -HQ' {1}(always_modality_spatial_id M ([∗] Γs')%I) //.
+    by rewrite -always_modality_sep.
 Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :
