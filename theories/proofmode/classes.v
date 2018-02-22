@@ -99,19 +99,29 @@ IntoLaterN n P P'       MaybeIntoLaterN n Q Q'
 -------------------------------
 IntoLaterN n (P /\ Q) (P /\ Q')
 >>
+
+The Boolean [only_head] indicates whether laters should only be stripped in
+head position or also below other logical connectives. For [iNext] it should
+strip laters below other logical connectives, but this should not happen while
+framing, e.g. the following should succeed:
+
+<<
+Lemma test_iFrame_later_1 P Q : P ∗ ▷ Q -∗ ▷ (P ∗ ▷ Q).
+Proof. iIntros "H". iFrame "H". Qed.
+>>
 *)
-Class MaybeIntoLaterN {M} (n : nat) (P Q : uPred M) :=
+Class MaybeIntoLaterN {M} (only_head : bool) (n : nat) (P Q : uPred M) :=
   maybe_into_laterN : P ⊢ ▷^n Q.
-Arguments maybe_into_laterN {_} _ _ _ {_}.
-Hint Mode MaybeIntoLaterN + - - - : typeclass_instances.
+Arguments maybe_into_laterN {_} _ _ _ _ {_}.
+Hint Mode MaybeIntoLaterN + + + - - : typeclass_instances.
 
-Class IntoLaterN {M} (n : nat) (P Q : uPred M) :=
-  into_laterN :> MaybeIntoLaterN n P Q.
+Class IntoLaterN {M} (only_head : bool) (n : nat) (P Q : uPred M) :=
+  into_laterN :> MaybeIntoLaterN only_head n P Q.
 Arguments into_laterN {_} _ _ _ {_}.
-Hint Mode IntoLaterN + - ! - : typeclass_instances.
+Hint Mode IntoLaterN + + + ! - : typeclass_instances.
 
-Instance maybe_into_laterN_default {M} n (P : uPred M) :
-  MaybeIntoLaterN n P P | 1000.
+Instance maybe_into_laterN_default {M} only_head n (P : uPred M) :
+  MaybeIntoLaterN only_head n P P | 1000.
 Proof. apply laterN_intro. Qed.
 
 Class FromLaterN {M} (n : nat) (P Q : uPred M) := from_laterN : ▷^n Q ⊢ P.

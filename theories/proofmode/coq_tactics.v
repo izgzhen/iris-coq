@@ -473,7 +473,7 @@ Proof. rewrite /envs_entails. intros HΔ ?. by rewrite HΔ pure_True // left_id.
 
 (** * Later *)
 Class MaybeIntoLaterNEnv (n : nat) (Γ1 Γ2 : env (uPred M)) :=
-  into_laterN_env : env_Forall2 (MaybeIntoLaterN n) Γ1 Γ2.
+  into_laterN_env : env_Forall2 (MaybeIntoLaterN false n) Γ1 Γ2.
 Class MaybeIntoLaterNEnvs (n : nat) (Δ1 Δ2 : envs M) := {
   into_later_persistent: MaybeIntoLaterNEnv n (env_persistent Δ1) (env_persistent Δ2);
   into_later_spatial: MaybeIntoLaterNEnv n (env_spatial Δ1) (env_spatial Δ2)
@@ -482,7 +482,7 @@ Class MaybeIntoLaterNEnvs (n : nat) (Δ1 Δ2 : envs M) := {
 Global Instance into_laterN_env_nil n : MaybeIntoLaterNEnv n Enil Enil.
 Proof. constructor. Qed.
 Global Instance into_laterN_env_snoc n Γ1 Γ2 i P Q :
-  MaybeIntoLaterNEnv n Γ1 Γ2 → MaybeIntoLaterN n P Q →
+  MaybeIntoLaterNEnv n Γ1 Γ2 → MaybeIntoLaterN false n P Q →
   MaybeIntoLaterNEnv n (Esnoc Γ1 i P) (Esnoc Γ2 i Q).
 Proof. by constructor. Qed.
 
