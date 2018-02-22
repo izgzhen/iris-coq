@@ -15,22 +15,9 @@ Hint Extern 1 (IsBiIndexRel _ _) => unfold IsBiIndexRel; assumption
             : typeclass_instances.
 
 Section always_modalities.
-Context {I : biIndex} {PROP : bi}.
+  Context {I : biIndex} {PROP : bi}.
 
   Lemma always_modality_absolutely_mixin :
-    always_modality_mixin (@monPred_absolutely I PROP)
-      (AIEnvFilter Absolute) (AIEnvForall Absolute).
-  Proof.
-    split; intros; try match goal with H : TCDiag _ _ _ |- _ => destruct H end;
-      eauto using bi.equiv_entails_sym, absolute_absolutely,
-        monPred_absolutely_mono, monPred_absolutely_and,
-        monPred_absolutely_sep_2 with typeclass_instances.
-  Qed.
-  Definition always_modality_absolutely :=
-    AlwaysModality _ always_modality_absolutely_mixin.
-
-  (* We can only filter the spatial context in case the BI is affine *)
-  Lemma always_modality_absolutely_filter_spatial_mixin `{BiAffine PROP} :
     always_modality_mixin (@monPred_absolutely I PROP)
       (AIEnvFilter Absolute) (AIEnvFilter Absolute).
   Proof.
@@ -39,8 +26,8 @@ Context {I : biIndex} {PROP : bi}.
         monPred_absolutely_mono, monPred_absolutely_and,
         monPred_absolutely_sep_2 with typeclass_instances.
   Qed.
-  Definition always_modality_absolutely_filter_spatial `{BiAffine PROP} :=
-    AlwaysModality _ always_modality_absolutely_filter_spatial_mixin.
+  Definition always_modality_absolutely :=
+    AlwaysModality _ always_modality_absolutely_mixin.
 End always_modalities.
 
 Section bi.
@@ -54,9 +41,6 @@ Implicit Types i j : I.
 
 Global Instance from_always_absolutely P :
   FromAlways always_modality_absolutely (∀ᵢ P) P | 1.
-Proof. by rewrite /FromAlways. Qed.
-Global Instance from_always_absolutely_filter_spatial `{BiAffine PROP} P :
-  FromAlways always_modality_absolutely_filter_spatial (∀ᵢ P) P | 0.
 Proof. by rewrite /FromAlways. Qed.
 
 Global Instance make_monPred_at_pure φ i : MakeMonPredAt i ⌜φ⌝ ⌜φ⌝.

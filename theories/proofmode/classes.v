@@ -132,7 +132,7 @@ Record always_modality_mixin {PROP : bi} (M : PROP → PROP)
     match sspec with
     | AIEnvIsEmpty => True
     | AIEnvForall C => ∀ P, C P → P ⊢ M P
-    | AIEnvTransform C => (∀ P Q, C P Q → P ⊢ M Q) ∧ (∀ P, Absorbing (M P))
+    | AIEnvTransform C => (∀ P Q, C P Q → P ⊢ M Q)
     | AIEnvClear => ∀ P, Absorbing (M P)
     | AIEnvId => False
     end;
@@ -171,9 +171,6 @@ Section always_modality.
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma always_modality_spatial_transform C P Q :
     always_modality_spatial_spec M = AIEnvTransform C → C P Q → P ⊢ M Q.
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_transform_absorbing C P :
-    always_modality_spatial_spec M = AIEnvTransform C → Absorbing (M P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma always_modality_spatial_clear P :
     always_modality_spatial_spec M = AIEnvClear → Absorbing (M P).

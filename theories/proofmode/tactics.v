@@ -967,15 +967,23 @@ Tactic Notation "iAlways":=
   eapply tac_always_intro;
     [apply _  ||
      fail "iAlways: the goal is not an always-style modality"
-    |hnf; env_cbv; apply _ ||
+    |hnf; env_cbv;
+     apply _ ||
      lazymatch goal with
      | |- TCAnd (TCForall ?C _) _ => fail "iAlways: persistent context does not satisfy" C
      | |- TCAnd (TCEq _ Enil) _ => fail "iAlways: persistent context is non-empty"
      end
-    |hnf; env_cbv; apply _ ||
+    |hnf; env_cbv;
      lazymatch goal with
-     | |- TCAnd (TCForall ?C _) _ => fail "iAlways: spatial context does not satisfy" C
-     | |- TCAnd (TCEq _ Enil) _ => fail "iAlways: spatial context is non-empty"
+     | |- ∃ _, TransformSpatialEnv _ _ _ _ _ ∧ _ =>
+        eexists; split;
+          [apply _
+          |apply _ || fail "iAlways: cannot filter spatial context when goal is not absorbing"]
+     | |- TCAnd (TCForall ?C _) _ =>
+        apply _ || fail "iAlways: spatial context does not satisfy" C
+     | |- TCAnd (TCEq _ Enil) _ =>
+        apply _ || fail "iAlways: spatial context is non-empty"
+     | |- _ => apply _
      end
     |env_cbv].
 

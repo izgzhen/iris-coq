@@ -620,45 +620,54 @@ Proof.
 Qed.
 
 Class TransformSpatialEnv
-    (M : always_modality PROP) (C : PROP → PROP → Prop) (Γ1 Γ2 : env PROP) := {
+    (M : always_modality PROP) (C : PROP → PROP → Prop)
+    (Γ1 Γ2 : env PROP) (filtered : bool) := {
   transform_spatial_env :
-    (∀ P Q, C P Q → P ⊢ M Q) → (∀ P, Absorbing (M P)) →
-    ([∗] Γ1) ⊢ M ([∗] Γ2);
+    (∀ P Q, C P Q → P ⊢ M Q) →
+    ([∗] Γ1) ⊢ M ([∗] Γ2) ∗ if filtered then True else emp;
   transform_spatial_env_wf : env_wf Γ1 → env_wf Γ2;
   transform_spatial_env_dom i : Γ1 !! i = None → Γ2 !! i = None;
 }.
-Global Instance transform_spatial_env_nil M C : TransformSpatialEnv M C Enil Enil.
-Proof. split=> // HC /=. by rewrite -always_modality_emp. Qed.
-Global Instance transform_spatial_env_snoc M (C : PROP → PROP → Prop) Γ Γ' i P Q :
+Global Instance transform_spatial_env_nil M C :
+  TransformSpatialEnv M C Enil Enil false.
+Proof. split=> // HC /=. by rewrite right_id -always_modality_emp. Qed.
+Global Instance transform_spatial_env_snoc M (C : PROP → PROP → Prop) Γ Γ' i P Q fi :
   C P Q →
-  TransformSpatialEnv M C Γ Γ' →
-  TransformSpatialEnv M C (Esnoc Γ i P) (Esnoc Γ' i Q).
+  TransformSpatialEnv M C Γ Γ' fi →
+  TransformSpatialEnv M C (Esnoc Γ i P) (Esnoc Γ' i Q) fi.
 Proof.
   intros ? [HΓ Hwf Hdom]; split; simpl.
-  - intros HC ?. by rewrite {1}(HC P) // HΓ // always_modality_sep.
+  - intros HC. by rewrite {1}(HC P) // HΓ // assoc always_modality_sep.
   - inversion 1; constructor; auto.
   - intros j. destruct (ident_beq _ _); naive_solver.
 Qed.
 
-Global Instance transform_spatial_env_snoc_not M (C : PROP → PROP → Prop) Γ Γ' i P :
-  TransformSpatialEnv M C Γ Γ' →
-  TransformSpatialEnv M C (Esnoc Γ i P) Γ' | 100.
+Global Instance transform_spatial_env_snoc_not
+    M (C : PROP → PROP → Prop) Γ Γ' i P fi fi' :
+  TransformSpatialEnv M C Γ Γ' fi →
+  TCIf (TCEq fi false)
+    (TCIf (Affine P) (TCEq fi' false) (TCEq fi' true))
+    (TCEq fi' true) →
+  TransformSpatialEnv M C (Esnoc Γ i P) Γ' fi' | 100.
 Proof.
-  intros [HΓ Hwf Hdom]; split; simpl.
-  - intros HC ?. by rewrite HΓ // sep_elim_r.
+  intros [HΓ Hwf Hdom] Hif; split; simpl.
+  - intros ?. rewrite HΓ //. destruct Hif as [-> [? ->| ->]| ->].
+    + by rewrite (affine P) left_id.
+    + by rewrite right_id comm (True_intro P).
+    + by rewrite comm -assoc (True_intro (_ ∗ P)%I).
   - inversion 1; auto.
   - intros j. destruct (ident_beq _ _); naive_solver.
 Qed.
 
 (** The actual tactic *)
-Ltac tac_always_cases :=
+Ltac tac_always_cases fi :=
   simplify_eq/=;
   repeat match goal with
   | H : TCAnd _ _ |- _ => destruct H
   | H : TCEq ?x _ |- _ => inversion H; subst x; clear H
   | H : TCForall _ _ |- _ => apply TCForall_Forall in H
   | H : TransformPersistentEnv _ _ _ _ |- _ => destruct H
-  | H : TransformSpatialEnv _ _ _ _ |- _ => destruct H
+  | H : ∃ fi, TransformSpatialEnv _ _ _ _ fi ∧ _ |- _ => destruct H as [fi [[] ?]]
   end; simpl; auto using Enil_wf.
 
 Lemma tac_always_intro Γp Γs Γp' Γs' M Q Q' :
@@ -672,37 +681,46 @@ Lemma tac_always_intro Γp Γs Γp' Γs' M Q Q' :
   end →
   match always_modality_spatial_spec M with
   | AIEnvForall C => TCAnd (TCForall C (env_to_list Γs)) (TCEq Γs Γs')
-  | AIEnvTransform C => TransformSpatialEnv M C Γs Γs'
+  | AIEnvTransform C =>
+     ∃ fi, TransformSpatialEnv M C Γs Γs' fi ∧
+     if fi then Absorbing Q' else TCTrue
   | AIEnvIsEmpty => TCAnd (TCEq Γs Enil) (TCEq Γs' Enil)
   | AIEnvClear => TCEq Γs' Enil
   | AIEnvId => TCEq Γs Γs'
   end →
   envs_entails (Envs Γp' Γs') Q → envs_entails (Envs Γp Γs) Q'.
 Proof.
-  rewrite envs_entails_eq /FromAlways /of_envs /= => <- HΓp HΓs <-.
-  apply pure_elim_l=> -[???]. assert (envs_wf (Envs Γp' Γs')).
+  rewrite envs_entails_eq /FromAlways /of_envs /= => HQ' HΓp HΓs HQ.
+  apply pure_elim_l=> -[???]. assert (envs_wf (Envs Γp' Γs')) as Hwf.
   { split; simpl in *.
-    - destruct (always_modality_persistent_spec M); tac_always_cases.
-    - destruct (always_modality_spatial_spec M); tac_always_cases.
+    - destruct (always_modality_persistent_spec M); tac_always_cases fi.
+    - destruct (always_modality_spatial_spec M); tac_always_cases fi.
     - destruct (always_modality_persistent_spec M),
-        (always_modality_spatial_spec M); tac_always_cases; naive_solver. }
-  rewrite pure_True // left_id. rewrite -always_modality_sep. apply sep_mono.
-  - destruct (always_modality_persistent_spec M) eqn:?; tac_always_cases.
+        (always_modality_spatial_spec M); tac_always_cases fi; naive_solver. }
+  assert (□ [∧] Γp ⊢ M (□ [∧] Γp'))%I as HMp.
+  { destruct (always_modality_persistent_spec M) eqn:?; tac_always_cases fi.
     + by rewrite {1}affinely_elim_emp (always_modality_emp M)
         persistently_True_emp affinely_persistently_emp.
     + eauto using always_modality_persistent_forall_big_and.
     + eauto using always_modality_persistent_transform.
     + by rewrite {1}affinely_elim_emp (always_modality_emp M)
         persistently_True_emp affinely_persistently_emp.
-    + eauto using always_modality_persistent_id.
-  - destruct (always_modality_spatial_spec M) eqn:?; tac_always_cases.
-    + by rewrite -always_modality_emp.
-    + eauto using always_modality_spatial_forall_big_sep.
-    + eauto using always_modality_spatial_transform,
-        always_modality_spatial_transform_absorbing.
-    + rewrite -(always_modality_spatial_clear M) // -always_modality_emp.
-      by rewrite -absorbingly_True_emp absorbingly_pure -True_intro.
-    + by destruct (always_modality_spatial_id M).
+    + eauto using always_modality_persistent_id. }
+  move: HQ'; rewrite -HQ pure_True // left_id HMp=> HQ' {HQ Hwf HMp}.
+  destruct (always_modality_spatial_spec M) eqn:?; tac_always_cases fi.
+  + by rewrite -HQ' /= !right_id.
+  + rewrite -HQ' {1}(always_modality_spatial_forall_big_sep _ _ Γs') //.
+    by rewrite always_modality_sep.
+  + destruct fi.
+    - rewrite -(absorbing Q') /bi_absorbingly -HQ' (comm _ True%I).
+      rewrite -always_modality_sep -assoc. apply sep_mono_r.
+      eauto using always_modality_spatial_transform.
+    - rewrite -HQ' -always_modality_sep. apply sep_mono_r.
+      rewrite -(right_id emp%I bi_sep (M _)).
+      eauto using always_modality_spatial_transform.
+  + rewrite -HQ' /= right_id comm -{2}(always_modality_spatial_clear M) //.
+    by rewrite (True_intro ([∗] Γs)%I).
+  + by destruct (always_modality_spatial_id M).
 Qed.
 
 Lemma tac_persistent Δ Δ' i p P P' Q :

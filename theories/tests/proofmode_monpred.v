@@ -71,7 +71,11 @@ Section tests.
   Lemma test_absolutely P Q : ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ ∀ᵢ (P ∗ Q).
   Proof. iIntros "#? HP HQ". iAlways. by iSplitL "HP". Qed.
 
-  Lemma test_absolutely_affine `{BiAffine PROP} P Q R :
+  Lemma test_absolutely_absorbing P Q R `{!Absorbing P} :
+    ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
+  Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
+
+  Lemma test_absolutely_affine P Q R `{!Affine R} :
     ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
   Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
 
