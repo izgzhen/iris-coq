@@ -10,7 +10,7 @@ Section always_modalities.
     always_modality_mixin (@bi_persistently PROP) AIEnvId AIEnvClear.
   Proof.
     split; eauto using equiv_entails_sym, persistently_intro, persistently_mono,
-      persistently_and, persistently_sep_2 with typeclass_instances.
+      persistently_sep_2 with typeclass_instances.
   Qed.
   Definition always_modality_persistently :=
     AlwaysModality _ always_modality_persistently_mixin.
@@ -19,7 +19,7 @@ Section always_modalities.
     always_modality_mixin (@bi_affinely PROP) AIEnvId (AIEnvForall Affine).
   Proof.
     split; eauto using equiv_entails_sym, affinely_intro, affinely_mono,
-      affinely_and, affinely_sep_2 with typeclass_instances.
+      affinely_sep_2 with typeclass_instances.
   Qed.
   Definition always_modality_affinely :=
     AlwaysModality _ always_modality_affinely_mixin.
@@ -29,7 +29,7 @@ Section always_modalities.
   Proof.
     split; eauto using equiv_entails_sym, affinely_persistently_emp,
       affinely_mono, persistently_mono, affinely_persistently_idemp,
-      affinely_persistently_and, affinely_persistently_sep_2 with typeclass_instances.
+      affinely_persistently_sep_2 with typeclass_instances.
   Qed.
   Definition always_modality_affinely_persistently :=
     AlwaysModality _ always_modality_affinely_persistently_mixin.
@@ -37,7 +37,7 @@ Section always_modalities.
   Lemma always_modality_plainly_mixin :
     always_modality_mixin (@bi_plainly PROP) (AIEnvForall Plain) AIEnvClear.
   Proof.
-    split; eauto using equiv_entails_sym, plainly_intro, plainly_mono,
+    split; split_and?; eauto using equiv_entails_sym, plainly_intro, plainly_mono,
       plainly_and, plainly_sep_2 with typeclass_instances.
   Qed.
   Definition always_modality_plainly :=
@@ -46,7 +46,7 @@ Section always_modalities.
   Lemma always_modality_affinely_plainly_mixin :
     always_modality_mixin (λ P : PROP, ■ P)%I (AIEnvForall Plain) AIEnvIsEmpty.
   Proof.
-    split; eauto using equiv_entails_sym, affinely_plainly_emp, affinely_intro,
+    split; split_and?; eauto using equiv_entails_sym, affinely_plainly_emp, affinely_intro,
       plainly_intro, affinely_mono, plainly_mono, affinely_plainly_idemp,
       affinely_plainly_and, affinely_plainly_sep_2 with typeclass_instances.
   Qed.

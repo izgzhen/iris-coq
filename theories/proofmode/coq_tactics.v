@@ -589,6 +589,7 @@ Class TransformPersistentEnv
     (M : always_modality PROP) (C : PROP → PROP → Prop) (Γ1 Γ2 : env PROP) := {
   transform_persistent_env :
     (∀ P Q, C P Q → □ P ⊢ M (□ Q)) →
+    (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q)) →
     □ ([∧] Γ1) ⊢ M (□ ([∧] Γ2));
   transform_persistent_env_wf : env_wf Γ1 → env_wf Γ2;
   transform_persistent_env_dom i : Γ1 !! i = None → Γ2 !! i = None;
@@ -604,8 +605,8 @@ Global Instance transform_persistent_env_snoc M (C : PROP → PROP → Prop) Γ 
   TransformPersistentEnv M C (Esnoc Γ i P) (Esnoc Γ' i Q).
 Proof.
   intros ? [HΓ Hwf Hdom]; split; simpl.
-  - intros HC. rewrite affinely_persistently_and HC // HΓ //.
-    by rewrite always_modality_and -affinely_persistently_and.
+  - intros HC Hand. rewrite affinely_persistently_and HC // HΓ //.
+    by rewrite Hand -affinely_persistently_and.
   - inversion 1; constructor; auto.
   - intros j. destruct (ident_beq _ _); naive_solver.
 Qed.
@@ -614,7 +615,7 @@ Global Instance transform_persistent_env_snoc_not M (C : PROP → PROP → Prop)
   TransformPersistentEnv M C (Esnoc Γ i P) Γ' | 100.
 Proof.
   intros [HΓ Hwf Hdom]; split; simpl.
-  - intros HC. by rewrite and_elim_r HΓ.
+  - intros HC Hand. by rewrite and_elim_r HΓ.
   - inversion 1; auto.
   - intros j. destruct (ident_beq _ _); naive_solver.
 Qed.
@@ -702,7 +703,8 @@ Proof.
     + by rewrite {1}affinely_elim_emp (always_modality_emp M)
         persistently_True_emp affinely_persistently_emp.
     + eauto using always_modality_persistent_forall_big_and.
-    + eauto using always_modality_persistent_transform.
+    + eauto using always_modality_persistent_transform,
+        always_modality_and_transform.
     + by rewrite {1}affinely_elim_emp (always_modality_emp M)
         persistently_True_emp affinely_persistently_emp.
     + eauto using always_modality_persistent_id. }

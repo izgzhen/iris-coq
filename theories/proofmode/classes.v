@@ -123,8 +123,8 @@ Record always_modality_mixin {PROP : bi} (M : PROP → PROP)
   always_modality_mixin_persistent :
     match pspec with
     | AIEnvIsEmpty => True
-    | AIEnvForall C => ∀ P, C P → □ P ⊢ M (□ P)
-    | AIEnvTransform C => ∀ P Q, C P Q → □ P ⊢ M (□ Q)
+    | AIEnvForall C => (∀ P, C P → □ P ⊢ M (□ P)) ∧ (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q))
+    | AIEnvTransform C => (∀ P Q, C P Q → □ P ⊢ M (□ Q)) ∧ (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q))
     | AIEnvClear => True
     | AIEnvId => ∀ P, □ P ⊢ M (□ P)
     end;
@@ -138,7 +138,6 @@ Record always_modality_mixin {PROP : bi} (M : PROP → PROP)
     end;
   always_modality_mixin_emp : emp ⊢ M emp;
   always_modality_mixin_mono P Q : (P ⊢ Q) → M P ⊢ M Q;
-  always_modality_mixin_and P Q : M P ∧ M Q ⊢ M (P ∧ Q);
   always_modality_mixin_sep P Q : M P ∗ M Q ⊢ M (P ∗ Q)
 }.
 
@@ -160,8 +159,14 @@ Section always_modality.
   Lemma always_modality_persistent_forall C P :
     always_modality_persistent_spec M = AIEnvForall C → C P → □ P ⊢ M (□ P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
+  Lemma always_modality_and_forall C P Q :
+    always_modality_persistent_spec M = AIEnvForall C → M P ∧ M Q ⊢ M (P ∧ Q).
+  Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma always_modality_persistent_transform C P Q :
     always_modality_persistent_spec M = AIEnvTransform C → C P Q → □ P ⊢ M (□ Q).
+  Proof. destruct M as [??? []]; naive_solver. Qed.
+  Lemma always_modality_and_transform C P Q :
+    always_modality_persistent_spec M = AIEnvTransform C → M P ∧ M Q ⊢ M (P ∧ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma always_modality_persistent_id P :
     always_modality_persistent_spec M = AIEnvId → □ P ⊢ M (□ P).
@@ -183,8 +188,6 @@ Section always_modality.
   Proof. eapply always_modality_mixin_emp, always_modality_mixin_of. Qed.
   Lemma always_modality_mono P Q : (P ⊢ Q) → M P ⊢ M Q.
   Proof. eapply always_modality_mixin_mono, always_modality_mixin_of. Qed.
-  Lemma always_modality_and P Q : M P ∧ M Q ⊢ M (P ∧ Q).
-  Proof. eapply always_modality_mixin_and, always_modality_mixin_of. Qed.
   Lemma always_modality_sep P Q : M P ∗ M Q ⊢ M (P ∗ Q).
   Proof. eapply always_modality_mixin_sep, always_modality_mixin_of. Qed.
   Global Instance always_modality_mono' : Proper ((⊢) ==> (⊢)) M.
@@ -200,7 +203,7 @@ Section always_modality.
   Proof.
     induction 2 as [|P Ps ? _ IH]; simpl.
     - by rewrite persistently_pure affinely_True_emp affinely_emp -always_modality_emp.
-    - rewrite affinely_persistently_and -always_modality_and -IH.
+    - rewrite affinely_persistently_and -always_modality_and_forall // -IH.
       by rewrite {1}(always_modality_persistent_forall _ P).
   Qed.
   Lemma always_modality_spatial_forall_big_sep C Ps :
