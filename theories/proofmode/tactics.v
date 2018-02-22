@@ -989,22 +989,7 @@ Tactic Notation "iModIntro":=
 Tactic Notation "iAlways" := iModIntro.
 
 (** * Later *)
-Tactic Notation "iNext" open_constr(n) :=
-  iStartProof;
-  let P := match goal with |- envs_entails _ ?P => P end in
-  try lazymatch n with 0 => fail 1 "iNext: cannot strip 0 laters" end;
-  (* apply is sometimes confused wrt. canonical structures search.
-     refine should use the other unification algorithm, which should
-     not have this issue. *)
-  notypeclasses refine (tac_next _ _ n _ _ _ _ _);
-    [apply _ || fail "iNext:" P "does not contain" n "laters"
-    |lazymatch goal with
-     | |- MaybeIntoLaterNEnvs 0 _ _ => fail "iNext:" P "does not contain laters"
-     | _ => apply _
-     end
-    |lazy beta (* remove beta redexes caused by removing laters under binders*)].
-
-Tactic Notation "iNext":= iNext _.
+Tactic Notation "iNext":= iAlways.
 
 (** * Update modality *)
 Tactic Notation "iModCore" constr(H) :=

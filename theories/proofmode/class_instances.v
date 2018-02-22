@@ -1458,10 +1458,11 @@ Global Instance is_except_0_fupd `{FUpdFacts PROP} E1 E2 P :
 Proof. by rewrite /IsExcept0 except_0_fupd. Qed.
 
 (* FromModal *)
-Global Instance from_modal_later P : FromModal (modality_laterN 1) (▷ P) P.
-Proof. by rewrite /FromModal. Qed.
-Global Instance from_modal_laterN n P : FromModal (modality_laterN n) (▷^n P) P.
-Proof. by rewrite /FromModal. Qed.
+Global Instance from_modal_later n P Q :
+  NoBackTrack (FromLaterN n P Q) →
+  TCIf (TCEq n 0) False TCTrue →
+  FromModal (modality_laterN n) P Q | 100.
+Proof. rewrite /FromLaterN /FromModal. by intros [?] [_ []|?]. Qed.
 Global Instance from_modal_except_0 P : FromModal modality_except_0 (◇ P) P.
 Proof. by rewrite /FromModal. Qed.
 

@@ -1250,6 +1250,8 @@ Proof.
 Qed.
 
 (** * Later *)
+(** Although the `iNext` tactic no longer exists, much of its infrastructure is
+still used by other tactics, e.g. the symbolic execution tactics. *)
 Class MaybeIntoLaterNEnv (n : nat) (Γ1 Γ2 : env PROP) :=
   into_laterN_env : env_Forall2 (MaybeIntoLaterN false n) Γ1 Γ2.
 Class MaybeIntoLaterNEnvs (n : nat) (Δ1 Δ2 : envs PROP) := {
@@ -1280,14 +1282,6 @@ Proof.
   - apply affinely_mono, persistently_mono.
     induction Hp; rewrite /= ?laterN_and. apply laterN_intro. by apply and_mono.
   - induction Hs; rewrite /= ?laterN_sep. apply laterN_intro. by apply sep_mono.
-Qed.
-
-Lemma tac_next Δ Δ' n Q Q' :
-  FromLaterN n Q Q' → MaybeIntoLaterNEnvs n Δ Δ' →
-  envs_entails Δ' Q' → envs_entails Δ Q.
-Proof.
-  rewrite envs_entails_eq => ?? HQ.
-  by rewrite -(from_laterN n Q) into_laterN_env_sound HQ.
 Qed.
 
 Lemma tac_löb Δ Δ' i Q :
