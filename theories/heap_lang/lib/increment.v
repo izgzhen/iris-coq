@@ -30,7 +30,7 @@ Section increment.
     wp_apply load_spec.
     (* Prove the atomic shift for load *)
     iDestruct "AUpd" as (F P) "(HF & HP & #AShft)".
-    iExists F, P. iFrame. iIntros "!# * % HP".
+    iExists F, P. iFrame. iIntros "!#" (E ?) "HP".
     iMod ("AShft" with "[%] HP") as (x) "[H↦ Hclose]"; first done.
     iModIntro. iExists (#x, 1%Qp). iFrame. iSplit.
     { iDestruct "Hclose" as "[Hclose _]". iApply "Hclose". }
