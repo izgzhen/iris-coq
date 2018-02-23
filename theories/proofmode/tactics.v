@@ -986,7 +986,8 @@ Tactic Notation "iModIntro" := iModIntro _.
 Tactic Notation "iAlways" := iModIntro.
 
 (** * Later *)
-Tactic Notation "iNext":= iAlways.
+Tactic Notation "iNext" open_constr(n) := iModIntro (modality_laterN n).
+Tactic Notation "iNext" := iModIntro (modality_laterN _).
 
 (** * Update modality *)
 Tactic Notation "iModCore" constr(H) :=
