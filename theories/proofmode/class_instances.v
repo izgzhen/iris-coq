@@ -177,100 +177,101 @@ Proof. done. Qed.
 Global Instance make_laterN_default P : MakeLaterN n P (▷^n P) | 100.
 Proof. done. Qed.
 
-Global Instance into_laterN_0 P : IntoLaterN 0 P P.
+Global Instance into_laterN_0 only_head P : IntoLaterN only_head 0 P P.
 Proof. done. Qed.
-Global Instance into_laterN_later n n' m' P Q lQ :
+Global Instance into_laterN_later only_head n n' m' P Q lQ :
   NatCancel n 1 n' m' →
   (** If canceling has failed (i.e. [1 = m']), we should make progress deeper
   into [P], as such, we continue with the [IntoLaterN] class, which is required
   to make progress. If canceling has succeeded, we do not need to make further
   progress, but there may still be a left-over (i.e. [n']) to cancel more deeply
   into [P], as such, we continue with [MaybeIntoLaterN]. *)
-  TCIf (TCEq 1 m') (IntoLaterN n' P Q) (MaybeIntoLaterN n' P Q) →
+  TCIf (TCEq 1 m') (IntoLaterN only_head n' P Q) (MaybeIntoLaterN only_head n' P Q) →
   MakeLaterN m' Q lQ →
-  IntoLaterN n (▷ P) lQ | 2.
+  IntoLaterN only_head n (▷ P) lQ | 2.
 Proof.
   rewrite /MakeLaterN /IntoLaterN /MaybeIntoLaterN /NatCancel.
   move=> Hn [_ ->|->] <-;
     by rewrite -later_laterN -laterN_plus -Hn Nat.add_comm.
 Qed.
-Global Instance into_laterN_laterN n m n' m' P Q lQ :
+Global Instance into_laterN_laterN only_head n m n' m' P Q lQ :
   NatCancel n m n' m' →
-  TCIf (TCEq m m') (IntoLaterN n' P Q) (MaybeIntoLaterN n' P Q) →
+  TCIf (TCEq m m') (IntoLaterN only_head n' P Q) (MaybeIntoLaterN only_head n' P Q) →
   MakeLaterN m' Q lQ →
-  IntoLaterN n (▷^m P) lQ | 1.
+  IntoLaterN only_head n (▷^m P) lQ | 1.
 Proof.
   rewrite /MakeLaterN /IntoLaterN /MaybeIntoLaterN /NatCancel.
   move=> Hn [_ ->|->] <-; by rewrite -!laterN_plus -Hn Nat.add_comm.
 Qed.
 
 Global Instance into_laterN_and_l n P1 P2 Q1 Q2 :
-  IntoLaterN n P1 Q1 → MaybeIntoLaterN n P2 Q2 →
-  IntoLaterN n (P1 ∧ P2) (Q1 ∧ Q2) | 10.
+  IntoLaterN false n P1 Q1 → MaybeIntoLaterN false n P2 Q2 →
+  IntoLaterN false n (P1 ∧ P2) (Q1 ∧ Q2) | 10.
 Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> -> ->. by rewrite laterN_and. Qed.
 Global Instance into_laterN_and_r n P P2 Q2 :
-  IntoLaterN n P2 Q2 → IntoLaterN n (P ∧ P2) (P ∧ Q2) | 11.
+  IntoLaterN false n P2 Q2 → IntoLaterN false n (P ∧ P2) (P ∧ Q2) | 11.
 Proof.
   rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_and -(laterN_intro _ P).
 Qed.
 
 Global Instance into_later_forall {A} n (Φ Ψ : A → uPred M) :
-  (∀ x, IntoLaterN n (Φ x) (Ψ x)) → IntoLaterN n (∀ x, Φ x) (∀ x, Ψ x).
+  (∀ x, IntoLaterN false n (Φ x) (Ψ x)) →
+  IntoLaterN false n (∀ x, Φ x) (∀ x, Ψ x).
 Proof. rewrite /IntoLaterN /MaybeIntoLaterN laterN_forall=> ?. by apply forall_mono. Qed.
 Global Instance into_later_exist {A} n (Φ Ψ : A → uPred M) :
-  (∀ x, IntoLaterN n (Φ x) (Ψ x)) →
-  IntoLaterN n (∃ x, Φ x) (∃ x, Ψ x).
+  (∀ x, IntoLaterN false n (Φ x) (Ψ x)) →
+  IntoLaterN false n (∃ x, Φ x) (∃ x, Ψ x).
 Proof. rewrite /IntoLaterN /MaybeIntoLaterN -laterN_exist_2=> ?. by apply exist_mono. Qed.
 
 Global Instance into_laterN_or_l n P1 P2 Q1 Q2 :
-  IntoLaterN n P1 Q1 → MaybeIntoLaterN n P2 Q2 →
-  IntoLaterN n (P1 ∨ P2) (Q1 ∨ Q2) | 10.
+  IntoLaterN false n P1 Q1 → MaybeIntoLaterN false n P2 Q2 →
+  IntoLaterN false n (P1 ∨ P2) (Q1 ∨ Q2) | 10.
 Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> -> ->. by rewrite laterN_or. Qed.
 Global Instance into_laterN_or_r n P P2 Q2 :
-  IntoLaterN n P2 Q2 →
-  IntoLaterN n (P ∨ P2) (P ∨ Q2) | 11.
+  IntoLaterN false n P2 Q2 →
+  IntoLaterN false n (P ∨ P2) (P ∨ Q2) | 11.
 Proof.
   rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_or -(laterN_intro _ P).
 Qed.
 
 Global Instance into_laterN_sep_l n P1 P2 Q1 Q2 :
-  IntoLaterN n P1 Q1 → MaybeIntoLaterN n P2 Q2 →
-  IntoLaterN n (P1 ∗ P2) (Q1 ∗ Q2) | 10.
+  IntoLaterN false n P1 Q1 → MaybeIntoLaterN false n P2 Q2 →
+  IntoLaterN false n (P1 ∗ P2) (Q1 ∗ Q2) | 10.
 Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> -> ->. by rewrite laterN_sep. Qed.
 Global Instance into_laterN_sep_r n P P2 Q2 :
-  IntoLaterN n P2 Q2 →
-  IntoLaterN n (P ∗ P2) (P ∗ Q2) | 11.
+  IntoLaterN false n P2 Q2 →
+  IntoLaterN false n (P ∗ P2) (P ∗ Q2) | 11.
 Proof.
   rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_sep -(laterN_intro _ P).
 Qed.
 
 Global Instance into_laterN_big_sepL n {A} (Φ Ψ : nat → A → uPred M) (l: list A) :
-  (∀ x k, IntoLaterN n (Φ k x) (Ψ k x)) →
-  IntoLaterN n ([∗ list] k ↦ x ∈ l, Φ k x) ([∗ list] k ↦ x ∈ l, Ψ k x).
+  (∀ x k, IntoLaterN false n (Φ k x) (Ψ k x)) →
+  IntoLaterN false n ([∗ list] k ↦ x ∈ l, Φ k x) ([∗ list] k ↦ x ∈ l, Ψ k x).
 Proof.
   rewrite /IntoLaterN /MaybeIntoLaterN=> ?.
   rewrite big_opL_commute. by apply big_sepL_mono.
 Qed.
 Global Instance into_laterN_big_sepM n `{Countable K} {A}
     (Φ Ψ : K → A → uPred M) (m : gmap K A) :
-  (∀ x k, IntoLaterN n (Φ k x) (Ψ k x)) →
-  IntoLaterN n ([∗ map] k ↦ x ∈ m, Φ k x) ([∗ map] k ↦ x ∈ m, Ψ k x).
+  (∀ x k, IntoLaterN false n (Φ k x) (Ψ k x)) →
+  IntoLaterN false n ([∗ map] k ↦ x ∈ m, Φ k x) ([∗ map] k ↦ x ∈ m, Ψ k x).
 Proof.
   rewrite /IntoLaterN /MaybeIntoLaterN=> ?.
   rewrite big_opM_commute; by apply big_sepM_mono.
 Qed.
 Global Instance into_laterN_big_sepS n `{Countable A}
     (Φ Ψ : A → uPred M) (X : gset A) :
-  (∀ x, IntoLaterN n (Φ x) (Ψ x)) →
-  IntoLaterN n ([∗ set] x ∈ X, Φ x) ([∗ set] x ∈ X, Ψ x).
+  (∀ x, IntoLaterN false n (Φ x) (Ψ x)) →
+  IntoLaterN false n ([∗ set] x ∈ X, Φ x) ([∗ set] x ∈ X, Ψ x).
 Proof.
   rewrite /IntoLaterN /MaybeIntoLaterN=> ?.
   rewrite big_opS_commute; by apply big_sepS_mono.
 Qed.
 Global Instance into_laterN_big_sepMS n `{Countable A}
     (Φ Ψ : A → uPred M) (X : gmultiset A) :
-  (∀ x, IntoLaterN n (Φ x) (Ψ x)) →
-  IntoLaterN n ([∗ mset] x ∈ X, Φ x) ([∗ mset] x ∈ X, Ψ x).
+  (∀ x, IntoLaterN false n (Φ x) (Ψ x)) →
+  IntoLaterN false n ([∗ mset] x ∈ X, Φ x) ([∗ mset] x ∈ X, Ψ x).
 Proof.
   rewrite /IntoLaterN /MaybeIntoLaterN=> ?.
   rewrite big_opMS_commute; by apply big_sepMS_mono.
@@ -651,7 +652,7 @@ Proof.
 Qed.
 
 Global Instance frame_later p R R' P Q Q' :
-  NoBackTrack (MaybeIntoLaterN 1 R' R) →
+  NoBackTrack (MaybeIntoLaterN true 1 R' R) →
   Frame p R P Q → MakeLaterN 1 Q Q' → Frame p R' (▷ P) Q'.
 Proof.
   rewrite /Frame /MakeLaterN /MaybeIntoLaterN=>-[->] <- <-.
@@ -659,7 +660,7 @@ Proof.
 Qed.
 
 Global Instance frame_laterN p n R R' P Q Q' :
-  NoBackTrack (MaybeIntoLaterN n R' R) →
+  NoBackTrack (MaybeIntoLaterN true n R' R) →
   Frame p R P Q → MakeLaterN n Q Q' → Frame p R' (▷^n P) Q'.
 Proof.
   rewrite /Frame /MakeLaterN /MaybeIntoLaterN=>-[->] <- <-.
