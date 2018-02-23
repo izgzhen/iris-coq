@@ -96,12 +96,12 @@ Qed.
 
 Global Instance into_inv_inv N P : IntoInv (inv N P) N.
 
-Global Instance elim_inv_inv E N P P' Q Q' :
-  ElimModal True (|={E,E∖↑N}=> ▷ P ∗ (▷ P ={E∖↑N,E}=∗ True))%I P' Q Q' →
-  ElimInv (↑N ⊆ E) (inv N P) True P' Q Q'.
+Global Instance elim_inv_inv E N P Q Q' :
+  (∀ R, ElimModal True (|={E,E∖↑N}=> R) R Q Q') →
+  ElimInv (↑N ⊆ E) (inv N P) True (▷ P) (▷ P ={E∖↑N,E}=∗ True) Q Q'.
 Proof.
   rewrite /ElimInv /ElimModal. iIntros (Helim ?) "(#H1&_&H2)".
-  iApply Helim; auto; iFrame.
+  iApply (Helim with "[$H2]"); first done.
   iMod (inv_open _ N with "[#]") as "(HP&Hclose)"; auto with iFrame.
 Qed.
 

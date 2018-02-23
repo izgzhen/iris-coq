@@ -1893,27 +1893,25 @@ Tactic Notation "iInvCore" constr(select) "with" constr(pats) "as" tactic(tac) c
   let H := iFresh in
   lazymatch type of select with
   | string =>
-     eapply tac_inv_elim with _ select H _ _ _ _ _ _;
+     eapply tac_inv_elim with _ select H _ _ _ _ _ _ _;
      first by (iAssumptionCore || fail "iInv: invariant" select "not found")
   | ident  =>
-     eapply tac_inv_elim with _ select H _ _ _ _ _ _;
+     eapply tac_inv_elim with _ select H _ _ _ _ _ _ _;
      first by (iAssumptionCore || fail "iInv: invariant" select "not found")
   | namespace =>
-     eapply tac_inv_elim with _ _ H _ _ _ _ _ _;
+     eapply tac_inv_elim with _ _ H _ _ _ _ _ _ _;
      first by (iAssumptionInv select || fail "iInv: invariant" select "not found")
   | _ => fail "iInv: selector" select "is not of the right type "
   end;
     [apply _ ||
-     let I := match goal with |- ElimInv _ ?I  _ _ _ _ => I end in
+     let I := match goal with |- ElimInv _ ?I  _ _ _ _ _ => I end in
      fail "iInv: cannot eliminate invariant " I
     |try (split_and?; solve [ fast_done | solve_ndisj ])
     |let R := fresh in intros R; eexists; split; [env_reflexivity|];
      iSpecializePat H pats; last (
        iApplyHyp H; clear R;
        iIntros H; (* H was spatial, so it's gone due to the apply and we can reuse the name *)
-       let patclose := intro_pat.parse_one Hclose in
-       let patintro := constr:(IList [[IIdent H; patclose]]) in
-       iDestructHyp H as patintro;
+       iIntros Hclose;
        tac H
     )].
 
