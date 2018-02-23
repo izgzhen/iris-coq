@@ -1,6 +1,5 @@
 From iris.base_logic Require Export derived.
 From iris.bi Require Export bi.
-From iris.proofmode Require Import tactics.
 From iris.algebra Require Import proofmode_classes.
 Set Default Proof Using "Type".
 
