@@ -101,85 +101,80 @@ spatial what action should be performed upon introducing the modality:
 
 Formally, these actions correspond to the following inductive type: *)
 
-Inductive modality_intro_spec (PROP : bi) :=
-  | MIEnvIsEmpty
-  | MIEnvForall (C : PROP → Prop)
-  | MIEnvTransform (C : PROP → PROP → Prop)
-  | MIEnvClear
-  | MIEnvId.
-Arguments MIEnvIsEmpty {_}.
+Inductive modality_intro_spec (PROP1 : bi) : bi → Type :=
+  | MIEnvIsEmpty {PROP2 : bi} : modality_intro_spec PROP1 PROP2
+  | MIEnvForall (C : PROP1 → Prop) : modality_intro_spec PROP1 PROP1
+  | MIEnvTransform {PROP2 : bi} (C : PROP2 → PROP1 → Prop) : modality_intro_spec PROP1 PROP2
+  | MIEnvClear {PROP2} : modality_intro_spec PROP1 PROP2
+  | MIEnvId : modality_intro_spec PROP1 PROP1.
+Arguments MIEnvIsEmpty {_ _}.
 Arguments MIEnvForall {_} _.
-Arguments MIEnvTransform {_} _.
-Arguments MIEnvClear {_}.
+Arguments MIEnvTransform {_ _} _.
+Arguments MIEnvClear {_ _}.
 Arguments MIEnvId {_}.
 
 Notation MIEnvFilter C := (MIEnvTransform (TCDiag C)).
 
+Definition modality_intro_spec_persistent {PROP1 PROP2}
+    (s : modality_intro_spec PROP1 PROP2) : (PROP1 → PROP2) → Prop :=
+  match s with
+  | MIEnvIsEmpty => λ M, True
+  | MIEnvForall C => λ M,
+     (∀ P, C P → □ P ⊢ M (□ P)) ∧
+     (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q))
+  | MIEnvTransform C => λ M,
+     (∀ P Q, C P Q → □ P ⊢ M (□ Q)) ∧
+     (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q))
+  | MIEnvClear => λ M, True
+  | MIEnvId => λ M, ∀ P, □ P ⊢ M (□ P)
+  end.
+
+Definition modality_intro_spec_spatial {PROP1 PROP2}
+    (s : modality_intro_spec PROP1 PROP2) : (PROP1 → PROP2) → Prop :=
+  match s with
+  | MIEnvIsEmpty => λ M, True
+  | MIEnvForall C => λ M, ∀ P, C P → P ⊢ M P
+  | MIEnvTransform C => λ M, ∀ P Q, C P Q → P ⊢ M Q
+  | MIEnvClear => λ M, ∀ P, Absorbing (M P)
+  | MIEnvId => λ M, ∀ P, P ⊢ M P
+  end.
+
 (* A modality is then a record packing together the modality with the laws it
 should satisfy to justify the given actions for both contexts: *)
-Record modality_mixin {PROP : bi} (M : PROP → PROP)
-    (pspec sspec : modality_intro_spec PROP) := {
-  modality_mixin_persistent :
-    match pspec with
-    | MIEnvIsEmpty => True
-    | MIEnvForall C => (∀ P, C P → □ P ⊢ M (□ P)) ∧ (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q))
-    | MIEnvTransform C => (∀ P Q, C P Q → □ P ⊢ M (□ Q)) ∧ (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q))
-    | MIEnvClear => True
-    | MIEnvId => ∀ P, □ P ⊢ M (□ P)
-    end;
-  modality_mixin_spatial :
-    match sspec with
-    | MIEnvIsEmpty => True
-    | MIEnvForall C => ∀ P, C P → P ⊢ M P
-    | MIEnvTransform C => (∀ P Q, C P Q → P ⊢ M Q)
-    | MIEnvClear => ∀ P, Absorbing (M P)
-    | MIEnvId => ∀ P, P ⊢ M P
-    end;
+Record modality_mixin {PROP1 PROP2 : bi} (M : PROP1 → PROP2)
+    (pspec sspec : modality_intro_spec PROP1 PROP2) := {
+  modality_mixin_persistent : modality_intro_spec_persistent pspec M;
+  modality_mixin_spatial : modality_intro_spec_spatial sspec M;
   modality_mixin_emp : emp ⊢ M emp;
   modality_mixin_mono P Q : (P ⊢ Q) → M P ⊢ M Q;
   modality_mixin_sep P Q : M P ∗ M Q ⊢ M (P ∗ Q)
 }.
 
-Record modality (PROP : bi) := Modality {
-  modality_car :> PROP → PROP;
-  modality_persistent_spec : modality_intro_spec PROP;
-  modality_spatial_spec : modality_intro_spec PROP;
+Record modality (PROP1 PROP2 : bi) := Modality {
+  modality_car :> PROP1 → PROP2;
+  modality_persistent_spec : modality_intro_spec PROP1 PROP2;
+  modality_spatial_spec : modality_intro_spec PROP1 PROP2;
   modality_mixin_of :
     modality_mixin modality_car modality_persistent_spec modality_spatial_spec
 }.
-Arguments Modality {_} _ {_ _} _.
-Arguments modality_persistent_spec {_} _.
-Arguments modality_spatial_spec {_} _.
+Arguments Modality {_ _} _ {_ _} _.
+Arguments modality_persistent_spec {_ _} _.
+Arguments modality_spatial_spec {_ _} _.
 
 Section modality.
-  Context {PROP} (M : modality PROP).
+  Context {PROP1 PROP2} (M : modality PROP1 PROP2).
 
-  Lemma modality_persistent_forall C P :
-    modality_persistent_spec M = MIEnvForall C → C P → □ P ⊢ M (□ P).
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma modality_and_forall C P Q :
-    modality_persistent_spec M = MIEnvForall C → M P ∧ M Q ⊢ M (P ∧ Q).
-  Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_persistent_transform C P Q :
     modality_persistent_spec M = MIEnvTransform C → C P Q → □ P ⊢ M (□ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_and_transform C P Q :
     modality_persistent_spec M = MIEnvTransform C → M P ∧ M Q ⊢ M (P ∧ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma modality_persistent_id P :
-    modality_persistent_spec M = MIEnvId → □ P ⊢ M (□ P).
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma modality_spatial_forall C P :
-    modality_spatial_spec M = MIEnvForall C → C P → P ⊢ M P.
-  Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_spatial_transform C P Q :
     modality_spatial_spec M = MIEnvTransform C → C P Q → P ⊢ M Q.
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_spatial_clear P :
     modality_spatial_spec M = MIEnvClear → Absorbing (M P).
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma modality_spatial_id P :
-    modality_spatial_spec M = MIEnvId → P ⊢ M P.
   Proof. destruct M as [??? []]; naive_solver. Qed.
 
   Lemma modality_emp : emp ⊢ M emp.
@@ -194,6 +189,26 @@ Section modality.
   Proof. intros P Q. apply modality_mono. Qed.
   Global Instance modality_proper : Proper ((≡) ==> (≡)) M.
   Proof. intros P Q. rewrite !equiv_spec=> -[??]; eauto using modality_mono. Qed.
+End modality.
+
+Section modality1.
+  Context {PROP} (M : modality PROP PROP).
+
+  Lemma modality_persistent_forall C P :
+    modality_persistent_spec M = MIEnvForall C → C P → □ P ⊢ M (□ P).
+  Proof. destruct M as [??? []]; naive_solver. Qed.
+  Lemma modality_and_forall C P Q :
+    modality_persistent_spec M = MIEnvForall C → M P ∧ M Q ⊢ M (P ∧ Q).
+  Proof. destruct M as [??? []]; naive_solver. Qed.
+  Lemma modality_persistent_id P :
+    modality_persistent_spec M = MIEnvId → □ P ⊢ M (□ P).
+  Proof. destruct M as [??? []]; naive_solver. Qed.
+  Lemma modality_spatial_forall C P :
+    modality_spatial_spec M = MIEnvForall C → C P → P ⊢ M P.
+  Proof. destruct M as [??? []]; naive_solver. Qed.
+  Lemma modality_spatial_id P :
+    modality_spatial_spec M = MIEnvId → P ⊢ M P.
+  Proof. destruct M as [??? []]; naive_solver. Qed.
 
   Lemma modality_persistent_forall_big_and C Ps :
     modality_persistent_spec M = MIEnvForall C →
@@ -212,13 +227,14 @@ Section modality.
     - by rewrite -modality_emp.
     - by rewrite -modality_sep -IH {1}(modality_spatial_forall _ P).
   Qed.
-End modality.
+End modality1.
 
-Class FromModal {PROP : bi} (M : modality PROP) (P Q : PROP) :=
+Class FromModal {PROP1 PROP2 : bi}
+    (M : modality PROP1 PROP2) (P : PROP2) (Q : PROP1) :=
   from_modal : M Q ⊢ P.
-Arguments FromModal {_} _ _%I _%I : simpl never.
-Arguments from_modal {_} _ _%I _%I {_}.
-Hint Mode FromModal + - ! - : typeclass_instances.
+Arguments FromModal {_ _} _ _%I _%I : simpl never.
+Arguments from_modal {_ _} _ _%I _%I {_}.
+Hint Mode FromModal - + - ! - : typeclass_instances.
 
 Class FromAffinely {PROP : bi} (P Q : PROP) :=
   from_affinely : bi_affinely Q ⊢ P.

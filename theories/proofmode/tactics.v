@@ -967,25 +967,21 @@ Tactic Notation "iModIntro":=
   eapply tac_modal_intro;
     [apply _  ||
      fail "iModIntro: the goal is not a modality"
-    |hnf; env_cbv;
-     apply _ ||
-     lazymatch goal with
-     | |- TCAnd (TCForall ?C _) _ => fail "iModIntro: persistent context does not satisfy" C
-     | |- TCAnd (TCEq _ Enil) _ => fail "iModIntro: persistent context is non-empty"
+    |apply _ ||
+     let s := lazymatch goal with |- IntoModalPersistentEnv _ _ _ ?s => s end in
+     lazymatch eval hnf in s with
+     | MIEnvForall ?C => fail "iModIntro: persistent context does not satisfy" C
+     | MIEnvIsEmpty => fail "iModIntro: persistent context is non-empty"
      end
-    |hnf; env_cbv;
-     lazymatch goal with
-     | |- ∃ _, TransformSpatialEnv _ _ _ _ _ ∧ _ =>
-        eexists; split;
-          [apply _
-          |apply _ || fail "iModIntro: cannot filter spatial context when goal is not absorbing"]
-     | |- TCAnd (TCForall ?C _) _ =>
-        apply _ || fail "iModIntro: spatial context does not satisfy" C
-     | |- TCAnd (TCEq _ Enil) _ =>
-        apply _ || fail "iModIntro: spatial context is non-empty"
-     | |- _ => apply _
+    |apply _ ||
+     let s := lazymatch goal with |- IntoModalPersistentEnv _ _ _ ?s => s end in
+     lazymatch eval hnf in s with
+     | MIEnvForall ?C => fail "iModIntro: spatial context does not satisfy" C
+     | MIEnvIsEmpty => fail "iModIntro: spatial context is non-empty"
      end
-    |env_cbv].
+    |env_cbv; apply _ ||
+     fail "iModIntro: cannot filter spatial context when goal is not absorbing"
+    |].
 Tactic Notation "iAlways" := iModIntro.
 
 (** * Later *)

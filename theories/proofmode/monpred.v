@@ -21,7 +21,8 @@ Section modalities.
     modality_mixin (@monPred_absolutely I PROP)
       (MIEnvFilter Absolute) (MIEnvFilter Absolute).
   Proof.
-    split; split_and?; intros; try match goal with H : TCDiag _ _ _ |- _ => destruct H end;
+    split; simpl; split_and?; intros;
+      try match goal with H : TCDiag _ _ _ |- _ => destruct H end;
       eauto using bi.equiv_entails_sym, absolute_absolutely,
         monPred_absolutely_mono, monPred_absolutely_and,
         monPred_absolutely_sep_2 with typeclass_instances.

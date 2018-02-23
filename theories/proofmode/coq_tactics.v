@@ -1036,148 +1036,6 @@ Proof.
 Qed.
 
 (** * Modalities *)
-(** Transforming *)
-Class TransformPersistentEnv
-    (M : modality PROP) (C : PROP → PROP → Prop) (Γ1 Γ2 : env PROP) := {
-  transform_persistent_env :
-    (∀ P Q, C P Q → □ P ⊢ M (□ Q)) →
-    (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q)) →
-    □ ([∧] Γ1) ⊢ M (□ ([∧] Γ2));
-  transform_persistent_env_wf : env_wf Γ1 → env_wf Γ2;
-  transform_persistent_env_dom i : Γ1 !! i = None → Γ2 !! i = None;
-}.
-Global Instance transform_persistent_env_nil M C : TransformPersistentEnv M C Enil Enil.
-Proof.
-  split=> // HC /=. rewrite !persistently_pure !affinely_True_emp.
-  by rewrite affinely_emp -modality_emp.
-Qed.
-Global Instance transform_persistent_env_snoc M (C : PROP → PROP → Prop) Γ Γ' i P Q :
-  C P Q →
-  TransformPersistentEnv M C Γ Γ' →
-  TransformPersistentEnv M C (Esnoc Γ i P) (Esnoc Γ' i Q).
-Proof.
-  intros ? [HΓ Hwf Hdom]; split; simpl.
-  - intros HC Hand. rewrite affinely_persistently_and HC // HΓ //.
-    by rewrite Hand -affinely_persistently_and.
-  - inversion 1; constructor; auto.
-  - intros j. destruct (ident_beq _ _); naive_solver.
-Qed.
-Global Instance transform_persistent_env_snoc_not M (C : PROP → PROP → Prop) Γ Γ' i P :
-  TransformPersistentEnv M C Γ Γ' →
-  TransformPersistentEnv M C (Esnoc Γ i P) Γ' | 100.
-Proof.
-  intros [HΓ Hwf Hdom]; split; simpl.
-  - intros HC Hand. by rewrite and_elim_r HΓ.
-  - inversion 1; auto.
-  - intros j. destruct (ident_beq _ _); naive_solver.
-Qed.
-
-Class TransformSpatialEnv
-    (M : modality PROP) (C : PROP → PROP → Prop)
-    (Γ1 Γ2 : env PROP) (filtered : bool) := {
-  transform_spatial_env :
-    (∀ P Q, C P Q → P ⊢ M Q) →
-    ([∗] Γ1) ⊢ M ([∗] Γ2) ∗ if filtered then True else emp;
-  transform_spatial_env_wf : env_wf Γ1 → env_wf Γ2;
-  transform_spatial_env_dom i : Γ1 !! i = None → Γ2 !! i = None;
-}.
-Global Instance transform_spatial_env_nil M C :
-  TransformSpatialEnv M C Enil Enil false.
-Proof. split=> // HC /=. by rewrite right_id -modality_emp. Qed.
-Global Instance transform_spatial_env_snoc M (C : PROP → PROP → Prop) Γ Γ' i P Q fi :
-  C P Q →
-  TransformSpatialEnv M C Γ Γ' fi →
-  TransformSpatialEnv M C (Esnoc Γ i P) (Esnoc Γ' i Q) fi.
-Proof.
-  intros ? [HΓ Hwf Hdom]; split; simpl.
-  - intros HC. by rewrite {1}(HC P) // HΓ // assoc modality_sep.
-  - inversion 1; constructor; auto.
-  - intros j. destruct (ident_beq _ _); naive_solver.
-Qed.
-
-Global Instance transform_spatial_env_snoc_not
-    M (C : PROP → PROP → Prop) Γ Γ' i P fi fi' :
-  TransformSpatialEnv M C Γ Γ' fi →
-  TCIf (TCEq fi false)
-    (TCIf (Affine P) (TCEq fi' false) (TCEq fi' true))
-    (TCEq fi' true) →
-  TransformSpatialEnv M C (Esnoc Γ i P) Γ' fi' | 100.
-Proof.
-  intros [HΓ Hwf Hdom] Hif; split; simpl.
-  - intros ?. rewrite HΓ //. destruct Hif as [-> [? ->| ->]| ->].
-    + by rewrite (affine P) left_id.
-    + by rewrite right_id comm (True_intro P).
-    + by rewrite comm -assoc (True_intro (_ ∗ P)%I).
-  - inversion 1; auto.
-  - intros j. destruct (ident_beq _ _); naive_solver.
-Qed.
-
-(** The actual introduction tactic *)
-Ltac tac_modal_cases fi :=
-  simplify_eq/=;
-  repeat match goal with
-  | H : TCAnd _ _ |- _ => destruct H
-  | H : TCEq ?x _ |- _ => inversion H; subst x; clear H
-  | H : TCForall _ _ |- _ => apply TCForall_Forall in H
-  | H : TransformPersistentEnv _ _ _ _ |- _ => destruct H
-  | H : ∃ fi, TransformSpatialEnv _ _ _ _ fi ∧ _ |- _ => destruct H as [fi [[] ?]]
-  end; simpl; auto using Enil_wf.
-
-Lemma tac_modal_intro Γp Γs Γp' Γs' M Q Q' :
-  FromModal M Q' Q →
-  match modality_persistent_spec M with
-  | MIEnvForall C => TCAnd (TCForall C (env_to_list Γp)) (TCEq Γp Γp')
-  | MIEnvTransform C => TransformPersistentEnv M C Γp Γp'
-  | MIEnvIsEmpty => TCAnd (TCEq Γp Enil) (TCEq Γp' Enil)
-  | MIEnvClear => TCEq Γp' Enil
-  | MIEnvId => TCEq Γp Γp'
-  end →
-  match modality_spatial_spec M with
-  | MIEnvForall C => TCAnd (TCForall C (env_to_list Γs)) (TCEq Γs Γs')
-  | MIEnvTransform C =>
-     ∃ fi, TransformSpatialEnv M C Γs Γs' fi ∧
-     if fi then Absorbing Q' else TCTrue
-  | MIEnvIsEmpty => TCAnd (TCEq Γs Enil) (TCEq Γs' Enil)
-  | MIEnvClear => TCEq Γs' Enil
-  | MIEnvId => TCEq Γs Γs'
-  end →
-  envs_entails (Envs Γp' Γs') Q → envs_entails (Envs Γp Γs) Q'.
-Proof.
-  rewrite envs_entails_eq /FromModal /of_envs /= => HQ' HΓp HΓs HQ.
-  apply pure_elim_l=> -[???]. assert (envs_wf (Envs Γp' Γs')) as Hwf.
-  { split; simpl in *.
-    - destruct (modality_persistent_spec M); tac_modal_cases fi.
-    - destruct (modality_spatial_spec M); tac_modal_cases fi.
-    - destruct (modality_persistent_spec M),
-        (modality_spatial_spec M); tac_modal_cases fi; naive_solver. }
-  assert (□ [∧] Γp ⊢ M (□ [∧] Γp'))%I as HMp.
-  { destruct (modality_persistent_spec M) eqn:?; tac_modal_cases fi.
-    + by rewrite {1}affinely_elim_emp (modality_emp M)
-        persistently_True_emp affinely_persistently_emp.
-    + eauto using modality_persistent_forall_big_and.
-    + eauto using modality_persistent_transform,
-        modality_and_transform.
-    + by rewrite {1}affinely_elim_emp (modality_emp M)
-        persistently_True_emp affinely_persistently_emp.
-    + eauto using modality_persistent_id. }
-  move: HQ'; rewrite -HQ pure_True // left_id HMp=> HQ' {HQ Hwf HMp}.
-  destruct (modality_spatial_spec M) eqn:?; tac_modal_cases fi.
-  + by rewrite -HQ' /= !right_id.
-  + rewrite -HQ' {1}(modality_spatial_forall_big_sep _ _ Γs') //.
-    by rewrite modality_sep.
-  + destruct fi.
-    - rewrite -(absorbing Q') /bi_absorbingly -HQ' (comm _ True%I).
-      rewrite -modality_sep -assoc. apply sep_mono_r.
-      eauto using modality_spatial_transform.
-    - rewrite -HQ' -modality_sep. apply sep_mono_r.
-      rewrite -(right_id emp%I bi_sep (M _)).
-      eauto using modality_spatial_transform.
-  + rewrite -HQ' /= right_id comm -{2}(modality_spatial_clear M) //.
-    by rewrite (True_intro ([∗] Γs)%I).
-  + rewrite -HQ' {1}(modality_spatial_id M ([∗] Γs')%I) //.
-    by rewrite -modality_sep.
-Qed.
-
 Lemma tac_modal_elim Δ Δ' i p φ P' P Q Q' :
   envs_lookup i Δ = Some (p, P) →
   ElimModal φ P P' Q Q' →
@@ -1205,6 +1063,176 @@ Proof.
   rewrite affinely_persistently_if_elim -assoc wand_curry. auto.
 Qed.
 End bi_tactics.
+
+Class TransformPersistentEnv {PROP1 PROP2} (M : modality PROP1 PROP2)
+    (C : PROP2 → PROP1 → Prop) (Γin : env PROP2) (Γout : env PROP1) := {
+  transform_persistent_env :
+    (∀ P Q, C P Q → □ P ⊢ M (□ Q)) →
+    (∀ P Q, M P ∧ M Q ⊢ M (P ∧ Q)) →
+    □ ([∧] Γin) ⊢ M (□ ([∧] Γout));
+  transform_persistent_env_wf : env_wf Γin → env_wf Γout;
+  transform_persistent_env_dom i : Γin !! i = None → Γout !! i = None;
+}.
+
+Class TransformSpatialEnv {PROP1 PROP2} (M : modality PROP1 PROP2)
+    (C : PROP2 → PROP1 → Prop) (Γin : env PROP2) (Γout : env PROP1)
+    (filtered : bool) := {
+  transform_spatial_env :
+    (∀ P Q, C P Q → P ⊢ M Q) →
+    ([∗] Γin) ⊢ M ([∗] Γout) ∗ if filtered then True else emp;
+  transform_spatial_env_wf : env_wf Γin → env_wf Γout;
+  transform_spatial_env_dom i : Γin !! i = None → Γout !! i = None;
+}.
+
+Inductive IntoModalPersistentEnv {PROP2} : ∀ {PROP1} (M : modality PROP1 PROP2)
+    (Γin : env PROP2) (Γout : env PROP1), modality_intro_spec PROP1 PROP2 → Prop :=
+  | MIEnvIsEmpty_persistent {PROP1} (M : modality PROP1 PROP2) :
+     IntoModalPersistentEnv M Enil Enil MIEnvIsEmpty
+  | MIEnvForall_persistent (M : modality PROP2 PROP2) (C : PROP2 → Prop) Γ :
+     TCForall C (env_to_list Γ) →
+     IntoModalPersistentEnv M Γ Γ (MIEnvForall C)
+  | MIEnvTransform_persistent {PROP1}
+       (M : modality PROP1 PROP2) (C : PROP2 → PROP1 → Prop) Γin Γout :
+     TransformPersistentEnv M C Γin Γout →
+     IntoModalPersistentEnv M Γin Γout (MIEnvTransform C)
+  | MIEnvClear_persistent {PROP1 : bi} (M : modality PROP1 PROP2) Γ :
+     IntoModalPersistentEnv M Γ Enil MIEnvClear
+  | MIEnvId_persistent (M : modality PROP2 PROP2) Γ :
+     IntoModalPersistentEnv M Γ Γ MIEnvId.
+Existing Class IntoModalPersistentEnv.
+Existing Instances MIEnvIsEmpty_persistent MIEnvForall_persistent
+  MIEnvTransform_persistent MIEnvClear_persistent MIEnvId_persistent.
+
+Inductive IntoModalSpatialEnv {PROP2} : ∀ {PROP1} (M : modality PROP1 PROP2)
+    (Γin : env PROP2) (Γout : env PROP1), modality_intro_spec PROP1 PROP2 → bool → Prop :=
+  | MIEnvIsEmpty_spatial {PROP1} (M : modality PROP1 PROP2) :
+     IntoModalSpatialEnv M Enil Enil MIEnvIsEmpty false
+  | MIEnvForall_spatial (M : modality PROP2 PROP2) (C : PROP2 → Prop) Γ :
+     TCForall C (env_to_list Γ) →
+     IntoModalSpatialEnv M Γ Γ (MIEnvForall C) false
+  | MIEnvTransform_spatial {PROP1}
+       (M : modality PROP1 PROP2) (C : PROP2 → PROP1 → Prop) Γin Γout fi :
+     TransformSpatialEnv M C Γin Γout fi →
+     IntoModalSpatialEnv M Γin Γout (MIEnvTransform C) fi
+  | MIEnvClear_spatial {PROP1 : bi} (M : modality PROP1 PROP2) Γ :
+     IntoModalSpatialEnv M Γ Enil MIEnvClear false
+  | MIEnvId_spatial (M : modality PROP2 PROP2) Γ :
+     IntoModalSpatialEnv M Γ Γ MIEnvId false.
+Existing Class IntoModalSpatialEnv.
+Existing Instances MIEnvIsEmpty_spatial MIEnvForall_spatial
+  MIEnvTransform_spatial MIEnvClear_spatial MIEnvId_spatial.
+
+Section tac_modal_intro.
+  Context {PROP1 PROP2 : bi} (M : modality PROP1 PROP2).
+
+  Global Instance transform_persistent_env_nil C : TransformPersistentEnv M C Enil Enil.
+  Proof.
+    split; [|eauto using Enil_wf|done]=> /= ??.
+    rewrite !persistently_pure !affinely_True_emp.
+    by rewrite !affinely_emp -modality_emp.
+  Qed.
+  Global Instance transform_persistent_env_snoc (C : PROP2 → PROP1 → Prop) Γ Γ' i P Q :
+    C P Q →
+    TransformPersistentEnv M C Γ Γ' →
+    TransformPersistentEnv M C (Esnoc Γ i P) (Esnoc Γ' i Q).
+  Proof.
+    intros ? [HΓ Hwf Hdom]; split; simpl.
+    - intros HC Hand. rewrite affinely_persistently_and HC // HΓ //.
+      by rewrite Hand -affinely_persistently_and.
+    - inversion 1; constructor; auto.
+    - intros j. destruct (ident_beq _ _); naive_solver.
+  Qed.
+  Global Instance transform_persistent_env_snoc_not (C : PROP2 → PROP1 → Prop) Γ Γ' i P :
+    TransformPersistentEnv M C Γ Γ' →
+    TransformPersistentEnv M C (Esnoc Γ i P) Γ' | 100.
+  Proof.
+    intros [HΓ Hwf Hdom]; split; simpl.
+    - intros HC Hand. by rewrite and_elim_r HΓ.
+    - inversion 1; auto.
+    - intros j. destruct (ident_beq _ _); naive_solver.
+  Qed.
+
+  Global Instance transform_spatial_env_nil C :
+    TransformSpatialEnv M C Enil Enil false.
+  Proof.
+    split; [|eauto using Enil_wf|done]=> /= ?. by rewrite right_id -modality_emp.
+  Qed.
+  Global Instance transform_spatial_env_snoc (C : PROP2 → PROP1 → Prop) Γ Γ' i P Q fi :
+    C P Q →
+    TransformSpatialEnv M C Γ Γ' fi →
+    TransformSpatialEnv M C (Esnoc Γ i P) (Esnoc Γ' i Q) fi.
+  Proof.
+    intros ? [HΓ Hwf Hdom]; split; simpl.
+    - intros HC. by rewrite {1}(HC P) // HΓ // assoc modality_sep.
+    - inversion 1; constructor; auto.
+    - intros j. destruct (ident_beq _ _); naive_solver.
+  Qed.
+
+  Global Instance transform_spatial_env_snoc_not
+      (C : PROP2 → PROP1 → Prop) Γ Γ' i P fi fi' :
+    TransformSpatialEnv M C Γ Γ' fi →
+    TCIf (TCEq fi false)
+      (TCIf (Affine P) (TCEq fi' false) (TCEq fi' true))
+      (TCEq fi' true) →
+    TransformSpatialEnv M C (Esnoc Γ i P) Γ' fi' | 100.
+  Proof.
+    intros [HΓ Hwf Hdom] Hif; split; simpl.
+    - intros ?. rewrite HΓ //. destruct Hif as [-> [? ->| ->]| ->].
+      + by rewrite (affine P) left_id.
+      + by rewrite right_id comm (True_intro P).
+      + by rewrite comm -assoc (True_intro (_ ∗ P)%I).
+    - inversion 1; auto.
+    - intros j. destruct (ident_beq _ _); naive_solver.
+  Qed.
+
+  (** The actual introduction tactic *)
+  Lemma tac_modal_intro Γp Γs Γp' Γs' Q Q' fi :
+    FromModal M Q' Q →
+    IntoModalPersistentEnv M Γp Γp' (modality_persistent_spec M) →
+    IntoModalSpatialEnv M Γs Γs' (modality_spatial_spec M) fi →
+    (if fi then Absorbing Q' else TCTrue) →
+    envs_entails (Envs Γp' Γs') Q → envs_entails (Envs Γp Γs) Q'.
+  Proof.
+    rewrite envs_entails_eq /FromModal /of_envs /= => HQ' HΓp HΓs ? HQ.
+    apply pure_elim_l=> -[???]. assert (envs_wf (Envs Γp' Γs')) as Hwf.
+    { split; simpl in *.
+      - destruct HΓp as [| |????? []| |]; eauto using Enil_wf.
+      - destruct HΓs as [| |?????? []| |]; eauto using Enil_wf.
+      - assert (∀ i, Γp !! i = None → Γp' !! i = None).
+        { destruct HΓp as [| |????? []| |]; eauto. }
+        assert (∀ i, Γs !! i = None → Γs' !! i = None).
+        { destruct HΓs as [| |?????? []| |]; eauto. }
+        naive_solver. }
+    assert (□ [∧] Γp ⊢ M (□ [∧] Γp'))%I as HMp.
+    { remember (modality_persistent_spec M).
+      destruct HΓp as [?|M C Γp ?%TCForall_Forall|? M C Γp Γp' []|? M Γp|M Γp]; simpl.
+      - by rewrite {1}affinely_elim_emp (modality_emp M)
+          persistently_True_emp affinely_persistently_emp.
+      - eauto using modality_persistent_forall_big_and.
+      - eauto using modality_persistent_transform,
+          modality_and_transform.
+      - by rewrite {1}affinely_elim_emp (modality_emp M)
+          persistently_True_emp affinely_persistently_emp.
+      - eauto using modality_persistent_id. }
+    move: HQ'; rewrite -HQ pure_True // left_id HMp=> HQ' {HQ Hwf HMp}.
+    remember (modality_spatial_spec M).
+    destruct HΓs as [?|M C Γs ?%TCForall_Forall|? M C Γs Γs' fi []|? M Γs|M Γs]; simpl.
+    - by rewrite -HQ' /= !right_id.
+    - rewrite -HQ' {1}(modality_spatial_forall_big_sep _ _ Γs) //.
+      by rewrite modality_sep.
+    - destruct fi.
+      + rewrite -(absorbing Q') /bi_absorbingly -HQ' (comm _ True%I).
+        rewrite -modality_sep -assoc. apply sep_mono_r.
+        eauto using modality_spatial_transform.
+      + rewrite -HQ' -modality_sep. apply sep_mono_r.
+        rewrite -(right_id emp%I bi_sep (M _)).
+        eauto using modality_spatial_transform.
+    - rewrite -HQ' /= right_id comm -{2}(modality_spatial_clear M) //.
+      by rewrite (True_intro ([∗] Γs)%I).
+    - rewrite -HQ' {1}(modality_spatial_id M ([∗] Γs)%I) //.
+      by rewrite -modality_sep.
+  Qed.
+End tac_modal_intro.
 
 Section sbi_tactics.
 Context {PROP : sbi}.

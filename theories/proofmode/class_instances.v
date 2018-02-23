@@ -9,8 +9,8 @@ Section bi_modalities.
   Lemma modality_persistently_mixin :
     modality_mixin (@bi_persistently PROP) MIEnvId MIEnvClear.
   Proof.
-    split; eauto using equiv_entails_sym, persistently_intro, persistently_mono,
-      persistently_sep_2 with typeclass_instances.
+    split; simpl; eauto using equiv_entails_sym, persistently_intro,
+      persistently_mono, persistently_sep_2 with typeclass_instances.
   Qed.
   Definition modality_persistently :=
     Modality _ modality_persistently_mixin.
@@ -18,7 +18,7 @@ Section bi_modalities.
   Lemma modality_affinely_mixin :
     modality_mixin (@bi_affinely PROP) MIEnvId (MIEnvForall Affine).
   Proof.
-    split; eauto using equiv_entails_sym, affinely_intro, affinely_mono,
+    split; simpl; eauto using equiv_entails_sym, affinely_intro, affinely_mono,
       affinely_sep_2 with typeclass_instances.
   Qed.
   Definition modality_affinely :=
@@ -27,7 +27,7 @@ Section bi_modalities.
   Lemma modality_affinely_persistently_mixin :
     modality_mixin (λ P : PROP, □ P)%I MIEnvId MIEnvIsEmpty.
   Proof.
-    split; eauto using equiv_entails_sym, affinely_persistently_emp,
+    split; simpl; eauto using equiv_entails_sym, affinely_persistently_emp,
       affinely_mono, persistently_mono, affinely_persistently_idemp,
       affinely_persistently_sep_2 with typeclass_instances.
   Qed.
@@ -37,8 +37,8 @@ Section bi_modalities.
   Lemma modality_plainly_mixin :
     modality_mixin (@bi_plainly PROP) (MIEnvForall Plain) MIEnvClear.
   Proof.
-    split; split_and?; eauto using equiv_entails_sym, plainly_intro, plainly_mono,
-      plainly_and, plainly_sep_2 with typeclass_instances.
+    split; simpl; split_and?; eauto using equiv_entails_sym, plainly_intro,
+      plainly_mono, plainly_and, plainly_sep_2 with typeclass_instances.
   Qed.
   Definition modality_plainly :=
     Modality _ modality_plainly_mixin.
@@ -46,7 +46,8 @@ Section bi_modalities.
   Lemma modality_affinely_plainly_mixin :
     modality_mixin (λ P : PROP, ■ P)%I (MIEnvForall Plain) MIEnvIsEmpty.
   Proof.
-    split; split_and?; eauto using equiv_entails_sym, affinely_plainly_emp, affinely_intro,
+    split; simpl; split_and?; eauto using equiv_entails_sym,
+      affinely_plainly_emp, affinely_intro,
       plainly_intro, affinely_mono, plainly_mono, affinely_plainly_idemp,
       affinely_plainly_and, affinely_plainly_sep_2 with typeclass_instances.
   Qed.
@@ -56,7 +57,7 @@ Section bi_modalities.
   Lemma modality_absorbingly_mixin :
     modality_mixin (@bi_absorbingly PROP) MIEnvId MIEnvId.
   Proof.
-    split; eauto using equiv_entails_sym, absorbingly_intro,
+    split; simpl; eauto using equiv_entails_sym, absorbingly_intro,
       absorbingly_mono, absorbingly_sep.
   Qed.
   Definition modality_absorbingly :=
@@ -69,7 +70,7 @@ Section sbi_modalities.
   Lemma modality_except_0_mixin :
     modality_mixin (@sbi_except_0 PROP) MIEnvId MIEnvId.
   Proof.
-    split; eauto using equiv_entails_sym,
+    split; simpl; eauto using equiv_entails_sym,
       except_0_intro, except_0_mono, except_0_sep.
   Qed.
   Definition modality_except_0 :=
@@ -79,8 +80,8 @@ Section sbi_modalities.
     modality_mixin (@sbi_laterN PROP n)
       (MIEnvTransform (MaybeIntoLaterN false n)) (MIEnvTransform (MaybeIntoLaterN false n)).
   Proof.
-    split; split_and?; eauto using equiv_entails_sym, laterN_intro, laterN_mono,
-      laterN_and, laterN_sep with typeclass_instances.
+    split; simpl; split_and?; eauto using equiv_entails_sym, laterN_intro,
+      laterN_mono, laterN_and, laterN_sep with typeclass_instances.
     rewrite /MaybeIntoLaterN=> P Q ->. by rewrite laterN_affinely_persistently_2.
   Qed.
   Definition modality_laterN n :=
@@ -88,13 +89,13 @@ Section sbi_modalities.
 
   Lemma modality_bupd_mixin `{BUpdFacts PROP} :
     modality_mixin (@bupd PROP _) MIEnvId MIEnvId.
-  Proof. split; eauto using bupd_intro, bupd_mono, bupd_sep. Qed.
+  Proof. split; simpl; eauto using bupd_intro, bupd_mono, bupd_sep. Qed.
   Definition modality_bupd `{BUpdFacts PROP} :=
     Modality _ modality_bupd_mixin.
 
   Lemma modality_fupd_mixin `{FUpdFacts PROP} E :
     modality_mixin (@fupd PROP _ E E) MIEnvId MIEnvId.
-  Proof. split; eauto using fupd_intro, fupd_mono, fupd_sep. Qed.
+  Proof. split; simpl; eauto using fupd_intro, fupd_mono, fupd_sep. Qed.
   Definition modality_fupd `{FUpdFacts PROP} E :=
     Modality _ (modality_fupd_mixin E).
 End sbi_modalities.
