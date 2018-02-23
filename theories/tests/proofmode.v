@@ -356,4 +356,10 @@ Proof.
   iEval (rewrite (Nat.add_comm x y) // H).
   done.
 Qed.
+
+Lemma test_iFrame_later_1 P Q : P ∗ ▷ Q -∗ ▷ (P ∗ ▷ Q).
+Proof. iIntros "H". iFrame "H". auto. Qed.
+
+Lemma test_iFrame_later_2 P Q : ▷ P ∗ ▷ Q -∗ ▷ (▷ P ∗ ▷ Q).
+Proof. iIntros "H". iFrame "H". auto. Qed.
 End tests.

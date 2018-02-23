@@ -239,6 +239,7 @@ Converting an assumption [R] into a wand [P -∗ Q] is done in three stages:
   hypothesis).
 - Instantiate the premise of the wand or implication.
 *)
+
 Class IntoWand {PROP : bi} (p q : bool) (R P Q : PROP) :=
   into_wand : □?p R ⊢ □?q P -∗ Q.
 Arguments IntoWand {_} _ _ _%I _%I _%I : simpl never.
@@ -416,26 +417,36 @@ IntoLaterN n P P'       MaybeIntoLaterN n Q Q'
 -------------------------------
 IntoLaterN n (P /\ Q) (P /\ Q')
 >>
+
+The Boolean [only_head] indicates whether laters should only be stripped in
+head position or also below other logical connectives. For [iNext] it should
+strip laters below other logical connectives, but this should not happen while
+framing, e.g. the following should succeed:
+
+<<
+Lemma test_iFrame_later_1 P Q : P ∗ ▷ Q -∗ ▷ (P ∗ ▷ Q).
+Proof. iIntros "H". iFrame "H". Qed.
+>>
 *)
-Class MaybeIntoLaterN {PROP : sbi} (n : nat) (P Q : PROP) :=
+Class MaybeIntoLaterN {PROP : sbi} (only_head : bool) (n : nat) (P Q : PROP) :=
   maybe_into_laterN : P ⊢ ▷^n Q.
-Arguments MaybeIntoLaterN {_} _%nat_scope _%I _%I.
-Arguments maybe_into_laterN {_} _%nat_scope _%I _%I {_}.
-Hint Mode MaybeIntoLaterN + - - - : typeclass_instances.
+Arguments MaybeIntoLaterN {_} _ _%nat_scope _%I _%I.
+Arguments maybe_into_laterN {_} _ _%nat_scope _%I _%I {_}.
+Hint Mode MaybeIntoLaterN + + + - - : typeclass_instances.
 
-Class IntoLaterN {PROP : sbi} (n : nat) (P Q : PROP) :=
-  into_laterN :> MaybeIntoLaterN n P Q.
-Arguments IntoLaterN {_} _%nat_scope _%I _%I.
-Hint Mode IntoLaterN + - ! - : typeclass_instances.
+Class IntoLaterN {PROP : sbi} (only_head : bool) (n : nat) (P Q : PROP) :=
+  into_laterN :> MaybeIntoLaterN only_head n P Q.
+Arguments IntoLaterN {_} _ _%nat_scope _%I _%I.
+Hint Mode IntoLaterN + + + ! - : typeclass_instances.
 
-Instance maybe_into_laterN_default {PROP : sbi} n (P : PROP) :
-  MaybeIntoLaterN n P P | 1000.
+Instance maybe_into_laterN_default {PROP : sbi} only_head n (P : PROP) :
+  MaybeIntoLaterN only_head n P P | 1000.
 Proof. apply laterN_intro. Qed.
 (* In the case both parameters are evars and n=0, we have to stop the
    search and unify both evars immediately instead of looping using
    other instances. *)
-Instance maybe_into_laterN_default_0 {PROP : sbi} (P : PROP) :
-  MaybeIntoLaterN 0 P P | 0.
+Instance maybe_into_laterN_default_0 {PROP : sbi} only_head (P : PROP) :
+  MaybeIntoLaterN only_head 0 P P | 0.
 Proof. apply _. Qed.
 
 Class FromLaterN {PROP : sbi} (n : nat) (P Q : PROP) := from_laterN : ▷^n Q ⊢ P.
