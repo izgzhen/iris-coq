@@ -354,6 +354,9 @@ Global Instance from_modal_monPred_at i P Q 𝓠 :
   FromModal P Q → MakeMonPredAt i Q 𝓠 → FromModal (P i) 𝓠.
 Proof. by rewrite /FromModal /MakeMonPredAt=> <- <-. Qed.
 *)
+Global Instance into_embed_absolute P :
+  Absolute P → IntoEmbed P (∀ i, P i).
+Proof. rewrite /IntoEmbed=> ?. by rewrite {1}(absolute_absolutely P). Qed.
 End bi.
 
 (* When P and/or Q are evars when doing typeclass search on [IntoWand
