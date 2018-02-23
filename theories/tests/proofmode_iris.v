@@ -1,5 +1,6 @@
 From iris.proofmode Require Import tactics.
-From iris.base_logic Require Import base_logic lib.invariants.
+From iris.base_logic Require Import base_logic.
+From iris.base_logic.lib Require Import invariants cancelable_invariants na_invariants.
 
 Section base_logic_tests.
   Context {M : ucmraT}.
@@ -48,7 +49,7 @@ Section base_logic_tests.
 End base_logic_tests.
 
 Section iris_tests.
-  Context `{invG Σ}.
+  Context `{invG Σ, cinvG Σ, na_invG Σ}.
 
   Lemma test_masks  N E P Q R :
     ↑N ⊆ E →
@@ -57,5 +58,153 @@ Section iris_tests.
     iIntros (?) "H HP HQ".
     iApply ("H" with "[% //] [$] [> HQ] [> //]").
     by iApply inv_alloc.
+  Qed.
+
+  Lemma test_iInv_0 N P: inv N (bi_persistently P) ={⊤}=∗ ▷ P.
+  Proof.
+    iIntros "#H".
+    iInv N as "#H2" "Hclose".
+    iMod ("Hclose" with "H2").
+    iModIntro. by iNext.
+  Qed.
+
+  Lemma test_iInv_1 N E P:
+    ↑N ⊆ E →
+    inv N (bi_persistently P) ={E}=∗ ▷ P.
+  Proof.
+    iIntros (?) "#H".
+    iInv N as "#H2" "Hclose".
+    iMod ("Hclose" with "H2").
+    iModIntro. by iNext.
+  Qed.
+
+  Lemma test_iInv_2 γ p N P:
+    cinv N γ (bi_persistently P) ∗ cinv_own γ p ={⊤}=∗ cinv_own γ p ∗ ▷ P.
+  Proof.
+    iIntros "(#?&?)".
+    iInv N as "(#HP&Hown)" "Hclose".
+    iMod ("Hclose" with "HP").
+    iModIntro. iFrame. by iNext.
+  Qed.
+
+  Lemma test_iInv_3 γ p1 p2 N P:
+    cinv N γ (bi_persistently P) ∗ cinv_own γ p1 ∗ cinv_own γ p2
+      ={⊤}=∗ cinv_own γ p1 ∗ cinv_own γ p2  ∗ ▷ P.
+  Proof.
+    iIntros "(#?&Hown1&Hown2)".
+    iInv N with "[Hown2 //]" as "(#HP&Hown2)" "Hclose".
+    iMod ("Hclose" with "HP").
+    iModIntro. iFrame. by iNext.
+  Qed.
+
+  Lemma test_iInv_4 t N E1 E2 P:
+    ↑N ⊆ E2 →
+    na_inv t N (bi_persistently P) ∗ na_own t E1 ∗ na_own t E2
+         ⊢ |={⊤}=> na_own t E1 ∗ na_own t E2  ∗ ▷ P.
+  Proof.
+    iIntros (?) "(#?&Hown1&Hown2)".
+    iInv N as "(#HP&Hown2)" "Hclose".
+    iMod ("Hclose" with "[HP Hown2]").
+    { iFrame. done. }
+    iModIntro. iFrame. by iNext.
+  Qed.
+
+  (* test named selection of which na_own to use *)
+  Lemma test_iInv_5 t N E1 E2 P:
+    ↑N ⊆ E2 →
+    na_inv t N (bi_persistently P) ∗ na_own t E1 ∗ na_own t E2
+      ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
+  Proof.
+    iIntros (?) "(#?&Hown1&Hown2)".
+    iInv N with "Hown2" as "(#HP&Hown2)" "Hclose".
+    iMod ("Hclose" with "[HP Hown2]").
+    { iFrame. done. }
+    iModIntro. iFrame. by iNext.
+  Qed.
+
+  Lemma test_iInv_6 t N E1 E2 P:
+    ↑N ⊆ E1 →
+    na_inv t N (bi_persistently P) ∗ na_own t E1 ∗ na_own t E2
+      ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
+  Proof.
+    iIntros (?) "(#?&Hown1&Hown2)".
+    iInv N with "Hown1" as "(#HP&Hown1)" "Hclose".
+    iMod ("Hclose" with "[HP Hown1]").
+    { iFrame. done. }
+    iModIntro. iFrame. by iNext.
+  Qed.
+
+  (* test robustness in presence of other invariants *)
+  Lemma test_iInv_7 t N1 N2 N3 E1 E2 P:
+    ↑N3 ⊆ E1 →
+    inv N1 P ∗ na_inv t N3 (bi_persistently P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
+      ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
+  Proof.
+    iIntros (?) "(#?&#?&#?&Hown1&Hown2)".
+    iInv N3 with "Hown1" as "(#HP&Hown1)" "Hclose".
+    iMod ("Hclose" with "[HP Hown1]").
+    { iFrame. done. }
+    iModIntro. iFrame. by iNext.
+  Qed.
+
+  (* iInv should work even where we have "inv N P" in which P contains an evar *)
+  Lemma test_iInv_8 N : ∃ P, inv N P ={⊤}=∗ P ≡ True ∧ inv N P.
+  Proof.
+    eexists. iIntros "#H".
+    iInv N as "HP" "Hclose".
+    iMod ("Hclose" with "[$HP]"). auto.
+  Qed.
+
+  (* test selection by hypothesis name instead of namespace *)
+  Lemma test_iInv_9 t N1 N2 N3 E1 E2 P:
+    ↑N3 ⊆ E1 →
+    inv N1 P ∗ na_inv t N3 (bi_persistently P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
+      ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
+  Proof.
+    iIntros (?) "(#?&#HInv&#?&Hown1&Hown2)".
+    iInv "HInv" with "Hown1" as "(#HP&Hown1)" "Hclose".
+    iMod ("Hclose" with "[$HP $Hown1]").
+    iModIntro. iFrame. by iNext.
+  Qed.
+
+  (* test selection by hypothesis name instead of namespace *)
+  Lemma test_iInv_10 t N1 N2 N3 E1 E2 P:
+    ↑N3 ⊆ E1 →
+    inv N1 P ∗ na_inv t N3 (bi_persistently P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
+      ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
+  Proof.
+    iIntros (?) "(#?&#HInv&#?&Hown1&Hown2)".
+    iInv "HInv" as "(#HP&Hown1)" "Hclose".
+    iMod ("Hclose" with "[$HP $Hown1]").
+    iModIntro. iFrame. by iNext.
+  Qed.
+
+  (* test selection by ident name *)
+  Lemma test_iInv_11 N P: inv N (bi_persistently P) ={⊤}=∗ ▷ P.
+  Proof.
+    let H := iFresh in
+    (iIntros H; iInv H as "#H2" "Hclose").
+    iMod ("Hclose" with "H2").
+    iModIntro. by iNext.
+  Qed.
+
+  (* error messages *)
+  Lemma test_iInv_12 N P: inv N (bi_persistently P) ={⊤}=∗ True.
+  Proof.
+    iIntros "H".
+    Fail iInv 34 as "#H2" "Hclose".
+    Fail iInv nroot as "#H2" "Hclose".
+    Fail iInv "H2" as "#H2" "Hclose".
+    done.
+  Qed.
+
+  (* test destruction of existentials when opening an invariant *)
+  Lemma test_iInv_13 N:
+    inv N (∃ (v1 v2 v3 : nat), emp ∗ emp ∗ emp) ={⊤}=∗ ▷ emp.
+  Proof.
+    iIntros "H"; iInv "H" as (v1 v2 v3) "(?&?&_)" "Hclose".
+    iMod ("Hclose" with "[]").
+    { iNext; iExists O; done. }
+    iModIntro. by iNext.
   Qed.
 End iris_tests.

@@ -209,6 +209,16 @@ Proof.
   repeat apply sep_mono=>//; apply affinely_persistently_if_flag_mono; by destruct q1.
 Qed.
 
+Lemma envs_lookup_delete_list_cons Δ Δ' Δ'' rp j js p1 p2 P Ps :
+  envs_lookup_delete rp j Δ = Some (p1, P, Δ') →
+  envs_lookup_delete_list rp js Δ' = Some (p2, Ps, Δ'') →
+  envs_lookup_delete_list rp (j :: js) Δ = Some (p1 && p2, (P :: Ps), Δ'').
+Proof. rewrite //= => -> //= -> //=. Qed.
+
+Lemma envs_lookup_delete_list_nil Δ rp :
+  envs_lookup_delete_list rp [] Δ = Some (true, [], Δ).
+Proof. done. Qed.
+
 Lemma envs_lookup_snoc Δ i p P :
   envs_lookup i Δ = None → envs_lookup i (envs_snoc Δ p i P) = Some (p, P).
 Proof.
@@ -1158,6 +1168,22 @@ Lemma tac_modal_elim Δ Δ' i p φ P' P Q Q' :
 Proof.
   rewrite envs_entails_eq => ???? HΔ. rewrite envs_replace_singleton_sound //=.
   rewrite HΔ affinely_persistently_if_elim. by eapply elim_modal.
+Qed.
+
+(** * Invariants *)
+Lemma tac_inv_elim Δ Δ' i j φ p P Pin Pout Pclose Q Q' :
+  envs_lookup_delete false i Δ = Some (p, P, Δ') →
+  ElimInv φ P Pin Pout Pclose Q Q' →
+  φ →
+  (∀ R, ∃ Δ'',
+    envs_app false (Esnoc Enil j (Pin -∗ (Pout -∗ Pclose -∗ Q') -∗ R)%I) Δ' = Some Δ'' ∧
+    envs_entails Δ'' R) →
+  envs_entails Δ Q.
+Proof.
+  rewrite envs_entails_eq=> /envs_lookup_delete_Some [? ->] ?? /(_ Q) [Δ'' [? <-]].
+  rewrite (envs_lookup_sound' _ false) // envs_app_singleton_sound //; simpl.
+  apply wand_elim_r', wand_mono; last done. apply wand_intro_r, wand_intro_r.
+  rewrite affinely_persistently_if_elim -assoc wand_curry. auto.
 Qed.
 End bi_tactics.
 

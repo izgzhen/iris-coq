@@ -394,7 +394,7 @@ Canonical Structure monPredSI : sbi :=
 End canonical_sbi.
 
 Class Absolute {I : biIndex} {PROP : bi} (P : monPred I PROP) :=
-  absolute_at V1 V2 : P V1 -∗ P V2.
+  absolute_at i j : P i -∗ P j.
 Arguments Absolute {_ _} _%I.
 Arguments absolute_at {_ _} _%I {_}.
 Hint Mode Absolute + + ! : typeclass_instances.
@@ -452,11 +452,11 @@ Proof. move => [] /(_ i). unfold Affine. by unseal. Qed.
 
 (* Note that monPred_in is *not* Plain, because it does depend on the
    index. *)
-Global Instance monPred_in_persistent V :
-  Persistent (@monPred_in I PROP V).
+Global Instance monPred_in_persistent i :
+  Persistent (@monPred_in I PROP i).
 Proof. unfold Persistent. unseal; split => ?. by apply bi.pure_persistent. Qed.
-Global Instance monPred_in_absorbing V :
-  Absorbing (@monPred_in I PROP V).
+Global Instance monPred_in_absorbing i :
+  Absorbing (@monPred_in I PROP i).
 Proof. unfold Absorbing. unseal. split=> ? /=. apply absorbing, _. Qed.
 
 
@@ -657,35 +657,35 @@ Global Instance relatively_absolute P : Absolute (∃ᵢ P).
 Proof. apply emb_absolute. Qed.
 
 Global Instance and_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P ∧ Q).
-Proof. intros ??. unseal. by rewrite !(absolute_at _ V1 V2). Qed.
+Proof. intros i j. unseal. by rewrite !(absolute_at _ i j). Qed.
 Global Instance or_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P ∨ Q).
-Proof. intros ??. by rewrite !monPred_at_or !(absolute_at _ V1 V2). Qed.
+Proof. intros i j. by rewrite !monPred_at_or !(absolute_at _ i j). Qed.
 Global Instance impl_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P → Q).
 Proof.
-  intros ??. unseal. rewrite (bi.forall_elim V1) bi.pure_impl_forall.
-  rewrite bi.forall_elim //. apply bi.forall_intro=>V'.
+  intros i j. unseal. rewrite (bi.forall_elim i) bi.pure_impl_forall.
+  rewrite bi.forall_elim //. apply bi.forall_intro=> k.
   rewrite bi.pure_impl_forall. apply bi.forall_intro=>_.
-  rewrite (absolute_at Q V1). by rewrite (absolute_at P V').
+  rewrite (absolute_at Q i). by rewrite (absolute_at P k).
 Qed.
 Global Instance forall_absolute {A} Φ {H : ∀ x : A, Absolute (Φ x)} :
   @Absolute I PROP (∀ x, Φ x)%I.
-Proof. intros ??. unseal. do 2 f_equiv. by apply absolute_at. Qed.
+Proof. intros i j. unseal. do 2 f_equiv. by apply absolute_at. Qed.
 Global Instance exists_absolute {A} Φ {H : ∀ x : A, Absolute (Φ x)} :
   @Absolute I PROP (∃ x, Φ x)%I.
-Proof. intros ??. unseal. do 2 f_equiv. by apply absolute_at. Qed.
+Proof. intros i j. unseal. do 2 f_equiv. by apply absolute_at. Qed.
 
 Global Instance sep_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P ∗ Q).
-Proof. intros ??. unseal. by rewrite !(absolute_at _ V1 V2). Qed.
+Proof. intros i j. unseal. by rewrite !(absolute_at _ i j). Qed.
 Global Instance wand_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P -∗ Q).
 Proof.
-  intros ??. unseal. rewrite (bi.forall_elim V1) bi.pure_impl_forall.
-  rewrite bi.forall_elim //. apply bi.forall_intro=>V'.
+  intros i j. unseal. rewrite (bi.forall_elim i) bi.pure_impl_forall.
+  rewrite bi.forall_elim //. apply bi.forall_intro=> k.
   rewrite bi.pure_impl_forall. apply bi.forall_intro=>_.
-  rewrite (absolute_at Q V1). by rewrite (absolute_at P V').
+  rewrite (absolute_at Q i). by rewrite (absolute_at P k).
 Qed.
 Global Instance persistently_absolute P `{!Absolute P} :
   Absolute (bi_persistently P).
-Proof. intros ??. unseal. by rewrite absolute_at. Qed.
+Proof. intros i j. unseal. by rewrite absolute_at. Qed.
 
 Global Instance affinely_absolute P `{!Absolute P} : Absolute (bi_affinely P).
 Proof. rewrite /bi_affinely. apply _. Qed.

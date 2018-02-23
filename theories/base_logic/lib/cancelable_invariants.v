@@ -90,6 +90,18 @@ Section proofs.
       + iIntros "HP". iApply "Hclose". iLeft. iNext. by iApply "HP'".
     - iDestruct (cinv_own_1_l with "Hγ' Hγ") as %[].
   Qed.
+
+  Global Instance into_inv_cinv N γ P : IntoInv (cinv N γ P) N.
+  Global Instance elim_inv_cinv p γ E N P Q Q' :
+    (∀ R, ElimModal True (|={E,E∖↑N}=> R) R Q Q') →
+    ElimInv (↑N ⊆ E) (cinv N γ P) (cinv_own γ p)
+      (▷ P ∗ cinv_own γ p) (▷ P ={E∖↑N,E}=∗ True) Q Q'.
+  Proof.
+    rewrite /ElimInv /ElimModal. iIntros (Helim ?) "(#H1&Hown&H2)".
+    iApply (Helim with "[- $H2]"); first done.
+    iMod (cinv_open E N γ p P with "[#] [Hown]") as "(HP&Hown&Hclose)"; auto. 
+    by iFrame.
+  Qed.
 End proofs.
 
 Typeclasses Opaque cinv_own cinv.
