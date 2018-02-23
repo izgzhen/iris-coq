@@ -454,9 +454,20 @@ Arguments FromLaterN {_} _%nat_scope _%I _%I.
 Arguments from_laterN {_} _%nat_scope _%I _%I {_}.
 Hint Mode FromLaterN + - ! - : typeclass_instances.
 
+(* We use two type classes for [AsValid], in order to avoid loops in
+   typeclass search. Indeed, the [as_valid_embed] instance would try
+   to add an arbitrary number of embeddings. To avoid this, the
+   [AsValid0] type class cannot handle embeddings, and therefore
+   [as_valid_embed] only tries to add one embedding, and we never try
+   to insert nested embeddings. This has the additional advantage of
+   always trying [as_valid_embed] as a second option, so that this
+   instance is never used when the BI is unknown.
+
+   No Hint Modes are declared here. The appropriate one would be
+   [Hint Mode - ! -], but the fact that Coq ignores primitive
+   projections for hints modes would make this fail.*)
 Class AsValid {PROP : bi} (φ : Prop) (P : PROP) := as_valid : φ ↔ P.
 Arguments AsValid {_} _%type _%I.
-
 Class AsValid0 {PROP : bi} (φ : Prop) (P : PROP) :=
   as_valid_here : AsValid φ P.
 Arguments AsValid0 {_} _%type _%I.
