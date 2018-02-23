@@ -43,6 +43,9 @@ Implicit Types i j : I.
 Global Instance from_modal_absolutely P :
   FromModal modality_absolutely (∀ᵢ P) P | 1.
 Proof. by rewrite /FromModal. Qed.
+Global Instance from_modal_relatively P :
+  FromModal modality_id (∃ᵢ P) P | 1.
+Proof. by rewrite /FromModal /= -monPred_relatively_intro. Qed.
 
 Global Instance make_monPred_at_pure φ i : MakeMonPredAt i ⌜φ⌝ ⌜φ⌝.
 Proof. by rewrite /MakeMonPredAt monPred_at_pure. Qed.
@@ -349,11 +352,9 @@ Proof.
                          ?monPred_at_persistently monPred_at_embed.
 Qed.
 
-(* FIXME
 Global Instance from_modal_monPred_at i P Q 𝓠 :
-  FromModal P Q → MakeMonPredAt i Q 𝓠 → FromModal (P i) 𝓠.
+  FromModal modality_id P Q → MakeMonPredAt i Q 𝓠 → FromModal modality_id (P i) 𝓠.
 Proof. by rewrite /FromModal /MakeMonPredAt=> <- <-. Qed.
-*)
 Global Instance into_embed_absolute P :
   Absolute P → IntoEmbed P (∀ i, P i).
 Proof. rewrite /IntoEmbed=> ?. by rewrite {1}(absolute_absolutely P). Qed.

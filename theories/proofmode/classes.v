@@ -236,6 +236,16 @@ Arguments FromModal {_ _} _ _%I _%I : simpl never.
 Arguments from_modal {_ _} _ _%I _%I {_}.
 Hint Mode FromModal - + - ! - : typeclass_instances.
 
+(** The identity modality [modality_id] can be used in combination with
+[FromModal modality_id] to support introduction for modalities that enjoy
+[P ⊢ M P]. This is done by defining an instance [FromModal modality_id (M P) P],
+which will instruct [iModIntro] to introduce the modality without modifying the
+proof mode context. Examples of such modalities are [bupd], [fupd], [except_0],
+[monPred_relatively] and [bi_absorbingly]. *)
+Lemma modality_id_mixin {PROP : bi} : modality_mixin (@id PROP) MIEnvId MIEnvId.
+Proof. split; simpl; eauto. Qed.
+Definition modality_id {PROP : bi} := Modality (@id PROP) modality_id_mixin.
+
 Class FromAffinely {PROP : bi} (P Q : PROP) :=
   from_affinely : bi_affinely Q ⊢ P.
 Arguments FromAffinely {_} _%I _%type_scope : simpl never.

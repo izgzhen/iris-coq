@@ -6,6 +6,7 @@ Import bi.
 
 Section bi_modalities.
   Context {PROP : bi}.
+
   Lemma modality_persistently_mixin :
     modality_mixin (@bi_persistently PROP) MIEnvId MIEnvClear.
   Proof.
@@ -54,15 +55,6 @@ Section bi_modalities.
   Definition modality_affinely_plainly :=
     Modality _ modality_affinely_plainly_mixin.
 
-  Lemma modality_absorbingly_mixin :
-    modality_mixin (@bi_absorbingly PROP) MIEnvId MIEnvId.
-  Proof.
-    split; simpl; eauto using equiv_entails_sym, absorbingly_intro,
-      absorbingly_mono, absorbingly_sep.
-  Qed.
-  Definition modality_absorbingly :=
-    Modality _ modality_absorbingly_mixin.
-
   Lemma modality_embed_mixin `{BiEmbedding PROP PROP'} :
     modality_mixin (@bi_embed PROP PROP' _)
       (MIEnvTransform IntoEmbed) (MIEnvTransform IntoEmbed).
@@ -80,15 +72,6 @@ End bi_modalities.
 Section sbi_modalities.
   Context {PROP : sbi}.
 
-  Lemma modality_except_0_mixin :
-    modality_mixin (@sbi_except_0 PROP) MIEnvId MIEnvId.
-  Proof.
-    split; simpl; eauto using equiv_entails_sym,
-      except_0_intro, except_0_mono, except_0_sep.
-  Qed.
-  Definition modality_except_0 :=
-    Modality _ modality_except_0_mixin.
-
   Lemma modality_laterN_mixin n :
     modality_mixin (@sbi_laterN PROP n)
       (MIEnvTransform (MaybeIntoLaterN false n)) (MIEnvTransform (MaybeIntoLaterN false n)).
@@ -99,18 +82,6 @@ Section sbi_modalities.
   Qed.
   Definition modality_laterN n :=
     Modality _ (modality_laterN_mixin n).
-
-  Lemma modality_bupd_mixin `{BUpdFacts PROP} :
-    modality_mixin (@bupd PROP _) MIEnvId MIEnvId.
-  Proof. split; simpl; eauto using bupd_intro, bupd_mono, bupd_sep. Qed.
-  Definition modality_bupd `{BUpdFacts PROP} :=
-    Modality _ modality_bupd_mixin.
-
-  Lemma modality_fupd_mixin `{FUpdFacts PROP} E :
-    modality_mixin (@fupd PROP _ E E) MIEnvId MIEnvId.
-  Proof. split; simpl; eauto using fupd_intro, fupd_mono, fupd_sep. Qed.
-  Definition modality_fupd `{FUpdFacts PROP} E :=
-    Modality _ (modality_fupd_mixin E).
 End sbi_modalities.
 
 Section bi_instances.
@@ -1137,8 +1108,8 @@ Qed.
 
 (* FromModal *)
 Global Instance from_modal_absorbingly P :
-  FromModal modality_absorbingly (bi_absorbingly P) P.
-Proof. by rewrite /FromModal. Qed.
+  FromModal modality_id (bi_absorbingly P) P.
+Proof. by rewrite /FromModal /= -absorbingly_intro. Qed.
 Global Instance from_modal_embed `{BiEmbedding PROP PROP'} (P : PROP) :
   FromModal (@modality_embed PROP PROP' _ _) ⎡P⎤ P.
 Proof. by rewrite /FromModal. Qed.
@@ -1482,15 +1453,15 @@ Global Instance from_modal_later n P Q :
   TCIf (TCEq n 0) False TCTrue →
   FromModal (modality_laterN n) P Q | 100.
 Proof. rewrite /FromLaterN /FromModal. by intros [?] [_ []|?]. Qed.
-Global Instance from_modal_except_0 P : FromModal modality_except_0 (◇ P) P.
-Proof. by rewrite /FromModal. Qed.
+Global Instance from_modal_except_0 P : FromModal modality_id (◇ P) P.
+Proof. by rewrite /FromModal /= -except_0_intro. Qed.
 
 Global Instance from_modal_bupd `{BUpdFacts PROP} P :
-  FromModal modality_bupd (|==> P) P.
-Proof. by rewrite /FromModal. Qed.
+  FromModal modality_id (|==> P) P.
+Proof. by rewrite /FromModal /= -bupd_intro. Qed.
 Global Instance from_modal_fupd E P `{FUpdFacts PROP} :
-  FromModal (modality_fupd E) (|={E}=> P) P.
-Proof. by rewrite /FromModal. Qed.
+  FromModal modality_id (|={E}=> P) P.
+Proof. by rewrite /FromModal /= -fupd_intro. Qed.
 
 (* IntoInternalEq *)
 Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
