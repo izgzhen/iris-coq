@@ -62,6 +62,19 @@ Section bi_modalities.
   Qed.
   Definition modality_absorbingly :=
     Modality _ modality_absorbingly_mixin.
+
+  Lemma modality_embed_mixin `{BiEmbedding PROP PROP'} :
+    modality_mixin (@bi_embed PROP PROP' _)
+      (MIEnvTransform IntoEmbed) (MIEnvTransform IntoEmbed).
+  Proof.
+    split; simpl; split_and?;
+      eauto using equiv_entails_sym, bi_embed_emp, bi_embed_sep, bi_embed_and.
+    - intros P Q. rewrite /IntoEmbed=> ->.
+      by rewrite bi_embed_affinely bi_embed_persistently.
+    - by intros P Q ->.
+  Qed.
+  Definition modality_embed `{BiEmbedding PROP PROP'} :=
+    Modality _ modality_embed_mixin.
 End bi_modalities.
 
 Section sbi_modalities.
@@ -1126,11 +1139,16 @@ Qed.
 Global Instance from_modal_absorbingly P :
   FromModal modality_absorbingly (bi_absorbingly P) P.
 Proof. by rewrite /FromModal. Qed.
-(* FIXME
-Global Instance from_modal_embed `{BiEmbedding PROP PROP'} P Q :
-  FromModal P Q → FromModal ⎡P⎤ ⎡Q⎤.
-Proof. by rewrite /FromModal=> ->. Qed.
-*)
+Global Instance from_modal_embed `{BiEmbedding PROP PROP'} (P : PROP) :
+  FromModal (@modality_embed PROP PROP' _ _) ⎡P⎤ P.
+Proof. by rewrite /FromModal. Qed.
+
+(* ElimModal *)
+
+(* IntoEmbed *)
+Global Instance into_embed_embed {PROP' : bi} `{BiEmbed PROP PROP'} P :
+  IntoEmbed ⎡P⎤ P.
+Proof. by rewrite /IntoEmbed. Qed.
 
 (* AsValid *)
 Global Instance as_valid_valid {PROP : bi} (P : PROP) : AsValid0 (bi_valid P) P | 0.
