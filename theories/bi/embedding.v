@@ -42,7 +42,7 @@ Section bi_embedding.
 
   Global Instance bi_embed_proper : Proper ((≡) ==> (≡)) bi_embed.
   Proof. apply (ne_proper _). Qed.
-  Global Instance bi_embed_mono_flip : Proper (flip (⊢) ==> flip (⊢)) bi_embed.
+  Global Instance bi_embed_flip_mono : Proper (flip (⊢) ==> flip (⊢)) bi_embed.
   Proof. solve_proper. Qed.
   Global Instance bi_embed_inj : Inj (≡) (≡) bi_embed.
   Proof.

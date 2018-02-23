@@ -416,7 +416,7 @@ Implicit Types P Q : monPred.
 Global Instance monPred_at_mono :
   Proper ((⊢) ==> (⊑) ==> (⊢)) monPred_at.
 Proof. by move=> ?? [?] ?? ->. Qed.
-Global Instance monPred_at_mono_flip :
+Global Instance monPred_at_flip_mono :
   Proper (flip (⊢) ==> flip (⊑) ==> flip (⊢)) monPred_at.
 Proof. solve_proper. Qed.
 
@@ -426,7 +426,7 @@ Global Instance monPred_in_proper (R : relation I) :
 Proof. unseal. split. solve_proper. Qed.
 Global Instance monPred_in_mono : Proper (flip (⊑) ==> (⊢)) (@monPred_in I PROP).
 Proof. unseal. split. solve_proper. Qed.
-Global Instance monPred_in_mono_flip : Proper ((⊑) ==> flip (⊢)) (@monPred_in I PROP).
+Global Instance monPred_in_flip_mono : Proper ((⊑) ==> flip (⊢)) (@monPred_in I PROP).
 Proof. solve_proper. Qed.
 
 Global Instance monPred_positive : BiPositive PROP → BiPositive monPredI.
