@@ -158,7 +158,7 @@ Section bi_mixin.
     sbi_mixin_fun_ext {A} {B : A → ofeT} (f g : ofe_fun B) : (∀ x, f x ≡ g x) ⊢ f ≡ g;
     sbi_mixin_sig_eq {A : ofeT} (P : A → Prop) (x y : sig P) : `x ≡ `y ⊢ x ≡ y;
     sbi_mixin_discrete_eq_1 {A : ofeT} (a b : A) : Discrete a → a ≡ b ⊢ ⌜a ≡ b⌝;
-    sbi_mixin_prop_ext P Q : bi_plainly ((P → Q) ∧ (Q → P)) ⊢
+    sbi_mixin_prop_ext P Q : bi_plainly ((P -∗ Q) ∧ (Q -∗ P)) ⊢
       sbi_internal_eq (OfeT PROP prop_ofe_mixin) P Q;
 
     (* Later *)
@@ -261,8 +261,8 @@ Structure sbi := Sbi {
                          sbi_forall sbi_exist sbi_sep sbi_wand sbi_plainly
                          sbi_persistently;
   sbi_sbi_mixin : SbiMixin sbi_ofe_mixin sbi_entails sbi_pure sbi_and sbi_or
-                           sbi_impl sbi_forall sbi_exist sbi_sep sbi_plainly
-                           sbi_persistently sbi_internal_eq sbi_later;
+                           sbi_impl sbi_forall sbi_exist sbi_sep sbi_wand
+                           sbi_plainly sbi_persistently sbi_internal_eq sbi_later;
 }.
 
 Instance: Params (@sbi_later) 1.
@@ -488,7 +488,7 @@ Lemma discrete_eq_1 {A : ofeT} (a b : A) :
   Discrete a → a ≡ b ⊢ (⌜a ≡ b⌝ : PROP).
 Proof. eapply sbi_mixin_discrete_eq_1, sbi_sbi_mixin. Qed.
 
-Lemma prop_ext P Q : bi_plainly ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q.
+Lemma prop_ext P Q : bi_plainly ((P -∗ Q) ∧ (Q -∗ P)) ⊢ P ≡ Q.
 Proof. eapply (sbi_mixin_prop_ext _ bi_entails), sbi_sbi_mixin. Qed.
 
 (* Later *)

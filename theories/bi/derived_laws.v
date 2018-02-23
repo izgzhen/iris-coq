@@ -1909,10 +1909,10 @@ Proof.
   rewrite -(internal_eq_refl True%I a) plainly_pure; auto.
 Qed.
 
-Lemma plainly_alt P : bi_plainly P ⊣⊢ P ≡ True.
+Lemma plainly_alt P `{!Absorbing P} : bi_plainly P ⊣⊢ P ≡ True.
 Proof.
   apply (anti_symm (⊢)).
-  - rewrite -prop_ext. apply plainly_mono, and_intro; apply impl_intro_r; auto.
+  - rewrite -prop_ext. apply plainly_mono, and_intro; apply wand_intro_l; auto.
   - rewrite internal_eq_sym (internal_eq_rewrite _ _ bi_plainly).
     by rewrite plainly_pure True_impl.
 Qed.

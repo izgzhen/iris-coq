@@ -345,8 +345,8 @@ Context (I : biIndex) (PROP : sbi).
 Lemma monPred_sbi_mixin :
   SbiMixin (PROP:=monPred I PROP) monPred_ofe_mixin monPred_entails monPred_pure
            monPred_and monPred_or monPred_impl monPred_forall monPred_exist
-           monPred_sep monPred_plainly monPred_persistently monPred_internal_eq
-           monPred_later.
+           monPred_sep monPred_wand monPred_plainly monPred_persistently
+           monPred_internal_eq monPred_later.
 Proof.
   split; unseal.
   - intros n P Q HPQ. split=> i /=.
