@@ -957,8 +957,11 @@ Proof.
 Qed.
 Lemma plainly_persistently P : bi_plainly (bi_persistently P) ⊣⊢ bi_plainly P.
 Proof.
-  apply (anti_symm _); first apply plainly_persistently_1.
-  by rewrite {1}plainly_idemp_2 (plainly_elim_persistently P).
+  apply (anti_symm _).
+  - rewrite -{1}(left_id True%I bi_and (bi_plainly _)) (plainly_emp_intro True%I).
+    rewrite -{2}(persistently_and_emp_elim P).
+    rewrite !and_alt -plainly_forall_2. by apply forall_mono=> -[].
+  - by rewrite {1}plainly_idemp_2 (plainly_elim_persistently P).
 Qed.
 
 Lemma absorbingly_plainly P : bi_absorbingly (bi_plainly P) ⊣⊢ bi_plainly P.

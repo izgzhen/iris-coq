@@ -129,8 +129,6 @@ Section bi_mixin.
     (* In the ordered RA model: `core` is idempotent *)
     bi_mixin_persistently_idemp_2 P :
       bi_persistently P ⊢ bi_persistently (bi_persistently P);
-    bi_mixin_plainly_persistently_1 P :
-      bi_plainly (bi_persistently P) ⊢ bi_plainly P;
 
     (* In the ordered RA model [P ⊢ persisently emp] (which can currently still
     be derived from the plainly axioms, which will be removed): `ε ≼ core x` *)
@@ -453,9 +451,6 @@ Proof. eapply bi_mixin_persistently_mono, bi_bi_mixin. Qed.
 Lemma persistently_idemp_2 P :
   bi_persistently P ⊢ bi_persistently (bi_persistently P).
 Proof. eapply bi_mixin_persistently_idemp_2, bi_bi_mixin. Qed.
-Lemma plainly_persistently_1 P :
-  bi_plainly (bi_persistently P) ⊢ bi_plainly P.
-Proof. eapply (bi_mixin_plainly_persistently_1 bi_entails), bi_bi_mixin. Qed.
 
 Lemma persistently_forall_2 {A} (Ψ : A → PROP) :
   (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a).

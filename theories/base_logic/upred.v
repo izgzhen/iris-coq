@@ -486,8 +486,6 @@ Proof.
     intros P QR HP. unseal; split=> n x ? /=. by apply HP, cmra_core_validN.
   - (* bi_persistently P ⊢ bi_persistently (bi_persistently P) *)
     intros P. unseal; split=> n x ?? /=. by rewrite cmra_core_idemp.
-  - (* bi_plainly (bi_persistently P) ⊢ bi_plainly P (ADMISSIBLE) *)
-    intros P. unseal; split=> n  x ?? /=. by rewrite -(core_id_core ε).
   - (* (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a) *)
     by unseal.
   - (* bi_persistently (∃ a, Ψ a) ⊢ ∃ a, bi_persistently (Ψ a) *)
