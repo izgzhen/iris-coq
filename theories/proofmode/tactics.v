@@ -962,9 +962,9 @@ Local Tactic Notation "iExistDestruct" constr(H)
     |revert y; intros x].
 
 (** * Modality introduction *)
-Tactic Notation "iModIntro":=
+Tactic Notation "iModIntro" open_constr(M) :=
   iStartProof;
-  eapply tac_modal_intro;
+  eapply tac_modal_intro with M _ _ _ _;
     [apply _  ||
      fail "iModIntro: the goal is not a modality"
     |apply _ ||
@@ -982,6 +982,7 @@ Tactic Notation "iModIntro":=
     |env_cbv; apply _ ||
      fail "iModIntro: cannot filter spatial context when goal is not absorbing"
     |].
+Tactic Notation "iModIntro" := iModIntro _.
 Tactic Notation "iAlways" := iModIntro.
 
 (** * Later *)
