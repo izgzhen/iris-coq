@@ -1083,6 +1083,13 @@ Qed.
 Lemma impl_wand_plainly_2 P Q : (bi_plainly P -∗ Q) ⊢ (bi_plainly P → Q).
 Proof. apply impl_intro_l. by rewrite plainly_and_sep_l_1 wand_elim_r. Qed.
 
+Lemma valid_plainly P : bi_valid (bi_plainly P) ↔ bi_valid P.
+Proof.
+  rewrite /bi_valid. split; intros HP.
+  - by rewrite -(idemp bi_and emp%I) {2}HP plainly_and_emp_elim.
+  - by rewrite (plainly_emp_intro emp%I) HP.
+Qed.
+
 Section plainly_affinely_bi.
   Context `{BiAffine PROP}.
 
