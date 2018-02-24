@@ -1934,6 +1934,16 @@ Proof.
     by rewrite plainly_pure True_impl.
 Qed.
 
+Lemma plainly_True_alt P : bi_plainly (True -∗ P) ⊣⊢ P ≡ True.
+Proof.
+  apply (anti_symm (⊢)).
+  - rewrite -prop_ext. apply plainly_mono, and_intro; apply wand_intro_l; auto.
+    by rewrite wand_elim_r.
+  - rewrite internal_eq_sym (internal_eq_rewrite _ _
+      (λ Q, bi_plainly (True -∗ Q)) ltac:(solve_proper)).
+    by rewrite -entails_wand // -(plainly_emp_intro True%I) True_impl.
+Qed.
+
 Global Instance internal_eq_absorbing {A : ofeT} (x y : A) :
   Absorbing (x ≡ y : PROP)%I.
 Proof. by rewrite /Absorbing absorbingly_internal_eq. Qed.
