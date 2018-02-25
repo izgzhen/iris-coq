@@ -501,8 +501,8 @@ Hint Mode IntoInv + ! - : typeclass_instances.
 *)
 Class ElimInv {PROP : bi} (φ : Prop) (Pinv Pin Pout Pclose Q Q' : PROP) :=
   elim_inv : φ → Pinv ∗ Pin ∗ (Pout ∗ Pclose -∗ Q') ⊢ Q.
-Arguments ElimInv {_} _ _ _%I _%I _%I _%I : simpl never.
-Arguments elim_inv {_} _ _ _%I _%I _%I _%I _%I _%I.
+Arguments ElimInv {_} _ _%I _%I _%I _%I _%I : simpl never.
+Arguments elim_inv {_} _ _%I _%I _%I _%I _%I _%I _%I.
 Hint Mode ElimInv + - ! - - - ! - : typeclass_instances.
 
 (* We make sure that tactics that perform actions on *specific* hypotheses or
