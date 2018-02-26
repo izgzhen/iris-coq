@@ -326,7 +326,6 @@ Proof.
   - intros P Q. split=> i. apply bi.sep_elim_l, _.
   - intros P Q [?]. split=> i /=. by f_equiv.
   - intros P. split=> i. by apply bi.persistently_idemp_2.
-  - intros P. split=> i /=. by setoid_rewrite bi.plainly_persistently_1.
   - intros A Ψ. split=> i. by apply bi.persistently_forall_2.
   - intros A Ψ. split=> i. by apply bi.persistently_exist_1.
   - intros P Q. split=> i. apply bi.sep_elim_l, _.
@@ -346,8 +345,8 @@ Context (I : biIndex) (PROP : sbi).
 Lemma monPred_sbi_mixin :
   SbiMixin (PROP:=monPred I PROP) monPred_ofe_mixin monPred_entails monPred_pure
            monPred_and monPred_or monPred_impl monPred_forall monPred_exist
-           monPred_sep monPred_plainly monPred_persistently monPred_internal_eq
-           monPred_later.
+           monPred_sep monPred_wand monPred_plainly monPred_persistently
+           monPred_internal_eq monPred_later.
 Proof.
   split; unseal.
   - intros n P Q HPQ. split=> i /=.

@@ -486,8 +486,6 @@ Proof.
     intros P QR HP. unseal; split=> n x ? /=. by apply HP, cmra_core_validN.
   - (* bi_persistently P ⊢ bi_persistently (bi_persistently P) *)
     intros P. unseal; split=> n x ?? /=. by rewrite cmra_core_idemp.
-  - (* bi_plainly (bi_persistently P) ⊢ bi_plainly P (ADMISSIBLE) *)
-    intros P. unseal; split=> n  x ?? /=. by rewrite -(core_id_core ε).
   - (* (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a) *)
     by unseal.
   - (* bi_persistently (∃ a, Ψ a) ⊢ ∃ a, bi_persistently (Ψ a) *)
@@ -503,8 +501,8 @@ Qed.
 
 Lemma uPred_sbi_mixin (M : ucmraT) : SbiMixin uPred_ofe_mixin
   uPred_entails uPred_pure uPred_and uPred_or uPred_impl
-  (@uPred_forall M) (@uPred_exist M) uPred_sep uPred_plainly uPred_persistently
-  (@uPred_internal_eq M) uPred_later.
+  (@uPred_forall M) (@uPred_exist M) uPred_sep uPred_wand
+  uPred_plainly uPred_persistently (@uPred_internal_eq M) uPred_later.
 Proof.
   split.
   - (* Contractive sbi_later *)
@@ -525,9 +523,10 @@ Proof.
     by unseal.
   - (* Discrete a → a ≡ b ⊣⊢ ⌜a ≡ b⌝ *)
     intros A a b ?. unseal; split=> n x ?; by apply (discrete_iff n).
-  - (* bi_plainly ((P → Q) ∧ (Q → P)) ⊢ P ≡ Q *)
-    unseal; split=> n x ? /= HPQ; split=> n' x' ? HP;
-    split; eapply HPQ; eauto using @ucmra_unit_least.
+  - (* bi_plainly ((P -∗ Q) ∧ (Q -∗ P)) ⊢ P ≡ Q *)
+    unseal; split=> n x ? /= HPQ. split=> n' x' ??.
+    move: HPQ=> [] /(_ n' x'); rewrite !left_id=> ?.
+    move=> /(_ n' x'); rewrite !left_id=> ?. naive_solver.
   - (* Next x ≡ Next y ⊢ ▷ (x ≡ y) *)
     by unseal.
   - (* ▷ (x ≡ y) ⊢ Next x ≡ Next y *)

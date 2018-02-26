@@ -957,8 +957,11 @@ Proof.
 Qed.
 Lemma plainly_persistently P : bi_plainly (bi_persistently P) ⊣⊢ bi_plainly P.
 Proof.
-  apply (anti_symm _); first apply plainly_persistently_1.
-  by rewrite {1}plainly_idemp_2 (plainly_elim_persistently P).
+  apply (anti_symm _).
+  - rewrite -{1}(left_id True%I bi_and (bi_plainly _)) (plainly_emp_intro True%I).
+    rewrite -{2}(persistently_and_emp_elim P).
+    rewrite !and_alt -plainly_forall_2. by apply forall_mono=> -[].
+  - by rewrite {1}plainly_idemp_2 (plainly_elim_persistently P).
 Qed.
 
 Lemma absorbingly_plainly P : bi_absorbingly (bi_plainly P) ⊣⊢ bi_plainly P.
@@ -1079,6 +1082,13 @@ Qed.
 
 Lemma impl_wand_plainly_2 P Q : (bi_plainly P -∗ Q) ⊢ (bi_plainly P → Q).
 Proof. apply impl_intro_l. by rewrite plainly_and_sep_l_1 wand_elim_r. Qed.
+
+Lemma valid_plainly P : bi_valid (bi_plainly P) ↔ bi_valid P.
+Proof.
+  rewrite /bi_valid. split; intros HP.
+  - by rewrite -(idemp bi_and emp%I) {2}HP plainly_and_emp_elim.
+  - by rewrite (plainly_emp_intro emp%I) HP.
+Qed.
 
 Section plainly_affinely_bi.
   Context `{BiAffine PROP}.
@@ -1906,12 +1916,32 @@ Proof.
   rewrite -(internal_eq_refl True%I a) plainly_pure; auto.
 Qed.
 
-Lemma plainly_alt P : bi_plainly P ⊣⊢ P ≡ True.
+Lemma plainly_alt P : bi_plainly P ⊣⊢ bi_affinely P ≡ emp.
+Proof.
+  rewrite -plainly_affinely. apply (anti_symm (⊢)).
+  - rewrite -prop_ext. apply plainly_mono, and_intro; apply wand_intro_l.
+    + by rewrite affinely_elim_emp left_id.
+    + by rewrite left_id.
+  - rewrite internal_eq_sym (internal_eq_rewrite _ _ bi_plainly).
+    by rewrite -plainly_True_emp plainly_pure True_impl.
+Qed.
+
+Lemma plainly_alt_absorbing P `{!Absorbing P} : bi_plainly P ⊣⊢ P ≡ True.
 Proof.
   apply (anti_symm (⊢)).
-  - rewrite -prop_ext. apply plainly_mono, and_intro; apply impl_intro_r; auto.
+  - rewrite -prop_ext. apply plainly_mono, and_intro; apply wand_intro_l; auto.
   - rewrite internal_eq_sym (internal_eq_rewrite _ _ bi_plainly).
     by rewrite plainly_pure True_impl.
+Qed.
+
+Lemma plainly_True_alt P : bi_plainly (True -∗ P) ⊣⊢ P ≡ True.
+Proof.
+  apply (anti_symm (⊢)).
+  - rewrite -prop_ext. apply plainly_mono, and_intro; apply wand_intro_l; auto.
+    by rewrite wand_elim_r.
+  - rewrite internal_eq_sym (internal_eq_rewrite _ _
+      (λ Q, bi_plainly (True -∗ Q)) ltac:(solve_proper)).
+    by rewrite -entails_wand // -(plainly_emp_intro True%I) True_impl.
 Qed.
 
 Global Instance internal_eq_absorbing {A : ofeT} (x y : A) :
