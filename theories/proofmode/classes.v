@@ -389,6 +389,94 @@ Instance maybe_frame_default {PROP : bi} (R P : PROP) :
   TCOr (Affine R) (Absorbing P) → MaybeFrame false R P P false | 100.
 Proof. intros. rewrite /MaybeFrame /=. apply: sep_elim_r. Qed.
 
+(* For each of the [MakeXxxx] class, there is a [KnownMakeXxxx] variant,
+   that only succeeds if the parameter(s) is not an evar. In the case
+   the parameter(s) is an evar, then [MakeXxxx] will not instantiate
+   it arbitrarily. *)
+Class MakeEmbed `{BiEmbedding PROP PROP'} (P : PROP) (Q : PROP') :=
+  make_embed : ⎡P⎤ ⊣⊢ Q.
+Arguments MakeEmbed {_ _ _ _} _%I _%I.
+Hint Mode MakeEmbed + + + + - - : typeclass_instances.
+Class KnownMakeEmbed `{BiEmbedding PROP PROP'} (P : PROP) (Q : PROP') :=
+  go_make_embed :> MakeEmbed P Q.
+Arguments KnownMakeEmbed {_ _ _ _} _%I _%I.
+Hint Mode KnownMakeEmbed + + + + ! - : typeclass_instances.
+
+Class MakeSep {PROP : bi} (P Q PQ : PROP) := make_sep : P ∗ Q ⊣⊢ PQ .
+Arguments MakeSep {_} _%I _%I _%I.
+Hint Mode MakeSep + - - - : typeclass_instances.
+Class KnownLMakeSep {PROP : bi} (P Q PQ : PROP) := gol_make_sep :> MakeSep P Q PQ.
+Arguments KnownLMakeSep {_} _%I _%I _%I.
+Hint Mode KnownLMakeSep + ! - - : typeclass_instances.
+Class KnownRMakeSep {PROP : bi} (P Q PQ : PROP) := gor_make_sep :> MakeSep P Q PQ.
+Arguments KnownRMakeSep {_} _%I _%I _%I.
+Hint Mode KnownRMakeSep + - ! - : typeclass_instances.
+
+Class MakeAnd {PROP : bi} (P Q PQ : PROP) :=  make_and_l : P ∧ Q ⊣⊢ PQ.
+Arguments MakeAnd {_} _%I _%I _%I.
+Hint Mode MakeAnd + - - - : typeclass_instances.
+Class KnownLMakeAnd {PROP : bi} (P Q PQ : PROP) := gol_make_and :> MakeAnd P Q PQ.
+Arguments KnownLMakeAnd {_} _%I _%I _%I.
+Hint Mode KnownLMakeAnd + ! - - : typeclass_instances.
+Class KnownRMakeAnd {PROP : bi} (P Q PQ : PROP) := gor_make_and :> MakeAnd P Q PQ.
+Arguments KnownRMakeAnd {_} _%I _%I _%I.
+Hint Mode KnownRMakeAnd + - ! - : typeclass_instances.
+
+Class MakeOr {PROP : bi} (P Q PQ : PROP) := make_or_l : P ∨ Q ⊣⊢ PQ.
+Arguments MakeOr {_} _%I _%I _%I.
+Hint Mode MakeOr + - - - : typeclass_instances.
+Class KnownLMakeOr {PROP : bi} (P Q PQ : PROP) := gol_make_or :> MakeOr P Q PQ.
+Arguments KnownLMakeOr {_} _%I _%I _%I.
+Hint Mode KnownLMakeOr + ! - - : typeclass_instances.
+Class KnownRMakeOr {PROP : bi} (P Q PQ : PROP) := gor_make_or :> MakeOr P Q PQ.
+Arguments KnownRMakeOr {_} _%I _%I _%I.
+Hint Mode KnownRMakeOr + - ! - : typeclass_instances.
+
+Class MakeAffinely {PROP : bi} (P Q : PROP) :=
+  make_affinely :> bi_affinely P ⊣⊢ Q.
+Arguments MakeAffinely {_} _%I _%I.
+Hint Mode MakeAffinely + - - : typeclass_instances.
+Class KnownMakeAffinely {PROP : bi} (P Q : PROP) :=
+  go_make_affinely : MakeAffinely P Q.
+Arguments KnownMakeAffinely {_} _%I _%I.
+Hint Mode KnownMakeAffinely + ! - : typeclass_instances.
+
+Class MakeAbsorbingly {PROP : bi} (P Q : PROP) :=
+  make_absorbingly : bi_absorbingly P ⊣⊢ Q.
+Arguments MakeAbsorbingly {_} _%I _%I.
+Hint Mode MakeAbsorbingly + - - : typeclass_instances.
+Class KnownMakeAbsorbingly {PROP : bi} (P Q : PROP) :=
+  go_make_absorbingly :> MakeAbsorbingly P Q.
+Arguments KnownMakeAbsorbingly {_} _%I _%I.
+Hint Mode KnownMakeAbsorbingly + ! - : typeclass_instances.
+
+Class MakePersistently {PROP : bi} (P Q : PROP) :=
+  make_persistently : bi_persistently P ⊣⊢ Q.
+Arguments MakePersistently {_} _%I _%I.
+Hint Mode MakePersistently + - - : typeclass_instances.
+Class KnownMakePersistently {PROP : bi} (P Q : PROP) :=
+  go_make_persistently :> MakePersistently P Q.
+Arguments KnownMakePersistently {_} _%I _%I.
+Hint Mode KnownMakePersistently + ! - : typeclass_instances.
+
+Class MakeLaterN {PROP : sbi} (n : nat) (P lP : PROP) :=
+  make_laterN : ▷^n P ⊣⊢ lP.
+Arguments MakeLaterN {_} _%nat _%I _%I.
+Hint Mode MakeLaterN + + - - : typeclass_instances.
+Class KnownMakeLaterN {PROP : sbi} (n : nat) (P lP : PROP) :=
+  go_make_laterN :> MakeLaterN n P lP.
+Arguments KnownMakeLaterN {_} _%nat _%I _%I.
+Hint Mode KnownMakeLaterN + + ! - : typeclass_instances.
+
+Class MakeExcept0 {PROP : sbi} (P Q : PROP) :=
+  make_except_0 : sbi_except_0 P ⊣⊢ Q.
+Arguments MakeExcept0 {_} _%I _%I.
+Hint Mode MakeExcept0 + - - : typeclass_instances.
+Class KnownMakeExcept0 {PROP : sbi} (P Q : PROP) :=
+  go_make_except_0 :> MakeExcept0 P Q.
+Arguments KnownMakeExcept0 {_} _%I _%I.
+Hint Mode KnownMakeExcept0 + ! - : typeclass_instances.
+
 Class IntoExcept0 {PROP : sbi} (P Q : PROP) := into_except_0 : P ⊢ ◇ Q.
 Arguments IntoExcept0 {_} _%I _%I : simpl never.
 Arguments into_except_0 {_} _%I _%I {_}.

@@ -369,4 +369,15 @@ Proof.
   iMatchHyp (fun H _ =>
     iApply ("H" with [spec_patterns.SIdent H; spec_patterns.SIdent "HQ"])).
 Qed.
+
+Lemma iFrame_with_evar_r P Q :
+  P -∗ Q -∗ ∃ R, P ∗ R.
+Proof.
+  iIntros "HP HQ". iExists _. iFrame. iApply "HQ".
+Qed.
+Lemma iFrame_with_evar_l P Q :
+  P -∗ Q -∗ ∃ R, R ∗ P.
+Proof.
+  iIntros "HP HQ". iExists _. iFrame. iApply "HQ".
+Qed.
 End tests.
