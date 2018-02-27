@@ -1,6 +1,6 @@
 From iris.bi Require Export bi.
 From iris.bi Require Import tactics.
-From iris.proofmode Require Export base environments classes.
+From iris.proofmode Require Export base environments classes modality_instances.
 Set Default Proof Using "Type".
 Import bi.
 Import env_notations.
@@ -1331,39 +1331,33 @@ Proof.
 Qed.
 
 (** * Later *)
-(** The classes [MaybeIntoLaterNEnvs] and [MaybeIntoLaterNEnvs] were used by
-[iNext] in the past, but are currently _only_ used by other tactics that need
-to introduce laters, e.g. the symbolic execution tactics. *)
-Class MaybeIntoLaterNEnv (n : nat) (Γ1 Γ2 : env PROP) :=
-  into_laterN_env : env_Forall2 (MaybeIntoLaterN false n) Γ1 Γ2.
+(** The class [MaybeIntoLaterNEnvs] is used by tactics that need to introduce
+laters, e.g. the symbolic execution tactics. *)
 Class MaybeIntoLaterNEnvs (n : nat) (Δ1 Δ2 : envs PROP) := {
-  into_later_persistent:  MaybeIntoLaterNEnv n (env_persistent Δ1) (env_persistent Δ2);
-  into_later_spatial: MaybeIntoLaterNEnv n (env_spatial Δ1) (env_spatial Δ2)
+  into_later_persistent :
+    TransformPersistentEnv (modality_laterN n) (MaybeIntoLaterN false n)
+      (env_persistent Δ1) (env_persistent Δ2);
+  into_later_spatial :
+    TransformSpatialEnv (modality_laterN n)
+      (MaybeIntoLaterN false n) (env_spatial Δ1) (env_spatial Δ2) false
 }.
 
-Global Instance into_laterN_env_nil n : MaybeIntoLaterNEnv n Enil Enil.
-Proof. constructor. Qed.
-Global Instance into_laterN_env_snoc n Γ1 Γ2 i P Q :
-  MaybeIntoLaterNEnv n Γ1 Γ2 → MaybeIntoLaterN false n P Q →
-  MaybeIntoLaterNEnv n (Esnoc Γ1 i P) (Esnoc Γ2 i Q).
-Proof. by constructor. Qed.
-
 Global Instance into_laterN_envs n Γp1 Γp2 Γs1 Γs2 :
-  MaybeIntoLaterNEnv n Γp1 Γp2 → MaybeIntoLaterNEnv n Γs1 Γs2 →
+  TransformPersistentEnv (modality_laterN n) (MaybeIntoLaterN false n) Γp1 Γp2 →
+  TransformSpatialEnv (modality_laterN n) (MaybeIntoLaterN false n) Γs1 Γs2 false →
   MaybeIntoLaterNEnvs n (Envs Γp1 Γs1) (Envs Γp2 Γs2).
 Proof. by split. Qed.
 
 Lemma into_laterN_env_sound n Δ1 Δ2 :
   MaybeIntoLaterNEnvs n Δ1 Δ2 → of_envs Δ1 ⊢ ▷^n (of_envs Δ2).
 Proof.
-  intros [Hp Hs]; rewrite /of_envs /= !laterN_and !laterN_sep.
-  rewrite -{1}laterN_intro -laterN_affinely_persistently_2.
-  apply and_mono, sep_mono.
-  - apply pure_mono; destruct 1; constructor;
-      naive_solver eauto using env_Forall2_wf, env_Forall2_fresh.
-  - apply affinely_mono, persistently_mono.
-    induction Hp; rewrite /= ?laterN_and. apply laterN_intro. by apply and_mono.
-  - induction Hs; rewrite /= ?laterN_sep. apply laterN_intro. by apply sep_mono.
+  intros [[Hp ??] [Hs ??]]; rewrite /of_envs /= !laterN_and !laterN_sep.
+  rewrite -{1}laterN_intro. apply and_mono, sep_mono.
+  - apply pure_mono; destruct 1; constructor; naive_solver.
+  - apply Hp; rewrite /= /MaybeIntoLaterN.
+    + intros P Q ->. by rewrite laterN_affinely_persistently_2.
+    + intros P Q. by rewrite laterN_and.
+  - by rewrite Hs //= right_id.
 Qed.
 
 Lemma tac_löb Δ Δ' i Q :
