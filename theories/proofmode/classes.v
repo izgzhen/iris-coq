@@ -229,6 +229,10 @@ Section modality1.
   Qed.
 End modality1.
 
+(** The [FromModal M P Q] class is used by the [iModIntro] tactic to transform
+a goal [P] into a modality [M] and proposition [Q].
+
+The input is [P] and the outputs are [M] and [Q]. *)
 Class FromModal {PROP1 PROP2 : bi}
     (M : modality PROP1 PROP2) (P : PROP2) (Q : PROP1) :=
   from_modal : M Q ⊢ P.
