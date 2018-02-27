@@ -362,4 +362,11 @@ Proof. iIntros "H". iFrame "H". auto. Qed.
 
 Lemma test_iFrame_later_2 P Q : ▷ P ∗ ▷ Q -∗ ▷ (▷ P ∗ ▷ Q).
 Proof. iIntros "H". iFrame "H". auto. Qed.
+
+Lemma test_with_ident P Q R : P -∗ Q -∗ (P -∗ Q -∗ R) -∗ R.
+Proof.
+  iIntros "? HQ H".
+  iMatchHyp (fun H _ =>
+    iApply ("H" with [spec_patterns.SIdent H; spec_patterns.SIdent "HQ"])).
+Qed.
 End tests.

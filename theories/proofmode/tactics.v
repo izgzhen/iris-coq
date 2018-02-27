@@ -455,9 +455,9 @@ Local Tactic Notation "iIntro" :=
   end.
 
 (** * Specialize *)
-Record iTrm {X As} :=
-  ITrm { itrm : X ; itrm_vars : hlist As ; itrm_hyps : string }.
-Arguments ITrm {_ _} _ _ _.
+Record iTrm {X As S} :=
+  ITrm { itrm : X ; itrm_vars : hlist As ; itrm_hyps : S }.
+Arguments ITrm {_ _ _} _ _ _.
 
 Notation "( H $! x1 .. xn )" :=
   (ITrm H (hcons x1 .. (hcons xn hnil) ..) "") (at level 0, x1, xn at level 9).
