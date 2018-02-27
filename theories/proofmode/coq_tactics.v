@@ -1064,6 +1064,21 @@ Proof.
 Qed.
 End bi_tactics.
 
+(** The following _private_ classes are used internally by [tac_modal_intro] /
+[iModIntro] to transform the proofmode environments when introducing a modality.
+
+The class [TransformPersistentEnv M C Γin Γout] is used to transform the
+persistent environment using a type class [C].
+
+Inputs:
+- [Γin] : the original environment.
+- [M] : the modality that the environment should be transformed into.
+- [C : PROP → PROP → Prop] : a type class that is used to transform the
+  individual hypotheses. The first parameter is the input and the second
+  parameter is the output.
+
+Outputs:
+- [Γout] : the resulting environment. *)
 Class TransformPersistentEnv {PROP1 PROP2} (M : modality PROP1 PROP2)
     (C : PROP2 → PROP1 → Prop) (Γin : env PROP2) (Γout : env PROP1) := {
   transform_persistent_env :
@@ -1074,6 +1089,19 @@ Class TransformPersistentEnv {PROP1 PROP2} (M : modality PROP1 PROP2)
   transform_persistent_env_dom i : Γin !! i = None → Γout !! i = None;
 }.
 
+(* The class [TransformPersistentEnv M C Γin Γout filtered] is used to transform
+the persistent environment using a type class [C].
+
+Inputs:
+- [Γin] : the original environment.
+- [M] : the modality that the environment should be transformed into.
+- [C : PROP → PROP → Prop] : a type class that is used to transform the
+  individual hypotheses. The first parameter is the input and the second
+  parameter is the output.
+
+Outputs:
+- [Γout] : the resulting environment.
+- [filtered] : a Boolean indicating if non-affine hypotheses have been cleared. *)
 Class TransformSpatialEnv {PROP1 PROP2} (M : modality PROP1 PROP2)
     (C : PROP2 → PROP1 → Prop) (Γin : env PROP2) (Γout : env PROP1)
     (filtered : bool) := {
@@ -1084,6 +1112,18 @@ Class TransformSpatialEnv {PROP1 PROP2} (M : modality PROP1 PROP2)
   transform_spatial_env_dom i : Γin !! i = None → Γout !! i = None;
 }.
 
+(* The class [IntoModalPersistentEnv M Γin Γout s] is used to transform the
+persistent environment with respect to the behavior needed to introduce [M] as
+given by [s : modality_intro_spec PROP1 PROP2].
+
+Inputs:
+- [Γin] : the original environment.
+- [M] : the modality that the environment should be transformed into.
+- [s] : the [modality_intro_spec] a specification of the way the hypotheses
+  should be transformed.
+
+Outputs:
+- [Γout] : the resulting environment. *)
 Inductive IntoModalPersistentEnv {PROP2} : ∀ {PROP1} (M : modality PROP1 PROP2)
     (Γin : env PROP2) (Γout : env PROP1), modality_intro_spec PROP1 PROP2 → Prop :=
   | MIEnvIsEmpty_persistent {PROP1} (M : modality PROP1 PROP2) :
@@ -1103,6 +1143,19 @@ Existing Class IntoModalPersistentEnv.
 Existing Instances MIEnvIsEmpty_persistent MIEnvForall_persistent
   MIEnvTransform_persistent MIEnvClear_persistent MIEnvId_persistent.
 
+(* The class [IntoModalSpatialEnv M Γin Γout s] is used to transform the spatial
+environment with respect to the behavior needed to introduce [M] as given by
+[s : modality_intro_spec PROP1 PROP2].
+
+Inputs:
+- [Γin] : the original environment.
+- [M] : the modality that the environment should be transformed into.
+- [s] : the [modality_intro_spec] a specification of the way the hypotheses
+  should be transformed.
+
+Outputs:
+- [Γout] : the resulting environment.
+- [filtered] : a Boolean indicating if non-affine hypotheses have been cleared. *)
 Inductive IntoModalSpatialEnv {PROP2} : ∀ {PROP1} (M : modality PROP1 PROP2)
     (Γin : env PROP2) (Γout : env PROP1), modality_intro_spec PROP1 PROP2 → bool → Prop :=
   | MIEnvIsEmpty_spatial {PROP1} (M : modality PROP1 PROP2) :
@@ -1278,8 +1331,9 @@ Proof.
 Qed.
 
 (** * Later *)
-(** Although the `iNext` tactic no longer exists, much of its infrastructure is
-still used by other tactics, e.g. the symbolic execution tactics. *)
+(** The classes [MaybeIntoLaterNEnvs] and [MaybeIntoLaterNEnvs] were used by
+[iNext] in the past, but are currently _only_ used by other tactics that need
+to introduce laters, e.g. the symbolic execution tactics. *)
 Class MaybeIntoLaterNEnv (n : nat) (Γ1 Γ2 : env PROP) :=
   into_laterN_env : env_Forall2 (MaybeIntoLaterN false n) Γ1 Γ2.
 Class MaybeIntoLaterNEnvs (n : nat) (Δ1 Δ2 : envs PROP) := {
