@@ -72,8 +72,11 @@ Definition parse (s : string) : option (list spec_pat) :=
 Ltac parse s :=
   lazymatch type of s with
   | list spec_pat => s
+  | spec_pat => constr:([s])
   | string => lazymatch eval vm_compute in (parse s) with
-              | Some ?pats => pats | _ => fail "invalid list spec_pat" s
+              | Some ?pats => pats | _ => fail "spec_pat.parse: cannot parse" s
               end
+  | ident => constr:([SIdent s])
+  | ?X => fail "spec_pat.parse:" s "has unexpected type" X
   end.
 End spec_pat.
