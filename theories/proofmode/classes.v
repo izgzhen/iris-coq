@@ -389,10 +389,15 @@ Instance maybe_frame_default {PROP : bi} (R P : PROP) :
   TCOr (Affine R) (Absorbing P) → MaybeFrame false R P P false | 100.
 Proof. intros. rewrite /MaybeFrame /=. apply: sep_elim_r. Qed.
 
-(* For each of the [MakeXxxx] class, there is a [KnownMakeXxxx] variant,
-   that only succeeds if the parameter(s) is not an evar. In the case
-   the parameter(s) is an evar, then [MakeXxxx] will not instantiate
-   it arbitrarily. *)
+(* For each of the [MakeXxxx] class, there is a [KnownMakeXxxx]
+   variant, that only succeeds if the parameter(s) is not an evar. In
+   the case the parameter(s) is an evar, then [MakeXxxx] will not
+   instantiate it arbitrarily.
+
+   The reason for this is that if given an evar, these typeclasses
+   would typically try to instantiate this evar with some arbitrary
+   logical constructs such as emp or True. Therefore, we use an Hint
+   Mode to disable all the instances that would have this behavior. *)
 Class MakeEmbed `{BiEmbedding PROP PROP'} (P : PROP) (Q : PROP') :=
   make_embed : ⎡P⎤ ⊣⊢ Q.
 Arguments MakeEmbed {_ _ _ _} _%I _%I.
