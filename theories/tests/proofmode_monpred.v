@@ -114,4 +114,8 @@ Section tests.
     iIntros "[$ #HP]". iFrame "HP".
   Qed.
 
+  Lemma test_iNext_Bi P :
+    @bi_entails monPredI (▷ P) (▷ P).
+  Proof. iIntros "H". by iNext. Qed.
+
 End tests.
