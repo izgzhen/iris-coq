@@ -114,35 +114,26 @@ Separating logic specific tactics
 Modalities
 ----------
 
-- `iModIntro` : introduction of a modality that is an instance of the
-  `FromModal` type class. Instances include: later, except 0, basic update and
-  fancy update.
-- `iMod pm_trm as (x1 ... xn) "ipat"` : eliminate a modality `pm_trm` that is
-  an instance of the `ElimModal` type class. Instances include: later, except 0,
-  basic update and fancy update.
-
-The persistence and plainness modalities
-----------------------------------------
-
-- `iAlways` : introduce a persistence or plainness modality and the spatial
-  context. In case of a plainness modality, the tactic will prune all persistent
-  hypotheses that are not plain.
-
-The later modality
-------------------
-
+- `iModIntro` : introduction of a modality. The type class `FromModal` is used
+  to specify which modalities this tactic should introduce. Instances of that
+  type class include: later, except 0, basic update and fancy update,
+  persistently, affinely, plainly, absorbingly, absolutely, and relatively.
+- `iAlways` : a deprecated alias of `iModIntro`.
 - `iNext n` : introduce `n` laters by stripping that number of laters from all
   hypotheses. If the argument `n` is not given, it strips one later if the
   leftmost conjunct is of the shape `▷ P`, or `n` laters if the leftmost
   conjunct is of the shape `▷^n P`.
-- `iLöb as "IH" forall (x1 ... xn) "selpat"` : perform Löb induction by
-  generating a hypothesis `IH : ▷ goal`. The tactic generalizes over the Coq
-  level variables `x1 ... xn`, the hypotheses given by the selection pattern
-  `selpat`, and the spatial context.
+- `iMod pm_trm as (x1 ... xn) "ipat"` : eliminate a modality `pm_trm` that is
+  an instance of the `ElimModal` type class. Instances include: later, except 0,
+  basic update and fancy update.
 
 Induction
 ---------
 
+- `iLöb as "IH" forall (x1 ... xn) "selpat"` : perform Löb induction by
+  generating a hypothesis `IH : ▷ goal`. The tactic generalizes over the Coq
+  level variables `x1 ... xn`, the hypotheses given by the selection pattern
+  `selpat`, and the spatial context.
 - `iInduction x as cpat "IH" forall (x1 ... xn) "selpat"` : perform induction on
   the Coq term `x`. The Coq introduction pattern is used to name the introduced
   variables. The induction hypotheses are inserted into the persistent context
@@ -229,8 +220,8 @@ appear at the top level:
   Items of the selection pattern can be prefixed with `$`, which cause them to
   be framed instead of cleared.
 - `!%` : introduce a pure goal (and leave the proof mode).
-- `!#` : introduce an persistence or plainness modality (by calling `iAlways`).
-- `!>` : introduce a modality (by calling `iModIntro`).
+- `!>` : introduce a modality by calling `iModIntro`.
+- `!#` : introduce a modality by calling `iModIntro` (deprecated).
 - `/=` : perform `simpl`.
 - `//` : perform `try done` on all goals.
 - `//=` : syntactic sugar for `/= //`

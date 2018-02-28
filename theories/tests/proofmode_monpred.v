@@ -7,6 +7,7 @@ Section tests.
   Local Notation monPredI := (monPredI I PROP).
   Local Notation monPredSI := (monPredSI I PROP).
   Implicit Types P Q R : monPred.
+  Implicit Types 𝓟 𝓠 𝓡 : PROP.
   Implicit Types i j : I.
 
   Lemma test0 P : P -∗ P.
@@ -71,9 +72,21 @@ Section tests.
   Lemma test_absolutely P Q : ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ ∀ᵢ (P ∗ Q).
   Proof. iIntros "#? HP HQ". iAlways. by iSplitL "HP". Qed.
 
-  Lemma test_absolutely_affine `{BiAffine PROP} P Q R :
+  Lemma test_absolutely_absorbing P Q R `{!Absorbing P} :
     ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
   Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
+
+  Lemma test_absolutely_affine P Q R `{!Affine R} :
+    ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
+  Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
+
+  Lemma test_iModIntro_embed P `{!Affine Q} 𝓟 𝓠 :
+    □ P -∗ Q -∗ ⎡𝓟⎤ -∗ ⎡𝓠⎤ -∗ ⎡ 𝓟 ∗ 𝓠 ⎤.
+  Proof. iIntros "#H1 _ H2 H3". iAlways. iFrame. Qed.
+
+  Lemma test_iModIntro_embed_absolute P `{!Absolute Q} 𝓟 𝓠 :
+    □ P -∗ Q -∗ ⎡𝓟⎤ -∗ ⎡𝓠⎤ -∗ ⎡ ∀ i, 𝓟 ∗ 𝓠 ∗ Q i ⎤.
+  Proof. iIntros "#H1 H2 H3 H4". iAlways. iFrame. Qed.
 
   (* This is a hack to avoid avoid coq bug #5735: sections variables
      ignore hint modes. So we assume the instances in a way that

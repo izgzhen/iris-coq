@@ -961,50 +961,35 @@ Local Tactic Notation "iExistDestruct" constr(H)
     [env_reflexivity || fail "iExistDestruct:" Hx "not fresh"
     |revert y; intros x].
 
-(** * Always *)
-Tactic Notation "iAlways":=
+(** * Modality introduction *)
+Tactic Notation "iModIntro" open_constr(M) :=
   iStartProof;
-  eapply tac_always_intro;
+  eapply tac_modal_intro with M _ _ _ _;
     [apply _  ||
-     fail "iAlways: the goal is not an always-style modality"
-    |hnf; env_cbv; apply _ ||
-     lazymatch goal with
-     | |- TCAnd (TCForall ?C _) _ => fail "iAlways: persistent context does not satisfy" C
-     | |- TCAnd (TCEq _ Enil) _ => fail "iAlways: persistent context is non-empty"
+     fail "iModIntro: the goal is not a modality"
+    |apply _ ||
+     let s := lazymatch goal with |- IntoModalPersistentEnv _ _ _ ?s => s end in
+     lazymatch eval hnf in s with
+     | MIEnvForall ?C => fail "iModIntro: persistent context does not satisfy" C
+     | MIEnvIsEmpty => fail "iModIntro: persistent context is non-empty"
      end
-    |hnf; env_cbv; apply _ ||
-     lazymatch goal with
-     | |- TCAnd (TCForall ?C _) _ => fail "iAlways: spatial context does not satisfy" C
-     | |- TCAnd (TCEq _ Enil) _ => fail "iAlways: spatial context is non-empty"
+    |apply _ ||
+     let s := lazymatch goal with |- IntoModalPersistentEnv _ _ _ ?s => s end in
+     lazymatch eval hnf in s with
+     | MIEnvForall ?C => fail "iModIntro: spatial context does not satisfy" C
+     | MIEnvIsEmpty => fail "iModIntro: spatial context is non-empty"
      end
-    |env_cbv].
+    |env_cbv; apply _ ||
+     fail "iModIntro: cannot filter spatial context when goal is not absorbing"
+    |].
+Tactic Notation "iModIntro" := iModIntro _.
+Tactic Notation "iAlways" := iModIntro.
 
 (** * Later *)
-Tactic Notation "iNext" open_constr(n) :=
-  iStartProof;
-  let P := match goal with |- envs_entails _ ?P => P end in
-  try lazymatch n with 0 => fail 1 "iNext: cannot strip 0 laters" end;
-  (* apply is sometimes confused wrt. canonical structures search.
-     refine should use the other unification algorithm, which should
-     not have this issue. *)
-  notypeclasses refine (tac_next _ _ n _ _ _ _ _);
-    [apply _ || fail "iNext:" P "does not contain" n "laters"
-    |lazymatch goal with
-     | |- MaybeIntoLaterNEnvs 0 _ _ => fail "iNext:" P "does not contain laters"
-     | _ => apply _
-     end
-    |lazy beta (* remove beta redexes caused by removing laters under binders*)].
-
-Tactic Notation "iNext":= iNext _.
+Tactic Notation "iNext" open_constr(n) := iModIntro (modality_laterN n).
+Tactic Notation "iNext" := iModIntro (modality_laterN _).
 
 (** * Update modality *)
-Tactic Notation "iModIntro" :=
-  iStartProof;
-  eapply tac_modal_intro;
-    [apply _ ||
-     let P := match goal with |- FromModal ?P _ => P end in
-     fail "iModIntro:" P "not a modality"|].
-
 Tactic Notation "iModCore" constr(H) :=
   eapply tac_modal_elim with _ H _ _ _ _ _;
     [env_reflexivity || fail "iMod:" H "not found"

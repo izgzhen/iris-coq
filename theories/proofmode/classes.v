@@ -1,4 +1,5 @@
 From iris.bi Require Export bi.
+From iris.proofmode Require Export modalities.
 From stdpp Require Import namespaces.
 Set Default Proof Using "Type".
 Import bi.
@@ -83,138 +84,22 @@ Arguments IntoPersistent {_} _ _%I _%I : simpl never.
 Arguments into_persistent {_} _ _%I _%I {_}.
 Hint Mode IntoPersistent + + ! - : typeclass_instances.
 
-(* The `iAlways` tactic is not tied to `persistently` and `affinely`, but can be
-instantiated with a variety of comonadic (always-style) modalities.
+(** The [FromModal M P Q] class is used by the [iModIntro] tactic to transform
+a goal [P] into a modality [M] and proposition [Q].
 
-In order to plug in an always-style modality, one has to decide for both the
-persistent and spatial what action should be performed upon introducing the
-modality:
+The input is [P] and the outputs are [M] and [Q].
 
-- Introduction is only allowed when the context is empty.
-- Introduction is only allowed when all hypotheses satisfy some predicate
-  `C : PROP → Prop` (where `C` should be a type class).
-- Introduction will only keep the hypotheses that satisfy some predicate
-  `C : PROP → Prop` (where `C` should be a type class).
-- Introduction will clear the context.
-- Introduction will keep the context as-if.
-
-Formally, these actions correspond to the following inductive type: *)
-Inductive always_intro_spec (PROP : bi) :=
-  | AIEnvIsEmpty
-  | AIEnvForall (C : PROP → Prop)
-  | AIEnvFilter (C : PROP → Prop)
-  | AIEnvClear
-  | AIEnvId.
-Arguments AIEnvIsEmpty {_}.
-Arguments AIEnvForall {_} _.
-Arguments AIEnvFilter {_} _.
-Arguments AIEnvClear {_}.
-Arguments AIEnvId {_}.
-
-(* An always-style modality is then a record packing together the modality with
-the laws it should satisfy to justify the given actions for both contexts: *)
-Record always_modality_mixin {PROP : bi} (M : PROP → PROP)
-    (pspec sspec : always_intro_spec PROP) := {
-  always_modality_mixin_persistent :
-    match pspec with
-    | AIEnvIsEmpty => True
-    | AIEnvForall C | AIEnvFilter C => ∀ P, C P → □ P ⊢ M (□ P)
-    | AIEnvClear => True
-    | AIEnvId => ∀ P, □ P ⊢ M (□ P)
-    end;
-  always_modality_mixin_spatial :
-    match sspec with
-    | AIEnvIsEmpty => True
-    | AIEnvForall C => ∀ P, C P → P ⊢ M P
-    | AIEnvFilter C => (∀ P, C P → P ⊢ M P) ∧ (∀ P, Absorbing (M P))
-    | AIEnvClear => ∀ P, Absorbing (M P)
-    | AIEnvId => False
-    end;
-  always_modality_mixin_emp : emp ⊢ M emp;
-  always_modality_mixin_mono P Q : (P ⊢ Q) → M P ⊢ M Q;
-  always_modality_mixin_and P Q : M P ∧ M Q ⊢ M (P ∧ Q);
-  always_modality_mixin_sep P Q : M P ∗ M Q ⊢ M (P ∗ Q)
-}.
-
-Record always_modality (PROP : bi) := AlwaysModality {
-  always_modality_car :> PROP → PROP;
-  always_modality_persistent_spec : always_intro_spec PROP;
-  always_modality_spatial_spec : always_intro_spec PROP;
-  always_modality_mixin_of : always_modality_mixin
-    always_modality_car
-    always_modality_persistent_spec always_modality_spatial_spec
-}.
-Arguments AlwaysModality {_} _ {_ _} _.
-Arguments always_modality_persistent_spec {_} _.
-Arguments always_modality_spatial_spec {_} _.
-
-Section always_modality.
-  Context {PROP} (M : always_modality PROP).
-
-  Lemma always_modality_persistent_forall C P :
-    always_modality_persistent_spec M = AIEnvForall C → C P → □ P ⊢ M (□ P).
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_persistent_filter C P :
-    always_modality_persistent_spec M = AIEnvFilter C → C P → □ P ⊢ M (□ P).
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_persistent_id P :
-    always_modality_persistent_spec M = AIEnvId → □ P ⊢ M (□ P).
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_forall C P :
-    always_modality_spatial_spec M = AIEnvForall C → C P → P ⊢ M P.
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_filter C P :
-    always_modality_spatial_spec M = AIEnvFilter C → C P → P ⊢ M P.
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_filter_absorbing C P :
-    always_modality_spatial_spec M = AIEnvFilter C → Absorbing (M P).
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_clear P :
-    always_modality_spatial_spec M = AIEnvClear → Absorbing (M P).
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma always_modality_spatial_id :
-    always_modality_spatial_spec M ≠ AIEnvId.
-  Proof. destruct M as [??? []]; naive_solver. Qed.
-
-  Lemma always_modality_emp : emp ⊢ M emp.
-  Proof. eapply always_modality_mixin_emp, always_modality_mixin_of. Qed.
-  Lemma always_modality_mono P Q : (P ⊢ Q) → M P ⊢ M Q.
-  Proof. eapply always_modality_mixin_mono, always_modality_mixin_of. Qed.
-  Lemma always_modality_and P Q : M P ∧ M Q ⊢ M (P ∧ Q).
-  Proof. eapply always_modality_mixin_and, always_modality_mixin_of. Qed.
-  Lemma always_modality_sep P Q : M P ∗ M Q ⊢ M (P ∗ Q).
-  Proof. eapply always_modality_mixin_sep, always_modality_mixin_of. Qed.
-  Global Instance always_modality_mono' : Proper ((⊢) ==> (⊢)) M.
-  Proof. intros P Q. apply always_modality_mono. Qed.
-  Global Instance always_modality_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) M.
-  Proof. intros P Q. apply always_modality_mono. Qed.
-  Global Instance always_modality_proper : Proper ((≡) ==> (≡)) M.
-  Proof. intros P Q. rewrite !equiv_spec=> -[??]; eauto using always_modality_mono. Qed.
-
-  Lemma always_modality_persistent_forall_big_and C Ps :
-    always_modality_persistent_spec M = AIEnvForall C →
-    Forall C Ps → □ [∧] Ps ⊢ M (□ [∧] Ps).
-  Proof.
-    induction 2 as [|P Ps ? _ IH]; simpl.
-    - by rewrite persistently_pure affinely_True_emp affinely_emp -always_modality_emp.
-    - rewrite affinely_persistently_and -always_modality_and -IH.
-      by rewrite {1}(always_modality_persistent_forall _ P).
-  Qed.
-  Lemma always_modality_spatial_forall_big_sep C Ps :
-    always_modality_spatial_spec M = AIEnvForall C →
-    Forall C Ps → [∗] Ps ⊢ M ([∗] Ps).
-  Proof.
-    induction 2 as [|P Ps ? _ IH]; simpl.
-    - by rewrite -always_modality_emp.
-    - by rewrite -always_modality_sep -IH {1}(always_modality_spatial_forall _ P).
-  Qed.
-End always_modality.
-
-Class FromAlways {PROP : bi} (M : always_modality PROP) (P Q : PROP) :=
-  from_always : M Q ⊢ P.
-Arguments FromAlways {_} _ _%I _%I : simpl never.
-Arguments from_always {_} _ _%I _%I {_}.
-Hint Mode FromAlways + - ! - : typeclass_instances.
+For modalities [M] that do not need to augment the proof mode environment, one
+can define an instance [FromModal modality_id (M P) P]. Defining such an
+only imposes the proof obligation [P ⊢ M P]. Examples of modalities that have
+such an instance are [bupd], [fupd], [except_0], [monPred_relatively] and
+[bi_absorbingly]. *)
+Class FromModal {PROP1 PROP2 : bi}
+    (M : modality PROP1 PROP2) (P : PROP2) (Q : PROP1) :=
+  from_modal : M Q ⊢ P.
+Arguments FromModal {_ _} _ _%I _%I : simpl never.
+Arguments from_modal {_ _} _ _%I _%I {_}.
+Hint Mode FromModal - + - ! - : typeclass_instances.
 
 Class FromAffinely {PROP : bi} (P Q : PROP) :=
   from_affinely : bi_affinely Q ⊢ P.
@@ -331,11 +216,6 @@ Class IsExcept0 {PROP : sbi} (Q : PROP) := is_except_0 : ◇ Q ⊢ Q.
 Arguments IsExcept0 {_} _%I : simpl never.
 Arguments is_except_0 {_} _%I {_}.
 Hint Mode IsExcept0 + ! : typeclass_instances.
-
-Class FromModal {PROP : bi} (P Q : PROP) := from_modal : Q ⊢ P.
-Arguments FromModal {_} _%I _%I : simpl never.
-Arguments from_modal {_} _%I _%I {_}.
-Hint Mode FromModal + ! - : typeclass_instances.
 
 Class ElimModal {PROP : bi} (φ : Prop) (P P' : PROP) (Q Q' : PROP) :=
   elim_modal : φ → P ∗ (P' -∗ Q') ⊢ Q.
@@ -553,6 +433,16 @@ Arguments FromLaterN {_} _%nat_scope _%I _%I.
 Arguments from_laterN {_} _%nat_scope _%I _%I {_}.
 Hint Mode FromLaterN + - ! - : typeclass_instances.
 
+(** The class [IntoEmbed P Q] is used to transform hypotheses while introducing
+embeddings using [iModIntro].
+
+Input: the proposition [P], output: the proposition [Q] so that [P ⊢ ⎡Q⎤] *)
+Class IntoEmbed {PROP PROP' : bi} `{BiEmbed PROP PROP'} (P : PROP') (Q : PROP) :=
+  into_embed : P ⊢ ⎡Q⎤.
+Arguments IntoEmbed {_ _ _} _%I _%I.
+Arguments into_embed {_ _ _} _%I _%I {_}.
+Hint Mode IntoEmbed + + + ! -  : typeclass_instances.
+
 (* We use two type classes for [AsValid], in order to avoid loops in
    typeclass search. Indeed, the [as_valid_embed] instance would try
    to add an arbitrary number of embeddings. To avoid this, the
@@ -644,8 +534,8 @@ Instance into_exist_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (tc_opaque P) Φ := id.
 Instance into_forall_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (tc_opaque P) Φ := id.
-Instance from_modal_tc_opaque {PROP : bi} (P Q : PROP) :
-  FromModal P Q → FromModal (tc_opaque P) Q := id.
+Instance from_modal_tc_opaque {PROP : bi} M (P Q : PROP) :
+  FromModal M P Q → FromModal M (tc_opaque P) Q := id.
 Instance elim_modal_tc_opaque {PROP : bi} φ (P P' Q Q' : PROP) :
   ElimModal φ P P' Q Q' → ElimModal φ (tc_opaque P) P' Q Q' := id.
 Instance into_inv_tc_opaque {PROP : bi} (P : PROP) N :

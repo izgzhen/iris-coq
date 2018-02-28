@@ -14,32 +14,22 @@ Proof. by rewrite /IsBiIndexRel. Qed.
 Hint Extern 1 (IsBiIndexRel _ _) => unfold IsBiIndexRel; assumption
             : typeclass_instances.
 
-Section always_modalities.
-Context {I : biIndex} {PROP : bi}.
+Section modalities.
+  Context {I : biIndex} {PROP : bi}.
 
-  Lemma always_modality_absolutely_mixin :
-    always_modality_mixin (@monPred_absolutely I PROP)
-      (AIEnvFilter Absolute) (AIEnvForall Absolute).
+  Lemma modality_absolutely_mixin :
+    modality_mixin (@monPred_absolutely I PROP)
+      (MIEnvFilter Absolute) (MIEnvFilter Absolute).
   Proof.
-    split; eauto using bi.equiv_entails_sym, absolute_absolutely,
-       monPred_absolutely_mono, monPred_absolutely_and,
-       monPred_absolutely_sep_2 with typeclass_instances.
+    split; simpl; split_and?; intros;
+      try match goal with H : TCDiag _ _ _ |- _ => destruct H end;
+      eauto using bi.equiv_entails_sym, absolute_absolutely,
+        monPred_absolutely_mono, monPred_absolutely_and,
+        monPred_absolutely_sep_2 with typeclass_instances.
   Qed.
-  Definition always_modality_absolutely :=
-    AlwaysModality _ always_modality_absolutely_mixin.
-
-  (* We can only filter the spatial context in case the BI is affine *)
-  Lemma always_modality_absolutely_filter_spatial_mixin `{BiAffine PROP} :
-    always_modality_mixin (@monPred_absolutely I PROP)
-      (AIEnvFilter Absolute) (AIEnvFilter Absolute).
-  Proof.
-    split; eauto using bi.equiv_entails_sym, absolute_absolutely,
-       monPred_absolutely_mono, monPred_absolutely_and,
-       monPred_absolutely_sep_2 with typeclass_instances.
-  Qed.
-  Definition always_modality_absolutely_filter_spatial `{BiAffine PROP} :=
-    AlwaysModality _ always_modality_absolutely_filter_spatial_mixin.
-End always_modalities.
+  Definition modality_absolutely :=
+    Modality _ modality_absolutely_mixin.
+End modalities.
 
 Section bi.
 Context {I : biIndex} {PROP : bi}.
@@ -50,12 +40,12 @@ Implicit Types 𝓟 𝓠 𝓡 : PROP.
 Implicit Types φ : Prop.
 Implicit Types i j : I.
 
-Global Instance from_always_absolutely P :
-  FromAlways always_modality_absolutely (∀ᵢ P) P | 1.
-Proof. by rewrite /FromAlways. Qed.
-Global Instance from_always_absolutely_filter_spatial `{BiAffine PROP} P :
-  FromAlways always_modality_absolutely_filter_spatial (∀ᵢ P) P | 0.
-Proof. by rewrite /FromAlways. Qed.
+Global Instance from_modal_absolutely P :
+  FromModal modality_absolutely (∀ᵢ P) P | 1.
+Proof. by rewrite /FromModal. Qed.
+Global Instance from_modal_relatively P :
+  FromModal modality_id (∃ᵢ P) P | 1.
+Proof. by rewrite /FromModal /= -monPred_relatively_intro. Qed.
 
 Global Instance make_monPred_at_pure φ i : MakeMonPredAt i ⌜φ⌝ ⌜φ⌝.
 Proof. by rewrite /MakeMonPredAt monPred_at_pure. Qed.
@@ -168,23 +158,23 @@ Proof.
   by rewrite -monPred_at_persistently -monPred_at_persistently_if.
 Qed.
 
-Global Instance from_always_affinely_monPred_at P Q 𝓠 i :
-  FromAlways always_modality_affinely P Q → MakeMonPredAt i Q 𝓠 →
-  FromAlways always_modality_affinely (P i) 𝓠 | 0.
+Global Instance from_modal_affinely_monPred_at P Q 𝓠 i :
+  FromModal modality_affinely P Q → MakeMonPredAt i Q 𝓠 →
+  FromModal modality_affinely (P i) 𝓠 | 0.
 Proof.
-  rewrite /FromAlways /MakeMonPredAt /==> <- <-. by rewrite monPred_at_affinely.
+  rewrite /FromModal /MakeMonPredAt /==> <- <-. by rewrite monPred_at_affinely.
 Qed.
-Global Instance from_always_persistently_monPred_at P Q 𝓠 i :
-  FromAlways always_modality_persistently P Q → MakeMonPredAt i Q 𝓠 →
-  FromAlways always_modality_persistently (P i) 𝓠 | 0.
+Global Instance from_modal_persistently_monPred_at P Q 𝓠 i :
+  FromModal modality_persistently P Q → MakeMonPredAt i Q 𝓠 →
+  FromModal modality_persistently (P i) 𝓠 | 0.
 Proof.
-  rewrite /FromAlways /MakeMonPredAt /==> <- <-. by rewrite monPred_at_persistently.
+  rewrite /FromModal /MakeMonPredAt /==> <- <-. by rewrite monPred_at_persistently.
 Qed.
-Global Instance from_always_affinely_persistently_monPred_at P Q 𝓠 i :
-  FromAlways always_modality_affinely_persistently P Q → MakeMonPredAt i Q 𝓠 →
-  FromAlways always_modality_affinely_persistently (P i) 𝓠 | 0.
+Global Instance from_modal_affinely_persistently_monPred_at P Q 𝓠 i :
+  FromModal modality_affinely_persistently P Q → MakeMonPredAt i Q 𝓠 →
+  FromModal modality_affinely_persistently (P i) 𝓠 | 0.
 Proof.
-  rewrite /FromAlways /MakeMonPredAt /==> <- <-.
+  rewrite /FromModal /MakeMonPredAt /==> <- <-.
   by rewrite monPred_at_affinely monPred_at_persistently.
 Qed.
 
@@ -363,9 +353,11 @@ Proof.
 Qed.
 
 Global Instance from_modal_monPred_at i P Q 𝓠 :
-  FromModal P Q → MakeMonPredAt i Q 𝓠 → FromModal (P i) 𝓠.
+  FromModal modality_id P Q → MakeMonPredAt i Q 𝓠 → FromModal modality_id (P i) 𝓠.
 Proof. by rewrite /FromModal /MakeMonPredAt=> <- <-. Qed.
-
+Global Instance into_embed_absolute P :
+  Absolute P → IntoEmbed P (∀ i, P i).
+Proof. rewrite /IntoEmbed=> ?. by rewrite {1}(absolute_absolutely P). Qed.
 End bi.
 
 (* When P and/or Q are evars when doing typeclass search on [IntoWand
