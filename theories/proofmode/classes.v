@@ -398,14 +398,14 @@ Proof. intros. rewrite /MaybeFrame /=. apply: sep_elim_r. Qed.
    would typically try to instantiate this evar with some arbitrary
    logical constructs such as emp or True. Therefore, we use an Hint
    Mode to disable all the instances that would have this behavior. *)
-Class MakeEmbed `{BiEmbedding PROP PROP'} (P : PROP) (Q : PROP') :=
+Class MakeEmbed {PROP PROP' : bi} `{BiEmbed PROP PROP'} (P : PROP) (Q : PROP') :=
   make_embed : ⎡P⎤ ⊣⊢ Q.
-Arguments MakeEmbed {_ _ _ _} _%I _%I.
-Hint Mode MakeEmbed + + + + - - : typeclass_instances.
-Class KnownMakeEmbed `{BiEmbedding PROP PROP'} (P : PROP) (Q : PROP') :=
+Arguments MakeEmbed {_ _ _} _%I _%I.
+Hint Mode MakeEmbed + + + - - : typeclass_instances.
+Class KnownMakeEmbed {PROP PROP' : bi} `{BiEmbed PROP PROP'} (P : PROP) (Q : PROP') :=
   known_make_embed :> MakeEmbed P Q.
-Arguments KnownMakeEmbed {_ _ _ _} _%I _%I.
-Hint Mode KnownMakeEmbed + + + + ! - : typeclass_instances.
+Arguments KnownMakeEmbed {_ _ _} _%I _%I.
+Hint Mode KnownMakeEmbed + + + ! - : typeclass_instances.
 
 Class MakeSep {PROP : bi} (P Q PQ : PROP) := make_sep : P ∗ Q ⊣⊢ PQ .
 Arguments MakeSep {_} _%I _%I _%I.

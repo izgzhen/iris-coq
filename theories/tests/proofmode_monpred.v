@@ -94,4 +94,11 @@ Section tests.
   Proof.
     iIntros. iFrame. by iApply fupd_intro_mask'.
   Qed.
+
+  Lemma test_iFrame_embed_persistent (P : PROP) (Q: monPred) :
+    Q ∗ □ ⎡P⎤ ⊢ Q ∗ ⎡P ∗ P⎤.
+  Proof.
+    iIntros "[$ #HP]". iFrame "HP".
+  Qed.
+
 End tests.
