@@ -964,8 +964,7 @@ Local Tactic Notation "iExistDestruct" constr(H)
 (** * Modality introduction *)
 Tactic Notation "iModIntro" open_constr(M) :=
   iStartProof;
-  let bi := lazymatch goal with |- @envs_entails ?bi _ _ => bi end in
-  eapply (tac_modal_intro (PROP2 := bi)) with M _ _ _ _;
+  notypeclasses refine (tac_modal_intro M _ _ _ _ _ _ _ _ _ _ _ _);
     [apply _  ||
      fail "iModIntro: the goal is not a modality"
     |apply _ ||
