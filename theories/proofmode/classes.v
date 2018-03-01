@@ -89,10 +89,10 @@ a goal [P] into a modality [M] and proposition [Q].
 
 The input is [P] and the outputs are [M] and [Q].
 
-For modalities [M] that do not need to augment the proof mode environment, one
-can define an instance [FromModal modality_id (M P) P]. Defining such an
-only imposes the proof obligation [P ⊢ M P]. Examples of modalities that have
-such an instance are [bupd], [fupd], [except_0], [monPred_relatively] and
+For modalities [N] that do not need to augment the proof mode environment, one
+can define an instance [FromModal modality_id (N P) P]. Defining such an
+instance only imposes the proof obligation [P ⊢ N P]. Examples of such
+modalities [N] are [bupd], [fupd], [except_0], [monPred_relatively] and
 [bi_absorbingly]. *)
 Class FromModal {PROP1 PROP2 : bi}
     (M : modality PROP1 PROP2) (P : PROP2) (Q : PROP1) :=
