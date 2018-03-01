@@ -1609,24 +1609,20 @@ Proof.
 Qed.
 
 Global Instance into_later_affinely n P Q :
-  MaybeIntoLaterN false n P Q →
-  MaybeIntoLaterN false n (bi_affinely P) (bi_affinely Q).
-Proof. rewrite /MaybeIntoLaterN=> ->. by rewrite laterN_affinely_2. Qed.
+  IntoLaterN false n P Q → IntoLaterN false n (bi_affinely P) (bi_affinely Q).
+Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_affinely_2. Qed.
 Global Instance into_later_absorbingly n P Q :
-  MaybeIntoLaterN false n P Q →
-  MaybeIntoLaterN false n (bi_absorbingly P) (bi_absorbingly Q).
-Proof. rewrite /MaybeIntoLaterN=> ->. by rewrite laterN_absorbingly. Qed.
+  IntoLaterN false n P Q → IntoLaterN false n (bi_absorbingly P) (bi_absorbingly Q).
+Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_absorbingly. Qed.
 Global Instance into_later_plainly n P Q :
-  MaybeIntoLaterN false n P Q →
-  MaybeIntoLaterN false n (bi_plainly P) (bi_plainly Q).
-Proof. rewrite /MaybeIntoLaterN=> ->. by rewrite laterN_plainly. Qed.
+  IntoLaterN false n P Q → IntoLaterN false n (bi_plainly P) (bi_plainly Q).
+Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_plainly. Qed.
 Global Instance into_later_persistently n P Q :
-  MaybeIntoLaterN false n P Q →
-  MaybeIntoLaterN false n (bi_persistently P) (bi_persistently Q).
-Proof. rewrite /MaybeIntoLaterN=> ->. by rewrite laterN_persistently. Qed.
+  IntoLaterN false n P Q → IntoLaterN false n (bi_persistently P) (bi_persistently Q).
+Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_persistently. Qed.
 Global Instance into_later_embed`{SbiEmbedding PROP PROP'} n P Q :
-  MaybeIntoLaterN false n P Q → MaybeIntoLaterN false n ⎡P⎤ ⎡Q⎤.
-Proof. rewrite /MaybeIntoLaterN=> ->. by rewrite sbi_embed_laterN. Qed.
+  IntoLaterN false n P Q → IntoLaterN false n ⎡P⎤ ⎡Q⎤.
+Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite sbi_embed_laterN. Qed.
 
 Global Instance into_laterN_sep_l n P1 P2 Q1 Q2 :
   IntoLaterN false n P1 Q1 → MaybeIntoLaterN false n P2 Q2 →

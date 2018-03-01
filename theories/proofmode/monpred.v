@@ -426,10 +426,10 @@ Global Instance into_except_0_monPred_at_bwd i P 𝓟 Q :
 Proof. rewrite /IntoExcept0 /MakeMonPredAt=> H <-. by rewrite H monPred_at_except_0. Qed.
 
 Global Instance maybe_into_later_monPred_at i n P Q 𝓠 :
-  MaybeIntoLaterN false n P Q → MakeMonPredAt i Q 𝓠 →
-  MaybeIntoLaterN false n (P i) 𝓠.
+  IntoLaterN false n P Q → MakeMonPredAt i Q 𝓠 →
+  IntoLaterN false n (P i) 𝓠.
 Proof.
-  rewrite /MaybeIntoLaterN /MakeMonPredAt=> -> <-. elim n=>//= ? <-.
+  rewrite /IntoLaterN /MaybeIntoLaterN /MakeMonPredAt=> -> <-. elim n=>//= ? <-.
    by rewrite monPred_at_later.
 Qed.
 Global Instance from_later_monPred_at i n P Q 𝓠 :
