@@ -1,6 +1,8 @@
 From stdpp Require Import coPset.
 From iris.bi Require Import interface derived_laws big_op.
 
+(* We first define operational type classes for the notations, and then later
+bundle these operational type classes with the laws. *)
 Class BUpd (PROP : Type) : Type := bupd : PROP → PROP.
 Instance : Params (@bupd) 2.
 Hint Mode BUpd ! : typeclass_instances.
@@ -35,7 +37,6 @@ Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)
   (at level 99, E at level 50, Q at level 200, only parsing) : stdpp_scope.
 
 (** Fancy updates that take a step. *)
-
 Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E1}=> Q))%I
   (at level 99, E1, E2 at level 50, Q at level 200,
    format "|={ E1 , E2 }▷=>  Q") : bi_scope.
@@ -49,26 +50,102 @@ Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I
   (at level 99, E at level 50, Q at level 200,
    format "P  ={ E }▷=∗  Q") : bi_scope.
 
-(** BUpd facts  *)
+(** Bundled versions  *)
+Record BiBUpdMixin (PROP : bi) `(BUpd PROP) := {
+  bi_bupd_mixin_bupd_ne : NonExpansive bupd;
+  bi_bupd_mixin_bupd_intro (P : PROP) : P ==∗ P;
+  bi_bupd_mixin_bupd_mono (P Q : PROP) : (P ⊢ Q) → (|==> P) ==∗ Q;
+  bi_bupd_mixin_bupd_trans (P : PROP) : (|==> |==> P) ==∗ P;
+  bi_bupd_mixin_bupd_frame_r (P R : PROP) : (|==> P) ∗ R ==∗ P ∗ R;
+  bi_bupd_mixin_bupd_plainly (P : PROP) : (|==> bi_plainly P) -∗ P;
+}.
 
-Class BUpdFacts (PROP : sbi) `{BUpd PROP} : Prop :=
-  { bupd_ne :> NonExpansive bupd;
-    bupd_intro (P : PROP) : P ==∗ P;
-    bupd_mono (P Q : PROP) : (P ⊢ Q) → (|==> P) ==∗ Q;
-    bupd_trans (P : PROP) : (|==> |==> P) ==∗ P;
-    bupd_frame_r (P R : PROP) : (|==> P) ∗ R ==∗ P ∗ R;
-    bupd_plainly (P : PROP) : (|==> bi_plainly P) -∗ P }.
-Hint Mode BUpdFacts ! - : typeclass_instances.
+Record BiFUpdMixin (PROP : sbi) `(FUpd PROP) := {
+  bi_fupd_mixin_fupd_ne E1 E2 : NonExpansive (fupd E1 E2);
+  bi_fupd_mixin_fupd_intro_mask E1 E2 (P : PROP) : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P;
+  bi_fupd_mixin_except_0_fupd E1 E2 (P : PROP) : ◇ (|={E1,E2}=> P) ={E1,E2}=∗ P;
+  bi_fupd_mixin_fupd_mono E1 E2 (P Q : PROP) : (P ⊢ Q) → (|={E1,E2}=> P) ⊢ |={E1,E2}=> Q;
+  bi_fupd_mixin_fupd_trans E1 E2 E3 (P : PROP) : (|={E1,E2}=> |={E2,E3}=> P) ⊢ |={E1,E3}=> P;
+  bi_fupd_mixin_fupd_mask_frame_r' E1 E2 Ef (P : PROP) :
+    E1 ## Ef → (|={E1,E2}=> ⌜E2 ## Ef⌝ → P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P;
+  bi_fupd_mixin_fupd_frame_r E1 E2 (P Q : PROP) : (|={E1,E2}=> P) ∗ Q ={E1,E2}=∗ P ∗ Q;
+  bi_fupd_mixin_fupd_plain' E1 E2 E2' (P Q : PROP) `{!Plain P} :
+    E1 ⊆ E2 →
+    (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P;
+  bi_fupd_mixin_later_fupd_plain E (P : PROP) `{!Plain P} : (▷ |={E}=> P) ={E}=∗ ▷ ◇ P;
+}.
+
+Class BiBUpd (PROP : bi) := {
+  bi_bupd_bupd :> BUpd PROP;
+  bi_bupd_mixin : BiBUpdMixin PROP bi_bupd_bupd;
+}.
+Hint Mode BiBUpd ! : typeclass_instances.
+Arguments bi_bupd_bupd : simpl never.
+
+Class BiFUpd (PROP : sbi) := {
+  bi_fupd_fupd :> FUpd PROP;
+  bi_fupd_mixin : BiFUpdMixin PROP bi_fupd_fupd;
+}.
+Hint Mode BiBUpd ! : typeclass_instances.
+Arguments bi_fupd_fupd : simpl never.
+
+Class BiBUpdFUpd (PROP : sbi) `{BiBUpd PROP, BiFUpd PROP} :=
+  bupd_fupd E (P : PROP) : (|==> P) ={E}=∗ P.
+
+Section bupd_laws.
+  Context `{BiBUpd PROP}.
+  Implicit Types P : PROP.
+
+  Global Instance bupd_ne : NonExpansive (@bupd PROP _).
+  Proof. eapply bi_bupd_mixin_bupd_ne, bi_bupd_mixin. Qed.
+  Lemma bupd_intro P : P ==∗ P.
+  Proof. eapply bi_bupd_mixin_bupd_intro, bi_bupd_mixin. Qed.
+  Lemma bupd_mono (P Q : PROP) : (P ⊢ Q) → (|==> P) ==∗ Q.
+  Proof. eapply bi_bupd_mixin_bupd_mono, bi_bupd_mixin. Qed.
+  Lemma bupd_trans (P : PROP) : (|==> |==> P) ==∗ P.
+  Proof. eapply bi_bupd_mixin_bupd_trans, bi_bupd_mixin. Qed.
+  Lemma bupd_frame_r (P R : PROP) : (|==> P) ∗ R ==∗ P ∗ R.
+  Proof. eapply bi_bupd_mixin_bupd_frame_r, bi_bupd_mixin. Qed.
+  Lemma bupd_plainly (P : PROP) : (|==> bi_plainly P) -∗ P.
+  Proof. eapply bi_bupd_mixin_bupd_plainly, bi_bupd_mixin. Qed.
+End bupd_laws.
+
+Section fupd_laws.
+  Context `{BiFUpd PROP}.
+  Implicit Types P : PROP.
+
+  Global Instance fupd_ne E1 E2 : NonExpansive (@fupd PROP _ E1 E2).
+  Proof. eapply bi_fupd_mixin_fupd_ne, bi_fupd_mixin. Qed.
+  Lemma fupd_intro_mask E1 E2 (P : PROP) : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P.
+  Proof. eapply bi_fupd_mixin_fupd_intro_mask, bi_fupd_mixin. Qed.
+  Lemma except_0_fupd E1 E2 (P : PROP) : ◇ (|={E1,E2}=> P) ={E1,E2}=∗ P.
+  Proof. eapply bi_fupd_mixin_except_0_fupd, bi_fupd_mixin. Qed.
+  Lemma fupd_mono E1 E2 (P Q : PROP) : (P ⊢ Q) → (|={E1,E2}=> P) ⊢ |={E1,E2}=> Q.
+  Proof. eapply bi_fupd_mixin_fupd_mono, bi_fupd_mixin. Qed.
+  Lemma fupd_trans E1 E2 E3 (P : PROP) : (|={E1,E2}=> |={E2,E3}=> P) ⊢ |={E1,E3}=> P.
+  Proof. eapply bi_fupd_mixin_fupd_trans, bi_fupd_mixin. Qed.
+  Lemma fupd_mask_frame_r' E1 E2 Ef (P : PROP) :
+    E1 ## Ef → (|={E1,E2}=> ⌜E2 ## Ef⌝ → P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P.
+  Proof. eapply bi_fupd_mixin_fupd_mask_frame_r', bi_fupd_mixin. Qed.
+  Lemma fupd_frame_r E1 E2 (P Q : PROP) : (|={E1,E2}=> P) ∗ Q ={E1,E2}=∗ P ∗ Q.
+  Proof. eapply bi_fupd_mixin_fupd_frame_r, bi_fupd_mixin. Qed.
+  Lemma fupd_plain' E1 E2 E2' (P Q : PROP) `{!Plain P} :
+    E1 ⊆ E2 →
+    (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
+  Proof. eapply bi_fupd_mixin_fupd_plain'; eauto using bi_fupd_mixin. Qed.
+  Lemma later_fupd_plain E (P : PROP) `{!Plain P} : (▷ |={E}=> P) ={E}=∗ ▷ ◇ P.
+  Proof. eapply bi_fupd_mixin_later_fupd_plain; eauto using bi_fupd_mixin. Qed.
+End fupd_laws.
 
 Section bupd_derived.
-  Context `{BUpdFacts PROP}.
-  Implicit Types P Q R: PROP.
+  Context `{BiBUpd PROP}.
+  Implicit Types P Q R : PROP.
 
   (* FIXME: Removing the `PROP:=` diverges. *)
-  Global Instance bupd_proper : Proper ((≡) ==> (≡)) (bupd (PROP:=PROP)) := ne_proper _.
+  Global Instance bupd_proper :
+    Proper ((≡) ==> (≡)) (bupd (PROP:=PROP)) := ne_proper _.
 
   (** BUpd derived rules *)
-
   Global Instance bupd_mono' : Proper ((⊢) ==> (⊢)) (bupd (PROP:=PROP)).
   Proof. intros P Q; apply bupd_mono. Qed.
   Global Instance bupd_flip_mono' : Proper (flip (⊢) ==> flip (⊢)) (bupd (PROP:=PROP)).
@@ -88,44 +165,25 @@ Section bupd_derived.
   Proof. by rewrite {1}(plain P) bupd_plainly. Qed.
 End bupd_derived.
 
-Lemma except_0_bupd {PROP : sbi} `{BUpdFacts PROP} (P : PROP) :
-  ◇ (|==> P) ⊢ (|==> ◇ P).
-Proof.
-  rewrite /sbi_except_0. apply bi.or_elim; eauto using bupd_mono, bi.or_intro_r.
-  by rewrite -bupd_intro -bi.or_intro_l.
-Qed.
+Section bupd_derived_sbi.
+  Context {PROP : sbi} `{BiBUpd PROP}.
+  Implicit Types P Q R : PROP.
 
-(** FUpd facts  *)
-
-(* Currently, this requires an SBI, because of [except_0_fupd] and
-   [later_fupd_plain]. If need be, we can generalize this to BIs by
-   extracting these propertes as lemmas to be proved by hand. *)
-Class FUpdFacts (PROP : sbi) `{BUpd PROP, FUpd PROP} : Prop :=
-  { fupd_bupd_facts :> BUpdFacts PROP;
-    fupd_ne E1 E2 :> NonExpansive (fupd E1 E2);
-    fupd_intro_mask E1 E2 (P : PROP) : E2 ⊆ E1 → P ⊢ |={E1,E2}=> |={E2,E1}=> P;
-    bupd_fupd E (P : PROP) : (|==> P) ={E}=∗ P;
-    except_0_fupd E1 E2 (P : PROP) : ◇ (|={E1,E2}=> P) ={E1,E2}=∗ P;
-    fupd_mono E1 E2 (P Q : PROP) : (P ⊢ Q) → (|={E1,E2}=> P) ⊢ |={E1,E2}=> Q;
-    fupd_trans E1 E2 E3 (P : PROP) : (|={E1,E2}=> |={E2,E3}=> P) ⊢ |={E1,E3}=> P;
-    fupd_mask_frame_r' E1 E2 Ef (P : PROP) :
-      E1 ## Ef → (|={E1,E2}=> ⌜E2 ## Ef⌝ → P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P;
-    fupd_frame_r E1 E2 (P Q : PROP) : (|={E1,E2}=> P) ∗ Q ={E1,E2}=∗ P ∗ Q;
-    fupd_plain' E1 E2 E2' (P Q : PROP) `{!Plain P} :
-      E1 ⊆ E2 →
-      (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P;
-    later_fupd_plain E (P : PROP) `{!Plain P} : (▷ |={E}=> P) ={E}=∗ ▷ ◇ P }.
-
-Hint Mode FUpdFacts ! - - : typeclass_instances.
+  Lemma except_0_bupd P : ◇ (|==> P) ⊢ (|==> ◇ P).
+  Proof.
+    rewrite /sbi_except_0. apply bi.or_elim; eauto using bupd_mono, bi.or_intro_r.
+    by rewrite -bupd_intro -bi.or_intro_l.
+  Qed.
+End bupd_derived_sbi.
 
 Section fupd_derived.
-  Context `{FUpdFacts PROP}.
-  Implicit Types P Q R: PROP.
+  Context `{BiFUpd PROP}.
+  Implicit Types P Q R : PROP.
 
-  Global Instance fupd_proper E1 E2 : Proper ((≡) ==> (≡)) (fupd (PROP:=PROP) E1 E2) := ne_proper _.
+  Global Instance fupd_proper E1 E2 :
+    Proper ((≡) ==> (≡)) (fupd (PROP:=PROP) E1 E2) := ne_proper _.
 
   (** FUpd derived rules *)
-
   Global Instance fupd_mono' E1 E2 : Proper ((⊢) ==> (⊢)) (fupd (PROP:=PROP) E1 E2).
   Proof. intros P Q; apply fupd_mono. Qed.
   Global Instance fupd_flip_mono' E1 E2 :
@@ -133,7 +191,7 @@ Section fupd_derived.
   Proof. intros P Q; apply fupd_mono. Qed.
 
   Lemma fupd_intro E P : P ={E}=∗ P.
-  Proof. rewrite -bupd_fupd. apply bupd_intro. Qed.
+  Proof. by rewrite {1}(fupd_intro_mask E E P) // fupd_trans. Qed.
   Lemma fupd_intro_mask' E1 E2 : E2 ⊆ E1 → (|={E1,E2}=> |={E2,E1}=> bi_emp (PROP:=PROP))%I.
   Proof. exact: fupd_intro_mask. Qed.
   Lemma fupd_except_0 E1 E2 P : (|={E1,E2}=> ◇ P) ={E1,E2}=∗ P.
@@ -193,7 +251,6 @@ Section fupd_derived.
   Qed.
 
   (** Fancy updates that take a step derived rules. *)
-
   Lemma step_fupd_wand E1 E2 P Q : (|={E1,E2}▷=> P) -∗ (P -∗ Q) -∗ |={E1,E2}▷=> Q.
   Proof.
     apply bi.wand_intro_l.

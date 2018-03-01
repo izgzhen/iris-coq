@@ -1103,10 +1103,10 @@ Global Instance from_assumption_except_0 p P Q :
   FromAssumption p P Q → FromAssumption p P (◇ Q)%I.
 Proof. rewrite /FromAssumption=>->. apply except_0_intro. Qed.
 
-Global Instance from_assumption_bupd `{BUpdFacts PROP} p P Q :
+Global Instance from_assumption_bupd `{BiBUpd PROP} p P Q :
   FromAssumption p P Q → FromAssumption p P (|==> Q).
 Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
-Global Instance from_assumption_fupd `{FUpdFacts PROP} E p P Q :
+Global Instance from_assumption_fupd `{BiBUpdFUpd PROP} E p P Q :
   FromAssumption p P (|==> Q) → FromAssumption p P (|={E}=> Q)%I.
 Proof. rewrite /FromAssumption=>->. apply bupd_fupd. Qed.
 
@@ -1121,10 +1121,10 @@ Proof. rewrite /FromPure=> ->. apply laterN_intro. Qed.
 Global Instance from_pure_except_0 a P φ : FromPure a P φ → FromPure a (◇ P) φ.
 Proof. rewrite /FromPure=> ->. apply except_0_intro. Qed.
 
-Global Instance from_pure_bupd `{BUpdFacts PROP} a P φ :
+Global Instance from_pure_bupd `{BiBUpd PROP} a P φ :
   FromPure a P φ → FromPure a (|==> P) φ.
 Proof. rewrite /FromPure=> <-. apply bupd_intro. Qed.
-Global Instance from_pure_fupd `{FUpdFacts PROP} a E P φ :
+Global Instance from_pure_fupd `{BiFUpd PROP} a E P φ :
   FromPure a P φ → FromPure a (|={E}=> P) φ.
 Proof. rewrite /FromPure. intros <-. apply fupd_intro. Qed.
 
@@ -1161,39 +1161,39 @@ Proof.
              (laterN_intro _ (□?p R)%I) -laterN_wand HR.
 Qed.
 
-Global Instance into_wand_bupd `{BUpdFacts PROP} p q R P Q :
+Global Instance into_wand_bupd `{BiBUpd PROP} p q R P Q :
   IntoWand false false R P Q → IntoWand p q (|==> R) (|==> P) (|==> Q).
 Proof.
   rewrite /IntoWand /= => HR. rewrite !affinely_persistently_if_elim HR.
   apply wand_intro_l. by rewrite bupd_sep wand_elim_r.
 Qed.
-Global Instance into_wand_bupd_persistent `{BUpdFacts PROP} p q R P Q :
+Global Instance into_wand_bupd_persistent `{BiBUpd PROP} p q R P Q :
   IntoWand false q R P Q → IntoWand p q (|==> R) P (|==> Q).
 Proof.
   rewrite /IntoWand /= => HR. rewrite affinely_persistently_if_elim HR.
   apply wand_intro_l. by rewrite bupd_frame_l wand_elim_r.
 Qed.
-Global Instance into_wand_bupd_args `{BUpdFacts PROP} p q R P Q :
+Global Instance into_wand_bupd_args `{BiBUpd PROP} p q R P Q :
   IntoWand p false R P Q → IntoWand' p q R (|==> P) (|==> Q).
 Proof.
   rewrite /IntoWand' /IntoWand /= => ->.
   apply wand_intro_l. by rewrite affinely_persistently_if_elim bupd_wand_r.
 Qed.
 
-Global Instance into_wand_fupd `{FUpdFacts PROP} E p q R P Q :
+Global Instance into_wand_fupd `{BiFUpd PROP} E p q R P Q :
   IntoWand false false R P Q →
   IntoWand p q (|={E}=> R) (|={E}=> P) (|={E}=> Q).
 Proof.
   rewrite /IntoWand /= => HR. rewrite !affinely_persistently_if_elim HR.
   apply wand_intro_l. by rewrite fupd_sep wand_elim_r.
 Qed.
-Global Instance into_wand_fupd_persistent `{FUpdFacts PROP} E1 E2 p q R P Q :
+Global Instance into_wand_fupd_persistent `{BiFUpd PROP} E1 E2 p q R P Q :
   IntoWand false q R P Q → IntoWand p q (|={E1,E2}=> R) P (|={E1,E2}=> Q).
 Proof.
   rewrite /IntoWand /= => HR. rewrite affinely_persistently_if_elim HR.
   apply wand_intro_l. by rewrite fupd_frame_l wand_elim_r.
 Qed.
-Global Instance into_wand_fupd_args `{FUpdFacts PROP} E1 E2 p q R P Q :
+Global Instance into_wand_fupd_args `{BiFUpd PROP} E1 E2 p q R P Q :
   IntoWand p false R P Q → IntoWand' p q R (|={E1,E2}=> P) (|={E1,E2}=> Q).
 Proof.
   rewrite /IntoWand' /IntoWand /= => ->.
@@ -1222,10 +1222,10 @@ Global Instance from_sep_except_0 P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (◇ P) (◇ Q1) (◇ Q2).
 Proof. rewrite /FromSep=><-. by rewrite except_0_sep. Qed.
 
-Global Instance from_sep_bupd `{BUpdFacts PROP} P Q1 Q2 :
+Global Instance from_sep_bupd `{BiBUpd PROP} P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (|==> P) (|==> Q1) (|==> Q2).
 Proof. rewrite /FromSep=><-. apply bupd_sep. Qed.
-Global Instance from_sep_fupd `{FUpdFacts PROP} E P Q1 Q2 :
+Global Instance from_sep_fupd `{BiFUpd PROP} E P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
 Proof. rewrite /FromSep =><-. apply fupd_sep. Qed.
 
@@ -1286,13 +1286,13 @@ Global Instance from_or_except_0 P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (◇ P) (◇ Q1) (◇ Q2).
 Proof. rewrite /FromOr=><-. by rewrite except_0_or. Qed.
 
-Global Instance from_or_bupd `{BUpdFacts PROP} P Q1 Q2 :
+Global Instance from_or_bupd `{BiBUpd PROP} P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (|==> P) (|==> Q1) (|==> Q2).
 Proof.
   rewrite /FromOr=><-.
   apply or_elim; apply bupd_mono; auto using or_intro_l, or_intro_r.
 Qed.
-Global Instance from_or_fupd `{FUpdFacts PROP} E1 E2 P Q1 Q2 :
+Global Instance from_or_fupd `{BiFUpd PROP} E1 E2 P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (|={E1,E2}=> P) (|={E1,E2}=> Q1) (|={E1,E2}=> Q2).
 Proof.
   rewrite /FromOr=><-. apply or_elim; apply fupd_mono;
@@ -1325,12 +1325,12 @@ Global Instance from_exist_except_0 {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (◇ P) (λ a, ◇ (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite except_0_exist_2. Qed.
 
-Global Instance from_exist_bupd `{BUpdFacts PROP} {A} P (Φ : A → PROP) :
+Global Instance from_exist_bupd `{BiBUpd PROP} {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (|==> P) (λ a, |==> Φ a)%I.
 Proof.
   rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
 Qed.
-Global Instance from_exist_fupd `{FUpdFacts PROP} {A} E1 E2 P (Φ : A → PROP) :
+Global Instance from_exist_fupd `{BiFUpd PROP} {A} E1 E2 P (Φ : A → PROP) :
   FromExist P Φ → FromExist (|={E1,E2}=> P) (λ a, |={E1,E2}=> Φ a)%I.
 Proof.
   rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
@@ -1384,12 +1384,12 @@ Proof. by rewrite /IsExcept0 except_0_later. Qed.
 Global Instance is_except_0_embed `{SbiEmbedding PROP PROP'} P :
   IsExcept0 P → IsExcept0 ⎡P⎤.
 Proof. by rewrite /IsExcept0 -sbi_embed_except_0=>->. Qed.
-Global Instance is_except_0_bupd `{BUpdFacts PROP} P : IsExcept0 P → IsExcept0 (|==> P).
+Global Instance is_except_0_bupd `{BiBUpd PROP} P : IsExcept0 P → IsExcept0 (|==> P).
 Proof.
   rewrite /IsExcept0=> HP.
   by rewrite -{2}HP -(except_0_idemp P) -except_0_bupd -(except_0_intro P).
 Qed.
-Global Instance is_except_0_fupd `{FUpdFacts PROP} E1 E2 P :
+Global Instance is_except_0_fupd `{BiFUpd PROP} E1 E2 P :
   IsExcept0 (|={E1,E2}=> P).
 Proof. by rewrite /IsExcept0 except_0_fupd. Qed.
 
@@ -1403,10 +1403,10 @@ Proof. by rewrite /FromModal. Qed.
 Global Instance from_modal_except_0 P : FromModal modality_id (◇ P) (◇ P) P.
 Proof. by rewrite /FromModal /= -except_0_intro. Qed.
 
-Global Instance from_modal_bupd `{BUpdFacts PROP} P :
+Global Instance from_modal_bupd `{BiBUpd PROP} P :
   FromModal modality_id (|==> P) (|==> P) P.
 Proof. by rewrite /FromModal /= -bupd_intro. Qed.
-Global Instance from_modal_fupd E P `{FUpdFacts PROP} :
+Global Instance from_modal_fupd E P `{BiFUpd PROP} :
   FromModal modality_id (|={E}=> P) (|={E}=> P) P.
 Proof. by rewrite /FromModal /= -fupd_intro. Qed.
 
@@ -1467,21 +1467,21 @@ Proof.
   intros. rewrite /ElimModal (except_0_intro (_ -∗ _)%I).
   by rewrite (into_except_0 P) -except_0_sep wand_elim_r.
 Qed.
-Global Instance elim_modal_bupd `{BUpdFacts PROP} P Q :
+Global Instance elim_modal_bupd `{BiBUpd PROP} P Q :
   ElimModal True (|==> P) P (|==> Q) (|==> Q).
 Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
-Global Instance elim_modal_bupd_plain_goal `{BUpdFacts PROP} P Q :
+Global Instance elim_modal_bupd_plain_goal `{BiBUpd PROP} P Q :
   Plain Q → ElimModal True (|==> P) P Q Q.
 Proof. intros. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_plain. Qed.
-Global Instance elim_modal_bupd_plain `{BUpdFacts PROP} P Q :
+Global Instance elim_modal_bupd_plain `{BiBUpd PROP} P Q :
   Plain P → ElimModal True (|==> P) P Q Q.
 Proof. intros. by rewrite /ElimModal bupd_plain wand_elim_r. Qed.
-Global Instance elim_modal_bupd_fupd `{FUpdFacts PROP} E1 E2 P Q :
+Global Instance elim_modal_bupd_fupd `{BiBUpdFUpd PROP} E1 E2 P Q :
   ElimModal True (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q) | 10.
 Proof.
   by rewrite /ElimModal (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
 Qed.
-Global Instance elim_modal_fupd_fupd `{FUpdFacts PROP} E1 E2 E3 P Q :
+Global Instance elim_modal_fupd_fupd `{BiFUpd PROP} E1 E2 E3 P Q :
   ElimModal True (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
 Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 
@@ -1510,9 +1510,9 @@ Proof.
   by rewrite -except_0_sep wand_elim_r except_0_later.
 Qed.
 
-Global Instance add_modal_bupd `{BUpdFacts PROP} P Q : AddModal (|==> P) P (|==> Q).
+Global Instance add_modal_bupd `{BiBUpd PROP} P Q : AddModal (|==> P) P (|==> Q).
 Proof. by rewrite /AddModal bupd_frame_r wand_elim_r bupd_trans. Qed.
-Global Instance add_modal_fupd `{FUpdFacts PROP} E1 E2 P Q :
+Global Instance add_modal_fupd `{BiFUpd PROP} E1 E2 P Q :
   AddModal (|={E1}=> P) P (|={E1,E2}=> Q).
 Proof. by rewrite /AddModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 
@@ -1546,10 +1546,10 @@ Proof.
   by rewrite laterN_affinely_persistently_if_2 laterN_sep.
 Qed.
 
-Global Instance frame_bupd `{BUpdFacts PROP} p R P Q :
+Global Instance frame_bupd `{BiBUpd PROP} p R P Q :
   Frame p R P Q → KnownFrame p R (|==> P) (|==> Q).
 Proof. rewrite /KnownFrame /Frame=><-. by rewrite bupd_frame_l. Qed.
-Global Instance frame_fupd `{FUpdFacts PROP} p E1 E2 R P Q :
+Global Instance frame_fupd `{BiFUpd PROP} p E1 E2 R P Q :
   Frame p R P Q → KnownFrame p R (|={E1,E2}=> P) (|={E1,E2}=> Q).
 Proof. rewrite /KnownFrame /Frame=><-. by rewrite fupd_frame_l. Qed.
 

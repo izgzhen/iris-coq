@@ -336,7 +336,7 @@ Next Obligation.
   eauto using uPred_mono, cmra_includedN_l.
 Qed.
 Definition uPred_bupd_aux {M} : seal (@uPred_bupd_def M). by eexists. Qed.
-Instance uPred_bupd {M} : BUpd (uPred M) := unseal uPred_bupd_aux.
+Definition uPred_bupd {M} : BUpd (uPred M) := unseal uPred_bupd_aux.
 Definition uPred_bupd_eq {M} :
   @bupd _ uPred_bupd = @uPred_bupd_def M := seal_eq uPred_bupd_aux.
 
@@ -575,6 +575,30 @@ Coercion uPred_valid {M} : uPred M → Prop := bi_valid.
 (* Latest notation *)
 Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : bi_scope.
 
+Lemma uPred_bupd_mixin M : BiBUpdMixin (uPredI M) uPred_bupd.
+Proof.
+  split.
+  - intros n P Q HPQ.
+    unseal; split=> n' x; split; intros HP k yf ??;
+    destruct (HP k yf) as (x'&?&?); auto;
+    exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
+  - unseal. split=> n x ? HP k yf ?; exists x; split; first done.
+    apply uPred_mono with n x; eauto using cmra_validN_op_l.
+  - unseal. intros HPQ; split=> n x ? HP k yf ??.
+    destruct (HP k yf) as (x'&?&?); eauto.
+    exists x'; split; eauto using uPred_in_entails, cmra_validN_op_l.
+  - unseal; split; naive_solver.
+  - unseal. split; intros n x ? (x1&x2&Hx&HP&?) k yf ??.
+    destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
+    { by rewrite assoc -(dist_le _ _ _ _ Hx); last lia. }
+    exists (x' ⋅ x2); split; first by rewrite -assoc.
+    exists x', x2. eauto using uPred_mono, cmra_validN_op_l, cmra_validN_op_r.
+  - unseal; split => n x Hnx /= Hng.
+    destruct (Hng n ε) as [? [_ Hng']]; try rewrite right_id; auto.
+    eapply uPred_mono; eauto using ucmra_unit_leastN.
+Qed.
+Instance uPred_bi_bupd M : BiBUpd (uPredI M) := {| bi_bupd_mixin := uPred_bupd_mixin M |}.
+
 Module uPred.
 Include uPred_unseal.
 Section uPred.
@@ -674,30 +698,6 @@ Proof. unseal. by destruct mx. Qed.
 Lemma ofe_fun_validI `{B : A → ucmraT} (g : ofe_fun B) :
   (✓ g : uPred M) ⊣⊢ ∀ i, ✓ g i.
 Proof. by uPred.unseal. Qed.
-
-(* Basic update modality *)
-Global Instance bupd_facts : BUpdFacts (uPredSI M).
-Proof.
-  split.
-  - intros n P Q HPQ.
-    unseal; split=> n' x; split; intros HP k yf ??;
-    destruct (HP k yf) as (x'&?&?); auto;
-    exists x'; split; auto; apply HPQ; eauto using cmra_validN_op_l.
-  - unseal. split=> n x ? HP k yf ?; exists x; split; first done.
-    apply uPred_mono with n x; eauto using cmra_validN_op_l.
-  - unseal. intros HPQ; split=> n x ? HP k yf ??.
-    destruct (HP k yf) as (x'&?&?); eauto.
-    exists x'; split; eauto using uPred_in_entails, cmra_validN_op_l.
-  - unseal; split; naive_solver.
-  - unseal. split; intros n x ? (x1&x2&Hx&HP&?) k yf ??.
-    destruct (HP k (x2 ⋅ yf)) as (x'&?&?); eauto.
-    { by rewrite assoc -(dist_le _ _ _ _ Hx); last lia. }
-    exists (x' ⋅ x2); split; first by rewrite -assoc.
-    exists x', x2. eauto using uPred_mono, cmra_validN_op_l, cmra_validN_op_r.
-  - unseal; split => n x Hnx /= Hng.
-    destruct (Hng n ε) as [? [_ Hng']]; try rewrite right_id; auto.
-    eapply uPred_mono; eauto using ucmra_unit_leastN.
-Qed.
 
 Lemma bupd_ownM_updateP x (Φ : M → Prop) :
   x ~~>: Φ → uPred_ownM x ==∗ ∃ y, ⌜Φ y⌝ ∧ uPred_ownM y.

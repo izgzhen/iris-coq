@@ -205,8 +205,8 @@ Definition monPred_bupd_def `{BUpd PROP} (P : monPred) : monPred :=
      terms in logical terms. *)
   monPred_upclosed (λ i, |==> P i)%I.
 Definition monPred_bupd_aux `{BUpd PROP} : seal monPred_bupd_def. by eexists. Qed.
-Global Instance monPred_bupd `{BUpd PROP} : BUpd _ := unseal monPred_bupd_aux.
-Definition monPred_bupd_eq `{BUpd PROP} : @bupd monPred _ = _ := seal_eq _.
+Definition monPred_bupd `{BUpd PROP} : BUpd _ := unseal monPred_bupd_aux.
+Definition monPred_bupd_eq `{BUpd PROP} : @bupd _ monPred_bupd = _ := seal_eq _.
 End Bi.
 
 Arguments monPred_absolutely {_ _} _%I.
@@ -237,8 +237,8 @@ Definition monPred_fupd_def `{FUpd PROP} (E1 E2 : coPset) (P : monPred) : monPre
      terms in logical terms. *)
   monPred_upclosed (λ i, |={E1,E2}=> P i)%I.
 Definition monPred_fupd_aux `{FUpd PROP} : seal monPred_fupd_def. by eexists. Qed.
-Global Instance monPred_fupd `{FUpd PROP} : FUpd _ := unseal monPred_fupd_aux.
-Definition monPred_fupd_eq `{FUpd PROP} : @fupd monPred _ = _ := seal_eq _.
+Definition monPred_fupd `{FUpd PROP} : FUpd _ := unseal monPred_fupd_aux.
+Definition monPred_fupd_eq `{FUpd PROP} : @fupd _ monPred_fupd = _ := seal_eq _.
 End Sbi.
 
 Module MonPred.
@@ -411,7 +411,6 @@ Implicit Types i : I.
 Implicit Types P Q : monPred.
 
 (** Instances *)
-
 Global Instance monPred_at_mono :
   Proper ((⊢) ==> (⊑) ==> (⊢)) monPred_at.
 Proof. by move=> ?? [?] ?? ->. Qed.
@@ -802,17 +801,8 @@ Global Instance big_sepMS_absolute `{Countable A} (Φ : A → monPred)
   Absolute ([∗ mset] y ∈ X, Φ y)%I.
 Proof. intros ??. rewrite !monPred_at_big_sepMS. do 2 f_equiv. by apply absolute_at. Qed.
 
-End bi_facts.
-
-Section sbi_facts.
-Context {I : biIndex} {PROP : sbi}.
-Local Notation monPred := (monPred I PROP).
-Local Notation monPredSI := (monPredSI I PROP).
-Implicit Types i : I.
-Implicit Types P Q : monPred.
-
 (** bupd *)
-Global Instance monPred_bupd_facts `{BUpdFacts PROP} : BUpdFacts monPredSI.
+Lemma monPred_bupd_mixin `{BiBUpd PROP} : BiBUpdMixin monPredI monPred_bupd.
 Proof.
   split; unseal; unfold monPred_bupd_def, monPred_upclosed.
   (* Note: Notation is somewhat broken here. *)
@@ -828,24 +818,34 @@ Proof.
   - intros P. split=> /= i. rewrite bi.forall_elim bi.pure_impl_forall
       bi.forall_elim // -bi.plainly_forall bupd_plainly bi.forall_elim //.
 Qed.
+Global Instance monPred_bi_bupd `{BiBUpd PROP} : BiBUpd monPredI :=
+  {| bi_bupd_mixin := monPred_bupd_mixin |}.
 
-Lemma monPred_at_bupd `{BUpdFacts PROP} i P : (|==> P) i ⊣⊢ |==> P i.
+Lemma monPred_at_bupd `{BiBUpd PROP} i P : (|==> P) i ⊣⊢ |==> P i.
 Proof.
   unseal. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
   - rewrite !bi.forall_elim //.
   - do 2 apply bi.forall_intro=>?. by do 2 f_equiv.
 Qed.
-Global Instance bupd_absolute `{BUpdFacts PROP} P `{!Absolute P} :
+Global Instance bupd_absolute `{BiBUpd PROP} P `{!Absolute P} :
   Absolute (|==> P)%I.
 Proof. intros ??. by rewrite !monPred_at_bupd absolute_at. Qed.
 
-Lemma monPred_bupd_embed `{BUpdFacts PROP} (P : PROP) :
-  ⎡|==> P⎤ ⊣⊢ bupd (PROP:=monPredSI) ⎡P⎤.
+Lemma monPred_bupd_embed `{BiBUpd PROP} (P : PROP) :
+  ⎡|==> P⎤ ⊣⊢ bupd (PROP:=monPredI) ⎡P⎤.
 Proof.
   unseal. split=>i /=. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
   - by do 2 apply bi.forall_intro=>?.
   - rewrite !bi.forall_elim //.
 Qed.
+End bi_facts.
+
+Section sbi_facts.
+Context {I : biIndex} {PROP : sbi}.
+Local Notation monPred := (monPred I PROP).
+Local Notation monPredSI := (monPredSI I PROP).
+Implicit Types i : I.
+Implicit Types P Q : monPred.
 
 Global Instance monPred_at_timeless P i : Timeless P → Timeless (P i).
 Proof. move => [] /(_ i). unfold Timeless. by unseal. Qed.
@@ -865,16 +865,15 @@ Qed.
 Global Instance monPred_sbi_embedding : SbiEmbedding PROP monPredSI.
 Proof. split; try apply _; by unseal. Qed.
 
-Global Instance monPred_fupd_facts `{FUpdFacts PROP} : FUpdFacts monPredSI.
+Lemma monPred_fupd_mixin `{BiFUpd PROP} : BiFUpdMixin monPredSI monPred_fupd.
 Proof.
-  split; first apply _; unseal; unfold monPred_fupd_def, monPred_upclosed.
+  split; unseal; unfold monPred_fupd_def, monPred_upclosed.
   (* Note: Notation is somewhat broken here. *)
   - intros E1 E2 n P Q HPQ. split=>/= i. by repeat f_equiv.
   - intros E1 E2 P HE12. split=>/= i.
     do 2 setoid_rewrite bi.pure_impl_forall. do 2 apply bi.forall_intro=>?.
     rewrite (fupd_intro_mask E1 E2 (P i)) //. f_equiv.
     do 2 apply bi.forall_intro=>?. do 2 f_equiv. by etrans.
-  - intros E P. split=>/= i. by setoid_rewrite bupd_fupd.
   - intros E1 E2 P. split=>/= i. etrans; [apply bi.equiv_entails, bi.except_0_forall|].
     do 2 f_equiv. rewrite bi.pure_impl_forall bi.except_0_forall. do 2 f_equiv.
     by apply except_0_fupd.
@@ -893,15 +892,21 @@ Proof.
   - intros E P ?. split=>/= i. setoid_rewrite bi.pure_impl_forall.
     do 2 setoid_rewrite bi.later_forall. do 4 f_equiv. apply later_fupd_plain, _.
 Qed.
+Global Instance monPred_bi_fupd `{BiFUpd PROP} : BiFUpd monPredSI :=
+  {| bi_fupd_mixin := monPred_fupd_mixin |}.
+Global Instance monPred_bi_bupd_fupd `{BiBUpdFUpd PROP} : BiBUpdFUpd monPredSI.
+Proof.
+  rewrite /BiBUpdFUpd; unseal; unfold monPred_fupd_def, monPred_upclosed.
+  intros E P. split=>/= i. by setoid_rewrite bupd_fupd.
+Qed.
 
 (** Unfolding lemmas *)
-
 Lemma monPred_at_internal_eq {A : ofeT} i (a b : A) :
   @monPred_at I PROP (a ≡ b) i ⊣⊢ a ≡ b.
 Proof. by apply monPred_at_embed. Qed.
 Lemma monPred_at_later i P : (▷ P) i ⊣⊢ ▷ P i.
 Proof. by unseal. Qed.
-Lemma monPred_at_fupd `{FUpdFacts PROP} i E1 E2 P :
+Lemma monPred_at_fupd `{BiFUpd PROP} i E1 E2 P :
   (|={E1,E2}=> P) i ⊣⊢ |={E1,E2}=> P i.
 Proof.
   unseal. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
@@ -911,7 +916,7 @@ Qed.
 Lemma monPred_at_except_0 i P : (◇ P) i ⊣⊢ ◇ P i.
 Proof. by unseal. Qed.
 
-Lemma monPred_fupd_embed `{FUpdFacts PROP} E1 E2 (P : PROP) :
+Lemma monPred_fupd_embed `{BiFUpd PROP} E1 E2 (P : PROP) :
   ⎡|={E1,E2}=> P⎤ ⊣⊢ fupd E1 E2 (PROP:=monPred) ⎡P⎤.
 Proof.
   unseal. split=>i /=. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
@@ -929,7 +934,6 @@ Proof.
 Qed.
 
 (** Absolute  *)
-
 Global Instance internal_eq_absolute {A : ofeT} (x y : A) :
   @Absolute I PROP (x ≡ y)%I.
 Proof. intros ??. by unseal. Qed.
@@ -941,8 +945,7 @@ Proof. induction n; apply _. Qed.
 Global Instance except0_absolute P `{!Absolute P} : Absolute (◇ P)%I.
 Proof. rewrite /sbi_except_0. apply _. Qed.
 
-Global Instance fupd_absolute E1 E2 P `{!Absolute P} `{FUpdFacts PROP} :
+Global Instance fupd_absolute E1 E2 P `{!Absolute P} `{BiFUpd PROP} :
   Absolute (|={E1,E2}=> P)%I.
 Proof. intros ??. by rewrite !monPred_at_fupd absolute_at. Qed.
-
 End sbi_facts.

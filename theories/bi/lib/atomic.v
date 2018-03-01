@@ -3,7 +3,7 @@ From stdpp Require Import coPset.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 
-Definition atomic_shift {PROP: sbi} `{!FUpd PROP} {A B : Type}
+Definition atomic_shift `{BiFUpd PROP} {A B : Type}
   (α : A → PROP) (* atomic pre-condition *)
   (β : A → B → PROP) (* atomic post-condition *)
   (Eo Em : coPset) (* outside/module masks *)
@@ -14,7 +14,7 @@ Definition atomic_shift {PROP: sbi} `{!FUpd PROP} {A B : Type}
           ((α x ={E∖Em, E}=∗ P) ∧ (∀ y, β x y ={E∖Em, E}=∗ Q x y)))
     )%I.
 
-Definition atomic_update {PROP: sbi} `{!FUpd PROP} {A B : Type}
+Definition atomic_update `{BiFUpd PROP} {A B : Type}
   (α : A → PROP) (* atomic pre-condition *)
   (β : A → B → PROP) (* atomic post-condition *)
   (Eo Em : coPset) (* outside/module masks *)
@@ -25,7 +25,7 @@ Definition atomic_update {PROP: sbi} `{!FUpd PROP} {A B : Type}
     )%I.
 
 Section lemmas.
-  Context {PROP: sbi} `{FUpdFacts PROP} {A B : Type}.
+  Context `{BiFUpd PROP} {A B : Type}.
   Implicit Types (α : A → PROP) (β: A → B → PROP) (P : PROP) (Q : A → B → PROP).
 
   Lemma aupd_acc α β Eo Em Q E :

@@ -1,8 +1,7 @@
 From iris.base_logic.lib Require Export own.
 From stdpp Require Export coPset.
 From iris.base_logic.lib Require Import wsat.
-From iris.algebra Require Import gmap.
-From iris.proofmode Require Import tactics classes.
+From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 Export invG.
 Import uPred.
@@ -10,18 +9,17 @@ Import uPred.
 Definition uPred_fupd_def `{invG Σ} (E1 E2 : coPset) (P : iProp Σ) : iProp Σ :=
   (wsat ∗ ownE E1 ==∗ ◇ (wsat ∗ ownE E2 ∗ P))%I.
 Definition uPred_fupd_aux `{invG Σ} : seal uPred_fupd_def. by eexists. Qed.
-Instance uPred_fupd `{invG Σ} : FUpd (iProp Σ):= unseal uPred_fupd_aux.
-Definition uPred_fupd_eq `{invG Σ} : fupd = uPred_fupd_def := seal_eq uPred_fupd_aux.
+Definition uPred_fupd `{invG Σ} : FUpd (iProp Σ):= unseal uPred_fupd_aux.
+Definition uPred_fupd_eq `{invG Σ} : @fupd _ uPred_fupd = uPred_fupd_def :=
+  seal_eq uPred_fupd_aux.
 
-Instance fupd_facts `{invG Σ} : FUpdFacts (uPredSI (iResUR Σ)).
+Lemma uPred_fupd_mixin `{invG Σ} : BiFUpdMixin (uPredSI (iResUR Σ)) uPred_fupd.
 Proof.
   split.
-  - apply _.
   - rewrite uPred_fupd_eq. solve_proper.
   - intros E1 E2 P (E1''&->&?)%subseteq_disjoint_union_L.
     rewrite uPred_fupd_eq /uPred_fupd_def ownE_op //.
-      by iIntros "$ ($ & $ & HE) !> !> [$ $] !> !>" .
-  - rewrite uPred_fupd_eq. by iIntros (E P) ">? [$ $] !> !>".
+    by iIntros "$ ($ & $ & HE) !> !> [$ $] !> !>" .
   - rewrite uPred_fupd_eq. iIntros (E1 E2 P) ">H [Hw HE]". iApply "H"; by iFrame.
   - rewrite uPred_fupd_eq. iIntros (E1 E2 P Q HPQ) "HP HwE". rewrite -HPQ. by iApply "HP".
   - rewrite uPred_fupd_eq. iIntros (E1 E2 E3 P) "HP HwE".
@@ -42,3 +40,8 @@ Proof.
     iAssert (▷ ◇ P)%I with "[-]" as "#$"; last by iFrame.
     iNext. by iMod ("HP" with "[$]") as "(_ & _ & HP)".
 Qed.
+Instance uPred_bi_fupd `{invG Σ} : BiFUpd (uPredSI (iResUR Σ)) :=
+  {| bi_fupd_mixin := uPred_fupd_mixin |}.
+
+Instance uPred_bi_bupd_fupd `{invG Σ} : BiBUpdFUpd (uPredSI (iResUR Σ)).
+Proof. rewrite /BiBUpdFUpd uPred_fupd_eq. by iIntros (E P) ">? [$ $] !> !>". Qed.
