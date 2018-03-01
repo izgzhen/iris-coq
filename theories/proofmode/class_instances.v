@@ -247,37 +247,37 @@ Global Instance from_modal_absorbingly P :
 Proof. by rewrite /FromModal /= -absorbingly_intro. Qed.
 
 (* When having a modality nested in an embedding, e.g. [ ⎡|==> P⎤ ], we prefer
-the modality over the embedding. *)
+the embedding over the modality. *)
 Global Instance from_modal_embed `{BiEmbedding PROP PROP'} (P : PROP) :
-  FromModal (@modality_embed PROP PROP' _ _) ⎡P⎤ ⎡P⎤ P | 100.
+  FromModal (@modality_embed PROP PROP' _ _) ⎡P⎤ ⎡P⎤ P.
 Proof. by rewrite /FromModal. Qed.
 
 Global Instance from_modal_id_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
   FromModal modality_id sel P Q →
-  FromModal modality_id sel ⎡P⎤ ⎡Q⎤.
+  FromModal modality_id sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof. by rewrite /FromModal /= =><-. Qed.
 
 Global Instance from_modal_affinely_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
   FromModal modality_affinely sel P Q →
-  FromModal modality_affinely sel ⎡P⎤ ⎡Q⎤.
+  FromModal modality_affinely sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof. rewrite /FromModal /= =><-. by rewrite bi_embed_affinely. Qed.
 Global Instance from_modal_persistently_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
   FromModal modality_persistently sel P Q →
-  FromModal modality_persistently sel ⎡P⎤ ⎡Q⎤.
+  FromModal modality_persistently sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof. rewrite /FromModal /= =><-. by rewrite bi_embed_persistently. Qed.
 Global Instance from_modal_affinely_persistently_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
   FromModal modality_affinely_persistently sel P Q →
-  FromModal modality_affinely_persistently sel ⎡P⎤ ⎡Q⎤.
+  FromModal modality_affinely_persistently sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof.
   rewrite /FromModal /= =><-. by rewrite bi_embed_affinely bi_embed_persistently.
 Qed.
 Global Instance from_modal_plainly_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
   FromModal modality_plainly sel P Q →
-  FromModal modality_plainly sel ⎡P⎤ ⎡Q⎤.
+  FromModal modality_plainly sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof. rewrite /FromModal /= =><-. by rewrite bi_embed_plainly. Qed.
 Global Instance from_modal_affinely_plainly_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
   FromModal modality_affinely_plainly sel P Q →
-  FromModal modality_affinely_plainly sel ⎡P⎤ ⎡Q⎤.
+  FromModal modality_affinely_plainly sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof.
   rewrite /FromModal /= =><-. by rewrite bi_embed_affinely bi_embed_plainly.
 Qed.
