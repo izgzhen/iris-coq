@@ -2,7 +2,6 @@ From stdpp Require Import coPset.
 From iris.bi Require Import bi.
 
 (** Definitions. *)
-
 Structure biIndex :=
   BiIndex
     { bi_index_type :> Type;
@@ -128,14 +127,33 @@ Next Obligation. solve_proper. Qed.
 
 Definition monPred_embed_def (P : PROP) : monPred := MonPred (λ _, P) _.
 Definition monPred_embed_aux : seal (@monPred_embed_def). by eexists. Qed.
-Global Instance monPred_embed : BiEmbed PROP monPred := unseal monPred_embed_aux.
-Definition monPred_embed_eq : bi_embed (A:=PROP) = _ := seal_eq _.
+Definition monPred_embed : Embed PROP monPred := unseal monPred_embed_aux.
+Definition monPred_embed_eq : @embed _ _ monPred_embed = _ := seal_eq _.
 
-Definition monPred_pure (φ : Prop) : monPred := tc_opaque ⎡⌜φ⌝⎤%I.
-Definition monPred_emp : monPred := tc_opaque ⎡emp⎤%I.
-Definition monPred_plainly P : monPred := tc_opaque ⎡∀ i, bi_plainly (P i)⎤%I.
-Definition monPred_absolutely (P : monPred) : monPred := tc_opaque ⎡∀ i, P i⎤%I.
-Definition monPred_relatively (P : monPred) : monPred := tc_opaque ⎡∃ i, P i⎤%I.
+Definition monPred_emp_def : monPred := MonPred (λ _, emp)%I _.
+Definition monPred_emp_aux : seal (@monPred_emp_def). by eexists. Qed.
+Definition monPred_emp := unseal monPred_emp_aux.
+Definition monPred_emp_eq : @monPred_emp = _ := seal_eq _.
+
+Definition monPred_pure_def (φ : Prop) : monPred := MonPred (λ _, ⌜φ⌝)%I _.
+Definition monPred_pure_aux : seal (@monPred_pure_def). by eexists. Qed.
+Definition monPred_pure := unseal monPred_pure_aux.
+Definition monPred_pure_eq : @monPred_pure = _ := seal_eq _.
+
+Definition monPred_plainly_def P : monPred := MonPred (λ _, ∀ i, bi_plainly (P i))%I _.
+Definition monPred_plainly_aux : seal (@monPred_plainly_def). by eexists. Qed.
+Definition monPred_plainly := unseal monPred_plainly_aux.
+Definition monPred_plainly_eq : @monPred_plainly = _ := seal_eq _.
+
+Definition monPred_absolutely_def P : monPred := MonPred (λ _, ∀ i, P i)%I _.
+Definition monPred_absolutely_aux : seal (@monPred_absolutely_def). by eexists. Qed.
+Definition monPred_absolutely := unseal monPred_absolutely_aux.
+Definition monPred_absolutely_eq : @monPred_absolutely = _ := seal_eq _.
+
+Definition monPred_relatively_def P : monPred := MonPred (λ _, ∃ i, P i)%I _.
+Definition monPred_relatively_aux : seal (@monPred_relatively_def). by eexists. Qed.
+Definition monPred_relatively := unseal monPred_relatively_aux.
+Definition monPred_relatively_eq : @monPred_relatively = _ := seal_eq _.
 
 Program Definition monPred_and_def P Q : monPred :=
   MonPred (λ i, P i ∧ Q i)%I _.
@@ -214,15 +232,16 @@ Arguments monPred_relatively {_ _} _%I.
 Notation "'∀ᵢ' P" := (monPred_absolutely P) (at level 20, right associativity) : bi_scope.
 Notation "'∃ᵢ' P" := (monPred_relatively P) (at level 20, right associativity) : bi_scope.
 
-Typeclasses Opaque monPred_pure monPred_emp monPred_plainly.
-
 Section Sbi.
 Context {I : biIndex} {PROP : sbi}.
 Implicit Types i : I.
 Notation monPred := (monPred I PROP).
 Implicit Types P Q : monPred.
 
-Definition monPred_internal_eq (A : ofeT) (a b : A) : monPred := tc_opaque ⎡a ≡ b⎤%I.
+Definition monPred_internal_eq_def (A : ofeT) (a b : A) : monPred := MonPred (λ _, a ≡ b)%I _.
+Definition monPred_internal_eq_aux : seal (@monPred_internal_eq_def). by eexists. Qed.
+Definition monPred_internal_eq := unseal monPred_internal_eq_aux.
+Definition monPred_internal_eq_eq : @monPred_internal_eq = _ := seal_eq _.
 
 Program Definition monPred_later_def P : monPred := MonPred (λ i, ▷ (P i))%I _.
 Next Obligation. solve_proper. Qed.
@@ -246,18 +265,18 @@ Definition unseal_eqs :=
   (@monPred_and_eq, @monPred_or_eq, @monPred_impl_eq,
    @monPred_forall_eq, @monPred_exist_eq,
    @monPred_sep_eq, @monPred_wand_eq,
-   @monPred_persistently_eq, @monPred_later_eq, @monPred_in_eq,
-   @monPred_embed_eq, @monPred_bupd_eq, @monPred_fupd_eq).
+   @monPred_persistently_eq, @monPred_later_eq, @monPred_internal_eq_eq, @monPred_in_eq,
+   @monPred_embed_eq, @monPred_emp_eq, @monPred_pure_eq, @monPred_plainly_eq,
+   @monPred_absolutely_eq, @monPred_relatively_eq, @monPred_bupd_eq, @monPred_fupd_eq).
 Ltac unseal :=
   unfold bi_affinely, bi_absorbingly, sbi_except_0, bi_pure, bi_emp,
-         monPred_absolutely, monPred_relatively, monPred_upclosed, bi_and, bi_or,
+         monPred_upclosed, bi_and, bi_or,
          bi_impl, bi_forall, bi_exist, sbi_internal_eq, bi_sep, bi_wand,
          bi_persistently, bi_affinely, bi_plainly, sbi_later;
   simpl;
   unfold sbi_emp, sbi_pure, sbi_and, sbi_or, sbi_impl, sbi_forall, sbi_exist,
          sbi_internal_eq, sbi_sep, sbi_wand, sbi_persistently, sbi_plainly;
   simpl;
-  unfold monPred_pure, monPred_emp, monPred_internal_eq, monPred_plainly; simpl;
   rewrite !unseal_eqs /=.
 End MonPred.
 Import MonPred.
@@ -322,7 +341,7 @@ Proof.
     repeat setoid_rewrite <-bi.plainly_forall.
     setoid_rewrite bi.plainly_impl_plainly. f_equiv.
     do 3 apply bi.forall_intro => ?. f_equiv. rewrite bi.forall_elim //.
-  - intros P. split=> i. apply bi.forall_intro=>_. by apply bi.plainly_emp_intro.
+  - intros P. split=> i /=. apply bi.forall_intro=>_. by apply bi.plainly_emp_intro.
   - intros P Q. split=> i. apply bi.sep_elim_l, _.
   - intros P Q [?]. split=> i /=. by f_equiv.
   - intros P. split=> i. by apply bi.persistently_idemp_2.
@@ -457,8 +476,7 @@ Global Instance monPred_in_absorbing i :
   Absorbing (@monPred_in I PROP i).
 Proof. unfold Absorbing. unseal. split=> ? /=. apply absorbing, _. Qed.
 
-
-Global Instance monPred_bi_embedding : BiEmbedding PROP monPredI.
+Definition monPred_embedding_mixin : BiEmbedMixin PROP monPredI monPred_embed.
 Proof.
   split; try apply _; unseal; try done.
   - move =>?? /= [/(_ inhabitant) ?] //.
@@ -469,61 +487,71 @@ Proof.
   - intros ?. split => ? /=. apply bi.equiv_spec; split.
     by apply bi.forall_intro. by rewrite bi.forall_elim.
 Qed.
+Global Instance monPred_bi_embed : BiEmbed PROP monPredI :=
+  {| bi_embed_mixin := monPred_embedding_mixin |}.
+
+Lemma monPred_emp_unfold : emp%I = ⎡emp : PROP⎤%I.
+Proof. by unseal. Qed.
+Lemma monPred_pure_unfold : bi_pure = λ φ, ⎡ ⌜ φ ⌝ : PROP⎤%I.
+Proof. by unseal. Qed.
+Lemma monPred_plainly_unfold : bi_plainly = λ P, ⎡ ∀ i, bi_plainly (P i) ⎤%I.
+Proof. by unseal. Qed.
+Lemma monPred_absolutely_unfold : monPred_absolutely = λ P, ⎡∀ i, P i⎤%I.
+Proof. by unseal. Qed.
+Lemma monPred_relatively_unfold : monPred_relatively = λ P, ⎡∃ i, P i⎤%I.
+Proof. by unseal. Qed.
 
 Global Instance monPred_absolutely_ne : NonExpansive (@monPred_absolutely I PROP).
-Proof. rewrite /monPred_absolutely /=. solve_proper. Qed.
+Proof. rewrite monPred_absolutely_unfold. solve_proper. Qed.
 Global Instance monPred_absolutely_proper : Proper ((≡) ==> (≡)) (@monPred_absolutely I PROP).
 Proof. apply (ne_proper _). Qed.
 Lemma monPred_absolutely_mono P Q : (P ⊢ Q) → (∀ᵢ P ⊢ ∀ᵢ Q).
-Proof. rewrite /monPred_absolutely /=. solve_proper. Qed.
+Proof. rewrite monPred_absolutely_unfold. solve_proper. Qed.
 Global Instance monPred_absolutely_mono' : Proper ((⊢) ==> (⊢)) (@monPred_absolutely I PROP).
-Proof. rewrite /monPred_absolutely /=. solve_proper. Qed.
+Proof. intros ???. by apply monPred_absolutely_mono. Qed.
 Global Instance monPred_absolutely_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@monPred_absolutely I PROP).
-Proof. solve_proper. Qed.
-
-Local Notation "'∀ᵢ' P" := (@monPred_absolutely I PROP P) : bi_scope.
-Local Notation "'∃ᵢ' P" := (@monPred_relatively I PROP P) : bi_scope.
+Proof. intros ???. by apply monPred_absolutely_mono. Qed.
 
 Global Instance monPred_absolutely_plain P : Plain P → Plain (∀ᵢ P).
-Proof. rewrite /monPred_absolutely /=. apply _. Qed.
+Proof. rewrite monPred_absolutely_unfold. apply _. Qed.
 Global Instance monPred_absolutely_persistent P : Persistent P → Persistent (∀ᵢ P).
-Proof. rewrite /monPred_absolutely /=. apply _. Qed.
+Proof. rewrite monPred_absolutely_unfold. apply _. Qed.
 Global Instance monPred_absolutely_absorbing P : Absorbing P → Absorbing (∀ᵢ P).
-Proof. rewrite /monPred_absolutely /=. apply _. Qed.
+Proof. rewrite monPred_absolutely_unfold. apply _. Qed.
 Global Instance monPred_absolutely_affine P : Affine P → Affine (∀ᵢ P).
-Proof. rewrite /monPred_absolutely /=. apply _. Qed.
+Proof. rewrite monPred_absolutely_unfold. apply _. Qed.
 
 Global Instance monPred_relatively_ne : NonExpansive (@monPred_relatively I PROP).
-Proof. rewrite /monPred_relatively /=. solve_proper. Qed.
+Proof. rewrite monPred_relatively_unfold. solve_proper. Qed.
 Global Instance monPred_relatively_proper : Proper ((≡) ==> (≡)) (@monPred_relatively I PROP).
 Proof. apply (ne_proper _). Qed.
 Lemma monPred_relatively_mono P Q : (P ⊢ Q) → (∃ᵢ P ⊢ ∃ᵢ Q).
-Proof. rewrite /monPred_relatively /=. solve_proper. Qed.
+Proof. rewrite monPred_relatively_unfold. solve_proper. Qed.
 Global Instance monPred_relatively_mono' : Proper ((⊢) ==> (⊢)) (@monPred_relatively I PROP).
-Proof. rewrite /monPred_relatively /=. solve_proper. Qed.
+Proof. intros ???. by apply monPred_relatively_mono. Qed.
 Global Instance monPred_relatively_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@monPred_relatively I PROP).
-Proof. solve_proper. Qed.
+Proof. intros ???. by apply monPred_relatively_mono. Qed.
 
 Global Instance monPred_relatively_plain P : Plain P → Plain (∃ᵢ P).
-Proof. rewrite /monPred_relatively /=. apply _. Qed.
+Proof. rewrite monPred_relatively_unfold. apply _. Qed.
 Global Instance monPred_relatively_persistent P : Persistent P → Persistent (∃ᵢ P).
-Proof. rewrite /monPred_relatively /=. apply _. Qed.
+Proof. rewrite monPred_relatively_unfold. apply _. Qed.
 Global Instance monPred_relatively_absorbing P : Absorbing P → Absorbing (∃ᵢ P).
-Proof. rewrite /monPred_relatively /=. apply _. Qed.
+Proof. rewrite monPred_relatively_unfold. apply _. Qed.
 Global Instance monPred_relatively_affine P : Affine P → Affine (∃ᵢ P).
-Proof. rewrite /monPred_relatively /=. apply _. Qed.
+Proof. rewrite monPred_relatively_unfold. apply _. Qed.
 
 (** monPred_at unfolding laws *)
 Lemma monPred_at_embed i (P : PROP) : monPred_at ⎡P⎤ i ⊣⊢ P.
 Proof. by unseal. Qed.
 Lemma monPred_at_pure i (φ : Prop) : monPred_at ⌜φ⌝ i ⊣⊢ ⌜φ⌝.
-Proof. by apply monPred_at_embed. Qed.
+Proof. by unseal. Qed.
 Lemma monPred_at_emp i : monPred_at emp i ⊣⊢ emp.
-Proof. by apply monPred_at_embed. Qed.
+Proof. by unseal. Qed.
 Lemma monPred_at_plainly i P : bi_plainly P i ⊣⊢ ∀ j, bi_plainly (P j).
-Proof. by apply monPred_at_embed. Qed.
+Proof. by unseal. Qed.
 Lemma monPred_at_and i P Q : (P ∧ Q) i ⊣⊢ P i ∧ Q i.
 Proof. by unseal. Qed.
 Lemma monPred_at_or i P Q : (P ∨ Q) i ⊣⊢ P i ∨ Q i.
@@ -544,7 +572,7 @@ Lemma monPred_at_in i j : monPred_at (monPred_in j) i ⊣⊢ ⌜j ⊑ i⌝.
 Proof. by unseal. Qed.
 Lemma monPred_at_absolutely i P : (∀ᵢ P) i ⊣⊢ ∀ j, P j.
 Proof. by unseal. Qed.
-Lemma monPred_at_ex i P : (∃ᵢ P) i ⊣⊢ ∃ j, P j.
+Lemma monPred_at_relatively i P : (∃ᵢ P) i ⊣⊢ ∃ j, P j.
 Proof. by unseal. Qed.
 Lemma monPred_at_persistently_if i p P :
   bi_persistently_if p P i ⊣⊢ bi_persistently_if p (P i).
@@ -564,7 +592,7 @@ Proof. unseal. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //. Qed
 
 (* Laws for monPred_absolutely and of Absolute. *)
 Lemma monPred_absolutely_elim P : ∀ᵢ P ⊢ P.
-Proof. unseal. split=>?. apply bi.forall_elim. Qed.
+Proof. rewrite monPred_absolutely_unfold. unseal. split=>?. apply bi.forall_elim. Qed.
 Lemma monPred_absolutely_idemp P : ∀ᵢ (∀ᵢ P) ⊣⊢ ∀ᵢ P.
 Proof.
   apply bi.equiv_spec; split; [by apply monPred_absolutely_elim|].
@@ -600,6 +628,10 @@ Proof.
   apply bi.equiv_spec; split; unseal; split=>i /=.
   by rewrite (bi.forall_elim inhabitant). by apply bi.forall_intro.
 Qed.
+Lemma monPred_absolutely_emp : ∀ᵢ (emp : monPred) ⊣⊢ emp.
+Proof. rewrite monPred_emp_unfold. apply monPred_absolutely_embed. Qed.
+Lemma monPred_absolutely_pure φ : ∀ᵢ (⌜ φ ⌝ : monPred) ⊣⊢ ⌜ φ ⌝.
+Proof. rewrite monPred_pure_unfold. apply monPred_absolutely_embed. Qed.
 
 Lemma monPred_relatively_intro P : P ⊢ ∃ᵢ P.
 Proof. unseal. split=>?. apply bi.exist_intro. Qed.
@@ -632,27 +664,27 @@ Qed.
 
 Lemma absolute_absolutely P `{!Absolute P} : P ⊢ ∀ᵢ P.
 Proof.
-  rewrite /monPred_absolutely /= bi_embed_forall. apply bi.forall_intro=>?.
+  rewrite monPred_absolutely_unfold /= embed_forall. apply bi.forall_intro=>?.
   split=>?. unseal. apply absolute_at, _.
 Qed.
 Lemma absolute_relatively P `{!Absolute P} : ∃ᵢ P ⊢ P.
 Proof.
-  rewrite /monPred_relatively /= bi_embed_exist. apply bi.exist_elim=>?.
+  rewrite monPred_relatively_unfold /= embed_exist. apply bi.exist_elim=>?.
   split=>?. unseal. apply absolute_at, _.
 Qed.
 
-Global Instance emb_absolute (P : PROP) : @Absolute I PROP ⎡P⎤.
+Global Instance embed_absolute (P : PROP) : @Absolute I PROP ⎡P⎤.
 Proof. intros ??. by unseal. Qed.
 Global Instance pure_absolute φ : @Absolute I PROP ⌜φ⌝.
-Proof. apply emb_absolute. Qed.
+Proof. intros ??. by unseal. Qed.
 Global Instance emp_absolute : @Absolute I PROP emp.
-Proof. apply emb_absolute. Qed.
+Proof. intros ??. by unseal. Qed.
 Global Instance plainly_absolute P : Absolute (bi_plainly P).
-Proof. apply emb_absolute. Qed.
+Proof. intros ??. by unseal. Qed.
 Global Instance absolutely_absolute P : Absolute (∀ᵢ P).
-Proof. apply emb_absolute. Qed.
+Proof. intros ??. by unseal. Qed.
 Global Instance relatively_absolute P : Absolute (∃ᵢ P).
-Proof. apply emb_absolute. Qed.
+Proof. intros ??. by unseal. Qed.
 
 Global Instance and_absolute P Q `{!Absolute P, !Absolute Q} : Absolute (P ∧ Q).
 Proof. intros i j. unseal. by rewrite !(absolute_at _ i j). Qed.
@@ -740,19 +772,19 @@ Global Instance monPred_absolutely_monoid_and_homomorphism :
   MonoidHomomorphism bi_and bi_and (≡) (@monPred_absolutely I PROP).
 Proof.
   split; [split|]; try apply _. apply monPred_absolutely_and.
-  apply monPred_absolutely_embed.
+  apply monPred_absolutely_pure.
 Qed.
 Global Instance monPred_absolutely_monoid_sep_entails_homomorphism :
   MonoidHomomorphism bi_sep bi_sep (flip (⊢)) (@monPred_absolutely I PROP).
 Proof.
   split; [split|]; try apply _. apply monPred_absolutely_sep_2.
-    by rewrite monPred_absolutely_embed.
+  by rewrite monPred_absolutely_emp.
 Qed.
 Global Instance monPred_absolutely_monoid_sep_homomorphism `{BiIndexBottom bot} :
   MonoidHomomorphism bi_sep bi_sep (≡) (@monPred_absolutely I PROP).
 Proof.
   split; [split|]; try apply _. apply monPred_absolutely_sep.
-    by rewrite monPred_absolutely_embed.
+  by rewrite monPred_absolutely_emp.
 Qed.
 
 Lemma monPred_absolutely_big_sepL_entails {A} (Φ : nat → A → monPred) l :
@@ -862,8 +894,11 @@ Proof.
   by apply timeless, bi.exist_timeless.
 Qed.
 
-Global Instance monPred_sbi_embedding : SbiEmbedding PROP monPredSI.
+Global Instance monPred_sbi_embed : SbiEmbed PROP monPredSI.
 Proof. split; try apply _; by unseal. Qed.
+
+Lemma monPred_internal_eq_unfold : @sbi_internal_eq monPredSI = λ A x y, ⎡ x ≡ y ⎤%I.
+Proof. by unseal. Qed.
 
 Lemma monPred_fupd_mixin `{BiFUpd PROP} : BiFUpdMixin monPredSI monPred_fupd.
 Proof.
@@ -903,7 +938,7 @@ Qed.
 (** Unfolding lemmas *)
 Lemma monPred_at_internal_eq {A : ofeT} i (a b : A) :
   @monPred_at I PROP (a ≡ b) i ⊣⊢ a ≡ b.
-Proof. by apply monPred_at_embed. Qed.
+Proof. rewrite monPred_internal_eq_unfold. by apply monPred_at_embed. Qed.
 Lemma monPred_at_later i P : (▷ P) i ⊣⊢ ▷ P i.
 Proof. by unseal. Qed.
 Lemma monPred_at_fupd `{BiFUpd PROP} i E1 E2 P :

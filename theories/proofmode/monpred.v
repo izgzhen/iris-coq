@@ -319,12 +319,12 @@ Qed.
 Global Instance from_exist_monPred_at_ex P (Φ : I → PROP) i :
   (∀ i, MakeMonPredAt i P (Φ i)) → FromExist ((∃ᵢ P) i) Φ.
 Proof.
-  rewrite /FromExist /MakeMonPredAt monPred_at_ex=>H. by setoid_rewrite <- H.
+  rewrite /FromExist /MakeMonPredAt monPred_at_relatively=>H. by setoid_rewrite <- H.
 Qed.
 Global Instance into_exist_monPred_at_ex P (Φ : I → PROP) i :
   (∀ i, MakeMonPredAt i P (Φ i)) → IntoExist ((∃ᵢ P) i) Φ.
 Proof.
-  rewrite /IntoExist /MakeMonPredAt monPred_at_ex=>H. by setoid_rewrite <- H.
+  rewrite /IntoExist /MakeMonPredAt monPred_at_relatively=>H. by setoid_rewrite <- H.
 Qed.
 
 Global Instance from_forall_monPred_at {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
@@ -361,7 +361,10 @@ Qed.
 
 Global Instance into_embed_absolute P :
   Absolute P → IntoEmbed P (∀ i, P i).
-Proof. rewrite /IntoEmbed=> ?. by rewrite {1}(absolute_absolutely P). Qed.
+Proof.
+  rewrite /IntoEmbed=> ?.
+  by rewrite {1}(absolute_absolutely P) monPred_absolutely_unfold.
+Qed.
 
 Global Instance elim_modal_embed_bupd_goal `{BiBUpd PROP} φ P P' 𝓠 𝓠' :
   ElimModal φ P P' (|==> ⎡𝓠⎤)%I (|==> ⎡𝓠'⎤)%I →
