@@ -1394,12 +1394,12 @@ Global Instance is_except_0_fupd `{FUpdFacts PROP} E1 E2 P :
 Proof. by rewrite /IsExcept0 except_0_fupd. Qed.
 
 (* FromModal *)
-Global Instance from_modal_later n P Q :
-  NoBackTrack (FromLaterN n P Q) →
-  TCIf (TCEq n 0) False TCTrue →
-  FromModal (modality_laterN n) (▷^n P) P Q | 99.
-  (* below [from_modal_embed] to prefer introducing a later *)
-Proof. rewrite /FromLaterN /FromModal. by intros [?] [_ []|?]. Qed.
+Global Instance from_modal_later P :
+  FromModal (modality_laterN 1) (▷^1 P) (▷ P) P.
+Proof. by rewrite /FromModal. Qed.
+Global Instance from_modal_laterN n P :
+  FromModal (modality_laterN n) (▷^n P) (▷^n P) P.
+Proof. by rewrite /FromModal. Qed.
 Global Instance from_modal_except_0 P : FromModal modality_id (◇ P) (◇ P) P.
 Proof. by rewrite /FromModal /= -except_0_intro. Qed.
 
@@ -1681,55 +1681,4 @@ Proof.
   rewrite /IntoLaterN /MaybeIntoLaterN=> ?.
   rewrite big_opMS_commute. by apply big_sepMS_mono.
 Qed.
-
-(* FromLater *)
-Global Instance from_laterN_later P : FromLaterN 1 (▷ P) P | 0.
-Proof. by rewrite /FromLaterN. Qed.
-Global Instance from_laterN_laterN n P : FromLaterN n (▷^n P) P | 0.
-Proof. by rewrite /FromLaterN. Qed.
-
-(* The instances below are used when stripping a specific number of laters, or
-to balance laters in different branches of ∧, ∨ and ∗. *)
-Global Instance from_laterN_0 P : FromLaterN 0 P P | 100. (* fallthrough *)
-Proof. by rewrite /FromLaterN. Qed.
-Global Instance from_laterN_later_S n P Q :
-  FromLaterN n P Q → FromLaterN (S n) (▷ P) Q.
-Proof. by rewrite /FromLaterN=><-. Qed.
-Global Instance from_laterN_later_plus n m P Q :
-  FromLaterN m P Q → FromLaterN (n + m) (▷^n P) Q.
-Proof. rewrite /FromLaterN=><-. by rewrite laterN_plus. Qed.
-
-Global Instance from_later_and n P1 P2 Q1 Q2 :
-  FromLaterN n P1 Q1 → FromLaterN n P2 Q2 → FromLaterN n (P1 ∧ P2) (Q1 ∧ Q2).
-Proof. intros ??; red. by rewrite laterN_and; apply and_mono. Qed.
-Global Instance from_later_or n P1 P2 Q1 Q2 :
-  FromLaterN n P1 Q1 → FromLaterN n P2 Q2 → FromLaterN n (P1 ∨ P2) (Q1 ∨ Q2).
-Proof. intros ??; red. by rewrite laterN_or; apply or_mono. Qed.
-Global Instance from_later_sep n P1 P2 Q1 Q2 :
-  FromLaterN n P1 Q1 → FromLaterN n P2 Q2 → FromLaterN n (P1 ∗ P2) (Q1 ∗ Q2).
-Proof. intros ??; red. by rewrite laterN_sep; apply sep_mono. Qed.
-
-Global Instance from_later_affinely n P Q `{BiAffine PROP} :
-  FromLaterN n P Q → FromLaterN n (bi_affinely P) (bi_affinely Q).
-Proof. rewrite /FromLaterN=><-. by rewrite affinely_elim affine_affinely. Qed.
-Global Instance from_later_plainly n P Q :
-  FromLaterN n P Q → FromLaterN n (bi_plainly P) (bi_plainly Q).
-Proof. by rewrite /FromLaterN laterN_plainly=> ->. Qed.
-Global Instance from_later_persistently n P Q :
-  FromLaterN n P Q → FromLaterN n (bi_persistently P) (bi_persistently Q).
-Proof. by rewrite /FromLaterN laterN_persistently=> ->. Qed.
-Global Instance from_later_absorbingly n P Q :
-  FromLaterN n P Q → FromLaterN n (bi_absorbingly P) (bi_absorbingly Q).
-Proof. by rewrite /FromLaterN laterN_absorbingly=> ->. Qed.
-Global Instance from_later_embed`{SbiEmbedding PROP PROP'} n P Q :
-  FromLaterN n P Q → FromLaterN n ⎡P⎤ ⎡Q⎤.
-Proof. rewrite /FromLaterN=> <-. by rewrite sbi_embed_laterN. Qed.
-
-Global Instance from_later_forall {A} n (Φ Ψ : A → PROP) :
-  (∀ x, FromLaterN n (Φ x) (Ψ x)) → FromLaterN n (∀ x, Φ x) (∀ x, Ψ x).
-Proof. rewrite /FromLaterN laterN_forall=> ?. by apply forall_mono. Qed.
-Global Instance from_later_exist {A} n (Φ Ψ : A → PROP) :
-  Inhabited A → (∀ x, FromLaterN n (Φ x) (Ψ x)) →
-  FromLaterN n (∃ x, Φ x) (∃ x, Ψ x).
-Proof. intros ?. rewrite /FromLaterN laterN_exist=> ?. by apply exist_mono. Qed.
 End sbi_instances.

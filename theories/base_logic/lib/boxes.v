@@ -127,7 +127,7 @@ Lemma slice_delete_empty E q f P Q γ :
   ↑N ⊆ E →
   f !! γ = Some false →
   slice N γ Q -∗ ▷?q box N f P ={E}=∗ ∃ P',
-    ▷?q ▷ (P ≡ (Q ∗ P')) ∗ ▷?q box N (delete γ f) P'.
+    ▷?q (▷ (P ≡ (Q ∗ P')) ∗ box N (delete γ f) P').
 Proof.
   iIntros (??) "[#HγQ Hinv] H". iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists ([∗ map] γ'↦_ ∈ delete γ f, Φ γ')%I.

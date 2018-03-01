@@ -57,7 +57,7 @@ Section proofs.
     ▷ □ (P ↔ P') -∗ cinv N γ P -∗ cinv N γ P'.
   Proof.
     iIntros "#HP' Hinv". iDestruct "Hinv" as (P'') "[#HP'' Hinv]".
-    iExists _. iFrame "Hinv". iNext. iAlways. iSplit.
+    iExists _. iFrame "Hinv". iAlways. iNext. iSplit.
     - iIntros "?". iApply "HP''". iApply "HP'". done.
     - iIntros "?". iApply "HP'". iApply "HP''". done.
   Qed.

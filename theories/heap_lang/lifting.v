@@ -107,7 +107,7 @@ Implicit Types σ : state.
 
 (** Base axioms for core primitives of the language: Stateless reductions *)
 Lemma wp_fork s E e Φ :
-  ▷ Φ (LitV LitUnit) ∗ ▷ WP e @ s; ⊤ {{ _, True }} ⊢ WP Fork e @ s; E {{ Φ }}.
+  ▷ (Φ (LitV LitUnit) ∗ WP e @ s; ⊤ {{ _, True }}) ⊢ WP Fork e @ s; E {{ Φ }}.
 Proof.
   iIntros "[HΦ He]".
   iApply wp_lift_pure_det_head_step; [auto|intros; inv_head_step; eauto|].

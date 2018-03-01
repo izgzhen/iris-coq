@@ -430,12 +430,13 @@ Global Instance maybe_into_later_monPred_at i n P Q 𝓠 :
   IntoLaterN false n (P i) 𝓠.
 Proof.
   rewrite /IntoLaterN /MaybeIntoLaterN /MakeMonPredAt=> -> <-. elim n=>//= ? <-.
-   by rewrite monPred_at_later.
+  by rewrite monPred_at_later.
 Qed.
-Global Instance from_later_monPred_at i n P Q 𝓠 :
-  FromLaterN n P Q → MakeMonPredAt i Q 𝓠 → FromLaterN n (P i) 𝓠.
+Global Instance from_later_monPred_at i `(sel : A) n P Q 𝓠 :
+  FromModal (modality_laterN n) sel P Q → MakeMonPredAt i Q 𝓠 →
+  FromModal (modality_laterN n) sel (P i) 𝓠.
 Proof.
-  rewrite /FromLaterN /MakeMonPredAt=> <- <-. elim n=>//= ? ->.
+  rewrite /FromModal /MakeMonPredAt=> <- <-. elim n=>//= ? ->.
   by rewrite monPred_at_later.
 Qed.
 
