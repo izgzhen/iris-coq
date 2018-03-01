@@ -371,13 +371,20 @@ Proof.
 Qed.
 
 Lemma iFrame_with_evar_r P Q :
-  P -∗ Q -∗ ∃ R, P ∗ R.
+  ∃ R, (P -∗ Q -∗ P ∗ R) ∧ R = (Q ∗ emp)%I.
 Proof.
-  iIntros "HP HQ". iExists _. iFrame. iApply "HQ".
+  eexists. split. iIntros "HP HQ".  iFrame. iEmpIntro. done.
 Qed.
 Lemma iFrame_with_evar_l P Q :
-  P -∗ Q -∗ ∃ R, R ∗ P.
+  ∃ R, (P -∗ Q -∗ R ∗ P) ∧ R = (Q ∗ emp)%I.
 Proof.
-  iIntros "HP HQ". iExists _. iFrame. iApply "HQ".
+  eexists. split. iIntros "HP HQ". iFrame "HQ".
+  iSplitR. iEmpIntro. done. done.
 Qed.
+Lemma iFrame_with_evar_persistent P Q :
+  ∃ R, (P -∗ □ Q -∗ P ∗ R ∗ Q) ∧ R = emp%I.
+Proof.
+  eexists. split. iIntros "HP #HQ". iFrame "HQ HP". iEmpIntro. done.
+Qed.
+
 End tests.

@@ -821,23 +821,26 @@ Proof.
 Qed.
 
 (* Frame *)
-Global Instance frame_here_absorbing p R : Absorbing R → Frame p R R True | 0.
-Proof. intros. by rewrite /Frame affinely_persistently_if_elim sep_elim_l. Qed.
-Global Instance frame_here p R : Frame p R R emp | 1.
-Proof. intros. by rewrite /Frame affinely_persistently_if_elim sep_elim_l. Qed.
+Global Instance frame_here_absorbing p R : Absorbing R → KnownFrame p R R True | 0.
+Proof. intros. by rewrite /KnownFrame /Frame affinely_persistently_if_elim sep_elim_l. Qed.
+Global Instance frame_here p R : KnownFrame p R R emp | 1.
+Proof. intros. by rewrite /KnownFrame /Frame affinely_persistently_if_elim sep_elim_l. Qed.
 Global Instance frame_affinely_here_absorbing p R :
-  Absorbing R → Frame p (bi_affinely R) R True | 0.
+  Absorbing R → KnownFrame p (bi_affinely R) R True | 0.
 Proof.
-  intros. by rewrite /Frame affinely_persistently_if_elim affinely_elim sep_elim_l.
+  intros. rewrite /KnownFrame /Frame affinely_persistently_if_elim affinely_elim.
+  apply sep_elim_l, _.
 Qed.
-Global Instance frame_affinely_here p R : Frame p (bi_affinely R) R emp | 1.
+Global Instance frame_affinely_here p R : KnownFrame p (bi_affinely R) R emp | 1.
 Proof.
-  intros. by rewrite /Frame affinely_persistently_if_elim affinely_elim sep_elim_l.
+  intros. rewrite /KnownFrame /Frame affinely_persistently_if_elim affinely_elim.
+  apply sep_elim_l, _.
 Qed.
 
-Global Instance frame_here_pure p φ Q : FromPure false Q φ → Frame p ⌜φ⌝ Q True.
+Global Instance frame_here_pure p φ Q : FromPure false Q φ → KnownFrame p ⌜φ⌝ Q True.
 Proof.
-  rewrite /FromPure /Frame=> <-. by rewrite affinely_persistently_if_elim sep_elim_l.
+  rewrite /FromPure /KnownFrame /Frame=> <-.
+  by rewrite affinely_persistently_if_elim sep_elim_l.
 Qed.
 
 Global Instance make_embed_pure `{BiEmbedding PROP PROP'} φ :
@@ -851,14 +854,16 @@ Global Instance make_embed_default `{BiEmbedding PROP PROP'} P :
 Proof. by rewrite /MakeEmbed. Qed.
 
 Global Instance frame_embed `{BiEmbedding PROP PROP'} p P Q (Q' : PROP') R :
-  Frame p R P Q → MakeEmbed Q Q' → Frame p ⎡R⎤ ⎡P⎤ Q'.
+  Frame p R P Q → MakeEmbed Q Q' → KnownFrame p ⎡R⎤ ⎡P⎤ Q'.
 Proof.
-  rewrite /Frame /MakeEmbed => <- <-.
+  rewrite /KnownFrame /Frame /MakeEmbed => <- <-.
   rewrite bi_embed_sep bi_embed_affinely_if bi_embed_persistently_if => //.
 Qed.
 Global Instance frame_pure_embed `{BiEmbedding PROP PROP'} p P Q (Q' : PROP') φ :
-  Frame p ⌜φ⌝ P Q → MakeEmbed Q Q' → Frame p ⌜φ⌝ ⎡P⎤ Q'.
-Proof. rewrite /Frame /MakeEmbed -bi_embed_pure. apply (frame_embed p P Q). Qed.
+  Frame p ⌜φ⌝ P Q → MakeEmbed Q Q' → KnownFrame p ⌜φ⌝ ⎡P⎤ Q'.
+Proof.
+  rewrite /KnownFrame /Frame /MakeEmbed -bi_embed_pure. apply (frame_embed p P Q).
+Qed.
 
 Global Instance make_sep_emp_l P : KnownLMakeSep emp P P.
 Proof. apply left_id, _. Qed.
@@ -877,29 +882,31 @@ Proof. by rewrite /MakeSep. Qed.
 
 Global Instance frame_sep_persistent_l progress R P1 P2 Q1 Q2 Q' :
   Frame true R P1 Q1 → MaybeFrame true R P2 Q2 progress → MakeSep Q1 Q2 Q' →
-  Frame true R (P1 ∗ P2) Q' | 9.
+  KnownFrame true R (P1 ∗ P2) Q' | 9.
 Proof.
-  rewrite /Frame /MaybeFrame /MakeSep /= => <- <- <-.
+  rewrite /KnownFrame /Frame /MaybeFrame /MakeSep /= => <- <- <-.
   rewrite {1}(affinely_persistently_sep_dup R). solve_sep_entails.
 Qed.
 Global Instance frame_sep_l R P1 P2 Q Q' :
-  Frame false R P1 Q → MakeSep Q P2 Q' → Frame false R (P1 ∗ P2) Q' | 9.
-Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc. Qed.
+  Frame false R P1 Q → MakeSep Q P2 Q' → KnownFrame false R (P1 ∗ P2) Q' | 9.
+Proof. rewrite /KnownFrame /Frame /MakeSep => <- <-. by rewrite assoc. Qed.
 Global Instance frame_sep_r p R P1 P2 Q Q' :
-  Frame p R P2 Q → MakeSep P1 Q Q' → Frame p R (P1 ∗ P2) Q' | 10.
-Proof. rewrite /Frame /MakeSep => <- <-. by rewrite assoc -(comm _ P1) assoc. Qed.
+  Frame p R P2 Q → MakeSep P1 Q Q' → KnownFrame p R (P1 ∗ P2) Q' | 10.
+Proof.
+  rewrite /KnownFrame /Frame /MakeSep => <- <-. by rewrite assoc -(comm _ P1) assoc.
+Qed.
 
 Global Instance frame_big_sepL_cons {A} p (Φ : nat → A → PROP) R Q l x l' :
   IsCons l x l' →
   Frame p R (Φ 0 x ∗ [∗ list] k ↦ y ∈ l', Φ (S k) y) Q →
-  Frame p R ([∗ list] k ↦ y ∈ l, Φ k y) Q.
-Proof. rewrite /IsCons=>->. by rewrite /Frame big_sepL_cons. Qed.
+  KnownFrame p R ([∗ list] k ↦ y ∈ l, Φ k y) Q.
+Proof. rewrite /IsCons=>->. by rewrite /KnownFrame /Frame big_sepL_cons. Qed.
 Global Instance frame_big_sepL_app {A} p (Φ : nat → A → PROP) R Q l l1 l2 :
   IsApp l l1 l2 →
   Frame p R (([∗ list] k ↦ y ∈ l1, Φ k y) ∗
            [∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y) Q →
-  Frame p R ([∗ list] k ↦ y ∈ l, Φ k y) Q.
-Proof. rewrite /IsApp=>->. by rewrite /Frame big_opL_app. Qed.
+  KnownFrame p R ([∗ list] k ↦ y ∈ l, Φ k y) Q.
+Proof. rewrite /IsApp=>->. by rewrite /KnownFrame /Frame big_opL_app. Qed.
 
 Global Instance make_and_true_l P : KnownLMakeAnd True P P.
 Proof. apply left_id, _. Qed.
@@ -921,9 +928,9 @@ Global Instance frame_and p progress1 progress2 R P1 P2 Q1 Q2 Q' :
   MaybeFrame p R P2 Q2 progress2 →
   TCEq (progress1 || progress2) true →
   MakeAnd Q1 Q2 Q' →
-  Frame p R (P1 ∧ P2) Q' | 9.
+  KnownFrame p R (P1 ∧ P2) Q' | 9.
 Proof.
-  rewrite /MaybeFrame /Frame /MakeAnd => <- <- _ <-. apply and_intro;
+  rewrite /MaybeFrame /KnownFrame /Frame /MakeAnd => <- <- _ <-. apply and_intro;
   [rewrite and_elim_l|rewrite and_elim_r]; done.
 Qed.
 
@@ -941,9 +948,9 @@ Proof. by rewrite /MakeOr. Qed.
 (* We could in principle write the instance [frame_or_spatial] by a bunch of
 instances, i.e. (omitting the parameter [p = false]):
 
-  Frame R P1 Q1 → Frame R P2 Q2 → Frame R (P1 ∨ P2) (Q1 ∨ Q2)
-  Frame R P1 True → Frame R (P1 ∨ P2) P2
-  Frame R P2 True → Frame R (P1 ∨ P2) P1
+  Frame R P1 Q1 → Frame R P2 Q2 → KnownFrame R (P1 ∨ P2) (Q1 ∨ Q2)
+  Frame R P1 True → KnownFrame R (P1 ∨ P2) P2
+  Frame R P2 True → KnownFrame R (P1 ∨ P2) P1
 
 The problem here is that Coq will try to infer [Frame R P1 ?] and [Frame R P2 ?]
 multiple times, whereas the current solution makes sure that said inference
@@ -957,19 +964,19 @@ Global Instance frame_or_spatial progress1 progress2 R P1 P2 Q1 Q2 Q :
     (TCAnd (TCEq progress1 true) (TCEq Q1 True%I))
     (TCAnd (TCEq progress2 true) (TCEq Q2 True%I))) →
   MakeOr Q1 Q2 Q →
-  Frame false R (P1 ∨ P2) Q | 9.
-Proof. rewrite /Frame /MakeOr => <- <- _ <-. by rewrite -sep_or_l. Qed.
+  KnownFrame false R (P1 ∨ P2) Q | 9.
+Proof. rewrite /KnownFrame /Frame /MakeOr => <- <- _ <-. by rewrite -sep_or_l. Qed.
 
 Global Instance frame_or_persistent progress1 progress2 R P1 P2 Q1 Q2 Q :
   MaybeFrame true R P1 Q1 progress1 → MaybeFrame true R P2 Q2 progress2 →
   TCEq (progress1 || progress2) true →
-  MakeOr Q1 Q2 Q → Frame true R (P1 ∨ P2) Q | 9.
-Proof. rewrite /Frame /MakeOr => <- <- _ <-. by rewrite -sep_or_l. Qed.
+  MakeOr Q1 Q2 Q → KnownFrame true R (P1 ∨ P2) Q | 9.
+Proof. rewrite /KnownFrame /Frame /MakeOr => <- <- _ <-. by rewrite -sep_or_l. Qed.
 
 Global Instance frame_wand p R P1 P2 Q2 :
-  Frame p R P2 Q2 → Frame p R (P1 -∗ P2) (P1 -∗ Q2).
+  Frame p R P2 Q2 → KnownFrame p R (P1 -∗ P2) (P1 -∗ Q2).
 Proof.
-  rewrite /Frame=> ?. apply wand_intro_l.
+  rewrite /KnownFrame /Frame=> ?. apply wand_intro_l.
   by rewrite assoc (comm _ P1) -assoc wand_elim_r.
 Qed.
 
@@ -981,9 +988,9 @@ Global Instance make_affinely_default P : MakeAffinely P (bi_affinely P) | 100.
 Proof. by rewrite /MakeAffinely. Qed.
 
 Global Instance frame_affinely R P Q Q' :
-  Frame true R P Q → MakeAffinely Q Q' → Frame true R (bi_affinely P) Q'.
+  Frame true R P Q → MakeAffinely Q Q' → KnownFrame true R (bi_affinely P) Q'.
 Proof.
-  rewrite /Frame /MakeAffinely=> <- <- /=.
+  rewrite /KnownFrame /Frame /MakeAffinely=> <- <- /=.
   by rewrite -{1}affinely_idemp affinely_sep_2.
 Qed.
 
@@ -999,8 +1006,10 @@ Global Instance make_absorbingly_default P : MakeAbsorbingly P (bi_absorbingly P
 Proof. by rewrite /MakeAbsorbingly. Qed.
 
 Global Instance frame_absorbingly p R P Q Q' :
-  Frame p R P Q → MakeAbsorbingly Q Q' → Frame p R (bi_absorbingly P) Q'.
-Proof. rewrite /Frame /MakeAbsorbingly=> <- <- /=. by rewrite absorbingly_sep_r. Qed.
+  Frame p R P Q → MakeAbsorbingly Q Q' → KnownFrame p R (bi_absorbingly P) Q'.
+Proof.
+  rewrite /KnownFrame /Frame /MakeAbsorbingly=> <- <- /=. by rewrite absorbingly_sep_r.
+Qed.
 
 Global Instance make_persistently_true : @KnownMakePersistently PROP True True.
 Proof. by rewrite /KnownMakePersistently /MakePersistently persistently_pure. Qed.
@@ -1014,38 +1023,44 @@ Global Instance make_persistently_default P :
 Proof. by rewrite /MakePersistently. Qed.
 
 Global Instance frame_persistently R P Q Q' :
-  Frame true R P Q → MakePersistently Q Q' → Frame true R (bi_persistently P) Q'.
+  Frame true R P Q → MakePersistently Q Q' → KnownFrame true R (bi_persistently P) Q'.
 Proof.
-  rewrite /Frame /MakePersistently=> <- <- /=. rewrite -persistently_and_affinely_sep_l.
+  rewrite /KnownFrame /Frame /MakePersistently=> <- <- /=.
+  rewrite -persistently_and_affinely_sep_l.
   by rewrite -persistently_sep_2 -persistently_and_sep_l_1 persistently_affinely
               persistently_idemp.
 Qed.
 
 Global Instance frame_exist {A} p R (Φ Ψ : A → PROP) :
-  (∀ a, Frame p R (Φ a) (Ψ a)) → Frame p R (∃ x, Φ x) (∃ x, Ψ x).
-Proof. rewrite /Frame=> ?. by rewrite sep_exist_l; apply exist_mono. Qed.
+  (∀ a, Frame p R (Φ a) (Ψ a)) → KnownFrame p R (∃ x, Φ x) (∃ x, Ψ x).
+Proof. rewrite /KnownFrame /Frame=> ?. by rewrite sep_exist_l; apply exist_mono. Qed.
 Global Instance frame_forall {A} p R (Φ Ψ : A → PROP) :
-  (∀ a, Frame p R (Φ a) (Ψ a)) → Frame p R (∀ x, Φ x) (∀ x, Ψ x).
-Proof. rewrite /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
+  (∀ a, Frame p R (Φ a) (Ψ a)) → KnownFrame p R (∀ x, Φ x) (∀ x, Ψ x).
+Proof. rewrite /KnownFrame /Frame=> ?. by rewrite sep_forall_l; apply forall_mono. Qed.
 
 Global Instance frame_impl_persistent R P1 P2 Q2 :
-  Frame true R P2 Q2 → Frame true R (P1 → P2) (P1 → Q2).
+  Frame true R P2 Q2 → KnownFrame true R (P1 → P2) (P1 → Q2).
 Proof.
-  rewrite /Frame /= => ?. apply impl_intro_l.
+  rewrite /KnownFrame /Frame /= => ?. apply impl_intro_l.
   by rewrite -persistently_and_affinely_sep_l assoc (comm _ P1) -assoc impl_elim_r
              persistently_and_affinely_sep_l.
 Qed.
 Global Instance frame_impl R P1 P2 Q2 :
   Persistent P1 → Absorbing P1 →
-  Frame false R P2 Q2 → Frame false R (P1 → P2) (P1 → Q2).
+  Frame false R P2 Q2 → KnownFrame false R (P1 → P2) (P1 → Q2).
 Proof.
-  rewrite /Frame /==> ???. apply impl_intro_l.
+  rewrite /KnownFrame /Frame /==> ???. apply impl_intro_l.
   rewrite {1}(persistent P1) persistently_and_affinely_sep_l assoc.
   rewrite (comm _ (□ P1)%I) -assoc -persistently_and_affinely_sep_l.
   rewrite persistently_elim impl_elim_r //.
 Qed.
 
-(* ElimModal *)
+(* In the case nothing else suceeded, then we try to instantiate the
+   evar [P] with [R ∗ Q]. This only does so in non-persistent mode:
+   The idea is that persistent assumptions will still be available
+   when [P] will be used, so there is no need to keep it in [P]. *)
+Global Instance frame_sep_instantiate R Q : Frame false R (R ∗ Q) Q | 100.
+Proof. by rewrite /Frame. Qed.
 
 (* IntoEmbed *)
 Global Instance into_embed_embed {PROP' : bi} `{BiEmbed PROP PROP'} P :
@@ -1504,8 +1519,8 @@ Proof. by rewrite /AddModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 (* Frame *)
 Global Instance frame_eq_embed `{SbiEmbedding PROP PROP'} p P Q (Q' : PROP')
        {A : ofeT} (a b : A) :
-  Frame p (a ≡ b) P Q → MakeEmbed Q Q' → Frame p (a ≡ b) ⎡P⎤ Q'.
-Proof. rewrite /Frame /MakeEmbed -sbi_embed_internal_eq. apply (frame_embed p P Q). Qed.
+  Frame p (a ≡ b) P Q → MakeEmbed Q Q' → KnownFrame p (a ≡ b) ⎡P⎤ Q'.
+Proof. rewrite /KnownFrame /Frame /MakeEmbed -sbi_embed_internal_eq. apply (frame_embed p P Q). Qed.
 
 Global Instance make_laterN_true n : @KnownMakeLaterN PROP n True True | 0.
 Proof. by rewrite /KnownMakeLaterN /MakeLaterN laterN_True. Qed.
@@ -1518,25 +1533,25 @@ Proof. by rewrite /MakeLaterN. Qed.
 
 Global Instance frame_later p R R' P Q Q' :
   NoBackTrack (MaybeIntoLaterN true 1 R' R) →
-  Frame p R P Q → MakeLaterN 1 Q Q' → Frame p R' (▷ P) Q'.
+  Frame p R P Q → MakeLaterN 1 Q Q' → KnownFrame p R' (▷ P) Q'.
 Proof.
-  rewrite /Frame /MakeLaterN /MaybeIntoLaterN=>-[->] <- <-.
+  rewrite /KnownFrame /Frame /MakeLaterN /MaybeIntoLaterN=>-[->] <- <-.
   by rewrite later_affinely_persistently_if_2 later_sep.
 Qed.
 Global Instance frame_laterN p n R R' P Q Q' :
   NoBackTrack (MaybeIntoLaterN true n R' R) →
-  Frame p R P Q → MakeLaterN n Q Q' → Frame p R' (▷^n P) Q'.
+  Frame p R P Q → MakeLaterN n Q Q' → KnownFrame p R' (▷^n P) Q'.
 Proof.
-  rewrite /Frame /MakeLaterN /MaybeIntoLaterN=>-[->] <- <-.
+  rewrite /KnownFrame /Frame /MakeLaterN /MaybeIntoLaterN=>-[->] <- <-.
   by rewrite laterN_affinely_persistently_if_2 laterN_sep.
 Qed.
 
 Global Instance frame_bupd `{BUpdFacts PROP} p R P Q :
-  Frame p R P Q → Frame p R (|==> P) (|==> Q).
-Proof. rewrite /Frame=><-. by rewrite bupd_frame_l. Qed.
+  Frame p R P Q → KnownFrame p R (|==> P) (|==> Q).
+Proof. rewrite /KnownFrame /Frame=><-. by rewrite bupd_frame_l. Qed.
 Global Instance frame_fupd `{FUpdFacts PROP} p E1 E2 R P Q :
-  Frame p R P Q → Frame p R (|={E1,E2}=> P) (|={E1,E2}=> Q).
-Proof. rewrite /Frame=><-. by rewrite fupd_frame_l. Qed.
+  Frame p R P Q → KnownFrame p R (|={E1,E2}=> P) (|={E1,E2}=> Q).
+Proof. rewrite /KnownFrame /Frame=><-. by rewrite fupd_frame_l. Qed.
 
 Global Instance make_except_0_True : @KnownMakeExcept0 PROP True True.
 Proof. by rewrite /KnownMakeExcept0 /MakeExcept0 except_0_True. Qed.
@@ -1544,9 +1559,9 @@ Global Instance make_except_0_default P : MakeExcept0 P (◇ P) | 100.
 Proof. by rewrite /MakeExcept0. Qed.
 
 Global Instance frame_except_0 p R P Q Q' :
-  Frame p R P Q → MakeExcept0 Q Q' → Frame p R (◇ P) Q'.
+  Frame p R P Q → MakeExcept0 Q Q' → KnownFrame p R (◇ P) Q'.
 Proof.
-  rewrite /Frame /MakeExcept0=><- <-.
+  rewrite /KnownFrame /Frame /MakeExcept0=><- <-.
   by rewrite except_0_sep -(except_0_intro (□?p R)%I).
 Qed.
 

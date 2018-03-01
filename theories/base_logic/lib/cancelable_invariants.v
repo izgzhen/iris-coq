@@ -98,7 +98,7 @@ Section proofs.
       (▷ P ∗ cinv_own γ p) (▷ P ={E∖↑N,E}=∗ True) Q Q'.
   Proof.
     rewrite /ElimInv /ElimModal. iIntros (Helim ?) "(#H1&Hown&H2)".
-    iApply (Helim with "[- $H2]"); first done.
+    iApply Helim; [done|]. iSplitR "H2"; [|done].
     iMod (cinv_open E N γ p P with "[#] [Hown]") as "(HP&Hown&Hclose)"; auto. 
     by iFrame.
   Qed.
