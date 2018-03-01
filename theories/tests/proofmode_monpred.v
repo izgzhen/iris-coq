@@ -88,6 +88,10 @@ Section tests.
     □ P -∗ Q -∗ ⎡𝓟⎤ -∗ ⎡𝓠⎤ -∗ ⎡ ∀ i, 𝓟 ∗ 𝓠 ∗ Q i ⎤.
   Proof. iIntros "#H1 H2 H3 H4". iAlways. iFrame. Qed.
 
+  Lemma test_iModIntro_embed_nested P 𝓟 𝓠 :
+    □ P -∗ ⎡◇ 𝓟⎤ -∗ ⎡◇ 𝓠⎤ -∗ ⎡ ◇ (𝓟 ∗ 𝓠) ⎤.
+  Proof. iIntros "#H1 H2 H3". iModIntro ⎡ _ ⎤%I. by iSplitL "H2". Qed.
+
   (* This is a hack to avoid avoid coq bug #5735: sections variables
      ignore hint modes. So we assume the instances in a way that
      cannot be used by type class resolution, and then declare the

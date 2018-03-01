@@ -962,9 +962,9 @@ Local Tactic Notation "iExistDestruct" constr(H)
     |revert y; intros x].
 
 (** * Modality introduction *)
-Tactic Notation "iModIntro" open_constr(M) :=
+Tactic Notation "iModIntro" uconstr(sel) :=
   iStartProof;
-  notypeclasses refine (tac_modal_intro M _ _ _ _ _ _ _ _ _ _ _ _);
+  notypeclasses refine (tac_modal_intro _ sel _ _ _ _ _ _ _ _ _ _ _ _);
     [apply _  ||
      fail "iModIntro: the goal is not a modality"
     |apply _ ||
@@ -986,8 +986,8 @@ Tactic Notation "iModIntro" := iModIntro _.
 Tactic Notation "iAlways" := iModIntro.
 
 (** * Later *)
-Tactic Notation "iNext" open_constr(n) := iModIntro (modality_laterN n).
-Tactic Notation "iNext" := iModIntro (modality_laterN _).
+Tactic Notation "iNext" open_constr(n) := iModIntro (▷^n _)%I.
+Tactic Notation "iNext" := iModIntro (▷^_ _)%I.
 
 (** * Update modality *)
 Tactic Notation "iModCore" constr(H) :=

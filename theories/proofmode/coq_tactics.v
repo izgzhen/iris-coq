@@ -1239,8 +1239,8 @@ Section tac_modal_intro.
   Qed.
 
   (** The actual introduction tactic *)
-  Lemma tac_modal_intro Γp Γs Γp' Γs' Q Q' fi :
-    FromModal M Q' Q →
+  Lemma tac_modal_intro {A} (sel : A) Γp Γs Γp' Γs' Q Q' fi :
+    FromModal M sel Q' Q →
     IntoModalPersistentEnv M Γp Γp' (modality_persistent_spec M) →
     IntoModalSpatialEnv M Γs Γs' (modality_spatial_spec M) fi →
     (if fi then Absorbing Q' else TCTrue) →

@@ -219,50 +219,65 @@ Proof. intros. by rewrite /IntoPersistent. Qed.
 
 (* FromModal *)
 Global Instance from_modal_affinely P :
-  FromModal modality_affinely (bi_affinely P) P | 2.
+  FromModal modality_affinely (bi_affinely P) (bi_affinely P) P | 2.
 Proof. by rewrite /FromModal. Qed.
 
 Global Instance from_modal_persistently P :
-  FromModal modality_persistently (bi_persistently P) P | 2.
+  FromModal modality_persistently (bi_persistently P) (bi_persistently P) P | 2.
 Proof. by rewrite /FromModal. Qed.
 Global Instance from_modal_affinely_persistently P :
-  FromModal modality_affinely_persistently (□ P) P | 1.
+  FromModal modality_affinely_persistently (□ P) (□ P) P | 1.
 Proof. by rewrite /FromModal. Qed.
 Global Instance from_modal_affinely_persistently_affine_bi P :
-  BiAffine PROP → FromModal modality_persistently (□ P) P | 0.
+  BiAffine PROP → FromModal modality_persistently (□ P) (□ P) P | 0.
 Proof. intros. by rewrite /FromModal /= affine_affinely. Qed.
 
 Global Instance from_modal_plainly P :
-  FromModal modality_plainly (bi_plainly P) P | 2.
+  FromModal modality_plainly (bi_plainly P) (bi_plainly P) P | 2.
 Proof. by rewrite /FromModal. Qed.
 Global Instance from_modal_affinely_plainly P :
-  FromModal modality_affinely_plainly (■ P) P | 1.
+  FromModal modality_affinely_plainly (■ P) (■ P) P | 1.
 Proof. by rewrite /FromModal. Qed.
 Global Instance from_modal_affinely_plainly_affine_bi P :
-  BiAffine PROP → FromModal modality_plainly (■ P) P | 0.
+  BiAffine PROP → FromModal modality_plainly (■ P) (■ P) P | 0.
 Proof. intros. by rewrite /FromModal /= affine_affinely. Qed.
 
-Global Instance from_modal_affinely_embed `{BiEmbedding PROP PROP'} P Q :
-  FromModal modality_affinely P Q →
-  FromModal modality_affinely ⎡P⎤ ⎡Q⎤.
+Global Instance from_modal_absorbingly P :
+  FromModal modality_id (bi_absorbingly P) (bi_absorbingly P) P.
+Proof. by rewrite /FromModal /= -absorbingly_intro. Qed.
+
+(* When having a modality nested in an embedding, e.g. [ ⎡|==> P⎤ ], we prefer
+the modality over the embedding. *)
+Global Instance from_modal_embed `{BiEmbedding PROP PROP'} (P : PROP) :
+  FromModal (@modality_embed PROP PROP' _ _) ⎡P⎤ ⎡P⎤ P | 100.
+Proof. by rewrite /FromModal. Qed.
+
+Global Instance from_modal_id_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
+  FromModal modality_id sel P Q →
+  FromModal modality_id sel ⎡P⎤ ⎡Q⎤.
+Proof. by rewrite /FromModal /= =><-. Qed.
+
+Global Instance from_modal_affinely_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
+  FromModal modality_affinely sel P Q →
+  FromModal modality_affinely sel ⎡P⎤ ⎡Q⎤.
 Proof. rewrite /FromModal /= =><-. by rewrite bi_embed_affinely. Qed.
-Global Instance from_modal_persistently_embed `{BiEmbedding PROP PROP'} P Q :
-  FromModal modality_persistently P Q →
-  FromModal modality_persistently ⎡P⎤ ⎡Q⎤.
+Global Instance from_modal_persistently_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
+  FromModal modality_persistently sel P Q →
+  FromModal modality_persistently sel ⎡P⎤ ⎡Q⎤.
 Proof. rewrite /FromModal /= =><-. by rewrite bi_embed_persistently. Qed.
-Global Instance from_modal_affinely_persistently_embed `{BiEmbedding PROP PROP'} P Q :
-  FromModal modality_affinely_persistently P Q →
-  FromModal modality_affinely_persistently ⎡P⎤ ⎡Q⎤.
+Global Instance from_modal_affinely_persistently_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
+  FromModal modality_affinely_persistently sel P Q →
+  FromModal modality_affinely_persistently sel ⎡P⎤ ⎡Q⎤.
 Proof.
   rewrite /FromModal /= =><-. by rewrite bi_embed_affinely bi_embed_persistently.
 Qed.
-Global Instance from_modal_plainly_embed `{BiEmbedding PROP PROP'} P Q :
-  FromModal modality_plainly P Q →
-  FromModal modality_plainly ⎡P⎤ ⎡Q⎤.
+Global Instance from_modal_plainly_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
+  FromModal modality_plainly sel P Q →
+  FromModal modality_plainly sel ⎡P⎤ ⎡Q⎤.
 Proof. rewrite /FromModal /= =><-. by rewrite bi_embed_plainly. Qed.
-Global Instance from_modal_affinely_plainly_embed `{BiEmbedding PROP PROP'} P Q :
-  FromModal modality_affinely_plainly P Q →
-  FromModal modality_affinely_plainly ⎡P⎤ ⎡Q⎤.
+Global Instance from_modal_affinely_plainly_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
+  FromModal modality_affinely_plainly sel P Q →
+  FromModal modality_affinely_plainly sel ⎡P⎤ ⎡Q⎤.
 Proof.
   rewrite /FromModal /= =><-. by rewrite bi_embed_affinely bi_embed_plainly.
 Qed.
@@ -1030,14 +1045,6 @@ Proof.
   rewrite persistently_elim impl_elim_r //.
 Qed.
 
-(* FromModal *)
-Global Instance from_modal_absorbingly P :
-  FromModal modality_id (bi_absorbingly P) P.
-Proof. by rewrite /FromModal /= -absorbingly_intro. Qed.
-Global Instance from_modal_embed `{BiEmbedding PROP PROP'} (P : PROP) :
-  FromModal (@modality_embed PROP PROP' _ _) ⎡P⎤ P.
-Proof. by rewrite /FromModal. Qed.
-
 (* ElimModal *)
 
 (* IntoEmbed *)
@@ -1375,17 +1382,23 @@ Proof. by rewrite /IsExcept0 except_0_fupd. Qed.
 Global Instance from_modal_later n P Q :
   NoBackTrack (FromLaterN n P Q) →
   TCIf (TCEq n 0) False TCTrue →
-  FromModal (modality_laterN n) P Q | 100.
+  FromModal (modality_laterN n) (▷^n P) P Q | 99.
+  (* below [from_modal_embed] to prefer introducing a later *)
 Proof. rewrite /FromLaterN /FromModal. by intros [?] [_ []|?]. Qed.
-Global Instance from_modal_except_0 P : FromModal modality_id (◇ P) P.
+Global Instance from_modal_except_0 P : FromModal modality_id (◇ P) (◇ P) P.
 Proof. by rewrite /FromModal /= -except_0_intro. Qed.
 
 Global Instance from_modal_bupd `{BUpdFacts PROP} P :
-  FromModal modality_id (|==> P) P.
+  FromModal modality_id (|==> P) (|==> P) P.
 Proof. by rewrite /FromModal /= -bupd_intro. Qed.
 Global Instance from_modal_fupd E P `{FUpdFacts PROP} :
-  FromModal modality_id (|={E}=> P) P.
+  FromModal modality_id (|={E}=> P) (|={E}=> P) P.
 Proof. by rewrite /FromModal /= -fupd_intro. Qed.
+
+Global Instance from_modal_later_embed `{SbiEmbedding PROP PROP'} `(sel : A) n P Q :
+  FromModal (modality_laterN n) sel P Q →
+  FromModal (modality_laterN n) sel ⎡P⎤ ⎡Q⎤.
+Proof. rewrite /FromModal /= =><-. by rewrite sbi_embed_laterN. Qed.
 
 (* IntoInternalEq *)
 Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :

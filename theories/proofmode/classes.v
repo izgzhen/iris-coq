@@ -87,19 +87,25 @@ Hint Mode IntoPersistent + + ! - : typeclass_instances.
 (** The [FromModal M P Q] class is used by the [iModIntro] tactic to transform
 a goal [P] into a modality [M] and proposition [Q].
 
-The input is [P] and the outputs are [M] and [Q].
+The inputs are [P] and [sel] and the outputs are [M] and [Q].
+
+The input [sel] can be used to specify which modality to introduce in case there
+are multiple choices to turn [P] into a modality. For example, given [⎡|==> R⎤],
+[sel] can be either [|==> ?e] or [⎡ ?e ⎤], which turn it into an update modality
+or embedding, respectively. In case there is no need to specify the modality to
+introduce, [sel] should be an evar.
 
 For modalities [N] that do not need to augment the proof mode environment, one
 can define an instance [FromModal modality_id (N P) P]. Defining such an
 instance only imposes the proof obligation [P ⊢ N P]. Examples of such
 modalities [N] are [bupd], [fupd], [except_0], [monPred_relatively] and
 [bi_absorbingly]. *)
-Class FromModal {PROP1 PROP2 : bi}
-    (M : modality PROP1 PROP2) (P : PROP2) (Q : PROP1) :=
+Class FromModal {PROP1 PROP2 : bi} {A}
+    (M : modality PROP1 PROP2) (sel : A) (P : PROP2) (Q : PROP1) :=
   from_modal : M Q ⊢ P.
-Arguments FromModal {_ _} _ _%I _%I : simpl never.
-Arguments from_modal {_ _} _ _%I _%I {_}.
-Hint Mode FromModal - + - ! - : typeclass_instances.
+Arguments FromModal {_ _ _} _ _%I _%I _%I : simpl never.
+Arguments from_modal {_ _ _} _ _ _%I _%I {_}.
+Hint Mode FromModal - + - - - ! - : typeclass_instances.
 
 Class FromAffinely {PROP : bi} (P Q : PROP) :=
   from_affinely : bi_affinely Q ⊢ P.
@@ -534,8 +540,9 @@ Instance into_exist_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (tc_opaque P) Φ := id.
 Instance into_forall_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (tc_opaque P) Φ := id.
-Instance from_modal_tc_opaque {PROP : bi} M (P Q : PROP) :
-  FromModal M P Q → FromModal M (tc_opaque P) Q := id.
+Instance from_modal_tc_opaque {PROP1 PROP2 : bi} {A}
+    M (sel : A) (P : PROP2) (Q : PROP1) :
+  FromModal M sel P Q → FromModal M sel (tc_opaque P) Q := id.
 Instance elim_modal_tc_opaque {PROP : bi} φ (P P' Q Q' : PROP) :
   ElimModal φ P P' Q Q' → ElimModal φ (tc_opaque P) P' Q Q' := id.
 Instance into_inv_tc_opaque {PROP : bi} (P : PROP) N :

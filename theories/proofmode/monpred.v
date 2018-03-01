@@ -41,11 +41,35 @@ Implicit Types φ : Prop.
 Implicit Types i j : I.
 
 Global Instance from_modal_absolutely P :
-  FromModal modality_absolutely (∀ᵢ P) P | 1.
+  FromModal modality_absolutely (∀ᵢ P) (∀ᵢ P) P | 1.
 Proof. by rewrite /FromModal. Qed.
 Global Instance from_modal_relatively P :
-  FromModal modality_id (∃ᵢ P) P | 1.
+  FromModal modality_id (∃ᵢ P) (∃ᵢ P) P | 1.
 Proof. by rewrite /FromModal /= -monPred_relatively_intro. Qed.
+
+Global Instance from_modal_affinely_monPred_at `(sel : A) P Q 𝓠 i :
+  FromModal modality_affinely sel P Q → MakeMonPredAt i Q 𝓠 →
+  FromModal modality_affinely sel (P i) 𝓠 | 0.
+Proof.
+  rewrite /FromModal /MakeMonPredAt /==> <- <-. by rewrite monPred_at_affinely.
+Qed.
+Global Instance from_modal_persistently_monPred_at `(sel : A) P Q 𝓠 i :
+  FromModal modality_persistently sel P Q → MakeMonPredAt i Q 𝓠 →
+  FromModal modality_persistently sel (P i) 𝓠 | 0.
+Proof.
+  rewrite /FromModal /MakeMonPredAt /==> <- <-. by rewrite monPred_at_persistently.
+Qed.
+Global Instance from_modal_affinely_persistently_monPred_at `(sel : A) P Q 𝓠 i :
+  FromModal modality_affinely_persistently sel P Q → MakeMonPredAt i Q 𝓠 →
+  FromModal modality_affinely_persistently sel (P i) 𝓠 | 0.
+Proof.
+  rewrite /FromModal /MakeMonPredAt /==> <- <-.
+  by rewrite monPred_at_affinely monPred_at_persistently.
+Qed.
+Global Instance from_modal_id_monPred_at `(sel : A) P Q 𝓠 i :
+  FromModal modality_id sel P Q → MakeMonPredAt i Q 𝓠 →
+  FromModal modality_id sel (P i) 𝓠.
+Proof. by rewrite /FromModal /MakeMonPredAt=> <- <-. Qed.
 
 Global Instance make_monPred_at_pure φ i : MakeMonPredAt i ⌜φ⌝ ⌜φ⌝.
 Proof. by rewrite /MakeMonPredAt monPred_at_pure. Qed.
@@ -156,26 +180,6 @@ Global Instance into_persistent_monPred_at p P Q 𝓠 i :
 Proof.
   rewrite /IntoPersistent /MakeMonPredAt  =>-[/(_ i) ?] <-.
   by rewrite -monPred_at_persistently -monPred_at_persistently_if.
-Qed.
-
-Global Instance from_modal_affinely_monPred_at P Q 𝓠 i :
-  FromModal modality_affinely P Q → MakeMonPredAt i Q 𝓠 →
-  FromModal modality_affinely (P i) 𝓠 | 0.
-Proof.
-  rewrite /FromModal /MakeMonPredAt /==> <- <-. by rewrite monPred_at_affinely.
-Qed.
-Global Instance from_modal_persistently_monPred_at P Q 𝓠 i :
-  FromModal modality_persistently P Q → MakeMonPredAt i Q 𝓠 →
-  FromModal modality_persistently (P i) 𝓠 | 0.
-Proof.
-  rewrite /FromModal /MakeMonPredAt /==> <- <-. by rewrite monPred_at_persistently.
-Qed.
-Global Instance from_modal_affinely_persistently_monPred_at P Q 𝓠 i :
-  FromModal modality_affinely_persistently P Q → MakeMonPredAt i Q 𝓠 →
-  FromModal modality_affinely_persistently (P i) 𝓠 | 0.
-Proof.
-  rewrite /FromModal /MakeMonPredAt /==> <- <-.
-  by rewrite monPred_at_affinely monPred_at_persistently.
 Qed.
 
 Lemma into_wand_monPred_at_unknown_unknown p q R P 𝓟 Q 𝓠 i :
@@ -352,9 +356,6 @@ Proof.
                          ?monPred_at_persistently monPred_at_embed.
 Qed.
 
-Global Instance from_modal_monPred_at i P Q 𝓠 :
-  FromModal modality_id P Q → MakeMonPredAt i Q 𝓠 → FromModal modality_id (P i) 𝓠.
-Proof. by rewrite /FromModal /MakeMonPredAt=> <- <-. Qed.
 Global Instance into_embed_absolute P :
   Absolute P → IntoEmbed P (∀ i, P i).
 Proof. rewrite /IntoEmbed=> ?. by rewrite {1}(absolute_absolutely P). Qed.
