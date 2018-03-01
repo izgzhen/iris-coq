@@ -104,6 +104,15 @@ Proof.
   iApply (Helim with "[$H2]"); first done.
   iMod (inv_open _ N with "[#]") as "(HP&Hclose)"; auto with iFrame.
 Qed.
+Global Instance elim_inv_embed_inv {PROP' : sbi} `{SbiEmbedding _ PROP'}
+       E N (P : iProp Σ) (Q Q' : PROP') :
+  (∀ R, ElimModal True ⎡|={E,E∖↑N}=> R⎤ ⎡R⎤ Q Q') →
+  ElimInv (↑N ⊆ E) ⎡inv N P⎤ True (⎡▷ P⎤) (⎡▷ P ={E∖↑N,E}=∗ True⎤) Q Q'.
+Proof.
+  rewrite /ElimInv /ElimModal. iIntros (Helim ?) "(#H1&TRUE&H2)".
+  rewrite -bi_embed_sep. iApply (Helim with "[$H2 $TRUE]"); first done.
+  iModIntro. iMod (inv_open _ N with "[#]") as "(HP&Hclose)"; auto with iFrame.
+Qed.
 
 Lemma inv_open_timeless E N P `{!Timeless P} :
   ↑N ⊆ E → inv N P ={E,E∖↑N}=∗ P ∗ (P ={E∖↑N,E}=∗ True).

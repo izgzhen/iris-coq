@@ -849,6 +849,10 @@ Global Instance from_forall_embed `{BiEmbedding PROP PROP'} {A} P (Φ : A → PR
   FromForall P Φ → FromForall ⎡P⎤%I (λ a, ⎡Φ a⎤%I).
 Proof. by rewrite /FromForall -bi_embed_forall => <-. Qed.
 
+(* IntoInv *)
+Global Instance into_inv_embed {PROP' : bi} `{BiEmbed PROP PROP'} P N :
+  IntoInv P N → IntoInv ⎡P⎤ N.
+
 (* ElimModal *)
 Global Instance elim_modal_wand φ P P' Q Q' R :
   ElimModal φ P P' Q Q' → ElimModal φ P P' (R -∗ Q) (R -∗ Q').
