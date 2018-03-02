@@ -255,7 +255,7 @@ Proof.
     iAlways. by iSplit; iIntros "[? $]"; iApply "HQQ'".
   - iMod (slice_delete_empty with "Hs Hb") as (P') "(Heq & Hb)"; try done.
     iMod (slice_insert_empty with "Hb") as (γ' ?) "[#Hs' Hb]"; try done.
-    iExists γ', _. iIntros "{$∗ $# $%} !>". do 2 iNext. iRewrite "Heq".
+    iExists γ', (Q' ∗ P')%I. iIntros "{$∗ $# $%} !>".  do 2 iNext. iRewrite "Heq".
     iAlways. by iSplit; iIntros "[? $]"; iApply "HQQ'".
 Qed.
 

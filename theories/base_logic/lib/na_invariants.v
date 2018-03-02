@@ -118,8 +118,8 @@ Section proofs.
       (▷ P ∗ na_own p (F∖↑N)) (▷ P ∗ na_own p (F∖↑N) ={E}=∗ na_own p F) Q Q'.
   Proof.
     rewrite /ElimInv /ElimModal. iIntros (Helim (?&?)) "(#H1&Hown&H2)".
-    iApply (Helim with "[- $H2]"); first done.
-    iMod (na_inv_open p E F N P with "[#] [Hown]") as "(HP&Hown&Hclose)"; auto. 
+    iApply Helim; [done|]. iSplitR "H2"; [|done].
+    iMod (na_inv_open p E F N P with "[#] [Hown]") as "(HP&Hown&Hclose)"; auto.
     by iFrame.
   Qed.
 End proofs.

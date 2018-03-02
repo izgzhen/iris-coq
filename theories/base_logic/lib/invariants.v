@@ -101,7 +101,7 @@ Global Instance elim_inv_inv E N P Q Q' :
   ElimInv (↑N ⊆ E) (inv N P) True (▷ P) (▷ P ={E∖↑N,E}=∗ True) Q Q'.
 Proof.
   rewrite /ElimInv /ElimModal. iIntros (Helim ?) "(#H1&_&H2)".
-  iApply (Helim with "[$H2]"); first done.
+  iApply (Helim with "[H2]"); [done|]. iSplitR "H2"; [|done].
   iMod (inv_open _ N with "[#]") as "(HP&Hclose)"; auto with iFrame.
 Qed.
 
