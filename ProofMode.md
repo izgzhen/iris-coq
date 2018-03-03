@@ -114,15 +114,15 @@ Separating logic specific tactics
 Modalities
 ----------
 
-- `iModIntro` : introduction of a modality. The type class `FromModal` is used
-  to specify which modalities this tactic should introduce. Instances of that
-  type class include: later, except 0, basic update and fancy update,
+- `iModIntro mod` : introduction of a modality. The type class `FromModal` is
+  used to specify which modalities this tactic should introduce. Instances of
+  that type class include: later, except 0, basic update and fancy update,
   persistently, affinely, plainly, absorbingly, absolutely, and relatively.
+  The optional argument `mod` can be used to specify what modality to introduce
+  in case of ambiguity, e.g. `⎡|==> P⎤`.
 - `iAlways` : a deprecated alias of `iModIntro`.
-- `iNext n` : introduce `n` laters by stripping that number of laters from all
-  hypotheses. If the argument `n` is not given, it strips one later if the
-  leftmost conjunct is of the shape `▷ P`, or `n` laters if the leftmost
-  conjunct is of the shape `▷^n P`.
+- `iNext n` : an alias of `iModIntro (▷^n P)`.
+- `iNext` : an alias of `iModIntro (▷^1 P)`.
 - `iMod pm_trm as (x1 ... xn) "ipat"` : eliminate a modality `pm_trm` that is
   an instance of the `ElimModal` type class. Instances include: later, except 0,
   basic update and fancy update.

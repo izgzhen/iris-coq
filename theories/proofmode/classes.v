@@ -446,11 +446,6 @@ Instance maybe_into_laterN_default_0 {PROP : sbi} only_head (P : PROP) :
   MaybeIntoLaterN only_head 0 P P | 0.
 Proof. apply _. Qed.
 
-Class FromLaterN {PROP : sbi} (n : nat) (P Q : PROP) := from_laterN : ▷^n Q ⊢ P.
-Arguments FromLaterN {_} _%nat_scope _%I _%I.
-Arguments from_laterN {_} _%nat_scope _%I _%I {_}.
-Hint Mode FromLaterN + - ! - : typeclass_instances.
-
 (** The class [IntoEmbed P Q] is used to transform hypotheses while introducing
 embeddings using [iModIntro].
 
@@ -531,8 +526,6 @@ Instance into_pure_tc_opaque {PROP : bi} (P : PROP) φ :
   IntoPure P φ → IntoPure (tc_opaque P) φ := id.
 Instance from_pure_tc_opaque {PROP : bi} (a : bool) (P : PROP) φ :
   FromPure a P φ → FromPure a (tc_opaque P) φ := id.
-Instance from_laterN_tc_opaque {PROP : sbi} n (P Q : PROP) :
-  FromLaterN n P Q → FromLaterN n (tc_opaque P) Q := id.
 Instance from_wand_tc_opaque {PROP : bi} (P Q1 Q2 : PROP) :
   FromWand P Q1 Q2 → FromWand (tc_opaque P) Q1 Q2 := id.
 Instance into_wand_tc_opaque {PROP : bi} p q (R P Q : PROP) :
