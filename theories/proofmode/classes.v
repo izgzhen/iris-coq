@@ -98,7 +98,7 @@ introduce, [sel] should be an evar.
 For modalities [N] that do not need to augment the proof mode environment, one
 can define an instance [FromModal modality_id (N P) P]. Defining such an
 instance only imposes the proof obligation [P ⊢ N P]. Examples of such
-modalities [N] are [bupd], [fupd], [except_0], [monPred_relatively] and
+modalities [N] are [bupd], [fupd], [except_0], [monPred_subjectively] and
 [bi_absorbingly]. *)
 Class FromModal {PROP1 PROP2 : bi} {A}
     (M : modality PROP1 PROP2) (sel : A) (P : PROP2) (Q : PROP1) :=

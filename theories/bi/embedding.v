@@ -233,6 +233,6 @@ End sbi_embed.
 
 (* Not defined using an ordinary [Instance] because the default
 [class_apply @bi_embed_plainly] shelves the [BiPlainly] premise, making proof
-search for the other premises fail. See the proof of [monPred_absolutely_plain]
+search for the other premises fail. See the proof of [monPred_objectively_plain]
 for an example where it would fail with a regular [Instance].*)
 Hint Extern 4 (Plain ⎡_⎤) => eapply @embed_plain : typeclass_instances.

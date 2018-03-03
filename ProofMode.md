@@ -117,7 +117,7 @@ Modalities
 - `iModIntro mod` : introduction of a modality. The type class `FromModal` is
   used to specify which modalities this tactic should introduce. Instances of
   that type class include: later, except 0, basic update and fancy update,
-  persistently, affinely, plainly, absorbingly, absolutely, and relatively.
+  persistently, affinely, plainly, absorbingly, objectively, and subjectively.
   The optional argument `mod` can be used to specify what modality to introduce
   in case of ambiguity, e.g. `⎡|==> P⎤`.
 - `iAlways` : a deprecated alias of `iModIntro`.

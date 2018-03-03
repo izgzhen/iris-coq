@@ -69,14 +69,14 @@ Section tests.
     iIntros "H HP". by iApply "H".
   Qed.
 
-  Lemma test_absolutely P Q : ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ ∀ᵢ (P ∗ Q).
+  Lemma test_objectively P Q : ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ ∀ᵢ (P ∗ Q).
   Proof. iIntros "#? HP HQ". iAlways. by iSplitL "HP". Qed.
 
-  Lemma test_absolutely_absorbing P Q R `{!Absorbing P} :
+  Lemma test_objectively_absorbing P Q R `{!Absorbing P} :
     ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
   Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
 
-  Lemma test_absolutely_affine P Q R `{!Affine R} :
+  Lemma test_objectively_affine P Q R `{!Affine R} :
     ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
   Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
 
@@ -84,7 +84,7 @@ Section tests.
     □ P -∗ Q -∗ ⎡𝓟⎤ -∗ ⎡𝓠⎤ -∗ ⎡ 𝓟 ∗ 𝓠 ⎤.
   Proof. iIntros "#H1 _ H2 H3". iAlways. iFrame. Qed.
 
-  Lemma test_iModIntro_embed_absolute P `{!Absolute Q} 𝓟 𝓠 :
+  Lemma test_iModIntro_embed_objective P `{!Objective Q} 𝓟 𝓠 :
     □ P -∗ Q -∗ ⎡𝓟⎤ -∗ ⎡𝓠⎤ -∗ ⎡ ∀ i, 𝓟 ∗ 𝓠 ∗ Q i ⎤.
   Proof. iIntros "#H1 H2 H3 H4". iAlways. iFrame. Qed.
 
