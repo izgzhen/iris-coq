@@ -386,4 +386,10 @@ Proof.
   eexists. split. iIntros "HP #HQ". iFrame "HQ HP". iEmpIntro. done.
 Qed.
 
+Lemma test_iAccu P Q R S :
+  ∃ PP, (□P -∗ Q -∗ R -∗ S -∗ PP) ∧ PP = (Q ∗ R ∗ S)%I.
+Proof.
+  eexists. split. iIntros "#? ? ? ?". iAccu. done.
+Qed.
+
 End tests.

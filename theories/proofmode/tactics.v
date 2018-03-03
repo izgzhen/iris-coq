@@ -16,7 +16,7 @@ Declare Reduction env_cbv := cbv [
   envs_lookup envs_lookup_delete envs_delete envs_snoc envs_app
     envs_simple_replace envs_replace envs_split
     envs_clear_spatial envs_clear_persistent
-    envs_split_go envs_split].
+    envs_split_go envs_split prop_of_env].
 Ltac env_cbv :=
   match goal with |- ?u => let v := eval env_cbv in u in change v end.
 Ltac env_reflexivity := env_cbv; exact eq_refl.
@@ -1935,6 +1935,9 @@ Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) constr(Hclose) :=
    iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2 x3 x4) pat) Hclose.
+
+Tactic Notation "iAccu" :=
+  eapply tac_accu; env_reflexivity.
 
 Hint Extern 0 (_ ⊢ _) => iStartProof.
 

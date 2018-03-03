@@ -126,6 +126,12 @@ Definition envs_split {PROP} (d : direction)
   ''(Δ1,Δ2) ← envs_split_go js Δ (envs_clear_spatial Δ);
   if d is Right then Some (Δ1,Δ2) else Some (Δ2,Δ1).
 
+Definition prop_of_env {PROP : bi} (Γ : env PROP) : PROP :=
+  let fix aux Γ acc :=
+    match Γ with Enil => acc | Esnoc Γ _ P => aux Γ (P ∗ acc)%I end
+  in
+  match Γ with Enil => emp%I | Esnoc Γ _ P => aux Γ P end.
+
 (* Coq versions of the tactics *)
 Section bi_tactics.
 Context {PROP : bi}.
@@ -418,6 +424,14 @@ Proof.
   apply envs_split_go_sound in HΔ as ->; last first.
   { intros j P. by rewrite envs_lookup_envs_clear_spatial=> ->. }
   destruct d; simplify_eq/=; solve_sep_entails.
+Qed.
+
+Lemma prop_of_env_sound Δ : of_envs Δ ⊢ prop_of_env (env_spatial Δ).
+Proof.
+  destruct Δ as [? Γ]. rewrite /of_envs /= and_elim_r sep_elim_r.
+  destruct Γ as [|Γ ? P0]=>//=. revert P0.
+  induction Γ as [|Γ IH ? P]=>P0; [rewrite /= right_id //|].
+  rewrite /= assoc (comm _ P0 P) IH //.
 Qed.
 
 Global Instance envs_Forall2_refl (R : relation PROP) :
@@ -1062,6 +1076,13 @@ Proof.
   apply wand_elim_r', wand_mono; last done. apply wand_intro_r, wand_intro_r.
   rewrite affinely_persistently_if_elim -assoc wand_curry. auto.
 Qed.
+
+(** * Accumulate hypotheses *)
+Lemma tac_accu Δ P :
+  prop_of_env (env_spatial Δ) = P →
+  envs_entails Δ P.
+Proof. rewrite envs_entails_eq=><-. apply prop_of_env_sound. Qed.
+
 End bi_tactics.
 
 (** The following _private_ classes are used internally by [tac_modal_intro] /
