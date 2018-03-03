@@ -1392,9 +1392,9 @@ Instance copy_destruct_impl {PROP : bi} (P Q : PROP) :
 Instance copy_destruct_wand {PROP : bi} (P Q : PROP) :
   CopyDestruct Q → CopyDestruct (P -∗ Q).
 Instance copy_destruct_affinely {PROP : bi} (P : PROP) :
-  CopyDestruct P → CopyDestruct (bi_affinely P).
+  CopyDestruct P → CopyDestruct (<affine> P).
 Instance copy_destruct_persistently {PROP : bi} (P : PROP) :
-  CopyDestruct P → CopyDestruct (bi_persistently P).
+  CopyDestruct P → CopyDestruct (<pers> P).
 
 Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
   let ident :=
@@ -1967,8 +1967,8 @@ Hint Extern 1 (envs_entails _ (_ ∧ _)) => iSplit.
 Hint Extern 1 (envs_entails _ (_ ∗ _)) => iSplit.
 Hint Extern 1 (envs_entails _ (▷ _)) => iNext.
 Hint Extern 1 (envs_entails _ (■ _)) => iAlways.
-Hint Extern 1 (envs_entails _ (bi_persistently _)) => iAlways.
-Hint Extern 1 (envs_entails _ (bi_affinely _)) => iAlways.
+Hint Extern 1 (envs_entails _ (<pers> _)) => iAlways.
+Hint Extern 1 (envs_entails _ (<affine> _)) => iAlways.
 Hint Extern 1 (envs_entails _ (∃ _, _)) => iExists _.
 Hint Extern 1 (envs_entails _ (◇ _)) => iModIntro.
 Hint Extern 1 (envs_entails _ (_ ∨ _)) => iLeft.

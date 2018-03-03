@@ -96,21 +96,21 @@ Global Instance make_monPred_at_exists {A} i (Φ : A → monPred) (Ψ : A → PR
   (∀ a, MakeMonPredAt i (Φ a) (Ψ a)) → MakeMonPredAt i (∃ a, Φ a) (∃ a, Ψ a).
 Proof. rewrite /MakeMonPredAt monPred_at_exist=>H. by setoid_rewrite <- H. Qed.
 Global Instance make_monPred_at_persistently i P 𝓟 :
-  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (bi_persistently P) (bi_persistently 𝓟).
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (<pers> P) (<pers> 𝓟).
 Proof. by rewrite /MakeMonPredAt monPred_at_persistently=><-. Qed.
 Global Instance make_monPred_at_affinely i P 𝓟 :
-  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (bi_affinely P) (bi_affinely 𝓟).
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (<affine> P) (<affine> 𝓟).
 Proof. by rewrite /MakeMonPredAt monPred_at_affinely=><-. Qed.
 Global Instance make_monPred_at_absorbingly i P 𝓟 :
-  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (bi_absorbingly P) (bi_absorbingly 𝓟).
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (<absorb> P) (<absorb> 𝓟).
 Proof. by rewrite /MakeMonPredAt monPred_at_absorbingly=><-. Qed.
 Global Instance make_monPred_at_persistently_if i P 𝓟 p :
   MakeMonPredAt i P 𝓟 →
-  MakeMonPredAt i (bi_persistently_if p P) (bi_persistently_if p 𝓟).
+  MakeMonPredAt i (<pers>?p P) (<pers>?p 𝓟).
 Proof. destruct p; simpl; apply _. Qed.
 Global Instance make_monPred_at_affinely_if i P 𝓟 p :
   MakeMonPredAt i P 𝓟 →
-  MakeMonPredAt i (bi_affinely_if p P) (bi_affinely_if p 𝓟).
+  MakeMonPredAt i (<affine>?p P) (<affine>?p 𝓟).
 Proof. destruct p; simpl; apply _. Qed.
 Global Instance make_monPred_at_embed i 𝓟 : MakeMonPredAt i ⎡𝓟⎤ 𝓟.
 Proof. by rewrite /MakeMonPredAt monPred_at_embed. Qed.

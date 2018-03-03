@@ -198,7 +198,7 @@ Definition monPred_wand := unseal monPred_wand_aux.
 Definition monPred_wand_eq : @monPred_wand = _ := seal_eq _.
 
 Program Definition monPred_persistently_def P : monPred :=
-  MonPred (λ i, bi_persistently (P i)) _.
+  MonPred (λ i, <pers> (P i))%I _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_persistently_aux : seal (@monPred_persistently_def). by eexists. Qed.
 Definition monPred_persistently := unseal monPred_persistently_aux.
@@ -555,7 +555,7 @@ Lemma monPred_at_sep i P Q : (P ∗ Q) i ⊣⊢ P i ∗ Q i.
 Proof. by unseal. Qed.
 Lemma monPred_at_wand i P Q : (P -∗ Q) i ⊣⊢ ∀ j, ⌜i ⊑ j⌝ → P j -∗ Q j.
 Proof. by unseal. Qed.
-Lemma monPred_at_persistently i P : bi_persistently P i ⊣⊢ bi_persistently (P i).
+Lemma monPred_at_persistently i P : (<pers> P) i ⊣⊢ <pers> (P i).
 Proof. by unseal. Qed.
 Lemma monPred_at_in i j : monPred_at (monPred_in j) i ⊣⊢ ⌜j ⊑ i⌝.
 Proof. by unseal. Qed.
@@ -563,15 +563,13 @@ Lemma monPred_at_objectively i P : (<obj> P) i ⊣⊢ ∀ j, P j.
 Proof. by unseal. Qed.
 Lemma monPred_at_subjectively i P : (<subj> P) i ⊣⊢ ∃ j, P j.
 Proof. by unseal. Qed.
-Lemma monPred_at_persistently_if i p P :
-  bi_persistently_if p P i ⊣⊢ bi_persistently_if p (P i).
+Lemma monPred_at_persistently_if i p P : (<pers>?p P) i ⊣⊢ <pers>?p (P i).
 Proof. destruct p=>//=. apply monPred_at_persistently. Qed.
-Lemma monPred_at_affinely i P : bi_affinely P i ⊣⊢ bi_affinely (P i).
+Lemma monPred_at_affinely i P : (<affine> P) i ⊣⊢ <affine> (P i).
 Proof. by rewrite /bi_affinely monPred_at_and monPred_at_emp. Qed.
-Lemma monPred_at_affinely_if i p P :
-  bi_affinely_if p P i ⊣⊢ bi_affinely_if p (P i).
+Lemma monPred_at_affinely_if i p P : (<affine>?p P) i ⊣⊢ <affine>?p (P i).
 Proof. destruct p=>//=. apply monPred_at_affinely. Qed.
-Lemma monPred_at_absorbingly i P : bi_absorbingly P i ⊣⊢ bi_absorbingly (P i).
+Lemma monPred_at_absorbingly i P : (<absorb> P) i ⊣⊢ <absorb> (P i).
 Proof. by rewrite /bi_absorbingly monPred_at_sep monPred_at_pure. Qed.
 
 Lemma monPred_wand_force i P Q : (P -∗ Q) i -∗ (P i -∗ Q i).
@@ -700,20 +698,16 @@ Proof.
   rewrite bi.pure_impl_forall. apply bi.forall_intro=>_.
   rewrite (objective_at Q i). by rewrite (objective_at P k).
 Qed.
-Global Instance persistently_objective P `{!Objective P} :
-  Objective (bi_persistently P).
+Global Instance persistently_objective P `{!Objective P} : Objective (<pers> P).
 Proof. intros i j. unseal. by rewrite objective_at. Qed.
 
-Global Instance affinely_objective P `{!Objective P} : Objective (bi_affinely P).
+Global Instance affinely_objective P `{!Objective P} : Objective (<affine> P).
 Proof. rewrite /bi_affinely. apply _. Qed.
-Global Instance absorbingly_objective P `{!Objective P} :
-  Objective (bi_absorbingly P).
+Global Instance absorbingly_objective P `{!Objective P} : Objective (<absorb> P).
 Proof. rewrite /bi_absorbingly. apply _. Qed.
-Global Instance persistently_if_objective P p `{!Objective P} :
-  Objective (bi_persistently_if p P).
+Global Instance persistently_if_objective P p `{!Objective P} : Objective (<pers>?p P).
 Proof. rewrite /bi_persistently_if. destruct p; apply _. Qed.
-Global Instance affinely_if_objective P p `{!Objective P} :
-  Objective (bi_affinely_if p P).
+Global Instance affinely_if_objective P p `{!Objective P} : Objective (<affine>?p P).
 Proof. rewrite /bi_affinely_if. destruct p; apply _. Qed.
 
 (** monPred_in *)

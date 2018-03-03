@@ -13,7 +13,7 @@ Arguments bi_wand_iff {_} _%I _%I : simpl never.
 Instance: Params (@bi_wand_iff) 1.
 Infix "∗-∗" := bi_wand_iff (at level 95, no associativity) : bi_scope.
 
-Class Persistent {PROP : bi} (P : PROP) := persistent : P ⊢ bi_persistently P.
+Class Persistent {PROP : bi} (P : PROP) := persistent : P ⊢ <pers> P.
 Arguments Persistent {_} _%I : simpl never.
 Arguments persistent {_} _%I {_}.
 Hint Mode Persistent + ! : typeclass_instances.
@@ -23,7 +23,10 @@ Definition bi_affinely {PROP : bi} (P : PROP) : PROP := (emp ∧ P)%I.
 Arguments bi_affinely {_} _%I : simpl never.
 Instance: Params (@bi_affinely) 1.
 Typeclasses Opaque bi_affinely.
-Notation "□ P" := (bi_affinely (bi_persistently P))%I
+Notation "'<affine>' P" := (bi_affinely P)
+  (at level 20, right associativity) : bi_scope.
+
+Notation "□ P" := (<affine> <pers> P)%I
   (at level 20, right associativity) : bi_scope.
 
 Class Affine {PROP : bi} (Q : PROP) := affine : Q ⊢ emp.
@@ -36,31 +39,40 @@ Hint Mode BiAffine ! : typeclass_instances.
 Existing Instance absorbing_bi | 0.
 
 Class BiPositive (PROP : bi) :=
-  bi_positive (P Q : PROP) : bi_affinely (P ∗ Q) ⊢ bi_affinely P ∗ Q.
+  bi_positive (P Q : PROP) : <affine> (P ∗ Q) ⊢ <affine> P ∗ Q.
 Hint Mode BiPositive ! : typeclass_instances.
 
 Definition bi_absorbingly {PROP : bi} (P : PROP) : PROP := (True ∗ P)%I.
 Arguments bi_absorbingly {_} _%I : simpl never.
 Instance: Params (@bi_absorbingly) 1.
 Typeclasses Opaque bi_absorbingly.
+Notation "'<absorb>' P" := (bi_absorbingly P)
+  (at level 20, right associativity) : bi_scope.
 
-Class Absorbing {PROP : bi} (P : PROP) := absorbing : bi_absorbingly P ⊢ P.
+Class Absorbing {PROP : bi} (P : PROP) := absorbing : <absorb> P ⊢ P.
 Arguments Absorbing {_} _%I : simpl never.
 Arguments absorbing {_} _%I.
 Hint Mode Absorbing + ! : typeclass_instances.
 
 Definition bi_persistently_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
-  (if p then bi_persistently P else P)%I.
+  (if p then <pers> P else P)%I.
 Arguments bi_persistently_if {_} !_ _%I /.
 Instance: Params (@bi_persistently_if) 2.
 Typeclasses Opaque bi_persistently_if.
+Notation "'<pers>?' p P" := (bi_persistently_if p P)
+  (at level 20, p at level 9, P at level 20,
+   right associativity, format "'<pers>?' p  P") : bi_scope.
 
 Definition bi_affinely_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
-  (if p then bi_affinely P else P)%I.
+  (if p then <affine> P else P)%I.
 Arguments bi_affinely_if {_} !_ _%I /.
 Instance: Params (@bi_affinely_if) 2.
 Typeclasses Opaque bi_affinely_if.
-Notation "□? p P" := (bi_affinely_if p (bi_persistently_if p P))%I
+Notation "'<affine>?' p P" := (bi_affinely_if p P)
+  (at level 20, p at level 9, P at level 20,
+   right associativity, format "'<affine>?' p  P") : bi_scope.
+
+Notation "□? p P" := (<affine>?p <pers>?p P)%I
   (at level 20, p at level 9, P at level 20,
    right associativity, format "□? p  P") : bi_scope.
 

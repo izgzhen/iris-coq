@@ -6,7 +6,7 @@ Import bi.
 (** Least and greatest fixpoint of a monotone function, defined entirely inside
     the logic.  *)
 Class BiMonoPred {PROP : bi} {A : ofeT} (F : (A → PROP) → (A → PROP)) := {
-  bi_mono_pred Φ Ψ : ((bi_persistently (∀ x, Φ x -∗ Ψ x)) → ∀ x, F Φ x -∗ F Ψ x)%I;
+  bi_mono_pred Φ Ψ : (<pers> (∀ x, Φ x -∗ Ψ x) → ∀ x, F Φ x -∗ F Ψ x)%I;
   bi_mono_pred_ne Φ : NonExpansive Φ → NonExpansive (F Φ)
 }.
 Arguments bi_mono_pred {_ _ _ _} _ _.
@@ -14,11 +14,11 @@ Local Existing Instance bi_mono_pred_ne.
 
 Definition bi_least_fixpoint {PROP : bi} {A : ofeT}
     (F : (A → PROP) → (A → PROP)) (x : A) : PROP :=
-  (∀ Φ : A -n> PROP, bi_persistently (∀ x, F Φ x -∗ Φ x) → Φ x)%I.
+  (∀ Φ : A -n> PROP, <pers> (∀ x, F Φ x -∗ Φ x) → Φ x)%I.
 
 Definition bi_greatest_fixpoint {PROP : bi} {A : ofeT}
     (F : (A → PROP) → (A → PROP)) (x : A) : PROP :=
-  (∃ Φ : A -n> PROP, bi_persistently (∀ x, Φ x -∗ F Φ x) ∧ Φ x)%I.
+  (∃ Φ : A -n> PROP, <pers> (∀ x, Φ x -∗ F Φ x) ∧ Φ x)%I.
 
 Section least.
   Context {PROP : bi} {A : ofeT} (F : (A → PROP) → (A → PROP)) `{!BiMonoPred F}.
