@@ -87,11 +87,11 @@ Arguments bi_fupd_fupd : simpl never.
 
 Class BiBUpdFUpd (PROP : sbi) `{BiBUpd PROP, BiFUpd PROP} :=
   bupd_fupd E (P : PROP) : (|==> P) ={E}=∗ P.
-Hint Mode BiBUpdFUpd + ! ! : typeclass_instances.
+Hint Mode BiBUpdFUpd ! - - : typeclass_instances.
 
 Class BiBUpdPlainly (PROP : sbi) `{!BiBUpd PROP, !BiPlainly PROP} :=
   bupd_plainly (P : PROP) : (|==> ■ P) -∗ P.
-Hint Mode BiBUpdPlainly + ! ! : typeclass_instances.
+Hint Mode BiBUpdPlainly ! - - : typeclass_instances.
 
 Class BiFUpdPlainly (PROP : sbi) `{!BiFUpd PROP, !BiPlainly PROP} := {
   fupd_plain' E1 E2 E2' (P Q : PROP) `{!Plain P} :
@@ -100,7 +100,7 @@ Class BiFUpdPlainly (PROP : sbi) `{!BiFUpd PROP, !BiPlainly PROP} := {
   later_fupd_plain E (P : PROP) `{!Plain P} :
     (▷ |={E}=> P) ={E}=∗ ▷ ◇ P;
 }.
-Hint Mode BiBUpdFUpd + ! ! : typeclass_instances.
+Hint Mode BiBUpdFUpd ! - - : typeclass_instances.
 
 Section bupd_laws.
   Context `{BiBUpd PROP}.

@@ -48,7 +48,7 @@ Class BiPlainlyExist `{!BiPlainly PROP} :=
 Arguments BiPlainlyExist : clear implicits.
 Arguments BiPlainlyExist _ {_}.
 Arguments plainly_exist_1 _ {_ _} _.
-Hint Mode BiPlainlyExist + ! : typeclass_instances.
+Hint Mode BiPlainlyExist ! - : typeclass_instances.
 
 Section plainly_laws.
   Context `{BiPlainly PROP}.
