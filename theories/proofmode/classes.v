@@ -215,7 +215,8 @@ Hint Mode IntoForall + - ! - : typeclass_instances.
 
 Class FromForall {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :=
   from_forall : (∀ x, Φ x) ⊢ P.
-Arguments from_forall {_ _} _ _ {_}.
+Arguments FromForall {_ _} _%I _%I : simpl never.
+Arguments from_forall {_ _} _%I _%I {_}.
 Hint Mode FromForall + - ! - : typeclass_instances.
 
 Class IsExcept0 {PROP : sbi} (Q : PROP) := is_except_0 : ◇ Q ⊢ Q.

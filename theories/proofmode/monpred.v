@@ -1,4 +1,5 @@
 From iris.bi Require Export monpred.
+From iris.bi Require Import plainly.
 From iris.proofmode Require Import tactics class_instances.
 
 Class MakeMonPredAt {I : biIndex} {PROP : bi} (i : I)
@@ -33,6 +34,7 @@ End modalities.
 
 Section bi.
 Context {I : biIndex} {PROP : bi}.
+Local Notation monPredI := (monPredI I PROP).
 Local Notation monPred := (monPred I PROP).
 Local Notation MakeMonPredAt := (@MakeMonPredAt I PROP).
 Implicit Types P Q R : monPred.
@@ -116,6 +118,9 @@ Global Instance make_monPred_at_in i j : MakeMonPredAt j (monPred_in i) ⌜i ⊑
 Proof. by rewrite /MakeMonPredAt monPred_at_in. Qed.
 Global Instance make_monPred_at_default i P : MakeMonPredAt i P (P i) | 100.
 Proof. by rewrite /MakeMonPredAt. Qed.
+Global Instance make_monPred_at_bupd `{BiBUpd PROP} i P 𝓟 :
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|==> P)%I (|==> 𝓟)%I.
+Proof. by rewrite /MakeMonPredAt monPred_at_bupd=> <-. Qed.
 
 Global Instance from_assumption_make_monPred_at_l p i j P 𝓟 :
   MakeMonPredAt i P 𝓟 → IsBiIndexRel j i → FromAssumption p (P j) 𝓟.
@@ -287,21 +292,6 @@ Proof.
   by rewrite monPred_at_exist.
 Qed.
 
-Global Instance foram_forall_monPred_at_plainly i P Φ :
-  (∀ i, MakeMonPredAt i P (Φ i)) →
-  FromForall (bi_plainly P i) (λ j, bi_plainly (Φ j)).
-Proof.
-  rewrite /FromForall /MakeMonPredAt=>H. rewrite monPred_at_plainly.
-  by setoid_rewrite H.
-Qed.
-Global Instance into_forall_monPred_at_plainly i P Φ :
-  (∀ i, MakeMonPredAt i P (Φ i)) →
-  IntoForall (bi_plainly P i) (λ j, bi_plainly (Φ j)).
-Proof.
-  rewrite /IntoForall /MakeMonPredAt=>H. rewrite monPred_at_plainly.
-  by setoid_rewrite H.
-Qed.
-
 Global Instance from_forall_monPred_at_absolutely P (Φ : I → PROP) i :
   (∀ i, MakeMonPredAt i P (Φ i)) → FromForall ((∀ᵢ P) i)%I Φ.
 Proof.
@@ -316,12 +306,12 @@ Qed.
 Global Instance from_exist_monPred_at_ex P (Φ : I → PROP) i :
   (∀ i, MakeMonPredAt i P (Φ i)) → FromExist ((∃ᵢ P) i) Φ.
 Proof.
-  rewrite /FromExist /MakeMonPredAt monPred_at_ex=>H. by setoid_rewrite <- H.
+  rewrite /FromExist /MakeMonPredAt monPred_at_relatively=>H. by setoid_rewrite <- H.
 Qed.
 Global Instance into_exist_monPred_at_ex P (Φ : I → PROP) i :
   (∀ i, MakeMonPredAt i P (Φ i)) → IntoExist ((∃ᵢ P) i) Φ.
 Proof.
-  rewrite /IntoExist /MakeMonPredAt monPred_at_ex=>H. by setoid_rewrite <- H.
+  rewrite /IntoExist /MakeMonPredAt monPred_at_relatively=>H. by setoid_rewrite <- H.
 Qed.
 
 Global Instance from_forall_monPred_at {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
@@ -358,7 +348,36 @@ Qed.
 
 Global Instance into_embed_absolute P :
   Absolute P → IntoEmbed P (∀ i, P i).
-Proof. rewrite /IntoEmbed=> ?. by rewrite {1}(absolute_absolutely P). Qed.
+Proof.
+  rewrite /IntoEmbed=> ?.
+  by rewrite {1}(absolute_absolutely P) monPred_absolutely_unfold.
+Qed.
+
+Global Instance elim_modal_embed_bupd_goal `{BiBUpd PROP} φ P P' 𝓠 𝓠' :
+  ElimModal φ P P' (|==> ⎡𝓠⎤)%I (|==> ⎡𝓠'⎤)%I →
+  ElimModal φ P P' ⎡|==> 𝓠⎤ ⎡|==> 𝓠'⎤.
+Proof. by rewrite /ElimModal !monPred_bupd_embed. Qed.
+Global Instance elim_modal_embed_bupd_hyp `{BiBUpd PROP} φ 𝓟 P' Q Q' :
+  ElimModal φ (|==> ⎡𝓟⎤)%I P' Q Q' →
+  ElimModal φ ⎡|==> 𝓟⎤ P' Q Q'.
+Proof. by rewrite /ElimModal monPred_bupd_embed. Qed.
+
+Global Instance add_modal_embed_bupd_goal `{BiBUpd PROP} P P' 𝓠 :
+  AddModal P P' (|==> ⎡𝓠⎤)%I → AddModal P P' ⎡|==> 𝓠⎤.
+Proof. by rewrite /AddModal !monPred_bupd_embed. Qed.
+
+Global Instance elim_modal_at_bupd_goal `{BiBUpd PROP} φ 𝓟 𝓟' Q Q' i :
+  ElimModal φ 𝓟 𝓟' (|==> Q i) (|==> Q' i) →
+  ElimModal φ 𝓟 𝓟' ((|==> Q) i) ((|==> Q') i).
+Proof. by rewrite /ElimModal !monPred_at_bupd. Qed.
+Global Instance elim_modal_at_bupd_hyp `{BiBUpd PROP} φ P 𝓟' 𝓠 𝓠' i:
+  ElimModal φ (|==> P i) 𝓟' 𝓠 𝓠' →
+  ElimModal φ ((|==> P) i) 𝓟' 𝓠 𝓠'.
+Proof. by rewrite /ElimModal monPred_at_bupd. Qed.
+
+Global Instance add_modal_at_bupd_goal `{BiBUpd PROP} φ 𝓟 𝓟' Q i :
+  AddModal 𝓟 𝓟' (|==> Q i)%I → AddModal 𝓟 𝓟' ((|==> Q) i).
+Proof. by rewrite /AddModal !monPred_at_bupd. Qed.
 End bi.
 
 (* When P and/or Q are evars when doing typeclass search on [IntoWand
@@ -391,6 +410,21 @@ Implicit Types 𝓟 𝓠 𝓡 : PROP.
 Implicit Types φ : Prop.
 Implicit Types i j : I.
 
+Global Instance from_forall_monPred_at_plainly `{BiPlainly PROP} i P Φ :
+  (∀ i, MakeMonPredAt i P (Φ i)) →
+  FromForall ((■ P) i) (λ j, ■ (Φ j))%I.
+Proof.
+  rewrite /FromForall /MakeMonPredAt=>HPΦ. rewrite monPred_at_plainly.
+  by setoid_rewrite HPΦ.
+Qed.
+Global Instance into_forall_monPred_at_plainly `{BiPlainly PROP} i P Φ :
+  (∀ i, MakeMonPredAt i P (Φ i)) →
+  IntoForall ((■ P) i) (λ j, ■ (Φ j))%I.
+Proof.
+  rewrite /IntoForall /MakeMonPredAt=>HPΦ. rewrite monPred_at_plainly.
+  by setoid_rewrite HPΦ.
+Qed.
+
 Global Instance is_except_0_monPred_at i P :
   IsExcept0 P → IsExcept0 (P i).
 Proof. rewrite /IsExcept0=>- [/(_ i)]. by rewrite monPred_at_except_0. Qed.
@@ -407,10 +441,7 @@ Proof. by rewrite /MakeMonPredAt monPred_at_later=><-. Qed.
 Global Instance make_monPred_at_laterN i n P 𝓠 :
   MakeMonPredAt i P 𝓠 → MakeMonPredAt i (▷^n P)%I (▷^n 𝓠)%I.
 Proof. rewrite /MakeMonPredAt=> <-. elim n=>//= ? <-. by rewrite monPred_at_later. Qed.
-Global Instance make_monPred_at_bupd `{BUpdFacts PROP} i P 𝓟 :
-  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|==> P)%I (|==> 𝓟)%I.
-Proof. by rewrite /MakeMonPredAt monPred_at_bupd=> <-. Qed.
-Global Instance make_monPred_at_fupd `{FUpdFacts PROP} i E1 E2 P 𝓟 :
+Global Instance make_monPred_at_fupd `{BiFUpd PROP} i E1 E2 P 𝓟 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i (|={E1,E2}=> P)%I (|={E1,E2}=> 𝓟)%I.
 Proof. by rewrite /MakeMonPredAt monPred_at_fupd=> <-. Qed.
 
@@ -440,55 +471,29 @@ Proof.
   by rewrite monPred_at_later.
 Qed.
 
-Global Instance elim_modal_embed_bupd_goal `{BUpdFacts PROP} φ P P' 𝓠 𝓠' :
-  ElimModal φ P P' (|==> ⎡𝓠⎤)%I (|==> ⎡𝓠'⎤)%I →
-  ElimModal φ P P' ⎡|==> 𝓠⎤ ⎡|==> 𝓠'⎤.
-Proof. by rewrite /ElimModal !monPred_bupd_embed. Qed.
-Global Instance elim_modal_embed_bupd_hyp `{BUpdFacts PROP} φ 𝓟 P' Q Q' :
-  ElimModal φ (|==> ⎡𝓟⎤)%I P' Q Q' →
-  ElimModal φ ⎡|==> 𝓟⎤ P' Q Q'.
-Proof. by rewrite /ElimModal monPred_bupd_embed. Qed.
-
-Global Instance add_modal_embed_bupd_goal `{BUpdFacts PROP} P P' 𝓠 :
-  AddModal P P' (|==> ⎡𝓠⎤)%I → AddModal P P' ⎡|==> 𝓠⎤.
-Proof. by rewrite /AddModal !monPred_bupd_embed. Qed.
-
-Global Instance elim_modal_at_bupd_goal `{BUpdFacts PROP} φ 𝓟 𝓟' Q Q' i :
-  ElimModal φ 𝓟 𝓟' (|==> Q i) (|==> Q' i) →
-  ElimModal φ 𝓟 𝓟' ((|==> Q) i) ((|==> Q') i).
-Proof. by rewrite /ElimModal !monPred_at_bupd. Qed.
-Global Instance elim_modal_at_bupd_hyp `{BUpdFacts PROP} φ P 𝓟' 𝓠 𝓠' i:
-  ElimModal φ (|==> P i) 𝓟' 𝓠 𝓠' →
-  ElimModal φ ((|==> P) i) 𝓟' 𝓠 𝓠'.
-Proof. by rewrite /ElimModal monPred_at_bupd. Qed.
-
-Global Instance add_modal_at_bupd_goal `{BUpdFacts PROP} φ 𝓟 𝓟' Q i :
-  AddModal 𝓟 𝓟' (|==> Q i)%I → AddModal 𝓟 𝓟' ((|==> Q) i).
-Proof. by rewrite /AddModal !monPred_at_bupd. Qed.
-
-Global Instance elim_modal_embed_fupd_goal `{FUpdFacts PROP} φ E1 E2 E3 P P' 𝓠 𝓠' :
+Global Instance elim_modal_embed_fupd_goal `{BiFUpd PROP} φ E1 E2 E3 P P' 𝓠 𝓠' :
   ElimModal φ P P' (|={E1,E3}=> ⎡𝓠⎤)%I (|={E2,E3}=> ⎡𝓠'⎤)%I →
   ElimModal φ P P' ⎡|={E1,E3}=> 𝓠⎤ ⎡|={E2,E3}=> 𝓠'⎤.
 Proof. by rewrite /ElimModal !monPred_fupd_embed. Qed.
-Global Instance elim_modal_embed_fupd_hyp `{FUpdFacts PROP} φ E1 E2 𝓟 P' Q Q' :
+Global Instance elim_modal_embed_fupd_hyp `{BiFUpd PROP} φ E1 E2 𝓟 P' Q Q' :
   ElimModal φ (|={E1,E2}=> ⎡𝓟⎤)%I P' Q Q' →
   ElimModal φ ⎡|={E1,E2}=> 𝓟⎤ P' Q Q'.
 Proof. by rewrite /ElimModal monPred_fupd_embed. Qed.
 
-Global Instance add_modal_embed_fupd_goal `{FUpdFacts PROP} E1 E2 P P' 𝓠 :
+Global Instance add_modal_embed_fupd_goal `{BiFUpd PROP} E1 E2 P P' 𝓠 :
   AddModal P P' (|={E1,E2}=> ⎡𝓠⎤)%I → AddModal P P' ⎡|={E1,E2}=> 𝓠⎤.
 Proof. by rewrite /AddModal !monPred_fupd_embed. Qed.
 
-Global Instance elim_modal_at_fupd_goal `{FUpdFacts PROP} φ E1 E2 E3 𝓟 𝓟' Q Q' i :
+Global Instance elim_modal_at_fupd_goal `{BiFUpd PROP} φ E1 E2 E3 𝓟 𝓟' Q Q' i :
   ElimModal φ 𝓟 𝓟' (|={E1,E3}=> Q i) (|={E2,E3}=> Q' i) →
   ElimModal φ 𝓟 𝓟' ((|={E1,E3}=> Q) i) ((|={E2,E3}=> Q') i).
 Proof. by rewrite /ElimModal !monPred_at_fupd. Qed.
-Global Instance elim_modal_at_fupd_hyp `{FUpdFacts PROP} φ E1 E2 P 𝓟' 𝓠 𝓠' i :
+Global Instance elim_modal_at_fupd_hyp `{BiFUpd PROP} φ E1 E2 P 𝓟' 𝓠 𝓠' i :
   ElimModal φ (|={E1,E2}=> P i) 𝓟' 𝓠 𝓠' →
   ElimModal φ ((|={E1,E2}=> P) i) 𝓟' 𝓠 𝓠'.
 Proof. by rewrite /ElimModal monPred_at_fupd. Qed.
 
-Global Instance add_modal_at_fupd_goal `{FUpdFacts PROP} E1 E2 𝓟 𝓟' Q i :
+Global Instance add_modal_at_fupd_goal `{BiFUpd PROP} E1 E2 𝓟 𝓟' Q i :
   AddModal 𝓟 𝓟' (|={E1,E2}=> Q i) → AddModal 𝓟 𝓟' ((|={E1,E2}=> Q) i).
 Proof. by rewrite /AddModal !monPred_at_fupd. Qed.
 

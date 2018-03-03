@@ -96,21 +96,15 @@ Section tests.
      ignore hint modes. So we assume the instances in a way that
      cannot be used by type class resolution, and then declare the
      instance. as such. *)
-  Context (BU0 : BUpd PROP * unit).
-  Instance BU : BUpd PROP := fst BU0.
-  Context (FU0 : FUpd PROP * unit).
-  Instance FU : FUpd PROP := fst FU0.
-  Context (FUF0 : FUpdFacts PROP * unit).
-  Instance FUF : FUpdFacts PROP := fst FUF0.
+  Context (FU0 : BiFUpd PROP * unit).
+  Instance FU : BiFUpd PROP := fst FU0.
 
   Lemma test_apply_fupd_intro_mask E1 E2 P :
     E2 ⊆ E1 → P -∗ |={E1,E2}=> |={E2,E1}=> P.
-  Proof. iIntros. by iApply fupd_intro_mask. Qed.
+  Proof. iIntros. by iApply @fupd_intro_mask. Qed.
   Lemma test_apply_fupd_intro_mask_2 E1 E2 P :
     E2 ⊆ E1 → P -∗ |={E1,E2}=> |={E2,E1}=> P.
-  Proof.
-    iIntros. iFrame. by iApply fupd_intro_mask'.
-  Qed.
+  Proof. iIntros. iFrame. by iApply @fupd_intro_mask'. Qed.
 
   Lemma test_iFrame_embed_persistent (P : PROP) (Q: monPred) :
     Q ∗ □ ⎡P⎤ ⊢ Q ∗ ⎡P ∗ P⎤.
@@ -121,5 +115,4 @@ Section tests.
   Lemma test_iNext_Bi P :
     @bi_entails monPredI (▷ P) (▷ P).
   Proof. iIntros "H". by iNext. Qed.
-
 End tests.

@@ -39,24 +39,6 @@ Global Instance from_assumption_absorbingly_r p P Q :
   FromAssumption p P Q → FromAssumption p P (bi_absorbingly Q).
 Proof. rewrite /FromAssumption /= =><-. apply absorbingly_intro. Qed.
 
-Global Instance from_assumption_affinely_plainly_l p P Q :
-  FromAssumption true P Q → FromAssumption p (■ P) Q.
-Proof.
-  rewrite /FromAssumption /= =><-.
-  by rewrite affinely_persistently_if_elim plainly_elim_persistently.
-Qed.
-Global Instance from_assumption_plainly_l_true P Q :
-  FromAssumption true P Q → FromAssumption true (bi_plainly P) Q.
-Proof.
-  rewrite /FromAssumption /= =><-.
-  by rewrite persistently_elim plainly_elim_persistently.
-Qed.
-Global Instance from_assumption_plainly_l_false `{BiAffine PROP} P Q :
-  FromAssumption true P Q → FromAssumption false (bi_plainly P) Q.
-Proof.
-  rewrite /FromAssumption /= =><-.
-  by rewrite affine_affinely plainly_elim_persistently.
-Qed.
 Global Instance from_assumption_affinely_persistently_l p P Q :
   FromAssumption true P Q → FromAssumption p (□ P) Q.
 Proof. rewrite /FromAssumption /= =><-. by rewrite affinely_persistently_if_elim. Qed.
@@ -112,14 +94,12 @@ Global Instance into_pure_affinely P φ :
 Proof. rewrite /IntoPure=> ->. apply affinely_elim. Qed.
 Global Instance into_pure_absorbingly P φ : IntoPure P φ → IntoPure (bi_absorbingly P) φ.
 Proof. rewrite /IntoPure=> ->. by rewrite absorbingly_pure. Qed.
-Global Instance into_pure_plainly P φ : IntoPure P φ → IntoPure (bi_plainly P) φ.
-Proof. rewrite /IntoPure=> ->. apply: plainly_elim. Qed.
 Global Instance into_pure_persistently P φ :
   IntoPure P φ → IntoPure (bi_persistently P) φ.
 Proof. rewrite /IntoPure=> ->. apply: persistently_elim. Qed.
-Global Instance into_pure_embed `{BiEmbedding PROP PROP'} P φ :
+Global Instance into_pure_embed `{BiEmbed PROP PROP'} P φ :
   IntoPure P φ → IntoPure ⎡P⎤ φ.
-Proof. rewrite /IntoPure=> ->. by rewrite bi_embed_pure. Qed.
+Proof. rewrite /IntoPure=> ->. by rewrite embed_pure. Qed.
 
 (* FromPure *)
 Global Instance from_pure_pure a φ : @FromPure PROP a ⌜φ⌝ φ.
@@ -173,9 +153,6 @@ Proof.
   by rewrite bi.affinely_if_elim pure_wand_forall pure_impl pure_impl_forall.
 Qed.
 
-Global Instance from_pure_plainly P φ :
-  FromPure false P φ → FromPure false (bi_plainly P) φ.
-Proof. rewrite /FromPure=> <-. by rewrite plainly_pure. Qed.
 Global Instance from_pure_persistently P a φ :
   FromPure true P φ → FromPure a (bi_persistently P) φ.
 Proof.
@@ -192,9 +169,9 @@ Proof. rewrite /FromPure /= affine_affinely //. Qed.
 Global Instance from_pure_absorbingly P φ :
   FromPure true P φ → FromPure false (bi_absorbingly P) φ.
 Proof. rewrite /FromPure=> <- /=. apply persistent_absorbingly_affinely, _. Qed.
-Global Instance from_pure_embed `{BiEmbedding PROP PROP'} a P φ :
+Global Instance from_pure_embed `{BiEmbed PROP PROP'} a P φ :
   FromPure a P φ → FromPure a ⎡P⎤ φ.
-Proof. rewrite /FromPure=> <-. by rewrite bi_embed_affinely_if bi_embed_pure. Qed.
+Proof. rewrite /FromPure=> <-. by rewrite embed_affinely_if embed_pure. Qed.
 
 (* IntoPersistent *)
 Global Instance into_persistent_persistently p P Q :
@@ -206,10 +183,10 @@ Qed.
 Global Instance into_persistent_affinely p P Q :
   IntoPersistent p P Q → IntoPersistent p (bi_affinely P) Q | 0.
 Proof. rewrite /IntoPersistent /= => <-. by rewrite affinely_elim. Qed.
-Global Instance into_persistent_embed `{BiEmbedding PROP PROP'} p P Q :
+Global Instance into_persistent_embed `{BiEmbed PROP PROP'} p P Q :
   IntoPersistent p P Q → IntoPersistent p ⎡P⎤ ⎡Q⎤ | 0.
 Proof.
-  rewrite /IntoPersistent -bi_embed_persistently -bi_embed_persistently_if=> -> //.
+  rewrite /IntoPersistent -embed_persistently -embed_persistently_if=> -> //.
 Qed.
 Global Instance into_persistent_here P : IntoPersistent true P P | 1.
 Proof. by rewrite /IntoPersistent. Qed.
@@ -232,54 +209,34 @@ Global Instance from_modal_affinely_persistently_affine_bi P :
   BiAffine PROP → FromModal modality_persistently (□ P) (□ P) P | 0.
 Proof. intros. by rewrite /FromModal /= affine_affinely. Qed.
 
-Global Instance from_modal_plainly P :
-  FromModal modality_plainly (bi_plainly P) (bi_plainly P) P | 2.
-Proof. by rewrite /FromModal. Qed.
-Global Instance from_modal_affinely_plainly P :
-  FromModal modality_affinely_plainly (■ P) (■ P) P | 1.
-Proof. by rewrite /FromModal. Qed.
-Global Instance from_modal_affinely_plainly_affine_bi P :
-  BiAffine PROP → FromModal modality_plainly (■ P) (■ P) P | 0.
-Proof. intros. by rewrite /FromModal /= affine_affinely. Qed.
-
 Global Instance from_modal_absorbingly P :
   FromModal modality_id (bi_absorbingly P) (bi_absorbingly P) P.
 Proof. by rewrite /FromModal /= -absorbingly_intro. Qed.
 
 (* When having a modality nested in an embedding, e.g. [ ⎡|==> P⎤ ], we prefer
 the embedding over the modality. *)
-Global Instance from_modal_embed `{BiEmbedding PROP PROP'} (P : PROP) :
-  FromModal (@modality_embed PROP PROP' _ _) ⎡P⎤ ⎡P⎤ P.
+Global Instance from_modal_embed `{BiEmbed PROP PROP'} (P : PROP) :
+  FromModal (@modality_embed PROP PROP' _) ⎡P⎤ ⎡P⎤ P.
 Proof. by rewrite /FromModal. Qed.
 
-Global Instance from_modal_id_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
+Global Instance from_modal_id_embed `{BiEmbed PROP PROP'} `(sel : A) P Q :
   FromModal modality_id sel P Q →
   FromModal modality_id sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof. by rewrite /FromModal /= =><-. Qed.
 
-Global Instance from_modal_affinely_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
+Global Instance from_modal_affinely_embed `{BiEmbed PROP PROP'} `(sel : A) P Q :
   FromModal modality_affinely sel P Q →
   FromModal modality_affinely sel ⎡P⎤ ⎡Q⎤ | 100.
-Proof. rewrite /FromModal /= =><-. by rewrite bi_embed_affinely. Qed.
-Global Instance from_modal_persistently_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
+Proof. rewrite /FromModal /= =><-. by rewrite embed_affinely. Qed.
+Global Instance from_modal_persistently_embed `{BiEmbed PROP PROP'} `(sel : A) P Q :
   FromModal modality_persistently sel P Q →
   FromModal modality_persistently sel ⎡P⎤ ⎡Q⎤ | 100.
-Proof. rewrite /FromModal /= =><-. by rewrite bi_embed_persistently. Qed.
-Global Instance from_modal_affinely_persistently_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
+Proof. rewrite /FromModal /= =><-. by rewrite embed_persistently. Qed.
+Global Instance from_modal_affinely_persistently_embed `{BiEmbed PROP PROP'} `(sel : A) P Q :
   FromModal modality_affinely_persistently sel P Q →
   FromModal modality_affinely_persistently sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof.
-  rewrite /FromModal /= =><-. by rewrite bi_embed_affinely bi_embed_persistently.
-Qed.
-Global Instance from_modal_plainly_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
-  FromModal modality_plainly sel P Q →
-  FromModal modality_plainly sel ⎡P⎤ ⎡Q⎤ | 100.
-Proof. rewrite /FromModal /= =><-. by rewrite bi_embed_plainly. Qed.
-Global Instance from_modal_affinely_plainly_embed `{BiEmbedding PROP PROP'} `(sel : A) P Q :
-  FromModal modality_affinely_plainly sel P Q →
-  FromModal modality_affinely_plainly sel ⎡P⎤ ⎡Q⎤ | 100.
-Proof.
-  rewrite /FromModal /= =><-. by rewrite bi_embed_affinely bi_embed_plainly.
+  rewrite /FromModal /= =><-. by rewrite embed_affinely embed_persistently.
 Qed.
 
 (* IntoWand *)
@@ -344,16 +301,6 @@ Global Instance into_wand_forall {A} p q (Φ : A → PROP) P Q x :
   IntoWand p q (Φ x) P Q → IntoWand p q (∀ x, Φ x) P Q.
 Proof. rewrite /IntoWand=> <-. by rewrite (forall_elim x). Qed.
 
-Global Instance into_wand_affinely_plainly p q R P Q :
-  IntoWand p q R P Q → IntoWand p q (■ R) P Q.
-Proof. by rewrite /IntoWand affinely_plainly_elim. Qed.
-Global Instance into_wand_plainly_true q R P Q :
-  IntoWand true q R P Q → IntoWand true q (bi_plainly R) P Q.
-Proof. by rewrite /IntoWand /= persistently_plainly plainly_elim_persistently. Qed.
-Global Instance into_wand_plainly_false `{!BiAffine PROP} q R P Q :
-  IntoWand false q R P Q → IntoWand false q (bi_plainly R) P Q.
-Proof. by rewrite /IntoWand plainly_elim. Qed.
-
 Global Instance into_wand_affinely_persistently p q R P Q :
   IntoWand p q R P Q → IntoWand p q (□ R) P Q.
 Proof. by rewrite /IntoWand affinely_persistently_elim. Qed.
@@ -363,26 +310,26 @@ Proof. by rewrite /IntoWand /= persistently_idemp. Qed.
 Global Instance into_wand_persistently_false `{!BiAffine PROP} q R P Q :
   IntoWand false q R P Q → IntoWand false q (bi_persistently R) P Q.
 Proof. by rewrite /IntoWand persistently_elim. Qed.
-Global Instance into_wand_embed `{BiEmbedding PROP PROP'} p q R P Q :
+Global Instance into_wand_embed `{BiEmbed PROP PROP'} p q R P Q :
   IntoWand p q R P Q → IntoWand p q ⎡R⎤ ⎡P⎤ ⎡Q⎤.
 Proof.
-  rewrite /IntoWand -!bi_embed_persistently_if -!bi_embed_affinely_if
-          -bi_embed_wand => -> //.
+  rewrite /IntoWand -!embed_persistently_if -!embed_affinely_if
+          -embed_wand => -> //.
 Qed.
 
 (* FromWand *)
 Global Instance from_wand_wand P1 P2 : FromWand (P1 -∗ P2) P1 P2.
 Proof. by rewrite /FromWand. Qed.
-Global Instance from_wand_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
+Global Instance from_wand_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   FromWand P Q1 Q2 → FromWand ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
-Proof. by rewrite /FromWand -bi_embed_wand => <-. Qed.
+Proof. by rewrite /FromWand -embed_wand => <-. Qed.
 
 (* FromImpl *)
 Global Instance from_impl_impl P1 P2 : FromImpl (P1 → P2) P1 P2.
 Proof. by rewrite /FromImpl. Qed.
-Global Instance from_impl_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
+Global Instance from_impl_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   FromImpl P Q1 Q2 → FromImpl ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
-Proof. by rewrite /FromImpl -bi_embed_impl => <-. Qed.
+Proof. by rewrite /FromImpl -embed_impl => <-. Qed.
 
 (* FromAnd *)
 Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2 | 100.
@@ -406,15 +353,6 @@ Qed.
 Global Instance from_and_pure φ ψ : @FromAnd PROP ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /FromAnd pure_and. Qed.
 
-Global Instance from_and_plainly P Q1 Q2 :
-  FromAnd P Q1 Q2 →
-  FromAnd (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
-Proof. rewrite /FromAnd=> <-. by rewrite plainly_and. Qed.
-Global Instance from_and_plainly_sep P Q1 Q2 :
-  FromSep P Q1 Q2 →
-  FromAnd (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2) | 11.
-Proof. rewrite /FromAnd=> <-. by rewrite -plainly_and plainly_and_sep. Qed.
-
 Global Instance from_and_persistently P Q1 Q2 :
   FromAnd P Q1 Q2 →
   FromAnd (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
@@ -424,9 +362,9 @@ Global Instance from_and_persistently_sep P Q1 Q2 :
   FromAnd (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2) | 11.
 Proof. rewrite /FromAnd=> <-. by rewrite -persistently_and persistently_and_sep. Qed.
 
-Global Instance from_and_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
+Global Instance from_and_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   FromAnd P Q1 Q2 → FromAnd ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
-Proof. by rewrite /FromAnd -bi_embed_and => <-. Qed.
+Proof. by rewrite /FromAnd -embed_and => <-. Qed.
 
 Global Instance from_and_big_sepL_cons_persistent {A} (Φ : nat → A → PROP) x l :
   Persistent (Φ 0 x) →
@@ -455,18 +393,14 @@ Proof. rewrite /FromSep=> <-. by rewrite affinely_sep_2. Qed.
 Global Instance from_sep_absorbingly P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (bi_absorbingly P) (bi_absorbingly Q1) (bi_absorbingly Q2).
 Proof. rewrite /FromSep=> <-. by rewrite absorbingly_sep. Qed.
-Global Instance from_sep_plainly P Q1 Q2 :
-  FromSep P Q1 Q2 →
-  FromSep (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
-Proof. rewrite /FromSep=> <-. by rewrite plainly_sep_2. Qed.
 Global Instance from_sep_persistently P Q1 Q2 :
   FromSep P Q1 Q2 →
   FromSep (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
 Proof. rewrite /FromSep=> <-. by rewrite persistently_sep_2. Qed.
 
-Global Instance from_sep_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
+Global Instance from_sep_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
-Proof. by rewrite /FromSep -bi_embed_sep => <-. Qed.
+Proof. by rewrite /FromSep -embed_sep => <-. Qed.
 
 Global Instance from_sep_big_sepL_cons {A} (Φ : nat → A → PROP) x l :
   FromSep ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
@@ -511,16 +445,6 @@ Proof.
   - by rewrite -affinely_and !persistently_affinely.
   - intros ->. by rewrite affinely_and.
 Qed.
-Global Instance into_and_plainly p P Q1 Q2 :
-  IntoAnd p P Q1 Q2 →
-  IntoAnd p (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
-Proof.
-  rewrite /IntoAnd /=. destruct p; simpl.
-  - rewrite -plainly_and persistently_plainly -plainly_persistently
-            -plainly_affinely => ->.
-    by rewrite plainly_affinely plainly_persistently persistently_plainly.
-  - intros ->. by rewrite plainly_and.
-Qed.
 Global Instance into_and_persistently p P Q1 Q2 :
   IntoAnd p P Q1 Q2 →
   IntoAnd p (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
@@ -529,11 +453,11 @@ Proof.
   - by rewrite -persistently_and !persistently_idemp.
   - intros ->. by rewrite persistently_and.
 Qed.
-Global Instance into_and_embed `{BiEmbedding PROP PROP'} p P Q1 Q2 :
+Global Instance into_and_embed `{BiEmbed PROP PROP'} p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
 Proof.
-  rewrite /IntoAnd -bi_embed_and -!bi_embed_persistently_if
-          -!bi_embed_affinely_if=> -> //.
+  rewrite /IntoAnd -embed_and -!embed_persistently_if
+          -!embed_affinely_if=> -> //.
 Qed.
 
 (* IntoSep *)
@@ -567,9 +491,9 @@ Qed.
 Global Instance into_sep_pure φ ψ : @IntoSep PROP ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.
 Proof. by rewrite /IntoSep pure_and persistent_and_sep_1. Qed.
 
-Global Instance into_sep_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
+Global Instance into_sep_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
-Proof. rewrite /IntoSep -bi_embed_sep=> -> //. Qed.
+Proof. rewrite /IntoSep -embed_sep=> -> //. Qed.
 
 Global Instance into_sep_affinely `{BiPositive PROP} P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep (bi_affinely P) (bi_affinely Q1) (bi_affinely Q2) | 0.
@@ -580,17 +504,6 @@ precedence. *)
 Global Instance into_sep_affinely_trim P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep (bi_affinely P) Q1 Q2 | 20.
 Proof. rewrite /IntoSep /= => ->. by rewrite affinely_elim. Qed.
-
-Global Instance into_sep_plainly `{BiPositive PROP} P Q1 Q2 :
-  IntoSep P Q1 Q2 → IntoSep (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
-Proof. rewrite /IntoSep /= => ->. by rewrite plainly_sep. Qed.
-Global Instance into_sep_plainly_affine P Q1 Q2 :
-  IntoSep P Q1 Q2 →
-  TCOr (Affine Q1) (Absorbing Q2) → TCOr (Absorbing Q1) (Affine Q2) →
-  IntoSep (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
-Proof.
-  rewrite /IntoSep /= => -> ??. by rewrite sep_and plainly_and plainly_and_sep_l_1.
-Qed.
 
 Global Instance into_sep_persistently `{BiPositive PROP} P Q1 Q2 :
   IntoSep P Q1 Q2 →
@@ -638,16 +551,13 @@ Proof. rewrite /FromOr=> <-. by rewrite affinely_or. Qed.
 Global Instance from_or_absorbingly P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (bi_absorbingly P) (bi_absorbingly Q1) (bi_absorbingly Q2).
 Proof. rewrite /FromOr=> <-. by rewrite absorbingly_or. Qed.
-Global Instance from_or_plainly P Q1 Q2 :
-  FromOr P Q1 Q2 → FromOr (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
-Proof. rewrite /FromOr=> <-. by rewrite -plainly_or_2. Qed.
 Global Instance from_or_persistently P Q1 Q2 :
   FromOr P Q1 Q2 →
   FromOr (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
 Proof. rewrite /FromOr=> <-. by rewrite persistently_or. Qed.
-Global Instance from_or_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
+Global Instance from_or_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
-Proof. by rewrite /FromOr -bi_embed_or => <-. Qed.
+Proof. by rewrite /FromOr -embed_or => <-. Qed.
 
 (* IntoOr *)
 Global Instance into_or_or P Q : IntoOr (P ∨ Q) P Q.
@@ -660,16 +570,13 @@ Proof. rewrite /IntoOr=>->. by rewrite affinely_or. Qed.
 Global Instance into_or_absorbingly P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (bi_absorbingly P) (bi_absorbingly Q1) (bi_absorbingly Q2).
 Proof. rewrite /IntoOr=>->. by rewrite absorbingly_or. Qed.
-Global Instance into_or_plainly `{BiPlainlyExist PROP} P Q1 Q2 :
-  IntoOr P Q1 Q2 → IntoOr (bi_plainly P) (bi_plainly Q1) (bi_plainly Q2).
-Proof. rewrite /IntoOr=>->. by rewrite plainly_or. Qed.
 Global Instance into_or_persistently P Q1 Q2 :
   IntoOr P Q1 Q2 →
   IntoOr (bi_persistently P) (bi_persistently Q1) (bi_persistently Q2).
 Proof. rewrite /IntoOr=>->. by rewrite persistently_or. Qed.
-Global Instance into_or_embed `{BiEmbedding PROP PROP'} P Q1 Q2 :
+Global Instance into_or_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
-Proof. by rewrite /IntoOr -bi_embed_or => <-. Qed.
+Proof. by rewrite /IntoOr -embed_or => <-. Qed.
 
 (* FromExist *)
 Global Instance from_exist_exist {A} (Φ : A → PROP): FromExist (∃ a, Φ a) Φ.
@@ -683,15 +590,12 @@ Proof. rewrite /FromExist=> <-. by rewrite affinely_exist. Qed.
 Global Instance from_exist_absorbingly {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (bi_absorbingly P) (λ a, bi_absorbingly (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite absorbingly_exist. Qed.
-Global Instance from_exist_plainly {A} P (Φ : A → PROP) :
-  FromExist P Φ → FromExist (bi_plainly P) (λ a, bi_plainly (Φ a))%I.
-Proof. rewrite /FromExist=> <-. by rewrite -plainly_exist_2. Qed.
 Global Instance from_exist_persistently {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (bi_persistently P) (λ a, bi_persistently (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite persistently_exist. Qed.
-Global Instance from_exist_embed `{BiEmbedding PROP PROP'} {A} P (Φ : A → PROP) :
+Global Instance from_exist_embed `{BiEmbed PROP PROP'} {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist ⎡P⎤ (λ a, ⎡Φ a⎤%I).
-Proof. by rewrite /FromExist -bi_embed_exist => <-. Qed.
+Proof. by rewrite /FromExist -embed_exist => <-. Qed.
 
 (* IntoExist *)
 Global Instance into_exist_exist {A} (Φ : A → PROP) : IntoExist (∃ a, Φ a) Φ.
@@ -718,15 +622,12 @@ Qed.
 Global Instance into_exist_absorbingly {A} P (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (bi_absorbingly P) (λ a, bi_absorbingly (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP absorbingly_exist. Qed.
-Global Instance into_exist_plainly `{BiPlainlyExist PROP} {A} P (Φ : A → PROP) :
-  IntoExist P Φ → IntoExist (bi_plainly P) (λ a, bi_plainly (Φ a))%I.
-Proof. rewrite /IntoExist=> HP. by rewrite HP plainly_exist. Qed.
 Global Instance into_exist_persistently {A} P (Φ : A → PROP) :
   IntoExist P Φ → IntoExist (bi_persistently P) (λ a, bi_persistently (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP persistently_exist. Qed.
-Global Instance into_exist_embed `{BiEmbedding PROP PROP'} {A} P (Φ : A → PROP) :
+Global Instance into_exist_embed `{BiEmbed PROP PROP'} {A} P (Φ : A → PROP) :
   IntoExist P Φ → IntoExist ⎡P⎤ (λ a, ⎡Φ a⎤%I).
-Proof. by rewrite /IntoExist -bi_embed_exist => <-. Qed.
+Proof. by rewrite /IntoExist -embed_exist => <-. Qed.
 
 (* IntoForall *)
 Global Instance into_forall_forall {A} (Φ : A → PROP) : IntoForall (∀ a, Φ a) Φ.
@@ -734,15 +635,12 @@ Proof. by rewrite /IntoForall. Qed.
 Global Instance into_forall_affinely {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (bi_affinely P) (λ a, bi_affinely (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP affinely_forall. Qed.
-Global Instance into_forall_plainly {A} P (Φ : A → PROP) :
-  IntoForall P Φ → IntoForall (bi_plainly P) (λ a, bi_plainly (Φ a))%I.
-Proof. rewrite /IntoForall=> HP. by rewrite HP plainly_forall. Qed.
 Global Instance into_forall_persistently {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (bi_persistently P) (λ a, bi_persistently (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP persistently_forall. Qed.
-Global Instance into_forall_embed `{BiEmbedding PROP PROP'} {A} P (Φ : A → PROP) :
+Global Instance into_forall_embed `{BiEmbed PROP PROP'} {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall ⎡P⎤ (λ a, ⎡Φ a⎤%I).
-Proof. by rewrite /IntoForall -bi_embed_forall => <-. Qed.
+Proof. by rewrite /IntoForall -embed_forall => <-. Qed.
 
 (* FromForall *)
 Global Instance from_forall_forall {A} (Φ : A → PROP) :
@@ -774,15 +672,12 @@ Global Instance from_forall_affinely `{BiAffine PROP} {A} P (Φ : A → PROP) :
 Proof.
   rewrite /FromForall=> <-. rewrite affine_affinely. by setoid_rewrite affinely_elim.
 Qed.
-Global Instance from_forall_plainly {A} P (Φ : A → PROP) :
-  FromForall P Φ → FromForall (bi_plainly P)%I (λ a, bi_plainly (Φ a))%I.
-Proof. rewrite /FromForall=> <-. by rewrite plainly_forall. Qed.
 Global Instance from_forall_persistently {A} P (Φ : A → PROP) :
   FromForall P Φ → FromForall (bi_persistently P)%I (λ a, bi_persistently (Φ a))%I.
 Proof. rewrite /FromForall=> <-. by rewrite persistently_forall. Qed.
-Global Instance from_forall_embed `{BiEmbedding PROP PROP'} {A} P (Φ : A → PROP) :
+Global Instance from_forall_embed `{BiEmbed PROP PROP'} {A} P (Φ : A → PROP) :
   FromForall P Φ → FromForall ⎡P⎤%I (λ a, ⎡Φ a⎤%I).
-Proof. by rewrite /FromForall -bi_embed_forall => <-. Qed.
+Proof. by rewrite /FromForall -embed_forall => <-. Qed.
 
 (* IntoInv *)
 Global Instance into_inv_embed {PROP' : bi} `{BiEmbed PROP PROP'} P N :
@@ -843,26 +738,26 @@ Proof.
   by rewrite affinely_persistently_if_elim sep_elim_l.
 Qed.
 
-Global Instance make_embed_pure `{BiEmbedding PROP PROP'} φ :
+Global Instance make_embed_pure `{BiEmbed PROP PROP'} φ :
   KnownMakeEmbed ⌜φ⌝ ⌜φ⌝.
-Proof. apply bi_embed_pure. Qed.
-Global Instance make_embed_emp `{BiEmbedding PROP PROP'} :
+Proof. apply embed_pure. Qed.
+Global Instance make_embed_emp `{BiEmbed PROP PROP'} :
   KnownMakeEmbed emp emp.
-Proof. apply bi_embed_emp. Qed.
-Global Instance make_embed_default `{BiEmbedding PROP PROP'} P :
+Proof. apply embed_emp. Qed.
+Global Instance make_embed_default `{BiEmbed PROP PROP'} P :
   MakeEmbed P ⎡P⎤ | 100.
 Proof. by rewrite /MakeEmbed. Qed.
 
-Global Instance frame_embed `{BiEmbedding PROP PROP'} p P Q (Q' : PROP') R :
+Global Instance frame_embed `{BiEmbed PROP PROP'} p P Q (Q' : PROP') R :
   Frame p R P Q → MakeEmbed Q Q' → KnownFrame p ⎡R⎤ ⎡P⎤ Q'.
 Proof.
   rewrite /KnownFrame /Frame /MakeEmbed => <- <-.
-  rewrite bi_embed_sep bi_embed_affinely_if bi_embed_persistently_if => //.
+  rewrite embed_sep embed_affinely_if embed_persistently_if => //.
 Qed.
-Global Instance frame_pure_embed `{BiEmbedding PROP PROP'} p P Q (Q' : PROP') φ :
+Global Instance frame_pure_embed `{BiEmbed PROP PROP'} p P Q (Q' : PROP') φ :
   Frame p ⌜φ⌝ P Q → MakeEmbed Q Q' → KnownFrame p ⌜φ⌝ ⎡P⎤ Q'.
 Proof.
-  rewrite /KnownFrame /Frame /MakeEmbed -bi_embed_pure. apply (frame_embed p P Q).
+  rewrite /KnownFrame /Frame /MakeEmbed -embed_pure. apply (frame_embed p P Q).
 Qed.
 
 Global Instance make_sep_emp_l P : KnownLMakeSep emp P P.
@@ -1083,9 +978,9 @@ Proof.
   - intros x. apply H1. revert H2. by rewrite (bi.forall_elim x).
 Qed.
 
-Global Instance as_valid_embed `{BiEmbedding PROP PROP'} (φ : Prop) (P : PROP) :
+Global Instance as_valid_embed `{BiEmbed PROP PROP'} (φ : Prop) (P : PROP) :
   AsValid0 φ P → AsValid φ ⎡P⎤.
-Proof. rewrite /AsValid0 /AsValid=> ->. rewrite bi_embed_valid //. Qed.
+Proof. rewrite /AsValid0 /AsValid=> ->. rewrite embed_valid //. Qed.
 End bi_instances.
 
 Section sbi_instances.
@@ -1103,12 +998,25 @@ Global Instance from_assumption_except_0 p P Q :
   FromAssumption p P Q → FromAssumption p P (◇ Q)%I.
 Proof. rewrite /FromAssumption=>->. apply except_0_intro. Qed.
 
-Global Instance from_assumption_bupd `{BUpdFacts PROP} p P Q :
+Global Instance from_assumption_bupd `{BiBUpd PROP} p P Q :
   FromAssumption p P Q → FromAssumption p P (|==> Q).
 Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
-Global Instance from_assumption_fupd `{FUpdFacts PROP} E p P Q :
+Global Instance from_assumption_fupd `{BiBUpdFUpd PROP} E p P Q :
   FromAssumption p P (|==> Q) → FromAssumption p P (|={E}=> Q)%I.
 Proof. rewrite /FromAssumption=>->. apply bupd_fupd. Qed.
+
+Global Instance from_assumption_plainly_l_true `{BiPlainly PROP} P Q :
+  FromAssumption true P Q → FromAssumption true (■ P) Q.
+Proof.
+  rewrite /FromAssumption /= =><-.
+  by rewrite persistently_elim plainly_elim_persistently.
+Qed.
+Global Instance from_assumption_plainly_l_false `{BiPlainly PROP, BiAffine PROP} P Q :
+  FromAssumption true P Q → FromAssumption false (■ P) Q.
+Proof.
+  rewrite /FromAssumption /= =><-.
+  by rewrite affine_affinely plainly_elim_persistently.
+Qed.
 
 (* FromPure *)
 Global Instance from_pure_internal_eq af {A : ofeT} (a b : A) :
@@ -1121,17 +1029,25 @@ Proof. rewrite /FromPure=> ->. apply laterN_intro. Qed.
 Global Instance from_pure_except_0 a P φ : FromPure a P φ → FromPure a (◇ P) φ.
 Proof. rewrite /FromPure=> ->. apply except_0_intro. Qed.
 
-Global Instance from_pure_bupd `{BUpdFacts PROP} a P φ :
+Global Instance from_pure_bupd `{BiBUpd PROP} a P φ :
   FromPure a P φ → FromPure a (|==> P) φ.
 Proof. rewrite /FromPure=> <-. apply bupd_intro. Qed.
-Global Instance from_pure_fupd `{FUpdFacts PROP} a E P φ :
+Global Instance from_pure_fupd `{BiFUpd PROP} a E P φ :
   FromPure a P φ → FromPure a (|={E}=> P) φ.
 Proof. rewrite /FromPure. intros <-. apply fupd_intro. Qed.
+
+Global Instance from_pure_plainly `{BiPlainly PROP} P φ :
+  FromPure false P φ → FromPure false (■ P) φ.
+Proof. rewrite /FromPure=> <-. by rewrite plainly_pure. Qed.
 
 (* IntoPure *)
 Global Instance into_pure_eq {A : ofeT} (a b : A) :
   Discrete a → @IntoPure PROP (a ≡ b) (a ≡ b).
 Proof. intros. by rewrite /IntoPure discrete_eq. Qed.
+
+Global Instance into_pure_plainly `{BiPlainly PROP} P φ :
+  IntoPure P φ → IntoPure (■ P) φ.
+Proof. rewrite /IntoPure=> ->. apply: plainly_elim. Qed.
 
 (* IntoWand *)
 Global Instance into_wand_later p q R P Q :
@@ -1161,44 +1077,51 @@ Proof.
              (laterN_intro _ (□?p R)%I) -laterN_wand HR.
 Qed.
 
-Global Instance into_wand_bupd `{BUpdFacts PROP} p q R P Q :
+Global Instance into_wand_bupd `{BiBUpd PROP} p q R P Q :
   IntoWand false false R P Q → IntoWand p q (|==> R) (|==> P) (|==> Q).
 Proof.
   rewrite /IntoWand /= => HR. rewrite !affinely_persistently_if_elim HR.
   apply wand_intro_l. by rewrite bupd_sep wand_elim_r.
 Qed.
-Global Instance into_wand_bupd_persistent `{BUpdFacts PROP} p q R P Q :
+Global Instance into_wand_bupd_persistent `{BiBUpd PROP} p q R P Q :
   IntoWand false q R P Q → IntoWand p q (|==> R) P (|==> Q).
 Proof.
   rewrite /IntoWand /= => HR. rewrite affinely_persistently_if_elim HR.
   apply wand_intro_l. by rewrite bupd_frame_l wand_elim_r.
 Qed.
-Global Instance into_wand_bupd_args `{BUpdFacts PROP} p q R P Q :
+Global Instance into_wand_bupd_args `{BiBUpd PROP} p q R P Q :
   IntoWand p false R P Q → IntoWand' p q R (|==> P) (|==> Q).
 Proof.
   rewrite /IntoWand' /IntoWand /= => ->.
   apply wand_intro_l. by rewrite affinely_persistently_if_elim bupd_wand_r.
 Qed.
 
-Global Instance into_wand_fupd `{FUpdFacts PROP} E p q R P Q :
+Global Instance into_wand_fupd `{BiFUpd PROP} E p q R P Q :
   IntoWand false false R P Q →
   IntoWand p q (|={E}=> R) (|={E}=> P) (|={E}=> Q).
 Proof.
   rewrite /IntoWand /= => HR. rewrite !affinely_persistently_if_elim HR.
   apply wand_intro_l. by rewrite fupd_sep wand_elim_r.
 Qed.
-Global Instance into_wand_fupd_persistent `{FUpdFacts PROP} E1 E2 p q R P Q :
+Global Instance into_wand_fupd_persistent `{BiFUpd PROP} E1 E2 p q R P Q :
   IntoWand false q R P Q → IntoWand p q (|={E1,E2}=> R) P (|={E1,E2}=> Q).
 Proof.
   rewrite /IntoWand /= => HR. rewrite affinely_persistently_if_elim HR.
   apply wand_intro_l. by rewrite fupd_frame_l wand_elim_r.
 Qed.
-Global Instance into_wand_fupd_args `{FUpdFacts PROP} E1 E2 p q R P Q :
+Global Instance into_wand_fupd_args `{BiFUpd PROP} E1 E2 p q R P Q :
   IntoWand p false R P Q → IntoWand' p q R (|={E1,E2}=> P) (|={E1,E2}=> Q).
 Proof.
   rewrite /IntoWand' /IntoWand /= => ->.
   apply wand_intro_l. by rewrite affinely_persistently_if_elim fupd_wand_r.
 Qed.
+
+Global Instance into_wand_plainly_true `{BiPlainly PROP} q R P Q :
+  IntoWand true q R P Q → IntoWand true q (■ R) P Q.
+Proof. by rewrite /IntoWand /= persistently_plainly plainly_elim_persistently. Qed.
+Global Instance into_wand_plainly_false `{BiPlainly PROP, !BiAffine PROP} q R P Q :
+  IntoWand false q R P Q → IntoWand false q (■ R) P Q.
+Proof. by rewrite /IntoWand plainly_elim. Qed.
 
 (* FromAnd *)
 Global Instance from_and_later P Q1 Q2 :
@@ -1211,6 +1134,10 @@ Global Instance from_and_except_0 P Q1 Q2 :
   FromAnd P Q1 Q2 → FromAnd (◇ P) (◇ Q1) (◇ Q2).
 Proof. rewrite /FromAnd=><-. by rewrite except_0_and. Qed.
 
+Global Instance from_and_plainly `{BiPlainly PROP} P Q1 Q2 :
+  FromAnd P Q1 Q2 → FromAnd (■ P) (■ Q1) (■ Q2).
+Proof. rewrite /FromAnd=> <-. by rewrite plainly_and. Qed.
+
 (* FromSep *)
 Global Instance from_sep_later P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (▷ P) (▷ Q1) (▷ Q2).
@@ -1222,12 +1149,16 @@ Global Instance from_sep_except_0 P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (◇ P) (◇ Q1) (◇ Q2).
 Proof. rewrite /FromSep=><-. by rewrite except_0_sep. Qed.
 
-Global Instance from_sep_bupd `{BUpdFacts PROP} P Q1 Q2 :
+Global Instance from_sep_bupd `{BiBUpd PROP} P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (|==> P) (|==> Q1) (|==> Q2).
 Proof. rewrite /FromSep=><-. apply bupd_sep. Qed.
-Global Instance from_sep_fupd `{FUpdFacts PROP} E P Q1 Q2 :
+Global Instance from_sep_fupd `{BiFUpd PROP} E P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (|={E}=> P) (|={E}=> Q1) (|={E}=> Q2).
 Proof. rewrite /FromSep =><-. apply fupd_sep. Qed.
+
+Global Instance from_sep_plainly `{BiPlainly PROP} P Q1 Q2 :
+  FromSep P Q1 Q2 → FromSep (■ P) (■ Q1) (■ Q2).
+Proof. rewrite /FromSep=> <-. by rewrite plainly_sep_2. Qed.
 
 (* IntoAnd *)
 Global Instance into_and_later p P Q1 Q2 :
@@ -1250,6 +1181,16 @@ Proof.
   rewrite /IntoAnd=> HP. apply affinely_persistently_if_intro'.
   by rewrite except_0_affinely_persistently_if_2 HP
              affinely_persistently_if_elim except_0_and.
+Qed.
+
+Global Instance into_and_plainly `{BiPlainly PROP} p P Q1 Q2 :
+  IntoAnd p P Q1 Q2 → IntoAnd p (■ P) (■ Q1) (■ Q2).
+Proof.
+  rewrite /IntoAnd /=. destruct p; simpl.
+  - rewrite -plainly_and persistently_plainly -plainly_persistently
+            -plainly_affinely => ->.
+    by rewrite plainly_affinely plainly_persistently persistently_plainly.
+  - intros ->. by rewrite plainly_and.
 Qed.
 
 (* IntoSep *)
@@ -1275,6 +1216,18 @@ Proof.
   by rewrite -(False_elim Q1) -(False_elim Q2).
 Qed.
 
+Global Instance into_sep_plainly `{BiPlainly PROP, BiPositive PROP} P Q1 Q2 :
+  IntoSep P Q1 Q2 → IntoSep (■ P) (■ Q1) (■ Q2).
+Proof. rewrite /IntoSep /= => ->. by rewrite plainly_sep. Qed.
+
+Global Instance into_sep_plainly_affine `{BiPlainly PROP} P Q1 Q2 :
+  IntoSep P Q1 Q2 →
+  TCOr (Affine Q1) (Absorbing Q2) → TCOr (Absorbing Q1) (Affine Q2) →
+  IntoSep (■ P) (■ Q1) (■ Q2).
+Proof.
+  rewrite /IntoSep /= => -> ??. by rewrite sep_and plainly_and plainly_and_sep_l_1.
+Qed.
+
 (* FromOr *)
 Global Instance from_or_later P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (▷ P) (▷ Q1) (▷ Q2).
@@ -1286,18 +1239,22 @@ Global Instance from_or_except_0 P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (◇ P) (◇ Q1) (◇ Q2).
 Proof. rewrite /FromOr=><-. by rewrite except_0_or. Qed.
 
-Global Instance from_or_bupd `{BUpdFacts PROP} P Q1 Q2 :
+Global Instance from_or_bupd `{BiBUpd PROP} P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (|==> P) (|==> Q1) (|==> Q2).
 Proof.
   rewrite /FromOr=><-.
   apply or_elim; apply bupd_mono; auto using or_intro_l, or_intro_r.
 Qed.
-Global Instance from_or_fupd `{FUpdFacts PROP} E1 E2 P Q1 Q2 :
+Global Instance from_or_fupd `{BiFUpd PROP} E1 E2 P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (|={E1,E2}=> P) (|={E1,E2}=> Q1) (|={E1,E2}=> Q2).
 Proof.
   rewrite /FromOr=><-. apply or_elim; apply fupd_mono;
                          [apply bi.or_intro_l|apply bi.or_intro_r].
 Qed.
+
+Global Instance from_or_plainly `{BiPlainly PROP} P Q1 Q2 :
+  FromOr P Q1 Q2 → FromOr (■ P) (■ Q1) (■ Q2).
+Proof. rewrite /FromOr=> <-. by rewrite -plainly_or_2. Qed.
 
 (* IntoOr *)
 Global Instance into_or_later P Q1 Q2 :
@@ -1309,6 +1266,10 @@ Proof. rewrite /IntoOr=>->. by rewrite laterN_or. Qed.
 Global Instance into_or_except_0 P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (◇ P) (◇ Q1) (◇ Q2).
 Proof. rewrite /IntoOr=>->. by rewrite except_0_or. Qed.
+
+Global Instance into_or_plainly `{BiPlainly PROP, BiPlainlyExist PROP} P Q1 Q2 :
+  IntoOr P Q1 Q2 → IntoOr (■ P) (■ Q1) (■ Q2).
+Proof. rewrite /IntoOr=>->. by rewrite plainly_or. Qed.
 
 (* FromExist *)
 Global Instance from_exist_later {A} P (Φ : A → PROP) :
@@ -1325,16 +1286,20 @@ Global Instance from_exist_except_0 {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (◇ P) (λ a, ◇ (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite except_0_exist_2. Qed.
 
-Global Instance from_exist_bupd `{BUpdFacts PROP} {A} P (Φ : A → PROP) :
+Global Instance from_exist_bupd `{BiBUpd PROP} {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (|==> P) (λ a, |==> Φ a)%I.
 Proof.
   rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
 Qed.
-Global Instance from_exist_fupd `{FUpdFacts PROP} {A} E1 E2 P (Φ : A → PROP) :
+Global Instance from_exist_fupd `{BiFUpd PROP} {A} E1 E2 P (Φ : A → PROP) :
   FromExist P Φ → FromExist (|={E1,E2}=> P) (λ a, |={E1,E2}=> Φ a)%I.
 Proof.
   rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
 Qed.
+
+Global Instance from_exist_plainly `{BiPlainly PROP} {A} P (Φ : A → PROP) :
+  FromExist P Φ → FromExist (■ P) (λ a, ■ (Φ a))%I.
+Proof. rewrite /FromExist=> <-. by rewrite -plainly_exist_2. Qed.
 
 (* IntoExist *)
 Global Instance into_exist_later {A} P (Φ : A → PROP) :
@@ -1346,6 +1311,10 @@ Proof. rewrite /IntoExist=> HP ?. by rewrite HP laterN_exist. Qed.
 Global Instance into_exist_except_0 {A} P (Φ : A → PROP) :
   IntoExist P Φ → Inhabited A → IntoExist (◇ P) (λ a, ◇ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP ?. by rewrite HP except_0_exist. Qed.
+
+Global Instance into_exist_plainly `{BiPlainlyExist PROP} {A} P (Φ : A → PROP) :
+  IntoExist P Φ → IntoExist (■ P) (λ a, ■ (Φ a))%I.
+Proof. rewrite /IntoExist=> HP. by rewrite HP plainly_exist. Qed.
 
 (* IntoForall *)
 Global Instance into_forall_later {A} P (Φ : A → PROP) :
@@ -1368,6 +1337,10 @@ Proof.
   by rewrite -(pure_intro True%I) // /bi_affinely right_id emp_wand.
 Qed.
 
+Global Instance into_forall_plainly `{BiPlainly PROP} {A} P (Φ : A → PROP) :
+  IntoForall P Φ → IntoForall (■ P) (λ a, ■ (Φ a))%I.
+Proof. rewrite /IntoForall=> HP. by rewrite HP plainly_forall. Qed.
+
 (* FromForall *)
 Global Instance from_forall_later {A} P (Φ : A → PROP) :
   FromForall P Φ → FromForall (▷ P)%I (λ a, ▷ (Φ a))%I.
@@ -1376,20 +1349,24 @@ Global Instance from_forall_except_0 {A} P (Φ : A → PROP) :
   FromForall P Φ → FromForall (◇ P)%I (λ a, ◇ (Φ a))%I.
 Proof. rewrite /FromForall=> <-. by rewrite except_0_forall. Qed.
 
+Global Instance from_forall_plainly `{BiPlainly PROP} {A} P (Φ : A → PROP) :
+  FromForall P Φ → FromForall (■ P)%I (λ a, ■ (Φ a))%I.
+Proof. rewrite /FromForall=> <-. by rewrite plainly_forall. Qed.
+
 (* IsExcept0 *)
 Global Instance is_except_0_except_0 P : IsExcept0 (◇ P).
 Proof. by rewrite /IsExcept0 except_0_idemp. Qed.
 Global Instance is_except_0_later P : IsExcept0 (▷ P).
 Proof. by rewrite /IsExcept0 except_0_later. Qed.
-Global Instance is_except_0_embed `{SbiEmbedding PROP PROP'} P :
+Global Instance is_except_0_embed `{SbiEmbed PROP PROP'} P :
   IsExcept0 P → IsExcept0 ⎡P⎤.
-Proof. by rewrite /IsExcept0 -sbi_embed_except_0=>->. Qed.
-Global Instance is_except_0_bupd `{BUpdFacts PROP} P : IsExcept0 P → IsExcept0 (|==> P).
+Proof. by rewrite /IsExcept0 -embed_except_0=>->. Qed.
+Global Instance is_except_0_bupd `{BiBUpd PROP} P : IsExcept0 P → IsExcept0 (|==> P).
 Proof.
   rewrite /IsExcept0=> HP.
   by rewrite -{2}HP -(except_0_idemp P) -except_0_bupd -(except_0_intro P).
 Qed.
-Global Instance is_except_0_fupd `{FUpdFacts PROP} E1 E2 P :
+Global Instance is_except_0_fupd `{BiFUpd PROP} E1 E2 P :
   IsExcept0 (|={E1,E2}=> P).
 Proof. by rewrite /IsExcept0 except_0_fupd. Qed.
 
@@ -1403,17 +1380,27 @@ Proof. by rewrite /FromModal. Qed.
 Global Instance from_modal_except_0 P : FromModal modality_id (◇ P) (◇ P) P.
 Proof. by rewrite /FromModal /= -except_0_intro. Qed.
 
-Global Instance from_modal_bupd `{BUpdFacts PROP} P :
+Global Instance from_modal_bupd `{BiBUpd PROP} P :
   FromModal modality_id (|==> P) (|==> P) P.
 Proof. by rewrite /FromModal /= -bupd_intro. Qed.
-Global Instance from_modal_fupd E P `{FUpdFacts PROP} :
+Global Instance from_modal_fupd E P `{BiFUpd PROP} :
   FromModal modality_id (|={E}=> P) (|={E}=> P) P.
 Proof. by rewrite /FromModal /= -fupd_intro. Qed.
 
-Global Instance from_modal_later_embed `{SbiEmbedding PROP PROP'} `(sel : A) n P Q :
+Global Instance from_modal_later_embed `{SbiEmbed PROP PROP'} `(sel : A) n P Q :
   FromModal (modality_laterN n) sel P Q →
   FromModal (modality_laterN n) sel ⎡P⎤ ⎡Q⎤.
-Proof. rewrite /FromModal /= =><-. by rewrite sbi_embed_laterN. Qed.
+Proof. rewrite /FromModal /= =><-. by rewrite embed_laterN. Qed.
+
+Global Instance from_modal_plainly `{BiPlainly PROP} P :
+  FromModal modality_plainly (■ P) (■ P) P | 2.
+Proof. by rewrite /FromModal. Qed.
+
+Global Instance from_modal_plainly_embed
+    `{BiPlainly PROP, BiPlainly PROP', SbiEmbed PROP PROP'} `(sel : A) P Q :
+  FromModal modality_plainly sel P Q →
+  FromModal modality_plainly sel ⎡P⎤ ⎡Q⎤ | 100.
+Proof. rewrite /FromModal /= =><-. by rewrite embed_plainly. Qed.
 
 (* IntoInternalEq *)
 Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
@@ -1425,16 +1412,16 @@ Proof. rewrite /IntoInternalEq=> ->. by rewrite affinely_elim. Qed.
 Global Instance into_internal_eq_absorbingly {A : ofeT} (x y : A) P :
   IntoInternalEq P x y → IntoInternalEq (bi_absorbingly P) x y.
 Proof. rewrite /IntoInternalEq=> ->. by rewrite absorbingly_internal_eq. Qed.
-Global Instance into_internal_eq_plainly {A : ofeT} (x y : A) P :
-  IntoInternalEq P x y → IntoInternalEq (bi_plainly P) x y.
+Global Instance into_internal_eq_plainly `{BiPlainly PROP} {A : ofeT} (x y : A) P :
+  IntoInternalEq P x y → IntoInternalEq (■ P) x y.
 Proof. rewrite /IntoInternalEq=> ->. by rewrite plainly_elim. Qed.
 Global Instance into_internal_eq_persistently {A : ofeT} (x y : A) P :
   IntoInternalEq P x y → IntoInternalEq (bi_persistently P) x y.
 Proof. rewrite /IntoInternalEq=> ->. by rewrite persistently_elim. Qed.
 Global Instance into_internal_eq_embed
-       `{SbiEmbedding PROP PROP'} {A : ofeT} (x y : A) P :
+       `{SbiEmbed PROP PROP'} {A : ofeT} (x y : A) P :
   IntoInternalEq P x y → IntoInternalEq ⎡P⎤ x y.
-Proof. rewrite /IntoInternalEq=> ->. by rewrite sbi_embed_internal_eq. Qed.
+Proof. rewrite /IntoInternalEq=> ->. by rewrite embed_internal_eq. Qed.
 
 (* IntoExcept0 *)
 Global Instance into_except_0_except_0 P : IntoExcept0 (◇ P) P.
@@ -1450,15 +1437,15 @@ Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_affinely_2. Qed.
 Global Instance into_except_0_absorbingly P Q :
   IntoExcept0 P Q → IntoExcept0 (bi_absorbingly P) (bi_absorbingly Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_absorbingly. Qed.
-Global Instance into_except_0_plainly `{BiPlainlyExist PROP} P Q :
-  IntoExcept0 P Q → IntoExcept0 (bi_plainly P) (bi_plainly Q).
+Global Instance into_except_0_plainly `{BiPlainly PROP, BiPlainlyExist PROP} P Q :
+  IntoExcept0 P Q → IntoExcept0 (■ P) (■ Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_plainly. Qed.
 Global Instance into_except_0_persistently P Q :
   IntoExcept0 P Q → IntoExcept0 (bi_persistently P) (bi_persistently Q).
 Proof. rewrite /IntoExcept0=> ->. by rewrite except_0_persistently. Qed.
-Global Instance into_except_0_embed `{SbiEmbedding PROP PROP'} P Q :
+Global Instance into_except_0_embed `{SbiEmbed PROP PROP'} P Q :
   IntoExcept0 P Q → IntoExcept0 ⎡P⎤ ⎡Q⎤.
-Proof. rewrite /IntoExcept0=> ->. by rewrite sbi_embed_except_0. Qed.
+Proof. rewrite /IntoExcept0=> ->. by rewrite embed_except_0. Qed.
 
 (* ElimModal *)
 Global Instance elim_modal_timeless P Q :
@@ -1467,21 +1454,21 @@ Proof.
   intros. rewrite /ElimModal (except_0_intro (_ -∗ _)%I).
   by rewrite (into_except_0 P) -except_0_sep wand_elim_r.
 Qed.
-Global Instance elim_modal_bupd `{BUpdFacts PROP} P Q :
+Global Instance elim_modal_bupd `{BiBUpd PROP} P Q :
   ElimModal True (|==> P) P (|==> Q) (|==> Q).
 Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
-Global Instance elim_modal_bupd_plain_goal `{BUpdFacts PROP} P Q :
+Global Instance elim_modal_bupd_plain_goal `{BiBUpdPlainly PROP} P Q :
   Plain Q → ElimModal True (|==> P) P Q Q.
 Proof. intros. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_plain. Qed.
-Global Instance elim_modal_bupd_plain `{BUpdFacts PROP} P Q :
+Global Instance elim_modal_bupd_plain `{BiBUpdPlainly PROP} P Q :
   Plain P → ElimModal True (|==> P) P Q Q.
 Proof. intros. by rewrite /ElimModal bupd_plain wand_elim_r. Qed.
-Global Instance elim_modal_bupd_fupd `{FUpdFacts PROP} E1 E2 P Q :
+Global Instance elim_modal_bupd_fupd `{BiBUpdFUpd PROP} E1 E2 P Q :
   ElimModal True (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q) | 10.
 Proof.
   by rewrite /ElimModal (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
 Qed.
-Global Instance elim_modal_fupd_fupd `{FUpdFacts PROP} E1 E2 E3 P Q :
+Global Instance elim_modal_fupd_fupd `{BiFUpd PROP} E1 E2 E3 P Q :
   ElimModal True (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
 Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 
@@ -1510,17 +1497,17 @@ Proof.
   by rewrite -except_0_sep wand_elim_r except_0_later.
 Qed.
 
-Global Instance add_modal_bupd `{BUpdFacts PROP} P Q : AddModal (|==> P) P (|==> Q).
+Global Instance add_modal_bupd `{BiBUpd PROP} P Q : AddModal (|==> P) P (|==> Q).
 Proof. by rewrite /AddModal bupd_frame_r wand_elim_r bupd_trans. Qed.
-Global Instance add_modal_fupd `{FUpdFacts PROP} E1 E2 P Q :
+Global Instance add_modal_fupd `{BiFUpd PROP} E1 E2 P Q :
   AddModal (|={E1}=> P) P (|={E1,E2}=> Q).
 Proof. by rewrite /AddModal fupd_frame_r wand_elim_r fupd_trans. Qed.
 
 (* Frame *)
-Global Instance frame_eq_embed `{SbiEmbedding PROP PROP'} p P Q (Q' : PROP')
+Global Instance frame_eq_embed `{SbiEmbed PROP PROP'} p P Q (Q' : PROP')
        {A : ofeT} (a b : A) :
   Frame p (a ≡ b) P Q → MakeEmbed Q Q' → KnownFrame p (a ≡ b) ⎡P⎤ Q'.
-Proof. rewrite /KnownFrame /Frame /MakeEmbed -sbi_embed_internal_eq. apply (frame_embed p P Q). Qed.
+Proof. rewrite /KnownFrame /Frame /MakeEmbed -embed_internal_eq. apply (frame_embed p P Q). Qed.
 
 Global Instance make_laterN_true n : @KnownMakeLaterN PROP n True True | 0.
 Proof. by rewrite /KnownMakeLaterN /MakeLaterN laterN_True. Qed.
@@ -1546,10 +1533,10 @@ Proof.
   by rewrite laterN_affinely_persistently_if_2 laterN_sep.
 Qed.
 
-Global Instance frame_bupd `{BUpdFacts PROP} p R P Q :
+Global Instance frame_bupd `{BiBUpd PROP} p R P Q :
   Frame p R P Q → KnownFrame p R (|==> P) (|==> Q).
 Proof. rewrite /KnownFrame /Frame=><-. by rewrite bupd_frame_l. Qed.
-Global Instance frame_fupd `{FUpdFacts PROP} p E1 E2 R P Q :
+Global Instance frame_fupd `{BiFUpd PROP} p E1 E2 R P Q :
   Frame p R P Q → KnownFrame p R (|={E1,E2}=> P) (|={E1,E2}=> Q).
 Proof. rewrite /KnownFrame /Frame=><-. by rewrite fupd_frame_l. Qed.
 
@@ -1629,15 +1616,15 @@ Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_affinely_2. 
 Global Instance into_later_absorbingly n P Q :
   IntoLaterN false n P Q → IntoLaterN false n (bi_absorbingly P) (bi_absorbingly Q).
 Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_absorbingly. Qed.
-Global Instance into_later_plainly n P Q :
-  IntoLaterN false n P Q → IntoLaterN false n (bi_plainly P) (bi_plainly Q).
+Global Instance into_later_plainly `{BiPlainly PROP} n P Q :
+  IntoLaterN false n P Q → IntoLaterN false n (■ P) (■ Q).
 Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_plainly. Qed.
 Global Instance into_later_persistently n P Q :
   IntoLaterN false n P Q → IntoLaterN false n (bi_persistently P) (bi_persistently Q).
 Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite laterN_persistently. Qed.
-Global Instance into_later_embed`{SbiEmbedding PROP PROP'} n P Q :
+Global Instance into_later_embed`{SbiEmbed PROP PROP'} n P Q :
   IntoLaterN false n P Q → IntoLaterN false n ⎡P⎤ ⎡Q⎤.
-Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite sbi_embed_laterN. Qed.
+Proof. rewrite /IntoLaterN /MaybeIntoLaterN=> ->. by rewrite embed_laterN. Qed.
 
 Global Instance into_laterN_sep_l n P1 P2 Q1 Q2 :
   IntoLaterN false n P1 Q1 → MaybeIntoLaterN false n P2 Q2 →
