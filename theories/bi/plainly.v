@@ -8,6 +8,7 @@ Instance: Params (@plainly) 2.
 Notation "■ P" := (plainly P)%I
   (at level 20, right associativity) : bi_scope.
 
+(* Mixins allow us to create instances easily without having to use Program *)
 Record BiPlainlyMixin (PROP : sbi) `(Plainly PROP) := {
   bi_plainly_mixin_plainly_ne : NonExpansive plainly;
 

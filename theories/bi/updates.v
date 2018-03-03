@@ -51,6 +51,7 @@ Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I
    format "P  ={ E }▷=∗  Q") : bi_scope.
 
 (** Bundled versions  *)
+(* Mixins allow us to create instances easily without having to use Program *)
 Record BiBUpdMixin (PROP : bi) `(BUpd PROP) := {
   bi_bupd_mixin_bupd_ne : NonExpansive bupd;
   bi_bupd_mixin_bupd_intro (P : PROP) : P ==∗ P;

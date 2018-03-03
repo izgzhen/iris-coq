@@ -11,6 +11,7 @@ Typeclasses Opaque embed.
 Hint Mode Embed ! - : typeclass_instances.
 Hint Mode Embed - ! : typeclass_instances.
 
+(* Mixins allow us to create instances easily without having to use Program *)
 Record BiEmbedMixin (PROP1 PROP2 : bi) `(Embed PROP1 PROP2) := {
   bi_embed_mixin_ne : NonExpansive embed;
   bi_embed_mixin_mono : Proper ((⊢) ==> (⊢)) embed;
