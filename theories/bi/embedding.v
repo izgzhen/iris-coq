@@ -38,6 +38,7 @@ Class SbiEmbed (PROP1 PROP2 : sbi) `{BiEmbed PROP1 PROP2} := {
   embed_later P : ⎡▷ P⎤ ⊣⊢ ▷ ⎡P⎤;
   embed_interal_inj (PROP' : sbi) (P Q : PROP1) : ⎡P⎤ ≡ ⎡Q⎤ ⊢ (P ≡ Q : PROP');
 }.
+Hint Mode BiEmbed + + ! ! : typeclass_instances.
 
 Section embed_laws.
   Context `{BiEmbed PROP1 PROP2}.
