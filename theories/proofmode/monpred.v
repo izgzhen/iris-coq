@@ -1,4 +1,5 @@
 From iris.bi Require Export monpred.
+From iris.bi Require Import plainly.
 From iris.proofmode Require Import tactics class_instances.
 
 Class MakeMonPredAt {I : biIndex} {PROP : bi} (i : I)
@@ -33,6 +34,7 @@ End modalities.
 
 Section bi.
 Context {I : biIndex} {PROP : bi}.
+Local Notation monPredI := (monPredI I PROP).
 Local Notation monPred := (monPred I PROP).
 Local Notation MakeMonPredAt := (@MakeMonPredAt I PROP).
 Implicit Types P Q R : monPred.
@@ -290,21 +292,6 @@ Proof.
   by rewrite monPred_at_exist.
 Qed.
 
-Global Instance foram_forall_monPred_at_plainly i P Φ :
-  (∀ i, MakeMonPredAt i P (Φ i)) →
-  FromForall (bi_plainly P i) (λ j, bi_plainly (Φ j)).
-Proof.
-  rewrite /FromForall /MakeMonPredAt=>H. rewrite monPred_at_plainly.
-  by setoid_rewrite H.
-Qed.
-Global Instance into_forall_monPred_at_plainly i P Φ :
-  (∀ i, MakeMonPredAt i P (Φ i)) →
-  IntoForall (bi_plainly P i) (λ j, bi_plainly (Φ j)).
-Proof.
-  rewrite /IntoForall /MakeMonPredAt=>H. rewrite monPred_at_plainly.
-  by setoid_rewrite H.
-Qed.
-
 Global Instance from_forall_monPred_at_absolutely P (Φ : I → PROP) i :
   (∀ i, MakeMonPredAt i P (Φ i)) → FromForall ((∀ᵢ P) i)%I Φ.
 Proof.
@@ -422,6 +409,21 @@ Implicit Types P Q R : monPred.
 Implicit Types 𝓟 𝓠 𝓡 : PROP.
 Implicit Types φ : Prop.
 Implicit Types i j : I.
+
+Global Instance from_forall_monPred_at_plainly `{BiPlainly PROP} i P Φ :
+  (∀ i, MakeMonPredAt i P (Φ i)) →
+  FromForall ((■ P) i) (λ j, ■ (Φ j))%I.
+Proof.
+  rewrite /FromForall /MakeMonPredAt=>HPΦ. rewrite monPred_at_plainly.
+  by setoid_rewrite HPΦ.
+Qed.
+Global Instance into_forall_monPred_at_plainly `{BiPlainly PROP} i P Φ :
+  (∀ i, MakeMonPredAt i P (Φ i)) →
+  IntoForall ((■ P) i) (λ j, ■ (Φ j))%I.
+Proof.
+  rewrite /IntoForall /MakeMonPredAt=>HPΦ. rewrite monPred_at_plainly.
+  by setoid_rewrite HPΦ.
+Qed.
 
 Global Instance is_except_0_monPred_at i P :
   IsExcept0 P → IsExcept0 (P i).

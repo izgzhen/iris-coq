@@ -1,4 +1,4 @@
-From iris.bi Require Export derived_laws big_op updates embedding.
+From iris.bi Require Export derived_laws big_op updates plainly embedding.
 Set Default Proof Using "Type".
 
 Module Import bi.

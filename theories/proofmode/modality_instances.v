@@ -34,26 +34,6 @@ Section bi_modalities.
   Definition modality_affinely_persistently :=
     Modality _ modality_affinely_persistently_mixin.
 
-  Lemma modality_plainly_mixin :
-    modality_mixin (@bi_plainly PROP) (MIEnvForall Plain) MIEnvClear.
-  Proof.
-    split; simpl; split_and?; eauto using equiv_entails_sym, plainly_intro,
-      plainly_mono, plainly_and, plainly_sep_2 with typeclass_instances.
-  Qed.
-  Definition modality_plainly :=
-    Modality _ modality_plainly_mixin.
-
-  Lemma modality_affinely_plainly_mixin :
-    modality_mixin (λ P : PROP, ■ P)%I (MIEnvForall Plain) MIEnvIsEmpty.
-  Proof.
-    split; simpl; split_and?; eauto using equiv_entails_sym,
-      affinely_plainly_emp, affinely_intro,
-      plainly_intro, affinely_mono, plainly_mono, affinely_plainly_idemp,
-      affinely_plainly_and, affinely_plainly_sep_2 with typeclass_instances.
-  Qed.
-  Definition modality_affinely_plainly :=
-    Modality _ modality_affinely_plainly_mixin.
-
   Lemma modality_embed_mixin `{BiEmbed PROP PROP'} :
     modality_mixin (@embed PROP PROP' _)
       (MIEnvTransform IntoEmbed) (MIEnvTransform IntoEmbed).
@@ -70,6 +50,15 @@ End bi_modalities.
 
 Section sbi_modalities.
   Context {PROP : sbi}.
+
+  Lemma modality_plainly_mixin `{BiPlainly PROP} :
+    modality_mixin (@plainly PROP _) (MIEnvForall Plain) MIEnvClear.
+  Proof.
+    split; simpl; split_and?; eauto using equiv_entails_sym, plainly_intro,
+      plainly_mono, plainly_and, plainly_sep_2 with typeclass_instances.
+  Qed.
+  Definition modality_plainly `{BiPlainly PROP} :=
+    Modality _ modality_plainly_mixin.
 
   Lemma modality_laterN_mixin n :
     modality_mixin (@sbi_laterN PROP n)

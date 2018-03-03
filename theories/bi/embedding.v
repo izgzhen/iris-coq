@@ -1,5 +1,5 @@
 From iris.algebra Require Import monoid.
-From iris.bi Require Import interface derived_laws big_op.
+From iris.bi Require Import interface derived_laws big_op plainly.
 From stdpp Require Import hlist.
 
 Class Embed (A B : Type) := embed : A → B.
@@ -21,7 +21,6 @@ Record BiEmbedMixin (PROP1 PROP2 : bi) `(Embed PROP1 PROP2) := {
   bi_embed_mixin_exist_1 A (Φ : A → PROP1) : ⎡∃ x, Φ x⎤ ⊢ ∃ x, ⎡Φ x⎤;
   bi_embed_mixin_sep P Q : ⎡P ∗ Q⎤ ⊣⊢ ⎡P⎤ ∗ ⎡Q⎤;
   bi_embed_mixin_wand_2 P Q : (⎡P⎤ -∗ ⎡Q⎤) ⊢ ⎡P -∗ Q⎤;
-  bi_embed_mixin_plainly P : ⎡bi_plainly P⎤ ⊣⊢ bi_plainly ⎡P⎤;
   bi_embed_mixin_persistently P : ⎡bi_persistently P⎤ ⊣⊢ bi_persistently ⎡P⎤
 }.
 
@@ -35,7 +34,8 @@ Arguments bi_embed_embed : simpl never.
 
 Class SbiEmbed (PROP1 PROP2 : sbi) `{BiEmbed PROP1 PROP2} := {
   embed_internal_eq_1 (A : ofeT) (x y : A) : ⎡x ≡ y⎤ ⊢ x ≡ y;
-  embed_later P : ⎡▷ P⎤ ⊣⊢ ▷ ⎡P⎤
+  embed_later P : ⎡▷ P⎤ ⊣⊢ ▷ ⎡P⎤;
+  embed_interal_inj (PROP' : sbi) (P Q : PROP1) : ⎡P⎤ ≡ ⎡Q⎤ ⊢ (P ≡ Q : PROP');
 }.
 
 Section embed_laws.
@@ -62,8 +62,6 @@ Section embed_laws.
   Proof. eapply bi_embed_mixin_sep, bi_embed_mixin. Qed.
   Lemma embed_wand_2 P Q : (⎡P⎤ -∗ ⎡Q⎤) ⊢ ⎡P -∗ Q⎤.
   Proof. eapply bi_embed_mixin_wand_2, bi_embed_mixin. Qed.
-  Lemma embed_plainly P : ⎡bi_plainly P⎤ ⊣⊢ bi_plainly ⎡P⎤.
-  Proof. eapply bi_embed_mixin_plainly, bi_embed_mixin. Qed.
   Lemma embed_persistently P : ⎡bi_persistently P⎤ ⊣⊢ bi_persistently ⎡P⎤.
   Proof. eapply bi_embed_mixin_persistently, bi_embed_mixin. Qed.
 End embed_laws.
@@ -121,6 +119,7 @@ Section embed.
       last apply bi.True_intro.
     apply bi.impl_intro_l. by rewrite right_id.
   Qed.
+
   Lemma embed_iff P Q : ⎡P ↔ Q⎤ ⊣⊢ (⎡P⎤ ↔ ⎡Q⎤).
   Proof. by rewrite embed_and !embed_impl. Qed.
   Lemma embed_wand_iff P Q : ⎡P ∗-∗ Q⎤ ⊣⊢ (⎡P⎤ ∗-∗ ⎡Q⎤).
@@ -129,8 +128,6 @@ Section embed.
   Proof. by rewrite embed_and embed_emp. Qed.
   Lemma embed_absorbingly P : ⎡bi_absorbingly P⎤ ⊣⊢ bi_absorbingly ⎡P⎤.
   Proof. by rewrite embed_sep embed_pure. Qed.
-  Lemma embed_plainly_if P b : ⎡bi_plainly_if b P⎤ ⊣⊢ bi_plainly_if b ⎡P⎤.
-  Proof. destruct b; simpl; auto using embed_plainly. Qed.
   Lemma embed_persistently_if P b :
     ⎡bi_persistently_if b P⎤ ⊣⊢ bi_persistently_if b ⎡P⎤.
   Proof. destruct b; simpl; auto using embed_persistently. Qed.
@@ -143,8 +140,6 @@ Section embed.
     ⎡bi_hexist Φ⎤ ⊣⊢ bi_hexist (hcompose embed Φ).
   Proof. induction As=>//. rewrite /= embed_exist. by do 2 f_equiv. Qed.
 
-  Global Instance embed_plain P : Plain P → Plain ⎡P⎤.
-  Proof. intros ?. by rewrite /Plain -embed_plainly -plain. Qed.
   Global Instance embed_persistent P : Persistent P → Persistent ⎡P⎤.
   Proof. intros ?. by rewrite /Persistent -embed_persistently -persistent. Qed.
   Global Instance embed_affine P : Affine P → Affine ⎡P⎤.
@@ -201,8 +196,26 @@ Section sbi_embed.
   Lemma embed_except_0 P : ⎡◇ P⎤ ⊣⊢ ◇ ⎡P⎤.
   Proof. by rewrite embed_or embed_later embed_pure. Qed.
 
+  Lemma embed_plainly `{!BiPlainly PROP1, !BiPlainly PROP2} P : ⎡■ P⎤ ⊣⊢ ■ ⎡P⎤.
+  Proof.
+    rewrite !plainly_alt embed_internal_eq. apply (anti_symm _).
+    - rewrite -embed_affinely -embed_emp. apply bi.f_equiv, _.
+    - by rewrite -embed_affinely -embed_emp embed_interal_inj.
+  Qed.
+  Lemma embed_plainly_if `{!BiPlainly PROP1, !BiPlainly PROP2} p P : ⎡■?p P⎤ ⊣⊢ ■?p ⎡P⎤.
+  Proof. destruct p; simpl; auto using embed_plainly. Qed.
+
+  Lemma embed_plain `{!BiPlainly PROP1, !BiPlainly PROP2} P : Plain P → Plain ⎡P⎤.
+  Proof. intros ?. by rewrite /Plain -embed_plainly -plain. Qed.
+
   Global Instance embed_timeless P : Timeless P → Timeless ⎡P⎤.
   Proof.
     intros ?. by rewrite /Timeless -embed_except_0 -embed_later timeless.
   Qed.
 End sbi_embed.
+
+(* Not defined using an ordinary [Instance] because the default
+[class_apply @bi_embed_plainly] shelves the [BiPlainly] premise, making proof
+search for the other premises fail. See the proof of [monPred_absolutely_plain]
+for an example where it would fail with a regular [Instance].*)
+Hint Extern 4 (Plain ⎡_⎤) => eapply @embed_plain : typeclass_instances.

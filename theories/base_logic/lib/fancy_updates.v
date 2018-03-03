@@ -30,6 +30,16 @@ Proof.
     iDestruct (ownE_op' with "[HE2 HEf]") as "[? $]"; first by iFrame.
     iIntros "!> !>". by iApply "HP".
   - rewrite uPred_fupd_eq /uPred_fupd_def. by iIntros (????) "[HwP $]".
+Qed.
+Instance uPred_bi_fupd `{invG Σ} : BiFUpd (uPredSI (iResUR Σ)) :=
+  {| bi_fupd_mixin := uPred_fupd_mixin |}.
+
+Instance uPred_bi_bupd_fupd `{invG Σ} : BiBUpdFUpd (uPredSI (iResUR Σ)).
+Proof. rewrite /BiBUpdFUpd uPred_fupd_eq. by iIntros (E P) ">? [$ $] !> !>". Qed.
+
+Instance uPred_bi_fupd_plainly `{invG Σ} : BiFUpdPlainly (uPredSI (iResUR Σ)).
+Proof.
+  split.
   - iIntros (E1 E2 E2' P Q ? (E3&->&HE)%subseteq_disjoint_union_L) "HQP HQ".
     rewrite uPred_fupd_eq /uPred_fupd_def ownE_op //. iIntros "H".
     iMod ("HQ" with "H") as ">(Hws & [HE1 HE3] & HQ)"; iModIntro.
@@ -40,8 +50,3 @@ Proof.
     iAssert (▷ ◇ P)%I with "[-]" as "#$"; last by iFrame.
     iNext. by iMod ("HP" with "[$]") as "(_ & _ & HP)".
 Qed.
-Instance uPred_bi_fupd `{invG Σ} : BiFUpd (uPredSI (iResUR Σ)) :=
-  {| bi_fupd_mixin := uPred_fupd_mixin |}.
-
-Instance uPred_bi_bupd_fupd `{invG Σ} : BiBUpdFUpd (uPredSI (iResUR Σ)).
-Proof. rewrite /BiBUpdFUpd uPred_fupd_eq. by iIntros (E P) ">? [$ $] !> !>". Qed.

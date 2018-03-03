@@ -13,12 +13,6 @@ Arguments bi_wand_iff {_} _%I _%I : simpl never.
 Instance: Params (@bi_wand_iff) 1.
 Infix "∗-∗" := bi_wand_iff (at level 95, no associativity) : bi_scope.
 
-Class Plain {PROP : bi} (P : PROP) := plain : P ⊢ bi_plainly P.
-Arguments Plain {_} _%I : simpl never.
-Arguments plain {_} _%I {_}.
-Hint Mode Plain + ! : typeclass_instances.
-Instance: Params (@Plain) 1.
-
 Class Persistent {PROP : bi} (P : PROP) := persistent : P ⊢ bi_persistently P.
 Arguments Persistent {_} _%I : simpl never.
 Arguments persistent {_} _%I {_}.
@@ -30,8 +24,6 @@ Arguments bi_affinely {_} _%I : simpl never.
 Instance: Params (@bi_affinely) 1.
 Typeclasses Opaque bi_affinely.
 Notation "□ P" := (bi_affinely (bi_persistently P))%I
-  (at level 20, right associativity) : bi_scope.
-Notation "■ P" := (bi_affinely (bi_plainly P))%I
   (at level 20, right associativity) : bi_scope.
 
 Class Affine {PROP : bi} (Q : PROP) := affine : Q ⊢ emp.
@@ -45,11 +37,6 @@ Existing Instance absorbing_bi | 0.
 Class BiPositive (PROP : bi) :=
   bi_positive (P Q : PROP) : bi_affinely (P ∗ Q) ⊢ bi_affinely P ∗ Q.
 
-Class BiPlainlyExist (PROP : bi) :=
-  plainly_exist_1 A (Ψ : A → PROP) :
-    bi_plainly (∃ a, Ψ a) ⊢ ∃ a, bi_plainly (Ψ a).
-Arguments plainly_exist_1 _ {_ _} _.
-
 Definition bi_absorbingly {PROP : bi} (P : PROP) : PROP := (True ∗ P)%I.
 Arguments bi_absorbingly {_} _%I : simpl never.
 Instance: Params (@bi_absorbingly) 1.
@@ -58,12 +45,6 @@ Typeclasses Opaque bi_absorbingly.
 Class Absorbing {PROP : bi} (P : PROP) := absorbing : bi_absorbingly P ⊢ P.
 Arguments Absorbing {_} _%I : simpl never.
 Arguments absorbing {_} _%I.
-
-Definition bi_plainly_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
-  (if p then bi_plainly P else P)%I.
-Arguments bi_plainly_if {_} !_ _%I /.
-Instance: Params (@bi_plainly_if) 2.
-Typeclasses Opaque bi_plainly_if.
 
 Definition bi_persistently_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
   (if p then bi_persistently P else P)%I.
@@ -79,9 +60,6 @@ Typeclasses Opaque bi_affinely_if.
 Notation "□? p P" := (bi_affinely_if p (bi_persistently_if p P))%I
   (at level 20, p at level 9, P at level 20,
    right associativity, format "□? p  P") : bi_scope.
-Notation "■? p P" := (bi_affinely_if p (bi_plainly_if p P))%I
-  (at level 20, p at level 9, P at level 20,
-   right associativity, format "■? p  P") : bi_scope.
 
 Fixpoint bi_hexist {PROP : bi} {As} : himpl As PROP → PROP :=
   match As return himpl As PROP → PROP with

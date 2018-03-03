@@ -1,5 +1,5 @@
 From stdpp Require Import coPset.
-From iris.bi Require Import interface derived_laws big_op.
+From iris.bi Require Import interface derived_laws big_op plainly.
 
 (* We first define operational type classes for the notations, and then later
 bundle these operational type classes with the laws. *)
@@ -57,7 +57,6 @@ Record BiBUpdMixin (PROP : bi) `(BUpd PROP) := {
   bi_bupd_mixin_bupd_mono (P Q : PROP) : (P ⊢ Q) → (|==> P) ==∗ Q;
   bi_bupd_mixin_bupd_trans (P : PROP) : (|==> |==> P) ==∗ P;
   bi_bupd_mixin_bupd_frame_r (P R : PROP) : (|==> P) ∗ R ==∗ P ∗ R;
-  bi_bupd_mixin_bupd_plainly (P : PROP) : (|==> bi_plainly P) -∗ P;
 }.
 
 Record BiFUpdMixin (PROP : sbi) `(FUpd PROP) := {
@@ -69,10 +68,6 @@ Record BiFUpdMixin (PROP : sbi) `(FUpd PROP) := {
   bi_fupd_mixin_fupd_mask_frame_r' E1 E2 Ef (P : PROP) :
     E1 ## Ef → (|={E1,E2}=> ⌜E2 ## Ef⌝ → P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P;
   bi_fupd_mixin_fupd_frame_r E1 E2 (P Q : PROP) : (|={E1,E2}=> P) ∗ Q ={E1,E2}=∗ P ∗ Q;
-  bi_fupd_mixin_fupd_plain' E1 E2 E2' (P Q : PROP) `{!Plain P} :
-    E1 ⊆ E2 →
-    (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P;
-  bi_fupd_mixin_later_fupd_plain E (P : PROP) `{!Plain P} : (▷ |={E}=> P) ={E}=∗ ▷ ◇ P;
 }.
 
 Class BiBUpd (PROP : bi) := {
@@ -92,6 +87,17 @@ Arguments bi_fupd_fupd : simpl never.
 Class BiBUpdFUpd (PROP : sbi) `{BiBUpd PROP, BiFUpd PROP} :=
   bupd_fupd E (P : PROP) : (|==> P) ={E}=∗ P.
 
+Class BiBUpdPlainly (PROP : sbi) `{!BiBUpd PROP, !BiPlainly PROP} :=
+  bupd_plainly (P : PROP) : (|==> ■ P) -∗ P.
+
+Class BiFUpdPlainly (PROP : sbi) `{!BiFUpd PROP, !BiPlainly PROP} := {
+  fupd_plain' E1 E2 E2' (P Q : PROP) `{!Plain P} :
+    E1 ⊆ E2 →
+    (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P;
+  later_fupd_plain E (P : PROP) `{!Plain P} :
+    (▷ |={E}=> P) ={E}=∗ ▷ ◇ P;
+}.
+
 Section bupd_laws.
   Context `{BiBUpd PROP}.
   Implicit Types P : PROP.
@@ -106,8 +112,6 @@ Section bupd_laws.
   Proof. eapply bi_bupd_mixin_bupd_trans, bi_bupd_mixin. Qed.
   Lemma bupd_frame_r (P R : PROP) : (|==> P) ∗ R ==∗ P ∗ R.
   Proof. eapply bi_bupd_mixin_bupd_frame_r, bi_bupd_mixin. Qed.
-  Lemma bupd_plainly (P : PROP) : (|==> bi_plainly P) -∗ P.
-  Proof. eapply bi_bupd_mixin_bupd_plainly, bi_bupd_mixin. Qed.
 End bupd_laws.
 
 Section fupd_laws.
@@ -129,12 +133,6 @@ Section fupd_laws.
   Proof. eapply bi_fupd_mixin_fupd_mask_frame_r', bi_fupd_mixin. Qed.
   Lemma fupd_frame_r E1 E2 (P Q : PROP) : (|={E1,E2}=> P) ∗ Q ={E1,E2}=∗ P ∗ Q.
   Proof. eapply bi_fupd_mixin_fupd_frame_r, bi_fupd_mixin. Qed.
-  Lemma fupd_plain' E1 E2 E2' (P Q : PROP) `{!Plain P} :
-    E1 ⊆ E2 →
-    (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
-  Proof. eapply bi_fupd_mixin_fupd_plain'; eauto using bi_fupd_mixin. Qed.
-  Lemma later_fupd_plain E (P : PROP) `{!Plain P} : (▷ |={E}=> P) ={E}=∗ ▷ ◇ P.
-  Proof. eapply bi_fupd_mixin_later_fupd_plain; eauto using bi_fupd_mixin. Qed.
 End fupd_laws.
 
 Section bupd_derived.
@@ -159,10 +157,6 @@ Section bupd_derived.
   Proof. by rewrite bupd_frame_r bi.wand_elim_r. Qed.
   Lemma bupd_sep P Q : (|==> P) ∗ (|==> Q) ==∗ P ∗ Q.
   Proof. by rewrite bupd_frame_r bupd_frame_l bupd_trans. Qed.
-  Lemma bupd_affinely_plainly `{BiAffine PROP} P : (|==> ■ P) ⊢ P.
-  Proof. by rewrite bi.affine_affinely bupd_plainly. Qed.
-  Lemma bupd_plain P `{!Plain P} : (|==> P) ⊢ P.
-  Proof. by rewrite {1}(plain P) bupd_plainly. Qed.
 End bupd_derived.
 
 Section bupd_derived_sbi.
@@ -174,6 +168,9 @@ Section bupd_derived_sbi.
     rewrite /sbi_except_0. apply bi.or_elim; eauto using bupd_mono, bi.or_intro_r.
     by rewrite -bupd_intro -bi.or_intro_l.
   Qed.
+
+  Lemma bupd_plain P `{BiBUpdPlainly PROP, !Plain P} : (|==> P) ⊢ P.
+  Proof. by rewrite {1}(plain P) bupd_plainly. Qed.
 End bupd_derived_sbi.
 
 Section fupd_derived.
@@ -243,7 +240,7 @@ Section fupd_derived.
     intros P1 P2 HP Q1 Q2 HQ. by rewrite HP HQ -fupd_sep.
   Qed.
 
-  Lemma fupd_plain E1 E2 P Q `{!Plain P} :
+  Lemma fupd_plain `{BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 P Q `{!Plain P} :
     E1 ⊆ E2 → (Q -∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
   Proof.
     intros HE. rewrite -(fupd_plain' _ _ E1) //. apply bi.wand_intro_l.

@@ -28,6 +28,7 @@ theories/algebra/proofmode_classes.v
 theories/bi/interface.v
 theories/bi/derived_connectives.v
 theories/bi/derived_laws.v
+theories/bi/plainly.v
 theories/bi/big_op.v
 theories/bi/updates.v
 theories/bi/bi.v
