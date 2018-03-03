@@ -254,19 +254,7 @@ Proof. done. Qed.
 Class Frame {PROP : bi} (p : bool) (R P Q : PROP) := frame : □?p R ∗ Q ⊢ P.
 Arguments Frame {_} _ _%I _%I _%I.
 Arguments frame {_ _} _%I _%I _%I {_}.
-(* [P] has - hint mode even though it is morally an input. In the case
-   P is an evar, it will be instantiated with [R * ?P'], where [?P']
-   is a new evar. This mechanism should be the only instance able to
-   instanciate [P] when it is an evar. *)
-Hint Mode Frame + + ! - - : typeclass_instances.
-
-(* [KnownFrame] is like [Frame], but with an [Hint Mode] that make
-   sure we do not instantiate [P]. *)
-Class KnownFrame {PROP : bi} (p : bool) (R P Q : PROP) :=
-  known_frame :> Frame p R P Q.
-Arguments KnownFrame {_} _ _%I _%I _%I.
-Arguments known_frame {_ _} _%I _%I _%I {_}.
-Hint Mode KnownFrame + + ! ! - : typeclass_instances.
+Hint Mode Frame + + ! ! - : typeclass_instances.
 
 (* The boolean [progress] indicates whether actual framing has been performed.
 If it is [false], then the default instance [maybe_frame_default] below has been

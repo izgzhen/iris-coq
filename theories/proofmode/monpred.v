@@ -332,16 +332,16 @@ Qed.
    search, and hence performance issues. *)
 Global Instance frame_monPred_at p P Q 𝓠 R i j :
   IsBiIndexRel i j → Frame p R P Q → MakeMonPredAt j Q 𝓠 →
-  KnownFrame p (R i) (P j) 𝓠.
+  Frame p (R i) (P j) 𝓠.
 Proof.
-  rewrite /KnownFrame /Frame /MakeMonPredAt /bi_affinely_if /bi_persistently_if
+  rewrite /Frame /MakeMonPredAt /bi_affinely_if /bi_persistently_if
           /IsBiIndexRel=> Hij <- <-.
   destruct p; by rewrite Hij monPred_at_sep ?monPred_at_affinely ?monPred_at_persistently.
 Qed.
 Global Instance frame_monPred_at_embed i p P Q 𝓠 𝓡 :
-  Frame p ⎡𝓡⎤ P Q → MakeMonPredAt i Q 𝓠 → KnownFrame p 𝓡 (P i) 𝓠.
+  Frame p ⎡𝓡⎤ P Q → MakeMonPredAt i Q 𝓠 → Frame p 𝓡 (P i) 𝓠.
 Proof.
-  rewrite /KnownFrame /Frame /MakeMonPredAt /bi_affinely_if /bi_persistently_if=> <- <-.
+  rewrite /Frame /MakeMonPredAt /bi_affinely_if /bi_persistently_if=> <- <-.
   destruct p; by rewrite monPred_at_sep ?monPred_at_affinely
                          ?monPred_at_persistently monPred_at_embed.
 Qed.

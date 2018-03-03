@@ -378,8 +378,8 @@ Section proofmode_classes.
 
   Global Instance frame_twp p s E e R Φ Ψ :
     (∀ v, Frame p R (Φ v) (Ψ v)) →
-    KnownFrame p R (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Ψ }]).
-  Proof. rewrite /KnownFrame /Frame=> HR. rewrite twp_frame_l. apply twp_mono, HR. Qed.
+    Frame p R (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Ψ }]).
+  Proof. rewrite /Frame=> HR. rewrite twp_frame_l. apply twp_mono, HR. Qed.
 
   Global Instance is_except_0_wp s E e Φ : IsExcept0 (WP e @ s; E [{ Φ }]).
   Proof. by rewrite /IsExcept0 -{2}fupd_twp -except_0_fupd -fupd_intro. Qed.
