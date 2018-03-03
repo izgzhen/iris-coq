@@ -224,8 +224,8 @@ End Bi.
 
 Arguments monPred_objectively {_ _} _%I.
 Arguments monPred_subjectively {_ _} _%I.
-Notation "'∀ᵢ' P" := (monPred_objectively P) (at level 20, right associativity) : bi_scope.
-Notation "'∃ᵢ' P" := (monPred_subjectively P) (at level 20, right associativity) : bi_scope.
+Notation "'<obj>' P" := (monPred_objectively P) (at level 20, right associativity) : bi_scope.
+Notation "'<subj>' P" := (monPred_subjectively P) (at level 20, right associativity) : bi_scope.
 
 Section Sbi.
 Context {I : biIndex} {PROP : sbi}.
@@ -500,7 +500,7 @@ Global Instance monPred_objectively_ne : NonExpansive (@monPred_objectively I PR
 Proof. rewrite monPred_objectively_unfold. solve_proper. Qed.
 Global Instance monPred_objectively_proper : Proper ((≡) ==> (≡)) (@monPred_objectively I PROP).
 Proof. apply (ne_proper _). Qed.
-Lemma monPred_objectively_mono P Q : (P ⊢ Q) → (∀ᵢ P ⊢ ∀ᵢ Q).
+Lemma monPred_objectively_mono P Q : (P ⊢ Q) → (<obj> P ⊢ <obj> Q).
 Proof. rewrite monPred_objectively_unfold. solve_proper. Qed.
 Global Instance monPred_objectively_mono' : Proper ((⊢) ==> (⊢)) (@monPred_objectively I PROP).
 Proof. intros ???. by apply monPred_objectively_mono. Qed.
@@ -508,18 +508,18 @@ Global Instance monPred_objectively_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@monPred_objectively I PROP).
 Proof. intros ???. by apply monPred_objectively_mono. Qed.
 
-Global Instance monPred_objectively_persistent P : Persistent P → Persistent (∀ᵢ P).
+Global Instance monPred_objectively_persistent P : Persistent P → Persistent (<obj> P).
 Proof. rewrite monPred_objectively_unfold. apply _. Qed.
-Global Instance monPred_objectively_absorbing P : Absorbing P → Absorbing (∀ᵢ P).
+Global Instance monPred_objectively_absorbing P : Absorbing P → Absorbing (<obj> P).
 Proof. rewrite monPred_objectively_unfold. apply _. Qed.
-Global Instance monPred_objectively_affine P : Affine P → Affine (∀ᵢ P).
+Global Instance monPred_objectively_affine P : Affine P → Affine (<obj> P).
 Proof. rewrite monPred_objectively_unfold. apply _. Qed.
 
 Global Instance monPred_subjectively_ne : NonExpansive (@monPred_subjectively I PROP).
 Proof. rewrite monPred_subjectively_unfold. solve_proper. Qed.
 Global Instance monPred_subjectively_proper : Proper ((≡) ==> (≡)) (@monPred_subjectively I PROP).
 Proof. apply (ne_proper _). Qed.
-Lemma monPred_subjectively_mono P Q : (P ⊢ Q) → (∃ᵢ P ⊢ ∃ᵢ Q).
+Lemma monPred_subjectively_mono P Q : (P ⊢ Q) → <subj> P ⊢ <subj> Q.
 Proof. rewrite monPred_subjectively_unfold. solve_proper. Qed.
 Global Instance monPred_subjectively_mono' : Proper ((⊢) ==> (⊢)) (@monPred_subjectively I PROP).
 Proof. intros ???. by apply monPred_subjectively_mono. Qed.
@@ -527,11 +527,11 @@ Global Instance monPred_subjectively_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@monPred_subjectively I PROP).
 Proof. intros ???. by apply monPred_subjectively_mono. Qed.
 
-Global Instance monPred_subjectively_persistent P : Persistent P → Persistent (∃ᵢ P).
+Global Instance monPred_subjectively_persistent P : Persistent P → Persistent (<subj> P).
 Proof. rewrite monPred_subjectively_unfold. apply _. Qed.
-Global Instance monPred_subjectively_absorbing P : Absorbing P → Absorbing (∃ᵢ P).
+Global Instance monPred_subjectively_absorbing P : Absorbing P → Absorbing (<subj> P).
 Proof. rewrite monPred_subjectively_unfold. apply _. Qed.
-Global Instance monPred_subjectively_affine P : Affine P → Affine (∃ᵢ P).
+Global Instance monPred_subjectively_affine P : Affine P → Affine (<subj> P).
 Proof. rewrite monPred_subjectively_unfold. apply _. Qed.
 
 (** monPred_at unfolding laws *)
@@ -559,9 +559,9 @@ Lemma monPred_at_persistently i P : bi_persistently P i ⊣⊢ bi_persistently (
 Proof. by unseal. Qed.
 Lemma monPred_at_in i j : monPred_at (monPred_in j) i ⊣⊢ ⌜j ⊑ i⌝.
 Proof. by unseal. Qed.
-Lemma monPred_at_objectively i P : (∀ᵢ P) i ⊣⊢ ∀ j, P j.
+Lemma monPred_at_objectively i P : (<obj> P) i ⊣⊢ ∀ j, P j.
 Proof. by unseal. Qed.
-Lemma monPred_at_subjectively i P : (∃ᵢ P) i ⊣⊢ ∃ j, P j.
+Lemma monPred_at_subjectively i P : (<subj> P) i ⊣⊢ ∃ j, P j.
 Proof. by unseal. Qed.
 Lemma monPred_at_persistently_if i p P :
   bi_persistently_if p P i ⊣⊢ bi_persistently_if p (P i).
@@ -580,83 +580,83 @@ Lemma monPred_impl_force i P Q : (P → Q) i -∗ (P i → Q i).
 Proof. unseal. rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim //. Qed.
 
 (* Laws for monPred_objectively and of Objective. *)
-Lemma monPred_objectively_elim P : ∀ᵢ P ⊢ P.
+Lemma monPred_objectively_elim P : <obj> P ⊢ P.
 Proof. rewrite monPred_objectively_unfold. unseal. split=>?. apply bi.forall_elim. Qed.
-Lemma monPred_objectively_idemp P : ∀ᵢ (∀ᵢ P) ⊣⊢ ∀ᵢ P.
+Lemma monPred_objectively_idemp P : <obj> <obj> P ⊣⊢ <obj> P.
 Proof.
   apply bi.equiv_spec; split; [by apply monPred_objectively_elim|].
   unseal. split=>i /=. by apply bi.forall_intro=>_.
 Qed.
 
-Lemma monPred_objectively_forall {A} (Φ : A → monPred) : ∀ᵢ (∀ x, Φ x) ⊣⊢ ∀ x, ∀ᵢ (Φ x).
+Lemma monPred_objectively_forall {A} (Φ : A → monPred) : <obj> (∀ x, Φ x) ⊣⊢ ∀ x, <obj> (Φ x).
 Proof.
   unseal. split=>i. apply bi.equiv_spec; split=>/=;
     do 2 apply bi.forall_intro=>?; by do 2 rewrite bi.forall_elim.
 Qed.
-Lemma monPred_objectively_and P Q : ∀ᵢ (P ∧ Q) ⊣⊢ ∀ᵢ P ∧ ∀ᵢ Q.
+Lemma monPred_objectively_and P Q : <obj> (P ∧ Q) ⊣⊢ <obj> P ∧ <obj> Q.
 Proof.
   unseal. split=>i. apply bi.equiv_spec; split=>/=.
   - apply bi.and_intro; do 2 f_equiv. apply bi.and_elim_l. apply bi.and_elim_r.
   - apply bi.forall_intro=>?. by rewrite !bi.forall_elim.
 Qed.
 Lemma monPred_objectively_exist {A} (Φ : A → monPred) :
-  (∃ x, ∀ᵢ (Φ x)) ⊢ ∀ᵢ (∃ x, (Φ x)).
+  (∃ x, <obj> (Φ x)) ⊢ <obj> (∃ x, (Φ x)).
 Proof. apply bi.exist_elim=>?. f_equiv. apply bi.exist_intro. Qed.
-Lemma monPred_objectively_or P Q : (∀ᵢ P) ∨ (∀ᵢ Q) ⊢ ∀ᵢ (P ∨ Q).
+Lemma monPred_objectively_or P Q : <obj> P ∨ <obj> Q ⊢ <obj> (P ∨ Q).
 Proof. apply bi.or_elim; f_equiv. apply bi.or_intro_l. apply bi.or_intro_r. Qed.
 
-Lemma monPred_objectively_sep_2 P Q : ∀ᵢ P ∗ ∀ᵢ Q ⊢ ∀ᵢ (P ∗ Q).
+Lemma monPred_objectively_sep_2 P Q : <obj> P ∗ <obj> Q ⊢ <obj> (P ∗ Q).
 Proof. unseal. split=>i /=. apply bi.forall_intro=>?. by rewrite !bi.forall_elim. Qed.
-Lemma monPred_objectively_sep `{BiIndexBottom bot} P Q : ∀ᵢ (P ∗ Q) ⊣⊢ ∀ᵢ P ∗ ∀ᵢ Q.
+Lemma monPred_objectively_sep `{BiIndexBottom bot} P Q : <obj> (P ∗ Q) ⊣⊢ <obj> P ∗ <obj> Q.
 Proof.
   apply bi.equiv_spec, conj, monPred_objectively_sep_2. unseal. split=>i /=.
   rewrite (bi.forall_elim bot). by f_equiv; apply bi.forall_intro=>j; f_equiv.
 Qed.
-Lemma monPred_objectively_embed (P : PROP) : ∀ᵢ ⎡P⎤ ⊣⊢ ⎡P⎤.
+Lemma monPred_objectively_embed (P : PROP) : <obj> ⎡P⎤ ⊣⊢ ⎡P⎤.
 Proof.
   apply bi.equiv_spec; split; unseal; split=>i /=.
   by rewrite (bi.forall_elim inhabitant). by apply bi.forall_intro.
 Qed.
-Lemma monPred_objectively_emp : ∀ᵢ (emp : monPred) ⊣⊢ emp.
+Lemma monPred_objectively_emp : <obj> (emp : monPred) ⊣⊢ emp.
 Proof. rewrite monPred_emp_unfold. apply monPred_objectively_embed. Qed.
-Lemma monPred_objectively_pure φ : ∀ᵢ (⌜ φ ⌝ : monPred) ⊣⊢ ⌜ φ ⌝.
+Lemma monPred_objectively_pure φ : <obj> (⌜ φ ⌝ : monPred) ⊣⊢ ⌜ φ ⌝.
 Proof. rewrite monPred_pure_unfold. apply monPred_objectively_embed. Qed.
 
-Lemma monPred_subjectively_intro P : P ⊢ ∃ᵢ P.
+Lemma monPred_subjectively_intro P : P ⊢ <subj> P.
 Proof. unseal. split=>?. apply bi.exist_intro. Qed.
 
 Lemma monPred_subjectively_forall {A} (Φ : A → monPred) :
-  (∃ᵢ (∀ x, Φ x)) ⊢ ∀ x, ∃ᵢ (Φ x).
+  (<subj> (∀ x, Φ x)) ⊢ ∀ x, <subj> (Φ x).
 Proof. apply bi.forall_intro=>?. f_equiv. apply bi.forall_elim. Qed.
-Lemma monPred_subjectively_and P Q : ∃ᵢ (P ∧ Q) ⊢ (∃ᵢ P) ∧ (∃ᵢ Q).
+Lemma monPred_subjectively_and P Q : <subj> (P ∧ Q) ⊢ <subj> P ∧ <subj> Q.
 Proof. apply bi.and_intro; f_equiv. apply bi.and_elim_l. apply bi.and_elim_r. Qed.
-Lemma monPred_subjectively_exist {A} (Φ : A → monPred) : ∃ᵢ (∃ x, Φ x) ⊣⊢ ∃ x, ∃ᵢ (Φ x).
+Lemma monPred_subjectively_exist {A} (Φ : A → monPred) : <subj> (∃ x, Φ x) ⊣⊢ ∃ x, <subj> (Φ x).
 Proof.
   unseal. split=>i. apply bi.equiv_spec; split=>/=;
     do 2 apply bi.exist_elim=>?; by do 2 rewrite -bi.exist_intro.
 Qed.
-Lemma monPred_subjectively_or P Q : ∃ᵢ (P ∨ Q) ⊣⊢ ∃ᵢ P ∨ ∃ᵢ Q.
+Lemma monPred_subjectively_or P Q : <subj> (P ∨ Q) ⊣⊢ <subj> P ∨ <subj> Q.
 Proof.
   unseal. split=>i. apply bi.equiv_spec; split=>/=.
   - apply bi.exist_elim=>?. by rewrite -!bi.exist_intro.
   - apply bi.or_elim; do 2 f_equiv. apply bi.or_intro_l. apply bi.or_intro_r.
 Qed.
 
-Lemma monPred_subjectively_sep P Q : ∃ᵢ (P ∗ Q) ⊢ ∃ᵢ P ∗ ∃ᵢ Q.
+Lemma monPred_subjectively_sep P Q : <subj> (P ∗ Q) ⊢ <subj> P ∗ <subj> Q.
 Proof. unseal. split=>i /=. apply bi.exist_elim=>?. by rewrite -!bi.exist_intro. Qed.
 
-Lemma monPred_subjectively_idemp P : ∃ᵢ (∃ᵢ P) ⊣⊢ ∃ᵢ P.
+Lemma monPred_subjectively_idemp P : <subj> <subj> P ⊣⊢ <subj> P.
 Proof.
   apply bi.equiv_spec; split; [|by apply monPred_subjectively_intro].
   unseal. split=>i /=. by apply bi.exist_elim=>_.
 Qed.
 
-Lemma objective_objectively P `{!Objective P} : P ⊢ ∀ᵢ P.
+Lemma objective_objectively P `{!Objective P} : P ⊢ <obj> P.
 Proof.
   rewrite monPred_objectively_unfold /= embed_forall. apply bi.forall_intro=>?.
   split=>?. unseal. apply objective_at, _.
 Qed.
-Lemma objective_subjectively P `{!Objective P} : ∃ᵢ P ⊢ P.
+Lemma objective_subjectively P `{!Objective P} : <subj> P ⊢ P.
 Proof.
   rewrite monPred_subjectively_unfold /= embed_exist. apply bi.exist_elim=>?.
   split=>?. unseal. apply objective_at, _.
@@ -668,9 +668,9 @@ Global Instance pure_objective φ : @Objective I PROP ⌜φ⌝.
 Proof. intros ??. by unseal. Qed.
 Global Instance emp_objective : @Objective I PROP emp.
 Proof. intros ??. by unseal. Qed.
-Global Instance objectively_objective P : Objective (∀ᵢ P).
+Global Instance objectively_objective P : Objective (<obj> P).
 Proof. intros ??. by unseal. Qed.
-Global Instance subjectively_objective P : Objective (∃ᵢ P).
+Global Instance subjectively_objective P : Objective (<subj> P).
 Proof. intros ??. by unseal. Qed.
 
 Global Instance and_objective P Q `{!Objective P, !Objective Q} : Objective (P ∧ Q).
@@ -772,33 +772,33 @@ Proof.
 Qed.
 
 Lemma monPred_objectively_big_sepL_entails {A} (Φ : nat → A → monPred) l :
-  ([∗ list] k↦x ∈ l, ∀ᵢ (Φ k x)) ⊢ ∀ᵢ ([∗ list] k↦x ∈ l, Φ k x).
+  ([∗ list] k↦x ∈ l, <obj> (Φ k x)) ⊢ <obj> ([∗ list] k↦x ∈ l, Φ k x).
 Proof. apply (big_opL_commute monPred_objectively (R:=flip (⊢))). Qed.
 Lemma monPred_objectively_big_sepM_entails
       `{Countable K} {A} (Φ : K → A → monPred) (m : gmap K A) :
-  ([∗ map] k↦x ∈ m, ∀ᵢ (Φ k x)) ⊢ ∀ᵢ ([∗ map] k↦x ∈ m, Φ k x).
+  ([∗ map] k↦x ∈ m, <obj> (Φ k x)) ⊢ <obj> ([∗ map] k↦x ∈ m, Φ k x).
 Proof. apply (big_opM_commute monPred_objectively (R:=flip (⊢))). Qed.
 Lemma monPred_objectively_big_sepS_entails `{Countable A} (Φ : A → monPred) (X : gset A) :
-  ([∗ set] y ∈ X, ∀ᵢ (Φ y)) ⊢ ∀ᵢ ([∗ set] y ∈ X, Φ y).
+  ([∗ set] y ∈ X, <obj> (Φ y)) ⊢ <obj> ([∗ set] y ∈ X, Φ y).
 Proof. apply (big_opS_commute monPred_objectively (R:=flip (⊢))). Qed.
 Lemma monPred_objectively_big_sepMS_entails `{Countable A} (Φ : A → monPred) (X : gmultiset A) :
-  ([∗ mset] y ∈ X, ∀ᵢ (Φ y)) ⊢ ∀ᵢ ([∗ mset] y ∈ X, Φ y).
+  ([∗ mset] y ∈ X, <obj> (Φ y)) ⊢ <obj> ([∗ mset] y ∈ X, Φ y).
 Proof. apply (big_opMS_commute monPred_objectively (R:=flip (⊢))). Qed.
 
 Lemma monPred_objectively_big_sepL `{BiIndexBottom bot} {A} (Φ : nat → A → monPred) l :
-  ∀ᵢ ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, ∀ᵢ (Φ k x)).
+  <obj> ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ ([∗ list] k↦x ∈ l, <obj> (Φ k x)).
 Proof. apply (big_opL_commute _). Qed.
 Lemma monPred_objectively_big_sepM `{BiIndexBottom bot} `{Countable K} {A}
       (Φ : K → A → monPred) (m : gmap K A) :
-  ∀ᵢ ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, ∀ᵢ (Φ k x)).
+  <obj> ([∗ map] k↦x ∈ m, Φ k x) ⊣⊢ ([∗ map] k↦x ∈ m, <obj> (Φ k x)).
 Proof. apply (big_opM_commute _). Qed.
 Lemma monPred_objectively_big_sepS `{BiIndexBottom bot} `{Countable A}
       (Φ : A → monPred) (X : gset A) :
-  ∀ᵢ ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, ∀ᵢ (Φ y)).
+  <obj> ([∗ set] y ∈ X, Φ y) ⊣⊢ ([∗ set] y ∈ X, <obj> (Φ y)).
 Proof. apply (big_opS_commute _). Qed.
 Lemma monPred_objectively_big_sepMS `{BiIndexBottom bot} `{Countable A}
       (Φ : A → monPred) (X : gmultiset A) :
-  ∀ᵢ ([∗ mset] y ∈ X, Φ y) ⊣⊢  ([∗ mset] y ∈ X, ∀ᵢ (Φ y)).
+  <obj> ([∗ mset] y ∈ X, Φ y) ⊣⊢  ([∗ mset] y ∈ X, <obj> (Φ y)).
 Proof. apply (big_opMS_commute _). Qed.
 
 Global Instance big_sepL_objective {A} (l : list A) Φ `{∀ n x, Objective (Φ n x)} :
@@ -866,12 +866,12 @@ Global Instance monPred_at_timeless P i : Timeless P → Timeless (P i).
 Proof. move => [] /(_ i). unfold Timeless. by unseal. Qed.
 Global Instance monPred_in_timeless i0 : Timeless (@monPred_in I PROP i0).
 Proof. split => ? /=. unseal. apply timeless, _. Qed.
-Global Instance monPred_objectively_timeless P : Timeless P → Timeless (∀ᵢ P).
+Global Instance monPred_objectively_timeless P : Timeless P → Timeless (<obj> P).
 Proof.
   move=>[]. unfold Timeless. unseal=>Hti. split=> ? /=.
   by apply timeless, bi.forall_timeless.
 Qed.
-Global Instance monPred_subjectively_timeless P : Timeless P → Timeless (∃ᵢ P).
+Global Instance monPred_subjectively_timeless P : Timeless P → Timeless (<subj> P).
 Proof.
   move=>[]. unfold Timeless. unseal=>Hti. split=> ? /=.
   by apply timeless, bi.exist_timeless.
@@ -973,9 +973,9 @@ Proof.
                -bi.f_equiv -bi.sig_equivI !bi.ofe_fun_equivI.
 Qed.
 
-Global Instance monPred_objectively_plain `{BiPlainly PROP} P : Plain P → Plain (∀ᵢ P).
+Global Instance monPred_objectively_plain `{BiPlainly PROP} P : Plain P → Plain (<obj> P).
 Proof. rewrite monPred_objectively_unfold. apply _. Qed.
-Global Instance monPred_subjectively_plain `{BiPlainly PROP} P : Plain P → Plain (∃ᵢ P).
+Global Instance monPred_subjectively_plain `{BiPlainly PROP} P : Plain P → Plain (<subj> P).
 Proof. rewrite monPred_subjectively_unfold. apply _. Qed.
 
 (** Objective  *)

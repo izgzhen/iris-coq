@@ -69,15 +69,15 @@ Section tests.
     iIntros "H HP". by iApply "H".
   Qed.
 
-  Lemma test_objectively P Q : ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ ∀ᵢ (P ∗ Q).
+  Lemma test_objectively P Q : <obj> emp -∗ <obj> P -∗ <obj> Q -∗ <obj> (P ∗ Q).
   Proof. iIntros "#? HP HQ". iAlways. by iSplitL "HP". Qed.
 
   Lemma test_objectively_absorbing P Q R `{!Absorbing P} :
-    ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
+    <obj> emp -∗ <obj> P -∗ <obj> Q -∗ R -∗ <obj> (P ∗ Q).
   Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
 
   Lemma test_objectively_affine P Q R `{!Affine R} :
-    ∀ᵢ emp -∗ ∀ᵢ P -∗ ∀ᵢ Q -∗ R -∗ ∀ᵢ (P ∗ Q).
+    <obj> emp -∗ <obj> P -∗ <obj> Q -∗ R -∗ <obj> (P ∗ Q).
   Proof. iIntros "#? HP HQ HR". iAlways. by iSplitL "HP". Qed.
 
   Lemma test_iModIntro_embed P `{!Affine Q} 𝓟 𝓠 :

@@ -43,10 +43,10 @@ Implicit Types φ : Prop.
 Implicit Types i j : I.
 
 Global Instance from_modal_objectively P :
-  FromModal modality_objectively (∀ᵢ P) (∀ᵢ P) P | 1.
+  FromModal modality_objectively (<obj> P) (<obj> P) P | 1.
 Proof. by rewrite /FromModal. Qed.
 Global Instance from_modal_subjectively P :
-  FromModal modality_id (∃ᵢ P) (∃ᵢ P) P | 1.
+  FromModal modality_id (<subj> P) (<subj> P) P | 1.
 Proof. by rewrite /FromModal /= -monPred_subjectively_intro. Qed.
 
 Global Instance from_modal_affinely_monPred_at `(sel : A) P Q 𝓠 i :
@@ -136,10 +136,10 @@ Proof.
 Qed.
 
 Global Instance from_assumption_make_monPred_objectively P Q :
-  FromAssumption p P Q → FromAssumption p (∀ᵢ P) Q.
+  FromAssumption p P Q → FromAssumption p (<obj> P) Q.
 Proof. intros ?. by rewrite /FromAssumption monPred_objectively_elim. Qed.
 Global Instance from_assumption_make_monPred_subjectively P Q :
-  FromAssumption p P Q → FromAssumption p P (∃ᵢ Q).
+  FromAssumption p P Q → FromAssumption p P (<subj> Q).
 Proof. intros ?. by rewrite /FromAssumption -monPred_subjectively_intro. Qed.
 
 Global Instance as_valid_monPred_at φ P (Φ : I → PROP) :
@@ -293,23 +293,23 @@ Proof.
 Qed.
 
 Global Instance from_forall_monPred_at_objectively P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → FromForall ((∀ᵢ P) i)%I Φ.
+  (∀ i, MakeMonPredAt i P (Φ i)) → FromForall ((<obj> P) i)%I Φ.
 Proof.
   rewrite /FromForall /MakeMonPredAt monPred_at_objectively=>H. by setoid_rewrite <- H.
 Qed.
 Global Instance into_forall_monPred_at_objectively P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → IntoForall ((∀ᵢ P) i) Φ.
+  (∀ i, MakeMonPredAt i P (Φ i)) → IntoForall ((<obj> P) i) Φ.
 Proof.
   rewrite /IntoForall /MakeMonPredAt monPred_at_objectively=>H. by setoid_rewrite <- H.
 Qed.
 
 Global Instance from_exist_monPred_at_ex P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → FromExist ((∃ᵢ P) i) Φ.
+  (∀ i, MakeMonPredAt i P (Φ i)) → FromExist ((<subj> P) i) Φ.
 Proof.
   rewrite /FromExist /MakeMonPredAt monPred_at_subjectively=>H. by setoid_rewrite <- H.
 Qed.
 Global Instance into_exist_monPred_at_ex P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → IntoExist ((∃ᵢ P) i) Φ.
+  (∀ i, MakeMonPredAt i P (Φ i)) → IntoExist ((<subj> P) i) Φ.
 Proof.
   rewrite /IntoExist /MakeMonPredAt monPred_at_subjectively=>H. by setoid_rewrite <- H.
 Qed.
