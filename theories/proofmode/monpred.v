@@ -18,18 +18,18 @@ Hint Extern 1 (IsBiIndexRel _ _) => unfold IsBiIndexRel; assumption
 Section modalities.
   Context {I : biIndex} {PROP : bi}.
 
-  Lemma modality_absolutely_mixin :
-    modality_mixin (@monPred_absolutely I PROP)
-      (MIEnvFilter Absolute) (MIEnvFilter Absolute).
+  Lemma modality_objectively_mixin :
+    modality_mixin (@monPred_objectively I PROP)
+      (MIEnvFilter Objective) (MIEnvFilter Objective).
   Proof.
     split; simpl; split_and?; intros;
       try match goal with H : TCDiag _ _ _ |- _ => destruct H end;
-      eauto using bi.equiv_entails_sym, absolute_absolutely,
-        monPred_absolutely_mono, monPred_absolutely_and,
-        monPred_absolutely_sep_2 with typeclass_instances.
+      eauto using bi.equiv_entails_sym, objective_objectively,
+        monPred_objectively_mono, monPred_objectively_and,
+        monPred_objectively_sep_2 with typeclass_instances.
   Qed.
-  Definition modality_absolutely :=
-    Modality _ modality_absolutely_mixin.
+  Definition modality_objectively :=
+    Modality _ modality_objectively_mixin.
 End modalities.
 
 Section bi.
@@ -42,12 +42,12 @@ Implicit Types 𝓟 𝓠 𝓡 : PROP.
 Implicit Types φ : Prop.
 Implicit Types i j : I.
 
-Global Instance from_modal_absolutely P :
-  FromModal modality_absolutely (∀ᵢ P) (∀ᵢ P) P | 1.
+Global Instance from_modal_objectively P :
+  FromModal modality_objectively (<obj> P) (<obj> P) P | 1.
 Proof. by rewrite /FromModal. Qed.
-Global Instance from_modal_relatively P :
-  FromModal modality_id (∃ᵢ P) (∃ᵢ P) P | 1.
-Proof. by rewrite /FromModal /= -monPred_relatively_intro. Qed.
+Global Instance from_modal_subjectively P :
+  FromModal modality_id (<subj> P) (<subj> P) P | 1.
+Proof. by rewrite /FromModal /= -monPred_subjectively_intro. Qed.
 
 Global Instance from_modal_affinely_monPred_at `(sel : A) P Q 𝓠 i :
   FromModal modality_affinely sel P Q → MakeMonPredAt i Q 𝓠 →
@@ -96,21 +96,21 @@ Global Instance make_monPred_at_exists {A} i (Φ : A → monPred) (Ψ : A → PR
   (∀ a, MakeMonPredAt i (Φ a) (Ψ a)) → MakeMonPredAt i (∃ a, Φ a) (∃ a, Ψ a).
 Proof. rewrite /MakeMonPredAt monPred_at_exist=>H. by setoid_rewrite <- H. Qed.
 Global Instance make_monPred_at_persistently i P 𝓟 :
-  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (bi_persistently P) (bi_persistently 𝓟).
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (<pers> P) (<pers> 𝓟).
 Proof. by rewrite /MakeMonPredAt monPred_at_persistently=><-. Qed.
 Global Instance make_monPred_at_affinely i P 𝓟 :
-  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (bi_affinely P) (bi_affinely 𝓟).
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (<affine> P) (<affine> 𝓟).
 Proof. by rewrite /MakeMonPredAt monPred_at_affinely=><-. Qed.
 Global Instance make_monPred_at_absorbingly i P 𝓟 :
-  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (bi_absorbingly P) (bi_absorbingly 𝓟).
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (<absorb> P) (<absorb> 𝓟).
 Proof. by rewrite /MakeMonPredAt monPred_at_absorbingly=><-. Qed.
 Global Instance make_monPred_at_persistently_if i P 𝓟 p :
   MakeMonPredAt i P 𝓟 →
-  MakeMonPredAt i (bi_persistently_if p P) (bi_persistently_if p 𝓟).
+  MakeMonPredAt i (<pers>?p P) (<pers>?p 𝓟).
 Proof. destruct p; simpl; apply _. Qed.
 Global Instance make_monPred_at_affinely_if i P 𝓟 p :
   MakeMonPredAt i P 𝓟 →
-  MakeMonPredAt i (bi_affinely_if p P) (bi_affinely_if p 𝓟).
+  MakeMonPredAt i (<affine>?p P) (<affine>?p 𝓟).
 Proof. destruct p; simpl; apply _. Qed.
 Global Instance make_monPred_at_embed i 𝓟 : MakeMonPredAt i ⎡𝓟⎤ 𝓟.
 Proof. by rewrite /MakeMonPredAt monPred_at_embed. Qed.
@@ -135,12 +135,12 @@ Proof.
   apply  bi.affinely_persistently_if_elim.
 Qed.
 
-Global Instance from_assumption_make_monPred_absolutely P Q :
-  FromAssumption p P Q → FromAssumption p (∀ᵢ P) Q.
-Proof. intros ?. by rewrite /FromAssumption monPred_absolutely_elim. Qed.
-Global Instance from_assumption_make_monPred_relatively P Q :
-  FromAssumption p P Q → FromAssumption p P (∃ᵢ Q).
-Proof. intros ?. by rewrite /FromAssumption -monPred_relatively_intro. Qed.
+Global Instance from_assumption_make_monPred_objectively P Q :
+  FromAssumption p P Q → FromAssumption p (<obj> P) Q.
+Proof. intros ?. by rewrite /FromAssumption monPred_objectively_elim. Qed.
+Global Instance from_assumption_make_monPred_subjectively P Q :
+  FromAssumption p P Q → FromAssumption p P (<subj> Q).
+Proof. intros ?. by rewrite /FromAssumption -monPred_subjectively_intro. Qed.
 
 Global Instance as_valid_monPred_at φ P (Φ : I → PROP) :
   AsValid0 φ P → (∀ i, MakeMonPredAt i P (Φ i)) → AsValid φ (∀ i, Φ i) | 100.
@@ -292,26 +292,26 @@ Proof.
   by rewrite monPred_at_exist.
 Qed.
 
-Global Instance from_forall_monPred_at_absolutely P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → FromForall ((∀ᵢ P) i)%I Φ.
+Global Instance from_forall_monPred_at_objectively P (Φ : I → PROP) i :
+  (∀ i, MakeMonPredAt i P (Φ i)) → FromForall ((<obj> P) i)%I Φ.
 Proof.
-  rewrite /FromForall /MakeMonPredAt monPred_at_absolutely=>H. by setoid_rewrite <- H.
+  rewrite /FromForall /MakeMonPredAt monPred_at_objectively=>H. by setoid_rewrite <- H.
 Qed.
-Global Instance into_forall_monPred_at_absolutely P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → IntoForall ((∀ᵢ P) i) Φ.
+Global Instance into_forall_monPred_at_objectively P (Φ : I → PROP) i :
+  (∀ i, MakeMonPredAt i P (Φ i)) → IntoForall ((<obj> P) i) Φ.
 Proof.
-  rewrite /IntoForall /MakeMonPredAt monPred_at_absolutely=>H. by setoid_rewrite <- H.
+  rewrite /IntoForall /MakeMonPredAt monPred_at_objectively=>H. by setoid_rewrite <- H.
 Qed.
 
 Global Instance from_exist_monPred_at_ex P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → FromExist ((∃ᵢ P) i) Φ.
+  (∀ i, MakeMonPredAt i P (Φ i)) → FromExist ((<subj> P) i) Φ.
 Proof.
-  rewrite /FromExist /MakeMonPredAt monPred_at_relatively=>H. by setoid_rewrite <- H.
+  rewrite /FromExist /MakeMonPredAt monPred_at_subjectively=>H. by setoid_rewrite <- H.
 Qed.
 Global Instance into_exist_monPred_at_ex P (Φ : I → PROP) i :
-  (∀ i, MakeMonPredAt i P (Φ i)) → IntoExist ((∃ᵢ P) i) Φ.
+  (∀ i, MakeMonPredAt i P (Φ i)) → IntoExist ((<subj> P) i) Φ.
 Proof.
-  rewrite /IntoExist /MakeMonPredAt monPred_at_relatively=>H. by setoid_rewrite <- H.
+  rewrite /IntoExist /MakeMonPredAt monPred_at_subjectively=>H. by setoid_rewrite <- H.
 Qed.
 
 Global Instance from_forall_monPred_at {A} P (Φ : A → monPred) (Ψ : A → PROP) i :
@@ -346,11 +346,11 @@ Proof.
                          ?monPred_at_persistently monPred_at_embed.
 Qed.
 
-Global Instance into_embed_absolute P :
-  Absolute P → IntoEmbed P (∀ i, P i).
+Global Instance into_embed_objective P :
+  Objective P → IntoEmbed P (∀ i, P i).
 Proof.
   rewrite /IntoEmbed=> ?.
-  by rewrite {1}(absolute_absolutely P) monPred_absolutely_unfold.
+  by rewrite {1}(objective_objectively P) monPred_objectively_unfold.
 Qed.
 
 Global Instance elim_modal_at_bupd_goal `{BiBUpd PROP} φ 𝓟 𝓟' Q Q' i :

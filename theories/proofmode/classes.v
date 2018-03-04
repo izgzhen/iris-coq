@@ -59,7 +59,7 @@ Hint Extern 0 (IntoPureT _ _) =>
     [IntoPure], we can have the same behavior by asking that [P] be
     [Affine]. *)
 Class FromPure {PROP : bi} (a : bool) (P : PROP) (φ : Prop) :=
-  from_pure : bi_affinely_if a ⌜φ⌝ ⊢ P.
+  from_pure : <affine>?a ⌜φ⌝ ⊢ P.
 Arguments FromPure {_} _ _%I _%type_scope : simpl never.
 Arguments from_pure {_} _ _%I _%type_scope {_}.
 Hint Mode FromPure + + ! - : typeclass_instances.
@@ -79,7 +79,7 @@ Arguments into_internal_eq {_ _} _%I _%type_scope _%type_scope {_}.
 Hint Mode IntoInternalEq + - ! - - : typeclass_instances.
 
 Class IntoPersistent {PROP : bi} (p : bool) (P Q : PROP) :=
-  into_persistent : bi_persistently_if p P ⊢ bi_persistently Q.
+  into_persistent : <pers>?p P ⊢ <pers> Q.
 Arguments IntoPersistent {_} _ _%I _%I : simpl never.
 Arguments into_persistent {_} _ _%I _%I {_}.
 Hint Mode IntoPersistent + + ! - : typeclass_instances.
@@ -98,7 +98,7 @@ introduce, [sel] should be an evar.
 For modalities [N] that do not need to augment the proof mode environment, one
 can define an instance [FromModal modality_id (N P) P]. Defining such an
 instance only imposes the proof obligation [P ⊢ N P]. Examples of such
-modalities [N] are [bupd], [fupd], [except_0], [monPred_relatively] and
+modalities [N] are [bupd], [fupd], [except_0], [monPred_subjectively] and
 [bi_absorbingly]. *)
 Class FromModal {PROP1 PROP2 : bi} {A}
     (M : modality PROP1 PROP2) (sel : A) (P : PROP2) (Q : PROP1) :=
@@ -108,14 +108,14 @@ Arguments from_modal {_ _ _} _ _ _%I _%I {_}.
 Hint Mode FromModal - + - - - ! - : typeclass_instances.
 
 Class FromAffinely {PROP : bi} (P Q : PROP) :=
-  from_affinely : bi_affinely Q ⊢ P.
+  from_affinely : <affine> Q ⊢ P.
 Arguments FromAffinely {_} _%I _%type_scope : simpl never.
 Arguments from_affinely {_} _%I _%type_scope {_}.
 Hint Mode FromAffinely + ! - : typeclass_instances.
 Hint Mode FromAffinely + - ! : typeclass_instances.
 
 Class IntoAbsorbingly {PROP : bi} (P Q : PROP) :=
-  into_absorbingly : P ⊢ bi_absorbingly Q.
+  into_absorbingly : P ⊢ <absorb> Q.
 Arguments IntoAbsorbingly {_} _%I _%I.
 Arguments into_absorbingly {_} _%I _%I {_}.
 Hint Mode IntoAbsorbingly + ! -  : typeclass_instances.
@@ -330,7 +330,7 @@ Arguments KnownRMakeOr {_} _%I _%I _%I.
 Hint Mode KnownRMakeOr + - ! - : typeclass_instances.
 
 Class MakeAffinely {PROP : bi} (P Q : PROP) :=
-  make_affinely : bi_affinely P ⊣⊢ Q.
+  make_affinely : <affine> P ⊣⊢ Q.
 Arguments MakeAffinely {_} _%I _%I.
 Hint Mode MakeAffinely + - - : typeclass_instances.
 Class KnownMakeAffinely {PROP : bi} (P Q : PROP) :=
@@ -339,7 +339,7 @@ Arguments KnownMakeAffinely {_} _%I _%I.
 Hint Mode KnownMakeAffinely + ! - : typeclass_instances.
 
 Class MakeAbsorbingly {PROP : bi} (P Q : PROP) :=
-  make_absorbingly : bi_absorbingly P ⊣⊢ Q.
+  make_absorbingly : <absorb> P ⊣⊢ Q.
 Arguments MakeAbsorbingly {_} _%I _%I.
 Hint Mode MakeAbsorbingly + - - : typeclass_instances.
 Class KnownMakeAbsorbingly {PROP : bi} (P Q : PROP) :=
@@ -348,7 +348,7 @@ Arguments KnownMakeAbsorbingly {_} _%I _%I.
 Hint Mode KnownMakeAbsorbingly + ! - : typeclass_instances.
 
 Class MakePersistently {PROP : bi} (P Q : PROP) :=
-  make_persistently : bi_persistently P ⊣⊢ Q.
+  make_persistently : <pers> P ⊣⊢ Q.
 Arguments MakePersistently {_} _%I _%I.
 Hint Mode MakePersistently + - - : typeclass_instances.
 Class KnownMakePersistently {PROP : bi} (P Q : PROP) :=

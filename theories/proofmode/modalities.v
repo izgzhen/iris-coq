@@ -154,7 +154,7 @@ End modality1.
 [P ⊢ M P]. This is done by defining an instance [FromModal modality_id (M P) P],
 which will instruct [iModIntro] to introduce the modality without modifying the
 proof mode context. Examples of such modalities are [bupd], [fupd], [except_0],
-[monPred_relatively] and [bi_absorbingly]. *)
+[monPred_subjectively] and [bi_absorbingly]. *)
 Lemma modality_id_mixin {PROP : bi} : modality_mixin (@id PROP) MIEnvId MIEnvId.
 Proof. split; simpl; eauto. Qed.
 Definition modality_id {PROP : bi} := Modality (@id PROP) modality_id_mixin.
