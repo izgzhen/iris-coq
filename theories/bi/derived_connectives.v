@@ -32,10 +32,12 @@ Arguments affine {_} _%I {_}.
 Hint Mode Affine + ! : typeclass_instances.
 
 Class BiAffine (PROP : bi) := absorbing_bi (Q : PROP) : Affine Q.
+Hint Mode BiAffine ! : typeclass_instances.
 Existing Instance absorbing_bi | 0.
 
 Class BiPositive (PROP : bi) :=
   bi_positive (P Q : PROP) : bi_affinely (P ∗ Q) ⊢ bi_affinely P ∗ Q.
+Hint Mode BiPositive ! : typeclass_instances.
 
 Definition bi_absorbingly {PROP : bi} (P : PROP) : PROP := (True ∗ P)%I.
 Arguments bi_absorbingly {_} _%I : simpl never.
@@ -45,6 +47,7 @@ Typeclasses Opaque bi_absorbingly.
 Class Absorbing {PROP : bi} (P : PROP) := absorbing : bi_absorbingly P ⊢ P.
 Arguments Absorbing {_} _%I : simpl never.
 Arguments absorbing {_} _%I.
+Hint Mode Absorbing + ! : typeclass_instances.
 
 Definition bi_persistently_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
   (if p then bi_persistently P else P)%I.
