@@ -613,9 +613,9 @@ Proof.
   apply pure_elim_l=> Hφ. by rewrite -(exist_intro Hφ).
 Qed.
 Global Instance into_exist_sep_pure P Q φ :
-  TCOr (Affine P) (Absorbing Q) → IntoPureT P φ → IntoExist (P ∗ Q) (λ _ : φ, Q).
+  IntoPureT P φ → TCOr (Affine P) (Absorbing Q) → IntoExist (P ∗ Q) (λ _ : φ, Q).
 Proof.
-  intros ? (φ'&->&?). rewrite /IntoExist.
+  intros (φ'&->&?) ?. rewrite /IntoExist.
   eapply (pure_elim φ'); [by rewrite (into_pure P); apply sep_elim_l, _|]=>?.
   rewrite -exist_intro //. apply sep_elim_r, _.
 Qed.
@@ -658,10 +658,10 @@ Proof.
   intros (φ'&->&?). by rewrite /FromForall -pure_impl_forall (into_pure P).
 Qed.
 Global Instance from_forall_wand_pure P Q φ :
-  TCOr (Affine P) (Absorbing Q) → IntoPureT P φ →
+  IntoPureT P φ → TCOr (Affine P) (Absorbing Q) →
   FromForall (P -∗ Q)%I (λ _ : φ, Q)%I.
 Proof.
-  intros [|] (φ'&->&?); rewrite /FromForall; apply wand_intro_r.
+  intros (φ'&->&?) [|]; rewrite /FromForall; apply wand_intro_r.
   - rewrite -(affine_affinely P) (into_pure P) -persistent_and_affinely_sep_r.
     apply pure_elim_r=>?. by rewrite forall_elim.
   - by rewrite (into_pure P) -pure_wand_forall wand_elim_l.
