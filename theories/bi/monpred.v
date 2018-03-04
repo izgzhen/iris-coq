@@ -127,89 +127,89 @@ Next Obligation. solve_proper. Qed.
 
 Definition monPred_embed_def (P : PROP) : monPred := MonPred (λ _, P) _.
 Definition monPred_embed_aux : seal (@monPred_embed_def). by eexists. Qed.
-Definition monPred_embed : Embed PROP monPred := unseal monPred_embed_aux.
-Definition monPred_embed_eq : @embed _ _ monPred_embed = _ := seal_eq _.
+Definition monPred_embed : Embed PROP monPred := monPred_embed_aux.(unseal).
+Definition monPred_embed_eq : @embed _ _ monPred_embed = _ := monPred_embed_aux.(seal_eq).
 
 Definition monPred_emp_def : monPred := MonPred (λ _, emp)%I _.
 Definition monPred_emp_aux : seal (@monPred_emp_def). by eexists. Qed.
-Definition monPred_emp := unseal monPred_emp_aux.
-Definition monPred_emp_eq : @monPred_emp = _ := seal_eq _.
+Definition monPred_emp := monPred_emp_aux.(unseal).
+Definition monPred_emp_eq : @monPred_emp = _ := monPred_emp_aux.(seal_eq).
 
 Definition monPred_pure_def (φ : Prop) : monPred := MonPred (λ _, ⌜φ⌝)%I _.
 Definition monPred_pure_aux : seal (@monPred_pure_def). by eexists. Qed.
-Definition monPred_pure := unseal monPred_pure_aux.
-Definition monPred_pure_eq : @monPred_pure = _ := seal_eq _.
+Definition monPred_pure := monPred_pure_aux.(unseal).
+Definition monPred_pure_eq : @monPred_pure = _ := monPred_pure_aux.(seal_eq).
 
 Definition monPred_objectively_def P : monPred := MonPred (λ _, ∀ i, P i)%I _.
 Definition monPred_objectively_aux : seal (@monPred_objectively_def). by eexists. Qed.
-Definition monPred_objectively := unseal monPred_objectively_aux.
-Definition monPred_objectively_eq : @monPred_objectively = _ := seal_eq _.
+Definition monPred_objectively := monPred_objectively_aux.(unseal).
+Definition monPred_objectively_eq : @monPred_objectively = _ := monPred_objectively_aux.(seal_eq).
 
 Definition monPred_subjectively_def P : monPred := MonPred (λ _, ∃ i, P i)%I _.
 Definition monPred_subjectively_aux : seal (@monPred_subjectively_def). by eexists. Qed.
-Definition monPred_subjectively := unseal monPred_subjectively_aux.
-Definition monPred_subjectively_eq : @monPred_subjectively = _ := seal_eq _.
+Definition monPred_subjectively := monPred_subjectively_aux.(unseal).
+Definition monPred_subjectively_eq : @monPred_subjectively = _ := monPred_subjectively_aux.(seal_eq).
 
 Program Definition monPred_and_def P Q : monPred :=
   MonPred (λ i, P i ∧ Q i)%I _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_and_aux : seal (@monPred_and_def). by eexists. Qed.
-Definition monPred_and := unseal (@monPred_and_aux).
-Definition monPred_and_eq : @monPred_and = _ := seal_eq _.
+Definition monPred_and := monPred_and_aux.(unseal).
+Definition monPred_and_eq : @monPred_and = _ := monPred_and_aux.(seal_eq).
 
 Program Definition monPred_or_def P Q : monPred :=
   MonPred (λ i, P i ∨ Q i)%I _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_or_aux : seal (@monPred_or_def). by eexists. Qed.
-Definition monPred_or := unseal (@monPred_or_aux).
-Definition monPred_or_eq : @monPred_or = _ := seal_eq _.
+Definition monPred_or := monPred_or_aux.(unseal).
+Definition monPred_or_eq : @monPred_or = _ := monPred_or_aux.(seal_eq).
 
 Definition monPred_impl_def P Q : monPred :=
   monPred_upclosed (λ i, P i → Q i)%I.
 Definition monPred_impl_aux : seal (@monPred_impl_def). by eexists. Qed.
-Definition monPred_impl := unseal (@monPred_impl_aux).
-Definition monPred_impl_eq : @monPred_impl = _ := seal_eq _.
+Definition monPred_impl := monPred_impl_aux.(unseal).
+Definition monPred_impl_eq : @monPred_impl = _ := monPred_impl_aux.(seal_eq).
 
 Program Definition monPred_forall_def A (Φ : A → monPred) : monPred :=
   MonPred (λ i, ∀ x : A, Φ x i)%I _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_forall_aux : seal (@monPred_forall_def). by eexists. Qed.
-Definition monPred_forall := unseal (@monPred_forall_aux).
-Definition monPred_forall_eq : @monPred_forall = _ := seal_eq _.
+Definition monPred_forall := monPred_forall_aux.(unseal).
+Definition monPred_forall_eq : @monPred_forall = _ := monPred_forall_aux.(seal_eq).
 
 Program Definition monPred_exist_def A (Φ : A → monPred) : monPred :=
   MonPred (λ i, ∃ x : A, Φ x i)%I _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_exist_aux : seal (@monPred_exist_def). by eexists. Qed.
-Definition monPred_exist := unseal (@monPred_exist_aux).
-Definition monPred_exist_eq : @monPred_exist = _ := seal_eq _.
+Definition monPred_exist := monPred_exist_aux.(unseal).
+Definition monPred_exist_eq : @monPred_exist = _ := monPred_exist_aux.(seal_eq).
 
 Program Definition monPred_sep_def P Q : monPred :=
   MonPred (λ i, P i ∗ Q i)%I _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_sep_aux : seal (@monPred_sep_def). by eexists. Qed.
-Definition monPred_sep := unseal monPred_sep_aux.
-Definition monPred_sep_eq : @monPred_sep = _ := seal_eq _.
+Definition monPred_sep := monPred_sep_aux.(unseal).
+Definition monPred_sep_eq : @monPred_sep = _ := monPred_sep_aux.(seal_eq).
 
 Definition monPred_wand_def P Q : monPred :=
   monPred_upclosed (λ i, P i -∗ Q i)%I.
 Definition monPred_wand_aux : seal (@monPred_wand_def). by eexists. Qed.
-Definition monPred_wand := unseal monPred_wand_aux.
-Definition monPred_wand_eq : @monPred_wand = _ := seal_eq _.
+Definition monPred_wand := monPred_wand_aux.(unseal).
+Definition monPred_wand_eq : @monPred_wand = _ := monPred_wand_aux.(seal_eq).
 
 Program Definition monPred_persistently_def P : monPred :=
   MonPred (λ i, <pers> (P i))%I _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_persistently_aux : seal (@monPred_persistently_def). by eexists. Qed.
-Definition monPred_persistently := unseal monPred_persistently_aux.
-Definition monPred_persistently_eq : @monPred_persistently = _ := seal_eq _.
+Definition monPred_persistently := monPred_persistently_aux.(unseal).
+Definition monPred_persistently_eq : @monPred_persistently = _ := monPred_persistently_aux.(seal_eq).
 
 Program Definition monPred_in_def (i0 : I) : monPred :=
   MonPred (λ i : I, ⌜i0 ⊑ i⌝%I) _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_in_aux : seal (@monPred_in_def). by eexists. Qed.
-Definition monPred_in := unseal (@monPred_in_aux).
-Definition monPred_in_eq : @monPred_in = _ := seal_eq _.
+Definition monPred_in := monPred_in_aux.(unseal).
+Definition monPred_in_eq : @monPred_in = _ := monPred_in_aux.(seal_eq).
 
 Definition monPred_bupd_def `{BUpd PROP} (P : monPred) : monPred :=
   (* monPred_upclosed is not actually needed, since bupd is always
@@ -218,8 +218,8 @@ Definition monPred_bupd_def `{BUpd PROP} (P : monPred) : monPred :=
      terms in logical terms. *)
   monPred_upclosed (λ i, |==> P i)%I.
 Definition monPred_bupd_aux `{BUpd PROP} : seal monPred_bupd_def. by eexists. Qed.
-Definition monPred_bupd `{BUpd PROP} : BUpd _ := unseal monPred_bupd_aux.
-Definition monPred_bupd_eq `{BUpd PROP} : @bupd _ monPred_bupd = _ := seal_eq _.
+Definition monPred_bupd `{BUpd PROP} : BUpd _ := monPred_bupd_aux.(unseal).
+Definition monPred_bupd_eq `{BUpd PROP} : @bupd _ monPred_bupd = _ := monPred_bupd_aux.(seal_eq).
 End Bi.
 
 Arguments monPred_objectively {_ _} _%I.
@@ -235,19 +235,19 @@ Implicit Types P Q : monPred.
 
 Definition monPred_plainly_def `{BiPlainly PROP} P : monPred := MonPred (λ _, ∀ i, ■ (P i))%I _.
 Definition monPred_plainly_aux `{BiPlainly PROP} : seal monPred_plainly_def. by eexists. Qed.
-Definition monPred_plainly `{BiPlainly PROP} : Plainly _ := unseal monPred_plainly_aux.
-Definition monPred_plainly_eq `{BiPlainly PROP} : @plainly _ monPred_plainly = _ := seal_eq _.
+Definition monPred_plainly `{BiPlainly PROP} : Plainly _ := monPred_plainly_aux.(unseal).
+Definition monPred_plainly_eq `{BiPlainly PROP} : @plainly _ monPred_plainly = _ := monPred_plainly_aux.(seal_eq).
 
 Definition monPred_internal_eq_def (A : ofeT) (a b : A) : monPred := MonPred (λ _, a ≡ b)%I _.
 Definition monPred_internal_eq_aux : seal (@monPred_internal_eq_def). by eexists. Qed.
-Definition monPred_internal_eq := unseal monPred_internal_eq_aux.
-Definition monPred_internal_eq_eq : @monPred_internal_eq = _ := seal_eq _.
+Definition monPred_internal_eq := monPred_internal_eq_aux.(unseal).
+Definition monPred_internal_eq_eq : @monPred_internal_eq = _ := monPred_internal_eq_aux.(seal_eq).
 
 Program Definition monPred_later_def P : monPred := MonPred (λ i, ▷ (P i))%I _.
 Next Obligation. solve_proper. Qed.
 Definition monPred_later_aux : seal monPred_later_def. by eexists. Qed.
-Definition monPred_later := unseal monPred_later_aux.
-Definition monPred_later_eq : monPred_later = _ := seal_eq _.
+Definition monPred_later := monPred_later_aux.(unseal).
+Definition monPred_later_eq : monPred_later = _ := monPred_later_aux.(seal_eq).
 
 Definition monPred_fupd_def `{FUpd PROP} (E1 E2 : coPset) (P : monPred) : monPred :=
   (* monPred_upclosed is not actually needed, since fupd is always
@@ -256,8 +256,8 @@ Definition monPred_fupd_def `{FUpd PROP} (E1 E2 : coPset) (P : monPred) : monPre
      terms in logical terms. *)
   monPred_upclosed (λ i, |={E1,E2}=> P i)%I.
 Definition monPred_fupd_aux `{FUpd PROP} : seal monPred_fupd_def. by eexists. Qed.
-Definition monPred_fupd `{FUpd PROP} : FUpd _ := unseal monPred_fupd_aux.
-Definition monPred_fupd_eq `{FUpd PROP} : @fupd _ monPred_fupd = _ := seal_eq _.
+Definition monPred_fupd `{FUpd PROP} : FUpd _ := monPred_fupd_aux.(unseal).
+Definition monPred_fupd_eq `{FUpd PROP} : @fupd _ monPred_fupd = _ := monPred_fupd_aux.(seal_eq).
 End Sbi.
 
 Module MonPred.

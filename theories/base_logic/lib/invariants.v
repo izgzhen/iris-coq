@@ -10,8 +10,8 @@ Import uPred.
 Definition inv_def `{invG Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
   (∃ i P', ⌜i ∈ (↑N:coPset)⌝ ∧ ▷ □ (P' ↔ P) ∧ ownI i P')%I.
 Definition inv_aux : seal (@inv_def). by eexists. Qed.
-Definition inv {Σ i} := unseal inv_aux Σ i.
-Definition inv_eq : @inv = @inv_def := seal_eq inv_aux.
+Definition inv {Σ i} := inv_aux.(unseal) Σ i.
+Definition inv_eq : @inv = @inv_def := inv_aux.(seal_eq).
 Instance: Params (@inv) 3.
 Typeclasses Opaque inv.
 
