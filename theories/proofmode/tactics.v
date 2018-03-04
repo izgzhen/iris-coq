@@ -1937,7 +1937,7 @@ Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(
    iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2 x3 x4) pat) Hclose.
 
 Tactic Notation "iAccu" :=
-  iStartProof; eapply tac_accu; [env_reflexivity || fail "iAccu: not an evar."].
+  iStartProof; eapply tac_accu; [env_reflexivity || fail "iAccu: not an evar"].
 
 Hint Extern 0 (_ ⊢ _) => iStartProof.
 
