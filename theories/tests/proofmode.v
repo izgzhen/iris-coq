@@ -78,6 +78,11 @@ Lemma test_very_fast_iIntros P :
   ∀ x y : nat, (⌜ x = y ⌝ → P -∗ P)%I.
 Proof. by iIntros. Qed.
 
+(** Prior to 0b84351c this used to loop, now `iAssumption` instantiates `R` with
+`False` and performs false elimination. *)
+Lemma test_iAssumption_evar_ex_false : ∃ R, R ⊢ ∀ P, P.
+Proof. eexists. iIntros "?" (P). iAssumption. Qed.
+
 Lemma test_iAssumption_affine P Q R `{!Affine P, !Affine R} : P -∗ Q -∗ R -∗ Q.
 Proof. iIntros "H1 H2 H3". iAssumption. Qed.
 
