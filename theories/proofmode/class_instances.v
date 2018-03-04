@@ -27,34 +27,55 @@ Global Instance from_assumption_exact p P : FromAssumption p P P | 0.
 Proof. by rewrite /FromAssumption /= affinely_persistently_if_elim. Qed.
 
 Global Instance from_assumption_persistently_r P Q :
-  FromAssumption true P Q → FromAssumption true P (bi_persistently Q).
+  FromAssumption true P Q → KnownRFromAssumption true P (bi_persistently Q).
 Proof.
-  rewrite /FromAssumption /= =><-.
+  rewrite /KnownRFromAssumption /FromAssumption /= =><-.
   by rewrite -{1}affinely_persistently_idemp affinely_elim.
 Qed.
 Global Instance from_assumption_affinely_r P Q :
-  FromAssumption true P Q → FromAssumption true P (bi_affinely Q).
-Proof. rewrite /FromAssumption /= =><-. by rewrite affinely_idemp. Qed.
+  FromAssumption true P Q → KnownRFromAssumption true P (bi_affinely Q).
+Proof.
+  rewrite /KnownRFromAssumption /FromAssumption /= =><-.
+  by rewrite affinely_idemp.
+Qed.
 Global Instance from_assumption_absorbingly_r p P Q :
-  FromAssumption p P Q → FromAssumption p P (bi_absorbingly Q).
-Proof. rewrite /FromAssumption /= =><-. apply absorbingly_intro. Qed.
+  FromAssumption p P Q → KnownRFromAssumption p P (bi_absorbingly Q).
+Proof.
+  rewrite /KnownRFromAssumption /FromAssumption /= =><-.
+  apply absorbingly_intro.
+Qed.
 
 Global Instance from_assumption_affinely_persistently_l p P Q :
-  FromAssumption true P Q → FromAssumption p (□ P) Q.
-Proof. rewrite /FromAssumption /= =><-. by rewrite affinely_persistently_if_elim. Qed.
+  FromAssumption true P Q → KnownLFromAssumption p (□ P) Q.
+Proof.
+  rewrite /KnownLFromAssumption /FromAssumption /= =><-.
+  by rewrite affinely_persistently_if_elim.
+Qed.
 Global Instance from_assumption_persistently_l_true P Q :
-  FromAssumption true P Q → FromAssumption true (bi_persistently P) Q.
-Proof. rewrite /FromAssumption /= =><-. by rewrite persistently_idemp. Qed.
+  FromAssumption true P Q → KnownLFromAssumption true (bi_persistently P) Q.
+Proof.
+  rewrite /KnownLFromAssumption /FromAssumption /= =><-.
+  by rewrite persistently_idemp.
+Qed.
 Global Instance from_assumption_persistently_l_false `{BiAffine PROP} P Q :
-  FromAssumption true P Q → FromAssumption false (bi_persistently P) Q.
-Proof. rewrite /FromAssumption /= =><-. by rewrite affine_affinely. Qed.
+  FromAssumption true P Q → KnownLFromAssumption false (bi_persistently P) Q.
+Proof.
+  rewrite /KnownLFromAssumption /FromAssumption /= =><-.
+  by rewrite affine_affinely.
+Qed.
 Global Instance from_assumption_affinely_l_true p P Q :
-  FromAssumption p P Q → FromAssumption p (bi_affinely P) Q.
-Proof. rewrite /FromAssumption /= =><-. by rewrite affinely_elim. Qed.
+  FromAssumption p P Q → KnownLFromAssumption p (bi_affinely P) Q.
+Proof.
+  rewrite /KnownLFromAssumption /FromAssumption /= =><-.
+  by rewrite affinely_elim.
+Qed.
 
 Global Instance from_assumption_forall {A} p (Φ : A → PROP) Q x :
-  FromAssumption p (Φ x) Q → FromAssumption p (∀ x, Φ x) Q.
-Proof. rewrite /FromAssumption=> <-. by rewrite forall_elim. Qed.
+  FromAssumption p (Φ x) Q → KnownLFromAssumption p (∀ x, Φ x) Q.
+Proof.
+  rewrite /KnownLFromAssumption /FromAssumption=> <-.
+  by rewrite forall_elim.
+Qed.
 
 (* IntoPure *)
 Global Instance into_pure_pure φ : @IntoPure PROP ⌜φ⌝ φ.
@@ -999,32 +1020,32 @@ Implicit Types P Q R : PROP.
 
 (* FromAssumption *)
 Global Instance from_assumption_later p P Q :
-  FromAssumption p P Q → FromAssumption p P (▷ Q)%I.
-Proof. rewrite /FromAssumption=>->. apply later_intro. Qed.
+  FromAssumption p P Q → KnownRFromAssumption p P (▷ Q)%I.
+Proof. rewrite /KnownRFromAssumption /FromAssumption=>->. apply later_intro. Qed.
 Global Instance from_assumption_laterN n p P Q :
-  FromAssumption p P Q → FromAssumption p P (▷^n Q)%I.
-Proof. rewrite /FromAssumption=>->. apply laterN_intro. Qed.
+  FromAssumption p P Q → KnownRFromAssumption p P (▷^n Q)%I.
+Proof. rewrite /KnownRFromAssumption /FromAssumption=>->. apply laterN_intro. Qed.
 Global Instance from_assumption_except_0 p P Q :
-  FromAssumption p P Q → FromAssumption p P (◇ Q)%I.
-Proof. rewrite /FromAssumption=>->. apply except_0_intro. Qed.
+  FromAssumption p P Q → KnownRFromAssumption p P (◇ Q)%I.
+Proof. rewrite /KnownRFromAssumption /FromAssumption=>->. apply except_0_intro. Qed.
 
 Global Instance from_assumption_bupd `{BiBUpd PROP} p P Q :
-  FromAssumption p P Q → FromAssumption p P (|==> Q).
-Proof. rewrite /FromAssumption=>->. apply bupd_intro. Qed.
+  FromAssumption p P Q → KnownRFromAssumption p P (|==> Q).
+Proof. rewrite /KnownRFromAssumption /FromAssumption=>->. apply bupd_intro. Qed.
 Global Instance from_assumption_fupd `{BiBUpdFUpd PROP} E p P Q :
-  FromAssumption p P (|==> Q) → FromAssumption p P (|={E}=> Q)%I.
-Proof. rewrite /FromAssumption=>->. apply bupd_fupd. Qed.
+  FromAssumption p P (|==> Q) → KnownRFromAssumption p P (|={E}=> Q)%I.
+Proof. rewrite /KnownRFromAssumption /FromAssumption=>->. apply bupd_fupd. Qed.
 
 Global Instance from_assumption_plainly_l_true `{BiPlainly PROP} P Q :
-  FromAssumption true P Q → FromAssumption true (■ P) Q.
+  FromAssumption true P Q → KnownLFromAssumption true (■ P) Q.
 Proof.
-  rewrite /FromAssumption /= =><-.
+  rewrite /KnownLFromAssumption /FromAssumption /= =><-.
   by rewrite persistently_elim plainly_elim_persistently.
 Qed.
 Global Instance from_assumption_plainly_l_false `{BiPlainly PROP, BiAffine PROP} P Q :
-  FromAssumption true P Q → FromAssumption false (■ P) Q.
+  FromAssumption true P Q → KnownLFromAssumption false (■ P) Q.
 Proof.
-  rewrite /FromAssumption /= =><-.
+  rewrite /KnownLFromAssumption /FromAssumption /= =><-.
   by rewrite affine_affinely plainly_elim_persistently.
 Qed.
 

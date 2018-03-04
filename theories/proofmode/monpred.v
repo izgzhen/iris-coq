@@ -123,24 +123,30 @@ Global Instance make_monPred_at_bupd `{BiBUpd PROP} i P 𝓟 :
 Proof. by rewrite /MakeMonPredAt monPred_at_bupd=> <-. Qed.
 
 Global Instance from_assumption_make_monPred_at_l p i j P 𝓟 :
-  MakeMonPredAt i P 𝓟 → IsBiIndexRel j i → FromAssumption p (P j) 𝓟.
+  MakeMonPredAt i P 𝓟 → IsBiIndexRel j i → KnownLFromAssumption p (P j) 𝓟.
 Proof.
-  rewrite /MakeMonPredAt /FromAssumption /IsBiIndexRel=><- ->.
+  rewrite /MakeMonPredAt /KnownLFromAssumption /FromAssumption /IsBiIndexRel=><- ->.
   apply  bi.affinely_persistently_if_elim.
 Qed.
 Global Instance from_assumption_make_monPred_at_r p i j P 𝓟 :
-  MakeMonPredAt i P 𝓟 → IsBiIndexRel i j → FromAssumption p 𝓟 (P j).
+  MakeMonPredAt i P 𝓟 → IsBiIndexRel i j → KnownRFromAssumption p 𝓟 (P j).
 Proof.
-  rewrite /MakeMonPredAt /FromAssumption /IsBiIndexRel=><- ->.
+  rewrite /MakeMonPredAt /KnownRFromAssumption /FromAssumption /IsBiIndexRel=><- ->.
   apply  bi.affinely_persistently_if_elim.
 Qed.
 
 Global Instance from_assumption_make_monPred_absolutely P Q :
-  FromAssumption p P Q → FromAssumption p (∀ᵢ P) Q.
-Proof. intros ?. by rewrite /FromAssumption monPred_absolutely_elim. Qed.
+  FromAssumption p P Q → KnownLFromAssumption p (∀ᵢ P) Q.
+Proof.
+  intros ?.
+  by rewrite /KnownLFromAssumption /FromAssumption monPred_absolutely_elim.
+Qed.
 Global Instance from_assumption_make_monPred_relatively P Q :
-  FromAssumption p P Q → FromAssumption p P (∃ᵢ Q).
-Proof. intros ?. by rewrite /FromAssumption -monPred_relatively_intro. Qed.
+  FromAssumption p P Q → KnownRFromAssumption p P (∃ᵢ Q).
+Proof.
+  intros ?.
+  by rewrite /KnownRFromAssumption /FromAssumption -monPred_relatively_intro.
+Qed.
 
 Global Instance as_valid_monPred_at φ P (Φ : I → PROP) :
   AsValid0 φ P → (∀ i, MakeMonPredAt i P (Φ i)) → AsValid φ (∀ i, Φ i) | 100.

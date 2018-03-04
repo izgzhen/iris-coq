@@ -8,9 +8,19 @@ Class FromAssumption {PROP : bi} (p : bool) (P Q : PROP) :=
   from_assumption : □?p P ⊢ Q.
 Arguments FromAssumption {_} _ _%I _%I : simpl never.
 Arguments from_assumption {_} _ _%I _%I {_}.
-(* No need to restrict Hint Mode, we have a default instance that will always
-be used in case of evars *)
 Hint Mode FromAssumption + + - - : typeclass_instances.
+
+Class KnownLFromAssumption {PROP : bi} (p : bool) (P Q : PROP) :=
+  knownl_from_assumption :> FromAssumption p P Q.
+Arguments KnownLFromAssumption {_} _ _%I _%I : simpl never.
+Arguments knownl_from_assumption {_} _ _%I _%I {_}.
+Hint Mode KnownLFromAssumption + + ! - : typeclass_instances.
+
+Class KnownRFromAssumption {PROP : bi} (p : bool) (P Q : PROP) :=
+  knownr_from_assumption :> FromAssumption p P Q.
+Arguments KnownRFromAssumption {_} _ _%I _%I : simpl never.
+Arguments knownr_from_assumption {_} _ _%I _%I {_}.
+Hint Mode KnownRFromAssumption + + - ! : typeclass_instances.
 
 Class IntoPure {PROP : bi} (P : PROP) (φ : Prop) :=
   into_pure : P ⊢ ⌜φ⌝.
