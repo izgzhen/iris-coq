@@ -3,8 +3,6 @@ import argparse, sys, pprint, itertools, subprocess
 import requests
 import parse_log
 
-markers = itertools.cycle([(3, 0), (3, 0, 180), (4, 0), (4, 0, 45), (8, 0)])
-
 # read command-line arguments
 parser = argparse.ArgumentParser(description='Export iris-coq build times to grafana')
 parser.add_argument("-f", "--file",
@@ -19,6 +17,9 @@ parser.add_argument("-p", "--project",
 parser.add_argument("-b", "--branch",
                     dest="branch", required=True,
                     help="Branch name sent to the server.")
+parser.add_argument("--config",
+                    dest="config", required=True,
+                    help="The config string.")
 parser.add_argument("-s", "--server",
                     dest="server", required=True,
                     help="The server (URL) to send the data to.")
@@ -41,8 +42,10 @@ results = list(results)
 for datapoint in results:
     times = ''.join(datapoint.times)
     commit = datapoint.commit
+    print("Sending {}...".format(commit), end='')
     date = subprocess.check_output(['git', 'show', commit, '-s', '--pretty=%cI']).strip().decode('UTF-8')
-    headers = {'X-Project': args.project, 'X-Branch': args.branch, 'X-Commit': commit, 'X-Date': date}
-    r = requests.post(args.server, data=times, headers=headers, auth=(args.user, args.password))
+    headers = {'X-Project': args.project, 'X-Branch': args.branch, 'X-Commit': commit, 'X-Config': args.config, 'X-Date': date}
+    r = requests.post(args.server+"/build_times_8.6", data=times, headers=headers, auth=(args.user, args.password))
     r.raise_for_status()
+    print(" done")
 
