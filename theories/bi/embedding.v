@@ -1,5 +1,5 @@
 From iris.algebra Require Import monoid.
-From iris.bi Require Import interface derived_laws big_op plainly.
+From iris.bi Require Import interface derived_laws big_op plainly updates.
 From stdpp Require Import hlist.
 
 Class Embed (A B : Type) := embed : A → B.
@@ -40,6 +40,20 @@ Class SbiEmbed (PROP1 PROP2 : sbi) `{BiEmbed PROP1 PROP2} := {
 }.
 Hint Mode SbiEmbed ! - - : typeclass_instances.
 Hint Mode SbiEmbed - ! - : typeclass_instances.
+
+Class BiEmbedBUpd (PROP1 PROP2 : bi)
+      `{BiEmbed PROP1 PROP2, BiBUpd PROP1, BiBUpd PROP2} := {
+  embed_bupd  P : ⎡|==> P⎤ ⊣⊢ bupd (PROP:=PROP2) ⎡P⎤
+}.
+Hint Mode BiEmbedBUpd - ! - - - : typeclass_instances.
+Hint Mode BiEmbedBUpd ! - - - - : typeclass_instances.
+
+Class BiEmbedFUpd (PROP1 PROP2 : sbi)
+      `{BiEmbed PROP1 PROP2, BiFUpd PROP1, BiFUpd PROP2} := {
+  embed_fupd E1 E2 P : ⎡|={E1,E2}=> P⎤ ⊣⊢ fupd (PROP:=PROP2) E1 E2 ⎡P⎤
+}.
+Hint Mode BiEmbedFUpd - ! - - - : typeclass_instances.
+Hint Mode BiEmbedFUpd ! - - - - : typeclass_instances.
 
 Section embed_laws.
   Context `{BiEmbed PROP1 PROP2}.

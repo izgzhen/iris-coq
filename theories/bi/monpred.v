@@ -845,10 +845,11 @@ Global Instance bupd_absolute `{BiBUpd PROP} P `{!Absolute P} :
   Absolute (|==> P)%I.
 Proof. intros ??. by rewrite !monPred_at_bupd absolute_at. Qed.
 
-Lemma monPred_bupd_embed `{BiBUpd PROP} (P : PROP) :
-  ⎡|==> P⎤ ⊣⊢ bupd (PROP:=monPredI) ⎡P⎤.
+Global Instance monPred_bi_embed_bupd `{BiBUpd PROP} :
+  BiEmbedBUpd PROP monPredI.
 Proof.
-  unseal. split=>i /=. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
+  split. unseal. split=>i /=. setoid_rewrite bi.pure_impl_forall.
+  apply bi.equiv_spec; split.
   - by do 2 apply bi.forall_intro=>?.
   - rewrite !bi.forall_elim //.
 Qed.
@@ -937,6 +938,14 @@ Proof.
     do 2 setoid_rewrite bi.later_forall. do 4 f_equiv. apply later_fupd_plain, _.
 Qed.
 
+Global Instance monPred_bi_embed_fupd `{BiFUpd PROP} : BiEmbedFUpd PROP monPredSI.
+Proof.
+  split. unseal. split=>i /=. setoid_rewrite bi.pure_impl_forall.
+  apply bi.equiv_spec; split.
+  - by do 2 apply bi.forall_intro=>?.
+  - rewrite !bi.forall_elim //.
+Qed.
+
 (** Unfolding lemmas *)
 Lemma monPred_at_plainly `{BiPlainly PROP} i P : (■ P) i ⊣⊢ ∀ j, ■ (P j).
 Proof. by unseal. Qed.
@@ -954,14 +963,6 @@ Proof.
 Qed.
 Lemma monPred_at_except_0 i P : (◇ P) i ⊣⊢ ◇ P i.
 Proof. by unseal. Qed.
-
-Lemma monPred_fupd_embed `{BiFUpd PROP} E1 E2 (P : PROP) :
-  ⎡|={E1,E2}=> P⎤ ⊣⊢ fupd E1 E2 (PROP:=monPred) ⎡P⎤.
-Proof.
-  unseal. split=>i /=. setoid_rewrite bi.pure_impl_forall. apply bi.equiv_spec; split.
-  - by do 2 apply bi.forall_intro=>?.
-  - rewrite !bi.forall_elim //.
-Qed.
 
 Lemma monPred_equivI {PROP' : sbi} P Q :
   sbi_internal_eq (PROP:=PROP') P Q ⊣⊢ ∀ i, P i ≡ Q i.

@@ -702,6 +702,21 @@ Proof.
   by rewrite absorbingly_sep_l wand_elim_r absorbing_absorbingly.
 Qed.
 
+Global Instance elim_modal_bupd `{BiBUpd PROP} P Q :
+  ElimModal True (|==> P) P (|==> Q) (|==> Q).
+Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
+
+Global Instance elim_modal_embed_bupd_goal `{BiEmbedBUpd PROP PROP'}
+       φ (P P' : PROP') (Q Q' : PROP) :
+  ElimModal φ P P' (|==> ⎡Q⎤)%I (|==> ⎡Q'⎤)%I →
+  ElimModal φ P P' ⎡|==> Q⎤ ⎡|==> Q'⎤.
+Proof. by rewrite /ElimModal !embed_bupd. Qed.
+Global Instance elim_modal_embed_bupd_hyp `{BiEmbedBUpd PROP PROP'}
+       φ (P : PROP) (P' Q Q' : PROP') :
+  ElimModal φ (|==> ⎡P⎤)%I P' Q Q' →
+  ElimModal φ ⎡|==> P⎤ P' Q Q'.
+Proof. by rewrite /ElimModal !embed_bupd. Qed.
+
 (* AddModal *)
 Global Instance add_modal_wand P P' Q R :
   AddModal P P' Q → AddModal P P' (R -∗ Q).
@@ -714,6 +729,10 @@ Global Instance add_modal_forall {A} P P' (Φ : A → PROP) :
 Proof.
   rewrite /AddModal=> H. apply forall_intro=> a. by rewrite (forall_elim a).
 Qed.
+Global Instance add_modal_embed_bupd_goal `{BiEmbedBUpd PROP PROP'}
+       (P P' : PROP') (Q : PROP) :
+  AddModal P P' (|==> ⎡Q⎤)%I → AddModal P P' ⎡|==> Q⎤.
+Proof. by rewrite /AddModal !embed_bupd. Qed.
 
 (* Frame *)
 Global Instance frame_here_absorbing p R : Absorbing R → Frame p R R True | 0.
@@ -1445,9 +1464,7 @@ Proof.
   intros. rewrite /ElimModal (except_0_intro (_ -∗ _)%I).
   by rewrite (into_except_0 P) -except_0_sep wand_elim_r.
 Qed.
-Global Instance elim_modal_bupd `{BiBUpd PROP} P Q :
-  ElimModal True (|==> P) P (|==> Q) (|==> Q).
-Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
+
 Global Instance elim_modal_bupd_plain_goal `{BiBUpdPlainly PROP} P Q :
   Plain Q → ElimModal True (|==> P) P Q Q.
 Proof. intros. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_plain. Qed.
@@ -1459,9 +1476,21 @@ Global Instance elim_modal_bupd_fupd `{BiBUpdFUpd PROP} E1 E2 P Q :
 Proof.
   by rewrite /ElimModal (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
 Qed.
+
 Global Instance elim_modal_fupd_fupd `{BiFUpd PROP} E1 E2 E3 P Q :
   ElimModal True (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
 Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
+
+Global Instance elim_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
+       φ E1 E2 E3 (P P' : PROP') (Q Q' : PROP) :
+  ElimModal φ P P' (|={E1,E3}=> ⎡Q⎤)%I (|={E2,E3}=> ⎡Q'⎤)%I →
+  ElimModal φ P P' ⎡|={E1,E3}=> Q⎤ ⎡|={E2,E3}=> Q'⎤.
+Proof. by rewrite /ElimModal !embed_fupd. Qed.
+Global Instance elim_modal_embed_fupd_hyp `{BiEmbedFUpd PROP PROP'}
+       φ E1 E2 (P : PROP) (P' Q Q' : PROP') :
+  ElimModal φ (|={E1,E2}=> ⎡P⎤)%I P' Q Q' →
+  ElimModal φ ⎡|={E1,E2}=> P⎤ P' Q Q'.
+Proof. by rewrite /ElimModal embed_fupd. Qed.
 
 (* AddModal *)
 (* High priority to add a ▷ rather than a ◇ when P is timeless. *)
@@ -1493,6 +1522,11 @@ Proof. by rewrite /AddModal bupd_frame_r wand_elim_r bupd_trans. Qed.
 Global Instance add_modal_fupd `{BiFUpd PROP} E1 E2 P Q :
   AddModal (|={E1}=> P) P (|={E1,E2}=> Q).
 Proof. by rewrite /AddModal fupd_frame_r wand_elim_r fupd_trans. Qed.
+
+Global Instance add_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
+       E1 E2 (P P' : PROP') (Q : PROP) :
+  AddModal P P' (|={E1,E2}=> ⎡Q⎤)%I → AddModal P P' ⎡|={E1,E2}=> Q⎤.
+Proof. by rewrite /AddModal !embed_fupd. Qed.
 
 (* Frame *)
 Global Instance frame_eq_embed `{SbiEmbed PROP PROP'} p P Q (Q' : PROP')

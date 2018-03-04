@@ -353,19 +353,6 @@ Proof.
   by rewrite {1}(absolute_absolutely P) monPred_absolutely_unfold.
 Qed.
 
-Global Instance elim_modal_embed_bupd_goal `{BiBUpd PROP} φ P P' 𝓠 𝓠' :
-  ElimModal φ P P' (|==> ⎡𝓠⎤)%I (|==> ⎡𝓠'⎤)%I →
-  ElimModal φ P P' ⎡|==> 𝓠⎤ ⎡|==> 𝓠'⎤.
-Proof. by rewrite /ElimModal !monPred_bupd_embed. Qed.
-Global Instance elim_modal_embed_bupd_hyp `{BiBUpd PROP} φ 𝓟 P' Q Q' :
-  ElimModal φ (|==> ⎡𝓟⎤)%I P' Q Q' →
-  ElimModal φ ⎡|==> 𝓟⎤ P' Q Q'.
-Proof. by rewrite /ElimModal monPred_bupd_embed. Qed.
-
-Global Instance add_modal_embed_bupd_goal `{BiBUpd PROP} P P' 𝓠 :
-  AddModal P P' (|==> ⎡𝓠⎤)%I → AddModal P P' ⎡|==> 𝓠⎤.
-Proof. by rewrite /AddModal !monPred_bupd_embed. Qed.
-
 Global Instance elim_modal_at_bupd_goal `{BiBUpd PROP} φ 𝓟 𝓟' Q Q' i :
   ElimModal φ 𝓟 𝓟' (|==> Q i) (|==> Q' i) →
   ElimModal φ 𝓟 𝓟' ((|==> Q) i) ((|==> Q') i).
@@ -470,19 +457,6 @@ Proof.
   rewrite /FromModal /MakeMonPredAt=> <- <-. elim n=>//= ? ->.
   by rewrite monPred_at_later.
 Qed.
-
-Global Instance elim_modal_embed_fupd_goal `{BiFUpd PROP} φ E1 E2 E3 P P' 𝓠 𝓠' :
-  ElimModal φ P P' (|={E1,E3}=> ⎡𝓠⎤)%I (|={E2,E3}=> ⎡𝓠'⎤)%I →
-  ElimModal φ P P' ⎡|={E1,E3}=> 𝓠⎤ ⎡|={E2,E3}=> 𝓠'⎤.
-Proof. by rewrite /ElimModal !monPred_fupd_embed. Qed.
-Global Instance elim_modal_embed_fupd_hyp `{BiFUpd PROP} φ E1 E2 𝓟 P' Q Q' :
-  ElimModal φ (|={E1,E2}=> ⎡𝓟⎤)%I P' Q Q' →
-  ElimModal φ ⎡|={E1,E2}=> 𝓟⎤ P' Q Q'.
-Proof. by rewrite /ElimModal monPred_fupd_embed. Qed.
-
-Global Instance add_modal_embed_fupd_goal `{BiFUpd PROP} E1 E2 P P' 𝓠 :
-  AddModal P P' (|={E1,E2}=> ⎡𝓠⎤)%I → AddModal P P' ⎡|={E1,E2}=> 𝓠⎤.
-Proof. by rewrite /AddModal !monPred_fupd_embed. Qed.
 
 Global Instance elim_modal_at_fupd_goal `{BiFUpd PROP} φ E1 E2 E3 𝓟 𝓟' Q Q' i :
   ElimModal φ 𝓟 𝓟' (|={E1,E3}=> Q i) (|={E2,E3}=> Q' i) →
