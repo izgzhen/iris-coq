@@ -13,7 +13,7 @@ Record BiPlainlyMixin (PROP : sbi) `(Plainly PROP) := {
   bi_plainly_mixin_plainly_ne : NonExpansive plainly;
 
   bi_plainly_mixin_plainly_mono P Q : (P ⊢ Q) → ■ P ⊢ ■ Q;
-  bi_plainly_mixin_plainly_elim_persistently P : ■ P ⊢ bi_persistently P;
+  bi_plainly_mixin_plainly_elim_persistently P : ■ P ⊢ <pers> P;
   bi_plainly_mixin_plainly_idemp_2 P : ■ P ⊢ ■ ■ P;
 
   bi_plainly_mixin_plainly_forall_2 {A} (Ψ : A → PROP) :
@@ -23,7 +23,7 @@ Record BiPlainlyMixin (PROP : sbi) `(Plainly PROP) := {
      for persistently and plainly, but for any modality defined as `M P n x :=
      ∀ y, R x y → P n y`. *)
   bi_plainly_mixin_persistently_impl_plainly P Q :
-    (■ P → bi_persistently Q) ⊢ bi_persistently (■ P → Q);
+    (■ P → <pers> Q) ⊢ <pers> (■ P → Q);
   bi_plainly_mixin_plainly_impl_plainly P Q : (■ P → ■ Q) ⊢ ■ (■ P → Q);
 
   bi_plainly_mixin_plainly_emp_intro P : P ⊢ ■ emp;
@@ -59,14 +59,13 @@ Section plainly_laws.
 
   Lemma plainly_mono P Q : (P ⊢ Q) → ■ P ⊢ ■ Q.
   Proof. eapply bi_plainly_mixin_plainly_mono, bi_plainly_mixin. Qed.
-  Lemma plainly_elim_persistently P : ■ P ⊢ bi_persistently P.
+  Lemma plainly_elim_persistently P : ■ P ⊢ <pers> P.
   Proof. eapply bi_plainly_mixin_plainly_elim_persistently, bi_plainly_mixin. Qed.
   Lemma plainly_idemp_2 P : ■ P ⊢ ■ ■ P.
   Proof. eapply bi_plainly_mixin_plainly_idemp_2, bi_plainly_mixin. Qed.
   Lemma plainly_forall_2 {A} (Ψ : A → PROP) : (∀ a, ■ (Ψ a)) ⊢ ■ (∀ a, Ψ a).
   Proof. eapply bi_plainly_mixin_plainly_forall_2, bi_plainly_mixin. Qed.
-  Lemma persistently_impl_plainly P Q :
-    (■ P → bi_persistently Q) ⊢ bi_persistently (■ P → Q).
+  Lemma persistently_impl_plainly P Q : (■ P → <pers> Q) ⊢ <pers> (■ P → Q).
   Proof. eapply bi_plainly_mixin_persistently_impl_plainly, bi_plainly_mixin. Qed.
   Lemma plainly_impl_plainly P Q : (■ P → ■ Q) ⊢ ■ (■ P → Q).
   Proof. eapply bi_plainly_mixin_plainly_impl_plainly, bi_plainly_mixin. Qed.
@@ -119,19 +118,19 @@ Global Instance plainly_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@plainly PROP _).
 Proof. intros P Q; apply plainly_mono. Qed.
 
-Lemma affinely_plainly_elim P : bi_affinely (■ P) ⊢ P.
+Lemma affinely_plainly_elim P : <affine> ■ P ⊢ P.
 Proof. by rewrite plainly_elim_persistently affinely_persistently_elim. Qed.
 
-Lemma persistently_plainly P : bi_persistently (■ P) ⊣⊢ ■ P.
+Lemma persistently_plainly P : <pers> ■ P ⊣⊢ ■ P.
 Proof.
   apply (anti_symm _).
   - by rewrite persistently_elim_absorbingly /bi_absorbingly comm plainly_absorb.
   - by rewrite {1}plainly_idemp_2 plainly_elim_persistently.
 Qed.
-Lemma persistently_if_plainly P p : bi_persistently_if p (■ P) ⊣⊢ ■ P.
+Lemma persistently_if_plainly P p : <pers>?p ■ P ⊣⊢ ■ P.
 Proof. destruct p; last done. exact: persistently_plainly. Qed.
 
-Lemma plainly_persistently P : ■ (bi_persistently P) ⊣⊢ ■ P.
+Lemma plainly_persistently P : ■ <pers> P ⊣⊢ ■ P.
 Proof.
   apply (anti_symm _).
   - rewrite -{1}(left_id True%I bi_and (■ _)%I) (plainly_emp_intro True%I).
@@ -140,7 +139,7 @@ Proof.
   - by rewrite {1}plainly_idemp_2 (plainly_elim_persistently P).
 Qed.
 
-Lemma absorbingly_plainly P : bi_absorbingly (■ P) ⊣⊢ ■ P.
+Lemma absorbingly_plainly P : <absorb> ■ P ⊣⊢ ■ P.
 Proof. by rewrite -(persistently_plainly P) absorbingly_persistently. Qed.
 
 Lemma plainly_and_sep_elim P Q : ■ P ∧ Q -∗ (emp ∧ P) ∗ Q.
@@ -149,7 +148,7 @@ Lemma plainly_and_sep_assoc P Q R : ■ P ∧ (Q ∗ R) ⊣⊢ (■ P ∧ Q) ∗
 Proof. by rewrite -(persistently_plainly P) persistently_and_sep_assoc. Qed.
 Lemma plainly_and_emp_elim P : emp ∧ ■ P ⊢ P.
 Proof. by rewrite plainly_elim_persistently persistently_and_emp_elim. Qed.
-Lemma plainly_elim_absorbingly P : ■ P ⊢ bi_absorbingly P.
+Lemma plainly_elim_absorbingly P : ■ P ⊢ <absorb> P.
 Proof. by rewrite plainly_elim_persistently persistently_elim_absorbingly. Qed.
 Lemma plainly_elim P `{!Absorbing P} : ■ P ⊢ P.
 Proof. by rewrite plainly_elim_persistently persistently_elim. Qed.
@@ -214,7 +213,7 @@ Proof.
   by rewrite plainly_and_sep_assoc (comm bi_and) plainly_and_emp_elim.
 Qed.
 
-Lemma plainly_affinely P : ■ (bi_affinely P) ⊣⊢ ■ P.
+Lemma plainly_affinely P : ■ <affine> P ⊣⊢ ■ P.
 Proof. by rewrite /bi_affinely plainly_and -plainly_True_emp plainly_pure left_id. Qed.
 
 Lemma and_sep_plainly P Q : ■ P ∧ ■ Q ⊣⊢ ■ P ∗ ■ Q.
@@ -252,7 +251,7 @@ Qed.
 Lemma impl_wand_plainly_2 P Q : (■ P -∗ Q) ⊢ (■ P → Q).
 Proof. apply impl_intro_l. by rewrite plainly_and_sep_l_1 wand_elim_r. Qed.
 
-Lemma impl_wand_affinely_plainly P Q : (■ P → Q) ⊣⊢ (bi_affinely (■ P) -∗ Q).
+Lemma impl_wand_affinely_plainly P Q : (■ P → Q) ⊣⊢ (<affine> ■ P -∗ Q).
 Proof. by rewrite -(persistently_plainly P) impl_wand_affinely_persistently. Qed.
 
 Section plainly_affine_bi.
@@ -351,7 +350,7 @@ Proof. by rewrite /Persistent persistently_plainly. Qed.
 Global Instance wand_persistent P Q :
   Plain P → Persistent Q → Absorbing Q → Persistent (P -∗ Q).
 Proof.
-  intros. rewrite /Persistent {2}(plain P). trans (bi_persistently (■ P → Q)%I).
+  intros. rewrite /Persistent {2}(plain P). trans (<pers> (■ P → Q))%I.
   - rewrite -persistently_impl_plainly impl_wand_affinely_plainly -(persistent Q).
     by rewrite affinely_plainly_elim.
   - apply persistently_mono, wand_intro_l. by rewrite sep_and impl_elim_r.
@@ -428,13 +427,13 @@ Proof. intros. by rewrite /Plain -plainly_sep_2 -!plain. Qed.
 
 Global Instance plainly_plain P : Plain (■ P).
 Proof. by rewrite /Plain plainly_idemp. Qed.
-Global Instance persistently_plain P : Plain P → Plain (bi_persistently P).
+Global Instance persistently_plain P : Plain P → Plain (<pers> P).
 Proof.
   rewrite /Plain=> HP. rewrite {1}HP plainly_persistently persistently_plainly //.
 Qed.
-Global Instance affinely_plain P : Plain P → Plain (bi_affinely P).
+Global Instance affinely_plain P : Plain P → Plain (<affine> P).
 Proof. rewrite /bi_affinely. apply _. Qed.
-Global Instance absorbingly_plain P : Plain P → Plain (bi_absorbingly P).
+Global Instance absorbingly_plain P : Plain P → Plain (<absorb> P).
 Proof. rewrite /bi_absorbingly. apply _. Qed.
 Global Instance from_option_plain {A} P (Ψ : A → PROP) (mx : option A) :
   (∀ x, Plain (Ψ x)) → Plain P → Plain (from_option Ψ P mx).
@@ -449,7 +448,7 @@ Proof.
   rewrite -(internal_eq_refl True%I a) plainly_pure; auto.
 Qed.
 
-Lemma plainly_alt P : ■ P ⊣⊢ bi_affinely P ≡ emp.
+Lemma plainly_alt P : ■ P ⊣⊢ <affine> P ≡ emp.
 Proof.
   rewrite -plainly_affinely. apply (anti_symm (⊢)).
   - rewrite -prop_ext. apply plainly_mono, and_intro; apply wand_intro_l.

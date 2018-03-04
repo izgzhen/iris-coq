@@ -44,7 +44,7 @@ Lemma test_unfold_constants : bar.
 Proof. iIntros (P) "HP //". Qed.
 
 Lemma test_iRewrite {A : ofeT} (x y : A) P :
-  □ (∀ z, P -∗ bi_affinely (z ≡ y)) -∗ (P -∗ P ∧ (x,x) ≡ (y,x)).
+  □ (∀ z, P -∗ <affine> (z ≡ y)) -∗ (P -∗ P ∧ (x,x) ≡ (y,x)).
 Proof.
   iIntros "#H1 H2".
   iRewrite (bi.internal_eq_sym x x with "[# //]").
@@ -53,7 +53,7 @@ Proof.
 Qed.
 
 Lemma test_iDestruct_and_emp P Q `{!Persistent P, !Persistent Q} :
-  P ∧ emp -∗ emp ∧ Q -∗ bi_affinely (P ∗ Q).
+  P ∧ emp -∗ emp ∧ Q -∗ <affine> (P ∗ Q).
 Proof. iIntros "[#? _] [_ #?]". auto. Qed.
 
 Lemma test_iIntros_persistent P Q `{!Persistent Q} : (P → Q → P ∧ Q)%I.
@@ -118,7 +118,7 @@ Lemma test_iSpecialize_tc P : (∀ x y z : gset positive, P) -∗ P.
 Proof. iIntros "H". iSpecialize ("H" $! ∅ {[ 1%positive ]} ∅). done. Qed.
 
 Lemma test_iFrame_pure {A : ofeT} (φ : Prop) (y z : A) :
-  φ → bi_affinely ⌜y ≡ z⌝ -∗ (⌜ φ ⌝ ∧ ⌜ φ ⌝ ∧ y ≡ z : PROP).
+  φ → <affine> ⌜y ≡ z⌝ -∗ (⌜ φ ⌝ ∧ ⌜ φ ⌝ ∧ y ≡ z : PROP).
 Proof. iIntros (Hv) "#Hxy". iFrame (Hv) "Hxy". Qed.
 
 Lemma test_iFrame_disjunction_1 P1 P2 Q1 Q2 :
@@ -138,12 +138,12 @@ Proof. iIntros "HP HQ". iFrame "HP HQ". Qed.
 Lemma test_iAssert_modality P : ◇ False -∗ ▷ P.
 Proof.
   iIntros "HF".
-  iAssert (bi_affinely False)%I with "[> -]" as %[].
+  iAssert (<affine> False)%I with "[> -]" as %[].
   by iMod "HF".
 Qed.
 
 Lemma test_iMod_affinely_timeless P `{!Timeless P} :
-  bi_affinely (▷ P) -∗ ◇ bi_affinely P.
+  <affine> ▷ P -∗ ◇ <affine> P.
 Proof. iIntros "H". iMod "H". done. Qed.
 
 Lemma test_iAssumption_False P : False -∗ P.
@@ -188,13 +188,13 @@ Lemma test_iNext_quantifier {A} (Φ : A → A → PROP) :
 Proof. iIntros "H". iNext. done. Qed.
 
 Lemma test_iFrame_persistent (P Q : PROP) :
-  □ P -∗ Q -∗ bi_persistently (P ∗ P) ∗ (P ∗ Q ∨ Q).
+  □ P -∗ Q -∗ <pers> (P ∗ P) ∗ (P ∗ Q ∨ Q).
 Proof. iIntros "#HP". iFrame "HP". iIntros "$". Qed.
 
-Lemma test_iSplit_persistently P Q : □ P -∗ bi_persistently (P ∗ P).
+Lemma test_iSplit_persistently P Q : □ P -∗ <pers> (P ∗ P).
 Proof. iIntros "#?". by iSplit. Qed.
 
-Lemma test_iSpecialize_persistent P Q : □ P -∗ (bi_persistently P → Q) -∗ Q.
+Lemma test_iSpecialize_persistent P Q : □ P -∗ (<pers> P → Q) -∗ Q.
 Proof. iIntros "#HP HPQ". by iSpecialize ("HPQ" with "HP"). Qed.
 
 Lemma test_iDestruct_persistent P (Φ : nat → PROP) `{!∀ x, Persistent (Φ x)}:
@@ -242,14 +242,13 @@ Lemma test_iIntros_let P :
   ∀ Q, let R := emp%I in P -∗ R -∗ Q -∗ P ∗ Q.
 Proof. iIntros (Q R) "$ _ $". Qed.
 
-Lemma test_foo P Q :
-  bi_affinely (▷ (Q ≡ P)) -∗ bi_affinely (▷ Q) -∗ bi_affinely (▷ P).
+Lemma test_foo P Q : <affine> ▷ (Q ≡ P) -∗ <affine> ▷ Q -∗ <affine> ▷ P.
 Proof.
   iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ".
 Qed.
 
 Lemma test_iIntros_modalities `(!Absorbing P) :
-  (bi_persistently (▷ ∀  x : nat, ⌜ x = 0 ⌝ → ⌜ x = 0 ⌝ -∗ False -∗ P -∗ P))%I.
+  (<pers> (▷ ∀  x : nat, ⌜ x = 0 ⌝ → ⌜ x = 0 ⌝ -∗ False -∗ P -∗ P))%I.
 Proof.
   iIntros (x ??).
   iIntros "* **". (* Test that fast intros do not work under modalities *)
@@ -260,12 +259,11 @@ Lemma test_iIntros_rewrite P (x1 x2 x3 x4 : nat) :
   x1 = x2 → (⌜ x2 = x3 ⌝ ∗ ⌜ x3 ≡ x4 ⌝ ∗ P) -∗ ⌜ x1 = x4 ⌝ ∗ P.
 Proof. iIntros (?) "(-> & -> & $)"; auto. Qed.
 
-Lemma test_iNext_affine P Q :
-  bi_affinely (▷ (Q ≡ P)) -∗ bi_affinely (▷ Q) -∗ bi_affinely (▷ P).
+Lemma test_iNext_affine P Q : <affine> ▷ (Q ≡ P) -∗ <affine> ▷ Q -∗ <affine> ▷ P.
 Proof. iIntros "#HPQ HQ !#". iNext. by iRewrite "HPQ" in "HQ". Qed.
 
 Lemma test_iAlways P Q R :
-  □ P -∗ bi_persistently Q → R -∗ bi_persistently (bi_affinely (bi_affinely P)) ∗ □ Q.
+  □ P -∗ <pers> Q → R -∗ <pers> <affine> <affine> P ∗ □ Q.
 Proof. iIntros "#HP #HQ HR". iSplitL. iAlways. done. iAlways. done. Qed.
 
 (* A bunch of test cases from #127 to establish that tactics behave the same on
@@ -337,14 +335,14 @@ Lemma test_iNext_fail P Q a b c d e f g h i j:
 Proof. iIntros "H". iNext. done. Qed.
 
 Lemma test_specialize_affine_pure (φ : Prop) P :
-  φ → (bi_affinely ⌜φ⌝ -∗ P) ⊢ P.
+  φ → (<affine> ⌜φ⌝ -∗ P) ⊢ P.
 Proof.
   iIntros (Hφ) "H". by iSpecialize ("H" with "[% //]").
 Qed.
 
 Lemma test_assert_affine_pure (φ : Prop) P :
-  φ → P ⊢ P ∗ bi_affinely ⌜φ⌝.
-Proof. iIntros (Hφ). iAssert (bi_affinely ⌜φ⌝) with "[%]" as "$"; auto. Qed.
+  φ → P ⊢ P ∗ <affine> ⌜φ⌝.
+Proof. iIntros (Hφ). iAssert (<affine> ⌜φ⌝)%I with "[%]" as "$"; auto. Qed.
 Lemma test_assert_pure (φ : Prop) P :
   φ → P ⊢ P ∗ ⌜φ⌝.
 Proof. iIntros (Hφ). iAssert ⌜φ⌝%I with "[%]" as "$"; auto. Qed.

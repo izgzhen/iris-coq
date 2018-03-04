@@ -22,7 +22,7 @@ Record BiEmbedMixin (PROP1 PROP2 : bi) `(Embed PROP1 PROP2) := {
   bi_embed_mixin_exist_1 A (Φ : A → PROP1) : ⎡∃ x, Φ x⎤ ⊢ ∃ x, ⎡Φ x⎤;
   bi_embed_mixin_sep P Q : ⎡P ∗ Q⎤ ⊣⊢ ⎡P⎤ ∗ ⎡Q⎤;
   bi_embed_mixin_wand_2 P Q : (⎡P⎤ -∗ ⎡Q⎤) ⊢ ⎡P -∗ Q⎤;
-  bi_embed_mixin_persistently P : ⎡bi_persistently P⎤ ⊣⊢ bi_persistently ⎡P⎤
+  bi_embed_mixin_persistently P : ⎡<pers> P⎤ ⊣⊢ <pers> ⎡P⎤
 }.
 
 Class BiEmbed (PROP1 PROP2 : bi) := {
@@ -79,7 +79,7 @@ Section embed_laws.
   Proof. eapply bi_embed_mixin_sep, bi_embed_mixin. Qed.
   Lemma embed_wand_2 P Q : (⎡P⎤ -∗ ⎡Q⎤) ⊢ ⎡P -∗ Q⎤.
   Proof. eapply bi_embed_mixin_wand_2, bi_embed_mixin. Qed.
-  Lemma embed_persistently P : ⎡bi_persistently P⎤ ⊣⊢ bi_persistently ⎡P⎤.
+  Lemma embed_persistently P : ⎡<pers> P⎤ ⊣⊢ <pers> ⎡P⎤.
   Proof. eapply bi_embed_mixin_persistently, bi_embed_mixin. Qed.
 End embed_laws.
 
@@ -141,14 +141,13 @@ Section embed.
   Proof. by rewrite embed_and !embed_impl. Qed.
   Lemma embed_wand_iff P Q : ⎡P ∗-∗ Q⎤ ⊣⊢ (⎡P⎤ ∗-∗ ⎡Q⎤).
   Proof. by rewrite embed_and !embed_wand. Qed.
-  Lemma embed_affinely P : ⎡bi_affinely P⎤ ⊣⊢ bi_affinely ⎡P⎤.
+  Lemma embed_affinely P : ⎡<affine> P⎤ ⊣⊢ <affine> ⎡P⎤.
   Proof. by rewrite embed_and embed_emp. Qed.
-  Lemma embed_absorbingly P : ⎡bi_absorbingly P⎤ ⊣⊢ bi_absorbingly ⎡P⎤.
+  Lemma embed_absorbingly P : ⎡<absorb> P⎤ ⊣⊢ <absorb> ⎡P⎤.
   Proof. by rewrite embed_sep embed_pure. Qed.
-  Lemma embed_persistently_if P b :
-    ⎡bi_persistently_if b P⎤ ⊣⊢ bi_persistently_if b ⎡P⎤.
+  Lemma embed_persistently_if P b : ⎡<pers>?b P⎤ ⊣⊢ <pers>?b ⎡P⎤.
   Proof. destruct b; simpl; auto using embed_persistently. Qed.
-  Lemma embed_affinely_if P b : ⎡bi_affinely_if b P⎤ ⊣⊢ bi_affinely_if b ⎡P⎤.
+  Lemma embed_affinely_if P b : ⎡<affine>?b P⎤ ⊣⊢ <affine>?b ⎡P⎤.
   Proof. destruct b; simpl; auto using embed_affinely. Qed.
   Lemma embed_hforall {As} (Φ : himpl As PROP1):
     ⎡bi_hforall Φ⎤ ⊣⊢ bi_hforall (hcompose embed Φ).
@@ -233,6 +232,6 @@ End sbi_embed.
 
 (* Not defined using an ordinary [Instance] because the default
 [class_apply @bi_embed_plainly] shelves the [BiPlainly] premise, making proof
-search for the other premises fail. See the proof of [monPred_absolutely_plain]
+search for the other premises fail. See the proof of [monPred_objectively_plain]
 for an example where it would fail with a regular [Instance].*)
 Hint Extern 4 (Plain ⎡_⎤) => eapply @embed_plain : typeclass_instances.

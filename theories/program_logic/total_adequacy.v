@@ -17,7 +17,7 @@ Definition twptp_pre (twptp : list (expr Λ) → iProp Σ)
     state_interp σ1 ={⊤}=∗ state_interp σ2 ∗ twptp t2)%I.
 
 Lemma twptp_pre_mono (twptp1 twptp2 : list (expr Λ) → iProp Σ) :
-  ((bi_persistently (∀ t, twptp1 t -∗ twptp2 t)) →
+  (<pers> (∀ t, twptp1 t -∗ twptp2 t) →
   ∀ t, twptp_pre twptp1 t -∗ twptp_pre twptp2 t)%I.
 Proof.
   iIntros "#H"; iIntros (t) "Hwp". rewrite /twptp_pre.

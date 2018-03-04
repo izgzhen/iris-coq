@@ -127,8 +127,7 @@ Section sep_list.
   Proof. auto using and_intro, big_sepL_mono, and_elim_l, and_elim_r. Qed.
 
   Lemma big_sepL_persistently `{BiAffine PROP} Φ l :
-    bi_persistently ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢
-    [∗ list] k↦x ∈ l, bi_persistently (Φ k x).
+    <pers> ([∗ list] k↦x ∈ l, Φ k x) ⊣⊢ [∗ list] k↦x ∈ l, <pers> (Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
   Lemma big_sepL_forall `{BiAffine PROP} Φ l :
@@ -266,8 +265,7 @@ Section and_list.
   Proof. auto using and_intro, big_andL_mono, and_elim_l, and_elim_r. Qed.
 
   Lemma big_andL_persistently Φ l :
-    bi_persistently ([∧ list] k↦x ∈ l, Φ k x) ⊣⊢
-    [∧ list] k↦x ∈ l, bi_persistently (Φ k x).
+    <pers> ([∧ list] k↦x ∈ l, Φ k x) ⊣⊢ [∧ list] k↦x ∈ l, <pers> (Φ k x).
   Proof. apply (big_opL_commute _). Qed.
 
   Lemma big_andL_forall `{BiAffine PROP} Φ l :
@@ -398,8 +396,7 @@ Section gmap.
   Proof. auto using and_intro, big_sepM_mono, and_elim_l, and_elim_r. Qed.
 
   Lemma big_sepM_persistently `{BiAffine PROP} Φ m :
-    (bi_persistently ([∗ map] k↦x ∈ m, Φ k x)) ⊣⊢
-      ([∗ map] k↦x ∈ m, bi_persistently (Φ k x)).
+    (<pers> ([∗ map] k↦x ∈ m, Φ k x)) ⊣⊢ ([∗ map] k↦x ∈ m, <pers> (Φ k x)).
   Proof. apply (big_opM_commute _). Qed.
 
   Lemma big_sepM_forall `{BiAffine PROP} Φ m :
@@ -564,7 +561,7 @@ Section gset.
   Proof. auto using and_intro, big_sepS_mono, and_elim_l, and_elim_r. Qed.
 
   Lemma big_sepS_persistently `{BiAffine PROP} Φ X :
-    bi_persistently ([∗ set] y ∈ X, Φ y) ⊣⊢ [∗ set] y ∈ X, bi_persistently (Φ y).
+    <pers> ([∗ set] y ∈ X, Φ y) ⊣⊢ [∗ set] y ∈ X, <pers> (Φ y).
   Proof. apply (big_opS_commute _). Qed.
 
   Lemma big_sepS_forall `{BiAffine PROP} Φ X :
@@ -672,8 +669,7 @@ Section gmultiset.
   Proof. auto using and_intro, big_sepMS_mono, and_elim_l, and_elim_r. Qed.
 
   Lemma big_sepMS_persistently `{BiAffine PROP} Φ X :
-    bi_persistently ([∗ mset] y ∈ X, Φ y) ⊣⊢
-      [∗ mset] y ∈ X, bi_persistently (Φ y).
+    <pers> ([∗ mset] y ∈ X, Φ y) ⊣⊢ [∗ mset] y ∈ X, <pers> (Φ y).
   Proof. apply (big_opMS_commute _). Qed.
 
   Global Instance big_sepMS_empty_persistent Φ :

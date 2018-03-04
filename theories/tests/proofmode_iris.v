@@ -60,7 +60,7 @@ Section iris_tests.
     by iApply inv_alloc.
   Qed.
 
-  Lemma test_iInv_0 N P: inv N (bi_persistently P) ={⊤}=∗ ▷ P.
+  Lemma test_iInv_0 N P: inv N (<pers> P) ={⊤}=∗ ▷ P.
   Proof.
     iIntros "#H".
     iInv N as "#H2" "Hclose".
@@ -70,7 +70,7 @@ Section iris_tests.
 
   Lemma test_iInv_1 N E P:
     ↑N ⊆ E →
-    inv N (bi_persistently P) ={E}=∗ ▷ P.
+    inv N (<pers> P) ={E}=∗ ▷ P.
   Proof.
     iIntros (?) "#H".
     iInv N as "#H2" "Hclose".
@@ -79,7 +79,7 @@ Section iris_tests.
   Qed.
 
   Lemma test_iInv_2 γ p N P:
-    cinv N γ (bi_persistently P) ∗ cinv_own γ p ={⊤}=∗ cinv_own γ p ∗ ▷ P.
+    cinv N γ (<pers> P) ∗ cinv_own γ p ={⊤}=∗ cinv_own γ p ∗ ▷ P.
   Proof.
     iIntros "(#?&?)".
     iInv N as "(#HP&Hown)" "Hclose".
@@ -88,7 +88,7 @@ Section iris_tests.
   Qed.
 
   Lemma test_iInv_3 γ p1 p2 N P:
-    cinv N γ (bi_persistently P) ∗ cinv_own γ p1 ∗ cinv_own γ p2
+    cinv N γ (<pers> P) ∗ cinv_own γ p1 ∗ cinv_own γ p2
       ={⊤}=∗ cinv_own γ p1 ∗ cinv_own γ p2  ∗ ▷ P.
   Proof.
     iIntros "(#?&Hown1&Hown2)".
@@ -99,7 +99,7 @@ Section iris_tests.
 
   Lemma test_iInv_4 t N E1 E2 P:
     ↑N ⊆ E2 →
-    na_inv t N (bi_persistently P) ∗ na_own t E1 ∗ na_own t E2
+    na_inv t N (<pers> P) ∗ na_own t E1 ∗ na_own t E2
          ⊢ |={⊤}=> na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&Hown1&Hown2)".
@@ -112,7 +112,7 @@ Section iris_tests.
   (* test named selection of which na_own to use *)
   Lemma test_iInv_5 t N E1 E2 P:
     ↑N ⊆ E2 →
-    na_inv t N (bi_persistently P) ∗ na_own t E1 ∗ na_own t E2
+    na_inv t N (<pers> P) ∗ na_own t E1 ∗ na_own t E2
       ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&Hown1&Hown2)".
@@ -124,7 +124,7 @@ Section iris_tests.
 
   Lemma test_iInv_6 t N E1 E2 P:
     ↑N ⊆ E1 →
-    na_inv t N (bi_persistently P) ∗ na_own t E1 ∗ na_own t E2
+    na_inv t N (<pers> P) ∗ na_own t E1 ∗ na_own t E2
       ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&Hown1&Hown2)".
@@ -137,7 +137,7 @@ Section iris_tests.
   (* test robustness in presence of other invariants *)
   Lemma test_iInv_7 t N1 N2 N3 E1 E2 P:
     ↑N3 ⊆ E1 →
-    inv N1 P ∗ na_inv t N3 (bi_persistently P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
+    inv N1 P ∗ na_inv t N3 (<pers> P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
       ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&#?&#?&Hown1&Hown2)".
@@ -158,7 +158,7 @@ Section iris_tests.
   (* test selection by hypothesis name instead of namespace *)
   Lemma test_iInv_9 t N1 N2 N3 E1 E2 P:
     ↑N3 ⊆ E1 →
-    inv N1 P ∗ na_inv t N3 (bi_persistently P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
+    inv N1 P ∗ na_inv t N3 (<pers> P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
       ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&#HInv&#?&Hown1&Hown2)".
@@ -170,7 +170,7 @@ Section iris_tests.
   (* test selection by hypothesis name instead of namespace *)
   Lemma test_iInv_10 t N1 N2 N3 E1 E2 P:
     ↑N3 ⊆ E1 →
-    inv N1 P ∗ na_inv t N3 (bi_persistently P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
+    inv N1 P ∗ na_inv t N3 (<pers> P) ∗ inv N2 P  ∗ na_own t E1 ∗ na_own t E2
       ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&#HInv&#?&Hown1&Hown2)".
@@ -180,7 +180,7 @@ Section iris_tests.
   Qed.
 
   (* test selection by ident name *)
-  Lemma test_iInv_11 N P: inv N (bi_persistently P) ={⊤}=∗ ▷ P.
+  Lemma test_iInv_11 N P: inv N (<pers> P) ={⊤}=∗ ▷ P.
   Proof.
     let H := iFresh in
     (iIntros H; iInv H as "#H2" "Hclose").
@@ -189,7 +189,7 @@ Section iris_tests.
   Qed.
 
   (* error messages *)
-  Lemma test_iInv_12 N P: inv N (bi_persistently P) ={⊤}=∗ True.
+  Lemma test_iInv_12 N P: inv N (<pers> P) ={⊤}=∗ True.
   Proof.
     iIntros "H".
     Fail iInv 34 as "#H2" "Hclose".

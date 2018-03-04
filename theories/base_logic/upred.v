@@ -457,21 +457,21 @@ Proof.
   - (* (P ⊢ Q -∗ R) → P ∗ Q ⊢ R *)
     intros P Q R. unseal=> HPQR. split; intros n x ? (?&?&?&?&?). ofe_subst.
     eapply HPQR; eauto using cmra_validN_op_l.
-  - (* (P ⊢ Q) → bi_persistently P ⊢ bi_persistently Q *)
+  - (* (P ⊢ Q) → <pers> P ⊢ <pers> Q *)
     intros P QR HP. unseal; split=> n x ? /=. by apply HP, cmra_core_validN.
-  - (* bi_persistently P ⊢ bi_persistently (bi_persistently P) *)
+  - (* <pers> P ⊢ <pers> <pers> P *)
     intros P. unseal; split=> n x ?? /=. by rewrite cmra_core_idemp.
-  - (* P ⊢ bi_persistently emp (ADMISSIBLE) *)
+  - (* P ⊢ <pers> emp (ADMISSIBLE) *)
     by unseal.
-  - (* (∀ a, bi_persistently (Ψ a)) ⊢ bi_persistently (∀ a, Ψ a) *)
+  - (* (∀ a, <pers> (Ψ a)) ⊢ <pers> (∀ a, Ψ a) *)
     by unseal.
-  - (* bi_persistently (∃ a, Ψ a) ⊢ ∃ a, bi_persistently (Ψ a) *)
+  - (* <pers> (∃ a, Ψ a) ⊢ ∃ a, <pers> (Ψ a) *)
     by unseal.
-  - (* bi_persistently P ∗ Q ⊢ bi_persistently P (ADMISSIBLE) *)
+  - (* <pers> P ∗ Q ⊢ <pers> P (ADMISSIBLE) *)
     intros P Q. move: (uPred_persistently P)=> P'.
     unseal; split; intros n x ? (x1&x2&?&?&_); ofe_subst;
       eauto using uPred_mono, cmra_includedN_l.
-  - (* bi_persistently P ∧ Q ⊢ P ∗ Q *)
+  - (* <pers> P ∧ Q ⊢ P ∗ Q *)
     intros P Q. unseal; split=> n x ? [??]; simpl in *.
     exists (core x), x; rewrite ?cmra_core_l; auto.
 Qed.
@@ -523,9 +523,9 @@ Proof.
   - (* ▷ P ∗ ▷ Q ⊢ ▷ (P ∗ Q) *)
     intros P Q. unseal; split=> -[|n] x ? /=; [done|intros (x1&x2&Hx&?&?)].
     exists x1, x2; eauto using dist_S.
-  - (* ▷ bi_persistently P ⊢ bi_persistently (▷ P) *)
+  - (* ▷ <pers> P ⊢ <pers> ▷ P *)
     by unseal.
-  - (* bi_persistently (▷ P) ⊢ ▷ bi_persistently P *)
+  - (* <pers> ▷ P ⊢ ▷ <pers> P *)
     by unseal.
   - (* ▷ P ⊢ ▷ False ∨ (▷ False → P) *)
     intros P. unseal; split=> -[|n] x ? /= HP; [by left|right].
@@ -552,13 +552,13 @@ Proof.
     unseal; split=> n' x; split; apply HP; eauto using @ucmra_unit_validN.
   - (* (P ⊢ Q) → ■ P ⊢ ■ Q *)
     intros P QR HP. unseal; split=> n x ? /=. by apply HP, ucmra_unit_validN.
-  - (* ■ P ⊢ bi_persistently P *)
+  - (* ■ P ⊢ <pers> P *)
     unseal; split; simpl; eauto using uPred_mono, @ucmra_unit_leastN.
   - (* ■ P ⊢ ■ ■ P *)
     unseal; split=> n x ?? //.
   - (* (∀ a, ■ (Ψ a)) ⊢ ■ (∀ a, Ψ a) *)
     by unseal.
-  - (* (■ P → bi_persistently Q) ⊢ bi_persistently (■ P → Q) *)
+  - (* (■ P → <pers> Q) ⊢ <pers> (■ P → Q) *)
     unseal; split=> /= n x ? HPQ n' x' ????.
     eapply uPred_mono with n' (core x)=>//; [|by apply cmra_included_includedN].
     apply (HPQ n' x); eauto using cmra_validN_le.
@@ -665,8 +665,7 @@ Proof.
     by rewrite (assoc op _ z1) -(comm op z1) (assoc op z1)
       -(assoc op _ a2) (comm op z1) -Hy1 -Hy2.
 Qed.
-Lemma persistently_ownM_core (a : M) :
-  uPred_ownM a ⊢ bi_persistently (uPred_ownM (core a)).
+Lemma persistently_ownM_core (a : M) : uPred_ownM a ⊢ <pers> uPred_ownM (core a).
 Proof.
   rewrite /bi_persistently /=. unseal.
   split=> n x Hx /=. by apply cmra_core_monoN.

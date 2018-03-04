@@ -16,8 +16,7 @@ Notation "P ⊢ Q" := (bi_entails (PROP:=uPredI M) P%I Q%I).
 Notation "P ⊣⊢ Q" := (equiv (A:=uPredI M) P%I Q%I).
 
 (* Own and valid derived *)
-Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) :
-  ✓ a ⊢ bi_persistently (✓ a : uPred M).
+Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ <pers> (✓ a : uPred M).
 Proof. by rewrite {1}plainly_cmra_valid_1 plainly_elim_persistently. Qed.
 Lemma affinely_persistently_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
