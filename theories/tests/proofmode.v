@@ -120,7 +120,11 @@ Lemma test_iExist_tc `{Collection A C} P : (∃ x1 x2 : gset positive, P -∗ P)
 Proof. iExists {[ 1%positive ]}, ∅. auto. Qed.
 
 Lemma test_iSpecialize_tc P : (∀ x y z : gset positive, P) -∗ P.
-Proof. iIntros "H". iSpecialize ("H" $! ∅ {[ 1%positive ]} ∅). done. Qed.
+Proof.
+  iIntros "H".
+  (* FIXME: this unshelve should not be needed. *)
+  unshelve iSpecialize ("H" $! ∅ {[ 1%positive ]} ∅); try apply _. done.
+Qed.
 
 Lemma test_iFrame_pure {A : ofeT} (φ : Prop) (y z : A) :
   φ → <affine> ⌜y ≡ z⌝ -∗ (⌜ φ ⌝ ∧ ⌜ φ ⌝ ∧ y ≡ z : PROP).
