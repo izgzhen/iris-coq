@@ -40,7 +40,7 @@ if args.commits:
 results = list(results)
 
 for datapoint in results:
-    times = ''.join(datapoint.times)
+    times = '\n'.join(datapoint.times)
     commit = datapoint.commit
     print("Sending {}...".format(commit), end='')
     date = subprocess.check_output(['git', 'show', commit, '-s', '--pretty=%cI']).strip().decode('UTF-8')
