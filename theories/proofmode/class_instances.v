@@ -1007,9 +1007,16 @@ Proof.
   - intros x. apply H1. revert H2. by rewrite (bi.forall_elim x).
 Qed.
 
+(* We add a useless hypothesis [BiEmbed PROP PROP'] in order to make
+   sure this iinstance is not used when there is no embedding between
+   PROP and PROP'.
+   The first [`{BiEmbed PROP PROP'}] is not considered as a premise by
+   Coq TC search mechanism because the rest of the hypothesis is dependent
+   on it. *)
 Global Instance as_valid_embed `{BiEmbed PROP PROP'} (φ : Prop) (P : PROP) :
+  BiEmbed PROP PROP' →
   AsValid0 φ P → AsValid φ ⎡P⎤.
-Proof. rewrite /AsValid0 /AsValid=> ->. rewrite embed_valid //. Qed.
+Proof. rewrite /AsValid0 /AsValid=> _ ->. rewrite embed_valid //. Qed.
 End bi_instances.
 
 Section sbi_instances.
