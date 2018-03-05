@@ -45,8 +45,8 @@ Qed.
 Definition wp_def `{irisG Λ Σ} (s : stuckness) :
   coPset → expr Λ → (val Λ → iProp Σ) → iProp Σ := fixpoint (wp_pre s).
 Definition wp_aux : seal (@wp_def). by eexists. Qed.
-Definition wp := unseal wp_aux.
-Definition wp_eq : @wp = @wp_def := seal_eq wp_aux.
+Definition wp := wp_aux.(unseal).
+Definition wp_eq : @wp = @wp_def := wp_aux.(seal_eq).
 
 Arguments wp {_ _ _} _ _ _%E _.
 Instance: Params (@wp) 6.

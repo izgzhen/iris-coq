@@ -300,8 +300,8 @@ Qed.
 Program Definition fixpoint_def `{Cofe A, Inhabited A} (f : A → A)
   `{!Contractive f} : A := compl (fixpoint_chain f).
 Definition fixpoint_aux : seal (@fixpoint_def). by eexists. Qed.
-Definition fixpoint {A AC AiH} f {Hf} := unseal fixpoint_aux A AC AiH f Hf.
-Definition fixpoint_eq : @fixpoint = @fixpoint_def := seal_eq fixpoint_aux.
+Definition fixpoint {A AC AiH} f {Hf} := fixpoint_aux.(unseal) A AC AiH f Hf.
+Definition fixpoint_eq : @fixpoint = @fixpoint_def := fixpoint_aux.(seal_eq).
 
 Section fixpoint.
   Context `{Cofe A, Inhabited A} (f : A → A) `{!Contractive f}.

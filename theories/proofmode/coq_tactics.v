@@ -29,8 +29,8 @@ Arguments of_envs : simpl never.
    proofmode's own tactics, such as [iIntros (?)]. *)
 Definition envs_entails_aux : seal (λ PROP (Δ : envs PROP) (Q : PROP), (of_envs Δ ⊢ Q)).
 Proof. by eexists. Qed.
-Definition envs_entails := unseal envs_entails_aux.
-Definition envs_entails_eq : envs_entails = _ := seal_eq envs_entails_aux.
+Definition envs_entails := envs_entails_aux.(unseal).
+Definition envs_entails_eq : envs_entails = _ := envs_entails_aux.(seal_eq).
 Arguments envs_entails {PROP} Δ Q%I : rename.
 Instance: Params (@envs_entails) 1.
 

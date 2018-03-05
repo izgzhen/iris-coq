@@ -51,8 +51,8 @@ Definition twp_def `{irisG Λ Σ} (s : stuckness) (E : coPset)
     (e : expr Λ) (Φ : val Λ → iProp Σ) :
   iProp Σ := bi_least_fixpoint (twp_pre' s) (E,e,Φ).
 Definition twp_aux : seal (@twp_def). by eexists. Qed.
-Definition twp := unseal twp_aux.
-Definition twp_eq : @twp = @twp_def := seal_eq twp_aux.
+Definition twp := twp_aux.(unseal).
+Definition twp_eq : @twp = @twp_def := twp_aux.(seal_eq).
 
 Arguments twp {_ _ _} _ _ _%E _.
 Instance: Params (@twp) 6.
