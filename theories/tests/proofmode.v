@@ -166,6 +166,15 @@ Proof.
   iSpecialize ("H" $! _ [#10]). done.
 Qed.
 
+(* Check that typeclasses are not resolved too early *)
+Lemma test_TC_resolution `{!BiAffine PROP} (Φ : nat → PROP) l x :
+  x ∈ l → ([∗ list] y ∈ l, Φ y) -∗ Φ x.
+Proof.
+  iIntros (Hp) "HT".
+  iDestruct (bi.big_sepL_elem_of _ _ _ Hp with "HT") as "Hp".
+  done.
+Qed.
+
 Lemma test_eauto_iFrame P Q R `{!Persistent R} :
   P -∗ Q -∗ R → R ∗ Q ∗ P ∗ R ∨ False.
 Proof. eauto 10 with iFrame. Qed.
