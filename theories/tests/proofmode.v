@@ -122,7 +122,7 @@ Proof. iExists {[ 1%positive ]}, ∅. auto. Qed.
 Lemma test_iSpecialize_tc P : (∀ x y z : gset positive, P) -∗ P.
 Proof.
   iIntros "H".
-  (* FIXME: this unshelve should not be needed. *)
+  (* FIXME: this [unshelve] and [apply _] should not be needed. *)
   unshelve iSpecialize ("H" $! ∅ {[ 1%positive ]} ∅); try apply _. done.
 Qed.
 
