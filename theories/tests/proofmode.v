@@ -408,7 +408,7 @@ Proof.
   eexists. split. iIntros "#? ? ? ?". iAccu. done.
 Qed.
 
-Lemma test_iAssumption_evar P : ∃ R, (R ⊢ P) /\ R = P.
+Lemma test_iAssumption_evar P : ∃ R, (R ⊢ P) ∧ R = P.
 Proof.
   eexists. split.
   - iIntros "H". iAssumption.
