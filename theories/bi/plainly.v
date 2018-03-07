@@ -254,6 +254,14 @@ Proof. apply impl_intro_l. by rewrite plainly_and_sep_l_1 wand_elim_r. Qed.
 Lemma impl_wand_affinely_plainly P Q : (■ P → Q) ⊣⊢ (<affine> ■ P -∗ Q).
 Proof. by rewrite -(persistently_plainly P) impl_wand_affinely_persistently. Qed.
 
+Lemma persistently_wand_affinely_plainly P Q :
+  (<affine> ■ P -∗ <pers> Q) ⊢ <pers> (<affine> ■ P -∗ Q).
+Proof. rewrite -!impl_wand_affinely_plainly. apply persistently_impl_plainly. Qed.
+
+Lemma plainly_wand_affinely_plainly P Q :
+  (<affine> ■ P -∗ ■ Q) ⊢ ■ (<affine> ■ P -∗ Q).
+Proof. rewrite -!impl_wand_affinely_plainly. apply plainly_impl_plainly. Qed.
+
 Section plainly_affine_bi.
   Context `{BiAffine PROP}.
 
