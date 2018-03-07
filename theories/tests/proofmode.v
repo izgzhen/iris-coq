@@ -408,4 +408,12 @@ Proof.
   eexists. split. iIntros "#? ? ? ?". iAccu. done.
 Qed.
 
+Lemma test_iAssumption_evar P : ∃ R, (R ⊢ P) /\ R = P.
+Proof.
+  eexists. split.
+  - iIntros "H". iAssumption.
+  (* Now verify that the evar was chosen as desired (i.e., it should not pick False). *)
+  - reflexivity.
+Qed.
+
 End tests.
