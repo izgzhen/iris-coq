@@ -326,9 +326,9 @@ Proof. by rewrite /IntoWand affinely_persistently_elim. Qed.
 Global Instance into_wand_persistently_true q R P Q :
   IntoWand true q R P Q → IntoWand true q (<pers> R) P Q.
 Proof. by rewrite /IntoWand /= persistently_idemp. Qed.
-Global Instance into_wand_persistently_false `{!BiAffine PROP} q R P Q :
-  IntoWand false q R P Q → IntoWand false q (<pers> R) P Q.
-Proof. by rewrite /IntoWand persistently_elim. Qed.
+Global Instance into_wand_persistently_false q R P Q :
+  Absorbing R → IntoWand false q R P Q → IntoWand false q (<pers> R) P Q.
+Proof. intros ?. by rewrite /IntoWand persistently_elim. Qed.
 Global Instance into_wand_embed `{BiEmbed PROP PROP'} p q R P Q :
   IntoWand p q R P Q → IntoWand p q ⎡R⎤ ⎡P⎤ ⎡Q⎤.
 Proof.
@@ -1155,9 +1155,9 @@ Qed.
 Global Instance into_wand_plainly_true `{BiPlainly PROP} q R P Q :
   IntoWand true q R P Q → IntoWand true q (■ R) P Q.
 Proof. by rewrite /IntoWand /= persistently_plainly plainly_elim_persistently. Qed.
-Global Instance into_wand_plainly_false `{BiPlainly PROP, !BiAffine PROP} q R P Q :
-  IntoWand false q R P Q → IntoWand false q (■ R) P Q.
-Proof. by rewrite /IntoWand plainly_elim. Qed.
+Global Instance into_wand_plainly_false `{BiPlainly PROP} q R P Q :
+  Absorbing R → IntoWand false q R P Q → IntoWand false q (■ R) P Q.
+Proof. intros ?. by rewrite /IntoWand plainly_elim. Qed.
 
 (* FromAnd *)
 Global Instance from_and_later P Q1 Q2 :
