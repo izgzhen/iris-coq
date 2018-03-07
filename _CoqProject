@@ -39,6 +39,7 @@ theories/bi/monpred.v
 theories/bi/embedding.v
 theories/bi/lib/fractional.v
 theories/bi/lib/atomic.v
+theories/bi/lib/core.v
 theories/base_logic/upred.v
 theories/base_logic/derived.v
 theories/base_logic/base_logic.v
@@ -58,7 +59,6 @@ theories/base_logic/lib/boxes.v
 theories/base_logic/lib/na_invariants.v
 theories/base_logic/lib/cancelable_invariants.v
 theories/base_logic/lib/gen_heap.v
-theories/base_logic/lib/core.v
 theories/base_logic/lib/fancy_updates_from_vs.v
 theories/program_logic/adequacy.v
 theories/program_logic/lifting.v
