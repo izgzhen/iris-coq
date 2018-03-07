@@ -416,4 +416,7 @@ Proof.
   - reflexivity.
 Qed.
 
+Lemma test_iAssumption_False_no_loop : ∃ R, R ⊢ ∀ P, P.
+Proof. eexists. iIntros "?" (P). done. Qed.
+
 End tests.
