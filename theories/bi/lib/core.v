@@ -7,7 +7,7 @@ Import bi.
     i.e. the conjunction of all persistent assertions that are weaker
     than P (as in, implied by P). *)
 Definition coreP `{!BiPlainly PROP} (P : PROP) : PROP :=
-  (∀ Q : PROP, <affine> ■ (Q -∗ <pers> Q) -∗ <affine> ■ (P -∗ Q) -∗ Q)%I.
+  (∀ Q : PROP, ■ (Q -∗ <pers> Q) → ■ (P -∗ Q) → Q)%I.
 Instance: Params (@coreP) 1.
 Typeclasses Opaque coreP.
 
@@ -16,19 +16,14 @@ Section core.
   Implicit Types P Q : PROP.
 
   Lemma coreP_intro P : P -∗ coreP P.
-  Proof.
-    rewrite /coreP. iIntros "HP" (Q) "_ HPQ".
-    (* FIXME: Cannot apply HPQ directly. *)
-    iDestruct (affinely_plainly_elim with "HPQ") as "HPQ".
-    by iApply "HPQ".
-  Qed.
+  Proof. rewrite /coreP. iIntros "HP" (Q) "_ #HPQ". by iApply "HPQ". Qed.
 
   Global Instance coreP_persistent P : Persistent (coreP P).
   Proof.
     rewrite /coreP /Persistent. iIntros "HC" (Q).
-    iApply persistently_wand_affinely_plainly. iIntros "#HQ".
-    iApply persistently_wand_affinely_plainly. iIntros "#HPQ".
-    iApply "HQ". iApply "HC"; auto.
+    iApply persistently_impl_plainly. iIntros "#HQ".
+    iApply persistently_impl_plainly. iIntros "#HPQ".
+    iApply "HQ". by iApply ("HC" with "[#] [#]").
   Qed.
 
   Global Instance coreP_ne : NonExpansive (coreP (PROP:=PROP)).
@@ -40,7 +35,7 @@ Section core.
   Proof. solve_proper. Qed.
 
   Lemma coreP_elim P : Persistent P → coreP P -∗ P.
-  Proof. rewrite /coreP. iIntros (?) "HCP". iApply "HCP"; auto. Qed.
+  Proof. rewrite /coreP. iIntros (?) "HCP". iApply ("HCP" with "[#] [#]"); auto. Qed.
 
   (* TODO: Can we generalize this to non-affine BIs? *)
   Lemma coreP_wand `{!BiAffine PROP} P Q : (coreP P ⊢ Q) ↔ (P ⊢ <pers> Q).
