@@ -419,4 +419,8 @@ Qed.
 Lemma test_iAssumption_False_no_loop : ∃ R, R ⊢ ∀ P, P.
 Proof. eexists. iIntros "?" (P). done. Qed.
 
+Lemma test_apply_affine_impl `{!BiPlainly PROP} (P : PROP) :
+  P -∗ (∀ Q : PROP, ■ (Q -∗ <pers> Q) → ■ (P -∗ Q) → Q).
+Proof. iIntros "HP" (Q) "_ #HPQ". by iApply "HPQ". Qed.
+
 End tests.
