@@ -584,7 +584,7 @@ Proof.
 Qed.
 Lemma absorbingly_or P Q : <absorb> (P ∨ Q) ⊣⊢ <absorb> P ∨ <absorb> Q.
 Proof. by rewrite /bi_absorbingly sep_or_l. Qed.
-Lemma absorbingly_and P Q : <absorb> (P ∧ Q) ⊢ <absorb> P ∧ <absorb> Q.
+Lemma absorbingly_and_1 P Q : <absorb> (P ∧ Q) ⊢ <absorb> P ∧ <absorb> Q.
 Proof. apply and_intro; apply absorbingly_mono; auto. Qed.
 Lemma absorbingly_forall {A} (Φ : A → PROP) : <absorb> (∀ a, Φ a) ⊢ ∀ a, <absorb> (Φ a).
 Proof. apply forall_intro=> a. by rewrite (forall_elim a). Qed.
@@ -1166,7 +1166,7 @@ Proof. rewrite /bi_affinely. apply _. Qed.
 Global Instance pure_absorbing φ : Absorbing (⌜φ⌝%I : PROP).
 Proof. by rewrite /Absorbing absorbingly_pure. Qed.
 Global Instance and_absorbing P Q : Absorbing P → Absorbing Q → Absorbing (P ∧ Q).
-Proof. intros. by rewrite /Absorbing absorbingly_and !absorbing. Qed.
+Proof. intros. by rewrite /Absorbing absorbingly_and_1 !absorbing. Qed.
 Global Instance or_absorbing P Q : Absorbing P → Absorbing Q → Absorbing (P ∨ Q).
 Proof. intros. by rewrite /Absorbing absorbingly_or !absorbing. Qed.
 Global Instance forall_absorbing {A} (Φ : A → PROP) :
