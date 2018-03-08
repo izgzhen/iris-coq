@@ -106,7 +106,7 @@ Global Instance into_pure_pure_wand (φ1 φ2 : Prop) P1 P2 :
 Proof.
   rewrite /FromPure /IntoPure=> <- -> /=.
   rewrite pure_impl -impl_wand_2. apply bi.wand_intro_l.
-  rewrite {1}(persistent_absorbingly_affinely ⌜φ1⌝%I) absorbingly_sep_l
+  rewrite -{1}(persistent_absorbingly_affinely ⌜φ1⌝%I) absorbingly_sep_l
           bi.wand_elim_r absorbing //.
 Qed.
 
@@ -186,8 +186,9 @@ Global Instance from_pure_affinely_false P φ `{!Affine P} :
   FromPure false P φ → FromPure false (<affine> P) φ.
 Proof. rewrite /FromPure /= affine_affinely //. Qed.
 
-Global Instance from_pure_absorbingly P φ : FromPure true P φ → FromPure false (<absorb> P) φ.
-Proof. rewrite /FromPure=> <- /=. apply persistent_absorbingly_affinely, _. Qed.
+Global Instance from_pure_absorbingly P φ :
+  FromPure true P φ → FromPure false (<absorb> P) φ.
+Proof. rewrite /FromPure=> <- /=. by rewrite persistent_absorbingly_affinely. Qed.
 Global Instance from_pure_embed `{BiEmbed PROP PROP'} a P φ :
   FromPure a P φ → FromPure a ⎡P⎤ φ.
 Proof. rewrite /FromPure=> <-. by rewrite embed_affinely_if embed_pure. Qed.

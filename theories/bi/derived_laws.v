@@ -1113,10 +1113,24 @@ Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
 Lemma persistent_entails_r P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
 Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
 
-Lemma persistent_absorbingly_affinely P `{!Persistent P} : P ⊢ <absorb> <affine> P.
+Lemma absorbingly_affinely_persistently P : <absorb> □ P ⊣⊢ <pers> P.
 Proof.
-  by rewrite {1}(persistent_persistently_2 P) -persistently_affinely
-             persistently_elim_absorbingly.
+  apply (anti_symm _).
+  - by rewrite affinely_elim absorbingly_persistently.
+  - rewrite -{1}(idemp bi_and (<pers> _)%I) persistently_and_affinely_sep_r.
+    by rewrite {1} (True_intro (<pers> _)%I).
+Qed.
+
+Lemma persistent_absorbingly_affinely_2 P `{!Persistent P} :
+  P ⊢ <absorb> <affine> P.
+Proof.
+  rewrite {1}(persistent P) -absorbingly_affinely_persistently.
+  by rewrite -{1}affinely_idemp affinely_persistently_elim.
+Qed.
+Lemma persistent_absorbingly_affinely P `{!Persistent P, !Absorbing P} :
+  <absorb> <affine> P ⊣⊢ P.
+Proof.
+  by rewrite -(persistent_persistently P) absorbingly_affinely_persistently.
 Qed.
 
 Lemma persistent_and_sep_assoc P `{!Persistent P, !Absorbing P} Q R :
