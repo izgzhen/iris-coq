@@ -58,7 +58,7 @@ Section bi_mixin.
     bi_mixin_entails_po : PreOrder bi_entails;
     bi_mixin_equiv_spec P Q : equiv P Q ↔ (P ⊢ Q) ∧ (Q ⊢ P);
 
-    (* Non-expansiveness *)
+    (** Non-expansiveness *)
     bi_mixin_pure_ne n : Proper (iff ==> dist n) bi_pure;
     bi_mixin_and_ne : NonExpansive2 bi_and;
     bi_mixin_or_ne : NonExpansive2 bi_or;
@@ -71,9 +71,11 @@ Section bi_mixin.
     bi_mixin_wand_ne : NonExpansive2 bi_wand;
     bi_mixin_persistently_ne : NonExpansive bi_persistently;
 
-    (* Higher-order logic *)
+    (** Higher-order logic *)
     bi_mixin_pure_intro P (φ : Prop) : φ → P ⊢ ⌜ φ ⌝;
     bi_mixin_pure_elim' (φ : Prop) P : (φ → True ⊢ P) → ⌜ φ ⌝ ⊢ P;
+    (* This is actually derivable if we assume excluded middle in Coq,
+       via [(∀ a, φ a) ∨ (∃ a, ¬φ a)]. *)
     bi_mixin_pure_forall_2 {A} (φ : A → Prop) : (∀ a, ⌜ φ a ⌝) ⊢ ⌜ ∀ a, φ a ⌝;
 
     bi_mixin_and_elim_l P Q : P ∧ Q ⊢ P;
@@ -93,7 +95,7 @@ Section bi_mixin.
     bi_mixin_exist_intro {A} {Ψ : A → PROP} a : Ψ a ⊢ ∃ a, Ψ a;
     bi_mixin_exist_elim {A} (Φ : A → PROP) Q : (∀ a, Φ a ⊢ Q) → (∃ a, Φ a) ⊢ Q;
 
-    (* BI connectives *)
+    (** BI connectives *)
     bi_mixin_sep_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ∗ P' ⊢ Q ∗ Q';
     bi_mixin_emp_sep_1 P : P ⊢ emp ∗ P;
     bi_mixin_emp_sep_2 P : emp ∗ P ⊢ P;
@@ -102,7 +104,7 @@ Section bi_mixin.
     bi_mixin_wand_intro_r P Q R : (P ∗ Q ⊢ R) → P ⊢ Q -∗ R;
     bi_mixin_wand_elim_l' P Q R : (P ⊢ Q -∗ R) → P ∗ Q ⊢ R;
 
-    (* Persistently *)
+    (** Persistently *)
     (* In the ordered RA model: Holds without further assumptions. *)
     bi_mixin_persistently_mono P Q : (P ⊢ Q) → <pers> P ⊢ <pers> Q;
     (* In the ordered RA model: `core` is idempotent *)
