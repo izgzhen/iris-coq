@@ -92,7 +92,7 @@ Definition envs_simple_replace {M} (i : ident) (p : bool) (Γ : env (uPred M))
 
 Definition envs_replace {M} (i : ident) (p q : bool) (Γ : env (uPred M))
     (Δ : envs M) : option (envs M) :=
-  if eqb p q then envs_simple_replace i p Γ Δ
+  if Bool.eqb p q then envs_simple_replace i p Γ Δ
   else envs_app q Γ (envs_delete i p Δ).
 
 Definition env_spatial_is_nil {M} (Δ : envs M) :=
@@ -285,7 +285,7 @@ Lemma envs_replace_sound' Δ Δ' i p q Γ :
   envs_replace i p q Γ Δ = Some Δ' →
   of_envs (envs_delete i p Δ) ⊢ □?q [∗] Γ -∗ of_envs Δ'.
 Proof.
-  rewrite /envs_replace; destruct (eqb _ _) eqn:Hpq.
+  rewrite /envs_replace; destruct (Bool.eqb _ _) eqn:Hpq.
   - apply eqb_prop in Hpq as ->. apply envs_simple_replace_sound'.
   - apply envs_app_sound.
 Qed.
