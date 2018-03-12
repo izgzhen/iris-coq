@@ -842,6 +842,14 @@ Proof.
   - by rewrite (affinely_elim_emp P) left_id affinely_elim.
 Qed.
 
+Lemma persistently_alt_fixpoint P :
+  <pers> P ⊣⊢ P ∗ <pers> P.
+Proof.
+  apply (anti_symm _).
+  - rewrite -persistently_and_sep_elim. apply and_intro; done.
+  - rewrite comm persistently_absorbing. done.
+Qed.
+
 Lemma persistently_wand P Q : <pers> (P -∗ Q) ⊢ <pers> P -∗ <pers> Q.
 Proof. apply wand_intro_r. by rewrite persistently_sep_2 wand_elim_l. Qed.
 
@@ -960,6 +968,17 @@ Proof.
   apply (anti_symm (⊢)).
   - apply wand_intro_l. by rewrite -persistently_and_affinely_sep_l impl_elim_r.
   - apply impl_intro_l. by rewrite persistently_and_affinely_sep_l wand_elim_r.
+Qed.
+
+Lemma affinely_persistently_alt_fixpoint P :
+  □ P ⊣⊢ emp ∧ (P ∗ □ P).
+Proof.
+  apply (anti_symm (⊢)).
+  - apply and_intro; first exact: affinely_elim_emp.
+    rewrite {1}affinely_persistently_sep_dup. apply sep_mono; last done.
+    apply affinely_persistently_elim.
+  - apply and_mono; first done. rewrite {2}persistently_alt_fixpoint.
+    apply sep_mono; first done. apply and_elim_r.
 Qed.
 
 (* Conditional affinely modality *)
