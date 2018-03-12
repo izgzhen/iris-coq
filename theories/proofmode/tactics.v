@@ -40,17 +40,6 @@ Ltac iSolveTC :=
   solve [once (typeclasses eauto)].
 
 (** * Misc *)
-(* Tactic Notation tactics cannot return terms *)
-Ltac iFresh :=
-  lazymatch goal with
-  |- envs_entails ?Δ _ =>
-  let do_incr := (lazymatch goal with
-                    _ => eapply tac_fresh; first by (env_reflexivity)
-                  end) in
-    let n := eval env_cbv in (Pos.succ (env_counter Δ)) in
-    constr:(IAnon n)
-  | _ => constr:(IAnon 1)
-  end.
 
 Ltac iMissingHyps Hs :=
   let Δ :=
@@ -100,6 +89,18 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
                |apply tac_adequate]
   end.
 
+(** * Generate a fresh identifier *)
+(* Tactic Notation tactics cannot return terms *)
+Ltac iFresh :=
+  let do_incr :=
+      lazymatch goal with
+      | _ => iStartProof; eapply tac_fresh; first by (env_reflexivity)
+      end in
+  lazymatch goal with
+  |- envs_entails ?Δ _ =>
+    let n := eval env_cbv in (env_counter Δ) in
+    constr:(IAnon n)
+  end.
 
 (** * Simplification *)
 Tactic Notation "iEval" tactic(t) :=

@@ -478,10 +478,6 @@ Global Instance envs_entails_flip_mono :
   Proper (envs_Forall2 (⊢) ==> flip (⊢) ==> flip impl) (@envs_entails PROP).
 Proof. rewrite envs_entails_eq=> Δ1 Δ2 ? P1 P2 <- <-. by f_equiv. Qed.
 
-Instance envs_incr_counter_proper :
-  Proper (envs_Forall2 (⊣⊢) ==> envs_Forall2 (⊣⊢)) (@envs_incr_counter PROP).
-Proof. intros ?? [? ?]; by constructor => //=. Qed.
-
 (** * Adequacy *)
 Lemma tac_adequate P : envs_entails (Envs Enil Enil 1) P → P.
 Proof.
