@@ -8,11 +8,12 @@ Import env_notations.
 Local Notation "b1 && b2" := (if b1 then b2 else false) : bool_scope.
 
 Record envs (PROP : bi) :=
-  Envs { env_persistent : env PROP; env_spatial : env PROP }.
+  Envs { env_persistent : env PROP; env_spatial : env PROP; env_counter : positive }.
 Add Printing Constructor envs.
-Arguments Envs {_} _ _.
+Arguments Envs {_} _ _ _.
 Arguments env_persistent {_} _.
 Arguments env_spatial {_} _.
+Arguments env_counter {_} _.
 
 Record envs_wf {PROP} (Δ : envs PROP) := {
   env_persistent_valid : env_wf (env_persistent Δ);
@@ -43,7 +44,7 @@ Definition envs_dom {PROP} (Δ : envs PROP) : list ident :=
   env_dom (env_persistent Δ) ++ env_dom (env_spatial Δ).
 
 Definition envs_lookup {PROP} (i : ident) (Δ : envs PROP) : option (bool * PROP) :=
-  let (Γp,Γs) := Δ in
+  let (Γp,Γs,n) := Δ in
   match env_lookup i Γp with
   | Some P => Some (true, P)
   | None => P ← env_lookup i Γs; Some (false, P)
@@ -51,18 +52,18 @@ Definition envs_lookup {PROP} (i : ident) (Δ : envs PROP) : option (bool * PROP
 
 Definition envs_delete {PROP} (remove_persistent : bool)
     (i : ident) (p : bool) (Δ : envs PROP) : envs PROP :=
-  let (Γp,Γs) := Δ in
+  let (Γp,Γs,n) := Δ in
   match p with
-  | true => Envs (if remove_persistent then env_delete i Γp else Γp) Γs
-  | false => Envs Γp (env_delete i Γs)
+  | true => Envs (if remove_persistent then env_delete i Γp else Γp) Γs n
+  | false => Envs Γp (env_delete i Γs) n
   end.
 
 Definition envs_lookup_delete {PROP} (remove_persistent : bool)
     (i : ident) (Δ : envs PROP) : option (bool * PROP * envs PROP) :=
-  let (Γp,Γs) := Δ in
+  let (Γp,Γs,n) := Δ in
   match env_lookup_delete i Γp with
-  | Some (P,Γp') => Some (true, P, Envs (if remove_persistent then Γp' else Γp) Γs)
-  | None => ''(P,Γs') ← env_lookup_delete i Γs; Some (false, P, Envs Γp Γs')
+  | Some (P,Γp') => Some (true, P, Envs (if remove_persistent then Γp' else Γp) Γs n)
+  | None => ''(P,Γs') ← env_lookup_delete i Γs; Some (false, P, Envs Γp Γs' n)
   end.
 
 Fixpoint envs_lookup_delete_list {PROP} (remove_persistent : bool)
@@ -77,23 +78,23 @@ Fixpoint envs_lookup_delete_list {PROP} (remove_persistent : bool)
 
 Definition envs_snoc {PROP} (Δ : envs PROP)
     (p : bool) (j : ident) (P : PROP) : envs PROP :=
-  let (Γp,Γs) := Δ in
-  if p then Envs (Esnoc Γp j P) Γs else Envs Γp (Esnoc Γs j P).
+  let (Γp,Γs,n) := Δ in
+  if p then Envs (Esnoc Γp j P) Γs n else Envs Γp (Esnoc Γs j P) n.
 
 Definition envs_app {PROP : bi} (p : bool)
     (Γ : env PROP) (Δ : envs PROP) : option (envs PROP) :=
-  let (Γp,Γs) := Δ in
+  let (Γp,Γs,n) := Δ in
   match p with
-  | true => _ ← env_app Γ Γs; Γp' ← env_app Γ Γp; Some (Envs Γp' Γs)
-  | false => _ ← env_app Γ Γp; Γs' ← env_app Γ Γs; Some (Envs Γp Γs')
+  | true => _ ← env_app Γ Γs; Γp' ← env_app Γ Γp; Some (Envs Γp' Γs n)
+  | false => _ ← env_app Γ Γp; Γs' ← env_app Γ Γs; Some (Envs Γp Γs' n)
   end.
 
 Definition envs_simple_replace {PROP : bi} (i : ident) (p : bool)
     (Γ : env PROP) (Δ : envs PROP) : option (envs PROP) :=
-  let (Γp,Γs) := Δ in
+  let (Γp,Γs,n) := Δ in
   match p with
-  | true => _ ← env_app Γ Γs; Γp' ← env_replace i Γ Γp; Some (Envs Γp' Γs)
-  | false => _ ← env_app Γ Γp; Γs' ← env_replace i Γ Γs; Some (Envs Γp Γs')
+  | true => _ ← env_app Γ Γs; Γp' ← env_replace i Γ Γp; Some (Envs Γp' Γs n)
+  | false => _ ← env_app Γ Γp; Γs' ← env_replace i Γ Γs; Some (Envs Γp Γs' n)
   end.
 
 Definition envs_replace {PROP : bi} (i : ident) (p q : bool)
@@ -105,10 +106,13 @@ Definition env_spatial_is_nil {PROP} (Δ : envs PROP) : bool :=
   if env_spatial Δ is Enil then true else false.
 
 Definition envs_clear_spatial {PROP} (Δ : envs PROP) : envs PROP :=
-  Envs (env_persistent Δ) Enil.
+  Envs (env_persistent Δ) Enil (env_counter Δ).
 
 Definition envs_clear_persistent {PROP} (Δ : envs PROP) : envs PROP :=
-  Envs Enil (env_spatial Δ).
+  Envs Enil (env_spatial Δ) (env_counter Δ).
+
+Definition envs_incr_counter {PROP} (Δ : envs PROP) : envs PROP :=
+  Envs (env_persistent Δ) (env_spatial Δ) (Pos.succ (env_counter Δ)).
 
 Fixpoint envs_split_go {PROP}
     (js : list ident) (Δ1 Δ2 : envs PROP) : option (envs PROP * envs PROP) :=
@@ -464,7 +468,7 @@ Proof.
     eapply (envs_Forall2_impl (⊣⊢)); [| |symmetry|]; eauto using equiv_entails.
 Qed.
 Global Instance Envs_proper (R : relation PROP) :
-  Proper (env_Forall2 R ==> env_Forall2 R ==> envs_Forall2 R) (@Envs PROP).
+  Proper (env_Forall2 R ==> env_Forall2 R ==> eq ==> envs_Forall2 R) (@Envs PROP).
 Proof. by constructor. Qed.
 
 Global Instance envs_entails_proper :
@@ -474,8 +478,12 @@ Global Instance envs_entails_flip_mono :
   Proper (envs_Forall2 (⊢) ==> flip (⊢) ==> flip impl) (@envs_entails PROP).
 Proof. rewrite envs_entails_eq=> Δ1 Δ2 ? P1 P2 <- <-. by f_equiv. Qed.
 
+Instance envs_incr_counter_proper :
+  Proper (envs_Forall2 (⊣⊢) ==> envs_Forall2 (⊣⊢)) (@envs_incr_counter PROP).
+Proof. intros ?? [? ?]; by constructor => //=. Qed.
+
 (** * Adequacy *)
-Lemma tac_adequate P : envs_entails (Envs Enil Enil) P → P.
+Lemma tac_adequate P : envs_entails (Envs Enil Enil 1) P → P.
 Proof.
   rewrite envs_entails_eq /of_envs /= persistently_True_emp
           affinely_persistently_emp left_id=><-.
@@ -1083,6 +1091,18 @@ Lemma tac_accu Δ P :
   envs_entails Δ P.
 Proof. rewrite envs_entails_eq=><-. apply prop_of_env_sound. Qed.
 
+(** * Fresh *)
+Lemma envs_incr_counter_equiv Δ: envs_Forall2 (⊣⊢) Δ (envs_incr_counter Δ).
+Proof. rewrite //=. Qed.
+
+Lemma tac_fresh Δ Δ' (Q : PROP) :
+  envs_incr_counter Δ = Δ' →
+  envs_entails Δ' Q → envs_entails Δ Q.
+Proof.
+  rewrite envs_entails_eq => <-. by setoid_rewrite <-envs_incr_counter_equiv.
+Qed.
+
+
 End bi_tactics.
 
 (** The following _private_ classes are used internally by [tac_modal_intro] /
@@ -1260,15 +1280,15 @@ Section tac_modal_intro.
   Qed.
 
   (** The actual introduction tactic *)
-  Lemma tac_modal_intro {A} (sel : A) Γp Γs Γp' Γs' Q Q' fi :
+  Lemma tac_modal_intro {A} (sel : A) Γp Γs n Γp' Γs' Q Q' fi :
     FromModal M sel Q' Q →
     IntoModalPersistentEnv M Γp Γp' (modality_persistent_spec M) →
     IntoModalSpatialEnv M Γs Γs' (modality_spatial_spec M) fi →
     (if fi then Absorbing Q' else TCTrue) →
-    envs_entails (Envs Γp' Γs') Q → envs_entails (Envs Γp Γs) Q'.
+    envs_entails (Envs Γp' Γs' n) Q → envs_entails (Envs Γp Γs n) Q'.
   Proof.
     rewrite envs_entails_eq /FromModal /of_envs /= => HQ' HΓp HΓs ? HQ.
-    apply pure_elim_l=> -[???]. assert (envs_wf (Envs Γp' Γs')) as Hwf.
+    apply pure_elim_l=> -[???]. assert (envs_wf (Envs Γp' Γs' n)) as Hwf.
     { split; simpl in *.
       - destruct HΓp as [| |????? []| |]; eauto using Enil_wf.
       - destruct HΓs as [| |?????? []| |]; eauto using Enil_wf.
@@ -1363,10 +1383,10 @@ Class MaybeIntoLaterNEnvs (n : nat) (Δ1 Δ2 : envs PROP) := {
       (MaybeIntoLaterN false n) (env_spatial Δ1) (env_spatial Δ2) false
 }.
 
-Global Instance into_laterN_envs n Γp1 Γp2 Γs1 Γs2 :
+Global Instance into_laterN_envs n Γp1 Γp2 Γs1 Γs2 m :
   TransformPersistentEnv (modality_laterN n) (MaybeIntoLaterN false n) Γp1 Γp2 →
   TransformSpatialEnv (modality_laterN n) (MaybeIntoLaterN false n) Γs1 Γs2 false →
-  MaybeIntoLaterNEnvs n (Envs Γp1 Γs1) (Envs Γp2 Γs2).
+  MaybeIntoLaterNEnvs n (Envs Γp1 Γs1 m) (Envs Γp2 Γs2 m).
 Proof. by split. Qed.
 
 Lemma into_laterN_env_sound n Δ1 Δ2 :
