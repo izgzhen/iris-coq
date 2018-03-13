@@ -850,6 +850,12 @@ Proof.
   - rewrite comm persistently_absorbing. done.
 Qed.
 
+Lemma persistently_alt_fixpoint' P :
+  <pers> P ⊣⊢ <affine> P ∗ <pers> P.
+Proof.
+  rewrite -{1}persistently_affinely {1}persistently_alt_fixpoint persistently_affinely //.
+Qed.
+
 Lemma persistently_wand P Q : <pers> (P -∗ Q) ⊢ <pers> P -∗ <pers> Q.
 Proof. apply wand_intro_r. by rewrite persistently_sep_2 wand_elim_l. Qed.
 
