@@ -10,12 +10,12 @@ Export ident.
 
 Declare Reduction env_cbv := cbv [
   option_bind
-  beq ascii_beq string_beq positive_beq ident_beq
+  beq ascii_beq string_beq positive_beq Pos.succ ident_beq
   env_lookup env_lookup_delete env_delete env_app env_replace env_dom
-  env_persistent env_spatial env_spatial_is_nil envs_dom
+  env_persistent env_spatial env_counter env_spatial_is_nil envs_dom
   envs_lookup envs_lookup_delete envs_delete envs_snoc envs_app
     envs_simple_replace envs_replace envs_split
-    envs_clear_spatial envs_clear_persistent
+    envs_clear_spatial envs_clear_persistent envs_incr_counter
     envs_split_go envs_split prop_of_env].
 Ltac env_cbv :=
   match goal with |- ?u => let v := eval env_cbv in u in change v end.
@@ -40,20 +40,6 @@ Ltac iSolveTC :=
   solve [once (typeclasses eauto)].
 
 (** * Misc *)
-(* Tactic Notation tactics cannot return terms *)
-Ltac iFresh :=
-  lazymatch goal with
-  |- envs_entails ?Δ _ =>
-     (* [vm_compute fails] if any of the hypotheses in [Δ] contain evars, so
-     first use [cbv] to compute the domain of [Δ] *)
-     let Hs := eval cbv in (envs_dom Δ) in
-     eval vm_compute in
-       (IAnon (match Hs with
-         | [] => 1
-         | _ => 1 + foldr Pos.max 1 (omap (maybe IAnon) Hs)
-         end))%positive
-  | _ => constr:(IAnon 1)
-  end.
 
 Ltac iMissingHyps Hs :=
   let Δ :=
@@ -103,6 +89,22 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
                |apply tac_adequate]
   end.
 
+(** * Generate a fresh identifier *)
+(* Tactic Notation tactics cannot return terms *)
+Ltac iFresh :=
+  (* We need to increment the environment counter using [tac_fresh].
+     But because [iFresh] returns a value, we have to let bind
+     [tac_fresh] wrapped under a match to force evaluation of this
+     side-effect. See https://stackoverflow.com/a/46178884 *)
+  let do_incr :=
+      lazymatch goal with
+      | _ => iStartProof; eapply tac_fresh; first by (env_reflexivity)
+      end in
+  lazymatch goal with
+  |- envs_entails ?Δ _ =>
+    let n := eval env_cbv in (env_counter Δ) in
+    constr:(IAnon n)
+  end.
 
 (** * Simplification *)
 Tactic Notation "iEval" tactic(t) :=
@@ -200,13 +202,13 @@ Tactic Notation "iAssumptionCore" :=
     | Esnoc ?Γ ?j ?Q => first [unify P Q; unify i j|find Γ i P]
     end in
   match goal with
-  | |- envs_lookup ?i (Envs ?Γp ?Γs) = Some (_, ?P) =>
+  | |- envs_lookup ?i (Envs ?Γp ?Γs _) = Some (_, ?P) =>
      first [is_evar i; fail 1 | env_reflexivity]
-  | |- envs_lookup ?i (Envs ?Γp ?Γs) = Some (_, ?P) =>
+  | |- envs_lookup ?i (Envs ?Γp ?Γs _) = Some (_, ?P) =>
      is_evar i; first [find Γp i P | find Γs i P]; env_reflexivity
-  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
+  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs _) = Some (_, ?P, _) =>
      first [is_evar i; fail 1 | env_reflexivity]
-  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs) = Some (_, ?P, _) =>
+  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs _) = Some (_, ?P, _) =>
      is_evar i; first [find Γp i P | find Γs i P]; env_reflexivity
   end.
 
@@ -228,7 +230,7 @@ Tactic Notation "iAssumption" :=
        |find p Γ Q]
     end in
   lazymatch goal with
-  | |- envs_entails (Envs ?Γp ?Γs) ?Q =>
+  | |- envs_entails (Envs ?Γp ?Γs _) ?Q =>
      first [find true Γp Q | find false Γs Q
            |fail "iAssumption:" Q "not found"]
   end.
@@ -974,7 +976,7 @@ Local Tactic Notation "iExistDestruct" constr(H)
 (** * Modality introduction *)
 Tactic Notation "iModIntro" uconstr(sel) :=
   iStartProof;
-  notypeclasses refine (tac_modal_intro _ sel _ _ _ _ _ _ _ _ _ _ _ _);
+  notypeclasses refine (tac_modal_intro _ sel _ _ _ _ _ _ _ _ _ _ _ _ _);
     [iSolveTC ||
      fail "iModIntro: the goal is not a modality"
     |iSolveTC ||
@@ -1569,8 +1571,8 @@ Ltac iHypsContaining x :=
        | _ => go Γ x Hs
        end
      end in
-  let Γp := lazymatch goal with |- envs_entails (Envs ?Γp _) _ => Γp end in
-  let Γs := lazymatch goal with |- envs_entails (Envs _ ?Γs) _ => Γs end in
+  let Γp := lazymatch goal with |- envs_entails (Envs ?Γp _ _) _ => Γp end in
+  let Γs := lazymatch goal with |- envs_entails (Envs _ ?Γs _) _ => Γs end in
   let Hs := go Γp x (@nil ident) in go Γs x Hs.
 
 Tactic Notation "iInductionRevert" constr(x) constr(Hs) "with" tactic(tac) :=
@@ -1872,7 +1874,7 @@ Tactic Notation "iAssumptionInv" constr(N) :=
       first [let H := constr:(_: IntoInv P' N) in unify i j|find Γ i]
     end in
   lazymatch goal with
-  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs) = Some _ =>
+  | |- envs_lookup_delete _ ?i (Envs ?Γp ?Γs _) = Some _ =>
      first [find Γp i|find Γs i]; env_reflexivity
   end.
 
