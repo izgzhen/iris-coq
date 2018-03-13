@@ -1,5 +1,5 @@
-From iris.proofmode Require Import tactics.
-From stdpp Require Import gmap.
+From iris.proofmode Require Import tactics intro_patterns.
+From stdpp Require Import gmap hlist.
 Set Default Proof Using "Type".
 
 Section tests.
@@ -111,6 +111,17 @@ Proof. iIntros "H ? HQ". by iApply ("H" with "[$]"). Qed.
 Lemma test_iEmp_intro P Q R `{!Affine P, !Persistent Q, !Affine R} :
   P -∗ Q → R -∗ emp.
 Proof. iIntros "HP #HQ HR". iEmpIntro. Qed.
+
+Let test_fresh P Q:
+  (P ∗ Q) -∗ (P ∗ Q).
+Proof.
+  iIntros "H".
+  let H1 := iFresh in
+  let H2 := iFresh in
+  let pat :=constr:(IList [cons (IIdent H1) (cons (IIdent H2) nil)]) in 
+  iDestruct "H" as pat.
+  iFrame.
+Qed.
 
 (* Check coercions *)
 Lemma test_iExist_coercion (P : Z → PROP) : (∀ x, P x) -∗ ∃ x, P x.
