@@ -92,6 +92,10 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
 (** * Generate a fresh identifier *)
 (* Tactic Notation tactics cannot return terms *)
 Ltac iFresh :=
+  (* We need to increment the environment counter using [tac_fresh].
+     But because [iFresh] returns a value, we have to let bind
+     [tac_fresh] wrapped under a match to force evaluation of this
+     side-effect. See https://stackoverflow.com/a/46178884 *)
   let do_incr :=
       lazymatch goal with
       | _ => iStartProof; eapply tac_fresh; first by (env_reflexivity)
