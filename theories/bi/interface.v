@@ -121,7 +121,7 @@ Section bi_mixin.
 
     (* In the ordered RA model: [core x ≼ core (x ⋅ y)]. *)
     bi_mixin_persistently_absorbing P Q : <pers> P ∗ Q ⊢ <pers> P;
-    (* In the ordered RA model: [x ⋅ core x = core x]. *)
+    (* In the ordered RA model: [x ⋅ core x = x]. *)
     bi_mixin_persistently_and_sep_elim P Q : <pers> P ∧ Q ⊢ P ∗ Q;
   }.
 
