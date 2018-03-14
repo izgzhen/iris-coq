@@ -110,8 +110,7 @@ Section bi_mixin.
     (* In the ordered RA model: `core` is idempotent *)
     bi_mixin_persistently_idemp_2 P : <pers> P ⊢ <pers> <pers> P;
 
-    (* In the ordered RA model: `core ε = ε`, which implies together with
-       monotonicity that `ε ≼ core x`. *)
+    (* In the ordered RA model: [ε ≼ core x]. *)
     bi_mixin_persistently_emp_intro P : P ⊢ <pers> emp;
 
     bi_mixin_persistently_forall_2 {A} (Ψ : A → PROP) :
