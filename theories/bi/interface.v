@@ -119,8 +119,7 @@ Section bi_mixin.
     bi_mixin_persistently_exist_1 {A} (Ψ : A → PROP) :
       <pers> (∃ a, Ψ a) ⊢ ∃ a, <pers> (Ψ a);
 
-    (* In the ordered RA model: [core x ≼ core (x ⋅ y)].
-       Note that this implies that the core is monotone. *)
+    (* In the ordered RA model: [core x ≼ core (x ⋅ y)]. *)
     bi_mixin_persistently_absorbing P Q : <pers> P ∗ Q ⊢ <pers> P;
     (* In the ordered RA model: [x ⋅ core x = core x]. *)
     bi_mixin_persistently_and_sep_elim P Q : <pers> P ∧ Q ⊢ P ∗ Q;
