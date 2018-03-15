@@ -1,6 +1,7 @@
-# IRIS COQ DEVELOPMENT
+# IRIS COQ DEVELOPMENT, MOSEL VERSION
 
-This is the Coq development of the [Iris Project](http://iris-project.org).
+This is the Coq development of the [Iris Project](http://iris-project.org), in
+the MoSeL version.
 
 ## Prerequisites
 
@@ -8,12 +9,6 @@ This version is known to compile with:
 
  - Coq 8.7.1 / 8.7.2
  - A development version of [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
-
-If you need to work with Coq 8.5, please check out the
-[iris-3.0 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.0).  For
-Coq 8.6, the
-[iris-3.1 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.1) should
-still work.
 
 ## Installing via opam
 
@@ -61,9 +56,11 @@ followed by `make build-dep`.
   to build Iris, the program logic.   This includes weakest preconditions that
   are defined for any language satisfying some generic axioms, and some derived
   constructions that work for any such language.
-* The folder [proofmode](theories/proofmode) contains the Iris proof mode, which
-  extends Coq with contexts for persistent and spatial Iris assertions. It also
-  contains tactics for interactive proofs in Iris. Documentation can be found in
+* The folder [bi](theories/bi) contains the BI++ laws, as well as derived
+  connectives, laws and constructions that are applicable for general BIS.
+* The folder [proofmode](theories/proofmode) contains MoSeL, which extends Coq
+  with contexts for intuitionistic and spatial BI++ assertions. It also contains
+  tactics for interactive proofs. Documentation can be found in
   [ProofMode.md](ProofMode.md).
 * The folder [heap_lang](theories/heap_lang) defines the ML-like concurrent heap
   language
