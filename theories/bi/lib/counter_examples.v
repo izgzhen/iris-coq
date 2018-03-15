@@ -29,8 +29,11 @@ Module savedprop. Section savedprop.
 
   Instance bupd_mono' : Proper ((⊢) ==> (⊢)) bupd.
   Proof. intros P Q ?. by apply bupd_mono. Qed.
-  Instance elim_modal_bupd P Q : ElimModal True (|==> P) P (|==> Q) (|==> Q).
-  Proof. by rewrite /ElimModal bupd_frame_r bi.wand_elim_r bupd_trans. Qed.
+  Instance elim_modal_bupd p P Q : ElimModal True p false (|==> P) P (|==> Q) (|==> Q).
+  Proof.
+    by rewrite /ElimModal bi.intuitionistically_if_elim
+      bupd_frame_r bi.wand_elim_r bupd_trans.
+  Qed.
 
   (** A bad recursive reference: "Assertion with name [i] does not hold" *)
   Definition A (i : ident) : PROP := (∃ P, ¬ P ∗ saved i P)%I.
@@ -127,12 +130,18 @@ Module inv. Section inv.
   Lemma fupd_frame_r E P Q : fupd E P ∗ Q ⊢ fupd E (P ∗ Q).
   Proof. by rewrite comm fupd_frame_l comm. Qed.
 
-  Global Instance elim_fupd_fupd E P Q : ElimModal True (fupd E P) P (fupd E Q) (fupd E Q).
-  Proof. by rewrite /ElimModal fupd_frame_r bi.wand_elim_r fupd_fupd. Qed.
-
-  Global Instance elim_fupd0_fupd1 P Q : ElimModal True (fupd M0 P) P (fupd M1 Q) (fupd M1 Q).
+  Global Instance elim_fupd_fupd p E P Q :
+    ElimModal True p false (fupd E P) P (fupd E Q) (fupd E Q).
   Proof.
-    by rewrite /ElimModal fupd_frame_r bi.wand_elim_r fupd_mask_mono fupd_fupd.
+    by rewrite /ElimModal bi.intuitionistically_if_elim
+      fupd_frame_r bi.wand_elim_r fupd_fupd.
+  Qed.
+
+  Global Instance elim_fupd0_fupd1 p P Q :
+    ElimModal True p false (fupd M0 P) P (fupd M1 Q) (fupd M1 Q).
+  Proof.
+    by rewrite /ElimModal bi.intuitionistically_if_elim
+      fupd_frame_r bi.wand_elim_r fupd_mask_mono fupd_fupd.
   Qed.
 
   Global Instance exists_split_fupd0 {A} E P (Φ : A → PROP) :

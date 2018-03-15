@@ -1054,15 +1054,15 @@ Proof.
 Qed.
 
 (** * Modalities *)
-Lemma tac_modal_elim Δ Δ' i p φ P' P Q Q' :
+Lemma tac_modal_elim Δ Δ' i p p' φ P' P Q Q' :
   envs_lookup i Δ = Some (p, P) →
-  ElimModal φ P P' Q Q' →
+  ElimModal φ p p' P P' Q Q' →
   φ →
-  envs_replace i p false (Esnoc Enil i P') Δ = Some Δ' →
+  envs_replace i p p' (Esnoc Enil i P') Δ = Some Δ' →
   envs_entails Δ' Q' → envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq => ???? HΔ. rewrite envs_replace_singleton_sound //=.
-  rewrite HΔ intuitionistically_if_elim. by eapply elim_modal.
+  rewrite HΔ. by eapply elim_modal.
 Qed.
 
 (** * Invariants *)

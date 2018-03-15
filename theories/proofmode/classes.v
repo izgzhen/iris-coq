@@ -234,11 +234,11 @@ Arguments IsExcept0 {_} _%I : simpl never.
 Arguments is_except_0 {_} _%I {_}.
 Hint Mode IsExcept0 + ! : typeclass_instances.
 
-Class ElimModal {PROP : bi} (φ : Prop) (P P' : PROP) (Q Q' : PROP) :=
-  elim_modal : φ → P ∗ (P' -∗ Q') ⊢ Q.
-Arguments ElimModal {_} _ _%I _%I _%I _%I : simpl never.
-Arguments elim_modal {_} _ _%I _%I _%I _%I {_}.
-Hint Mode ElimModal + - ! - ! - : typeclass_instances.
+Class ElimModal {PROP : bi} (φ : Prop) (p p' : bool) (P P' : PROP) (Q Q' : PROP) :=
+  elim_modal : φ → □?p P ∗ (□?p' P' -∗ Q') ⊢ Q.
+Arguments ElimModal {_} _ _ _ _%I _%I _%I _%I : simpl never.
+Arguments elim_modal {_} _ _ _ _%I _%I _%I _%I {_}.
+Hint Mode ElimModal + - ! - ! - ! - : typeclass_instances.
 
 (* Used by the specialization pattern [ > ] in [iSpecialize] and [iAssert] to
 add a modality to the goal corresponding to a premise/asserted proposition. *)
@@ -556,8 +556,8 @@ Instance into_forall_tc_opaque {PROP : bi} {A} (P : PROP) (Φ : A → PROP) :
 Instance from_modal_tc_opaque {PROP1 PROP2 : bi} {A}
     M (sel : A) (P : PROP2) (Q : PROP1) :
   FromModal M sel P Q → FromModal M sel (tc_opaque P) Q := id.
-Instance elim_modal_tc_opaque {PROP : bi} φ (P P' Q Q' : PROP) :
-  ElimModal φ P P' Q Q' → ElimModal φ (tc_opaque P) P' Q Q' := id.
+Instance elim_modal_tc_opaque {PROP : bi} φ p p' (P P' Q Q' : PROP) :
+  ElimModal φ p p' P P' Q Q' → ElimModal φ p p' (tc_opaque P) P' Q Q' := id.
 Instance into_inv_tc_opaque {PROP : bi} (P : PROP) N :
   IntoInv P N → IntoInv (tc_opaque P) N := id.
 Instance elim_inv_tc_opaque {PROP : bi} φ (Pinv Pin Pout Pclose Q Q' : PROP) :
