@@ -8,21 +8,21 @@ Import env_notations.
 Local Notation "b1 && b2" := (if b1 then b2 else false) : bool_scope.
 
 Record envs (PROP : bi) :=
-  Envs { env_persistent : env PROP; env_spatial : env PROP; env_counter : positive }.
+  Envs { env_intuitionistic : env PROP; env_spatial : env PROP; env_counter : positive }.
 Add Printing Constructor envs.
 Arguments Envs {_} _ _ _.
-Arguments env_persistent {_} _.
+Arguments env_intuitionistic {_} _.
 Arguments env_spatial {_} _.
 Arguments env_counter {_} _.
 
 Record envs_wf {PROP} (Δ : envs PROP) := {
-  env_persistent_valid : env_wf (env_persistent Δ);
+  env_intuitionistic_valid : env_wf (env_intuitionistic Δ);
   env_spatial_valid : env_wf (env_spatial Δ);
-  envs_disjoint i : env_persistent Δ !! i = None ∨ env_spatial Δ !! i = None
+  envs_disjoint i : env_intuitionistic Δ !! i = None ∨ env_spatial Δ !! i = None
 }.
 
 Definition of_envs {PROP} (Δ : envs PROP) : PROP :=
-  (⌜envs_wf Δ⌝ ∧ □ [∧] env_persistent Δ ∗ [∗] env_spatial Δ)%I.
+  (⌜envs_wf Δ⌝ ∧ □ [∧] env_intuitionistic Δ ∗ [∗] env_spatial Δ)%I.
 Instance: Params (@of_envs) 1.
 Arguments of_envs : simpl never.
 
@@ -36,12 +36,12 @@ Arguments envs_entails {PROP} Δ Q%I : rename.
 Instance: Params (@envs_entails) 1.
 
 Record envs_Forall2 {PROP : bi} (R : relation PROP) (Δ1 Δ2 : envs PROP) := {
-  env_persistent_Forall2 : env_Forall2 R (env_persistent Δ1) (env_persistent Δ2);
+  env_intuitionistic_Forall2 : env_Forall2 R (env_intuitionistic Δ1) (env_intuitionistic Δ2);
   env_spatial_Forall2 : env_Forall2 R (env_spatial Δ1) (env_spatial Δ2)
 }.
 
 Definition envs_dom {PROP} (Δ : envs PROP) : list ident :=
-  env_dom (env_persistent Δ) ++ env_dom (env_spatial Δ).
+  env_dom (env_intuitionistic Δ) ++ env_dom (env_spatial Δ).
 
 Definition envs_lookup {PROP} (i : ident) (Δ : envs PROP) : option (bool * PROP) :=
   let (Γp,Γs,n) := Δ in
@@ -106,13 +106,13 @@ Definition env_spatial_is_nil {PROP} (Δ : envs PROP) : bool :=
   if env_spatial Δ is Enil then true else false.
 
 Definition envs_clear_spatial {PROP} (Δ : envs PROP) : envs PROP :=
-  Envs (env_persistent Δ) Enil (env_counter Δ).
+  Envs (env_intuitionistic Δ) Enil (env_counter Δ).
 
 Definition envs_clear_persistent {PROP} (Δ : envs PROP) : envs PROP :=
   Envs Enil (env_spatial Δ) (env_counter Δ).
 
 Definition envs_incr_counter {PROP} (Δ : envs PROP) : envs PROP :=
-  Envs (env_persistent Δ) (env_spatial Δ) (Pos.succ (env_counter Δ)).
+  Envs (env_intuitionistic Δ) (env_spatial Δ) (Pos.succ (env_counter Δ)).
 
 Fixpoint envs_split_go {PROP}
     (js : list ident) (Δ1 Δ2 : envs PROP) : option (envs PROP * envs PROP) :=
@@ -144,7 +144,7 @@ Implicit Types Δ : envs PROP.
 Implicit Types P Q : PROP.
 
 Lemma of_envs_eq Δ :
-  of_envs Δ = (⌜envs_wf Δ⌝ ∧ □ [∧] env_persistent Δ ∗ [∗] env_spatial Δ)%I.
+  of_envs Δ = (⌜envs_wf Δ⌝ ∧ □ [∧] env_intuitionistic Δ ∗ [∗] env_spatial Δ)%I.
 Proof. done. Qed.
 
 Lemma envs_delete_persistent Δ i : envs_delete false i true Δ = Δ. 
@@ -1373,7 +1373,7 @@ laters, e.g. the symbolic execution tactics. *)
 Class MaybeIntoLaterNEnvs (n : nat) (Δ1 Δ2 : envs PROP) := {
   into_later_persistent :
     TransformPersistentEnv (modality_laterN n) (MaybeIntoLaterN false n)
-      (env_persistent Δ1) (env_persistent Δ2);
+      (env_intuitionistic Δ1) (env_intuitionistic Δ2);
   into_later_spatial :
     TransformSpatialEnv (modality_laterN n)
       (MaybeIntoLaterN false n) (env_spatial Δ1) (env_spatial Δ2) false

@@ -12,7 +12,7 @@ Declare Reduction env_cbv := cbv [
   option_bind
   beq ascii_beq string_beq positive_beq Pos.succ ident_beq
   env_lookup env_lookup_delete env_delete env_app env_replace env_dom
-  env_persistent env_spatial env_counter env_spatial_is_nil envs_dom
+  env_intuitionistic env_spatial env_counter env_spatial_is_nil envs_dom
   envs_lookup envs_lookup_delete envs_delete envs_snoc envs_app
     envs_simple_replace envs_replace envs_split
     envs_clear_spatial envs_clear_persistent envs_incr_counter
@@ -148,7 +148,7 @@ Ltac iElaborateSelPat pat :=
     | [] => eval cbv in Hs
     | SelPure :: ?pat => go pat Δ (ESelPure :: Hs)
     | SelPersistent :: ?pat =>
-       let Hs' := eval env_cbv in (env_dom (env_persistent Δ)) in
+       let Hs' := eval env_cbv in (env_dom (env_intuitionistic Δ)) in
        let Δ' := eval env_cbv in (envs_clear_persistent Δ) in
        go pat Δ' ((ESelIdent true <$> Hs') ++ Hs)
     | SelSpatial :: ?pat =>
@@ -309,7 +309,7 @@ Local Ltac iFrameAnyPersistent :=
     match Hs with [] => idtac | ?H :: ?Hs => repeat iFrameHyp H; go Hs end in
   match goal with
   | |- envs_entails ?Δ _ =>
-     let Hs := eval cbv in (env_dom (env_persistent Δ)) in go Hs
+     let Hs := eval cbv in (env_dom (env_intuitionistic Δ)) in go Hs
   end.
 
 Local Ltac iFrameAnySpatial :=
