@@ -742,6 +742,11 @@ Proof.
   apply persistently_mono, impl_elim with P; auto.
 Qed.
 
+Lemma persistently_emp_intro P : P ⊢ <pers> emp.
+Proof.
+  by rewrite -(left_id emp%I bi_sep P) {1}persistently_emp_2 persistently_absorbing.
+Qed.
+
 Lemma persistently_True_emp : <pers> True ⊣⊢ <pers> emp.
 Proof. apply (anti_symm _); auto using persistently_emp_intro. Qed.
 

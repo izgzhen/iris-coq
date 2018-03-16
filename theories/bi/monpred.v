@@ -303,7 +303,7 @@ Proof.
     rewrite HP /= bi.forall_elim bi.pure_impl_forall bi.forall_elim //.
   - intros P Q [?]. split=> i /=. by f_equiv.
   - intros P. split=> i. by apply bi.persistently_idemp_2.
-  - intros P. split=> i. by apply bi.persistently_emp_intro.
+  - split=> i. by apply bi.persistently_emp_intro.
   - intros A Ψ. split=> i. by apply bi.persistently_forall_2.
   - intros A Ψ. split=> i. by apply bi.persistently_exist_1.
   - intros P Q. split=> i. apply bi.sep_elim_l, _.
