@@ -111,7 +111,7 @@ Section bi_mixin.
     bi_mixin_persistently_idemp_2 P : <pers> P ⊢ <pers> <pers> P;
 
     (* In the ordered RA model: [ε ≼ core x]. *)
-    bi_mixin_persistently_emp_intro P : P ⊢ <pers> emp;
+    bi_mixin_persistently_emp_2 : emp ⊢ <pers> emp;
 
     bi_mixin_persistently_forall_2 {A} (Ψ : A → PROP) :
       (∀ a, <pers> (Ψ a)) ⊢ <pers> (∀ a, Ψ a);
@@ -394,8 +394,8 @@ Proof. eapply bi_mixin_persistently_mono, bi_bi_mixin. Qed.
 Lemma persistently_idemp_2 P : <pers> P ⊢ <pers> <pers> P.
 Proof. eapply bi_mixin_persistently_idemp_2, bi_bi_mixin. Qed.
 
-Lemma persistently_emp_intro P : P ⊢ <pers> emp.
-Proof. eapply bi_mixin_persistently_emp_intro, bi_bi_mixin. Qed.
+Lemma persistently_emp_2 : (emp : PROP) ⊢ <pers> emp.
+Proof. eapply bi_mixin_persistently_emp_2, bi_bi_mixin. Qed.
 
 Lemma persistently_forall_2 {A} (Ψ : A → PROP) :
   (∀ a, <pers> (Ψ a)) ⊢ <pers> (∀ a, Ψ a).
