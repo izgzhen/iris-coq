@@ -63,7 +63,7 @@ Tactic Notation "iMatchHyp" tactic1(tac) :=
 Tactic Notation "iStartProof" :=
   lazymatch goal with
   | |- envs_entails _ _ => idtac
-  | |- ?φ => notypeclasses refine (as_valid_2 φ _ _);
+  | |- ?φ => notypeclasses refine (as_emp_valid_2 φ _ _);
                [apply _ || fail "iStartProof: not a Bi entailment"
                |apply tac_adequate]
   end.
@@ -79,12 +79,12 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
     type_term has a non-negligeable performance impact. *)
     let x := type_term (eq_refl : @eq Type PROP PROP') in idtac
 
-  (* We eta-expand [as_valid_2], in order to make sure that
+  (* We eta-expand [as_emp_valid_2], in order to make sure that
      [iStartProof PROP] works even if [PROP] is the carrier type. In
      this case, typing this expression will end up unifying PROP with
      [bi_car _], and hence trigger the canonical structures mechanism
      to find the corresponding bi. *)
-  | |- ?φ => notypeclasses refine ((λ P : PROP, @as_valid_2 φ _ P) _ _ _);
+  | |- ?φ => notypeclasses refine ((λ P : PROP, @as_emp_valid_2 φ _ P) _ _ _);
                [apply _ || fail "iStartProof: not a Bi entailment"
                |apply tac_adequate]
   end.
@@ -684,13 +684,13 @@ Tactic Notation "iIntoValid" open_constr(t) :=
        not necessarilly opaque, and could be unfolded by [hnf].
 
        However, for calling type class search, we only use [cbv zeta]
-       in order to make sure we do not unfold [bi_valid]. *)
+       in order to make sure we do not unfold [bi_emp_valid]. *)
     let tT := type of t in
     first
       [ let tT' := eval hnf in tT in go_specialize t tT'
       | let tT' := eval cbv zeta in tT in go_specialize t tT'
       | let tT' := eval cbv zeta in tT in
-        notypeclasses refine (as_valid_1 tT _ _);
+        notypeclasses refine (as_emp_valid_1 tT _ _);
           [iSolveTC || fail "iPoseProof: not a BI assertion"
           |exact t]]
   with go_specialize t tT :=

@@ -540,7 +540,7 @@ Canonical Structure uPredSI (M : ucmraT) : sbi :=
   {| sbi_ofe_mixin := ofe_mixin_of (uPred M);
      sbi_bi_mixin := uPred_bi_mixin M; sbi_sbi_mixin := uPred_sbi_mixin M |}.
 
-Coercion uPred_valid {M} : uPred M → Prop := bi_valid.
+Coercion uPred_valid {M} : uPred M → Prop := bi_emp_valid.
 
 (* Latest notation *)
 Notation "✓ x" := (uPred_cmra_valid x) (at level 20) : bi_scope.
@@ -671,7 +671,7 @@ Proof.
   rewrite /bi_persistently /=. unseal.
   split=> n x Hx /=. by apply cmra_core_monoN.
 Qed.
-Lemma ownM_unit : bi_valid (uPred_ownM (ε:M)).
+Lemma ownM_unit : bi_emp_valid (uPred_ownM (ε:M)).
 Proof. unseal; split=> n x ??; by  exists x; rewrite left_id. Qed.
 Lemma later_ownM (a : M) : ▷ uPred_ownM a ⊢ ∃ b, uPred_ownM b ∧ ▷ (a ≡ b).
 Proof.
@@ -691,7 +691,7 @@ Proof.
   unseal; split=> n x Hv [a' ?]; ofe_subst; eauto using cmra_validN_op_l.
 Qed.
 Lemma cmra_valid_intro {A : cmraT} (a : A) :
-  ✓ a → bi_valid (PROP:=uPredI M) (✓ a).
+  ✓ a → bi_emp_valid (PROP:=uPredI M) (✓ a).
 Proof. unseal=> ?; split=> n x ? _ /=; by apply cmra_valid_validN. Qed.
 Lemma cmra_valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊢ (False : uPred M).
 Proof.

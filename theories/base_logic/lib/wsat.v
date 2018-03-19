@@ -54,7 +54,7 @@ Proof. rewrite /ownI. apply _. Qed.
 
 Lemma ownE_empty : (|==> ownE ∅)%I.
 Proof.
-  rewrite /uPred_valid /bi_valid.
+  rewrite /uPred_valid /bi_emp_valid.
   by rewrite (own_unit (coPset_disjUR) enabled_name).
 Qed.
 Lemma ownE_op E1 E2 : E1 ## E2 → ownE (E1 ∪ E2) ⊣⊢ ownE E1 ∗ ownE E2.
@@ -72,7 +72,7 @@ Proof. rewrite ownE_disjoint. iIntros (?); set_solver. Qed.
 
 Lemma ownD_empty : (|==> ownD ∅)%I.
 Proof.
-  rewrite /uPred_valid /bi_valid.
+  rewrite /uPred_valid /bi_emp_valid.
   by rewrite (own_unit (gset_disjUR positive) disabled_name).
 Qed.
 Lemma ownD_op E1 E2 : E1 ## E2 → ownD (E1 ∪ E2) ⊣⊢ ownD E1 ∗ ownD E2.

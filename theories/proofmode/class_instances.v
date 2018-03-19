@@ -992,18 +992,18 @@ Global Instance into_embed_embed {PROP' : bi} `{BiEmbed PROP PROP'} P :
   IntoEmbed ⎡P⎤ P.
 Proof. by rewrite /IntoEmbed. Qed.
 
-(* AsValid *)
-Global Instance as_valid_valid {PROP : bi} (P : PROP) : AsValid0 (bi_valid P) P | 0.
-Proof. by rewrite /AsValid. Qed.
-Global Instance as_valid_entails {PROP : bi} (P Q : PROP) : AsValid0 (P ⊢ Q) (P -∗ Q).
+(* AsEmpValid *)
+Global Instance as_emp_valid_emp_valid {PROP : bi} (P : PROP) : AsEmpValid0 (bi_emp_valid P) P | 0.
+Proof. by rewrite /AsEmpValid. Qed.
+Global Instance as_emp_valid_entails {PROP : bi} (P Q : PROP) : AsEmpValid0 (P ⊢ Q) (P -∗ Q).
 Proof. split. apply bi.entails_wand. apply bi.wand_entails. Qed.
-Global Instance as_valid_equiv {PROP : bi} (P Q : PROP) : AsValid0 (P ≡ Q) (P ∗-∗ Q).
+Global Instance as_emp_valid_equiv {PROP : bi} (P Q : PROP) : AsEmpValid0 (P ≡ Q) (P ∗-∗ Q).
 Proof. split. apply bi.equiv_wand_iff. apply bi.wand_iff_equiv. Qed.
 
-Global Instance as_valid_forall {A : Type} (φ : A → Prop) (P : A → PROP) :
-  (∀ x, AsValid (φ x) (P x)) → AsValid (∀ x, φ x) (∀ x, P x).
+Global Instance as_emp_valid_forall {A : Type} (φ : A → Prop) (P : A → PROP) :
+  (∀ x, AsEmpValid (φ x) (P x)) → AsEmpValid (∀ x, φ x) (∀ x, P x).
 Proof.
-  rewrite /AsValid=>H1. split=>H2.
+  rewrite /AsEmpValid=>H1. split=>H2.
   - apply bi.forall_intro=>?. apply H1, H2.
   - intros x. apply H1. revert H2. by rewrite (bi.forall_elim x).
 Qed.
@@ -1014,10 +1014,10 @@ Qed.
    The first [`{BiEmbed PROP PROP'}] is not considered as a premise by
    Coq TC search mechanism because the rest of the hypothesis is dependent
    on it. *)
-Global Instance as_valid_embed `{BiEmbed PROP PROP'} (φ : Prop) (P : PROP) :
+Global Instance as_emp_valid_embed `{BiEmbed PROP PROP'} (φ : Prop) (P : PROP) :
   BiEmbed PROP PROP' →
-  AsValid0 φ P → AsValid φ ⎡P⎤.
-Proof. rewrite /AsValid0 /AsValid=> _ ->. rewrite embed_valid //. Qed.
+  AsEmpValid0 φ P → AsEmpValid φ ⎡P⎤.
+Proof. rewrite /AsEmpValid0 /AsEmpValid=> _ ->. rewrite embed_emp_valid //. Qed.
 End bi_instances.
 
 Section sbi_instances.

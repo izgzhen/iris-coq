@@ -99,9 +99,9 @@ Section embed.
     rewrite EQ //.
   Qed.
 
-  Lemma embed_valid (P : PROP1) : ⎡P⎤%I ↔ P.
+  Lemma embed_emp_valid (P : PROP1) : ⎡P⎤%I ↔ P.
   Proof.
-    by rewrite /bi_valid -embed_emp; split=>?; [apply (inj embed)|f_equiv].
+    by rewrite /bi_emp_valid -embed_emp; split=>?; [apply (inj embed)|f_equiv].
   Qed.
 
   Lemma embed_forall A (Φ : A → PROP1) : ⎡∀ x, Φ x⎤ ⊣⊢ ∀ x, ⎡Φ x⎤.

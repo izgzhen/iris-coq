@@ -35,12 +35,12 @@ Lemma entails_equiv_l P Q R : (P ⊣⊢ Q) → (Q ⊢ R) → (P ⊢ R).
 Proof. by intros ->. Qed.
 Lemma entails_equiv_r P Q R : (P ⊢ Q) → (Q ⊣⊢ R) → (P ⊢ R).
 Proof. by intros ? <-. Qed.
-Global Instance bi_valid_proper : Proper ((⊣⊢) ==> iff) (@bi_valid PROP).
+Global Instance bi_emp_valid_proper : Proper ((⊣⊢) ==> iff) (@bi_emp_valid PROP).
 Proof. solve_proper. Qed.
-Global Instance bi_valid_mono : Proper ((⊢) ==> impl) (@bi_valid PROP).
+Global Instance bi_emp_valid_mono : Proper ((⊢) ==> impl) (@bi_emp_valid PROP).
 Proof. solve_proper. Qed.
-Global Instance bi_valid_flip_mono :
-  Proper (flip (⊢) ==> flip impl) (@bi_valid PROP).
+Global Instance bi_emp_valid_flip_mono :
+  Proper (flip (⊢) ==> flip impl) (@bi_emp_valid PROP).
 Proof. solve_proper. Qed.
 
 (* Propers *)
@@ -313,13 +313,13 @@ Proof. rewrite -{1}[P](left_id emp%I bi_sep). auto using sep_mono. Qed.
 Lemma sep_True_2 P : P ⊢ P ∗ True.
 Proof. by rewrite comm -True_sep_2. Qed.
 
-Lemma sep_intro_valid_l P Q R : P → (R ⊢ Q) → R ⊢ P ∗ Q.
+Lemma sep_intro_emp_valid_l P Q R : P → (R ⊢ Q) → R ⊢ P ∗ Q.
 Proof. intros ? ->. rewrite -{1}(left_id emp%I _ Q). by apply sep_mono. Qed.
-Lemma sep_intro_valid_r P Q R : (R ⊢ P) → Q → R ⊢ P ∗ Q.
-Proof. intros -> ?. rewrite comm. by apply sep_intro_valid_l. Qed.
-Lemma sep_elim_valid_l P Q R : P → (P ∗ R ⊢ Q) → R ⊢ Q.
+Lemma sep_intro_emp_valid_r P Q R : (R ⊢ P) → Q → R ⊢ P ∗ Q.
+Proof. intros -> ?. rewrite comm. by apply sep_intro_emp_valid_l. Qed.
+Lemma sep_elim_emp_valid_l P Q R : P → (P ∗ R ⊢ Q) → R ⊢ Q.
 Proof. intros <- <-. by rewrite left_id. Qed.
-Lemma sep_elim_valid_r P Q R : P → (R ∗ P ⊢ Q) → R ⊢ Q.
+Lemma sep_elim_emp_valid_r P Q R : P → (R ∗ P ⊢ Q) → R ⊢ Q.
 Proof. intros <- <-. by rewrite right_id. Qed.
 
 Lemma wand_intro_l P Q R : (Q ∗ P ⊢ R) → P ⊢ Q -∗ R.
@@ -402,7 +402,7 @@ Proof. intros ->; apply wand_iff_refl. Qed.
 Lemma wand_iff_equiv P Q : (P ∗-∗ Q)%I → (P ⊣⊢ Q).
 Proof.
   intros HPQ; apply (anti_symm (⊢));
-    apply wand_entails; rewrite /bi_valid HPQ /bi_wand_iff; auto.
+    apply wand_entails; rewrite /bi_emp_valid HPQ /bi_wand_iff; auto.
 Qed.
 
 Lemma entails_impl P Q : (P ⊢ Q) → (P → Q)%I.
@@ -415,7 +415,7 @@ Proof. intros ->; apply iff_refl. Qed.
 Lemma iff_equiv P Q `{!Affine P, !Affine Q} : (P ↔ Q)%I → (P ⊣⊢ Q).
 Proof.
   intros HPQ; apply (anti_symm (⊢));
-    apply: impl_entails; rewrite /bi_valid HPQ /bi_iff; auto.
+    apply: impl_entails; rewrite /bi_emp_valid HPQ /bi_iff; auto.
 Qed.
 
 (* Pure stuff *)
