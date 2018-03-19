@@ -150,10 +150,10 @@ Section sep_list.
   Proof.
     apply wand_intro_l. revert Φ Ψ. induction l as [|x l IH]=> Φ Ψ /=.
     { by rewrite sep_elim_r. }
-    rewrite affinely_persistently_sep_dup -assoc [(□ _ ∗ _)%I]comm -!assoc assoc.
+    rewrite intuitionistically_sep_dup -assoc [(□ _ ∗ _)%I]comm -!assoc assoc.
     apply sep_mono.
     - rewrite (forall_elim 0) (forall_elim x) pure_True // True_impl.
-      by rewrite affinely_persistently_elim wand_elim_l.
+      by rewrite intuitionistically_elim wand_elim_l.
     - rewrite comm -(IH (Φ ∘ S) (Ψ ∘ S)) /=.
       apply sep_mono_l, affinely_mono, persistently_mono.
       apply forall_intro=> k. by rewrite (forall_elim (S k)).
@@ -423,10 +423,10 @@ Section gmap.
   Proof.
     apply wand_intro_l. induction m as [|i x m ? IH] using map_ind.
     { by rewrite sep_elim_r. }
-    rewrite !big_sepM_insert // affinely_persistently_sep_dup.
+    rewrite !big_sepM_insert // intuitionistically_sep_dup.
     rewrite -assoc [(□ _ ∗ _)%I]comm -!assoc assoc. apply sep_mono.
     - rewrite (forall_elim i) (forall_elim x) pure_True ?lookup_insert //.
-      by rewrite True_impl affinely_persistently_elim wand_elim_l.
+      by rewrite True_impl intuitionistically_elim wand_elim_l.
     - rewrite comm -IH /=.
       apply sep_mono_l, affinely_mono, persistently_mono, forall_mono=> k.
       apply forall_mono=> y. apply impl_intro_l, pure_elim_l=> ?.
@@ -584,10 +584,10 @@ Section gset.
   Proof.
     apply wand_intro_l. induction X as [|x X ? IH] using collection_ind_L.
     { by rewrite sep_elim_r. }
-    rewrite !big_sepS_insert // affinely_persistently_sep_dup.
+    rewrite !big_sepS_insert // intuitionistically_sep_dup.
     rewrite -assoc [(□ _ ∗ _)%I]comm -!assoc assoc. apply sep_mono.
     - rewrite (forall_elim x) pure_True; last set_solver.
-      by rewrite True_impl affinely_persistently_elim wand_elim_l.
+      by rewrite True_impl intuitionistically_elim wand_elim_l.
     - rewrite comm -IH /=. apply sep_mono_l, affinely_mono, persistently_mono.
       apply forall_mono=> y. apply impl_intro_l, pure_elim_l=> ?.
       by rewrite pure_True ?True_impl; last set_solver.
