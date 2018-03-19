@@ -666,15 +666,23 @@ Tactic Notation "iSpecialize" open_constr(t) "as" "#" :=
   iSpecializeCore t as true.
 
 (** * Pose proof *)
-(* The tactic [iIntoEmpValid] tactic solves a goal [uPred_valid Q]. The
-arguments [t] is a Coq term whose type is of the following shape:
+(* The tactic [iIntoEmpValid] tactic solves a goal [bi_emp_valid Q]. The
+argument [t] must be a Coq term whose type is of the following shape:
 
-- [∀ (x_1 : A_1) .. (x_n : A_n), uPred_valid Q]
-- [∀ (x_1 : A_1) .. (x_n : A_n), P1 ⊢ P2], in which case [Q] becomes [P1 -∗ P2]
-- [∀ (x_1 : A_1) .. (x_n : A_n), P1 ⊣⊢ P2], in which case [Q] becomes [P1 ↔ P2]
+[∀ (x_1 : A_1) .. (x_n : A_n), φ]
+
+and so that we have an instance `AsValid φ Q`.
+
+Examples of such [φ]s are
+
+- [bi_emp_valid P], in which case [Q] should be [P]
+- [P1 ⊢ P2], in which case [Q] should be [P1 -∗ P2]
+- [P1 ⊣⊢ P2], in which case [Q] should be [P1 ↔ P2]
 
 The tactic instantiates each dependent argument [x_i] with an evar and generates
-a goal [P] for non-dependent arguments [x_i : P]. *)
+a goal [R] for each non-dependent argument [x_i : R].  For example, if the
+original goal was [Q] and [t] has type [∀ x, P x → Q], then it generates an evar
+[?x] for [x] and a subgoal [P ?x]. *)
 Tactic Notation "iIntoEmpValid" open_constr(t) :=
   let rec go t :=
     (* We try two reduction tactics for the type of t before trying to
