@@ -210,11 +210,13 @@ Global Instance into_persistent_affinely p P Q :
   IntoPersistent p P Q → IntoPersistent p (<affine> P) Q | 0.
 Proof. rewrite /IntoPersistent /= => <-. by rewrite affinely_elim. Qed.
 Global Instance into_persistent_intuitionistically p P Q :
-  IntoPersistent p P Q → IntoPersistent p (□ P) Q | 0.
-Proof. rewrite /IntoPersistent /= =><-. by rewrite intuitionistically_elim. Qed.
-Global Instance into_persistent_intuitionistically2 P Q :
-  IntoPersistent true P Q → IntoPersistent false (□ P) Q | 0.
-Proof. rewrite /IntoPersistent /= =><-. by rewrite intuitionistically_persistently_1. Qed.
+  IntoPersistent true P Q → IntoPersistent p (□ P) Q | 0.
+Proof.
+  rewrite /IntoPersistent /= =><-.
+  destruct p; simpl;
+    eauto using persistently_mono, intuitionistically_elim,
+    intuitionistically_persistently_1.
+Qed.
 Global Instance into_persistent_embed `{BiEmbed PROP PROP'} p P Q :
   IntoPersistent p P Q → IntoPersistent p ⎡P⎤ ⎡Q⎤ | 0.
 Proof.
