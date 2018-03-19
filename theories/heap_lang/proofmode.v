@@ -70,7 +70,7 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
       |apply _                        (* IntoLaters *)
       |wp_expr_simpl_subst; try wp_value_head (* new goal *)
       ])
-    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a reduct"
+    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a redex"
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     let e := eval simpl in e in
     reshape_expr e ltac:(fun K e' =>
@@ -80,7 +80,7 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
       |try fast_done                  (* The pure condition for PureExec *)
       |wp_expr_simpl_subst; try wp_value_head (* new goal *)
       ])
-    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a reduct"
+    || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a redex"
   | _ => fail "wp_pure: not a 'wp'"
   end.
 
