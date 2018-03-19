@@ -666,7 +666,7 @@ Tactic Notation "iSpecialize" open_constr(t) "as" "#" :=
   iSpecializeCore t as true.
 
 (** * Pose proof *)
-(* The tactic [iIntoValid] tactic solves a goal [uPred_valid Q]. The
+(* The tactic [iIntoEmpValid] tactic solves a goal [uPred_valid Q]. The
 arguments [t] is a Coq term whose type is of the following shape:
 
 - [∀ (x_1 : A_1) .. (x_n : A_n), uPred_valid Q]
@@ -675,7 +675,7 @@ arguments [t] is a Coq term whose type is of the following shape:
 
 The tactic instantiates each dependent argument [x_i] with an evar and generates
 a goal [P] for non-dependent arguments [x_i : P]. *)
-Tactic Notation "iIntoValid" open_constr(t) :=
+Tactic Notation "iIntoEmpValid" open_constr(t) :=
   let rec go t :=
     (* We try two reduction tactics for the type of t before trying to
        specialize it. We first try the head normal form in order to
@@ -735,7 +735,7 @@ Tactic Notation "iPoseProofCore" open_constr(lem)
          |goal_tac ()]
     | _ =>
        eapply tac_pose_proof with _ Htmp _; (* (j:=H) *)
-         [iIntoValid t
+         [iIntoEmpValid t
          |env_reflexivity || fail "iPoseProof:" Htmp "not fresh"
          |goal_tac ()]
     end;
