@@ -63,7 +63,7 @@ Tactic Notation "iMatchHyp" tactic1(tac) :=
 Tactic Notation "iStartProof" :=
   lazymatch goal with
   | |- envs_entails _ _ => idtac
-  | |- ?φ => notypeclasses refine (as_valid_2 φ _ _);
+  | |- ?φ => notypeclasses refine (as_emp_valid_2 φ _ _);
                [apply _ || fail "iStartProof: not a Bi entailment"
                |apply tac_adequate]
   end.
@@ -79,12 +79,12 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
     type_term has a non-negligeable performance impact. *)
     let x := type_term (eq_refl : @eq Type PROP PROP') in idtac
 
-  (* We eta-expand [as_valid_2], in order to make sure that
+  (* We eta-expand [as_emp_valid_2], in order to make sure that
      [iStartProof PROP] works even if [PROP] is the carrier type. In
      this case, typing this expression will end up unifying PROP with
      [bi_car _], and hence trigger the canonical structures mechanism
      to find the corresponding bi. *)
-  | |- ?φ => notypeclasses refine ((λ P : PROP, @as_valid_2 φ _ P) _ _ _);
+  | |- ?φ => notypeclasses refine ((λ P : PROP, @as_emp_valid_2 φ _ P) _ _ _);
                [apply _ || fail "iStartProof: not a Bi entailment"
                |apply tac_adequate]
   end.
@@ -666,16 +666,24 @@ Tactic Notation "iSpecialize" open_constr(t) "as" "#" :=
   iSpecializeCore t as true.
 
 (** * Pose proof *)
-(* The tactic [iIntoValid] tactic solves a goal [uPred_valid Q]. The
-arguments [t] is a Coq term whose type is of the following shape:
+(* The tactic [iIntoEmpValid] tactic solves a goal [bi_emp_valid Q]. The
+argument [t] must be a Coq term whose type is of the following shape:
 
-- [∀ (x_1 : A_1) .. (x_n : A_n), uPred_valid Q]
-- [∀ (x_1 : A_1) .. (x_n : A_n), P1 ⊢ P2], in which case [Q] becomes [P1 -∗ P2]
-- [∀ (x_1 : A_1) .. (x_n : A_n), P1 ⊣⊢ P2], in which case [Q] becomes [P1 ↔ P2]
+[∀ (x_1 : A_1) .. (x_n : A_n), φ]
+
+and so that we have an instance `AsValid φ Q`.
+
+Examples of such [φ]s are
+
+- [bi_emp_valid P], in which case [Q] should be [P]
+- [P1 ⊢ P2], in which case [Q] should be [P1 -∗ P2]
+- [P1 ⊣⊢ P2], in which case [Q] should be [P1 ↔ P2]
 
 The tactic instantiates each dependent argument [x_i] with an evar and generates
-a goal [P] for non-dependent arguments [x_i : P]. *)
-Tactic Notation "iIntoValid" open_constr(t) :=
+a goal [R] for each non-dependent argument [x_i : R].  For example, if the
+original goal was [Q] and [t] has type [∀ x, P x → Q], then it generates an evar
+[?x] for [x] and a subgoal [P ?x]. *)
+Tactic Notation "iIntoEmpValid" open_constr(t) :=
   let rec go t :=
     (* We try two reduction tactics for the type of t before trying to
        specialize it. We first try the head normal form in order to
@@ -684,13 +692,13 @@ Tactic Notation "iIntoValid" open_constr(t) :=
        not necessarilly opaque, and could be unfolded by [hnf].
 
        However, for calling type class search, we only use [cbv zeta]
-       in order to make sure we do not unfold [bi_valid]. *)
+       in order to make sure we do not unfold [bi_emp_valid]. *)
     let tT := type of t in
     first
       [ let tT' := eval hnf in tT in go_specialize t tT'
       | let tT' := eval cbv zeta in tT in go_specialize t tT'
       | let tT' := eval cbv zeta in tT in
-        notypeclasses refine (as_valid_1 tT _ _);
+        notypeclasses refine (as_emp_valid_1 tT _ _);
           [iSolveTC || fail "iPoseProof: not a BI assertion"
           |exact t]]
   with go_specialize t tT :=
@@ -735,7 +743,7 @@ Tactic Notation "iPoseProofCore" open_constr(lem)
          |goal_tac ()]
     | _ =>
        eapply tac_pose_proof with _ Htmp _; (* (j:=H) *)
-         [iIntoValid t
+         [iIntoEmpValid t
          |env_reflexivity || fail "iPoseProof:" Htmp "not fresh"
          |goal_tac ()]
     end;

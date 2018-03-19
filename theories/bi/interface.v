@@ -294,11 +294,11 @@ Notation "'<pers>' P" := (bi_persistently P) : bi_scope.
 Infix "≡" := sbi_internal_eq : bi_scope.
 Notation "▷ P" := (sbi_later P) : bi_scope.
 
-Coercion bi_valid {PROP : bi} (P : PROP) : Prop := emp ⊢ P.
-Coercion sbi_valid {PROP : sbi} : PROP → Prop := bi_valid.
+Coercion bi_emp_valid {PROP : bi} (P : PROP) : Prop := emp ⊢ P.
+Coercion sbi_emp_valid {PROP : sbi} : PROP → Prop := bi_emp_valid.
 
-Arguments bi_valid {_} _%I : simpl never.
-Typeclasses Opaque bi_valid.
+Arguments bi_emp_valid {_} _%I : simpl never.
+Typeclasses Opaque bi_emp_valid.
 
 Module bi.
 Section bi_laws.

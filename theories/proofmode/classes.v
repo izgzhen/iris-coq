@@ -455,29 +455,29 @@ Arguments IntoEmbed {_ _ _} _%I _%I.
 Arguments into_embed {_ _ _} _%I _%I {_}.
 Hint Mode IntoEmbed + + + ! -  : typeclass_instances.
 
-(* We use two type classes for [AsValid], in order to avoid loops in
-   typeclass search. Indeed, the [as_valid_embed] instance would try
+(* We use two type classes for [AsEmpValid], in order to avoid loops in
+   typeclass search. Indeed, the [as_emp_valid_embed] instance would try
    to add an arbitrary number of embeddings. To avoid this, the
-   [AsValid0] type class cannot handle embeddings, and therefore
-   [as_valid_embed] only tries to add one embedding, and we never try
+   [AsEmpValid0] type class cannot handle embeddings, and therefore
+   [as_emp_valid_embed] only tries to add one embedding, and we never try
    to insert nested embeddings. This has the additional advantage of
-   always trying [as_valid_embed] as a second option, so that this
+   always trying [as_emp_valid_embed] as a second option, so that this
    instance is never used when the BI is unknown.
 
    No Hint Modes are declared here. The appropriate one would be
    [Hint Mode - ! -], but the fact that Coq ignores primitive
    projections for hints modes would make this fail.*)
-Class AsValid {PROP : bi} (φ : Prop) (P : PROP) := as_valid : φ ↔ P.
-Arguments AsValid {_} _%type _%I.
-Class AsValid0 {PROP : bi} (φ : Prop) (P : PROP) :=
-  as_valid_here : AsValid φ P.
-Arguments AsValid0 {_} _%type _%I.
-Existing Instance as_valid_here | 0.
+Class AsEmpValid {PROP : bi} (φ : Prop) (P : PROP) := as_emp_valid : φ ↔ P.
+Arguments AsEmpValid {_} _%type _%I.
+Class AsEmpValid0 {PROP : bi} (φ : Prop) (P : PROP) :=
+  as_emp_valid_here : AsEmpValid φ P.
+Arguments AsEmpValid0 {_} _%type _%I.
+Existing Instance as_emp_valid_here | 0.
 
-Lemma as_valid_1 (φ : Prop) {PROP : bi} (P : PROP) `{!AsValid φ P} : φ → P.
-Proof. by apply as_valid. Qed.
-Lemma as_valid_2 (φ : Prop) {PROP : bi} (P : PROP) `{!AsValid φ P} : P → φ.
-Proof. by apply as_valid. Qed.
+Lemma as_emp_valid_1 (φ : Prop) {PROP : bi} (P : PROP) `{!AsEmpValid φ P} : φ → P.
+Proof. by apply as_emp_valid. Qed.
+Lemma as_emp_valid_2 (φ : Prop) {PROP : bi} (P : PROP) `{!AsEmpValid φ P} : P → φ.
+Proof. by apply as_emp_valid. Qed.
 
 (* Input: [P]; Outputs: [N],
    Extracts the namespace associated with an invariant assertion. Used for [iInv]. *)
