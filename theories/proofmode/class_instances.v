@@ -13,6 +13,9 @@ Global Instance from_affinely_affine P : Affine P → FromAffinely P P.
 Proof. intros. by rewrite /FromAffinely affinely_elim. Qed.
 Global Instance from_affinely_default P : FromAffinely (<affine> P) P | 100.
 Proof. by rewrite /FromAffinely. Qed.
+Global Instance from_affinely_intuitionistically P :
+  FromAffinely (□ P) (<pers> P) | 100.
+Proof. by rewrite /FromAffinely. Qed.
 
 (* IntoAbsorbingly *)
 Global Instance into_absorbingly_True : @IntoAbsorbingly PROP True emp | 0.
