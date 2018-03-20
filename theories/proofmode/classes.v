@@ -119,8 +119,8 @@ Hint Mode FromModal - + - - - ! - : typeclass_instances.
 
 Class FromAffinely {PROP : bi} (P Q : PROP) :=
   from_affinely : <affine> Q ⊢ P.
-Arguments FromAffinely {_} _%I _%type_scope : simpl never.
-Arguments from_affinely {_} _%I _%type_scope {_}.
+Arguments FromAffinely {_} _%I _%I : simpl never.
+Arguments from_affinely {_} _%I _%I {_}.
 Hint Mode FromAffinely + ! - : typeclass_instances.
 Hint Mode FromAffinely + - ! : typeclass_instances.
 

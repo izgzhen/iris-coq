@@ -961,6 +961,8 @@ Proof.
 Qed.
 Lemma intuitionistically_and P Q : □ (P ∧ Q) ⊣⊢ □ P ∧ □ Q.
 Proof. by rewrite /bi_intuitionistically persistently_and affinely_and. Qed.
+Lemma intuitionistically_forall {A} (Φ : A → PROP) : □ (∀ x, Φ x) ⊢ ∀ x, □ Φ x.
+Proof. by rewrite /bi_intuitionistically persistently_forall affinely_forall. Qed.
 Lemma intuitionistically_or P Q : □ (P ∨ Q) ⊣⊢ □ P ∨ □ Q.
 Proof. by rewrite /bi_intuitionistically persistently_or affinely_or. Qed.
 Lemma intuitionistically_exist {A} (Φ : A → PROP) : □ (∃ x, Φ x) ⊣⊢ ∃ x, □ Φ x.
