@@ -991,6 +991,29 @@ Proof.
   rewrite -{1}(affine_affinely (□ R)%I) affinely_sep_2 //.
 Qed.
 
+Global Instance make_intuitionistically_True :
+  @KnownMakeIntuitionistically PROP True emp | 0.
+Proof.
+  by rewrite /KnownMakeIntuitionistically /MakeIntuitionistically
+             intuitionistically_True_emp.
+Qed.
+Global Instance make_intuitionistically_intuitionistic P :
+  Affine P → Persistent P → KnownMakeIntuitionistically P P | 1.
+Proof.
+  intros. rewrite /KnownMakeIntuitionistically /MakeIntuitionistically.
+  rewrite intuitionistic_intuitionistically //.
+Qed.
+Global Instance make_intuitionistically_default P :
+  MakeIntuitionistically P (□ P) | 100.
+Proof. by rewrite /MakeIntuitionistically. Qed.
+
+Global Instance frame_intuitionistically R P Q Q' :
+  Frame true R P Q → MakeIntuitionistically Q Q' → Frame true R (□ P) Q'.
+Proof.
+  rewrite /Frame /MakeIntuitionistically=> <- <- /=.
+  rewrite -intuitionistically_sep_2 intuitionistically_idemp //.
+Qed.
+
 Global Instance make_absorbingly_emp : @KnownMakeAbsorbingly PROP emp True | 0.
 Proof.
   by rewrite /KnownMakeAbsorbingly /MakeAbsorbingly

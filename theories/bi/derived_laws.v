@@ -980,6 +980,12 @@ Proof. rewrite /bi_intuitionistically affinely_elim //. Qed.
 Lemma intuitionistically_persistently_persistently P : □ <pers> P ⊣⊢ □ P.
 Proof. rewrite /bi_intuitionistically persistently_idemp //. Qed.
 
+Lemma intuitionistic_intuitionistically P :
+  Affine P → Persistent P → □ P ⊣⊢ P.
+Proof.
+  intros. apply (anti_symm _); first exact: intuitionistically_elim.
+  rewrite -{1}(affine_affinely P) {1}(persistent P) //.
+Qed.
 Lemma intuitionistically_affinely P : □ P ⊢ <affine> P.
 Proof.
   rewrite /bi_intuitionistically /bi_affinely. apply and_intro.

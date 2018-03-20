@@ -348,6 +348,15 @@ Class KnownMakeAffinely {PROP : bi} (P Q : PROP) :=
 Arguments KnownMakeAffinely {_} _%I _%I.
 Hint Mode KnownMakeAffinely + ! - : typeclass_instances.
 
+Class MakeIntuitionistically {PROP : bi} (P Q : PROP) :=
+  make_intuitionistically : □ P ⊣⊢ Q.
+Arguments MakeIntuitionistically {_} _%I _%I.
+Hint Mode MakeIntuitionistically + - - : typeclass_instances.
+Class KnownMakeIntuitionistically {PROP : bi} (P Q : PROP) :=
+  known_make_intuitionistically :> MakeIntuitionistically P Q.
+Arguments KnownMakeIntuitionistically {_} _%I _%I.
+Hint Mode KnownMakeIntuitionistically + ! - : typeclass_instances.
+
 Class MakeAbsorbingly {PROP : bi} (P Q : PROP) :=
   make_absorbingly : <absorb> P ⊣⊢ Q.
 Arguments MakeAbsorbingly {_} _%I _%I.
