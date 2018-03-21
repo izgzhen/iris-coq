@@ -62,8 +62,8 @@ Proof.
   rewrite /FromModal /MakeMonPredAt /==> <- <-. by rewrite monPred_at_persistently.
 Qed.
 Global Instance from_modal_affinely_persistently_monPred_at `(sel : A) P Q 𝓠 i :
-  FromModal modality_affinely_persistently sel P Q → MakeMonPredAt i Q 𝓠 →
-  FromModal modality_affinely_persistently sel (P i) 𝓠 | 0.
+  FromModal modality_intuitionistically sel P Q → MakeMonPredAt i Q 𝓠 →
+  FromModal modality_intuitionistically sel (P i) 𝓠 | 0.
 Proof.
   rewrite /FromModal /MakeMonPredAt /==> <- <-.
   by rewrite monPred_at_affinely monPred_at_persistently.
@@ -126,13 +126,13 @@ Global Instance from_assumption_make_monPred_at_l p i j P 𝓟 :
   MakeMonPredAt i P 𝓟 → IsBiIndexRel j i → KnownLFromAssumption p (P j) 𝓟.
 Proof.
   rewrite /MakeMonPredAt /KnownLFromAssumption /FromAssumption /IsBiIndexRel=><- ->.
-  apply  bi.affinely_persistently_if_elim.
+  apply  bi.intuitionistically_if_elim.
 Qed.
 Global Instance from_assumption_make_monPred_at_r p i j P 𝓟 :
   MakeMonPredAt i P 𝓟 → IsBiIndexRel i j → KnownRFromAssumption p 𝓟 (P j).
 Proof.
   rewrite /MakeMonPredAt /KnownRFromAssumption /FromAssumption /IsBiIndexRel=><- ->.
-  apply  bi.affinely_persistently_if_elim.
+  apply  bi.intuitionistically_if_elim.
 Qed.
 
 Global Instance from_assumption_make_monPred_objectively P Q :

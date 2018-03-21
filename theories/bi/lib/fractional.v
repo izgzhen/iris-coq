@@ -173,6 +173,6 @@ Section fractional.
     - rewrite fractional /Frame /MakeSep=><-<-. by rewrite assoc.
     - rewrite fractional /Frame /MakeSep=><-<-=>_.
       by rewrite (comm _ Q (Φ q0)) !assoc (comm _ (Φ _)).
-    - move=>-[-> _]->. by rewrite bi.affinely_persistently_if_elim -fractional Qp_div_2.
+    - move=>-[-> _]->. by rewrite bi.intuitionistically_if_elim -fractional Qp_div_2.
   Qed.
 End fractional.

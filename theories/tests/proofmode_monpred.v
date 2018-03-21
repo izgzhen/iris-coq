@@ -1,5 +1,4 @@
 From iris.proofmode Require Import tactics monpred.
-From iris.base_logic Require Import base_logic lib.invariants.
 
 Section tests.
   Context {I : biIndex} {PROP : sbi}.

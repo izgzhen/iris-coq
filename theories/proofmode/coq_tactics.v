@@ -171,10 +171,10 @@ Proof.
   - rewrite pure_True ?left_id; last (destruct Hwf, rp; constructor;
       naive_solver eauto using env_delete_wf, env_delete_fresh).
     destruct rp.
-    + rewrite (env_lookup_perm Γp) //= affinely_persistently_and.
-      by rewrite and_sep_affinely_persistently -assoc.
-    + rewrite {1}affinely_persistently_sep_dup {1}(env_lookup_perm Γp) //=.
-      by rewrite affinely_persistently_and and_elim_l -assoc.
+    + rewrite (env_lookup_perm Γp) //= intuitionistically_and.
+      by rewrite and_sep_intuitionistically -assoc.
+    + rewrite {1}intuitionistically_sep_dup {1}(env_lookup_perm Γp) //=.
+      by rewrite intuitionistically_and and_elim_l -assoc.
   - destruct (Γs !! i) eqn:?; simplify_eq/=.
     rewrite pure_True ?left_id; last (destruct Hwf; constructor;
       naive_solver eauto using env_delete_wf, env_delete_fresh).
@@ -194,7 +194,7 @@ Proof.
   rewrite /envs_lookup /of_envs=>?. apply pure_elim_l=> Hwf.
   destruct Δ as [Γp Γs], (Γp !! i) eqn:?; simplify_eq/=.
   - rewrite pure_True // left_id (env_lookup_perm Γp) //=
-      affinely_persistently_and and_sep_affinely_persistently.
+      intuitionistically_and and_sep_intuitionistically.
     cancel [□ P]%I. apply wand_intro_l. solve_sep_entails.
   - destruct (Γs !! i) eqn:?; simplify_eq/=.
     rewrite (env_lookup_perm Γs) //=. rewrite pure_True // left_id.
@@ -210,13 +210,13 @@ Lemma envs_lookup_delete_list_sound Δ Δ' rp js p Ps :
   of_envs Δ ⊢ □?p [∗] Ps ∗ of_envs Δ'.
 Proof.
   revert Δ Δ' p Ps. induction js as [|j js IH]=> Δ Δ'' p Ps ?; simplify_eq/=.
-  { by rewrite affinely_persistently_emp left_id. }
+  { by rewrite intuitionistically_emp left_id. }
   destruct (envs_lookup_delete rp j Δ) as [[[q1 P] Δ']|] eqn:Hj; simplify_eq/=.
   apply envs_lookup_delete_Some in Hj as [Hj ->].
   destruct (envs_lookup_delete_list _ js _) as [[[q2 Ps'] ?]|] eqn:?; simplify_eq/=.
-  rewrite -affinely_persistently_if_sep_2 -assoc.
+  rewrite -intuitionistically_if_sep_2 -assoc.
   rewrite envs_lookup_sound' //; rewrite IH //.
-  repeat apply sep_mono=>//; apply affinely_persistently_if_flag_mono; by destruct q1.
+  repeat apply sep_mono=>//; apply intuitionistically_if_flag_mono; by destruct q1.
 Qed.
 
 Lemma envs_lookup_delete_list_cons Δ Δ' Δ'' rp j js p1 p2 P Ps :
@@ -251,7 +251,7 @@ Proof.
   - apply and_intro; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
       intros j; destruct (ident_beq_reflect j i); naive_solver.
-    + by rewrite affinely_persistently_and and_sep_affinely_persistently assoc.
+    + by rewrite intuitionistically_and and_sep_intuitionistically assoc.
   - apply and_intro; [apply pure_intro|].
     + destruct Hwf; constructor; simpl; eauto using Esnoc_wf.
       intros j; destruct (ident_beq_reflect j i); naive_solver.
@@ -271,7 +271,7 @@ Proof.
       intros j. apply (env_app_disjoint _ _ _ j) in Happ.
       naive_solver eauto using env_app_fresh.
     + rewrite (env_app_perm _ _ Γp') //.
-      rewrite big_opL_app affinely_persistently_and and_sep_affinely_persistently.
+      rewrite big_opL_app intuitionistically_and and_sep_intuitionistically.
       solve_sep_entails.
   - destruct (env_app Γ Γp) eqn:Happ,
       (env_app Γ Γs) as [Γs'|] eqn:?; simplify_eq/=.
@@ -299,7 +299,7 @@ Proof.
       intros j. apply (env_app_disjoint _ _ _ j) in Happ.
       destruct (decide (i = j)); try naive_solver eauto using env_replace_fresh.
     + rewrite (env_replace_perm _ _ Γp') //.
-      rewrite big_opL_app affinely_persistently_and and_sep_affinely_persistently.
+      rewrite big_opL_app intuitionistically_and and_sep_intuitionistically.
       solve_sep_entails.
   - destruct (env_app Γ Γp) eqn:Happ,
       (env_replace i Γ Γs) as [Γs'|] eqn:?; simplify_eq/=.
@@ -370,11 +370,11 @@ Proof.
   apply pure_intro. destruct Hwf; constructor; simpl; auto using Enil_wf.
 Qed.
 
-Lemma env_spatial_is_nil_affinely_persistently Δ :
+Lemma env_spatial_is_nil_intuitionistically Δ :
   env_spatial_is_nil Δ = true → of_envs Δ ⊢ □ of_envs Δ.
 Proof.
   intros. unfold of_envs; destruct Δ as [? []]; simplify_eq/=.
-  rewrite !right_id {1}affinely_and_r persistently_and.
+  rewrite !right_id /bi_intuitionistically {1}affinely_and_r persistently_and.
   by rewrite persistently_affinely persistently_idemp persistently_pure.
 Qed.
 
@@ -420,10 +420,10 @@ Lemma envs_split_sound Δ d js Δ1 Δ2 :
 Proof.
   rewrite /envs_split=> ?. rewrite -(idemp bi_and (of_envs Δ)).
   rewrite {2}envs_clear_spatial_sound.
-  rewrite (env_spatial_is_nil_affinely_persistently (envs_clear_spatial _)) //.
-  rewrite -persistently_and_affinely_sep_l.
+  rewrite (env_spatial_is_nil_intuitionistically (envs_clear_spatial _)) //.
+  rewrite -persistently_and_intuitionistically_sep_l.
   rewrite (and_elim_l (<pers> _)%I)
-          persistently_and_affinely_sep_r affinely_persistently_elim.
+          persistently_and_intuitionistically_sep_r intuitionistically_elim.
   destruct (envs_split_go _ _) as [[Δ1' Δ2']|] eqn:HΔ; [|done].
   apply envs_split_go_sound in HΔ as ->; last first.
   { intros j P. by rewrite envs_lookup_envs_clear_spatial=> ->. }
@@ -481,8 +481,8 @@ Proof. rewrite envs_entails_eq=> Δ1 Δ2 ? P1 P2 <- <-. by f_equiv. Qed.
 (** * Adequacy *)
 Lemma tac_adequate P : envs_entails (Envs Enil Enil 1) P → P.
 Proof.
-  rewrite envs_entails_eq /of_envs /= persistently_True_emp
-          affinely_persistently_emp left_id=><-.
+  rewrite envs_entails_eq /of_envs /= intuitionistically_True_emp
+          left_id=><-.
   apply and_intro=> //. apply pure_intro; repeat constructor.
 Qed.
 
@@ -532,7 +532,7 @@ Lemma tac_assumption Δ Δ' i p P Q :
 Proof.
   intros ?? H. rewrite envs_entails_eq envs_lookup_delete_sound //.
   destruct (env_spatial_is_nil Δ') eqn:?.
-  - by rewrite (env_spatial_is_nil_affinely_persistently Δ') // sep_elim_l.
+  - by rewrite (env_spatial_is_nil_intuitionistically Δ') // sep_elim_l.
   - rewrite from_assumption. destruct H; by rewrite sep_elim_l.
 Qed.
 
@@ -566,7 +566,7 @@ Lemma tac_false_destruct Δ i p P Q :
   envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq => ??. subst. rewrite envs_lookup_sound //; simpl.
-  by rewrite affinely_persistently_if_elim sep_elim_l False_elim.
+  by rewrite intuitionistically_if_elim sep_elim_l False_elim.
 Qed.
 
 (** * Pure *)
@@ -576,8 +576,8 @@ Lemma tac_pure_intro Δ Q φ af :
   env_spatial_is_nil Δ = af → FromPure af Q φ → φ → envs_entails Δ Q.
 Proof.
   intros ???. rewrite envs_entails_eq -(from_pure _ Q). destruct af.
-  - rewrite env_spatial_is_nil_affinely_persistently //=. f_equiv.
-    by apply pure_intro.
+  - rewrite env_spatial_is_nil_intuitionistically //= /bi_intuitionistically.
+    f_equiv. by apply pure_intro.
   - by apply pure_intro.
 Qed.
 
@@ -589,7 +589,7 @@ Lemma tac_pure Δ Δ' i p P φ Q :
 Proof.
   rewrite envs_entails_eq=> ?? HPQ HQ.
   rewrite envs_lookup_delete_sound //; simpl. destruct p; simpl.
-  - rewrite (into_pure P) -persistently_and_affinely_sep_l persistently_pure.
+  - rewrite (into_pure P) -persistently_and_intuitionistically_sep_l persistently_pure.
     by apply pure_elim_l.
   - destruct HPQ.
     + rewrite -(affine_affinely P) (into_pure P) -persistent_and_affinely_sep_l.
@@ -610,13 +610,13 @@ Lemma tac_persistent Δ Δ' i p P P' Q :
   envs_entails Δ' Q → envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq=>?? HPQ ? HQ. rewrite envs_replace_singleton_sound //=.
-  destruct p; simpl.
+  destruct p; simpl; rewrite /bi_intuitionistically.
   - by rewrite -(into_persistent _ P) /= wand_elim_r.
   - destruct HPQ.
     + rewrite -(affine_affinely P) (_ : P = <pers>?false P)%I //
               (into_persistent _ P) wand_elim_r //.
     + rewrite (_ : P = <pers>?false P)%I // (into_persistent _ P).
-      by rewrite -{1}absorbingly_affinely_persistently
+      by rewrite -{1}absorbingly_intuitionistically
         absorbingly_sep_l wand_elim_r HQ.
 Qed.
 
@@ -629,10 +629,10 @@ Lemma tac_impl_intro Δ Δ' i P P' Q R :
   envs_entails Δ' Q → envs_entails Δ R.
 Proof.
   rewrite /FromImpl envs_entails_eq => <- ??? <-. destruct (env_spatial_is_nil Δ) eqn:?.
-  - rewrite (env_spatial_is_nil_affinely_persistently Δ) //; simpl. apply impl_intro_l.
+  - rewrite (env_spatial_is_nil_intuitionistically Δ) //; simpl. apply impl_intro_l.
     rewrite envs_app_singleton_sound //; simpl.
     rewrite -(from_affinely P') -affinely_and_lr.
-    by rewrite persistently_and_affinely_sep_r affinely_persistently_elim wand_elim_r.
+    by rewrite persistently_and_intuitionistically_sep_r intuitionistically_elim wand_elim_r.
   - apply impl_intro_l. rewrite envs_app_singleton_sound //; simpl.
     by rewrite -(from_affinely P') persistent_and_affinely_sep_l_1 wand_elim_r.
 Qed.
@@ -645,7 +645,7 @@ Proof.
   rewrite /FromImpl envs_entails_eq => <- ?? <-.
   rewrite envs_app_singleton_sound //=. apply impl_intro_l.
   rewrite (_ : P = <pers>?false P)%I // (into_persistent false P).
-  by rewrite persistently_and_affinely_sep_l wand_elim_r.
+  by rewrite persistently_and_intuitionistically_sep_l wand_elim_r.
 Qed.
 Lemma tac_impl_intro_drop Δ P Q R :
   FromImpl R P Q → envs_entails Δ Q → envs_entails Δ R.
@@ -672,8 +672,8 @@ Proof.
   rewrite envs_app_singleton_sound //=. apply wand_intro_l. destruct HPQ.
   - rewrite -(affine_affinely P) (_ : P = <pers>?false P)%I //
             (into_persistent _ P) wand_elim_r //.
-  - rewrite (_ : P = □?false P)%I // (into_persistent _ P).
-    by rewrite -{1}absorbingly_affinely_persistently
+  - rewrite (_ : P = <pers>?false P)%I // (into_persistent _ P).
+    by rewrite -{1}absorbingly_intuitionistically
       absorbingly_sep_l wand_elim_r HQ.
 Qed.
 Lemma tac_wand_intro_pure Δ P φ Q R :
@@ -714,9 +714,9 @@ Proof.
   rewrite (envs_lookup_sound' _ false) //; simpl. destruct p; simpl.
   - move: Hj; rewrite envs_delete_persistent=> Hj.
     rewrite envs_simple_replace_singleton_sound //; simpl.
-    rewrite -affinely_persistently_if_idemp -affinely_persistently_idemp into_wand /=.
-    rewrite assoc (affinely_persistently_affinely_persistently_if q).
-    by rewrite affinely_persistently_if_sep_2 wand_elim_r wand_elim_r.
+    rewrite -intuitionistically_if_idemp -intuitionistically_idemp into_wand /=.
+    rewrite assoc (intuitionistically_intuitionistically_if q).
+    by rewrite intuitionistically_if_sep_2 wand_elim_r wand_elim_r.
   - move: Hj Hj'; rewrite envs_delete_spatial=> Hj Hj'.
     rewrite envs_lookup_sound // (envs_replace_singleton_sound' _ Δ'') //; simpl.
     by rewrite into_wand /= assoc wand_elim_r wand_elim_r.
@@ -768,7 +768,7 @@ Lemma tac_specialize_assert_pure Δ Δ' j q R P1 P2 φ Q :
   φ → envs_entails Δ' Q → envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq=> ????? <-. rewrite envs_simple_replace_singleton_sound //=.
-  rewrite -affinely_persistently_if_idemp into_wand /= -(from_pure _ P1).
+  rewrite -intuitionistically_if_idemp into_wand /= -(from_pure _ P1) /bi_intuitionistically.
   rewrite pure_True //= persistently_affinely persistently_pure
           affinely_True_emp affinely_emp.
   by rewrite emp_wand wand_elim_r.
@@ -787,10 +787,10 @@ Proof.
   rewrite -(idemp bi_and (of_envs (envs_delete _ _ _ _))).
   rewrite {2}envs_simple_replace_singleton_sound' //; simpl.
   rewrite {1}HP1 (into_absorbingly P1') (persistent_persistently_2 P1).
-  rewrite absorbingly_persistently persistently_and_affinely_sep_l assoc.
-  rewrite -affinely_persistently_if_idemp -affinely_persistently_idemp.
-  rewrite (affinely_persistently_affinely_persistently_if q).
-  by rewrite affinely_persistently_if_sep_2 into_wand wand_elim_l wand_elim_r.
+  rewrite absorbingly_persistently persistently_and_intuitionistically_sep_l assoc.
+  rewrite -intuitionistically_if_idemp -intuitionistically_idemp.
+  rewrite (intuitionistically_intuitionistically_if q).
+  by rewrite intuitionistically_if_sep_2 into_wand wand_elim_l wand_elim_r.
 Qed.
 
 Lemma tac_specialize_persistent_helper Δ Δ'' j q P R R' Q :
@@ -804,9 +804,9 @@ Proof.
   rewrite envs_entails_eq => ? HR ? Hpos ? <-. rewrite -(idemp bi_and (of_envs Δ)) {1}HR.
   rewrite envs_replace_singleton_sound //; destruct q; simpl.
   - by rewrite (_ : R = <pers>?false R)%I // (into_persistent _ R)
-      absorbingly_persistently sep_elim_r persistently_and_affinely_sep_l wand_elim_r.
+      absorbingly_persistently sep_elim_r persistently_and_intuitionistically_sep_l wand_elim_r.
   - by rewrite (absorbing_absorbingly R) (_ : R = <pers>?false R)%I //
-       (into_persistent _ R) sep_elim_r persistently_and_affinely_sep_l wand_elim_r.
+       (into_persistent _ R) sep_elim_r persistently_and_intuitionistically_sep_l wand_elim_r.
 Qed.
 
 (* A special version of [tac_assumption] that does not do any of the
@@ -816,7 +816,7 @@ Lemma tac_specialize_persistent_helper_done Δ i q P :
   envs_entails Δ (<absorb> P).
 Proof.
   rewrite envs_entails_eq /bi_absorbingly=> /envs_lookup_sound=> ->.
-  rewrite affinely_persistently_if_elim comm. f_equiv; auto.
+  rewrite intuitionistically_if_elim comm. f_equiv; auto.
 Qed.
 
 Lemma tac_revert Δ Δ' i p P Q :
@@ -846,9 +846,9 @@ Lemma tac_revert_ih Δ P Q {φ : Prop} (Hφ : φ) :
   envs_entails Δ Q.
 Proof.
   rewrite /IntoIH envs_entails_eq. intros HP ? HPQ.
-  rewrite (env_spatial_is_nil_affinely_persistently Δ) //.
+  rewrite (env_spatial_is_nil_intuitionistically Δ) //.
   rewrite -(idemp bi_and (□ (of_envs Δ))%I) {1}HP // HPQ.
-  by rewrite -{1}persistently_idemp !affinely_persistently_elim impl_elim_r.
+  rewrite {1}intuitionistically_persistently_1 intuitionistically_elim impl_elim_r //.
 Qed.
 
 Lemma tac_assert Δ Δ' j P Q :
@@ -856,7 +856,7 @@ Lemma tac_assert Δ Δ' j P Q :
   envs_entails Δ' Q → envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq=> ? <-. rewrite (envs_app_singleton_sound Δ) //; simpl.
-  by rewrite -(entails_wand P) // affinely_persistently_emp emp_wand.
+  by rewrite -(entails_wand P) // intuitionistically_emp emp_wand.
 Qed.
 
 Lemma tac_pose_proof Δ Δ' j P Q :
@@ -865,7 +865,7 @@ Lemma tac_pose_proof Δ Δ' j P Q :
   envs_entails Δ' Q → envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq => HP ? <-. rewrite envs_app_singleton_sound //=.
-  by rewrite -HP /= affinely_persistently_emp emp_wand.
+  by rewrite -HP /= intuitionistically_emp emp_wand.
 Qed.
 
 Lemma tac_pose_proof_hyp Δ Δ' Δ'' i p j P Q :
@@ -970,7 +970,7 @@ Lemma tac_frame_pure Δ (φ : Prop) P Q :
   φ → Frame true ⌜φ⌝ P Q → envs_entails Δ Q → envs_entails Δ P.
 Proof.
   rewrite envs_entails_eq => ?? ->. rewrite -(frame ⌜φ⌝ P) /=.
-  rewrite -persistently_and_affinely_sep_l persistently_pure.
+  rewrite -persistently_and_intuitionistically_sep_l persistently_pure.
   auto using and_intro, pure_intro.
 Qed.
 
@@ -1002,7 +1002,7 @@ Lemma tac_or_destruct Δ Δ1 Δ2 i p j1 j2 P P1 P2 Q :
   envs_entails Δ1 Q → envs_entails Δ2 Q → envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq. intros ???? HP1 HP2. rewrite envs_lookup_sound //.
-  rewrite (into_or P) affinely_persistently_if_or sep_or_r; apply or_elim.
+  rewrite (into_or P) intuitionistically_if_or sep_or_r; apply or_elim.
   - rewrite (envs_simple_replace_singleton_sound' _ Δ1) //.
     by rewrite wand_elim_r.
   - rewrite (envs_simple_replace_singleton_sound' _ Δ2) //.
@@ -1048,7 +1048,7 @@ Lemma tac_exist_destruct {A} Δ i p j P (Φ : A → PROP) Q :
   envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq => ?? HΦ. rewrite envs_lookup_sound //.
-  rewrite (into_exist P) affinely_persistently_if_exist sep_exist_r.
+  rewrite (into_exist P) intuitionistically_if_exist sep_exist_r.
   apply exist_elim=> a; destruct (HΦ a) as (Δ'&?&?).
   rewrite envs_simple_replace_singleton_sound' //; simpl. by rewrite wand_elim_r.
 Qed.
@@ -1062,7 +1062,7 @@ Lemma tac_modal_elim Δ Δ' i p φ P' P Q Q' :
   envs_entails Δ' Q' → envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq => ???? HΔ. rewrite envs_replace_singleton_sound //=.
-  rewrite HΔ affinely_persistently_if_elim. by eapply elim_modal.
+  rewrite HΔ intuitionistically_if_elim. by eapply elim_modal.
 Qed.
 
 (** * Invariants *)
@@ -1078,7 +1078,7 @@ Proof.
   rewrite envs_entails_eq=> /envs_lookup_delete_Some [? ->] ?? /(_ Q) [Δ'' [? <-]].
   rewrite (envs_lookup_sound' _ false) // envs_app_singleton_sound //; simpl.
   apply wand_elim_r', wand_mono; last done. apply wand_intro_r, wand_intro_r.
-  rewrite affinely_persistently_if_elim -assoc wand_curry. auto.
+  rewrite intuitionistically_if_elim -assoc wand_curry. auto.
 Qed.
 
 (** * Accumulate hypotheses *)
@@ -1218,8 +1218,7 @@ Section tac_modal_intro.
   Global Instance transform_persistent_env_nil C : TransformPersistentEnv M C Enil Enil.
   Proof.
     split; [|eauto using Enil_wf|done]=> /= ??.
-    rewrite !persistently_pure !affinely_True_emp.
-    by rewrite !affinely_emp -modality_emp.
+    rewrite !intuitionistically_True_emp -modality_emp //.
   Qed.
   Global Instance transform_persistent_env_snoc (C : PROP2 → PROP1 → Prop) Γ Γ' i P Q :
     C P Q →
@@ -1227,8 +1226,8 @@ Section tac_modal_intro.
     TransformPersistentEnv M C (Esnoc Γ i P) (Esnoc Γ' i Q).
   Proof.
     intros ? [HΓ Hwf Hdom]; split; simpl.
-    - intros HC Hand. rewrite affinely_persistently_and HC // HΓ //.
-      by rewrite Hand -affinely_persistently_and.
+    - intros HC Hand. rewrite intuitionistically_and HC // HΓ //.
+      by rewrite Hand -intuitionistically_and.
     - inversion 1; constructor; auto.
     - intros j. destruct (ident_beq _ _); naive_solver.
   Qed.
@@ -1278,7 +1277,7 @@ Section tac_modal_intro.
   (** The actual introduction tactic *)
   Lemma tac_modal_intro {A} (sel : A) Γp Γs n Γp' Γs' Q Q' fi :
     FromModal M sel Q' Q →
-    IntoModalPersistentEnv M Γp Γp' (modality_persistent_spec M) →
+    IntoModalPersistentEnv M Γp Γp' (modality_intuitionistic_spec M) →
     IntoModalSpatialEnv M Γs Γs' (modality_spatial_spec M) fi →
     (if fi then Absorbing Q' else TCTrue) →
     envs_entails (Envs Γp' Γs' n) Q → envs_entails (Envs Γp Γs n) Q'.
@@ -1294,16 +1293,16 @@ Section tac_modal_intro.
         { destruct HΓs as [| |?????? []| |]; eauto. }
         naive_solver. }
     assert (□ [∧] Γp ⊢ M (□ [∧] Γp'))%I as HMp.
-    { remember (modality_persistent_spec M).
+    { remember (modality_intuitionistic_spec M).
       destruct HΓp as [?|M C Γp ?%TCForall_Forall|? M C Γp Γp' []|? M Γp|M Γp]; simpl.
-      - by rewrite {1}affinely_elim_emp (modality_emp M)
-          persistently_True_emp affinely_persistently_emp.
-      - eauto using modality_persistent_forall_big_and.
-      - eauto using modality_persistent_transform,
+      - rewrite {1}intuitionistically_elim_emp (modality_emp M)
+          intuitionistically_True_emp //.
+      - eauto using modality_intuitionistic_forall_big_and.
+      - eauto using modality_intuitionistic_transform,
           modality_and_transform.
-      - by rewrite {1}affinely_elim_emp (modality_emp M)
-          persistently_True_emp affinely_persistently_emp.
-      - eauto using modality_persistent_id. }
+      - by rewrite {1}intuitionistically_elim_emp (modality_emp M)
+          intuitionistically_True_emp.
+      - eauto using modality_intuitionistic_id. }
     move: HQ'; rewrite -HQ pure_True // left_id HMp=> HQ' {HQ Hwf HMp}.
     remember (modality_spatial_spec M).
     destruct HΓs as [?|M C Γs ?%TCForall_Forall|? M C Γs Γs' fi []|? M Γs|M Γs]; simpl.
@@ -1341,7 +1340,7 @@ Lemma tac_rewrite Δ i p Pxy d Q :
 Proof.
   intros ? A x y ? HPxy -> ?. rewrite envs_entails_eq.
   apply internal_eq_rewrite'; auto. rewrite {1}envs_lookup_sound //.
-  rewrite (into_internal_eq Pxy x y) affinely_persistently_if_elim sep_elim_l.
+  rewrite (into_internal_eq Pxy x y) intuitionistically_if_elim sep_elim_l.
   destruct d; auto using internal_eq_sym.
 Qed.
 
@@ -1359,7 +1358,7 @@ Proof.
   rewrite envs_entails_eq /IntoInternalEq => ?? A Δ' x y Φ HPxy HP ?? <-.
   rewrite -(idemp bi_and (of_envs Δ)) {2}(envs_lookup_sound _ i) //.
   rewrite (envs_simple_replace_singleton_sound _ _ j) //=.
-  rewrite HP HPxy (affinely_persistently_if_elim _ (_ ≡ _)%I) sep_elim_l.
+  rewrite HP HPxy (intuitionistically_if_elim _ (_ ≡ _)%I) sep_elim_l.
   rewrite persistent_and_affinely_sep_r -assoc. apply wand_elim_r'.
   rewrite -persistent_and_affinely_sep_r. apply impl_elim_r'. destruct d.
   - apply (internal_eq_rewrite x y (λ y, □?q Φ y -∗ of_envs Δ')%I). solve_proper.
@@ -1392,7 +1391,7 @@ Proof.
   rewrite -{1}laterN_intro. apply and_mono, sep_mono.
   - apply pure_mono; destruct 1; constructor; naive_solver.
   - apply Hp; rewrite /= /MaybeIntoLaterN.
-    + intros P Q ->. by rewrite laterN_affinely_persistently_2.
+    + intros P Q ->. by rewrite laterN_intuitionistically_2.
     + intros P Q. by rewrite laterN_and.
   - by rewrite Hs //= right_id.
 Qed.
@@ -1403,11 +1402,11 @@ Lemma tac_löb Δ Δ' i Q :
   envs_entails Δ' Q → envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq => ?? HQ.
-  rewrite (env_spatial_is_nil_affinely_persistently Δ) //.
+  rewrite (env_spatial_is_nil_intuitionistically Δ) //.
   rewrite -(persistently_and_emp_elim Q). apply and_intro; first apply: affine.
   rewrite -(löb (<pers> Q)%I) later_persistently. apply impl_intro_l.
   rewrite envs_app_singleton_sound //; simpl; rewrite HQ.
-  rewrite persistently_and_affinely_sep_l -{1}affinely_persistently_idemp.
-  by rewrite affinely_persistently_sep_2 wand_elim_r affinely_elim.
+  rewrite persistently_and_intuitionistically_sep_l -{1}intuitionistically_idemp.
+  rewrite intuitionistically_sep_2 wand_elim_r intuitionistically_persistently_1 //.
 Qed.
 End sbi_tactics.

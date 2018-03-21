@@ -637,12 +637,16 @@ Proof. intros i j. unseal. by rewrite objective_at. Qed.
 
 Global Instance affinely_objective P `{!Objective P} : Objective (<affine> P).
 Proof. rewrite /bi_affinely. apply _. Qed.
+Global Instance intuitionistically_objective P `{!Objective P} : Objective (□ P).
+Proof. rewrite /bi_intuitionistically. apply _. Qed.
 Global Instance absorbingly_objective P `{!Objective P} : Objective (<absorb> P).
 Proof. rewrite /bi_absorbingly. apply _. Qed.
 Global Instance persistently_if_objective P p `{!Objective P} : Objective (<pers>?p P).
 Proof. rewrite /bi_persistently_if. destruct p; apply _. Qed.
 Global Instance affinely_if_objective P p `{!Objective P} : Objective (<affine>?p P).
 Proof. rewrite /bi_affinely_if. destruct p; apply _. Qed.
+Global Instance intuitionistically_if_objective P p `{!Objective P} : Objective (<affine>?p P).
+Proof. rewrite /bi_intuitionistically_if. destruct p; apply _. Qed.
 
 (** monPred_in *)
 Lemma monPred_in_intro P : P ⊢ ∃ i, monPred_in i ∧ ⎡P i⎤.

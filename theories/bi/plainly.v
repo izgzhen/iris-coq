@@ -119,7 +119,7 @@ Global Instance plainly_flip_mono' :
 Proof. intros P Q; apply plainly_mono. Qed.
 
 Lemma affinely_plainly_elim P : <affine> ■ P ⊢ P.
-Proof. by rewrite plainly_elim_persistently affinely_persistently_elim. Qed.
+Proof. by rewrite plainly_elim_persistently /bi_affinely persistently_and_emp_elim. Qed.
 
 Lemma persistently_plainly P : <pers> ■ P ⊣⊢ ■ P.
 Proof.
@@ -216,6 +216,14 @@ Qed.
 Lemma plainly_affinely P : ■ <affine> P ⊣⊢ ■ P.
 Proof. by rewrite /bi_affinely plainly_and -plainly_True_emp plainly_pure left_id. Qed.
 
+Lemma intuitionistically_plainly_elim P : □ ■ P -∗ □ P.
+Proof. rewrite intuitionistically_affinely plainly_elim_persistently //. Qed.
+Lemma intuitionistically_plainly P : □ ■ P -∗ ■ □ P.
+Proof.
+  rewrite /bi_intuitionistically plainly_affinely affinely_elim.
+  rewrite persistently_plainly plainly_persistently. done.
+Qed.
+
 Lemma and_sep_plainly P Q : ■ P ∧ ■ Q ⊣⊢ ■ P ∗ ■ Q.
 Proof.
   apply (anti_symm _); auto using plainly_and_sep_l_1.
@@ -252,7 +260,7 @@ Lemma impl_wand_plainly_2 P Q : (■ P -∗ Q) ⊢ (■ P → Q).
 Proof. apply impl_intro_l. by rewrite plainly_and_sep_l_1 wand_elim_r. Qed.
 
 Lemma impl_wand_affinely_plainly P Q : (■ P → Q) ⊣⊢ (<affine> ■ P -∗ Q).
-Proof. by rewrite -(persistently_plainly P) impl_wand_affinely_persistently. Qed.
+Proof. by rewrite -(persistently_plainly P) impl_wand_intuitionistically. Qed.
 
 Lemma persistently_wand_affinely_plainly P Q :
   (<affine> ■ P -∗ <pers> Q) ⊢ <pers> (<affine> ■ P -∗ Q).
@@ -441,6 +449,8 @@ Proof.
 Qed.
 Global Instance affinely_plain P : Plain P → Plain (<affine> P).
 Proof. rewrite /bi_affinely. apply _. Qed.
+Global Instance intuitionistically_plain P : Plain P → Plain (□ P).
+Proof. rewrite /bi_intuitionistically. apply _. Qed.
 Global Instance absorbingly_plain P : Plain P → Plain (<absorb> P).
 Proof. rewrite /bi_absorbingly. apply _. Qed.
 Global Instance from_option_plain {A} P (Ψ : A → PROP) (mx : option A) :

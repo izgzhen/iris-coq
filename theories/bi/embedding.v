@@ -145,10 +145,14 @@ Section embed.
   Proof. by rewrite embed_and embed_emp. Qed.
   Lemma embed_absorbingly P : ⎡<absorb> P⎤ ⊣⊢ <absorb> ⎡P⎤.
   Proof. by rewrite embed_sep embed_pure. Qed.
+  Lemma embed_intuitionistically P : ⎡□ P⎤ ⊣⊢ □ ⎡P⎤.
+  Proof. rewrite embed_and embed_emp embed_persistently //. Qed.
   Lemma embed_persistently_if P b : ⎡<pers>?b P⎤ ⊣⊢ <pers>?b ⎡P⎤.
   Proof. destruct b; simpl; auto using embed_persistently. Qed.
   Lemma embed_affinely_if P b : ⎡<affine>?b P⎤ ⊣⊢ <affine>?b ⎡P⎤.
   Proof. destruct b; simpl; auto using embed_affinely. Qed.
+  Lemma embed_intuitionistically_if P b : ⎡□?b P⎤ ⊣⊢ □?b ⎡P⎤.
+  Proof. destruct b; simpl; auto using embed_intuitionistically. Qed.
   Lemma embed_hforall {As} (Φ : himpl As PROP1):
     ⎡bi_hforall Φ⎤ ⊣⊢ bi_hforall (hcompose embed Φ).
   Proof. induction As=>//. rewrite /= embed_forall. by do 2 f_equiv. Qed.

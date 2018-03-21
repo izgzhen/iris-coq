@@ -6,8 +6,8 @@ Import bi.
 (** The `iModIntro` tactic is not tied the Iris modalities, but can be
 instantiated with a variety of modalities.
 
-In order to plug in a modality, one has to decide for both the persistent and
-spatial what action should be performed upon introducing the modality:
+In order to plug in a modality, one has to decide for both the intuitionistic and
+spatial context what action should be performed upon introducing the modality:
 
 - Introduction is only allowed when the context is empty.
 - Introduction is only allowed when all hypotheses satisfy some predicate
@@ -35,7 +35,7 @@ Arguments MIEnvId {_}.
 
 Notation MIEnvFilter C := (MIEnvTransform (TCDiag C)).
 
-Definition modality_intro_spec_persistent {PROP1 PROP2}
+Definition modality_intro_spec_intuitionistic {PROP1 PROP2}
     (s : modality_intro_spec PROP1 PROP2) : (PROP1 → PROP2) → Prop :=
   match s with
   | MIEnvIsEmpty => λ M, True
@@ -63,7 +63,7 @@ Definition modality_intro_spec_spatial {PROP1 PROP2}
 should satisfy to justify the given actions for both contexts: *)
 Record modality_mixin {PROP1 PROP2 : bi} (M : PROP1 → PROP2)
     (pspec sspec : modality_intro_spec PROP1 PROP2) := {
-  modality_mixin_persistent : modality_intro_spec_persistent pspec M;
+  modality_mixin_intuitionistic : modality_intro_spec_intuitionistic pspec M;
   modality_mixin_spatial : modality_intro_spec_spatial sspec M;
   modality_mixin_emp : emp ⊢ M emp;
   modality_mixin_mono P Q : (P ⊢ Q) → M P ⊢ M Q;
@@ -72,23 +72,23 @@ Record modality_mixin {PROP1 PROP2 : bi} (M : PROP1 → PROP2)
 
 Record modality (PROP1 PROP2 : bi) := Modality {
   modality_car :> PROP1 → PROP2;
-  modality_persistent_spec : modality_intro_spec PROP1 PROP2;
+  modality_intuitionistic_spec : modality_intro_spec PROP1 PROP2;
   modality_spatial_spec : modality_intro_spec PROP1 PROP2;
   modality_mixin_of :
-    modality_mixin modality_car modality_persistent_spec modality_spatial_spec
+    modality_mixin modality_car modality_intuitionistic_spec modality_spatial_spec
 }.
 Arguments Modality {_ _} _ {_ _} _.
-Arguments modality_persistent_spec {_ _} _.
+Arguments modality_intuitionistic_spec {_ _} _.
 Arguments modality_spatial_spec {_ _} _.
 
 Section modality.
   Context {PROP1 PROP2} (M : modality PROP1 PROP2).
 
-  Lemma modality_persistent_transform C P Q :
-    modality_persistent_spec M = MIEnvTransform C → C P Q → □ P ⊢ M (□ Q).
+  Lemma modality_intuitionistic_transform C P Q :
+    modality_intuitionistic_spec M = MIEnvTransform C → C P Q → □ P ⊢ M (□ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_and_transform C P Q :
-    modality_persistent_spec M = MIEnvTransform C → M P ∧ M Q ⊢ M (P ∧ Q).
+    modality_intuitionistic_spec M = MIEnvTransform C → M P ∧ M Q ⊢ M (P ∧ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_spatial_transform C P Q :
     modality_spatial_spec M = MIEnvTransform C → C P Q → P ⊢ M Q.
@@ -114,14 +114,14 @@ End modality.
 Section modality1.
   Context {PROP} (M : modality PROP PROP).
 
-  Lemma modality_persistent_forall C P :
-    modality_persistent_spec M = MIEnvForall C → C P → □ P ⊢ M (□ P).
+  Lemma modality_intuitionistic_forall C P :
+    modality_intuitionistic_spec M = MIEnvForall C → C P → □ P ⊢ M (□ P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_and_forall C P Q :
-    modality_persistent_spec M = MIEnvForall C → M P ∧ M Q ⊢ M (P ∧ Q).
+    modality_intuitionistic_spec M = MIEnvForall C → M P ∧ M Q ⊢ M (P ∧ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
-  Lemma modality_persistent_id P :
-    modality_persistent_spec M = MIEnvId → □ P ⊢ M (□ P).
+  Lemma modality_intuitionistic_id P :
+    modality_intuitionistic_spec M = MIEnvId → □ P ⊢ M (□ P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_spatial_forall C P :
     modality_spatial_spec M = MIEnvForall C → C P → P ⊢ M P.
@@ -130,14 +130,14 @@ Section modality1.
     modality_spatial_spec M = MIEnvId → P ⊢ M P.
   Proof. destruct M as [??? []]; naive_solver. Qed.
 
-  Lemma modality_persistent_forall_big_and C Ps :
-    modality_persistent_spec M = MIEnvForall C →
+  Lemma modality_intuitionistic_forall_big_and C Ps :
+    modality_intuitionistic_spec M = MIEnvForall C →
     Forall C Ps → □ [∧] Ps ⊢ M (□ [∧] Ps).
   Proof.
     induction 2 as [|P Ps ? _ IH]; simpl.
-    - by rewrite persistently_pure affinely_True_emp affinely_emp -modality_emp.
-    - rewrite affinely_persistently_and -modality_and_forall // -IH.
-      by rewrite {1}(modality_persistent_forall _ P).
+    - by rewrite intuitionistically_True_emp -modality_emp.
+    - rewrite intuitionistically_and -modality_and_forall // -IH.
+      by rewrite {1}(modality_intuitionistic_forall _ P).
   Qed.
   Lemma modality_spatial_forall_big_sep C Ps :
     modality_spatial_spec M = MIEnvForall C →

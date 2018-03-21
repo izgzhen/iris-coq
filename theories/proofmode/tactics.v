@@ -1989,6 +1989,7 @@ Hint Extern 1 (envs_entails _ (▷ _)) => iNext.
 Hint Extern 1 (envs_entails _ (■ _)) => iAlways.
 Hint Extern 1 (envs_entails _ (<pers> _)) => iAlways.
 Hint Extern 1 (envs_entails _ (<affine> _)) => iAlways.
+Hint Extern 1 (envs_entails _ (□ _)) => iAlways.
 Hint Extern 1 (envs_entails _ (∃ _, _)) => iExists _.
 Hint Extern 1 (envs_entails _ (◇ _)) => iModIntro.
 Hint Extern 1 (envs_entails _ (_ ∨ _)) => iLeft.

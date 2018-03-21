@@ -73,7 +73,7 @@ Qed.
 Global Instance into_and_ownM p (a b1 b2 : M) :
   IsOp a b1 b2 → IntoAnd p (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
 Proof.
-  intros. apply affinely_persistently_if_mono. by rewrite (is_op a) ownM_op sep_and.
+  intros. apply intuitionistically_if_mono. by rewrite (is_op a) ownM_op sep_and.
 Qed.
 
 Global Instance into_sep_ownM (a b1 b2 : M) :

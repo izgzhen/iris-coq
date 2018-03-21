@@ -20,7 +20,8 @@ Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ <pers> (✓ a : 
 Proof. by rewrite {1}plainly_cmra_valid_1 plainly_elim_persistently. Qed.
 Lemma affinely_persistently_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
-  rewrite affine_affinely=>?; apply (anti_symm _); [by rewrite persistently_elim|].
+  rewrite /bi_intuitionistically affine_affinely=>?; apply (anti_symm _);
+    [by rewrite persistently_elim|].
   by rewrite {1}persistently_ownM_core core_id_core.
 Qed.
 Lemma ownM_invalid (a : M) : ¬ ✓{0} a → uPred_ownM a ⊢ False.
@@ -33,7 +34,8 @@ Lemma plainly_cmra_valid {A : cmraT} (a : A) : ■ ✓ a ⊣⊢ ✓ a.
 Proof. apply (anti_symm _), plainly_cmra_valid_1. apply plainly_elim, _. Qed.
 Lemma affinely_persistently_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
 Proof.
-  rewrite affine_affinely. intros; apply (anti_symm _); first by rewrite persistently_elim.
+  rewrite /bi_intuitionistically affine_affinely. intros; apply (anti_symm _);
+    first by rewrite persistently_elim.
   apply:persistently_cmra_valid_1.
 Qed.
 Lemma bupd_ownM_update x y : x ~~> y → uPred_ownM x ⊢ |==> uPred_ownM y.

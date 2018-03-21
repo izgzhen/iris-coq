@@ -76,7 +76,7 @@ Section increment_client.
                            ⊤ ⊤
                            (λ _ _, True))%I as "#Aupd".
     { iAlways. iExists True%I, True%I. repeat (iSplit; first done). clear x.
-      iIntros (E) "!# % _".
+      iIntros "!#" (E) "% _".
       assert (E = ⊤) as -> by set_solver.
       iInv nroot as (x) ">H↦" "Hclose".
       iMod fupd_intro_mask' as "Hclose2"; last iModIntro; first set_solver.

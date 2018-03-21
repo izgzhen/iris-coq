@@ -26,9 +26,6 @@ Typeclasses Opaque bi_affinely.
 Notation "'<affine>' P" := (bi_affinely P)
   (at level 20, right associativity) : bi_scope.
 
-Notation "□ P" := (<affine> <pers> P)%I
-  (at level 20, right associativity) : bi_scope.
-
 Class Affine {PROP : bi} (Q : PROP) := affine : Q ⊢ emp.
 Arguments Affine {_} _%I : simpl never.
 Arguments affine {_} _%I {_}.
@@ -72,9 +69,22 @@ Notation "'<affine>?' p P" := (bi_affinely_if p P)
   (at level 20, p at level 9, P at level 20,
    right associativity, format "'<affine>?' p  P") : bi_scope.
 
-Notation "□? p P" := (<affine>?p <pers>?p P)%I
+Definition bi_intuitionistically {PROP : bi} (P : PROP) : PROP :=
+  (<affine> <pers> P)%I.
+Arguments bi_intuitionistically {_} _%I : simpl never.
+Instance: Params (@bi_intuitionistically) 1.
+Typeclasses Opaque bi_intuitionistically.
+Notation "□ P" := (bi_intuitionistically P)%I
+  (at level 20, right associativity) : bi_scope.
+
+Definition bi_intuitionistically_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
+  (if p then □ P else P)%I.
+Arguments bi_intuitionistically_if {_} !_ _%I /.
+Instance: Params (@bi_intuitionistically_if) 2.
+Typeclasses Opaque bi_intuitionistically_if.
+Notation "'□?' p P" := (bi_intuitionistically_if p P)
   (at level 20, p at level 9, P at level 20,
-   right associativity, format "□? p  P") : bi_scope.
+   right associativity, format "'□?' p  P") : bi_scope.
 
 Fixpoint bi_hexist {PROP : bi} {As} : himpl As PROP → PROP :=
   match As return himpl As PROP → PROP with

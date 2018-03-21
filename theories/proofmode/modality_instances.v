@@ -24,15 +24,15 @@ Section bi_modalities.
   Definition modality_affinely :=
     Modality _ modality_affinely_mixin.
 
-  Lemma modality_affinely_persistently_mixin :
-    modality_mixin (λ P : PROP, □ P)%I MIEnvId MIEnvIsEmpty.
+  Lemma modality_intuitionistically_mixin :
+    modality_mixin (@bi_intuitionistically PROP) MIEnvId MIEnvIsEmpty.
   Proof.
-    split; simpl; eauto using equiv_entails_sym, affinely_persistently_emp,
-      affinely_mono, persistently_mono, affinely_persistently_idemp,
-      affinely_persistently_sep_2 with typeclass_instances.
+    split; simpl; eauto using equiv_entails_sym, intuitionistically_emp,
+      affinely_mono, persistently_mono, intuitionistically_idemp,
+      intuitionistically_sep_2 with typeclass_instances.
   Qed.
-  Definition modality_affinely_persistently :=
-    Modality _ modality_affinely_persistently_mixin.
+  Definition modality_intuitionistically :=
+    Modality _ modality_intuitionistically_mixin.
 
   Lemma modality_embed_mixin `{BiEmbed PROP PROP'} :
     modality_mixin (@embed PROP PROP' _)
@@ -66,7 +66,7 @@ Section sbi_modalities.
   Proof.
     split; simpl; split_and?; eauto using equiv_entails_sym, laterN_intro,
       laterN_mono, laterN_and, laterN_sep with typeclass_instances.
-    rewrite /MaybeIntoLaterN=> P Q ->. by rewrite laterN_affinely_persistently_2.
+    rewrite /MaybeIntoLaterN=> P Q ->. by rewrite laterN_intuitionistically_2.
   Qed.
   Definition modality_laterN n :=
     Modality _ (modality_laterN_mixin n).

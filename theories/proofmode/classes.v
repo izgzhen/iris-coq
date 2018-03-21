@@ -119,8 +119,8 @@ Hint Mode FromModal - + - - - ! - : typeclass_instances.
 
 Class FromAffinely {PROP : bi} (P Q : PROP) :=
   from_affinely : <affine> Q ⊢ P.
-Arguments FromAffinely {_} _%I _%type_scope : simpl never.
-Arguments from_affinely {_} _%I _%type_scope {_}.
+Arguments FromAffinely {_} _%I _%I : simpl never.
+Arguments from_affinely {_} _%I _%I {_}.
 Hint Mode FromAffinely + ! - : typeclass_instances.
 Hint Mode FromAffinely + - ! : typeclass_instances.
 
@@ -347,6 +347,15 @@ Class KnownMakeAffinely {PROP : bi} (P Q : PROP) :=
   known_make_affinely :> MakeAffinely P Q.
 Arguments KnownMakeAffinely {_} _%I _%I.
 Hint Mode KnownMakeAffinely + ! - : typeclass_instances.
+
+Class MakeIntuitionistically {PROP : bi} (P Q : PROP) :=
+  make_intuitionistically : □ P ⊣⊢ Q.
+Arguments MakeIntuitionistically {_} _%I _%I.
+Hint Mode MakeIntuitionistically + - - : typeclass_instances.
+Class KnownMakeIntuitionistically {PROP : bi} (P Q : PROP) :=
+  known_make_intuitionistically :> MakeIntuitionistically P Q.
+Arguments KnownMakeIntuitionistically {_} _%I _%I.
+Hint Mode KnownMakeIntuitionistically + ! - : typeclass_instances.
 
 Class MakeAbsorbingly {PROP : bi} (P Q : PROP) :=
   make_absorbingly : <absorb> P ⊣⊢ Q.
