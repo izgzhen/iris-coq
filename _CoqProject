@@ -33,10 +33,10 @@ theories/bi/big_op.v
 theories/bi/updates.v
 theories/bi/bi.v
 theories/bi/tactics.v
-theories/bi/counter_examples.v
-theories/bi/fixpoint.v
 theories/bi/monpred.v
 theories/bi/embedding.v
+theories/bi/lib/counter_examples.v
+theories/bi/lib/fixpoint.v
 theories/bi/lib/fractional.v
 theories/bi/lib/atomic.v
 theories/bi/lib/core.v
