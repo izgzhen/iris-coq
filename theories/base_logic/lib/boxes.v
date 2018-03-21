@@ -100,8 +100,7 @@ Qed.
 
 Lemma box_alloc : box N ∅ True%I.
 Proof.
-  iIntros; iExists (λ _, True)%I; iSplit; last by auto.
-  iNext. by rewrite big_opM_empty.
+  iIntros. iExists (λ _, True)%I. iSplit; by auto.
 Qed.
 
 Lemma slice_insert_empty E q f Q P :

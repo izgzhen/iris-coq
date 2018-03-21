@@ -1089,7 +1089,7 @@ Proof.
 Qed.
 
 (* We add a useless hypothesis [BiEmbed PROP PROP'] in order to make
-   sure this iinstance is not used when there is no embedding between
+   sure this instance is not used when there is no embedding between
    PROP and PROP'.
    The first [`{BiEmbed PROP PROP'}] is not considered as a premise by
    Coq TC search mechanism because the rest of the hypothesis is dependent

@@ -1,5 +1,5 @@
 From stdpp Require Import coPset.
-From iris.bi Require Import interface derived_laws big_op plainly.
+From iris.bi Require Import interface derived_laws_sbi big_op plainly.
 
 (* We first define operational type classes for the notations, and then later
 bundle these operational type classes with the laws. *)

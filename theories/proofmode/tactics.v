@@ -1,6 +1,6 @@
 From iris.proofmode Require Import coq_tactics.
 From iris.proofmode Require Import base intro_patterns spec_patterns sel_patterns.
-From iris.bi Require Export bi big_op.
+From iris.bi Require Export bi.
 From stdpp Require Import namespaces.
 From iris.proofmode Require Export classes notation.
 From iris.proofmode Require Import class_instances.

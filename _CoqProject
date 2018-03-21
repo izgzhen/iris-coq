@@ -27,7 +27,8 @@ theories/algebra/deprecated.v
 theories/algebra/proofmode_classes.v
 theories/bi/interface.v
 theories/bi/derived_connectives.v
-theories/bi/derived_laws.v
+theories/bi/derived_laws_bi.v
+theories/bi/derived_laws_sbi.v
 theories/bi/plainly.v
 theories/bi/big_op.v
 theories/bi/updates.v
