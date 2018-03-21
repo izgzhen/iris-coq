@@ -3,7 +3,8 @@ From iris.proofmode Require Import base intro_patterns spec_patterns sel_pattern
 From iris.bi Require Export bi.
 From stdpp Require Import namespaces.
 From iris.proofmode Require Export classes notation.
-From iris.proofmode Require Import class_instances_bi class_instances_sbi.
+From iris.proofmode Require Import modality_instances frame_instances
+     class_instances_bi class_instances_sbi.
 From stdpp Require Import hlist pretty.
 Set Default Proof Using "Type".
 Export ident.

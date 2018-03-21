@@ -103,6 +103,7 @@ theories/proofmode/notation.v
 theories/proofmode/classes.v
 theories/proofmode/class_instances_bi.v
 theories/proofmode/class_instances_sbi.v
+theories/proofmode/frame_instances.v
 theories/proofmode/monpred.v
 theories/proofmode/modalities.v
 theories/proofmode/modality_instances.v

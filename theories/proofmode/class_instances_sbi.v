@@ -1,6 +1,6 @@
 From stdpp Require Import nat_cancel.
 From iris.bi Require Import bi tactics.
-From iris.proofmode Require Import modality_instances classes class_instances_bi.
+From iris.proofmode Require Import modality_instances classes.
 Set Default Proof Using "Type".
 Import bi.
 
@@ -543,55 +543,6 @@ Global Instance add_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
        E1 E2 (P P' : PROP') (Q : PROP) :
   AddModal P P' (|={E1,E2}=> ⎡Q⎤)%I → AddModal P P' ⎡|={E1,E2}=> Q⎤.
 Proof. by rewrite /AddModal !embed_fupd. Qed.
-
-(* Frame *)
-Global Instance frame_eq_embed `{SbiEmbed PROP PROP'} p P Q (Q' : PROP')
-       {A : ofeT} (a b : A) :
-  Frame p (a ≡ b) P Q → MakeEmbed Q Q' → Frame p (a ≡ b) ⎡P⎤ Q'.
-Proof. rewrite /Frame /MakeEmbed -embed_internal_eq. apply (frame_embed p P Q). Qed.
-
-Global Instance make_laterN_true n : @KnownMakeLaterN PROP n True True | 0.
-Proof. by rewrite /KnownMakeLaterN /MakeLaterN laterN_True. Qed.
-Global Instance make_laterN_0 P : MakeLaterN 0 P P | 0.
-Proof. by rewrite /MakeLaterN. Qed.
-Global Instance make_laterN_1 P : MakeLaterN 1 P (▷ P) | 2.
-Proof. by rewrite /MakeLaterN. Qed.
-Global Instance make_laterN_default P : MakeLaterN n P (▷^n P) | 100.
-Proof. by rewrite /MakeLaterN. Qed.
-
-Global Instance frame_later p R R' P Q Q' :
-  NoBackTrack (MaybeIntoLaterN true 1 R' R) →
-  Frame p R P Q → MakeLaterN 1 Q Q' → Frame p R' (▷ P) Q'.
-Proof.
-  rewrite /Frame /MakeLaterN /MaybeIntoLaterN=>-[->] <- <-.
-  by rewrite later_intuitionistically_if_2 later_sep.
-Qed.
-Global Instance frame_laterN p n R R' P Q Q' :
-  NoBackTrack (MaybeIntoLaterN true n R' R) →
-  Frame p R P Q → MakeLaterN n Q Q' → Frame p R' (▷^n P) Q'.
-Proof.
-  rewrite /Frame /MakeLaterN /MaybeIntoLaterN=>-[->] <- <-.
-  by rewrite laterN_intuitionistically_if_2 laterN_sep.
-Qed.
-
-Global Instance frame_bupd `{BiBUpd PROP} p R P Q :
-  Frame p R P Q → Frame p R (|==> P) (|==> Q).
-Proof. rewrite /Frame=><-. by rewrite bupd_frame_l. Qed.
-Global Instance frame_fupd `{BiFUpd PROP} p E1 E2 R P Q :
-  Frame p R P Q → Frame p R (|={E1,E2}=> P) (|={E1,E2}=> Q).
-Proof. rewrite /Frame=><-. by rewrite fupd_frame_l. Qed.
-
-Global Instance make_except_0_True : @KnownMakeExcept0 PROP True True.
-Proof. by rewrite /KnownMakeExcept0 /MakeExcept0 except_0_True. Qed.
-Global Instance make_except_0_default P : MakeExcept0 P (◇ P) | 100.
-Proof. by rewrite /MakeExcept0. Qed.
-
-Global Instance frame_except_0 p R P Q Q' :
-  Frame p R P Q → MakeExcept0 Q Q' → Frame p R (◇ P) Q'.
-Proof.
-  rewrite /Frame /MakeExcept0=><- <-.
-  by rewrite except_0_sep -(except_0_intro (□?p R)%I).
-Qed.
 
 (* IntoLater *)
 Global Instance into_laterN_0 only_head P : IntoLaterN only_head 0 P P.
