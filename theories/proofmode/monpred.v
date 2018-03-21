@@ -1,6 +1,6 @@
 From iris.bi Require Export monpred.
 From iris.bi Require Import plainly.
-From iris.proofmode Require Import tactics class_instances.
+From iris.proofmode Require Import tactics modality_instances.
 
 Class MakeMonPredAt {I : biIndex} {PROP : bi} (i : I)
       (P : monPred I PROP) (𝓟 : PROP) :=

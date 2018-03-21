@@ -101,7 +101,8 @@ theories/proofmode/sel_patterns.v
 theories/proofmode/tactics.v
 theories/proofmode/notation.v
 theories/proofmode/classes.v
-theories/proofmode/class_instances.v
+theories/proofmode/class_instances_bi.v
+theories/proofmode/class_instances_sbi.v
 theories/proofmode/monpred.v
 theories/proofmode/modalities.v
 theories/proofmode/modality_instances.v
