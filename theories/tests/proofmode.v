@@ -57,7 +57,7 @@ Lemma test_iDestruct_and_emp P Q `{!Persistent P, !Persistent Q} :
 Proof. iIntros "[#? _] [_ #?]". auto. Qed.
 
 Lemma test_iIntros_persistent P Q `{!Persistent Q} : (P → Q → P ∧ Q)%I.
-Proof. iIntros "H1 #H2". by iFrame. Qed.
+Proof. iIntros "H1 #H2". by iFrame "∗#". Qed.
 
 Lemma test_iIntros_pure (ψ φ : Prop) P : ψ → (⌜ φ ⌝ → P → ⌜ φ ∧ ψ ⌝ ∧ P)%I.
 Proof. iIntros (??) "H". auto. Qed.
@@ -374,7 +374,7 @@ Lemma test_assert_affine_pure (φ : Prop) P :
 Proof. iIntros (Hφ). iAssert (<affine> ⌜φ⌝)%I with "[%]" as "$"; auto. Qed.
 Lemma test_assert_pure (φ : Prop) P :
   φ → P ⊢ P ∗ ⌜φ⌝.
-Proof. iIntros (Hφ). iAssert ⌜φ⌝%I with "[%]" as "$"; auto. Qed.
+Proof. iIntros (Hφ). iAssert ⌜φ⌝%I with "[%]" as "$"; auto with iFrame. Qed.
 
 Lemma test_iEval x y : ⌜ (y + x)%nat = 1 ⌝ -∗ ⌜ S (x + y) = 2%nat ⌝ : PROP.
 Proof.

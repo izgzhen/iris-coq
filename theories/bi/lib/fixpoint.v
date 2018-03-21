@@ -85,8 +85,7 @@ Section greatest.
     F (bi_greatest_fixpoint F) x ⊢ bi_greatest_fixpoint F x.
   Proof.
     iIntros "HF". iExists (CofeMor (F (bi_greatest_fixpoint F))).
-    (* FIXME: The framing here adds an <affine> modality that we have to introduce. *)
-    iIntros "{$HF} !# !#" (y) "Hy". iApply (bi_mono_pred with "[#] Hy").
+    iSplit; last done. iIntros "!#" (y) "Hy". iApply (bi_mono_pred with "[#] Hy").
     iIntros "!#" (z) "?". by iApply greatest_fixpoint_unfold_1.
   Qed.
 

@@ -58,12 +58,8 @@ Global Instance make_sep_emp_r P : KnownRMakeSep P emp P.
 Proof. apply right_id, _. Qed.
 Global Instance make_sep_true_l P : Absorbing P → KnownLMakeSep True P P.
 Proof. intros. apply True_sep, _. Qed.
-Global Instance make_and_emp_l_absorbingly P : KnownLMakeSep True P (<absorb> P) | 10.
-Proof. intros. by rewrite /KnownLMakeSep /MakeSep. Qed.
 Global Instance make_sep_true_r P : Absorbing P → KnownRMakeSep P True P.
 Proof. intros. by rewrite /KnownRMakeSep /MakeSep sep_True. Qed.
-Global Instance make_and_emp_r_absorbingly P : KnownRMakeSep P True (<absorb> P) | 10.
-Proof. intros. by rewrite /KnownRMakeSep /MakeSep comm. Qed.
 Global Instance make_sep_default P Q : MakeSep P Q (P ∗ Q) | 100.
 Proof. by rewrite /MakeSep. Qed.
 
@@ -101,12 +97,8 @@ Global Instance make_and_true_r P : KnownRMakeAnd P True P.
 Proof. by rewrite /KnownRMakeAnd /MakeAnd right_id. Qed.
 Global Instance make_and_emp_l P : Affine P → KnownLMakeAnd emp P P.
 Proof. intros. by rewrite /KnownLMakeAnd /MakeAnd emp_and. Qed.
-Global Instance make_and_emp_l_affinely P : KnownLMakeAnd emp P (<affine> P) | 10.
-Proof. intros. by rewrite /KnownLMakeAnd /MakeAnd. Qed.
 Global Instance make_and_emp_r P : Affine P → KnownRMakeAnd P emp P.
 Proof. intros. by rewrite /KnownRMakeAnd /MakeAnd and_emp. Qed.
-Global Instance make_and_emp_r_affinely P : KnownRMakeAnd P emp (<affine> P) | 10.
-Proof. intros. by rewrite /KnownRMakeAnd /MakeAnd comm. Qed.
 Global Instance make_and_default P Q : MakeAnd P Q (P ∧ Q) | 100.
 Proof. by rewrite /MakeAnd. Qed.
 
