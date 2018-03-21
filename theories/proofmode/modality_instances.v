@@ -25,7 +25,7 @@ Section bi_modalities.
     Modality _ modality_affinely_mixin.
 
   Lemma modality_intuitionistically_mixin :
-    modality_mixin (λ P : PROP, □ P)%I MIEnvId MIEnvIsEmpty.
+    modality_mixin (@bi_intuitionistically PROP) MIEnvId MIEnvIsEmpty.
   Proof.
     split; simpl; eauto using equiv_entails_sym, intuitionistically_emp,
       affinely_mono, persistently_mono, intuitionistically_idemp,

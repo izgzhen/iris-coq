@@ -827,17 +827,6 @@ Proof.
   intros. rewrite /Frame intuitionistically_if_elim affinely_elim.
   apply sep_elim_l, _.
 Qed.
-Global Instance frame_intuitionistically_here_absorbing p R :
-  Absorbing R → Frame p (□ R) R True | 0.
-Proof.
-  intros. rewrite /Frame intuitionistically_if_elim intuitionistically_elim.
-  apply sep_elim_l, _.
-Qed.
-Global Instance frame_intuitionistically_here p R : Frame p (□ R) R emp | 1.
-Proof.
-  intros. rewrite /Frame intuitionistically_if_elim intuitionistically_elim.
-  apply sep_elim_l, _.
-Qed.
 
 Global Instance frame_here_pure p φ Q : FromPure false Q φ → Frame p ⌜φ⌝ Q True.
 Proof.
