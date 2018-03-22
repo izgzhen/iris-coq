@@ -17,6 +17,7 @@ def parse(file, parse_times = PARSE_FULL):
     commit = None
     times = None
     for line in file:
+        line = line.strip()
         # next commit?
         m = commit_re.match(line)
         if m is not None:
@@ -40,6 +41,7 @@ def parse(file, parse_times = PARSE_FULL):
                     times[name] = time
             continue
         # nothing else we know about, ignore
+        print("Ignoring line",line)
     # end of file. previous commit, if any, is done now.
     if commit is not None:
         yield Result(commit, times)
