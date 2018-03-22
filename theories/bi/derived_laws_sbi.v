@@ -121,7 +121,7 @@ Qed.
 Lemma persistently_internal_eq {A : ofeT} (a b : A) : <pers> (a ≡ b) ⊣⊢ a ≡ b.
 Proof.
   apply (anti_symm (⊢)).
-  { by rewrite persistently_elim_absorbingly absorbingly_internal_eq. }
+  { by rewrite persistently_into_absorbingly absorbingly_internal_eq. }
   apply (internal_eq_rewrite' a b (λ b, <pers> (a ≡ b))%I); auto.
   rewrite -(internal_eq_refl emp%I a). apply persistently_emp_intro.
 Qed.

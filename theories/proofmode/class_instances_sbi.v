@@ -36,7 +36,7 @@ Global Instance from_assumption_plainly_l_false `{BiPlainly PROP, BiAffine PROP}
   FromAssumption true P Q → KnownLFromAssumption false (■ P) Q.
 Proof.
   rewrite /KnownLFromAssumption /FromAssumption /= =><-.
-  rewrite plainly_elim_persistently intuitionistically_persistently //.
+  rewrite plainly_elim_persistently intuitionistically_into_persistently //.
 Qed.
 
 (* FromPure *)

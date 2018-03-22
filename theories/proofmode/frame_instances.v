@@ -229,8 +229,8 @@ Global Instance frame_persistently R P Q Q' :
 Proof.
   rewrite /Frame /MakePersistently=> <- <- /=.
   rewrite -persistently_and_intuitionistically_sep_l.
-  by rewrite -persistently_sep_2 -persistently_and_sep_l_1 persistently_affinely
-              persistently_idemp.
+  by rewrite -persistently_sep_2 -persistently_and_sep_l_1
+     persistently_affinely_elim persistently_idemp.
 Qed.
 
 Global Instance frame_exist {A} p R (Φ Ψ : A → PROP) :
