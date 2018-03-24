@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, pprint, sys, glob, zipfile
+import argparse, pprint, sys, glob, zipfile, subprocess
 import requests
 import parse_log
 
@@ -40,6 +40,9 @@ parser.add_argument("-c", "--commits",
 parser.add_argument("-a", "--artifacts",
                     dest="artifacts",
                     help="Location of the artifacts (following GitLab's folder structure).  If not given (which should be the common case), the artifacts will be downloaded from GitLab.")
+parser.add_argument("-b", "--blacklist-branch",
+                    dest="blacklist_branch",
+                    help="Skip the commit if it is contained in the given branch.")
 args = parser.parse_args()
 log_file = sys.stdout if args.file == "-" else open(args.file, "a")
 
@@ -60,7 +63,13 @@ BREAK = False
 for commit in parse_log.parse_git_commits(args.commits):
     if BREAK:
         break
-    print("Fetching {}...".format(commit))
+    # test to skip the commit
+    if args.blacklist_branch is not None:
+        branches = subprocess.check_output(["git", "branch", "-r", "--contains", commit]).decode("utf-8")
+        if args.blacklist_branch in map(lambda x: x.strip(), branches.split('\n')):
+            continue
+    # Find out more about the commit
+    print("Fetching {}...".format(commit), end='')
     commit_data = req("/projects/{}/repository/commits/{}".format(project['id'], commit))
     if commit_data.status_code != 200:
         raise Exception("Commit not found?")
@@ -68,10 +77,12 @@ for commit in parse_log.parse_git_commits(args.commits):
     if builds.status_code != 200:
         raise Exception("Build not found?")
     # iterate over builds by decreasing ID, and look for the artifact
+    found_build = False
     for build in builds.json():
         if build['status'] in ('created', 'pending', 'running'):
             # build still not yet done, don't fetch this or any later commit
             BREAK = True
+            print(" build still in progress, aborting")
             break
         if build['status'] != 'success':
             # build failed or cancelled, skip to next
@@ -100,4 +111,8 @@ for commit in parse_log.parse_git_commits(args.commits):
             log_file.write(build_times.text)
             log_file.flush()
             # don't fetch another build
+            found_build = True
+            print(" success")
             break
+    if not found_build:
+        print(" found no succeessful build")

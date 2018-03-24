@@ -45,6 +45,6 @@ for datapoint in results:
     print("Sending {}...".format(commit), end='')
     date = subprocess.check_output(['git', 'show', commit, '-s', '--pretty=%cI']).strip().decode('UTF-8')
     headers = {'X-Project': args.project, 'X-Branch': args.branch, 'X-Commit': commit, 'X-Config': args.config, 'X-Date': date}
-    r = requests.post(args.server+"/build_times_8.6", data=times, headers=headers, auth=(args.user, args.password))
+    r = requests.post(args.server+"/build_times", data=times, headers=headers, auth=(args.user, args.password))
     print(" {}".format(r.text.strip()))
     r.raise_for_status()
