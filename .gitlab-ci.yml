@@ -5,30 +5,21 @@ stages:
 
 variables:
   CPU_CORES: "10"
-  GIT_SUBMODULE_STRATEGY: recursive
+  MAIN_BRANCH: "master"
+  GIT_SUBMODULE_STRATEGY: "recursive"
 
 .template: &template
   stage: build
   tags:
   - fp
   script:
-  # prepare
-  - . ci/prepare-opam $OPAM_PINS
-  - env | egrep '^(CI_BUILD_REF|CI_RUNNER)' > build-env.txt
-  # build
-  - 'time make -k -j$CPU_CORES TIMED=y 2>&1 | tee build-log.txt'
-  - 'if fgrep Axiom build-log.txt >/dev/null; then exit 1; fi'
-  - 'cat build-log.txt | egrep "[a-zA-Z0-9_/-]+ \((real|user): [0-9]" | tee build-time.txt'
-  # maybe validate
-  - 'if [[ -n "$VALIDATE" ]]; then make validate; fi'
-  # maybe create opam package
-  - 'if [[ -n "$OPAM_PKG" && "$CI_COMMIT_REF_NAME" == master ]]; then curl --fail -X POST -F "token=$OPAM_UPDATE_SECRET" -F "ref=master" -F "variables[REPO]=$CI_PROJECT_URL.git" -F "variables[REF]=$CI_COMMIT_REF_NAME" -F "variables[SHA]=$CI_COMMIT_SHA" -F "variables[NAME]=$OPAM_PKG" https://gitlab.mpi-sws.org/api/v4/projects/581/trigger/pipeline; fi'
+  - ci/buildjob
   cache:
     key: "$CI_JOB_NAME"
     paths:
     - opamroot/
   only:
-  - master
+  - "$MAIN_BRANCH"
   - /^ci/
   except:
   - triggers
@@ -47,12 +38,10 @@ build-coq.8.7.2:
   variables:
     OPAM_PINS: "coq version 8.7.2   coq-mathcomp-ssreflect version 1.6.4"
     OPAM_PKG: "coq-iris"
+    TIMING_PROJECT: "iris"
+    TIMING_CONF: "coq-8.7.2"
   tags:
   - fp-timing
-  artifacts:
-    paths:
-    - build-time.txt
-    - build-env.txt
 
 build-coq.8.7.1:
   <<: *template
