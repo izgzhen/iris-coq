@@ -5,6 +5,7 @@ stages:
 
 variables:
   CPU_CORES: "10"
+  GIT_SUBMODULE_STRATEGY: recursive
 
 .template: &template
   stage: build
