@@ -5,7 +5,6 @@ stages:
 
 variables:
   CPU_CORES: "10"
-  MAIN_BRANCH: "master"
   GIT_SUBMODULE_STRATEGY: "recursive"
 
 .template: &template
@@ -19,7 +18,7 @@ variables:
     paths:
     - opamroot/
   only:
-  - "$MAIN_BRANCH"
+  - master
   - /^ci/
   except:
   - triggers
