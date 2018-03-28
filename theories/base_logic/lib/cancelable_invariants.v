@@ -37,9 +37,9 @@ Section proofs.
   Global Instance cinv_persistent N γ P : Persistent (cinv N γ P).
   Proof. rewrite /cinv; apply _. Qed.
 
-  Global Instance cinv_own_fractionnal γ : Fractional (cinv_own γ).
+  Global Instance cinv_own_fractional γ : Fractional (cinv_own γ).
   Proof. intros ??. by rewrite -own_op. Qed.
-  Global Instance cinv_own_as_fractionnal γ q :
+  Global Instance cinv_own_as_fractional γ q :
     AsFractional (cinv_own γ q) (cinv_own γ) q.
   Proof. split. done. apply _. Qed.
 
