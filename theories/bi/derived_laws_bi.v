@@ -2,6 +2,13 @@ From iris.bi Require Export derived_connectives.
 From iris.algebra Require Import monoid.
 From stdpp Require Import hlist.
 
+(** Naming schema for lemmas about modalities:
+    M1_into_M2: M1 P ⊢ M2 P
+    M1_M2_elim: M1 (M2 P) ⊣⊢ M1 P
+    M1_elim_M2: M1 (M2 P) ⊣⊢ M2 P
+    M1_M2: M1 (M2 P) ⊣⊢ M2 (M1 P)
+*)
+
 Module bi.
 Import interface.bi.
 Section bi_derived.
@@ -605,7 +612,7 @@ Proof. by rewrite /bi_absorbingly !assoc (comm _ P). Qed.
 Lemma absorbingly_sep_lr P Q : <absorb> P ∗ Q ⊣⊢ P ∗ <absorb> Q.
 Proof. by rewrite absorbingly_sep_l absorbingly_sep_r. Qed.
 
-Lemma affinely_absorbingly `{!BiPositive PROP} P : <affine> <absorb> P ⊣⊢ <affine> P.
+Lemma affinely_absorbingly_elim `{!BiPositive PROP} P : <affine> <absorb> P ⊣⊢ <affine> P.
 Proof.
   apply (anti_symm _), affinely_mono, absorbingly_intro.
   by rewrite /bi_absorbingly affinely_sep affinely_True_emp affinely_emp left_id.
@@ -714,7 +721,7 @@ Global Instance persistently_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@bi_persistently PROP).
 Proof. intros P Q; apply persistently_mono. Qed.
 
-Lemma absorbingly_persistently P : <absorb> <pers> P ⊣⊢ <pers> P.
+Lemma absorbingly_elim_persistently P : <absorb> <pers> P ⊣⊢ <pers> P.
 Proof.
   apply (anti_symm _), absorbingly_intro.
   by rewrite /bi_absorbingly comm persistently_absorbing.
@@ -776,16 +783,16 @@ Proof.
 Qed.
 Lemma persistently_and_emp_elim P : emp ∧ <pers> P ⊢ P.
 Proof. by rewrite comm persistently_and_sep_elim_emp right_id and_elim_r. Qed.
-Lemma persistently_elim_absorbingly P : <pers> P ⊢ <absorb> P.
+Lemma persistently_into_absorbingly P : <pers> P ⊢ <absorb> P.
 Proof.
   rewrite -(right_id True%I _ (<pers> _)%I) -{1}(left_id emp%I _ True%I).
   by rewrite persistently_and_sep_assoc (comm bi_and) persistently_and_emp_elim comm.
 Qed.
 Lemma persistently_elim P `{!Absorbing P} : <pers> P ⊢ P.
-Proof. by rewrite persistently_elim_absorbingly absorbing_absorbingly. Qed.
+Proof. by rewrite persistently_into_absorbingly absorbing_absorbingly. Qed.
 
 Lemma persistently_idemp_1 P : <pers> <pers> P ⊢ <pers> P.
-Proof. by rewrite persistently_elim_absorbingly absorbingly_persistently. Qed.
+Proof. by rewrite persistently_into_absorbingly absorbingly_elim_persistently. Qed.
 Lemma persistently_idemp P : <pers> <pers> P ⊣⊢ <pers> P.
 Proof. apply (anti_symm _); auto using persistently_idemp_1, persistently_idemp_2. Qed.
 
@@ -795,7 +802,7 @@ Proof. intros <-. apply persistently_idemp_2. Qed.
 Lemma persistently_pure φ : <pers> ⌜φ⌝ ⊣⊢ ⌜φ⌝.
 Proof.
   apply (anti_symm _).
-  { by rewrite persistently_elim_absorbingly absorbingly_pure. }
+  { by rewrite persistently_into_absorbingly absorbingly_pure. }
   apply pure_elim'=> Hφ.
   trans (∀ x : False, <pers> True : PROP)%I; [by apply forall_intro|].
   rewrite persistently_forall_2. auto using persistently_mono, pure_intro.
@@ -824,7 +831,7 @@ Proof.
   by rewrite persistently_and_sep_assoc (comm bi_and) persistently_and_emp_elim.
 Qed.
 
-Lemma persistently_affinely P : <pers> <affine> P ⊣⊢ <pers> P.
+Lemma persistently_affinely_elim P : <pers> <affine> P ⊣⊢ <pers> P.
 Proof.
   by rewrite /bi_affinely persistently_and -persistently_True_emp
              persistently_pure left_id.
@@ -842,7 +849,7 @@ Proof. by rewrite -persistently_and_sep persistently_and -and_sep_persistently. 
 Lemma persistently_sep `{BiPositive PROP} P Q : <pers> (P ∗ Q) ⊣⊢ <pers> P ∗ <pers> Q.
 Proof.
   apply (anti_symm _); auto using persistently_sep_2.
-  rewrite -persistently_affinely affinely_sep -and_sep_persistently. apply and_intro.
+  rewrite -persistently_affinely_elim affinely_sep -and_sep_persistently. apply and_intro.
   - by rewrite (affinely_elim_emp Q) right_id affinely_elim.
   - by rewrite (affinely_elim_emp P) left_id affinely_elim.
 Qed.
@@ -858,7 +865,8 @@ Qed.
 Lemma persistently_alt_fixpoint' P :
   <pers> P ⊣⊢ <affine> P ∗ <pers> P.
 Proof.
-  rewrite -{1}persistently_affinely {1}persistently_alt_fixpoint persistently_affinely //.
+  rewrite -{1}persistently_affinely_elim {1}persistently_alt_fixpoint
+          persistently_affinely_elim //.
 Qed.
 
 Lemma persistently_wand P Q : <pers> (P -∗ Q) ⊢ <pers> P -∗ <pers> Q.
@@ -946,7 +954,7 @@ Proof. rewrite /bi_intuitionistically affinely_elim_emp //. Qed.
 Lemma intuitionistically_intro' P Q : (□ P ⊢ Q) → □ P ⊢ □ Q.
 Proof.
   intros <-.
-  by rewrite /bi_intuitionistically persistently_affinely persistently_idemp.
+  by rewrite /bi_intuitionistically persistently_affinely_elim persistently_idemp.
 Qed.
 
 Lemma intuitionistically_emp : □ emp ⊣⊢ emp.
@@ -973,11 +981,11 @@ Lemma intuitionistically_sep `{BiPositive PROP} P Q : □ (P ∗ Q) ⊣⊢ □ P
 Proof. by rewrite /bi_intuitionistically -affinely_sep -persistently_sep. Qed.
 
 Lemma intuitionistically_idemp P : □ □ P ⊣⊢ □ P.
-Proof. by rewrite /bi_intuitionistically persistently_affinely persistently_idemp. Qed.
+Proof. by rewrite /bi_intuitionistically persistently_affinely_elim persistently_idemp. Qed.
 
-Lemma intuitionistically_persistently_1 P : □ P ⊢ <pers> P.
+Lemma intuitionistically_into_persistently_1 P : □ P ⊢ <pers> P.
 Proof. rewrite /bi_intuitionistically affinely_elim //. Qed.
-Lemma intuitionistically_persistently_persistently P : □ <pers> P ⊣⊢ □ P.
+Lemma intuitionistically_persistently_elim P : □ <pers> P ⊣⊢ □ P.
 Proof. rewrite /bi_intuitionistically persistently_idemp //. Qed.
 
 Lemma intuitionistic_intuitionistically P :
@@ -992,8 +1000,8 @@ Proof.
   - rewrite and_elim_l //.
   - apply persistently_and_emp_elim.
 Qed.
-Lemma intuitionistically_affinely_affinely P : □ <affine> P ⊣⊢ □ P.
-Proof. rewrite /bi_intuitionistically persistently_affinely //. Qed.
+Lemma intuitionistically_affinely_elim P : □ <affine> P ⊣⊢ □ P.
+Proof. rewrite /bi_intuitionistically persistently_affinely_elim //. Qed.
 
 Lemma persistently_and_intuitionistically_sep_l P Q : <pers> P ∧ Q ⊣⊢ □ P ∗ Q.
 Proof.
@@ -1038,7 +1046,7 @@ Qed.
 Section bi_affine_intuitionistically.
   Context `{BiAffine PROP}.
 
-  Lemma intuitionistically_persistently P : □ P ⊣⊢ <pers> P.
+  Lemma intuitionistically_into_persistently P : □ P ⊣⊢ <pers> P.
   Proof. rewrite /bi_intuitionistically affine_affinely //. Qed.
 End bi_affine_intuitionistically.
 
@@ -1205,10 +1213,11 @@ Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
 Lemma persistent_entails_r P Q `{!Persistent Q} : (P ⊢ Q) → P ⊢ P ∗ Q.
 Proof. intros. rewrite -persistent_and_sep_1; auto. Qed.
 
-Lemma absorbingly_intuitionistically P : <absorb> □ P ⊣⊢ <pers> P.
+Lemma absorbingly_intuitionistically_into_persistently P :
+  <absorb> □ P ⊣⊢ <pers> P.
 Proof.
   apply (anti_symm _).
-  - by rewrite intuitionistically_persistently_1 absorbingly_persistently.
+  - by rewrite intuitionistically_into_persistently_1 absorbingly_elim_persistently.
   - rewrite -{1}(idemp bi_and (<pers> _)%I) persistently_and_intuitionistically_sep_r.
     by rewrite {1} (True_intro (<pers> _)%I).
 Qed.
@@ -1216,13 +1225,13 @@ Qed.
 Lemma persistent_absorbingly_affinely_2 P `{!Persistent P} :
   P ⊢ <absorb> <affine> P.
 Proof.
-  rewrite {1}(persistent P) -absorbingly_intuitionistically.
+  rewrite {1}(persistent P) -absorbingly_intuitionistically_into_persistently.
   by rewrite intuitionistically_affinely.
 Qed.
 Lemma persistent_absorbingly_affinely P `{!Persistent P, !Absorbing P} :
   <absorb> <affine> P ⊣⊢ P.
 Proof.
-  by rewrite -(persistent_persistently P) absorbingly_intuitionistically.
+  by rewrite -(persistent_persistently P) absorbingly_intuitionistically_into_persistently.
 Qed.
 
 Lemma persistent_and_sep_assoc P `{!Persistent P, !Absorbing P} Q R :
@@ -1309,7 +1318,7 @@ Proof. intros. by rewrite /Absorbing absorbingly_wand !absorbing -absorbingly_in
 Global Instance absorbingly_absorbing P : Absorbing (<absorb> P).
 Proof. rewrite /bi_absorbingly. apply _. Qed.
 Global Instance persistently_absorbing P : Absorbing (<pers> P).
-Proof. by rewrite /Absorbing absorbingly_persistently. Qed.
+Proof. by rewrite /Absorbing absorbingly_elim_persistently. Qed.
 Global Instance persistently_if_absorbing P p :
   Absorbing P → Absorbing (<pers>?p P).
 Proof. intros; destruct p; simpl; apply _. Qed.
