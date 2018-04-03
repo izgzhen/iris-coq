@@ -920,10 +920,10 @@ Proof.
   - intros P. split=> i /=.
     rewrite bi.later_forall. f_equiv=> j. by rewrite -later_plainly_2.
 Qed.
-Global Instance monPred_plainlyC `{BiPlainly PROP} : BiPlainly monPredSI :=
+Global Instance monPred_bi_plainly `{BiPlainly PROP} : BiPlainly monPredSI :=
   {| bi_plainly_mixin := monPred_plainly_mixin |}.
 
-Global Instance monPred_plainly_exist `{BiPlainly PROP} `{@BiIndexBottom I bot} :
+Global Instance monPred_bi_plainly_exist `{BiPlainly PROP} `{@BiIndexBottom I bot} :
   BiPlainlyExist PROP → BiPlainlyExist monPredSI.
 Proof.
   split=>?/=. rewrite monPred_plainly_eq /=. repeat setoid_rewrite monPred_at_exist.
