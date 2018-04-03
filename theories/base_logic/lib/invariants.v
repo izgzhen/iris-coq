@@ -95,17 +95,16 @@ Proof.
 Qed.
 
 Lemma inv_open_strong E N P :
-  ↑N ⊆ E →
-  inv N P ={E,E∖↑N}=∗ ▷ P ∗ ∀ E', ⌜ ↑N ⊆ E' ⌝ → ▷ P ={E'∖↑N,E'}=∗ True.
+  ↑N ⊆ E → inv N P ={E,E∖↑N}=∗ ▷ P ∗ ∀ E', ▷ P ={E',↑N ∪ E'}=∗ True.
 Proof.
   iIntros (?) "Hinv".
   iPoseProof (inv_open (↑ N) N P with "Hinv") as "H"; first done.
   rewrite difference_diag_L.
   iPoseProof (fupd_mask_frame_r _ _ (E ∖ ↑ N) with "H") as "H"; first set_solver.
   rewrite left_id_L -union_difference_L //. iMod "H" as "[$ H]"; iModIntro.
-  iIntros (E' ?) "HP". iSpecialize ("H" with "HP").
-  iPoseProof (fupd_mask_frame_r _ _ (E' ∖ ↑ N) with "H") as "H"; first set_solver.
-  by rewrite left_id_L -union_difference_L.
+  iIntros (E') "HP". iSpecialize ("H" with "HP").
+  iPoseProof (fupd_mask_frame_r _ _ E' with "H") as "H"; first set_solver.
+  by rewrite left_id_L.
 Qed.
 
 Lemma inv_open_timeless E N P `{!Timeless P} :
