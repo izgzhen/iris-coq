@@ -35,7 +35,7 @@ Qed.
 Global Instance make_embed_pure `{BiEmbed PROP PROP'} φ :
   KnownMakeEmbed ⌜φ⌝ ⌜φ⌝.
 Proof. apply embed_pure. Qed.
-Global Instance make_embed_emp `{BiEmbed PROP PROP'} :
+Global Instance make_embed_emp `{BiEmbedEmp PROP PROP'} :
   KnownMakeEmbed emp emp.
 Proof. apply embed_emp. Qed.
 Global Instance make_embed_default `{BiEmbed PROP PROP'} P :
@@ -46,7 +46,7 @@ Global Instance frame_embed `{BiEmbed PROP PROP'} p P Q (Q' : PROP') R :
   Frame p R P Q → MakeEmbed Q Q' → Frame p ⎡R⎤ ⎡P⎤ Q'.
 Proof.
   rewrite /Frame /MakeEmbed => <- <-.
-  rewrite embed_sep embed_intuitionistically_if => //.
+  rewrite embed_sep embed_intuitionistically_if_2 => //.
 Qed.
 Global Instance frame_pure_embed `{BiEmbed PROP PROP'} p P Q (Q' : PROP') φ :
   Frame p ⌜φ⌝ P Q → MakeEmbed Q Q' → Frame p ⌜φ⌝ ⎡P⎤ Q'.

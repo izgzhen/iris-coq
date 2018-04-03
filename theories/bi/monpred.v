@@ -411,15 +411,17 @@ Proof. unfold Absorbing. unseal. split=> ? /=. apply absorbing, _. Qed.
 
 Definition monPred_embedding_mixin : BiEmbedMixin PROP monPredI monPred_embed.
 Proof.
-  split; try apply _; unseal; try done.
-  - move =>?? /= [/(_ inhabitant) ?] //.
-  - split=>? /=.
+  split; try apply _; rewrite /bi_emp_valid; unseal; try done.
+  - move=> P /= [/(_ inhabitant) ?] //.
+  - intros P Q. split=> i /=.
     by rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim.
-  - split=>? /=.
+  - intros P Q. split=> i /=.
     by rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim.
 Qed.
 Global Instance monPred_bi_embed : BiEmbed PROP monPredI :=
   {| bi_embed_mixin := monPred_embedding_mixin |}.
+Global Instance monPred_bi_embed_emp : BiEmbedEmp PROP monPredI.
+Proof. split. by unseal. Qed.
 
 Lemma monPred_emp_unfold : emp%I = ⎡emp : PROP⎤%I.
 Proof. by unseal. Qed.
