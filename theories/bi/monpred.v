@@ -933,6 +933,10 @@ Proof.
   apply bi.forall_intro=>?. by do 2 f_equiv.
 Qed.
 
+Global Instance monPred_bi_embed_plainly `{BiPlainly PROP} :
+  BiEmbedPlainly PROP monPredSI.
+Proof. apply bi_embed_plainly_emp, _. Qed.
+
 Lemma monPred_plainly_unfold `{BiPlainly PROP} : plainly = λ P, ⎡ ∀ i, ■ (P i) ⎤%I.
 Proof. by rewrite monPred_plainly_eq monPred_embed_eq. Qed.
 Lemma monPred_at_plainly `{BiPlainly PROP} i P : (■ P) i ⊣⊢ ∀ j, ■ (P j).

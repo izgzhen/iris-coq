@@ -62,6 +62,13 @@ Class BiEmbedFUpd (PROP1 PROP2 : sbi)
 Hint Mode BiEmbedFUpd - ! - - - : typeclass_instances.
 Hint Mode BiEmbedFUpd ! - - - - : typeclass_instances.
 
+Class BiEmbedPlainly (PROP1 PROP2 : sbi)
+      `{BiEmbed PROP1 PROP2, BiPlainly PROP1, BiPlainly PROP2} := {
+  embed_plainly_2 (P : PROP1) : ■ ⎡P⎤ ⊢ (⎡■ P⎤ : PROP2)
+}.
+Hint Mode BiEmbedPlainly - ! - - - : typeclass_instances.
+Hint Mode BiEmbedPlainly ! - - - - : typeclass_instances.
+
 Section embed_laws.
   Context `{BiEmbed PROP1 PROP2}.
   Local Notation embed := (embed (A:=PROP1) (B:=PROP2)).
@@ -270,6 +277,14 @@ Section sbi_embed.
   Lemma embed_except_0 P : ⎡◇ P⎤ ⊣⊢ ◇ ⎡P⎤.
   Proof. by rewrite embed_or embed_later embed_pure. Qed.
 
+  (* Not an instance, since it may cause overlap *)
+  Lemma bi_embed_plainly_emp `{!BiPlainly PROP1, !BiPlainly PROP2} :
+    BiEmbedEmp PROP1 PROP2 → BiEmbedPlainly PROP1 PROP2.
+  Proof.
+    intros. constructor=> P. rewrite !plainly_alt embed_internal_eq.
+    by rewrite -embed_affinely -embed_emp embed_interal_inj.
+  Qed.
+
   Lemma embed_plainly_1 `{!BiPlainly PROP1, !BiPlainly PROP2} P : ⎡■ P⎤ ⊢ ■ ⎡P⎤.
   Proof.
     assert (∀ P, <affine> ⎡ P ⎤ ⊣⊢ (<affine> ⎡ <affine> P ⎤ : PROP2)) as Hhelp.
@@ -282,16 +297,14 @@ Section sbi_embed.
       - apply bi.and_intro; auto using embed_emp_2. }
     rewrite !plainly_alt embed_internal_eq. by rewrite Hhelp -Hemp -!bi.f_equiv.
   Qed.
-  Lemma embed_plainly `{!BiEmbedEmp PROP1 PROP2,
-    !BiPlainly PROP1, !BiPlainly PROP2} P : ⎡■ P⎤ ⊣⊢ ■ ⎡P⎤.
+  Lemma embed_plainly `{!BiPlainly PROP1, !BiPlainly PROP2,
+    !BiEmbedPlainly PROP1 PROP2} P : ⎡■ P⎤ ⊣⊢ ■ ⎡P⎤.
   Proof.
-    apply (anti_symm _); first by apply embed_plainly_1.
-    rewrite !plainly_alt embed_internal_eq.
-    by rewrite -embed_affinely -embed_emp embed_interal_inj.
+    apply (anti_symm _). by apply embed_plainly_1. by apply embed_plainly_2.
   Qed.
 
-  Lemma embed_plainly_if `{!BiEmbedEmp PROP1 PROP2,
-    !BiPlainly PROP1, !BiPlainly PROP2} p P : ⎡■?p P⎤ ⊣⊢ ■?p ⎡P⎤.
+  Lemma embed_plainly_if `{!BiPlainly PROP1, !BiPlainly PROP2,
+    !BiEmbedPlainly PROP1 PROP2} p P : ⎡■?p P⎤ ⊣⊢ ■?p ⎡P⎤.
   Proof. destruct p; simpl; auto using embed_plainly. Qed.
   Lemma embed_plainly_if_1 `{!BiPlainly PROP1, !BiPlainly PROP2} p P :
     ⎡■?p P⎤ ⊢ ■?p ⎡P⎤.

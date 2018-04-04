@@ -417,7 +417,7 @@ Global Instance from_modal_plainly `{BiPlainly PROP} P :
 Proof. by rewrite /FromModal. Qed.
 
 Global Instance from_modal_plainly_embed `{BiPlainly PROP, BiPlainly PROP',
-    BiEmbedEmp PROP PROP', !SbiEmbed PROP PROP'} `(sel : A) P Q :
+    BiEmbedPlainly PROP PROP', !SbiEmbed PROP PROP'} `(sel : A) P Q :
   FromModal modality_plainly sel P Q →
   FromModal modality_plainly sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof. rewrite /FromModal /= =><-. by rewrite embed_plainly. Qed.
