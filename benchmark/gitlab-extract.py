@@ -114,5 +114,5 @@ for commit in parse_log.parse_git_commits(args.commits):
             found_build = True
             print(" success")
             break
-    if not found_build:
+    if not found_build and not BREAK:
         print(" found no succeessful build")

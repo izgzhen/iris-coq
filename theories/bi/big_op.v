@@ -158,6 +158,28 @@ Section sep_list.
       apply forall_intro=> k. by rewrite (forall_elim (S k)).
   Qed.
 
+  Lemma big_sepL_delete Φ l i x :
+    l !! i = Some x →
+    ([∗ list] k↦y ∈ l, Φ k y)
+    ⊣⊢ Φ i x ∗ [∗ list] k↦y ∈ l, if decide (k = i) then emp else Φ k y.
+  Proof.
+    intros. rewrite -(take_drop_middle l i x) // !big_sepL_app /= Nat.add_0_r.
+    rewrite take_length_le; last eauto using lookup_lt_Some, Nat.lt_le_incl.
+    rewrite decide_True // left_id.
+    rewrite assoc -!(comm _ (Φ _ _)) -assoc. do 2 f_equiv.
+    - apply big_sepL_proper=> k y Hk. apply lookup_lt_Some in Hk.
+      rewrite take_length in Hk. by rewrite decide_False; last lia.
+    - apply big_sepL_proper=> k y _. by rewrite decide_False; last lia.
+  Qed.
+
+  Lemma big_sepL_delete' `{!BiAffine PROP} Φ l i x :
+    l !! i = Some x →
+    ([∗ list] k↦y ∈ l, Φ k y) ⊣⊢ Φ i x ∗ [∗ list] k↦y ∈ l, ⌜ k ≠ i ⌝ → Φ k y.
+  Proof.
+    intros. rewrite big_sepL_delete //. (do 2 f_equiv)=> k y.
+    rewrite -decide_emp. by repeat case_decide.
+  Qed.
+
   Global Instance big_sepL_nil_persistent Φ :
     Persistent ([∗ list] k↦x ∈ [], Φ k x).
   Proof. simpl; apply _. Qed.
