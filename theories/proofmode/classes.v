@@ -234,6 +234,25 @@ Arguments IsExcept0 {_} _%I : simpl never.
 Arguments is_except_0 {_} _%I {_}.
 Hint Mode IsExcept0 + ! : typeclass_instances.
 
+(** The [ElimModal φ p p' P P' Q Q'] class is used by the [iMod] tactic.
+
+The inputs are [p], [P] and [Q], and the outputs are [φ], [p'], [P'] and [Q'].
+
+The class is used to transform a hypothesis [P] into a hypothesis [P'], given
+a goal [Q], which is simultaniously transformed into [Q']. The Booleans [p]
+and [p'] indicate whether the original, respectively, updated hypothesis reside
+in the persistent context (iff [true]). The proposition [φ] can be used to
+express a side-condition that [iMod] will generate (if not [True]).
+
+An example instance is:
+
+  ElimModal True p false (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
+
+This instance expresses that to eliminate [|={E1,E2}=> P] the goal is
+transformed from [|={E1,E3}=> Q] into [|={E2,E3}=> Q], and the resulting
+hypothesis is moved into the spatial context (regardless of where it was
+originally). A corresponding [ElimModal] instance for the Iris 1/2-style update
+modality, would have a side-condition [φ] on the masks. *)
 Class ElimModal {PROP : bi} (φ : Prop) (p p' : bool) (P P' : PROP) (Q Q' : PROP) :=
   elim_modal : φ → □?p P ∗ (□?p' P' -∗ Q') ⊢ Q.
 Arguments ElimModal {_} _ _ _ _%I _%I _%I _%I : simpl never.
