@@ -21,8 +21,8 @@ Implicit Types A : Type.
 Hint Extern 100 (NonExpansive _) => solve_proper.
 
 (* Force implicit argument PROP *)
-Notation "P ⊢ Q" := (@bi_entails PROP P%I Q%I).
-Notation "P ⊣⊢ Q" := (equiv (A:=bi_car PROP) P%I Q%I).
+Notation "P ⊢ Q" := (P ⊢@{PROP} Q).
+Notation "P ⊣⊢ Q" := (P ⊣⊢@{PROP} Q).
 
 (* Derived stuff about the entailment *)
 Global Instance entails_anti_sym : AntiSymm (⊣⊢) (@bi_entails PROP).
@@ -629,9 +629,9 @@ Proof. rewrite /bi_affinely. apply (anti_symm _); auto. Qed.
 Lemma absorbing_absorbingly P `{!Absorbing P} : <absorb> P ⊣⊢ P.
 Proof. by apply (anti_symm _), absorbingly_intro. Qed.
 
-Lemma True_affine_all_affine P : Affine (True%I : PROP) → Affine P.
+Lemma True_affine_all_affine P : Affine (PROP:=PROP) True → Affine P.
 Proof. rewrite /Affine=> <-; auto. Qed.
-Lemma emp_absorbing_all_absorbing P : Absorbing (emp%I : PROP) → Absorbing P.
+Lemma emp_absorbing_all_absorbing P : Absorbing (PROP:=PROP) emp → Absorbing P.
 Proof.
   intros. rewrite /Absorbing -{2}(left_id emp%I _ P).
   by rewrite -(absorbing emp) absorbingly_sep_l left_id.
@@ -1257,7 +1257,7 @@ Section persistent_bi_absorbing.
 End persistent_bi_absorbing.
 
 (* Affine instances *)
-Global Instance emp_affine_l : Affine (emp%I : PROP).
+Global Instance emp_affine_l : Affine (PROP:=PROP) emp.
 Proof. by rewrite /Affine. Qed.
 Global Instance and_affine_l P Q : Affine P → Affine (P ∧ Q).
 Proof. rewrite /Affine=> ->; auto. Qed.
@@ -1280,7 +1280,7 @@ Global Instance intuitionistically_affine P : Affine (□ P).
 Proof. rewrite /bi_intuitionistically. apply _. Qed.
 
 (* Absorbing instances *)
-Global Instance pure_absorbing φ : Absorbing (⌜φ⌝%I : PROP).
+Global Instance pure_absorbing φ : Absorbing (PROP:=PROP) ⌜φ⌝.
 Proof. by rewrite /Absorbing absorbingly_pure. Qed.
 Global Instance and_absorbing P Q : Absorbing P → Absorbing Q → Absorbing (P ∧ Q).
 Proof. intros. by rewrite /Absorbing absorbingly_and_1 !absorbing. Qed.
@@ -1324,9 +1324,9 @@ Global Instance persistently_if_absorbing P p :
 Proof. intros; destruct p; simpl; apply _. Qed.
 
 (* Persistence instances *)
-Global Instance pure_persistent φ : Persistent (⌜φ⌝%I : PROP).
+Global Instance pure_persistent φ : Persistent (PROP:=PROP) ⌜φ⌝.
 Proof. by rewrite /Persistent persistently_pure. Qed.
-Global Instance emp_persistent : Persistent (emp%I : PROP).
+Global Instance emp_persistent : Persistent (PROP:=PROP) emp.
 Proof. rewrite /Persistent. apply persistently_emp_intro. Qed.
 Global Instance and_persistent P Q :
   Persistent P → Persistent Q → Persistent (P ∧ Q).

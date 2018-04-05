@@ -13,8 +13,8 @@ Implicit Types Ps : list PROP.
 Implicit Types A : Type.
 
 (* Force implicit argument PROP *)
-Notation "P ⊢ Q" := (@bi_entails PROP P%I Q%I).
-Notation "P ⊣⊢ Q" := (equiv (A:=bi_car PROP) P%I Q%I).
+Notation "P ⊢ Q" := (P ⊢@{PROP} Q).
+Notation "P ⊣⊢ Q" := (P ⊣⊢@{PROP} Q).
 
 Hint Resolve or_elim or_intro_l' or_intro_r' True_intro False_elim.
 Hint Resolve and_elim_l' and_elim_r' and_intro forall_intro.
@@ -127,10 +127,10 @@ Proof.
 Qed.
 
 Global Instance internal_eq_absorbing {A : ofeT} (x y : A) :
-  Absorbing (x ≡ y : PROP)%I.
+  Absorbing (PROP:=PROP) (x ≡ y).
 Proof. by rewrite /Absorbing absorbingly_internal_eq. Qed.
 Global Instance internal_eq_persistent {A : ofeT} (a b : A) :
-  Persistent (a ≡ b : PROP)%I.
+  Persistent (PROP:=PROP) (a ≡ b).
 Proof. by intros; rewrite /Persistent persistently_internal_eq. Qed.
 
 (* Equality under a later. *)
@@ -351,7 +351,7 @@ Proof. by rewrite {1}(except_0_intro P) except_0_sep. Qed.
 Lemma except_0_frame_r P Q : ◇ P ∗ Q ⊢ ◇ (P ∗ Q).
 Proof. by rewrite {1}(except_0_intro Q) except_0_sep. Qed.
 
-Lemma later_affinely_1 `{!Timeless (emp%I : PROP)} P : ▷ <affine> P ⊢ ◇ <affine> ▷ P.
+Lemma later_affinely_1 `{!Timeless (PROP:=PROP) emp} P : ▷ <affine> P ⊢ ◇ <affine> ▷ P.
 Proof.
   rewrite /bi_affinely later_and (timeless emp%I) except_0_and.
   by apply and_mono, except_0_intro.
@@ -366,12 +366,12 @@ Proof. rewrite /sbi_except_0; apply _. Qed.
 Global Instance Timeless_proper : Proper ((≡) ==> iff) (@Timeless PROP).
 Proof. solve_proper. Qed.
 
-Global Instance pure_timeless φ : Timeless (⌜φ⌝ : PROP)%I.
+Global Instance pure_timeless φ : Timeless (PROP:=PROP) ⌜φ⌝.
 Proof.
   rewrite /Timeless /sbi_except_0 pure_alt later_exist_false.
   apply or_elim, exist_elim; [auto|]=> Hφ. rewrite -(exist_intro Hφ). auto.
 Qed.
-Global Instance emp_timeless `{BiAffine PROP} : Timeless (emp : PROP)%I.
+Global Instance emp_timeless `{BiAffine PROP} : Timeless (PROP:=PROP) emp.
 Proof. rewrite -True_emp. apply _. Qed.
 
 Global Instance and_timeless P Q : Timeless P → Timeless Q → Timeless (P ∧ Q).
@@ -420,13 +420,13 @@ Proof.
 Qed.
 
 Global Instance affinely_timeless P :
-  Timeless (emp%I : PROP) → Timeless P → Timeless (<affine> P).
+  Timeless (PROP:=PROP) emp → Timeless P → Timeless (<affine> P).
 Proof. rewrite /bi_affinely; apply _. Qed.
 Global Instance absorbingly_timeless P : Timeless P → Timeless (<absorb> P).
 Proof. rewrite /bi_absorbingly; apply _. Qed.
 
 Global Instance eq_timeless {A : ofeT} (a b : A) :
-  Discrete a → Timeless (a ≡ b : PROP)%I.
+  Discrete a → Timeless (PROP:=PROP) (a ≡ b).
 Proof. intros. rewrite /Discrete !discrete_eq. apply (timeless _). Qed.
 Global Instance from_option_timeless {A} P (Ψ : A → PROP) (mx : option A) :
   (∀ x, Timeless (Ψ x)) → Timeless P → Timeless (from_option Ψ P mx).

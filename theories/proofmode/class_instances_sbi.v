@@ -225,7 +225,7 @@ Global Instance into_sep_except_0 P Q1 Q2 :
 Proof. rewrite /IntoSep=> ->. by rewrite except_0_sep. Qed.
 
 (* FIXME: This instance is overly specific, generalize it. *)
-Global Instance into_sep_affinely_later `{!Timeless (emp%I : PROP)} P Q1 Q2 :
+Global Instance into_sep_affinely_later `{!Timeless (PROP:=PROP) emp} P Q1 Q2 :
   IntoSep P Q1 Q2 → Affine Q1 → Affine Q2 →
   IntoSep (<affine> ▷ P) (<affine> ▷ Q1) (<affine> ▷ Q2).
 Proof.

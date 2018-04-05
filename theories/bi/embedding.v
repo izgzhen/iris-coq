@@ -36,21 +36,21 @@ Arguments bi_embed_embed : simpl never.
 Class SbiEmbed (PROP1 PROP2 : sbi) `{BiEmbed PROP1 PROP2} := {
   embed_internal_eq_1 (A : ofeT) (x y : A) : ⎡x ≡ y⎤ ⊢ x ≡ y;
   embed_later P : ⎡▷ P⎤ ⊣⊢ ▷ ⎡P⎤;
-  embed_interal_inj (PROP' : sbi) (P Q : PROP1) : ⎡P⎤ ≡ ⎡Q⎤ ⊢ (P ≡ Q : PROP');
+  embed_interal_inj (PROP' : sbi) (P Q : PROP1) : ⎡P⎤ ≡ ⎡Q⎤ ⊢@{PROP'} (P ≡ Q);
 }.
 Hint Mode SbiEmbed ! - - : typeclass_instances.
 Hint Mode SbiEmbed - ! - : typeclass_instances.
 
 Class BiEmbedBUpd (PROP1 PROP2 : bi)
       `{BiEmbed PROP1 PROP2, BiBUpd PROP1, BiBUpd PROP2} := {
-  embed_bupd  P : ⎡|==> P⎤ ⊣⊢ bupd (PROP:=PROP2) ⎡P⎤
+  embed_bupd  P : ⎡|==> P⎤ ⊣⊢@{PROP2} |==> ⎡P⎤
 }.
 Hint Mode BiEmbedBUpd - ! - - - : typeclass_instances.
 Hint Mode BiEmbedBUpd ! - - - - : typeclass_instances.
 
 Class BiEmbedFUpd (PROP1 PROP2 : sbi)
       `{BiEmbed PROP1 PROP2, BiFUpd PROP1, BiFUpd PROP2} := {
-  embed_fupd E1 E2 P : ⎡|={E1,E2}=> P⎤ ⊣⊢ fupd (PROP:=PROP2) E1 E2 ⎡P⎤
+  embed_fupd E1 E2 P : ⎡|={E1,E2}=> P⎤ ⊣⊢@{PROP2} |={E1,E2}=> ⎡P⎤
 }.
 Hint Mode BiEmbedFUpd - ! - - - : typeclass_instances.
 Hint Mode BiEmbedFUpd ! - - - - : typeclass_instances.
