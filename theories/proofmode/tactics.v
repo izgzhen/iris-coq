@@ -1012,11 +1012,11 @@ Tactic Notation "iNext" := iModIntro (▷^_ _)%I.
 
 (** * Update modality *)
 Tactic Notation "iModCore" constr(H) :=
-  eapply tac_modal_elim with _ H _ _ _ _ _;
+  eapply tac_modal_elim with _ H _ _ _ _ _ _;
     [env_reflexivity || fail "iMod:" H "not found"
     |iSolveTC ||
-     let P := match goal with |- ElimModal _ ?P _ _ _ => P end in
-     let Q := match goal with |- ElimModal _ _ _ ?Q _ => Q end in
+     let P := match goal with |- ElimModal _ _ _ ?P _ _ _ => P end in
+     let Q := match goal with |- ElimModal _ _ _ _ _ ?Q _ => Q end in
      fail "iMod: cannot eliminate modality " P "in" Q
     |try fast_done (* optional side-condition *)
     |env_reflexivity|].

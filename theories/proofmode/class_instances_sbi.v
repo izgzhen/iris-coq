@@ -474,38 +474,45 @@ Global Instance into_except_0_embed `{SbiEmbed PROP PROP'} P Q :
 Proof. rewrite /IntoExcept0=> ->. by rewrite embed_except_0. Qed.
 
 (* ElimModal *)
-Global Instance elim_modal_timeless P Q :
-  IntoExcept0 P P' → IsExcept0 Q → ElimModal True P P' Q Q.
+Global Instance elim_modal_timeless p P Q :
+  IntoExcept0 P P' → IsExcept0 Q → ElimModal True p p P P' Q Q.
 Proof.
-  intros. rewrite /ElimModal (except_0_intro (_ -∗ _)%I).
-  by rewrite (into_except_0 P) -except_0_sep wand_elim_r.
+  intros. rewrite /ElimModal (except_0_intro (_ -∗ _)%I) (into_except_0 P).
+  by rewrite except_0_intuitionistically_if_2 -except_0_sep wand_elim_r.
 Qed.
 
-Global Instance elim_modal_bupd_plain_goal `{BiBUpdPlainly PROP} P Q :
-  Plain Q → ElimModal True (|==> P) P Q Q.
-Proof. intros. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_plain. Qed.
-Global Instance elim_modal_bupd_plain `{BiBUpdPlainly PROP} P Q :
-  Plain P → ElimModal True (|==> P) P Q Q.
+Global Instance elim_modal_bupd_plain_goal `{BiBUpdPlainly PROP} p P Q :
+  Plain Q → ElimModal True p false (|==> P) P Q Q.
+Proof.
+  intros. by rewrite /ElimModal intuitionistically_if_elim
+    bupd_frame_r wand_elim_r bupd_plain.
+Qed.
+Global Instance elim_modal_bupd_plain `{BiBUpdPlainly PROP} p P Q :
+  Plain P → ElimModal True p p (|==> P) P Q Q.
 Proof. intros. by rewrite /ElimModal bupd_plain wand_elim_r. Qed.
-Global Instance elim_modal_bupd_fupd `{BiBUpdFUpd PROP} E1 E2 P Q :
-  ElimModal True (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q) | 10.
+Global Instance elim_modal_bupd_fupd `{BiBUpdFUpd PROP} p E1 E2 P Q :
+  ElimModal True p false (|==> P) P (|={E1,E2}=> Q) (|={E1,E2}=> Q) | 10.
 Proof.
-  by rewrite /ElimModal (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
+  by rewrite /ElimModal intuitionistically_if_elim
+    (bupd_fupd E1) fupd_frame_r wand_elim_r fupd_trans.
 Qed.
 
-Global Instance elim_modal_fupd_fupd `{BiFUpd PROP} E1 E2 E3 P Q :
-  ElimModal True (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
-Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_trans. Qed.
+Global Instance elim_modal_fupd_fupd `{BiFUpd PROP} p E1 E2 E3 P Q :
+  ElimModal True p false (|={E1,E2}=> P) P (|={E1,E3}=> Q) (|={E2,E3}=> Q).
+Proof.
+  by rewrite /ElimModal intuitionistically_if_elim
+    fupd_frame_r wand_elim_r fupd_trans.
+Qed.
 
 Global Instance elim_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
-       φ E1 E2 E3 (P P' : PROP') (Q Q' : PROP) :
-  ElimModal φ P P' (|={E1,E3}=> ⎡Q⎤)%I (|={E2,E3}=> ⎡Q'⎤)%I →
-  ElimModal φ P P' ⎡|={E1,E3}=> Q⎤ ⎡|={E2,E3}=> Q'⎤.
+    p p' φ E1 E2 E3 (P P' : PROP') (Q Q' : PROP) :
+  ElimModal φ p p' P P' (|={E1,E3}=> ⎡Q⎤)%I (|={E2,E3}=> ⎡Q'⎤)%I →
+  ElimModal φ p p' P P' ⎡|={E1,E3}=> Q⎤ ⎡|={E2,E3}=> Q'⎤.
 Proof. by rewrite /ElimModal !embed_fupd. Qed.
 Global Instance elim_modal_embed_fupd_hyp `{BiEmbedFUpd PROP PROP'}
-       φ E1 E2 (P : PROP) (P' Q Q' : PROP') :
-  ElimModal φ (|={E1,E2}=> ⎡P⎤)%I P' Q Q' →
-  ElimModal φ ⎡|={E1,E2}=> P⎤ P' Q Q'.
+    p p' φ E1 E2 (P : PROP) (P' Q Q' : PROP') :
+  ElimModal φ p p' (|={E1,E2}=> ⎡P⎤)%I P' Q Q' →
+  ElimModal φ p p' ⎡|={E1,E2}=> P⎤ P' Q Q'.
 Proof. by rewrite /ElimModal embed_fupd. Qed.
 
 (* AddModal *)

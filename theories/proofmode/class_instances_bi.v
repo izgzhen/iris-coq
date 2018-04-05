@@ -763,37 +763,40 @@ Global Instance into_inv_embed {PROP' : bi} `{BiEmbed PROP PROP'} P N :
   IntoInv P N → IntoInv ⎡P⎤ N.
 
 (* ElimModal *)
-Global Instance elim_modal_wand φ P P' Q Q' R :
-  ElimModal φ P P' Q Q' → ElimModal φ P P' (R -∗ Q) (R -∗ Q').
+Global Instance elim_modal_wand φ p p' P P' Q Q' R :
+  ElimModal φ p p' P P' Q Q' → ElimModal φ p p' P P' (R -∗ Q) (R -∗ Q').
 Proof.
   rewrite /ElimModal=> H Hφ. apply wand_intro_r.
-  rewrite wand_curry -assoc (comm _ P') -wand_curry wand_elim_l; auto.
+  rewrite wand_curry -assoc (comm _ (□?p' _)%I) -wand_curry wand_elim_l; auto.
 Qed.
-Global Instance elim_modal_forall {A} φ P P' (Φ Ψ : A → PROP) :
-  (∀ x, ElimModal φ P P' (Φ x) (Ψ x)) → ElimModal φ P P' (∀ x, Φ x) (∀ x, Ψ x).
+Global Instance elim_modal_forall {A} φ p p' P P' (Φ Ψ : A → PROP) :
+  (∀ x, ElimModal φ p p' P P' (Φ x) (Ψ x)) → ElimModal φ p p' P P' (∀ x, Φ x) (∀ x, Ψ x).
 Proof.
   rewrite /ElimModal=> H ?. apply forall_intro=> a. rewrite (forall_elim a); auto.
 Qed.
-Global Instance elim_modal_absorbingly_here P Q :
-  Absorbing Q → ElimModal True (<absorb> P) P Q Q.
+Global Instance elim_modal_absorbingly_here p P Q :
+  Absorbing Q → ElimModal True p false (<absorb> P) P Q Q.
 Proof.
-  rewrite /ElimModal=> H.
-  by rewrite absorbingly_sep_l wand_elim_r absorbing_absorbingly.
+  rewrite /ElimModal=> ? _. by rewrite intuitionistically_if_elim
+    absorbingly_sep_l wand_elim_r absorbing_absorbingly.
 Qed.
 
-Global Instance elim_modal_bupd `{BiBUpd PROP} P Q :
-  ElimModal True (|==> P) P (|==> Q) (|==> Q).
-Proof. by rewrite /ElimModal bupd_frame_r wand_elim_r bupd_trans. Qed.
+Global Instance elim_modal_bupd `{BiBUpd PROP} p P Q :
+  ElimModal True p false (|==> P) P (|==> Q) (|==> Q).
+Proof.
+  by rewrite /ElimModal
+    intuitionistically_if_elim bupd_frame_r wand_elim_r bupd_trans.
+Qed.
 
 Global Instance elim_modal_embed_bupd_goal `{BiEmbedBUpd PROP PROP'}
-       φ (P P' : PROP') (Q Q' : PROP) :
-  ElimModal φ P P' (|==> ⎡Q⎤)%I (|==> ⎡Q'⎤)%I →
-  ElimModal φ P P' ⎡|==> Q⎤ ⎡|==> Q'⎤.
+    p p' φ (P P' : PROP') (Q Q' : PROP) :
+  ElimModal φ p p' P P' (|==> ⎡Q⎤)%I (|==> ⎡Q'⎤)%I →
+  ElimModal φ p p' P P' ⎡|==> Q⎤ ⎡|==> Q'⎤.
 Proof. by rewrite /ElimModal !embed_bupd. Qed.
 Global Instance elim_modal_embed_bupd_hyp `{BiEmbedBUpd PROP PROP'}
-       φ (P : PROP) (P' Q Q' : PROP') :
-  ElimModal φ (|==> ⎡P⎤)%I P' Q Q' →
-  ElimModal φ ⎡|==> P⎤ P' Q Q'.
+    p p' φ (P : PROP) (P' Q Q' : PROP') :
+  ElimModal φ p p' (|==> ⎡P⎤)%I P' Q Q' →
+  ElimModal φ p p' ⎡|==> P⎤ P' Q Q'.
 Proof. by rewrite /ElimModal !embed_bupd. Qed.
 
 (* AddModal *)

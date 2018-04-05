@@ -384,19 +384,28 @@ Section proofmode_classes.
   Global Instance is_except_0_wp s E e Φ : IsExcept0 (WP e @ s; E [{ Φ }]).
   Proof. by rewrite /IsExcept0 -{2}fupd_twp -except_0_fupd -fupd_intro. Qed.
 
-  Global Instance elim_modal_bupd_twp s E e P Φ :
-    ElimModal True (|==> P) P (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Φ }]).
-  Proof. by rewrite /ElimModal (bupd_fupd E) fupd_frame_r wand_elim_r fupd_twp. Qed.
+  Global Instance elim_modal_bupd_twp p s E e P Φ :
+    ElimModal True p false (|==> P) P (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Φ }]).
+  Proof.
+    by rewrite /ElimModal intuitionistically_if_elim
+      (bupd_fupd E) fupd_frame_r wand_elim_r fupd_twp.
+  Qed.
 
-  Global Instance elim_modal_fupd_twp s E e P Φ :
-    ElimModal True (|={E}=> P) P (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Φ }]).
-  Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_twp. Qed.
+  Global Instance elim_modal_fupd_twp p s E e P Φ :
+    ElimModal True p false (|={E}=> P) P (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Φ }]).
+  Proof.
+    by rewrite /ElimModal intuitionistically_if_elim
+      fupd_frame_r wand_elim_r fupd_twp.
+  Qed.
 
-  Global Instance elim_modal_fupd_twp_atomic s E1 E2 e P Φ :
+  Global Instance elim_modal_fupd_twp_atomic p s E1 E2 e P Φ :
     Atomic (stuckness_to_atomicity s) e →
-    ElimModal True (|={E1,E2}=> P) P
+    ElimModal True p false (|={E1,E2}=> P) P
             (WP e @ s; E1 [{ Φ }]) (WP e @ s; E2 [{ v, |={E2,E1}=> Φ v }])%I.
-  Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r twp_atomic. Qed.
+  Proof.
+    intros. by rewrite /ElimModal intuitionistically_if_elim
+      fupd_frame_r wand_elim_r twp_atomic.
+  Qed.
 
   Global Instance add_modal_fupd_twp s E e P Φ :
     AddModal (|={E}=> P) P (WP e @ s; E [{ Φ }]).
