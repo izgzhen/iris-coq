@@ -13,8 +13,8 @@ Implicit Types Ps : list PROP.
 Implicit Types A : Type.
 
 (* Force implicit argument PROP *)
-Notation "P ⊢ Q" := (P ⊢{PROP} Q).
-Notation "P ⊣⊢ Q" := (P ⊣⊢{PROP} Q).
+Notation "P ⊢ Q" := (P ⊢@{PROP} Q).
+Notation "P ⊣⊢ Q" := (P ⊣⊢@{PROP} Q).
 
 Hint Resolve or_elim or_intro_l' or_intro_r' True_intro False_elim.
 Hint Resolve and_elim_l' and_elim_r' and_intro forall_intro.

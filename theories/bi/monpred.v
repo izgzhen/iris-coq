@@ -823,7 +823,7 @@ Lemma monPred_at_except_0 i P : (◇ P) i ⊣⊢ ◇ P i.
 Proof. by unseal. Qed.
 
 Lemma monPred_equivI {PROP' : sbi} P Q :
-  P ≡ Q ⊣⊢{PROP'} ∀ i, P i ≡ Q i.
+  P ≡ Q ⊣⊢@{PROP'} ∀ i, P i ≡ Q i.
 Proof.
   apply bi.equiv_spec. split.
   - apply bi.forall_intro=>?. apply (bi.f_equiv (flip monPred_at _)).

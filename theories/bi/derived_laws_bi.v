@@ -21,8 +21,8 @@ Implicit Types A : Type.
 Hint Extern 100 (NonExpansive _) => solve_proper.
 
 (* Force implicit argument PROP *)
-Notation "P ⊢ Q" := (P ⊢{PROP} Q).
-Notation "P ⊣⊢ Q" := (P ⊣⊢{PROP} Q).
+Notation "P ⊢ Q" := (P ⊢@{PROP} Q).
+Notation "P ⊣⊢ Q" := (P ⊣⊢@{PROP} Q).
 
 (* Derived stuff about the entailment *)
 Global Instance entails_anti_sym : AntiSymm (⊣⊢) (@bi_entails PROP).

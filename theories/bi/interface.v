@@ -2,7 +2,9 @@ From iris.algebra Require Export ofe.
 Set Primitive Projections.
 
 Reserved Notation "P ⊢ Q" (at level 99, Q at level 200, right associativity).
-Reserved Notation "P ⊢{ PROP } Q" (at level 99, Q at level 200, right associativity, format "P  '⊢{' PROP '}'  Q").
+Reserved Notation "P '⊢@{' PROP } Q" (at level 99, Q at level 200, right associativity, format "P  '⊢@{' PROP '}'  Q").
+Reserved Notation "P ⊣⊢ Q" (at level 95, no associativity).
+Reserved Notation "P '⊣⊢@{' PROP } Q" (at level 95, no associativity, format "P  '⊣⊢@{' PROP '}'  Q").
 Reserved Notation "'emp'".
 Reserved Notation "'⌜' φ '⌝'" (at level 1, φ at level 200, format "⌜ φ ⌝").
 Reserved Notation "P ∗ Q" (at level 80, right associativity).
@@ -266,13 +268,11 @@ Instance bi_rewrite_relation (PROP : bi) : RewriteRelation (@bi_entails PROP).
 Instance bi_inhabited {PROP : bi} : Inhabited PROP := populate (bi_pure True).
 
 Notation "P ⊢ Q" := (bi_entails P%I Q%I) : stdpp_scope.
-Notation "P ⊢{ PROP } Q" := (bi_entails (PROP:=PROP) P%I Q%I) : stdpp_scope.
+Notation "P ⊢@{ PROP } Q" := (bi_entails (PROP:=PROP) P%I Q%I) : stdpp_scope.
 Notation "(⊢)" := bi_entails (only parsing) : stdpp_scope.
 
-Notation "P ⊣⊢ Q" := (equiv (A:=bi_car _) P%I Q%I)
-  (at level 95, no associativity) : stdpp_scope.
-Notation "P ⊣⊢{ PROP } Q" := (equiv (A:=bi_car PROP) P%I Q%I)
-  (at level 95, no associativity) : stdpp_scope.
+Notation "P ⊣⊢ Q" := (equiv (A:=bi_car _) P%I Q%I) : stdpp_scope.
+Notation "P ⊣⊢@{ PROP } Q" := (equiv (A:=bi_car PROP) P%I Q%I) : stdpp_scope.
 Notation "(⊣⊢)" := (equiv (A:=bi_car _)) (only parsing) : stdpp_scope.
 
 Notation "P -∗ Q" := (P ⊢ Q) : stdpp_scope.
@@ -344,7 +344,7 @@ Lemma pure_intro P (φ : Prop) : φ → P ⊢ ⌜ φ ⌝.
 Proof. eapply bi_mixin_pure_intro, bi_bi_mixin. Qed.
 Lemma pure_elim' (φ : Prop) P : (φ → True ⊢ P) → ⌜ φ ⌝ ⊢ P.
 Proof. eapply bi_mixin_pure_elim', bi_bi_mixin. Qed.
-Lemma pure_forall_2 {A} (φ : A → Prop) : (∀ a, ⌜ φ a ⌝) ⊢{PROP} ⌜ ∀ a, φ a ⌝.
+Lemma pure_forall_2 {A} (φ : A → Prop) : (∀ a, ⌜ φ a ⌝) ⊢@{PROP} ⌜ ∀ a, φ a ⌝.
 Proof. eapply bi_mixin_pure_forall_2, bi_bi_mixin. Qed.
 
 Lemma and_elim_l P Q : P ∧ Q ⊢ P.
@@ -398,7 +398,7 @@ Proof. eapply bi_mixin_persistently_mono, bi_bi_mixin. Qed.
 Lemma persistently_idemp_2 P : <pers> P ⊢ <pers> <pers> P.
 Proof. eapply bi_mixin_persistently_idemp_2, bi_bi_mixin. Qed.
 
-Lemma persistently_emp_2 : emp ⊢{PROP} <pers> emp.
+Lemma persistently_emp_2 : emp ⊢@{PROP} <pers> emp.
 Proof. eapply bi_mixin_persistently_emp_2, bi_bi_mixin. Qed.
 
 Lemma persistently_forall_2 {A} (Ψ : A → PROP) :
@@ -430,22 +430,22 @@ Lemma internal_eq_rewrite {A : ofeT} a b (Ψ : A → PROP) :
 Proof. eapply sbi_mixin_internal_eq_rewrite, sbi_sbi_mixin. Qed.
 
 Lemma fun_ext {A} {B : A → ofeT} (f g : ofe_fun B) :
-  (∀ x, f x ≡ g x) ⊢{PROP} f ≡ g.
+  (∀ x, f x ≡ g x) ⊢@{PROP} f ≡ g.
 Proof. eapply sbi_mixin_fun_ext, sbi_sbi_mixin. Qed.
 Lemma sig_eq {A : ofeT} (P : A → Prop) (x y : sig P) :
-  `x ≡ `y ⊢{PROP} x ≡ y.
+  `x ≡ `y ⊢@{PROP} x ≡ y.
 Proof. eapply sbi_mixin_sig_eq, sbi_sbi_mixin. Qed.
 Lemma discrete_eq_1 {A : ofeT} (a b : A) :
-  Discrete a → a ≡ b ⊢{PROP} ⌜a ≡ b⌝.
+  Discrete a → a ≡ b ⊢@{PROP} ⌜a ≡ b⌝.
 Proof. eapply sbi_mixin_discrete_eq_1, sbi_sbi_mixin. Qed.
 
 (* Later *)
 Global Instance later_contractive : Contractive (@sbi_later PROP).
 Proof. eapply sbi_mixin_later_contractive, sbi_sbi_mixin. Qed.
 
-Lemma later_eq_1 {A : ofeT} (x y : A) : Next x ≡ Next y ⊢{PROP} ▷ (x ≡ y).
+Lemma later_eq_1 {A : ofeT} (x y : A) : Next x ≡ Next y ⊢@{PROP} ▷ (x ≡ y).
 Proof. eapply sbi_mixin_later_eq_1, sbi_sbi_mixin. Qed.
-Lemma later_eq_2 {A : ofeT} (x y : A) : ▷ (x ≡ y) ⊢{PROP} Next x ≡ Next y.
+Lemma later_eq_2 {A : ofeT} (x y : A) : ▷ (x ≡ y) ⊢@{PROP} Next x ≡ Next y.
 Proof. eapply sbi_mixin_later_eq_2, sbi_sbi_mixin. Qed.
 
 Lemma later_mono P Q : (P ⊢ Q) → ▷ P ⊢ ▷ Q.

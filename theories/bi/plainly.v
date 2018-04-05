@@ -161,7 +161,7 @@ Proof. apply (anti_symm _); auto using plainly_idemp_1, plainly_idemp_2. Qed.
 Lemma plainly_intro' P Q : (■ P ⊢ Q) → ■ P ⊢ ■ Q.
 Proof. intros <-. apply plainly_idemp_2. Qed.
 
-Lemma plainly_pure φ : ■ ⌜φ⌝ ⊣⊢{PROP} ⌜φ⌝.
+Lemma plainly_pure φ : ■ ⌜φ⌝ ⊣⊢@{PROP} ⌜φ⌝.
 Proof.
   apply (anti_symm _); auto.
   - by rewrite plainly_elim_persistently persistently_pure.
@@ -204,7 +204,7 @@ Proof. by rewrite -{1}(left_id emp%I _ Q%I) plainly_and_sep_assoc and_elim_l. Qe
 Lemma plainly_and_sep_r_1 P Q : P ∧ ■ Q ⊢ P ∗ ■ Q.
 Proof. by rewrite !(comm _ P) plainly_and_sep_l_1. Qed.
 
-Lemma plainly_True_emp : ■ True ⊣⊢{PROP} ■ emp.
+Lemma plainly_True_emp : ■ True ⊣⊢@{PROP} ■ emp.
 Proof. apply (anti_symm _); eauto using plainly_mono, plainly_emp_intro. Qed.
 Lemma plainly_and_sep P Q : ■ (P ∧ Q) ⊢ ■ (P ∗ Q).
 Proof.
@@ -273,7 +273,7 @@ Proof. rewrite -!impl_wand_affinely_plainly. apply plainly_impl_plainly. Qed.
 Section plainly_affine_bi.
   Context `{BiAffine PROP}.
 
-  Lemma plainly_emp : ■ emp ⊣⊢{PROP} emp.
+  Lemma plainly_emp : ■ emp ⊣⊢@{PROP} emp.
   Proof. by rewrite -!True_emp plainly_pure. Qed.
 
   Lemma plainly_and_sep_l P Q : ■ P ∧ Q ⊣⊢ ■ P ∗ Q.
@@ -311,7 +311,7 @@ Proof. solve_proper. Qed.
 Lemma plainly_if_mono p P Q : (P ⊢ Q) → ■?p P ⊢ ■?p Q.
 Proof. by intros ->. Qed.
 
-Lemma plainly_if_pure p φ : ■?p ⌜φ⌝ ⊣⊢{PROP} ⌜φ⌝.
+Lemma plainly_if_pure p φ : ■?p ⌜φ⌝ ⊣⊢@{PROP} ⌜φ⌝.
 Proof. destruct p; simpl; auto using plainly_pure. Qed.
 Lemma plainly_if_and p P Q : ■?p (P ∧ Q) ⊣⊢ ■?p P ∧ ■?p Q.
 Proof. destruct p; simpl; auto using plainly_and. Qed.
@@ -458,7 +458,7 @@ Global Instance from_option_plain {A} P (Ψ : A → PROP) (mx : option A) :
 Proof. destruct mx; apply _. Qed.
 
 (* Interaction with equality *)
-Lemma plainly_internal_eq {A:ofeT} (a b : A) : ■ (a ≡ b) ⊣⊢{PROP} a ≡ b.
+Lemma plainly_internal_eq {A:ofeT} (a b : A) : ■ (a ≡ b) ⊣⊢@{PROP} a ≡ b.
 Proof.
   apply (anti_symm (⊢)).
   { by rewrite plainly_elim. }

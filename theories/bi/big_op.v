@@ -89,7 +89,7 @@ Section sep_list.
     Proper (Forall2 (⊢) ==> (⊢)) (big_opL (@bi_sep M) (λ _ P, P)).
   Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
-  Lemma big_sepL_emp l : ([∗ list] k↦y ∈ l, emp) ⊣⊢{PROP} emp.
+  Lemma big_sepL_emp l : ([∗ list] k↦y ∈ l, emp) ⊣⊢@{PROP} emp.
   Proof. by rewrite big_opL_unit. Qed.
 
   Lemma big_sepL_lookup_acc Φ l i x :
