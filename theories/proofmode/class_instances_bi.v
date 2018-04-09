@@ -215,7 +215,7 @@ Global Instance from_pure_absorbingly P φ :
 Proof. rewrite /FromPure=> <- /=. by rewrite persistent_absorbingly_affinely. Qed.
 Global Instance from_pure_embed `{BiEmbed PROP PROP'} a P φ :
   FromPure a P φ → FromPure a ⎡P⎤ φ.
-Proof. rewrite /FromPure=> <-. by rewrite embed_affinely_if embed_pure. Qed.
+Proof. rewrite /FromPure=> <-. by rewrite -embed_pure embed_affinely_if_2. Qed.
 
 (* IntoPersistent *)
 Global Instance into_persistent_persistently p P Q :
@@ -281,7 +281,7 @@ Proof. by rewrite /FromModal /= =><-. Qed.
 Global Instance from_modal_affinely_embed `{BiEmbed PROP PROP'} `(sel : A) P Q :
   FromModal modality_affinely sel P Q →
   FromModal modality_affinely sel ⎡P⎤ ⎡Q⎤ | 100.
-Proof. rewrite /FromModal /= =><-. by rewrite embed_affinely. Qed.
+Proof. rewrite /FromModal /= =><-. by rewrite embed_affinely_2. Qed.
 Global Instance from_modal_persistently_embed `{BiEmbed PROP PROP'} `(sel : A) P Q :
   FromModal modality_persistently sel P Q →
   FromModal modality_persistently sel ⎡P⎤ ⎡Q⎤ | 100.
@@ -289,9 +289,7 @@ Proof. rewrite /FromModal /= =><-. by rewrite embed_persistently. Qed.
 Global Instance from_modal_intuitionistically_embed `{BiEmbed PROP PROP'} `(sel : A) P Q :
   FromModal modality_intuitionistically sel P Q →
   FromModal modality_intuitionistically sel ⎡P⎤ ⎡Q⎤ | 100.
-Proof.
-  rewrite /FromModal /= =><-. by rewrite embed_affinely embed_persistently.
-Qed.
+Proof. rewrite /FromModal /= =><-. by rewrite embed_intuitionistically_2. Qed.
 
 (* IntoWand *)
 Global Instance into_wand_wand p q P Q P' :
@@ -364,9 +362,7 @@ Global Instance into_wand_persistently_false q R P Q :
 Proof. intros ?. by rewrite /IntoWand persistently_elim. Qed.
 Global Instance into_wand_embed `{BiEmbed PROP PROP'} p q R P Q :
   IntoWand p q R P Q → IntoWand p q ⎡R⎤ ⎡P⎤ ⎡Q⎤.
-Proof.
-  rewrite /IntoWand -!embed_intuitionistically_if -embed_wand => -> //.
-Qed.
+Proof. by rewrite /IntoWand !embed_intuitionistically_if_2 -embed_wand=> ->. Qed.
 
 (* FromWand *)
 Global Instance from_wand_wand P1 P2 : FromWand (P1 -∗ P2) P1 P2.
@@ -517,7 +513,8 @@ Qed.
 Global Instance into_and_embed `{BiEmbed PROP PROP'} p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
 Proof.
-  rewrite /IntoAnd -embed_and -!embed_intuitionistically_if=> -> //.
+  rewrite /IntoAnd -embed_and=> HP. apply intuitionistically_if_intro'.
+  by rewrite embed_intuitionistically_if_2 HP intuitionistically_if_elim.
 Qed.
 
 (* IntoSep *)

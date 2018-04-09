@@ -39,9 +39,8 @@ Section bi_modalities.
       (MIEnvTransform IntoEmbed) (MIEnvTransform IntoEmbed).
   Proof.
     split; simpl; split_and?;
-      eauto using equiv_entails_sym, embed_emp, embed_sep, embed_and.
-    - intros P Q. rewrite /IntoEmbed=> ->.
-      by rewrite embed_affinely embed_persistently.
+      eauto using equiv_entails_sym, embed_emp_2, embed_sep, embed_and.
+    - intros P Q. rewrite /IntoEmbed=> ->. by rewrite embed_intuitionistically_2.
     - by intros P Q ->.
   Qed.
   Definition modality_embed `{BiEmbed PROP PROP'} :=

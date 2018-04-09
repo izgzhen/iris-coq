@@ -411,15 +411,17 @@ Proof. unfold Absorbing. unseal. split=> ? /=. apply absorbing, _. Qed.
 
 Definition monPred_embedding_mixin : BiEmbedMixin PROP monPredI monPred_embed.
 Proof.
-  split; try apply _; unseal; try done.
-  - move =>?? /= [/(_ inhabitant) ?] //.
-  - split=>? /=.
+  split; try apply _; rewrite /bi_emp_valid; unseal; try done.
+  - move=> P /= [/(_ inhabitant) ?] //.
+  - intros P Q. split=> i /=.
     by rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim.
-  - split=>? /=.
+  - intros P Q. split=> i /=.
     by rewrite bi.forall_elim bi.pure_impl_forall bi.forall_elim.
 Qed.
 Global Instance monPred_bi_embed : BiEmbed PROP monPredI :=
   {| bi_embed_mixin := monPred_embedding_mixin |}.
+Global Instance monPred_bi_embed_emp : BiEmbedEmp PROP monPredI.
+Proof. split. by unseal. Qed.
 
 Lemma monPred_emp_unfold : emp%I = ⎡emp : PROP⎤%I.
 Proof. by unseal. Qed.
@@ -935,6 +937,10 @@ Proof.
   rewrite (bi.forall_elim bot) plainly_exist_1. do 2 f_equiv.
   apply bi.forall_intro=>?. by do 2 f_equiv.
 Qed.
+
+Global Instance monPred_bi_embed_plainly `{BiPlainly PROP} :
+  BiEmbedPlainly PROP monPredSI.
+Proof. apply bi_embed_plainly_emp, _. Qed.
 
 Lemma monPred_plainly_unfold `{BiPlainly PROP} : plainly = λ P, ⎡ ∀ i, ■ (P i) ⎤%I.
 Proof. by rewrite monPred_plainly_eq monPred_embed_eq. Qed.
