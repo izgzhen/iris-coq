@@ -503,6 +503,11 @@ Lemma monPred_at_affinely i P : (<affine> P) i ⊣⊢ <affine> (P i).
 Proof. by rewrite /bi_affinely monPred_at_and monPred_at_emp. Qed.
 Lemma monPred_at_affinely_if i p P : (<affine>?p P) i ⊣⊢ <affine>?p (P i).
 Proof. destruct p=>//=. apply monPred_at_affinely. Qed.
+Lemma monPred_at_intuitionistically i P : (□ P) i ⊣⊢ □ (P i).
+Proof. by rewrite /bi_intuitionistically monPred_at_affinely monPred_at_persistently. Qed.
+Lemma monPred_at_intuitionistically_if i p P : (□?p P) i ⊣⊢ □?p (P i).
+Proof. destruct p=>//=. apply monPred_at_intuitionistically. Qed.
+
 Lemma monPred_at_absorbingly i P : (<absorb> P) i ⊣⊢ <absorb> (P i).
 Proof. by rewrite /bi_absorbingly monPred_at_sep monPred_at_pure. Qed.
 

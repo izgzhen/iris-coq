@@ -61,7 +61,7 @@ Global Instance from_modal_persistently_monPred_at `(sel : A) P Q 𝓠 i :
 Proof.
   rewrite /FromModal /MakeMonPredAt /==> <- <-. by rewrite monPred_at_persistently.
 Qed.
-Global Instance from_modal_affinely_persistently_monPred_at `(sel : A) P Q 𝓠 i :
+Global Instance from_modal_intuitionistically_monPred_at `(sel : A) P Q 𝓠 i :
   FromModal modality_intuitionistically sel P Q → MakeMonPredAt i Q 𝓠 →
   FromModal modality_intuitionistically sel (P i) 𝓠 | 0.
 Proof.
@@ -101,6 +101,9 @@ Proof. by rewrite /MakeMonPredAt monPred_at_persistently=><-. Qed.
 Global Instance make_monPred_at_affinely i P 𝓟 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i (<affine> P) (<affine> 𝓟).
 Proof. by rewrite /MakeMonPredAt monPred_at_affinely=><-. Qed.
+Global Instance make_monPred_at_intuitionistically i P 𝓟 :
+  MakeMonPredAt i P 𝓟 → MakeMonPredAt i (□ P) (□ 𝓟).
+Proof. by rewrite /MakeMonPredAt monPred_at_intuitionistically=><-. Qed.
 Global Instance make_monPred_at_absorbingly i P 𝓟 :
   MakeMonPredAt i P 𝓟 → MakeMonPredAt i (<absorb> P) (<absorb> 𝓟).
 Proof. by rewrite /MakeMonPredAt monPred_at_absorbingly=><-. Qed.
@@ -111,6 +114,10 @@ Proof. destruct p; simpl; apply _. Qed.
 Global Instance make_monPred_at_affinely_if i P 𝓟 p :
   MakeMonPredAt i P 𝓟 →
   MakeMonPredAt i (<affine>?p P) (<affine>?p 𝓟).
+Proof. destruct p; simpl; apply _. Qed.
+Global Instance make_monPred_at_intuitionistically_if i P 𝓟 p :
+  MakeMonPredAt i P 𝓟 →
+  MakeMonPredAt i (□?p P) (□?p 𝓟).
 Proof. destruct p; simpl; apply _. Qed.
 Global Instance make_monPred_at_embed i 𝓟 : MakeMonPredAt i ⎡𝓟⎤ 𝓟.
 Proof. by rewrite /MakeMonPredAt monPred_at_embed. Qed.

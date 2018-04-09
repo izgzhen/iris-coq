@@ -17,7 +17,7 @@ Notation "P ⊣⊢ Q" := (equiv (A:=uPredI M) P%I Q%I).
 (* Own and valid derived *)
 Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ <pers> (✓ a : uPred M).
 Proof. by rewrite {1}plainly_cmra_valid_1 plainly_elim_persistently. Qed.
-Lemma affinely_persistently_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
+Lemma intuitionistically_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
 Proof.
   rewrite /bi_intuitionistically affine_affinely=>?; apply (anti_symm _);
     [by rewrite persistently_elim|].
@@ -31,7 +31,7 @@ Lemma ownM_unit' : uPred_ownM ε ⊣⊢ True.
 Proof. apply (anti_symm _); first by apply pure_intro. apply ownM_unit. Qed.
 Lemma plainly_cmra_valid {A : cmraT} (a : A) : ■ ✓ a ⊣⊢ ✓ a.
 Proof. apply (anti_symm _), plainly_cmra_valid_1. apply plainly_elim, _. Qed.
-Lemma affinely_persistently_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
+Lemma intuitionistically_cmra_valid {A : cmraT} (a : A) : □ ✓ a ⊣⊢ ✓ a.
 Proof.
   rewrite /bi_intuitionistically affine_affinely. intros; apply (anti_symm _);
     first by rewrite persistently_elim.
