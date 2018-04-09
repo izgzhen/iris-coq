@@ -17,6 +17,10 @@ Section ofe.
   Implicit Types x : A.
   Implicit Types f g : ofe_fun B.
 
+  Global Instance ofe_funC_ofe_discrete :
+    (∀ i, OfeDiscrete (B i)) → OfeDiscrete (ofe_funC B).
+  Proof. intros HB f f' Heq i. apply HB, Heq. Qed.
+
   (** Properties of ofe_fun_insert. *)
   Global Instance ofe_fun_insert_ne x :
     NonExpansive2 (ofe_fun_insert (B:=B) x).
@@ -51,6 +55,10 @@ Section cmra.
   Context `{EqDecision A} {B : A → ucmraT}.
   Implicit Types x : A.
   Implicit Types f g : ofe_fun B.
+
+  Global Instance ofe_funR_cmra_discrete:
+    (∀ i, CmraDiscrete (B i)) → CmraDiscrete (ofe_funR B).
+  Proof. intros HB. split; [apply _|]. intros x Hv i. apply HB, Hv. Qed.
 
   Global Instance ofe_fun_singleton_ne x :
     NonExpansive (ofe_fun_singleton x : B x → _).
