@@ -6,7 +6,7 @@ This is the Coq development of the [Iris Project](http://iris-project.org).
 
 This version is known to compile with:
 
- - Coq 8.7.0 / 8.7.1 / 8.7.2
+ - Coq 8.7.0 / 8.7.1 / 8.7.2 / 8.8.0
  - A development version of [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
 
 For a version compatible with Coq 8.6, have a look at the
