@@ -29,13 +29,13 @@ variables:
 build-coq.dev:
   <<: *template
   variables:
-    OPAM_PINS: "coq version dev   coq-mathcomp-ssreflect version dev"
+    OPAM_PINS: "coq version dev"
     VALIDATE: "1"
 
 build-coq.8.7.2:
   <<: *template
   variables:
-    OPAM_PINS: "coq version 8.7.2   coq-mathcomp-ssreflect version 1.6.4"
+    OPAM_PINS: "coq version 8.7.2"
     OPAM_PKG: "coq-iris"
     TIMING_PROJECT: "iris"
     TIMING_CONF: "coq-8.7.2"
@@ -45,22 +45,17 @@ build-coq.8.7.2:
 build-coq.8.7.1:
   <<: *template
   variables:
-    OPAM_PINS: "coq version 8.7.1   coq-mathcomp-ssreflect version 1.6.4"
+    OPAM_PINS: "coq version 8.7.1"
 
 build-coq.8.7.0:
   <<: *template
   variables:
-    OPAM_PINS: "coq version 8.7.0   coq-mathcomp-ssreflect version 1.6.4"
-
-build-coq.8.6.1:
-  <<: *template
-  variables:
-    OPAM_PINS: "coq version 8.6.1   coq-mathcomp-ssreflect version 1.6.4"
+    OPAM_PINS: "coq version 8.7.0"
 
 build-stdpp.dev:
   <<: *template
   variables:
-    OPAM_PINS: "coq version 8.7.2   coq-mathcomp-ssreflect version 1.6.4   coq-stdpp.dev git https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp/#$STDPP_REV"
+    OPAM_PINS: "coq version 8.7.2   coq-stdpp.dev git https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp/#$STDPP_REV"
   except:
   only:
   - triggers
