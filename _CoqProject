@@ -22,6 +22,7 @@ theories/algebra/vector.v
 theories/algebra/updates.v
 theories/algebra/local_updates.v
 theories/algebra/gset.v
+theories/algebra/gmultiset.v
 theories/algebra/coPset.v
 theories/algebra/deprecated.v
 theories/algebra/proofmode_classes.v
