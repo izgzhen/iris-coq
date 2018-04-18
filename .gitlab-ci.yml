@@ -32,19 +32,14 @@ build-coq.dev:
     OPAM_PINS: "coq version dev"
     VALIDATE: "1"
 
-build-coq.8.8.dev:
+build-coq.8.8.0:
   <<: *template
   variables:
-    OPAM_PINS: "coq version 8.8.dev"
-
-build-coq.8.8+beta1:
-  <<: *template
-  variables:
-    OPAM_PINS: "coq version 8.8+beta1"
+    OPAM_PINS: "coq version 8.8.0"
     OPAM_PKG: "coq-iris"
     OPAM_PKG_BRANCH: "gen_proofmode"
     TIMING_PROJECT: "iris"
-    TIMING_CONF: "coq-8.8+beta1"
+    TIMING_CONF: "coq-8.8.0"
   tags:
   - fp-timing
 

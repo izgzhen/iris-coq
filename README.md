@@ -7,7 +7,7 @@ the MoSeL version.
 
 This version is known to compile with:
 
- - Coq 8.7.1 / 8.7.2
+ - Coq 8.7.1 / 8.7.2 / 8.8.0
  - A development version of [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
 
 ## Installing via opam
