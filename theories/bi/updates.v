@@ -222,6 +222,25 @@ Section fupd_derived.
   Proof.
     intros (Ef&->&?)%subseteq_disjoint_union_L. by apply fupd_mask_frame_r.
   Qed.
+  (** How to apply an arbitrary mask-changing view shift when having
+      an arbitrary mask. *)
+  Lemma fupd_mask_frame E E1 E2 P :
+    E1 ⊆ E → (|={E1,E2}=> P) -∗ (|={E,E2 ∪ (E ∖ E1)}=> P).
+  Proof.
+    intros ?. rewrite (fupd_mask_frame_r _ _ (E ∖ E1)); last set_solver.
+    assert (E = E1 ∪ E ∖ E1) as <-; last done.
+    apply union_difference_L. done.
+  Qed.
+  Lemma fupd_mask_frame_diff E E1 E2 P :
+    (* E2 ⊆ E1 is needed bcause otherwise the [E ∖ E2] could remove
+       more invariants from E than it did from E1. *)
+    E2 ⊆ E1 → E1 ⊆ E → (|={E1,E1∖E2}=> P) -∗ (|={E,E∖E2}=> P).
+  Proof.
+    intros ? HE. rewrite (fupd_mask_frame E); last done.
+    assert (E1 ∖ E2 ∪ E ∖ E1 = E ∖ E2) as <-; last done.
+    apply (anti_symm (⊆)); first set_solver.
+    rewrite {1}(union_difference_L _ _ HE). set_solver.
+  Qed.
 
   Lemma fupd_sep E P Q : (|={E}=> P) ∗ (|={E}=> Q) ={E}=∗ P ∗ Q.
   Proof. by rewrite fupd_frame_r fupd_frame_l fupd_trans. Qed.
