@@ -1964,7 +1964,8 @@ Hint Extern 0 (_ ⊢ _) => iStartProof.
 
 (* Make sure that by and done solve trivial things in proof mode *)
 Hint Extern 0 (envs_entails _ _) => iPureIntro; try done.
-Hint Extern 0 (envs_entails _ _) => iAssumption.
+Hint Extern 0 (envs_entails _ ?Q) =>
+  first [is_evar Q; fail 1|iAssumption].
 Hint Extern 0 (envs_entails _ emp) => iEmpIntro.
 
 (* TODO: look for a more principled way of adding trivial hints like those
