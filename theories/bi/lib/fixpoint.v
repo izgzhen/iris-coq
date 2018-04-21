@@ -22,11 +22,16 @@ Definition bi_greatest_fixpoint {PROP : bi} {A : ofeT}
   tc_opaque (∃ Φ : A -n> PROP, <pers> (∀ x, Φ x -∗ F Φ x) ∧ Φ x)%I.
 Arguments bi_greatest_fixpoint : simpl never.
 
+Global Instance least_fixpoint_ne {PROP : bi} {A : ofeT} n :
+  Proper (pointwise_relation (A → PROP) (pointwise_relation A (dist n)) ==>
+          dist n ==> dist n) bi_least_fixpoint.
+Proof.
+  intros F1 F2 HF x1 x2 Hx. rewrite /bi_least_fixpoint /=.
+  do 7 (fast_done || f_equiv). apply HF.
+Qed.
+
 Section least.
   Context {PROP : bi} {A : ofeT} (F : (A → PROP) → (A → PROP)) `{!BiMonoPred F}.
-
-  Global Instance least_fixpoint_ne : NonExpansive (bi_least_fixpoint F).
-  Proof. solve_proper. Qed.
 
   Lemma least_fixpoint_unfold_2 x : F (bi_least_fixpoint F) x ⊢ bi_least_fixpoint F x.
   Proof.
@@ -68,11 +73,27 @@ Section least.
   Qed.
 End least.
 
+Lemma greatest_fixpoint_ne_outer {PROP : bi} {A : ofeT}
+  (F1 : (A → PROP) → (A → PROP))
+  (F2 : (A → PROP) → (A → PROP)):
+  (∀ Φ x n, F1 Φ x ≡{n}≡ F2 Φ x) → ∀ x1 x2 n,
+  (dist n) x1 x2 → (dist n) (bi_greatest_fixpoint F1 x1) (bi_greatest_fixpoint F2 x2).
+Proof.
+  intros HF ??? Hx. rewrite /bi_greatest_fixpoint /=.
+  f_equiv. f_equiv. f_equiv. 2: solve_proper.
+  f_equiv. f_equiv. f_equiv. f_equiv. apply HF.
+Qed.
+
+Global Instance greatest_fixpoint_ne {PROP : bi} {A : ofeT} n :
+  Proper (pointwise_relation (A → PROP) (pointwise_relation A (dist n)) ==>
+          dist n ==> dist n) bi_greatest_fixpoint.
+Proof.
+  intros F1 F2 HF x1 x2 Hx. rewrite /bi_greatest_fixpoint /=.
+  do 7 (fast_done || f_equiv). apply HF.
+Qed.
+
 Section greatest.
   Context {PROP : bi} {A : ofeT} (F : (A → PROP) → (A → PROP)) `{!BiMonoPred F}.
-
-  Global Instance greatest_fixpoint_ne : NonExpansive (bi_greatest_fixpoint F).
-  Proof. solve_proper. Qed.
 
   Lemma greatest_fixpoint_unfold_1 x :
     bi_greatest_fixpoint F x ⊢ F (bi_greatest_fixpoint F) x.
