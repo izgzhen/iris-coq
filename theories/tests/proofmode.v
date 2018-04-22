@@ -86,6 +86,9 @@ Proof. eexists. iIntros "?" (P). iAssumption. Qed.
 Lemma test_iAssumption_affine P Q R `{!Affine P, !Affine R} : P -∗ Q -∗ R -∗ Q.
 Proof. iIntros "H1 H2 H3". iAssumption. Qed.
 
+Lemma test_done_goal_evar Q : ∃ P, Q ⊢ P.
+Proof. eexists. iIntros "H". Fail done. iAssumption. Qed.
+
 Lemma test_iDestruct_spatial_and P Q1 Q2 : P ∗ (Q1 ∧ Q2) -∗ P ∗ Q1.
 Proof. iIntros "[H [? _]]". by iFrame. Qed.
 
@@ -405,7 +408,7 @@ Lemma iFrame_with_evar_l P Q :
   ∃ R, (P -∗ Q -∗ R ∗ P) ∧ R = Q.
 Proof.
   eexists. split. iIntros "HP HQ". Fail iFrame "HQ".
-  by iSplitR "HP". done.
+  iSplitR "HP"; iAssumption. done.
 Qed.
 Lemma iFrame_with_evar_persistent P Q :
   ∃ R, (P -∗ □ Q -∗ P ∗ R ∗ Q) ∧ R = emp%I.
