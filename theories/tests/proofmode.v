@@ -328,12 +328,8 @@ Proof.
   done.
 Qed.
 
-(* TODO: This test is broken in Coq 8.6. Should be restored once we drop Coq
-8.6 support. See also issue #108. *)
-(*
-Lemma test_iIntros_pure : (⌜ ¬False ⌝ : uPred M)%I.
+Lemma test_iIntros_pure_neg : (⌜ ¬False ⌝ : uPred M)%I.
 Proof. by iIntros (?). Qed.
-*)
 End tests.
 
 Section more_tests.
