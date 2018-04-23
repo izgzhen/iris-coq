@@ -1,6 +1,6 @@
 From stdpp Require Import nat_cancel.
 From iris.bi Require Import bi tactics.
-From iris.proofmode Require Import modality_instances classes.
+From iris.proofmode Require Import modality_instances classes class_instances_bi ltac_tactics.
 Set Default Proof Using "Type".
 Import bi.
 
@@ -550,6 +550,18 @@ Global Instance add_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
        E1 E2 (P P' : PROP') (Q : PROP) :
   AddModal P P' (|={E1,E2}=> ⎡Q⎤)%I → AddModal P P' ⎡|={E1,E2}=> Q⎤.
 Proof. by rewrite /AddModal !embed_fupd. Qed.
+
+(* InvOpener *)
+Global Instance inv_opener_vs `{BiFUpd PROP} E1 E2 E P P' (P'' : option PROP) Q :
+  (* FIXME: Why %I? ElimInv should set the right scopes! *)
+  InvOpener E1 E2 P P' P''
+            (|={E1,E}=> Q) (|={E2}=> (P' ∗ (coq_tactics.maybe_wand P'' (|={E1,E}=> Q))))%I.
+Proof.
+  rewrite /InvOpener coq_tactics.maybe_wand_sound.
+  iIntros "Hinner >[HP Hclose]".
+  iMod ("Hinner" with "HP") as "[HP Hfin]".
+  iMod ("Hclose" with "HP") as "HP''". by iApply "Hfin".
+Qed.
 
 (* IntoLater *)
 Global Instance into_laterN_0 only_head P : IntoLaterN only_head 0 P P.

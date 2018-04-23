@@ -144,7 +144,8 @@ Section auth.
       ⌜a ≼ f t⌝ ∗ ▷ φ t ∗ ∀ u b,
       ⌜(f t, a) ~l~> (f u, b)⌝ ∗ ▷ φ u ={E∖↑N,E}=∗ auth_own γ b.
   Proof using Type*.
-    iIntros (?) "[#? Hγf]". rewrite /auth_ctx. iInv N as "Hinv" "Hclose".
+    iIntros (?) "[Hinv Hγf]". rewrite /auth_ctx.
+    iMod (inv_open with "Hinv") as "[Hinv Hclose]"; first done.
     (* The following is essentially a very trivial composition of the accessors
        [auth_acc] and [inv_open] -- but since we don't have any good support
        for that currently, this gets more tedious than it should, with us having

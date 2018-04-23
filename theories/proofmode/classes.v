@@ -513,12 +513,27 @@ Class IntoInv {PROP : bi} (P: PROP) (N: namespace).
 Arguments IntoInv {_} _%I _.
 Hint Mode IntoInv + ! - : typeclass_instances.
 
+(** Typeclass for assertions around which invariants can be opened.
+    Inputs: [Q]
+    Outputs: [E1], [E2], [P], [P'], [Q']
+
+    Transforms the goal [Q] into the goal [Q'] where additional assumptions [P]
+    are available, obtaining may require accessing invariants. Later, [P'] has
+    to be given up again to close these invariants again, which will
+    produce [P''].  If [P''] is None, that signifies [emp] and will be used to
+    make the goal shown to the user nicer (i.e., no unnecessary hypothesis is
+    added) *)
+Class InvOpener `{BiFUpd PROP} E1 E2 (P P' : PROP) (P'' : option PROP) (Q Q' : PROP) :=
+  inv_opener : ((P -∗ Q') -∗ (|={E1,E2}=> P ∗ (P' ={E2,E1}=∗ default emp P'' id)) -∗ Q).
+Arguments InvOpener {_} {_} _ _ _%I _%I _%I _%I : simpl never.
+Arguments inv_opener {_} {_} _ _ _%I _%I _%I _%I {_}.
+Hint Mode InvOpener + + - - - - - ! - : typeclass_instances.
+
 (* Input: [Pinv]
    Arguments:
    - [Pinv] is an invariant assertion
    - [Pin] is an additional assertion needed for opening an invariant
    - [Pout] is the assertion obtained by opening the invariant
-   - [Pclose] is the assertion which contains an update modality to close the invariant
    - [Q] is a goal on which iInv may be invoked
    - [Q'] is the transformed goal that must be proved after opening the invariant.
 
@@ -527,11 +542,11 @@ Hint Mode IntoInv + ! - : typeclass_instances.
    is not a clearly associated instance of ElimModal of the right form
    (e.g. to handle Iris 2.0 usage of iInv).
 *)
-Class ElimInv {PROP : bi} (φ : Prop) (Pinv Pin Pout Pclose Q Q' : PROP) :=
-  elim_inv : φ → Pinv ∗ Pin ∗ (Pout ∗ Pclose -∗ Q') ⊢ Q.
+Class ElimInv {PROP : bi} (φ : Prop) (Pinv Pin Pout Q Q' : PROP) :=
+  elim_inv : φ → Pinv ∗ Pin ∗ (Pout -∗ Q') ⊢ Q.
 Arguments ElimInv {_} _ _%I _%I _%I _%I _%I : simpl never.
-Arguments elim_inv {_} _ _%I _%I _%I _%I _%I _%I _%I.
-Hint Mode ElimInv + - ! - - - ! - : typeclass_instances.
+Arguments elim_inv {_} _ _ _%I _%I _%I _%I _%I.
+Hint Mode ElimInv + - ! - - ! - : typeclass_instances.
 
 (* We make sure that tactics that perform actions on *specific* hypotheses or
 parts of the goal look through the [tc_opaque] connective, which is used to make
@@ -579,6 +594,6 @@ Instance elim_modal_tc_opaque {PROP : bi} φ p p' (P P' Q Q' : PROP) :
   ElimModal φ p p' P P' Q Q' → ElimModal φ p p' (tc_opaque P) P' Q Q' := id.
 Instance into_inv_tc_opaque {PROP : bi} (P : PROP) N :
   IntoInv P N → IntoInv (tc_opaque P) N := id.
-Instance elim_inv_tc_opaque {PROP : bi} φ (Pinv Pin Pout Pclose Q Q' : PROP) :
-  ElimInv φ Pinv Pin Pout Pclose Q Q' →
-  ElimInv φ (tc_opaque Pinv) Pin Pout Pclose Q Q' := id.
+Instance elim_inv_tc_opaque {PROP : bi} φ (Pinv Pin Pout Q Q' : PROP) :
+  ElimInv φ Pinv Pin Pout Q Q' →
+  ElimInv φ (tc_opaque Pinv) Pin Pout Q Q' := id.

@@ -136,6 +136,12 @@ Definition prop_of_env {PROP : bi} (Γ : env PROP) : PROP :=
   in
   match Γ with Enil => emp%I | Esnoc Γ _ P => aux Γ P end.
 
+Definition maybe_wand {PROP : bi} (P : option PROP) (Q : PROP) : PROP :=
+  match P with
+  | None => Q
+  | Some P => (P -∗ Q)%I
+  end.
+
 (* Coq versions of the tactics *)
 Section bi_tactics.
 Context {PROP : bi}.
@@ -437,6 +443,10 @@ Proof.
   induction Γ as [|Γ IH ? P]=>P0; [rewrite /= right_id //|].
   rewrite /= assoc (comm _ P0 P) IH //.
 Qed.
+
+Lemma maybe_wand_sound (P : option PROP) Q :
+  maybe_wand P Q ⊣⊢ (default emp P id -∗ Q).
+Proof. destruct P; simpl; first done. rewrite emp_wand //. Qed.
 
 Global Instance envs_Forall2_refl (R : relation PROP) :
   Reflexive R → Reflexive (envs_Forall2 R).
@@ -1066,19 +1076,19 @@ Proof.
 Qed.
 
 (** * Invariants *)
-Lemma tac_inv_elim Δ Δ' i j φ p P Pin Pout Pclose Q Q' :
+Lemma tac_inv_elim Δ Δ' i j φ p P Pin Pout Q Q' :
   envs_lookup_delete false i Δ = Some (p, P, Δ') →
-  ElimInv φ P Pin Pout Pclose Q Q' →
+  ElimInv φ P Pin Pout Q Q' →
   φ →
   (∀ R, ∃ Δ'',
-    envs_app false (Esnoc Enil j (Pin -∗ (Pout -∗ Pclose -∗ Q') -∗ R)%I) Δ' = Some Δ'' ∧
+    envs_app false (Esnoc Enil j (Pin -∗ (Pout -∗ Q') -∗ R)%I) Δ' = Some Δ'' ∧
     envs_entails Δ'' R) →
   envs_entails Δ Q.
 Proof.
   rewrite envs_entails_eq=> /envs_lookup_delete_Some [? ->] ?? /(_ Q) [Δ'' [? <-]].
   rewrite (envs_lookup_sound' _ false) // envs_app_singleton_sound //; simpl.
   apply wand_elim_r', wand_mono; last done. apply wand_intro_r, wand_intro_r.
-  rewrite intuitionistically_if_elim -assoc wand_curry. auto.
+  rewrite intuitionistically_if_elim -assoc. auto.
 Qed.
 
 (** * Accumulate hypotheses *)

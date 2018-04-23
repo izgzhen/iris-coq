@@ -61,12 +61,12 @@ Section proof.
     {{{ b, RET #b; if b is true then locked γ ∗ R else True }}}.
   Proof.
     iIntros (Φ) "#Hl HΦ". iDestruct "Hl" as (l ->) "#Hinv".
-    wp_rec. iInv N as ([]) "[Hl HR]" "Hclose".
-    - wp_cas_fail. iMod ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-      iModIntro. iApply ("HΦ" $! false). done.
+    wp_rec. iInv N as ([]) "[Hl HR]".
+    - wp_cas_fail. iSplitL "Hl"; first (iNext; iExists true; eauto).
+      iApply ("HΦ" $! false). done.
     - wp_cas_suc. iDestruct "HR" as "[Hγ HR]".
-      iMod ("Hclose" with "[Hl]"); first (iNext; iExists true; eauto).
-      iModIntro. rewrite /locked. by iApply ("HΦ" $! true with "[$Hγ $HR]").
+      iSplitL "Hl"; first (iNext; iExists true; eauto).
+      rewrite /locked. by iApply ("HΦ" $! true with "[$Hγ $HR]").
   Qed.
 
   Lemma acquire_spec γ lk R :
@@ -83,8 +83,9 @@ Section proof.
   Proof.
     iIntros (Φ) "(Hlock & Hlocked & HR) HΦ".
     iDestruct "Hlock" as (l ->) "#Hinv".
-    rewrite /release /=. wp_let. iInv N as (b) "[Hl _]" "Hclose".
-    wp_store. iApply "HΦ". iApply "Hclose". iNext. iExists false. by iFrame.
+    rewrite /release /=. wp_let. iInv N as (b) "[Hl _]".
+    wp_store. iSplitR "HΦ"; last by iApply "HΦ".
+    iNext. iExists false. by iFrame.
   Qed.
 End proof.
 

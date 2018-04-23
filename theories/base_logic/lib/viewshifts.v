@@ -72,7 +72,8 @@ Qed.
 Lemma vs_inv N E P Q R :
   ↑N ⊆ E → inv N R ∗ (▷ R ∗ P ={E∖↑N}=> ▷ R ∗ Q) ⊢ P ={E}=> Q.
 Proof.
-  iIntros (?) "#[? Hvs] !# HP". iInv N as "HR" "Hclose".
+  iIntros (?) "#[Hinv Hvs] !# HP".
+  iMod (inv_open with "Hinv") as "[HR Hclose]"; first done.
   iMod ("Hvs" with "[HR HP]") as "[? $]"; first by iFrame.
   by iApply "Hclose".
 Qed.

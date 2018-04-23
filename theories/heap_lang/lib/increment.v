@@ -68,7 +68,7 @@ Section increment_client.
     WP incr_client #x {{ _, True }}%I.
   Proof using Type*.
     wp_let. wp_alloc l as "Hl". wp_let.
-    iMod (inv_alloc nroot _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#?"; first eauto.
+    iMod (inv_alloc nroot _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#Hinv"; first eauto.
     (* FIXME: I am only usign persistent stuff, so I should be allowed
        to move this to the persisten context even without the additional □. *)
     iAssert (□ atomic_update (λ (v: Z), l ↦ #v)
@@ -78,7 +78,8 @@ Section increment_client.
     { iAlways. iExists True%I, True%I. repeat (iSplit; first done). clear x.
       iIntros "!#" (E) "% _".
       assert (E = ⊤) as -> by set_solver.
-      iInv nroot as (x) ">H↦" "Hclose".
+      iMod (inv_open with "Hinv") as "[>H↦ Hclose]"; first done.
+      iDestruct "H↦" as (x) "H↦".
       iMod fupd_intro_mask' as "Hclose2"; last iModIntro; first set_solver.
       iExists _. iFrame. iSplit.
       { iIntros "H↦". iMod "Hclose2" as "_". iMod ("Hclose" with "[-]"); last done.
