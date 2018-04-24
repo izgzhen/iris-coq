@@ -115,7 +115,7 @@ Lemma test_iEmp_intro P Q R `{!Affine P, !Persistent Q, !Affine R} :
   P -∗ Q → R -∗ emp.
 Proof. iIntros "HP #HQ HR". iEmpIntro. Qed.
 
-Let test_fresh P Q:
+Lemma test_fresh P Q:
   (P ∗ Q) -∗ (P ∗ Q).
 Proof.
   iIntros "H".
