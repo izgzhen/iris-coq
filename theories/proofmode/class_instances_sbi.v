@@ -551,13 +551,13 @@ Global Instance add_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
   AddModal P P' (|={E1,E2}=> ⎡Q⎤)%I → AddModal P P' ⎡|={E1,E2}=> Q⎤.
 Proof. by rewrite /AddModal !embed_fupd. Qed.
 
-(* InvOpener *)
-Global Instance inv_opener_vs `{BiFUpd PROP} E1 E2 E P P' (P'' : option PROP) Q :
-  (* FIXME: Why %I? ElimInv should set the right scopes! *)
-  InvOpener E1 E2 P P' P''
-            (|={E1,E}=> Q) (|={E2}=> (P' ∗ (coq_tactics.maybe_wand P'' (|={E1,E}=> Q))))%I.
+(* AccElim *)
+Global Instance acc_elim_vs `{BiFUpd PROP} E1 E2 E P P' (P'' : option PROP) Q :
+  (* FIXME: Why %I? AccElim sets the right scopes! *)
+  AccElim E1 E2 P P' P''
+          (|={E1,E}=> Q) (|={E2}=> (P' ∗ (coq_tactics.maybe_wand P'' (|={E1,E}=> Q))))%I.
 Proof.
-  rewrite /InvOpener coq_tactics.maybe_wand_sound.
+  rewrite /AccElim coq_tactics.maybe_wand_sound.
   iIntros "Hinner >[HP Hclose]".
   iMod ("Hinner" with "HP") as "[HP Hfin]".
   iMod ("Hclose" with "HP") as "HP''". by iApply "Hfin".

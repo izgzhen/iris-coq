@@ -93,10 +93,10 @@ Section proofs.
   Global Instance into_inv_cinv N γ P : IntoInv (cinv N γ P) N.
 
   Global Instance elim_inv_cinv E N γ P p Q Q' :
-    InvOpener E (E∖↑N) (▷ P ∗ cinv_own γ p) (▷ P) None Q Q' →
+    AccElim E (E∖↑N) (▷ P ∗ cinv_own γ p) (▷ P) None Q Q' →
     ElimInv (↑N ⊆ E) (cinv N γ P) (cinv_own γ p) (▷ P ∗ cinv_own γ p) Q Q'.
   Proof.
-    rewrite /ElimInv /InvOpener. iIntros (Helim ?) "(#Hinv & Hown & Hcont)".
+    rewrite /ElimInv /AccElim. iIntros (Helim ?) "(#Hinv & Hown & Hcont)".
     iApply (Helim with "Hcont"). clear Helim. rewrite -assoc.
     iApply (cinv_open with "Hinv"); done.
   Qed.

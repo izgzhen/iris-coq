@@ -114,12 +114,12 @@ Section proofs.
   Global Instance into_inv_na p N P : IntoInv (na_inv p N P) N.
 
   Global Instance elim_inv_na p F E N P Q Q':
-    InvOpener E E (▷ P ∗ na_own p (F ∖ ↑ N)) (▷ P ∗ na_own p (F ∖ ↑ N))
+    AccElim E E (▷ P ∗ na_own p (F ∖ ↑ N)) (▷ P ∗ na_own p (F ∖ ↑ N))
               (Some (na_own p F)) Q Q' →
     ElimInv (↑N ⊆ E ∧ ↑N ⊆ F) (na_inv p N P) (na_own p F)
       (▷ P ∗ na_own p (F∖↑N)) Q Q'.
   Proof.
-    rewrite /ElimInv /InvOpener. iIntros (Helim (?&?)) "(#Hinv & Hown & Hcont)".
+    rewrite /ElimInv /AccElim. iIntros (Helim (?&?)) "(#Hinv & Hown & Hcont)".
     iApply (Helim with "Hcont"). clear Helim. rewrite -assoc /=.
     iApply (na_inv_open with "Hinv"); done.
   Qed.

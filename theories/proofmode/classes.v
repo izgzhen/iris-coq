@@ -513,21 +513,21 @@ Class IntoInv {PROP : bi} (P: PROP) (N: namespace).
 Arguments IntoInv {_} _%I _.
 Hint Mode IntoInv + ! - : typeclass_instances.
 
-(** Typeclass for assertions around which invariants can be opened.
-    Inputs: [Q]
-    Outputs: [E1], [E2], [P], [P'], [Q']
+(** Typeclass for assertions around which accessors can be elliminated.
+    Inputs: [Q], [P], [P'], [P'']
+    Outputs: [Q']
+    In/Out (can be an evar and will not usually be instantiated): [E1], [E2]
 
-    Transforms the goal [Q] into the goal [Q'] where additional assumptions [P]
-    are available, obtaining may require accessing invariants. Later, [P'] has
-    to be given up again to close these invariants again, which will
-    produce [P''].  If [P''] is None, that signifies [emp] and will be used to
-    make the goal shown to the user nicer (i.e., no unnecessary hypothesis is
-    added) *)
-Class InvOpener `{BiFUpd PROP} E1 E2 (P P' : PROP) (P'' : option PROP) (Q Q' : PROP) :=
-  inv_opener : ((P -∗ Q') -∗ (|={E1,E2}=> P ∗ (P' ={E2,E1}=∗ default emp P'' id)) -∗ Q).
-Arguments InvOpener {_} {_} _ _ _%I _%I _%I _%I : simpl never.
-Arguments inv_opener {_} {_} _ _ _%I _%I _%I _%I {_}.
-Hint Mode InvOpener + + - - - - - ! - : typeclass_instances.
+    Elliminates an accessor [|={E1,E2}=> P ∗ (P' ={E2,E1}=∗ P'')] in goal [Q'],
+    turning the goal into [Q'] with a new assumption [P].  If [P''] is None,
+    that signifies [emp] and will be used to make the goal shown to the user
+    nicer (i.e., no unnecessary hypothesis is added). [φ] is a Coq-level
+    side-condition that will be attempted to be discharged by solve_ndisj. *)
+Class AccElim `{BiFUpd PROP} E1 E2 (P P' : PROP) (P'' : option PROP) (Q Q' : PROP) :=
+  acc_elim : ((P -∗ Q') -∗ (|={E1,E2}=> P ∗ (P' ={E2,E1}=∗ default emp P'' id)) -∗ Q).
+Arguments AccElim {_} {_} _ _ _%I _%I _%I _%I : simpl never.
+Arguments acc_elim {_} {_} _ _ _%I _%I _%I _%I {_}.
+Hint Mode AccElim + + - - ! ! ! ! - : typeclass_instances.
 
 (* Input: [Pinv]
    Arguments:

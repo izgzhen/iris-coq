@@ -405,22 +405,22 @@ Section proofmode_classes.
     AddModal (|={E}=> P) P (WP e @ s; E {{ Φ }}).
   Proof. by rewrite /AddModal fupd_frame_r wand_elim_r fupd_wp. Qed.
 
-  Global Instance inv_opener_wp E1 E2 P P' (P'' : option _) e s Φ :
+  Global Instance acc_elim_wp E1 E2 P P' (P'' : option _) e s Φ :
     Atomic (stuckness_to_atomicity s) e →
-    InvOpener E1 E2 P P' P'' (WP e @ s; E1 {{ Φ }})
+    AccElim E1 E2 P P' P'' (WP e @ s; E1 {{ Φ }})
               (WP e @ s; E2 {{ v, P' ∗ coq_tactics.maybe_wand P'' (Φ v) }})%I.
   Proof.
-    intros ?. rewrite /InvOpener. setoid_rewrite coq_tactics.maybe_wand_sound.
+    intros ?. rewrite /AccElim. setoid_rewrite coq_tactics.maybe_wand_sound.
     iIntros "Hinner >[HP Hclose]".
     iApply (wp_wand with "[Hinner HP]"); first by iApply "Hinner".
     iIntros (v) "[HP HΦ]". iApply "HΦ". by iApply "Hclose".
   Qed.
 
-  Global Instance inv_opener_wp_nonatomic E P P' (P'' : option _) e s Φ :
-    InvOpener E E P P' P'' (WP e @ s; E {{ Φ }})
-              (WP e @ s; E {{ v, P' ∗ coq_tactics.maybe_wand P'' (Φ v) }})%I.
+  Global Instance acc_elim_wp_nonatomic E P P' (P'' : option _) e s Φ :
+    AccElim E E P P' P'' (WP e @ s; E {{ Φ }})
+            (WP e @ s; E {{ v, P' ∗ coq_tactics.maybe_wand P'' (Φ v) }})%I.
   Proof.
-    rewrite /InvOpener. setoid_rewrite coq_tactics.maybe_wand_sound.
+    rewrite /AccElim. setoid_rewrite coq_tactics.maybe_wand_sound.
     iIntros "Hinner >[HP Hclose]". iApply wp_fupd.
     iApply (wp_wand with "[Hinner HP]"); first by iApply "Hinner".
     iIntros (v) "[HP HΦ]". iApply "HΦ". by iApply "Hclose".

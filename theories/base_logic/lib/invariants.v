@@ -110,10 +110,10 @@ Qed.
 Global Instance into_inv_inv N P : IntoInv (inv N P) N.
 
 Global Instance elim_inv_inv E N P Q Q' :
-  InvOpener E (E∖↑N) (▷ P) (▷ P) None Q Q' →
+  AccElim E (E∖↑N) (▷ P) (▷ P) None Q Q' →
   ElimInv (↑N ⊆ E) (inv N P) True (▷ P) Q Q'.
 Proof.
-  rewrite /ElimInv /InvOpener. iIntros (Hopener ?) "(#Hinv & _ & Hcont)".
+  rewrite /ElimInv /AccElim. iIntros (Hopener ?) "(#Hinv & _ & Hcont)".
   iApply (Hopener with "Hcont"). iApply inv_open; done.
 Qed.
 
