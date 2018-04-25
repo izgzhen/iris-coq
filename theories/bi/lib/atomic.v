@@ -1,13 +1,17 @@
 From iris.bi Require Export bi updates.
 From iris.bi.lib Require Import fixpoint laterable.
-From stdpp Require Import coPset.
+From stdpp Require Import coPset namespaces.
 From iris.proofmode Require Import coq_tactics tactics.
 Set Default Proof Using "Type".
+
+(** Conveniently split a conjunction on both assumption and conclusion. *)
+Local Tactic Notation "iSplitWith" constr(H) :=
+  iApply (bi.and_parallel with H); iSplit; iIntros H.
 
 Section definition.
   Context `{BiFUpd PROP} {A B : Type}.
   Implicit Types
-    (Eo Em : coPset) (* outside/module masks *)
+    (Eo Em Ei : coPset) (* outside/module/inner masks *)
     (α : A → PROP) (* atomic pre-condition *)
     (P : PROP) (* abortion condition *)
     (β : A → B → PROP) (* atomic post-condition *)
@@ -15,14 +19,14 @@ Section definition.
   .
 
 (** atomic_step as the "introduction form" of atomic updates *)
-  Definition atomic_step Eo Em α P β Φ : PROP :=
-    (|={Eo, Eo∖Em}=> ∃ x, α x ∗
-          ((α x ={Eo∖Em, Eo}=∗ P) ∧ (∀ y, β x y ={Eo∖Em, Eo}=∗ Φ x y))
+  Definition atomic_step Eo Ei α P β Φ : PROP :=
+    (|={Eo, Ei}=> ∃ x, α x ∗
+          ((α x ={Ei, Eo}=∗ P) ∧ (∀ y, β x y ={Ei, Eo}=∗ Φ x y))
     )%I.
 
-  Lemma atomic_shift_mono Eo Em α P1 P2 β Φ :
+  Lemma atomic_step_mono Eo Ei α P1 P2 β Φ :
     □ (P1 -∗ P2) -∗
-    □ (atomic_step Eo Em α P1 β Φ -∗ atomic_step Eo Em α P2 β Φ).
+    □ (atomic_step Eo Ei α P1 β Φ -∗ atomic_step Eo Ei α P2 β Φ).
   Proof.
     iIntros "#HP12 !# AS". iMod "AS" as (x) "[Hα Hclose]".
     iModIntro. iExists x. iFrame "Hα". iSplit.
@@ -32,6 +36,20 @@ Section definition.
       iApply "Hclose". done.
   Qed.
 
+  Lemma atomic_step_mask Eo Em α P β Φ :
+    atomic_step Eo (Eo∖Em) α P β Φ ⊣⊢ ∀ E, ⌜Eo ⊆ E⌝ → atomic_step E (E∖Em) α P β Φ.
+  Proof.
+    iSplit; last first.
+    { iIntros "Hstep". iApply ("Hstep" with "[% //]"). }
+    iIntros "Hstep" (E HE).
+    iApply (fupd_mask_frame_acc with "Hstep"); first done.
+    iIntros "Hstep". iDestruct "Hstep" as (x) "[Hα Hclose]".
+    iIntros "!> Hclose'".
+    iExists x. iFrame. iSplitWith "Hclose".
+    - iIntros "Hα". iApply "Hclose'". iApply "Hclose". done.
+    - iIntros (y) "Hβ". iApply "Hclose'". iApply "Hclose". done.
+  Qed.
+
 (** atomic_update as a fixed-point of the equation
    AU = ∃ P. ▷ P ∗ □ (▷ P ==∗ α ∗ (α ==∗ AU) ∧ (β ==∗ Q))
  *)
@@ -39,15 +57,15 @@ Section definition.
 
   Definition atomic_update_pre (Ψ : () → PROP) (_ : ()) : PROP :=
     (∃ (P : PROP), ▷ P ∗
-     □ (∀ E, ⌜Eo ⊆ E⌝ → (▷ P) -∗ atomic_step E Em α (Ψ ()) β Φ))%I.
+     □ (▷ P -∗ atomic_step Eo (Eo∖Em) α (Ψ ()) β Φ))%I.
 
   Local Instance atomic_update_pre_mono : BiMonoPred atomic_update_pre.
   Proof.
     constructor.
     - iIntros (P1 P2) "#HP12". iIntros ([]) "AU".
       iDestruct "AU" as (P) "[HP #AS]". iExists P. iFrame.
-      iIntros "!# * % HP". iApply (atomic_shift_mono with "HP12").
-      iApply ("AS" with "[%]"); done.
+      iIntros "!# HP". iApply (atomic_step_mono with "HP12").
+      iApply "AS"; done.
     - intros ??. solve_proper.
   Qed.
 
@@ -65,7 +83,7 @@ Definition atomic_update_eq :
 (** Lemmas about AU *)
 Section lemmas.
   Context `{BiFUpd PROP} {A B : Type}.
-  Implicit Types (α : A → PROP) (β: A → B → PROP) (P : PROP) (Φ : A → B → PROP).
+  Implicit Types (α : A → PROP) (β Φ : A → B → PROP) (P : PROP).
 
   Local Existing Instance atomic_update_pre_mono.
 
@@ -94,13 +112,13 @@ Section lemmas.
   Lemma aupd_acc  Eo Em E α β Φ :
     Eo ⊆ E →
     atomic_update Eo Em α β Φ -∗
-    atomic_step E Em α (atomic_update Eo Em α β Φ) β Φ.
+    atomic_step E (E∖Em) α (atomic_update Eo Em α β Φ) β Φ.
   Proof using Type*.
     rewrite atomic_update_eq {1}/atomic_update_def /=. iIntros (HE) "HUpd".
     iPoseProof (greatest_fixpoint_unfold_1 with "HUpd") as "HUpd".
     iDestruct "HUpd" as (P) "(HP & Hshift)".
-    iMod ("Hshift" with "[% //] HP") as (x) "[Hα Hclose]".
-    iModIntro. iExists x. iFrame.
+    iRevert (E HE). iApply atomic_step_mask.
+    iApply "Hshift". done.
   Qed.
 
   Global Instance aupd_laterable Eo Em α β Φ :
@@ -113,42 +131,72 @@ Section lemmas.
   Qed.
 
   Lemma aupd_intro P Q α β Eo Em Φ :
-    Em ⊆ Eo → Affine P → Persistent P → Laterable Q →
-    (P ∗ Q -∗ atomic_step Eo Em α Q β Φ) →
+    Affine P → Persistent P → Laterable Q →
+    (P ∗ Q -∗ atomic_step Eo (Eo∖Em) α Q β Φ) →
     P ∗ Q -∗ atomic_update Eo Em α β Φ.
   Proof.
     rewrite atomic_update_eq {1}/atomic_update_def /=.
-    iIntros (???? HAU) "[#HP HQ]".
+    iIntros (??? HAU) "[#HP HQ]".
     iApply (greatest_fixpoint_coind _ (λ _, Q)); last done. iIntros "!#" ([]) "HQ".
     iDestruct (laterable with "HQ") as (Q') "[HQ' #HQi]". iExists Q'. iFrame.
-    iIntros "!#" (E HE) "HQ'". iDestruct ("HQi" with "HQ'") as ">HQ {HQi}".
-    iApply fupd_mask_frame_diff_open; last
-      iMod (HAU with "[$HQ]") as (x) "[Hα Hclose]"; [done..|].
-    iModIntro. iExists x. iFrame. iSplit.
-    - iDestruct "Hclose" as "[Hclose _]". iIntros "Hα".
-      iApply fupd_mask_frame_diff_close; last (by iApply "Hclose"); done.
-    - iDestruct "Hclose" as "[_ Hclose]". iIntros (y) "Hβ".
-      iApply fupd_mask_frame_diff_close; last (by iApply "Hclose"); done.
+    iIntros "!# HQ'". iDestruct ("HQi" with "HQ'") as ">HQ {HQi}".
+    iApply HAU. by iFrame.
   Qed.
+
+  Lemma astep_intro Eo Ei α P β Φ x :
+    Ei ⊆ Eo → α x -∗
+    ((α x ={Eo}=∗ P) ∧ (∀ y, β x y ={Eo}=∗ Φ x y)) -∗
+    atomic_step Eo Ei α P β Φ.
+  Proof.
+    iIntros (?) "Hα Hclose".
+    iMod fupd_intro_mask' as "Hclose'"; last iModIntro; first set_solver.
+    iExists x. iFrame. iSplitWith "Hclose".
+    - iIntros "Hα". iMod "Hclose'" as "_". iApply "Hclose". done.
+    - iIntros (y) "Hβ". iMod "Hclose'" as "_". iApply "Hclose". done.
+  Qed.
+
+  Global Instance elim_acc_astep {X} E1 E2 Ei (α' β' : X → PROP) γ' α β Pas Φ :
+    ElimAcc (X:=X) (fupd E1 E2) (fupd E2 E1) α' β' γ'
+            (atomic_step E1 Ei α Pas β Φ)
+            (λ x', atomic_step E2 Ei α (β' x' ∗ coq_tactics.maybe_wand (γ' x') Pas)%I β
+                (λ x y, β' x' ∗ coq_tactics.maybe_wand (γ' x') (Φ x y)))%I.
+  Proof.
+    rewrite /ElimAcc.
+    (* FIXME: Is there any way to prevent maybe_wand from unfolding?
+       It gets unfolded by env_cbv in the proofmode, ideally we'd like that
+       to happen only if one argument is a constructor. *)
+    iIntros "Hinner >Hacc". iDestruct "Hacc" as (x') "[Hα' Hclose]".
+    iMod ("Hinner" with "Hα'") as (x) "[Hα Hclose']".
+    iMod (fupd_intro_mask') as "Hclose''"; last iModIntro; first done.
+    iExists x. iFrame. iSplitWith "Hclose'".
+    - iIntros "Hα". iMod "Hclose''" as "_".
+      iMod ("Hclose'" with "Hα") as "[Hβ' HPas]".
+      iMod ("Hclose" with "Hβ'") as "Hγ'".
+      iModIntro. destruct (γ' x'); iApply "HPas"; done.
+    - iIntros (y) "Hβ". iMod "Hclose''" as "_".
+      iMod ("Hclose'" with "Hβ") as "[Hβ' HΦ]".
+      iMod ("Hclose" with "Hβ'") as "Hγ'".
+      iModIntro. destruct (γ' x'); iApply "HΦ"; done.
+  Qed.
+
 End lemmas.
 
 (** ProofMode support for atomic updates *)
 
 Section proof_mode.
   Context `{BiFUpd PROP} {A B : Type}.
-  Implicit Types (α : A → PROP) (β: A → B → PROP) (P : PROP) (Φ : A → B → PROP).
+  Implicit Types (α : A → PROP) (β Φ : A → B → PROP) (P : PROP).
 
   Lemma tac_aupd_intro Γp Γs n α β Eo Em Φ P :
-    Em ⊆ Eo →
     Timeless (PROP:=PROP) emp →
     TCForall Laterable (env_to_list Γs) →
     P = prop_of_env Γs →
-    envs_entails (Envs Γp Γs n) (atomic_step Eo Em α P β Φ) →
+    envs_entails (Envs Γp Γs n) (atomic_step Eo (Eo∖Em) α P β Φ) →
     envs_entails (Envs Γp Γs n) (atomic_update Eo Em α β Φ).
   Proof.
-    intros ?? HΓs ->. rewrite envs_entails_eq of_envs_eq' /atomic_step /=.
+    intros ? HΓs ->. rewrite envs_entails_eq of_envs_eq' /atomic_step /=.
     setoid_rewrite prop_of_env_sound =>HAU.
-    apply aupd_intro; [done|apply _..|]. done.
+    apply aupd_intro; [apply _..|]. done.
   Qed. 
 End proof_mode.
 
@@ -156,8 +204,7 @@ End proof_mode.
 
 Tactic Notation "iAuIntro" :=
   iStartProof; eapply tac_aupd_intro; [
-    (* Em ⊆ Eo: to be proven by user *)
-  | iSolveTC || fail "iAuIntro: emp is not timeless"
-  | iSolveTC || fail "Not all spatial assumptions are laterable"
+    iSolveTC || fail "iAuIntro: emp is not timeless"
+  | iSolveTC || fail "iAuIntro: not all spatial assumptions are laterable"
   | (* P = ...: make the P pretty *) env_reflexivity
   | (* the new proof mode goal *) ].

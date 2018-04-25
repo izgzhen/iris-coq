@@ -29,7 +29,7 @@ Section increment.
     iIntros (Q Φ) "HQ AU". iLöb as "IH". wp_let.
     wp_apply (load_spec with "[HQ]"); first by iAccu.
     (* Prove the atomic shift for load *)
-    iAuIntro; first done.
+    iAuIntro.
     iMod (aupd_acc with "AU") as (x) "[H↦ [Hclose _]]"; first solve_ndisj.
     iModIntro. iExists (#x, 1%Qp). iFrame "H↦". iSplit; first done.
     iIntros ([]) "H↦". iMod ("Hclose" with "H↦") as "AU". iIntros "!> HQ".
@@ -37,7 +37,7 @@ Section increment.
     wp_let. wp_op. wp_bind (aheap.(cas) _)%I.
     wp_apply (cas_spec with "[HQ]"); first by iAccu.
     (* Prove the atomic shift for CAS *)
-    iAuIntro; first done.
+    iAuIntro.
     iMod (aupd_acc with "AU") as (x') "[H↦ Hclose]"; first solve_ndisj.
     iModIntro. iExists #x'. iFrame. iSplit.
     { iDestruct "Hclose" as "[Hclose _]". iApply "Hclose". }
@@ -64,18 +64,18 @@ Section increment_client.
     WP incr_client #x {{ _, True }}%I.
   Proof using Type*.
     wp_let. wp_alloc l as "Hl". wp_let.
-    iMod (inv_alloc nroot _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#?"; first eauto.
-    (* FIXME: I am only usign persistent stuff, so I should be allowed
+    iMod (inv_alloc nroot _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#Hinv"; first eauto.
+    (* FIXME: I am only using persistent stuff, so I should be allowed
        to move this to the persisten context even without the additional □. *)
     iAssert (□ WP incr primitive_atomic_heap #l {{ _, True }})%I as "#Aupd".
-    { iAlways. wp_apply (incr_spec with "[]"); first iEmpIntro. clear x.
-      iAuIntro; first done. iInv nroot as (x) ">H↦" "Hclose".
-      iMod fupd_intro_mask' as "Hclose2"; last iModIntro; first set_solver.
-      iExists _. iFrame. iSplit.
-      { iIntros "H↦". iMod "Hclose2" as "_". iMod ("Hclose" with "[-]"); last done.
-        iNext. iExists _. iFrame. }
-      iIntros (_) "H↦". iMod "Hclose2" as "_".
-      iMod ("Hclose" with "[-]"); last done. iNext. iExists _. iFrame. }
+    { iAlways. wp_apply (incr_spec with "[]"); first by iAccu. clear x.
+      iAuIntro. iInv nroot as (x) ">H↦".
+      iApply (astep_intro with "[H↦]"); [solve_ndisj|done|].
+      iSplit; first by eauto 10.
+      iIntros ([]) "H↦ !>". iSplitL "H↦"; first by eauto 10.
+      (* The continuation: From after the atomic triple to the postcondition of the WP *)
+      done.
+    }
     wp_apply wp_par.
     - iAssumption.
     - iAssumption.

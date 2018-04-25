@@ -212,6 +212,10 @@ Section fupd_derived.
     by rewrite fupd_frame_r left_id fupd_trans.
   Qed.
 
+  Lemma fupd_elim E1 E2 E3 P Q :
+    (Q -∗ (|={E2,E3}=> P)) → (|={E1,E2}=> Q) -∗ (|={E1,E3}=> P).
+  Proof. intros ->. rewrite fupd_trans //. Qed.
+
   Lemma fupd_mask_frame_r E1 E2 Ef P :
     E1 ## Ef → (|={E1,E2}=> P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P.
   Proof.
@@ -225,32 +229,39 @@ Section fupd_derived.
   (** How to apply an arbitrary mask-changing view shift when having
       an arbitrary mask. *)
   Lemma fupd_mask_frame E E' E1 E2 P :
-    E1 ⊆ E → E' = E2 ∪ (E ∖ E1) →
-    (|={E1,E2}=> P) -∗ (|={E,E'}=> P).
+    E1 ⊆ E →
+    (|={E1,E2}=> |={E2 ∪ (E ∖ E1),E'}=> P) -∗ (|={E,E'}=> P).
   Proof.
-    intros ? ->. rewrite (fupd_mask_frame_r _ _ (E ∖ E1)); last set_solver.
+    intros ?. rewrite (fupd_mask_frame_r _ _ (E ∖ E1)); last set_solver.
+    rewrite fupd_trans.
     assert (E = E1 ∪ E ∖ E1) as <-; last done.
     apply union_difference_L. done.
   Qed.
-  Lemma fupd_mask_frame_diff_open E E1 E2 P :
-    (* E2 ⊆ E1 is needed bcause otherwise the [E ∖ E2] could remove
-       more invariants from E than it did from E1. *)
-    E1 ⊆ E → E2 ⊆ E1 → (|={E1,E1∖E2}=> P) -∗ (|={E,E∖E2}=> P).
+  (* A variant of [fupd_mask_frame] that works well for accessors: Tailored to
+     elliminate updates of the form [|={E1,E1∖E2}=> Q] and provides a way to
+     transform the closing view shift instead of letting you prove the same
+     side-conditions twice. *)
+  Lemma fupd_mask_frame_acc E E' E1(*Eo*) E2(*Em*) P Q :
+    E1 ⊆ E →
+    (|={E1,E1∖E2}=> Q) -∗
+    (Q -∗ |={E∖E2,E'}=> (∀ R, (|={E1∖E2,E1}=> R) -∗ |={E∖E2,E}=> R) -∗  P) -∗
+    (|={E,E'}=> P).
   Proof.
-    intros HE ?. rewrite (fupd_mask_frame E); [|done..].
-    assert (E1 ∖ E2 ∪ E ∖ E1 = E ∖ E2) as <-; last done.
-    apply (anti_symm (⊆)); first set_solver.
-    rewrite {1}(union_difference_L _ _ HE). set_solver.
-  Qed.
-  Lemma fupd_mask_frame_diff_close E E1 E2 P :
-    (* E2 ⊆ E1 is needed bcause otherwise the [E ∖ E2] could remove
-       more invariants from E than it did from E1. *)
-    E1 ⊆ E → E2 ⊆ E1 → (|={E1∖E2,E1}=> P) -∗ (|={E∖E2,E}=> P).
-  Proof.
-    intros HE ?. rewrite (fupd_mask_frame (E ∖ E2)); [|set_solver..].
-    assert (E = E1 ∪ E ∖ E2 ∖ (E1 ∖ E2)) as <-; last done.
-    apply (anti_symm (⊆)); last set_solver.
-    rewrite {1}(union_difference_L _ _ HE). set_solver.
+    intros HE. apply bi.wand_intro_r. rewrite fupd_frame_r.
+    rewrite bi.wand_elim_r. clear Q.
+    rewrite -(fupd_mask_frame E E'); first apply fupd_mono; last done.
+    (* The most horrible way to apply fupd_intro_mask *)
+    rewrite -[X in (X -∗ _)](right_id emp%I).
+    rewrite (fupd_intro_mask (E1 ∖ E2 ∪ E ∖ E1) (E ∖ E2) emp%I); last first.
+    { rewrite {1}(union_difference_L _ _ HE). set_solver. }
+    rewrite fupd_frame_l fupd_frame_r. apply fupd_elim.
+    apply fupd_mono.
+    eapply bi.wand_apply;
+      last (apply bi.sep_mono; first reflexivity); first reflexivity.
+    apply bi.forall_intro=>R. apply bi.wand_intro_r.
+    rewrite fupd_frame_r. apply fupd_elim. rewrite left_id.
+    rewrite (fupd_mask_frame_r _ _ (E ∖ E1)); last set_solver+.
+    rewrite {4}(union_difference_L _ _ HE). done.
   Qed.
 
   Lemma fupd_mask_same E E1 P :

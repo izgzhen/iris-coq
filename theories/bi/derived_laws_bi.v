@@ -451,6 +451,14 @@ Proof.
     apply: impl_entails; rewrite /bi_emp_valid HPQ /bi_iff; auto.
 Qed.
 
+Lemma and_parallel P1 P2 Q1 Q2 :
+  (P1 ∧ P2) -∗ ((P1 -∗ Q1) ∧ (P2 -∗ Q2)) -∗ Q1 ∧ Q2.
+Proof.
+  apply wand_intro_r, and_intro.
+  - rewrite !and_elim_l wand_elim_r. done.
+  - rewrite !and_elim_r wand_elim_r. done.
+Qed.
+
 (* Pure stuff *)
 Lemma pure_elim φ Q R : (Q ⊢ ⌜φ⌝) → (φ → Q ⊢ R) → Q ⊢ R.
 Proof.
