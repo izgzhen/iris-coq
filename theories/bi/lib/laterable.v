@@ -50,4 +50,10 @@ Section instances.
     - iApply "HP". done.
     - iApply "HQ". done.
   Qed.
+
+  Global Instance big_sepL_laterable Ps :
+    Timeless (PROP:=PROP) emp →
+    TCForall Laterable Ps →
+    Laterable (PROP:=PROP) ([∗] Ps).
+  Proof. induction 2; simpl; apply _. Qed.
 End instances.

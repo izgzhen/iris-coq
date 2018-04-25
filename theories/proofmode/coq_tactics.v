@@ -152,6 +152,11 @@ Implicit Types P Q : PROP.
 Lemma of_envs_eq Δ :
   of_envs Δ = (⌜envs_wf Δ⌝ ∧ □ [∧] env_intuitionistic Δ ∗ [∗] env_spatial Δ)%I.
 Proof. done. Qed.
+(** An environment is a ∗ of something persistent and the spatial environment.
+TODO: Can we define it as such? *)
+Lemma of_envs_eq' Δ :
+  of_envs Δ ⊣⊢ (⌜envs_wf Δ⌝ ∧ □ [∧] env_intuitionistic Δ) ∗ [∗] env_spatial Δ.
+Proof. rewrite of_envs_eq persistent_and_sep_assoc //. Qed.
 
 Lemma envs_delete_persistent Δ i : envs_delete false i true Δ = Δ. 
 Proof. by destruct Δ. Qed.
@@ -436,12 +441,12 @@ Proof.
   destruct d; simplify_eq/=; solve_sep_entails.
 Qed.
 
-Lemma prop_of_env_sound Δ : of_envs Δ ⊢ prop_of_env (env_spatial Δ).
+Lemma prop_of_env_sound Γ : prop_of_env Γ ⊣⊢ [∗] Γ.
 Proof.
-  destruct Δ as [? Γ]. rewrite /of_envs /= and_elim_r sep_elim_r.
-  destruct Γ as [|Γ ? P0]=>//=. revert P0.
-  induction Γ as [|Γ IH ? P]=>P0; [rewrite /= right_id //|].
-  rewrite /= assoc (comm _ P0 P) IH //.
+  destruct Γ as [|Γ ? P]; simpl; first done.
+  revert P. induction Γ as [|Γ IH ? Q]=>P; simpl.
+  - by rewrite right_id.
+  - rewrite /= IH (comm _ Q _) assoc. done.
 Qed.
 
 Lemma maybe_wand_sound (mP : option PROP) Q :
@@ -1080,7 +1085,10 @@ Qed.
 Lemma tac_accu Δ P :
   prop_of_env (env_spatial Δ) = P →
   envs_entails Δ P.
-Proof. rewrite envs_entails_eq=><-. apply prop_of_env_sound. Qed.
+Proof.
+  rewrite envs_entails_eq=><-.
+  rewrite prop_of_env_sound /of_envs and_elim_r sep_elim_r //.
+Qed.
 
 (** * Fresh *)
 Lemma envs_incr_counter_equiv Δ: envs_Forall2 (⊣⊢) Δ (envs_incr_counter Δ).
