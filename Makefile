@@ -36,7 +36,7 @@ build-dep: build-dep/opam phony
 	@BUILD_DEP_PACKAGE="$$(egrep "^name:" build-dep/opam | sed 's/^name: *"\(.*\)" */\1/')"; \
 	  echo "# Pinning build-dep package." && \
 	  opam pin add -k path $(OPAMFLAGS) "$$BUILD_DEP_PACKAGE".dev build-dep && \
-	  (! opam --version | grep "^1\.") || ( \
+	  (! opam --version | grep "^1\." > /dev/null) || ( \
 	    echo "# Reinstalling build-dep package." && \
 	    opam reinstall $(OPAMFLAGS) "$$BUILD_DEP_PACKAGE" \
 	  )
