@@ -95,6 +95,7 @@ theories/heap_lang/lib/increment.v
 theories/proofmode/base.v
 theories/proofmode/tokens.v
 theories/proofmode/coq_tactics.v
+theories/proofmode/ltac_tactics.v
 theories/proofmode/environments.v
 theories/proofmode/intro_patterns.v
 theories/proofmode/spec_patterns.v
