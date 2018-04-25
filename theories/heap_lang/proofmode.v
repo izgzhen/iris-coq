@@ -16,9 +16,15 @@ Proof. by intros ->. Qed.
 
 Tactic Notation "wp_expr_eval" tactic(t) :=
   iStartProof;
-  try (first [eapply tac_wp_expr_eval|eapply tac_twp_expr_eval];
-       [let x := fresh in intros x; t; unfold x; reflexivity
-       |]).
+  lazymatch goal with
+  | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
+    eapply tac_wp_expr_eval;
+      [let x := fresh in intros x; t; unfold x; reflexivity|]
+  | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
+    eapply tac_twp_expr_eval;
+      [let x := fresh in intros x; t; unfold x; reflexivity|]
+  | _ => fail "wp_expr_eval: not a 'wp'"
+  end.
 
 Ltac wp_expr_simpl := wp_expr_eval simpl.
 Ltac wp_expr_simpl_subst := wp_expr_eval simpl_subst.
@@ -295,13 +301,13 @@ Tactic Notation "wp_apply" open_constr(lem) :=
     lazymatch goal with
     | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
       reshape_expr e ltac:(fun K e' =>
-        wp_bind_core K; iApplyHyp H; try iNext; wp_expr_simpl) ||
+        wp_bind_core K; iApplyHyp H; try iNext; try wp_expr_simpl) ||
       lazymatch iTypeOf H with
       | Some (_,?P) => fail "wp_apply: cannot apply" P
       end
     | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
       reshape_expr e ltac:(fun K e' =>
-        twp_bind_core K; iApplyHyp H; wp_expr_simpl) ||
+        twp_bind_core K; iApplyHyp H; try wp_expr_simpl) ||
       lazymatch iTypeOf H with
       | Some (_,?P) => fail "wp_apply: cannot apply" P
       end

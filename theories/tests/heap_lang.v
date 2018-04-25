@@ -104,6 +104,11 @@ Section LiftingTests.
   Lemma Pred_user E :
     WP let: "x" := Pred #42 in Pred "x" @ E [{ v, ⌜v = #40⌝ }]%I.
   Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
+
+  Lemma wp_apply_evar e P :
+    P -∗ (∀ Q Φ, Q -∗ WP e {{ Φ }}) -∗ WP e {{ _, True }}.
+  Proof. iIntros "HP HW". wp_apply "HW". iExact "HP". Qed.
+
 End LiftingTests.
 
 Lemma heap_e_adequate σ : adequate NotStuck heap_e σ (= #2).
