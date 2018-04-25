@@ -40,6 +40,7 @@ theories/bi/embedding.v
 theories/bi/lib/counter_examples.v
 theories/bi/lib/fixpoint.v
 theories/bi/lib/fractional.v
+theories/bi/lib/laterable.v
 theories/bi/lib/atomic.v
 theories/bi/lib/core.v
 theories/base_logic/upred.v

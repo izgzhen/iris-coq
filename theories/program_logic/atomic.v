@@ -10,7 +10,7 @@ Definition atomic_wp `{irisG Λ Σ} {A B : Type}
   (Eo Em : coPset) (* outside/module masks *)
   (f: A → B → val Λ) (* Turn the return data into the return value *)
   : iProp Σ :=
-    (∀ Φ, atomic_update α β Eo Em (λ x y, Φ (f x y)) -∗
-          WP e {{ Φ }})%I.
+    (∀ Q Φ, Q -∗ atomic_update α β Eo Em (λ x y, Q -∗ Φ (f x y)) -∗
+             WP e {{ Φ }})%I.
 (* Note: To add a private postcondition, use
    atomic_update α β Eo Em (λ x y, POST x y -∗ Φ (f x y)) *)

@@ -5,7 +5,7 @@ From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation atomic_heap par.
 Set Default Proof Using "Type".
 
-(** Show taht implementing fetch-and-add on top of CAS preserves logical
+(** Show that implementing fetch-and-add on top of CAS preserves logical
 atomicity. *)
 
 (* TODO: Move this to iris-examples once gen_proofmode is merged. *)
@@ -26,32 +26,28 @@ Section increment.
                   ⊤ ⊤
                   (λ v _, #v).
   Proof.
-    iIntros (Φ) "AUpd". iLöb as "IH". wp_let.
-    wp_apply load_spec.
+    iIntros (Q Φ) "HQ AU". iLöb as "IH". wp_let.
+    wp_apply (load_spec with "HQ").
     (* Prove the atomic shift for load *)
-    iDestruct "AUpd" as (F P) "(HF & HP & #AShft)".
-    iExists F, P. iFrame. iIntros "!#" (E ?) "HP".
-    iMod ("AShft" with "[%] HP") as (x) "[H↦ Hclose]"; first done.
-    iModIntro. iExists (#x, 1%Qp). iFrame. iSplit.
-    { iDestruct "Hclose" as "[Hclose _]". iApply "Hclose". }
-    iIntros (_) "H↦". iDestruct "Hclose" as "[Hclose _]".
-    iMod ("Hclose" with "H↦") as "HP". iIntros "!> HF".
-    clear dependent E.
+    iApply (aupd_intro with "AU"); first done. iIntros "!# AU".
+    iMod (aupd_acc with "AU") as (x) "[H↦ [Hclose _]]"; first solve_ndisj.
+    iModIntro. iExists (#x, 1%Qp). iFrame "H↦". iSplit; first done.
+    iIntros ([]) "H↦". iMod ("Hclose" with "H↦") as "AU". iIntros "!> HQ".
     (* Now go on *)
     wp_let. wp_op. wp_bind (aheap.(cas) _)%I.
-    wp_apply cas_spec.
+    wp_apply (cas_spec with "HQ").
     (* Prove the atomic shift for CAS *)
-    iExists F, P. iFrame. iIntros "!# * % HP".
-    iMod ("AShft" with "[%] HP") as (x') "[H↦ Hclose]"; first done.
+    iApply (aupd_intro with "AU"); first done. iIntros "!# AU".
+    iMod (aupd_acc with "AU") as (x') "[H↦ Hclose]"; first solve_ndisj.
     iModIntro. iExists #x'. iFrame. iSplit.
     { iDestruct "Hclose" as "[Hclose _]". iApply "Hclose". }
-    iIntros (_). destruct (decide (#x' = #x)) as [[= Hx]|Hx].
+    iIntros ([]). destruct (decide (#x' = #x)) as [[= Hx]|Hx].
     - iIntros "H↦". iDestruct "Hclose" as "[_ Hclose]". subst.
-      iMod ("Hclose" $! () with "H↦") as "HΦ". iIntros "!> HF".
+      iMod ("Hclose" $! () with "H↦") as "HΦ". iIntros "!> HQ".
       wp_if. by iApply "HΦ".
     - iDestruct "Hclose" as "[Hclose _]". iIntros "H↦".
-      iMod ("Hclose" with "H↦") as "HP". iIntros "!> HF".
-      wp_if. iApply "IH". iExists F, P. iFrame. done.
+      iMod ("Hclose" with "H↦") as "AU". iIntros "!> HQ".
+      wp_if. iApply ("IH" with "HQ"). done.
   Qed.
 
 End increment.
@@ -71,13 +67,9 @@ Section increment_client.
     iMod (inv_alloc nroot _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#?"; first eauto.
     (* FIXME: I am only usign persistent stuff, so I should be allowed
        to move this to the persisten context even without the additional □. *)
-    iAssert (□ atomic_update (λ (v: Z), l ↦ #v)
-                           (λ v (_:()), l ↦ #(v + 1))
-                           ⊤ ⊤
-                           (λ _ _, True))%I as "#Aupd".
-    { iAlways. iExists True%I, True%I. repeat (iSplit; first done). clear x.
-      iIntros "!#" (E) "% _".
-      assert (E = ⊤) as -> by set_solver.
+    iAssert (□ WP incr primitive_atomic_heap #l {{ _, True }})%I as "#Aupd".
+    { iAlways. wp_apply (incr_spec with "[]"); first iEmpIntro. clear x.
+      iApply (aupd_intro with "[]"); try iEmpIntro; [done|apply _|]. iIntros "!# _".
       iInv nroot as (x) ">H↦" "Hclose".
       iMod fupd_intro_mask' as "Hclose2"; last iModIntro; first set_solver.
       iExists _. iFrame. iSplit.
@@ -85,10 +77,9 @@ Section increment_client.
         iNext. iExists _. iFrame. }
       iIntros (_) "H↦". iMod "Hclose2" as "_".
       iMod ("Hclose" with "[-]"); last done. iNext. iExists _. iFrame. }
-    wp_apply (wp_par (λ _, True)%I (λ _, True)%I).
-    - wp_apply incr_spec. iAssumption. (* FIXME: without giving the
-      postconditions above, this diverges. *)
-    - wp_apply incr_spec. iAssumption.
+    wp_apply wp_par.
+    - iAssumption.
+    - iAssumption.
     - iIntros (??) "_ !>". done.
   Qed.
 

@@ -69,9 +69,9 @@ Section proof.
               ⊤ ⊤
               (λ '(v, q) _, v).
   Proof.
-    iIntros (Φ) "Aupd". wp_let.
-    iMod (aupd_acc with "Aupd") as ((v, q)) "[H↦ [_ Hclose]]"; first solve_ndisj.
-    wp_load. iMod ("Hclose" $! () with "H↦"). done.
+    iIntros (Q Φ) "? AU". wp_let.
+    iMod (aupd_acc with "AU") as ((v, q)) "[H↦ [_ Hclose]]"; first solve_ndisj.
+    wp_load. iMod ("Hclose" $! () with "H↦") as "HΦ". by iApply "HΦ".
   Qed.
 
   Lemma primitive_store_spec (l : loc) (e : expr) (w : val) :
@@ -82,9 +82,9 @@ Section proof.
               ⊤ ⊤
               (λ _ _, #()%V).
   Proof.
-    iIntros (<-%of_to_val Φ) "Aupd". wp_let. wp_proj. wp_proj.
-    iMod (aupd_acc with "Aupd") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
-    wp_store. iMod ("Hclose" $! () with "H↦"). done.
+    iIntros (<-%of_to_val Q Φ) "? AU". wp_let. wp_proj. wp_proj.
+    iMod (aupd_acc with "AU") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
+    wp_store. iMod ("Hclose" $! () with "H↦") as "HΦ". by iApply "HΦ".
   Qed.
 
   Lemma primitive_cas_spec (l : loc) e1 e2 (w1 w2 : val) :
@@ -95,10 +95,10 @@ Section proof.
               ⊤ ⊤
               (λ v _, #(if decide (v = w1) then true else false)%V).
   Proof.
-    iIntros (<-%of_to_val <-%of_to_val Φ) "Aupd". wp_let. repeat wp_proj.
-    iMod (aupd_acc with "Aupd") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
+    iIntros (<-%of_to_val <-%of_to_val Q Φ) "? AU". wp_let. repeat wp_proj.
+    iMod (aupd_acc with "AU") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
     destruct (decide (v = w1)) as [Hv|Hv]; [wp_cas_suc|wp_cas_fail];
-    iMod ("Hclose" $! () with "H↦"); done.
+    iMod ("Hclose" $! () with "H↦") as "HΦ"; by iApply "HΦ".
   Qed.
 
   Definition primitive_atomic_heap : atomic_heap Σ :=
