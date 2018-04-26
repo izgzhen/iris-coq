@@ -156,8 +156,7 @@ Section sts.
       ⌜s ∈ S⌝ ∗ ▷ φ s ∗ ∀ s' T',
       ⌜sts.steps (s, T) (s', T')⌝ ∗ ▷ φ s' ={E∖↑N,E}=∗ sts_own γ s' T'.
   Proof.
-    iIntros (?) "[Hinv Hγf]". rewrite /sts_ctx.
-    iMod (inv_open with "Hinv") as "[Hinv Hclose]"; first done.
+    iIntros (?) "[#? Hγf]". rewrite /sts_ctx. iInv N as "Hinv" "Hclose".
     (* The following is essentially a very trivial composition of the accessors
        [sts_acc] and [inv_open] -- but since we don't have any good support
        for that currently, this gets more tedious than it should, with us having

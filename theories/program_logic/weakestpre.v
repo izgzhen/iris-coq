@@ -405,25 +405,26 @@ Section proofmode_classes.
     AddModal (|={E}=> P) P (WP e @ s; E {{ Φ }}).
   Proof. by rewrite /AddModal fupd_frame_r wand_elim_r fupd_wp. Qed.
 
-  Global Instance acc_elim_wp E1 E2 P P' (P'' : option _) e s Φ :
+  Global Instance acc_elim_wp {X} E1 E2 α β γ e s Φ :
     Atomic (stuckness_to_atomicity s) e →
-    AccElim E1 E2 P P' P'' (WP e @ s; E1 {{ Φ }})
-              (WP e @ s; E2 {{ v, P' ∗ coq_tactics.maybe_wand P'' (Φ v) }})%I.
+    AccElim (X:=X) E1 E2 α β γ (WP e @ s; E1 {{ Φ }})
+            (λ x, WP e @ s; E2 {{ v, β x ∗ coq_tactics.maybe_wand (γ x) (Φ v) }})%I.
   Proof.
     intros ?. rewrite /AccElim. setoid_rewrite coq_tactics.maybe_wand_sound.
-    iIntros "Hinner >[HP Hclose]".
-    iApply (wp_wand with "[Hinner HP]"); first by iApply "Hinner".
-    iIntros (v) "[HP HΦ]". iApply "HΦ". by iApply "Hclose".
+    iIntros "Hinner >Hacc". iDestruct "Hacc" as (x) "[Hα Hclose]".
+    iApply (wp_wand with "[Hinner Hα]"); first by iApply "Hinner".
+    iIntros (v) "[Hβ HΦ]". iApply "HΦ". by iApply "Hclose".
   Qed.
 
-  Global Instance acc_elim_wp_nonatomic E P P' (P'' : option _) e s Φ :
-    AccElim E E P P' P'' (WP e @ s; E {{ Φ }})
-            (WP e @ s; E {{ v, P' ∗ coq_tactics.maybe_wand P'' (Φ v) }})%I.
+  Global Instance acc_elim_wp_nonatomic {X} E α β γ e s Φ :
+    AccElim (X:=X) E E α β γ (WP e @ s; E {{ Φ }})
+            (λ x, WP e @ s; E {{ v, β x ∗ coq_tactics.maybe_wand (γ x) (Φ v) }})%I.
   Proof.
     rewrite /AccElim. setoid_rewrite coq_tactics.maybe_wand_sound.
-    iIntros "Hinner >[HP Hclose]". iApply wp_fupd.
-    iApply (wp_wand with "[Hinner HP]"); first by iApply "Hinner".
-    iIntros (v) "[HP HΦ]". iApply "HΦ". by iApply "Hclose".
+    iIntros "Hinner >Hacc". iDestruct "Hacc" as (x) "[Hα Hclose]".
+    iApply wp_fupd.
+    iApply (wp_wand with "[Hinner Hα]"); first by iApply "Hinner".
+    iIntros (v) "[Hβ HΦ]". iApply "HΦ". by iApply "Hclose".
   Qed.
 
 End proofmode_classes.

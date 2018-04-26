@@ -101,7 +101,7 @@ Section proofs.
     rewrite [F as X in na_own p X](union_difference_L (↑N) F) //.
     rewrite [X in (X ∪ _)](union_difference_L {[i]} (↑N)) ?na_own_union; [|set_solver..].
     iDestruct "Htoks" as "[[Htoki $] $]".
-    iMod (inv_open with "Hinv") as "[[[$ >Hdis]|>Htoki2] Hclose]"; first done.
+    iInv "Hinv" as "[[$ >Hdis]|>Htoki2]" "Hclose".
     - iMod ("Hclose" with "[Htoki]") as "_"; first auto.
       iIntros "!> [HP $]".
       iInv N as "[[_ >Hdis2]|>Hitok]".
@@ -113,14 +113,14 @@ Section proofs.
 
   Global Instance into_inv_na p N P : IntoInv (na_inv p N P) N.
 
-  Global Instance elim_inv_na p F E N P Q Q':
-    AccElim E E (▷ P ∗ na_own p (F ∖ ↑ N)) (▷ P ∗ na_own p (F ∖ ↑ N))
-              (Some (na_own p F)) Q Q' →
-    ElimInv (↑N ⊆ E ∧ ↑N ⊆ F) (na_inv p N P) (na_own p F)
-      (▷ P ∗ na_own p (F∖↑N)) Q Q'.
+  Global Instance elim_inv_na p F E N P :
+    IntoAcc (X:=unit) (na_inv p N P)
+            (↑N ⊆ E ∧ ↑N ⊆ F) (na_own p F) E E
+            (λ _, ▷ P ∗ na_own p (F∖↑N))%I (λ _, ▷ P ∗ na_own p (F∖↑N))%I
+              (λ _, Some (na_own p F))%I.
   Proof.
-    rewrite /ElimInv /AccElim. iIntros (Helim (?&?)) "(#Hinv & Hown & Hcont)".
-    iApply (Helim with "Hcont"). clear Helim. rewrite -assoc /=.
+    rewrite /IntoAcc /accessor. iIntros ((?&?)) "#Hinv Hown".
+    rewrite exist_unit -assoc /=.
     iApply (na_inv_open with "Hinv"); done.
   Qed.
 End proofs.

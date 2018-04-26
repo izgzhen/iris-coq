@@ -109,12 +109,12 @@ Qed.
 
 Global Instance into_inv_inv N P : IntoInv (inv N P) N.
 
-Global Instance elim_inv_inv E N P Q Q' :
-  AccElim E (E∖↑N) (▷ P) (▷ P) None Q Q' →
-  ElimInv (↑N ⊆ E) (inv N P) True (▷ P) Q Q'.
+Global Instance elim_inv_inv E N P :
+  IntoAcc (X:=unit) (inv N P) 
+          (↑N ⊆ E) True E (E∖↑N) (λ _, ▷ P)%I (λ _, ▷ P)%I (λ _, None)%I.
 Proof.
-  rewrite /ElimInv /AccElim. iIntros (Hopener ?) "(#Hinv & _ & Hcont)".
-  iApply (Hopener with "Hcont"). iApply inv_open; done.
+  rewrite /IntoAcc /accessor exist_unit.
+  iIntros (?) "#Hinv _". iApply inv_open; done.
 Qed.
 
 Lemma inv_open_timeless E N P `{!Timeless P} :
@@ -123,4 +123,5 @@ Proof.
   iIntros (?) "Hinv". iMod (inv_open with "Hinv") as "[>HP Hclose]"; auto.
   iIntros "!> {$HP} HP". iApply "Hclose"; auto.
 Qed.
+
 End inv.

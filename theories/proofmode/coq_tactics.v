@@ -746,6 +746,7 @@ Proof.
   rewrite envs_lookup_sound // envs_split_sound //.
   rewrite (envs_app_singleton_sound Δ2) //; simpl.
   rewrite HP1 into_wand /= -(add_modal P1' P1 Q). cancel [P1'].
+
   apply wand_intro_l. by rewrite assoc !wand_elim_r.
 Qed.
 
@@ -1075,22 +1076,6 @@ Proof.
   rewrite HΔ. by eapply elim_modal.
 Qed.
 
-(** * Invariants *)
-Lemma tac_inv_elim Δ Δ' i j φ p P Pin Pout Q Q' :
-  envs_lookup_delete false i Δ = Some (p, P, Δ') →
-  ElimInv φ P Pin Pout Q Q' →
-  φ →
-  (∀ R, ∃ Δ'',
-    envs_app false (Esnoc Enil j (Pin -∗ (Pout -∗ Q') -∗ R)%I) Δ' = Some Δ'' ∧
-    envs_entails Δ'' R) →
-  envs_entails Δ Q.
-Proof.
-  rewrite envs_entails_eq=> /envs_lookup_delete_Some [? ->] ?? /(_ Q) [Δ'' [? <-]].
-  rewrite (envs_lookup_sound' _ false) // envs_app_singleton_sound //; simpl.
-  apply wand_elim_r', wand_mono; last done. apply wand_intro_r, wand_intro_r.
-  rewrite intuitionistically_if_elim -assoc. auto.
-Qed.
-
 (** * Accumulate hypotheses *)
 Lemma tac_accu Δ P :
   prop_of_env (env_spatial Δ) = P →
@@ -1338,6 +1323,22 @@ Context {PROP : sbi}.
 Implicit Types Γ : env PROP.
 Implicit Types Δ : envs PROP.
 Implicit Types P Q : PROP.
+
+(** * Invariants *)
+Lemma tac_inv_elim Δ Δ' i j φ p Pinv Pin Pout (Pclose : option PROP) Q Q' :
+  envs_lookup_delete false i Δ = Some (p, Pinv, Δ') →
+  ElimInv φ Pinv Pin Pout Pclose Q Q' →
+  φ →
+  (∀ R, ∃ Δ'',
+    envs_app false (Esnoc Enil j (Pin -∗ (Pout -∗ maybe_wand Pclose Q') -∗ R)%I) Δ' = Some Δ'' ∧
+    envs_entails Δ'' R) →
+  envs_entails Δ Q.
+Proof.
+  rewrite envs_entails_eq=> /envs_lookup_delete_Some [? ->] ?? /(_ Q) [Δ'' [? <-]].
+  rewrite (envs_lookup_sound' _ false) // envs_app_singleton_sound //; simpl.
+  apply wand_elim_r', wand_mono; last done. apply wand_intro_r, wand_intro_r.
+  rewrite intuitionistically_if_elim maybe_wand_sound -assoc wand_curry. auto.
+Qed.
 
 (** * Rewriting *)
 Lemma tac_rewrite Δ i p Pxy d Q :

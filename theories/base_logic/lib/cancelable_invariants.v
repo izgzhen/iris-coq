@@ -83,21 +83,22 @@ Section proofs.
     cinv N γ P -∗ cinv_own γ p ={E,E∖↑N}=∗ ▷ P ∗ cinv_own γ p ∗ (▷ P ={E∖↑N,E}=∗ True).
   Proof.
     iIntros (?) "#Hinv Hγ". iDestruct "Hinv" as (P') "[#HP' Hinv]".
-    iMod (inv_open with "Hinv") as "[[HP | >Hγ'] Hclose]"; first done.
+    iInv N as "[HP | >Hγ']" "Hclose".
     - iIntros "!> {$Hγ}". iSplitL "HP".
-      + iApply "HP'". done.
+      + iNext. iApply "HP'". done.
       + iIntros "HP". iApply "Hclose". iLeft. iNext. by iApply "HP'".
     - iDestruct (cinv_own_1_l with "Hγ' Hγ") as %[].
   Qed.
 
   Global Instance into_inv_cinv N γ P : IntoInv (cinv N γ P) N.
 
-  Global Instance elim_inv_cinv E N γ P p Q Q' :
-    AccElim E (E∖↑N) (▷ P ∗ cinv_own γ p) (▷ P) None Q Q' →
-    ElimInv (↑N ⊆ E) (cinv N γ P) (cinv_own γ p) (▷ P ∗ cinv_own γ p) Q Q'.
+  Global Instance elim_inv_cinv E N γ P p :
+    IntoAcc (X:=unit) (cinv N γ P)
+            (↑N ⊆ E) (cinv_own γ p) E (E∖↑N)
+            (λ _, ▷ P ∗ cinv_own γ p)%I (λ _, ▷ P)%I (λ _, None)%I.
   Proof.
-    rewrite /ElimInv /AccElim. iIntros (Helim ?) "(#Hinv & Hown & Hcont)".
-    iApply (Helim with "Hcont"). clear Helim. rewrite -assoc.
+    rewrite /IntoAcc /accessor. iIntros (?) "#Hinv Hown".
+    rewrite exist_unit -assoc.
     iApply (cinv_open with "Hinv"); done.
   Qed.
 End proofs.

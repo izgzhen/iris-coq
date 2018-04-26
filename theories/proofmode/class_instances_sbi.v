@@ -552,15 +552,46 @@ Global Instance add_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
 Proof. by rewrite /AddModal !embed_fupd. Qed.
 
 (* AccElim *)
-Global Instance acc_elim_vs `{BiFUpd PROP} E1 E2 E P P' (P'' : option PROP) Q :
+Global Instance acc_elim_vs `{BiFUpd PROP} {X} E1 E2 E α β γ Q :
   (* FIXME: Why %I? AccElim sets the right scopes! *)
-  AccElim E1 E2 P P' P''
-          (|={E1,E}=> Q) (|={E2}=> (P' ∗ (coq_tactics.maybe_wand P'' (|={E1,E}=> Q))))%I.
+  AccElim (X:=X) E1 E2 α β γ
+          (|={E1,E}=> Q)
+          (λ x, |={E2}=> (β x ∗ (coq_tactics.maybe_wand (γ x) (|={E1,E}=> Q))))%I.
 Proof.
-  rewrite /AccElim coq_tactics.maybe_wand_sound.
-  iIntros "Hinner >[HP Hclose]".
-  iMod ("Hinner" with "HP") as "[HP Hfin]".
-  iMod ("Hclose" with "HP") as "HP''". by iApply "Hfin".
+  rewrite /AccElim. setoid_rewrite coq_tactics.maybe_wand_sound.
+  iIntros "Hinner >Hacc". iDestruct "Hacc" as (x) "[Hα Hclose]".
+  iMod ("Hinner" with "Hα") as "[Hβ Hfin]".
+  iMod ("Hclose" with "Hβ") as "Hγ". by iApply "Hfin".
+Qed.
+
+(* IntoAcc *)
+(* TODO: We could have instances from "unfolded" accessors with or without
+   the first binder. *)
+
+(* ElimInv *)
+Global Instance elim_inv_acc_without_close `{BiFUpd PROP} φ Pinv Pin
+       E1 E2 α β γ Q (Q' : () → PROP) :
+  IntoAcc (X:=unit) Pinv φ Pin E1 E2 α β γ →
+  AccElim (X:=unit) E1 E2 α β γ Q Q' →
+  ElimInv φ Pinv Pin (α ()) None Q (Q' ()).
+Proof.
+  rewrite /AccElim /IntoAcc /ElimInv.
+  iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
+  iApply (Helim with "[Hcont]").
+  - rewrite right_id. iIntros ([]). done.
+  - iApply (Hacc with "Hinv Hin"). done.
+Qed.
+
+Global Instance elim_inv_acc_with_close `{BiFUpd PROP} φ Pinv Pin
+       E1 E2 α β γ Q Q' :
+  IntoAcc (X:=unit) Pinv φ Pin E1 E2 α β γ →
+  (∀ R, ElimModal True false false (|={E1,E2}=> R) R Q Q') →
+  ElimInv φ Pinv Pin (α ()) (Some (β () ={E2,E1}=∗ default emp (γ ()) id))%I Q Q'.
+Proof.
+  rewrite /AccElim /IntoAcc /ElimInv.
+  iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
+  iMod (Hacc with "Hinv Hin") as ([]) "[Hα Hclose]"; first done.
+  iApply "Hcont". simpl. iSplitL "Hα"; done.
 Qed.
 
 (* IntoLater *)
