@@ -486,18 +486,21 @@ Global Instance add_modal_at_fupd_goal `{BiFUpd PROP} E1 E2 𝓟 𝓟' Q i :
   AddModal 𝓟 𝓟' (|={E1,E2}=> Q i) → AddModal 𝓟 𝓟' ((|={E1,E2}=> Q) i).
 Proof. by rewrite /AddModal !monPred_at_fupd. Qed.
 
-Global Instance elim_inv_embed φ 𝓟inv 𝓟in 𝓟out 𝓟close Pin Pout Pclose Q Q' :
-  (∀ i, ElimInv φ 𝓟inv 𝓟in 𝓟out 𝓟close (Q i) (Q' i)) →
-  MakeEmbed 𝓟in Pin → MakeEmbed 𝓟out Pout →
-  match 𝓟close, Pclose with
-  | Some 𝓟close, Some Pclose => MakeEmbed 𝓟close Pclose
-  | None, None => True
-  | _, _ => False
-  end →
-  ElimInv φ ⎡𝓟inv⎤ Pin Pout Pclose Q Q'.
+Global Instance elim_inv_embed_with_close φ 𝓟inv 𝓟in 𝓟out 𝓟close Pin Pout Pclose Q Q' :
+  (∀ i, ElimInv φ 𝓟inv 𝓟in 𝓟out (Some 𝓟close) (Q i) (Q' i)) →
+  MakeEmbed 𝓟in Pin → MakeEmbed 𝓟out Pout → MakeEmbed 𝓟close Pclose →
+  ElimInv φ ⎡𝓟inv⎤ Pin Pout (Some Pclose) Q Q'.
 Proof.
-  rewrite /MakeEmbed /ElimInv=>H <- <- Hclose ?. iStartProof PROP.
-  iIntros (?) "(?&?&HQ')". iApply H; [done|]. iFrame. iIntros "?".
-  destruct 𝓟close; destruct Pclose; try rewrite -Hclose; iApply "HQ'"; done.
+  rewrite /MakeEmbed /ElimInv=>H <- <- <- ?. iStartProof PROP.
+  iIntros (?) "(?&?&HQ')". iApply H; [done|]. iFrame. iIntros "?". by iApply "HQ'".
 Qed.
+Global Instance elim_inv_embed_without_close φ 𝓟inv 𝓟in 𝓟out Pin Pout Q Q' :
+  (∀ i, ElimInv φ 𝓟inv 𝓟in 𝓟out None (Q i) (Q' i)) →
+  MakeEmbed 𝓟in Pin → MakeEmbed 𝓟out Pout →
+  ElimInv φ ⎡𝓟inv⎤ Pin Pout None Q Q'.
+Proof.
+  rewrite /MakeEmbed /ElimInv=>H <- <- ?. iStartProof PROP.
+  iIntros (?) "(?&?&HQ')". iApply H; [done|]. iFrame. iIntros "?". by iApply "HQ'".
+Qed.
+
 End sbi.
