@@ -351,10 +351,11 @@ Definition bin_op_eval_bool (op : bin_op) (b1 b2 : bool) : option base_lit :=
   end.
 
 Definition bin_op_eval (op : bin_op) (v1 v2 : val) : option val :=
+  if decide (op = EqOp) then Some $ LitV $ LitBool $ bool_decide (v1 = v2) else
   match v1, v2 with
   | LitV (LitInt n1), LitV (LitInt n2) => Some $ LitV $ bin_op_eval_int op n1 n2
   | LitV (LitBool b1), LitV (LitBool b2) => LitV <$> bin_op_eval_bool op b1 b2
-  | v1, v2 => guard (op = EqOp); Some $ LitV $ LitBool $ bool_decide (v1 = v2)
+  | _, _ => None
   end.
 
 Inductive head_step : expr → state → expr → state → list (expr) → Prop :=
