@@ -1093,6 +1093,26 @@ Proof.
   rewrite envs_entails_eq => <-. by setoid_rewrite <-envs_incr_counter_equiv.
 Qed.
 
+(** * Invariants *)
+Lemma tac_inv_elim {X : Type} Δ Δ' i j φ p Pinv Pin Pout (Pclose : option (X → PROP))
+      Q (Q' : X → PROP) :
+  envs_lookup_delete false i Δ = Some (p, Pinv, Δ') →
+  ElimInv φ Pinv Pin Pout Pclose Q Q' →
+  φ →
+  (∀ R, ∃ Δ'',
+    envs_app false (Esnoc Enil j
+                    (Pin -∗ (∀ x, Pout x -∗ default (Q' x) Pclose (λ Pclose, Pclose x -∗ Q' x)) -∗ R)%I) Δ'
+      = Some Δ'' ∧
+    envs_entails Δ'' R) →
+  envs_entails Δ Q.
+Proof.
+  rewrite envs_entails_eq=> /envs_lookup_delete_Some [? ->] Hinv ? /(_ Q) [Δ'' [? <-]].
+  rewrite (envs_lookup_sound' _ false) // envs_app_singleton_sound //; simpl.
+  apply wand_elim_r', wand_mono; last done. apply wand_intro_r, wand_intro_r.
+  rewrite intuitionistically_if_elim -assoc. destruct Pclose; simpl in *.
+  - setoid_rewrite wand_curry. auto.
+  - setoid_rewrite <-(right_id emp%I _ (Pout _)). auto.
+Qed.
 
 End bi_tactics.
 
@@ -1323,27 +1343,6 @@ Context {PROP : sbi}.
 Implicit Types Γ : env PROP.
 Implicit Types Δ : envs PROP.
 Implicit Types P Q : PROP.
-
-(** * Invariants *)
-Lemma tac_inv_elim {X : Type} Δ Δ' i j φ p Pinv Pin Pout (Pclose : option (X → PROP))
-      Q (Q' : X → PROP) :
-  envs_lookup_delete false i Δ = Some (p, Pinv, Δ') →
-  ElimInv φ Pinv Pin Pout Pclose Q Q' →
-  φ →
-  (∀ R, ∃ Δ'',
-    envs_app false (Esnoc Enil j
-                    (Pin -∗ (∀ x, Pout x -∗ default (Q' x) Pclose (λ Pclose, Pclose x -∗ Q' x)) -∗ R)%I) Δ'
-      = Some Δ'' ∧
-    envs_entails Δ'' R) →
-  envs_entails Δ Q.
-Proof.
-  rewrite envs_entails_eq=> /envs_lookup_delete_Some [? ->] Hinv ? /(_ Q) [Δ'' [? <-]].
-  rewrite (envs_lookup_sound' _ false) // envs_app_singleton_sound //; simpl.
-  apply wand_elim_r', wand_mono; last done. apply wand_intro_r, wand_intro_r.
-  rewrite intuitionistically_if_elim -assoc. destruct Pclose; simpl in *.
-  - setoid_rewrite wand_curry. auto.
-  - setoid_rewrite <-(right_id emp%I _ (Pout _)). auto.
-Qed.
 
 (** * Rewriting *)
 Lemma tac_rewrite Δ i p Pxy d Q :

@@ -571,11 +571,8 @@ Hint Mode IntoAcc + - ! - - - - - - - - : typeclass_instances.
    still benefit from [iInv].
 
    TODO: Add support for a binder (like accessors have it).
-
-   This is defined on sbi instead of bi as typeclass search otherwise
-   fails (e.g. in the iInv as used in cancelable_invariants.v).
 *)
-Class ElimInv {PROP : sbi} {X : Type} (φ : Prop)
+Class ElimInv {PROP : bi} {X : Type} (φ : Prop)
       (Pinv Pin : PROP) (Pout : X → PROP) (Pclose : option (X → PROP))
       (Q : PROP) (Q' : X → PROP) :=
   elim_inv : φ → Pinv ∗ Pin ∗ (∀ x, Pout x ∗ (default (λ _, emp) Pclose id) x -∗ Q' x) ⊢ Q.
