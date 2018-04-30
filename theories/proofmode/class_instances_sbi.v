@@ -569,28 +569,31 @@ Qed.
    the first binder. *)
 
 (* ElimInv *)
-Global Instance elim_inv_acc_without_close `{BiFUpd PROP} φ Pinv Pin
-       E1 E2 α β γ Q (Q' : () → PROP) :
-  IntoAcc (X:=unit) Pinv φ Pin E1 E2 α β γ →
-  AccElim (X:=unit) E1 E2 α β γ Q Q' →
-  ElimInv φ Pinv Pin (α ()) None Q (Q' ()).
+Global Instance elim_inv_acc_without_close `{BiFUpd PROP} {X : Type}
+       φ Pinv Pin
+       E1 E2 α β γ Q (Q' : X → PROP) :
+  IntoAcc (X:=X) Pinv φ Pin E1 E2 α β γ →
+  AccElim (X:=X) E1 E2 α β γ Q Q' →
+  ElimInv φ Pinv Pin α None Q Q'.
 Proof.
   rewrite /AccElim /IntoAcc /ElimInv.
   iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
   iApply (Helim with "[Hcont]").
-  - rewrite right_id. iIntros ([]). done.
+  - iIntros (x) "Hα". iApply "Hcont". iSplitL; done.
   - iApply (Hacc with "Hinv Hin"). done.
 Qed.
 
-Global Instance elim_inv_acc_with_close `{BiFUpd PROP} φ Pinv Pin
+Global Instance elim_inv_acc_with_close `{BiFUpd PROP} {X : Type}
+       φ Pinv Pin
        E1 E2 α β γ Q Q' :
-  IntoAcc (X:=unit) Pinv φ Pin E1 E2 α β γ →
+  IntoAcc Pinv φ Pin E1 E2 α β γ →
   (∀ R, ElimModal True false false (|={E1,E2}=> R) R Q Q') →
-  ElimInv φ Pinv Pin (α ()) (Some (β () ={E2,E1}=∗ default emp (γ ()) id))%I Q Q'.
+  ElimInv (X:=X) φ Pinv Pin α (Some (λ x, β x ={E2,E1}=∗ default emp (γ x) id))%I
+          Q (λ _, Q').
 Proof.
   rewrite /AccElim /IntoAcc /ElimInv.
   iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
-  iMod (Hacc with "Hinv Hin") as ([]) "[Hα Hclose]"; first done.
+  iMod (Hacc with "Hinv Hin") as (x) "[Hα Hclose]"; first done.
   iApply "Hcont". simpl. iSplitL "Hα"; done.
 Qed.
 

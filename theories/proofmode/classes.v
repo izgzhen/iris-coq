@@ -573,14 +573,15 @@ Hint Mode IntoAcc + - ! - - - - - - - - : typeclass_instances.
    TODO: Add support for a binder (like accessors have it).
 
    This is defined on sbi instead of bi as typeclass search otherwise
-   fails (e.g. in the iInv as used in cancelable_invariants.v)
+   fails (e.g. in the iInv as used in cancelable_invariants.v).
 *)
-Class ElimInv {PROP : sbi} (φ : Prop)
-      (Pinv Pin : PROP) (Pout : PROP) (Pclose : option PROP) (Q Q' : PROP) :=
-  elim_inv : φ → Pinv ∗ Pin ∗ (Pout ∗ default emp Pclose id -∗ Q') ⊢ Q.
-Arguments ElimInv {_} _ _%I _%I _%I _%I _%I _%I : simpl never.
-Arguments elim_inv {_} _ _%I _%I _%I _%I _%I _%I {_}.
-Hint Mode ElimInv + - ! - - ! ! - : typeclass_instances.
+Class ElimInv {PROP : sbi} {X : Type} (φ : Prop)
+      (Pinv Pin : PROP) (Pout : X → PROP) (Pclose : option (X → PROP))
+      (Q : PROP) (Q' : X → PROP) :=
+  elim_inv : φ → Pinv ∗ Pin ∗ (∀ x, Pout x ∗ (default (λ _, emp) Pclose id) x -∗ Q' x) ⊢ Q.
+Arguments ElimInv {_} {_} _ _%I _%I _%I _%I _%I _%I : simpl never.
+Arguments elim_inv {_} {_} _ _%I _%I _%I _%I _%I _%I {_}.
+Hint Mode ElimInv + - - ! - - ! ! - : typeclass_instances.
 
 (* We make sure that tactics that perform actions on *specific* hypotheses or
 parts of the goal look through the [tc_opaque] connective, which is used to make
@@ -628,6 +629,6 @@ Instance elim_modal_tc_opaque {PROP : bi} φ p p' (P P' Q Q' : PROP) :
   ElimModal φ p p' P P' Q Q' → ElimModal φ p p' (tc_opaque P) P' Q Q' := id.
 Instance into_inv_tc_opaque {PROP : bi} (P : PROP) N :
   IntoInv P N → IntoInv (tc_opaque P) N := id.
-Instance elim_inv_tc_opaque {PROP : sbi} φ Pinv Pin Pout Pclose Q Q' :
-  ElimInv (PROP:=PROP) φ Pinv Pin Pout Pclose Q Q' →
+Instance elim_inv_tc_opaque {PROP : sbi} {X} φ Pinv Pin Pout Pclose Q Q' :
+  ElimInv (PROP:=PROP) (X:=X) φ Pinv Pin Pout Pclose Q Q' →
   ElimInv φ (tc_opaque Pinv) Pin Pout Pclose Q Q' := id.

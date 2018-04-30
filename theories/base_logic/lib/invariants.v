@@ -109,7 +109,7 @@ Qed.
 
 Global Instance into_inv_inv N P : IntoInv (inv N P) N.
 
-Global Instance elim_inv_inv E N P :
+Global Instance into_acc_inv E N P :
   IntoAcc (X:=unit) (inv N P) 
           (↑N ⊆ E) True E (E∖↑N) (λ _, ▷ P)%I (λ _, ▷ P)%I (λ _, None)%I.
 Proof.

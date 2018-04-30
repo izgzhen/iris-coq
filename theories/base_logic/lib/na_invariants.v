@@ -113,7 +113,7 @@ Section proofs.
 
   Global Instance into_inv_na p N P : IntoInv (na_inv p N P) N.
 
-  Global Instance elim_inv_na p F E N P :
+  Global Instance into_acc_na p F E N P :
     IntoAcc (X:=unit) (na_inv p N P)
             (↑N ⊆ E ∧ ↑N ⊆ F) (na_own p F) E E
             (λ _, ▷ P ∗ na_own p (F∖↑N))%I (λ _, ▷ P ∗ na_own p (F∖↑N))%I

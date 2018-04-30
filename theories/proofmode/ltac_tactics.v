@@ -1887,7 +1887,7 @@ Tactic Notation "iAssumptionInv" constr(N) :=
 
 (* The argument [select] is the namespace [N] or hypothesis name ["H"] of the
 invariant. *)
-Tactic Notation "iInvCore" constr(select) "with" constr(pats) "as" tactic(tac) open_constr(Hclose) :=
+Tactic Notation "iInvCore" constr(select) "with" constr(pats) "as" open_constr(Hclose) "in" tactic(tac) :=
   iStartProof;
   let pats := spec_pat.parse pats in
   lazymatch pats with
@@ -1896,7 +1896,7 @@ Tactic Notation "iInvCore" constr(select) "with" constr(pats) "as" tactic(tac) o
   end;
   let H := iFresh in
   let Pclose_pat :=
-    match Hclose with
+    lazymatch Hclose with
     | Some _ => open_constr:(Some _)
     | None => open_constr:(None)
     end in
@@ -1917,97 +1917,161 @@ Tactic Notation "iInvCore" constr(select) "with" constr(pats) "as" tactic(tac) o
      fail "iInv: cannot eliminate invariant " I
     |try (split_and?; solve [ fast_done | solve_ndisj ])
     |let R := fresh in intros R; eexists; split; [env_reflexivity|];
+     (* Now we are left proving [envs_entails Δ'' R]. *)
      iSpecializePat H pats; last (
        iApplyHyp H; clear R; env_cbv;
+       (* Now the goal is [∀ x, Pout x -∗ maybe_wand (Pclose x) (Q' x)] *)
+       let x := fresh in
+       iIntros (x);
        iIntro H; (* H was spatial, so it's gone due to the apply and we can reuse the name *)
-       match Hclose with
+       lazymatch Hclose with
        | Some ?Hcl => iIntros Hcl
        | None => idtac
        end;
-       tac H
+       tac x H
     )].
 
 (* Without closing view shift *)
-Tactic Notation "iInvCore" constr(N) "with" constr(pats) "as" tactic(tac) :=
-  iInvCore N with pats as ltac:(tac) (@None string).
+Tactic Notation "iInvCore" constr(N) "with" constr(pats) "in" tactic(tac) :=
+  iInvCore N with pats as (@None string) in ltac:(tac).
 (* Without pattern *)
-Tactic Notation "iInvCore" constr(N) "as" tactic(tac) constr(Hclose) :=
-  iInvCore N with "[$]" as ltac:(tac) Hclose.
+Tactic Notation "iInvCore" constr(N) "as" constr(Hclose) "in" tactic(tac) :=
+  iInvCore N with "[$]" as Hclose in ltac:(tac).
 (* Without both *)
-Tactic Notation "iInvCore" constr(N) "as" tactic(tac) :=
-  iInvCore N with "[$]" as ltac:(tac) (@None string).
+Tactic Notation "iInvCore" constr(N) "in" tactic(tac) :=
+  iInvCore N with "[$]" as (@None string) in ltac:(tac).
 
 (* With everything *)
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" constr(pat) constr(Hclose) :=
-   iInvCore N with Hs as (fun H => iDestructHyp H as pat) (Some Hclose).
+   iInvCore N with Hs as (Some Hclose) in (fun x H => iDestructHyp H as pat).
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1) ")"
     constr(pat) constr(Hclose) :=
-   iInvCore N with Hs as (fun H => iDestructHyp H as (x1) pat) (Some Hclose).
+   iInvCore N with Hs as (Some Hclose) in (fun x H => iDestructHyp H as (x1) pat).
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) constr(Hclose) :=
-   iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2) pat) (Some Hclose).
+   iInvCore N with Hs as (Some Hclose) in (fun x H => iDestructHyp H as (x1 x2) pat).
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")"
     constr(pat) constr(Hclose) :=
-   iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2 x3) pat) (Some Hclose).
+   iInvCore N with Hs as (Some Hclose) in (fun x H => iDestructHyp H as (x1 x2 x3) pat).
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) constr(Hclose) :=
-   iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2 x3 x4) pat) (Some Hclose).
+   iInvCore N with Hs as (Some Hclose) in (fun x H => iDestructHyp H as (x1 x2 x3 x4) pat).
 
 (* Without closing view shift *)
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" constr(pat) :=
-   iInvCore N with Hs as (fun H => iDestructHyp H as pat).
+   iInvCore N with Hs in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as pat
+                | _ => fail "Missing intro pattern for accessor variable"
+                end).
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
-   iInvCore N with Hs as (fun H => iDestructHyp H as (x1) pat).
+   iInvCore N with Hs in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1) pat
+                | _ => revert x; intros x1; iDestructHyp H as      pat
+                end).
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) :=
-   iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2) pat).
+   iInvCore N with Hs in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1 x2) pat
+                | _ => revert x; intros x1; iDestructHyp H as (   x2) pat
+                end).
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")"
     constr(pat) :=
-   iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2 x3) pat).
+   iInvCore N with Hs in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1 x2 x3) pat
+                | _ => revert x; intros x1; iDestructHyp H as (   x2 x3) pat
+                end).
 Tactic Notation "iInv" constr(N) "with" constr(Hs) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
-   iInvCore N with Hs as (fun H => iDestructHyp H as (x1 x2 x3 x4) pat).
+   iInvCore N with Hs in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1 x2 x3 x4) pat
+                | _ => revert x; intros x1; iDestructHyp H as (   x2 x3 x4) pat
+                end).
 
 (* Without pattern *)
 Tactic Notation "iInv" constr(N) "as" constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestructHyp H as pat) (Some Hclose).
+   iInvCore N as (Some Hclose) in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as pat
+                | _ => fail "Missing intro pattern for accessor variable"
+                end).
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1) ")"
     constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestructHyp H as (x1) pat) (Some Hclose).
+   iInvCore N as (Some Hclose) in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1) pat
+                | _ => revert x; intros x1; iDestructHyp H as      pat
+                end).
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestructHyp H as (x1 x2) pat) (Some Hclose).
+   iInvCore N as (Some Hclose) in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1 x2) pat
+                | _ => revert x; intros x1; iDestructHyp H as (   x2) pat
+                end).
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")"
     constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestructHyp H as (x1 x2 x3) pat) (Some Hclose).
+   iInvCore N as (Some Hclose) in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1 x2 x3) pat
+                | _ => revert x; intros x1; iDestructHyp H as (   x2 x3) pat
+                end).
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestructHyp H as (x1 x2 x3 x4) pat) (Some Hclose).
+   iInvCore N as (Some Hclose) in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1 x2 x3 x4) pat
+                | _ => revert x; intros x1; iDestructHyp H as (   x2 x3 x4) pat
+                end).
 
 (* Without both *)
 Tactic Notation "iInv" constr(N) "as" constr(pat) :=
-   iInvCore N as (fun H => iDestructHyp H as pat).
+   iInvCore N in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as pat
+                | _ => fail "Missing intro pattern for accessor variable"
+                end).
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
-   iInvCore N as (fun H => iDestructHyp H as (x1) pat).
+   iInvCore N in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1) pat
+                | _ => revert x; intros x1; iDestructHyp H as      pat
+                end).
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) ")" constr(pat) :=
-   iInvCore N as (fun H => iDestructHyp H as (x1 x2) pat).
+   iInvCore N in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1 x2) pat
+                | _ => revert x; intros x1; iDestructHyp H as (   x2)  pat
+                end).
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) ")"
     constr(pat) :=
-   iInvCore N as (fun H => iDestructHyp H as (x1 x2 x3) pat).
+   iInvCore N in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1 x2 x3) pat
+                | _ => revert x; intros x1; iDestructHyp H as (   x2 x3)  pat
+                end).
 Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
     simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
     constr(pat) :=
-   iInvCore N as (fun H => iDestructHyp H as (x1 x2 x3 x4) pat).
+   iInvCore N in
+    (fun x H => lazymatch type of x with
+                | unit => destruct x as []; iDestructHyp H as (x1 x2 x3 x4) pat
+                | _ => revert x; intros x1; iDestructHyp H as (   x2 x3 x4)  pat
+                end).
 
 (** Miscellaneous *)
 Tactic Notation "iAccu" :=

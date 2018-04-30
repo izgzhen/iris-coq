@@ -92,7 +92,7 @@ Section proofs.
 
   Global Instance into_inv_cinv N γ P : IntoInv (cinv N γ P) N.
 
-  Global Instance elim_inv_cinv E N γ P p :
+  Global Instance into_acc_cinv E N γ P p :
     IntoAcc (X:=unit) (cinv N γ P)
             (↑N ⊆ E) (cinv_own γ p) E (E∖↑N)
             (λ _, ▷ P ∗ cinv_own γ p)%I (λ _, ▷ P)%I (λ _, None)%I.
