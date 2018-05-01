@@ -62,10 +62,10 @@ Section proof.
   Proof.
     iIntros (Φ) "#Hl HΦ". iDestruct "Hl" as (l ->) "#Hinv".
     wp_rec. iInv N as ([]) "[Hl HR]".
-    - wp_cas_fail. iSplitL "Hl"; first (iNext; iExists true; eauto).
+    - wp_cas_fail. iModIntro. iSplitL "Hl"; first (iNext; iExists true; eauto).
       iApply ("HΦ" $! false). done.
     - wp_cas_suc. iDestruct "HR" as "[Hγ HR]".
-      iSplitL "Hl"; first (iNext; iExists true; eauto).
+      iModIntro. iSplitL "Hl"; first (iNext; iExists true; eauto).
       rewrite /locked. by iApply ("HΦ" $! true with "[$Hγ $HR]").
   Qed.
 
@@ -85,7 +85,7 @@ Section proof.
     iDestruct "Hlock" as (l ->) "#Hinv".
     rewrite /release /=. wp_let. iInv N as (b) "[Hl _]".
     wp_store. iSplitR "HΦ"; last by iApply "HΦ".
-    iNext. iExists false. by iFrame.
+    iModIntro. iNext. iExists false. by iFrame.
   Qed.
 End proof.
 

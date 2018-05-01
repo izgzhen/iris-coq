@@ -56,7 +56,7 @@ Proof.
   - wp_seq. iApply "HΦ". rewrite /join_handle. eauto.
   - wp_bind (f _). iApply (wp_wand with "Hf"); iIntros (v) "Hv".
     iInv N as (v') "[Hl _]".
-    wp_store. iSplit; last done. iNext. iExists (SOMEV v). iFrame. eauto.
+    wp_store. iSplitL; last done. iIntros "!> !>". iExists (SOMEV v). iFrame. eauto.
 Qed.
 
 Lemma join_spec (Ψ : val → iProp Σ) l :
@@ -65,10 +65,10 @@ Proof.
   iIntros (Φ) "H HΦ". iDestruct "H" as (γ) "[Hγ #?]".
   iLöb as "IH". wp_rec. wp_bind (! _)%E. iInv N as (v) "[Hl Hinv]".
   wp_load. iDestruct "Hinv" as "[%|Hinv]"; subst.
-  - iSplitL "Hl"; [iNext; iExists _; iFrame; eauto|].
+  - iModIntro. iSplitL "Hl"; [iNext; iExists _; iFrame; eauto|].
     wp_match. iApply ("IH" with "Hγ [HΦ]"). auto.
   - iDestruct "Hinv" as (v' ->) "[HΨ|Hγ']".
-    + iSplitL "Hl Hγ"; [iNext; iExists _; iFrame; eauto|].
+    + iModIntro. iSplitL "Hl Hγ"; [iNext; iExists _; iFrame; eauto|].
       wp_match. by iApply "HΦ".
     + iDestruct (own_valid_2 with "Hγ Hγ'") as %[].
 Qed.

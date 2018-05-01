@@ -91,13 +91,13 @@ Section proof.
     iInv N as (o n) "(Hlo & Hln & Ha)".
     wp_load. destruct (decide (x = o)) as [->|Hneq].
     - iDestruct "Ha" as "[Hainv [[Ho HR] | Haown]]".
-      + iSplitL "Hlo Hln Hainv Ht".
+      + iModIntro. iSplitL "Hlo Hln Hainv Ht".
         { iNext. iExists o, n. iFrame. }
         wp_let. wp_op. case_bool_decide; [|done]. wp_if.
         iApply ("HΦ" with "[-]"). rewrite /locked. iFrame. eauto.
       + iDestruct (own_valid_2 with "Ht Haown") as % [_ ?%gset_disj_valid_op].
         set_solver.
-    - iSplitL "Hlo Hln Ha".
+    - iModIntro. iSplitL "Hlo Hln Ha".
       { iNext. iExists o, n. by iFrame. }
       wp_let. wp_op. case_bool_decide; [simplify_eq |].
       wp_if. iApply ("IH" with "Ht"). iNext. by iExact "HΦ".
@@ -109,7 +109,7 @@ Section proof.
     iIntros (ϕ) "Hl HΦ". iDestruct "Hl" as (lo ln ->) "#Hinv".
     iLöb as "IH". wp_rec. wp_bind (! _)%E. simplify_eq/=. wp_proj.
     iInv N as (o n) "[Hlo [Hln Ha]]".
-    wp_load. iSplitL "Hlo Hln Ha".
+    wp_load. iModIntro. iSplitL "Hlo Hln Ha".
     { iNext. iExists o, n. by iFrame. }
     wp_let. wp_proj. wp_op. wp_bind (CAS _ _ _).
     iInv N as (o' n') "(>Hlo' & >Hln' & >Hauth & Haown)".
@@ -119,14 +119,14 @@ Section proof.
         eapply (gset_disj_alloc_empty_local_update _ {[ n ]}).
         apply (seq_set_S_disjoint 0). }
       rewrite -(seq_set_S_union_L 0).
-      wp_cas_suc. iSplitL "Hlo' Hln' Haown Hauth".
+      wp_cas_suc. iModIntro. iSplitL "Hlo' Hln' Haown Hauth".
       { iNext. iExists o', (S n).
         rewrite Nat2Z.inj_succ -Z.add_1_r. by iFrame. }
       wp_if.
       iApply (wait_loop_spec γ (#lo, #ln) with "[-HΦ]").
       + iFrame. rewrite /is_lock; eauto 10.
       + by iNext.
-    - wp_cas_fail.
+    - wp_cas_fail. iModIntro.
       iSplitL "Hlo' Hln' Hauth Haown".
       { iNext. iExists o', n'. by iFrame. }
       wp_if. by iApply "IH"; auto.
@@ -142,7 +142,7 @@ Section proof.
     wp_load.
     iDestruct (own_valid_2 with "Hauth Hγo") as
       %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
-    iSplitL "Hlo Hln Hauth Haown".
+    iModIntro. iSplitL "Hlo Hln Hauth Haown".
     { iNext. iExists o, n. by iFrame. }
     wp_op.
     iInv N as (o' n') "(>Hlo & >Hln & >Hauth & Haown)".
@@ -155,7 +155,7 @@ Section proof.
     { apply auth_update, prod_local_update_1.
       by apply option_local_update, (exclusive_local_update _ (Excl (S o))). }
     iModIntro. iSplitR "HΦ"; last by iApply "HΦ".
-    iNext. iExists (S o), n'.
+    iIntros "!> !>". iExists (S o), n'.
     rewrite Nat2Z.inj_succ -Z.add_1_r. iFrame. iLeft. by iFrame.
   Qed.
 End proof.

@@ -408,23 +408,23 @@ Section proofmode_classes.
   Global Instance acc_elim_wp {X} E1 E2 α β γ e s Φ :
     Atomic (stuckness_to_atomicity s) e →
     AccElim (X:=X) E1 E2 α β γ (WP e @ s; E1 {{ Φ }})
-            (λ x, WP e @ s; E2 {{ v, β x ∗ coq_tactics.maybe_wand (γ x) (Φ v) }})%I.
+            (λ x, WP e @ s; E2 {{ v, |={E2}=> β x ∗ coq_tactics.maybe_wand (γ x) (Φ v) }})%I.
   Proof.
     intros ?. rewrite /AccElim. setoid_rewrite coq_tactics.maybe_wand_sound.
     iIntros "Hinner >Hacc". iDestruct "Hacc" as (x) "[Hα Hclose]".
     iApply (wp_wand with "[Hinner Hα]"); first by iApply "Hinner".
-    iIntros (v) "[Hβ HΦ]". iApply "HΦ". by iApply "Hclose".
+    iIntros (v) ">[Hβ HΦ]". iApply "HΦ". by iApply "Hclose".
   Qed.
 
   Global Instance acc_elim_wp_nonatomic {X} E α β γ e s Φ :
     AccElim (X:=X) E E α β γ (WP e @ s; E {{ Φ }})
-            (λ x, WP e @ s; E {{ v, β x ∗ coq_tactics.maybe_wand (γ x) (Φ v) }})%I.
+            (λ x, WP e @ s; E {{ v, |={E}=> β x ∗ coq_tactics.maybe_wand (γ x) (Φ v) }})%I.
   Proof.
     rewrite /AccElim. setoid_rewrite coq_tactics.maybe_wand_sound.
     iIntros "Hinner >Hacc". iDestruct "Hacc" as (x) "[Hα Hclose]".
     iApply wp_fupd.
     iApply (wp_wand with "[Hinner Hα]"); first by iApply "Hinner".
-    iIntros (v) "[Hβ HΦ]". iApply "HΦ". by iApply "Hclose".
+    iIntros (v) ">[Hβ HΦ]". iApply "HΦ". by iApply "Hclose".
   Qed.
 
 End proofmode_classes.

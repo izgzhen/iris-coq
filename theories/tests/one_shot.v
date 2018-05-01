@@ -53,7 +53,7 @@ Proof.
     + iMod (own_update with "Hγ") as "Hγ".
       { by apply cmra_update_exclusive with (y:=Shot n). }
       wp_cas_suc. iSplitL; last eauto.
-      iNext; iRight; iExists n; by iFrame.
+      iModIntro. iNext; iRight; iExists n; by iFrame.
     + wp_cas_fail. iSplitL; last eauto.
       rewrite /one_shot_inv; eauto 10.
   - iIntros "!# /=". wp_seq. wp_bind (! _)%E.
@@ -70,7 +70,7 @@ Proof.
       + iSplit. iLeft; by iSplitL "Hl". eauto.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
     iSplitL "Hinv"; first by eauto.
-    wp_let. iIntros "!#". wp_seq.
+    iModIntro. wp_let. iIntros "!#". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as (m) "[% Hγ']"; subst.
     { by wp_match. }
     wp_match. wp_bind (! _)%E.
@@ -78,7 +78,7 @@ Proof.
     { by iDestruct (own_valid_2 with "Hγ Hγ'") as %?. }
     wp_load.
     iDestruct (own_valid_2 with "Hγ Hγ'") as %?%agree_op_invL'; subst.
-    iSplitL "Hl".
+    iModIntro. iSplitL "Hl".
     { iNext; iRight; by eauto. }
     wp_match. iApply wp_assert.
     wp_op. by case_bool_decide.
