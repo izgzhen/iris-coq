@@ -516,7 +516,7 @@ Hint Mode IntoInv + ! - : typeclass_instances.
 (** Accessors.
     This definition only exists for the purpose of the proof mode; a truly
     usable and general form would use telescopes and also allow binders for the
-    closing view shift.  [γ] is an [option] to make it easy for AccElim
+    closing view shift.  [γ] is an [option] to make it easy for ElimAcc
     instances to recognize the [emp] case and make it look nicer. *)
 Definition accessor `{BiFUpd PROP} {X : Type} (E1 E2 : coPset)
            (α β : X → PROP) (γ : X → option PROP) : PROP :=
@@ -529,12 +529,12 @@ Definition accessor `{BiFUpd PROP} {X : Type} (E1 E2 : coPset)
 
    Elliminates an accessor [accessor E1 E2 α β γ] in goal [Q'], turning the goal
    into [Q'] with a new assumption [α x]. *)
-Class AccElim `{BiFUpd PROP} {X : Type} E1 E2 (α β : X → PROP) (γ : X → option PROP)
+Class ElimAcc `{BiFUpd PROP} {X : Type} E1 E2 (α β : X → PROP) (γ : X → option PROP)
       (Q : PROP) (Q' : X → PROP) :=
-  acc_elim : ((∀ x, α x -∗ Q' x) -∗ accessor E1 E2 α β γ -∗ Q).
-Arguments AccElim {_} {_} {_} _ _ _%I _%I _%I _%I : simpl never.
-Arguments acc_elim {_} {_} {_} _ _ _%I _%I _%I _%I {_}.
-Hint Mode AccElim + + ! - - ! ! ! ! - : typeclass_instances.
+  elim_acc : ((∀ x, α x -∗ Q' x) -∗ accessor E1 E2 α β γ -∗ Q).
+Arguments ElimAcc {_} {_} {_} _ _ _%I _%I _%I _%I : simpl never.
+Arguments elim_acc {_} {_} {_} _ _ _%I _%I _%I _%I {_}.
+Hint Mode ElimAcc + + ! - - ! ! ! ! - : typeclass_instances.
 
 (* Turn [P] into an accessor.
    Inputs:
@@ -566,7 +566,7 @@ Hint Mode IntoAcc + - ! - - - - - - - - : typeclass_instances.
    - [Q'] is the transformed goal that must be proved after opening the invariant.
 
    Most users will never want to instantiate this; there is a general instance
-   based on [AccElim] and [IntoAcc].  However, logics like Iris 2 that support
+   based on [ElimAcc] and [IntoAcc].  However, logics like Iris 2 that support
    invariants but not mask-changing fancy updates can use this class directly to
    still benefit from [iInv].
 

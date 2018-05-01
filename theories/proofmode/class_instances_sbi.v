@@ -551,14 +551,14 @@ Global Instance add_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
   AddModal P P' (|={E1,E2}=> ⎡Q⎤)%I → AddModal P P' ⎡|={E1,E2}=> Q⎤.
 Proof. by rewrite /AddModal !embed_fupd. Qed.
 
-(* AccElim *)
-Global Instance acc_elim_vs `{BiFUpd PROP} {X} E1 E2 E α β γ Q :
-  (* FIXME: Why %I? AccElim sets the right scopes! *)
-  AccElim (X:=X) E1 E2 α β γ
+(* ElimAcc *)
+Global Instance elim_acc_vs `{BiFUpd PROP} {X} E1 E2 E α β γ Q :
+  (* FIXME: Why %I? ElimAcc sets the right scopes! *)
+  ElimAcc (X:=X) E1 E2 α β γ
           (|={E1,E}=> Q)
           (λ x, |={E2}=> (β x ∗ (coq_tactics.maybe_wand (γ x) (|={E1,E}=> Q))))%I.
 Proof.
-  rewrite /AccElim. setoid_rewrite coq_tactics.maybe_wand_sound.
+  rewrite /ElimAcc. setoid_rewrite coq_tactics.maybe_wand_sound.
   iIntros "Hinner >Hacc". iDestruct "Hacc" as (x) "[Hα Hclose]".
   iMod ("Hinner" with "Hα") as "[Hβ Hfin]".
   iMod ("Hclose" with "Hβ") as "Hγ". by iApply "Hfin".
@@ -573,10 +573,10 @@ Global Instance elim_inv_acc_without_close `{BiFUpd PROP} {X : Type}
        φ Pinv Pin
        E1 E2 α β γ Q (Q' : X → PROP) :
   IntoAcc (X:=X) Pinv φ Pin E1 E2 α β γ →
-  AccElim (X:=X) E1 E2 α β γ Q Q' →
+  ElimAcc (X:=X) E1 E2 α β γ Q Q' →
   ElimInv φ Pinv Pin α None Q Q'.
 Proof.
-  rewrite /AccElim /IntoAcc /ElimInv.
+  rewrite /ElimAcc /IntoAcc /ElimInv.
   iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
   iApply (Helim with "[Hcont]").
   - iIntros (x) "Hα". iApply "Hcont". iSplitL; done.
@@ -591,7 +591,7 @@ Global Instance elim_inv_acc_with_close `{BiFUpd PROP} {X : Type}
   ElimInv (X:=X) φ Pinv Pin α (Some (λ x, β x ={E2,E1}=∗ default emp (γ x) id))%I
           Q (λ _, Q').
 Proof.
-  rewrite /AccElim /IntoAcc /ElimInv.
+  rewrite /ElimAcc /IntoAcc /ElimInv.
   iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
   iMod (Hacc with "Hinv Hin") as (x) "[Hα Hclose]"; first done.
   iApply "Hcont". simpl. iSplitL "Hα"; done.
