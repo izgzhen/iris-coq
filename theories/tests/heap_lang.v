@@ -71,6 +71,11 @@ Section LiftingTests.
     wp_load. wp_op. wp_faa. do 2 wp_load. wp_op. done.
   Qed.
 
+  Definition heap_e6 : val := λ: "v", "v" = "v".
+
+  Lemma heap_e6_spec (v : val) : (WP heap_e6 v {{ w, ⌜ w = #true ⌝ }})%I.
+  Proof. wp_lam. wp_op. by case_bool_decide. Qed.
+
   Definition FindPred : val :=
     rec: "pred" "x" "y" :=
       let: "yp" := "y" + #1 in
