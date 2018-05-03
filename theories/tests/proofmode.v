@@ -444,4 +444,20 @@ Lemma test_apply_affine_wand `{!BiPlainly PROP} (P : PROP) :
   P -∗ (∀ Q : PROP, <affine> ■ (Q -∗ <pers> Q) -∗ <affine> ■ (P -∗ Q) -∗ Q).
 Proof. iIntros "HP" (Q) "_ #HPQ". by iApply "HPQ". Qed.
 
+Lemma test_and_sep (P Q R : PROP) : P ∧ (Q ∗ □ R) ⊢ (P ∧ Q) ∗ □ R.
+Proof.
+  iIntros "H". repeat iSplit.
+  - iDestruct "H" as "[$ _]".
+  - iDestruct "H" as "[_ [$ _]]".
+  - iDestruct "H" as "[_ [_ #$]]".
+Qed.
+
+Lemma test_and_sep_2 (P Q R : PROP) `{!Persistent R, !Affine R} :
+  P ∧ (Q ∗ R) ⊢ (P ∧ Q) ∗ R.
+Proof.
+  iIntros "H". repeat iSplit.
+  - iDestruct "H" as "[$ _]".
+  - iDestruct "H" as "[_ [$ _]]".
+  - iDestruct "H" as "[_ [_ #$]]".
+Qed.
 End tests.

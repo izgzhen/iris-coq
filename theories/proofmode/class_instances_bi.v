@@ -22,6 +22,11 @@ Global Instance into_absorbingly_True : @IntoAbsorbingly PROP True emp | 0.
 Proof. by rewrite /IntoAbsorbingly -absorbingly_True_emp absorbingly_pure. Qed.
 Global Instance into_absorbingly_absorbing P : Absorbing P → IntoAbsorbingly P P | 1.
 Proof. intros. by rewrite /IntoAbsorbingly absorbing_absorbingly. Qed.
+Global Instance into_absorbingly_intuitionistically P :
+  IntoAbsorbingly (<pers> P) (□ P) | 0.
+Proof.
+  by rewrite /IntoAbsorbingly -absorbingly_intuitionistically_into_persistently.
+Qed.
 Global Instance into_absorbingly_default P : IntoAbsorbingly (<absorb> P) P | 100.
 Proof. by rewrite /IntoAbsorbingly. Qed.
 
@@ -382,19 +387,18 @@ Proof. by rewrite /FromImpl -embed_impl => <-. Qed.
 Global Instance from_and_and P1 P2 : FromAnd (P1 ∧ P2) P1 P2 | 100.
 Proof. by rewrite /FromAnd. Qed.
 Global Instance from_and_sep_persistent_l P1 P1' P2 :
-  FromAffinely P1 P1' → Persistent P1' → FromAnd (P1 ∗ P2) P1' P2 | 9.
+  Persistent P1 → IntoAbsorbingly P1' P1 → FromAnd (P1 ∗ P2) P1' P2 | 9.
 Proof.
-  rewrite /FromAffinely /FromAnd=> <- ?. by rewrite persistent_and_affinely_sep_l_1.
+  rewrite /IntoAbsorbingly /FromAnd=> ? ->.
+  rewrite persistent_and_affinely_sep_l_1 {1}(persistent_persistently_2 P1).
+  by rewrite absorbingly_elim_persistently -{2}(intuitionistically_elim P1).
 Qed.
 Global Instance from_and_sep_persistent_r P1 P2 P2' :
-  FromAffinely P2 P2' → Persistent P2' → FromAnd (P1 ∗ P2) P1 P2' | 10.
+  Persistent P2 → IntoAbsorbingly P2' P2 → FromAnd (P1 ∗ P2) P1 P2' | 10.
 Proof.
-  rewrite /FromAffinely /FromAnd=> <- ?. by rewrite persistent_and_affinely_sep_r_1.
-Qed.
-Global Instance from_and_sep_persistent P1 P2 :
-  Persistent P1 → Persistent P2 → FromAnd (P1 ∗ P2) P1 P2 | 11.
-Proof.
-  rewrite /FromAffinely /FromAnd. intros ??. by rewrite -persistent_and_sep_1.
+  rewrite /IntoAbsorbingly /FromAnd=> ? ->.
+  rewrite persistent_and_affinely_sep_r_1 {1}(persistent_persistently_2 P2).
+  by rewrite absorbingly_elim_persistently -{2}(intuitionistically_elim P2).
 Qed.
 
 Global Instance from_and_pure φ ψ : @FromAnd PROP ⌜φ ∧ ψ⌝ ⌜φ⌝ ⌜ψ⌝.

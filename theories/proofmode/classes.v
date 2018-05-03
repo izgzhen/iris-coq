@@ -117,11 +117,14 @@ Arguments FromModal {_ _ _} _ _%I _%I _%I : simpl never.
 Arguments from_modal {_ _ _} _ _ _%I _%I {_}.
 Hint Mode FromModal - + - - - ! - : typeclass_instances.
 
+(** The [FromAffinely P Q] class is used to add an [<affine>] modality to the
+proposition [Q].
+
+The input is [Q] and the output is [P]. *)
 Class FromAffinely {PROP : bi} (P Q : PROP) :=
   from_affinely : <affine> Q ⊢ P.
 Arguments FromAffinely {_} _%I _%I : simpl never.
 Arguments from_affinely {_} _%I _%I {_}.
-Hint Mode FromAffinely + ! - : typeclass_instances.
 Hint Mode FromAffinely + - ! : typeclass_instances.
 
 (** The [IntoAbsorbingly P Q] class is used to add an [<absorb>] modality to
