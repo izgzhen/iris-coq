@@ -94,7 +94,7 @@ Section proofs.
 
   Global Instance into_acc_cinv E N γ P p :
     IntoAcc (X:=unit) (cinv N γ P)
-            (↑N ⊆ E) (cinv_own γ p) E (E∖↑N)
+            (↑N ⊆ E) (cinv_own γ p) (fupd E (E∖↑N)) (fupd (E∖↑N) E)
             (λ _, ▷ P ∗ cinv_own γ p)%I (λ _, ▷ P)%I (λ _, None)%I.
   Proof.
     rewrite /IntoAcc /accessor. iIntros (?) "#Hinv Hown".

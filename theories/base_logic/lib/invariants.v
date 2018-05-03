@@ -111,7 +111,8 @@ Global Instance into_inv_inv N P : IntoInv (inv N P) N.
 
 Global Instance into_acc_inv E N P :
   IntoAcc (X:=unit) (inv N P) 
-          (↑N ⊆ E) True E (E∖↑N) (λ _, ▷ P)%I (λ _, ▷ P)%I (λ _, None)%I.
+          (↑N ⊆ E) True (fupd E (E∖↑N)) (fupd (E∖↑N) E)
+          (λ _, ▷ P)%I (λ _, ▷ P)%I (λ _, None)%I.
 Proof.
   rewrite /IntoAcc /accessor exist_unit.
   iIntros (?) "#Hinv _". iApply inv_open; done.

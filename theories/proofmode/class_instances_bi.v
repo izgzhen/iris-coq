@@ -1,12 +1,39 @@
 From stdpp Require Import nat_cancel.
 From iris.bi Require Import bi tactics.
-From iris.proofmode Require Import modality_instances classes.
+From iris.proofmode Require Import modality_instances classes ltac_tactics.
 Set Default Proof Using "Type".
 Import bi.
 
 Section bi_instances.
 Context {PROP : bi}.
 Implicit Types P Q R : PROP.
+
+(* AsEmpValid *)
+Global Instance as_emp_valid_emp_valid {PROP : bi} (P : PROP) : AsEmpValid0 (bi_emp_valid P) P | 0.
+Proof. by rewrite /AsEmpValid. Qed.
+Global Instance as_emp_valid_entails {PROP : bi} (P Q : PROP) : AsEmpValid0 (P ⊢ Q) (P -∗ Q).
+Proof. split. apply bi.entails_wand. apply bi.wand_entails. Qed.
+Global Instance as_emp_valid_equiv {PROP : bi} (P Q : PROP) : AsEmpValid0 (P ≡ Q) (P ∗-∗ Q).
+Proof. split. apply bi.equiv_wand_iff. apply bi.wand_iff_equiv. Qed.
+
+Global Instance as_emp_valid_forall {A : Type} (φ : A → Prop) (P : A → PROP) :
+  (∀ x, AsEmpValid (φ x) (P x)) → AsEmpValid (∀ x, φ x) (∀ x, P x).
+Proof.
+  rewrite /AsEmpValid=>H1. split=>H2.
+  - apply bi.forall_intro=>?. apply H1, H2.
+  - intros x. apply H1. revert H2. by rewrite (bi.forall_elim x).
+Qed.
+
+(* We add a useless hypothesis [BiEmbed PROP PROP'] in order to make
+   sure this instance is not used when there is no embedding between
+   PROP and PROP'.
+   The first [`{BiEmbed PROP PROP'}] is not considered as a premise by
+   Coq TC search mechanism because the rest of the hypothesis is dependent
+   on it. *)
+Global Instance as_emp_valid_embed `{BiEmbed PROP PROP'} (φ : Prop) (P : PROP) :
+  BiEmbed PROP PROP' →
+  AsEmpValid0 φ P → AsEmpValid φ ⎡P⎤.
+Proof. rewrite /AsEmpValid0 /AsEmpValid=> _ ->. rewrite embed_emp_valid //. Qed.
 
 (* FromAffinely *)
 Global Instance from_affinely_affine P : Affine P → FromAffinely P P.
@@ -813,35 +840,37 @@ Global Instance add_modal_embed_bupd_goal `{BiEmbedBUpd PROP PROP'}
   AddModal P P' (|==> ⎡Q⎤)%I → AddModal P P' ⎡|==> Q⎤.
 Proof. by rewrite /AddModal !embed_bupd. Qed.
 
+(* ElimInv *)
+Global Instance elim_inv_acc_without_close {X : Type}
+       φ Pinv Pin
+       M1 M2 α β γ Q (Q' : X → PROP) :
+  IntoAcc (X:=X) Pinv φ Pin M1 M2 α β γ →
+  ElimAcc (X:=X) M1 M2 α β γ Q Q' →
+  ElimInv φ Pinv Pin α None Q Q'.
+Proof.
+  rewrite /ElimAcc /IntoAcc /ElimInv.
+  iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
+  iApply (Helim with "[Hcont]").
+  - iIntros (x) "Hα". iApply "Hcont". iSplitL; done.
+  - iApply (Hacc with "Hinv Hin"). done.
+Qed.
+
+Global Instance elim_inv_acc_with_close {X : Type}
+       φ Pinv Pin
+       M1 M2 α β γ Q Q' :
+  IntoAcc Pinv φ Pin M1 M2 α β γ →
+  (∀ R, ElimModal True false false (M1 R) R Q Q') →
+  ElimInv (X:=X) φ Pinv Pin α (Some (λ x, β x -∗ M2 (default emp (γ x) id)))%I
+          Q (λ _, Q').
+Proof.
+  rewrite /ElimAcc /IntoAcc /ElimInv.
+  iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
+  iMod (Hacc with "Hinv Hin") as (x) "[Hα Hclose]"; first done.
+  iApply "Hcont". simpl. iSplitL "Hα"; done.
+Qed.
+
 (* IntoEmbed *)
 Global Instance into_embed_embed {PROP' : bi} `{BiEmbed PROP PROP'} P :
   IntoEmbed ⎡P⎤ P.
 Proof. by rewrite /IntoEmbed. Qed.
-
-(* AsEmpValid *)
-Global Instance as_emp_valid_emp_valid {PROP : bi} (P : PROP) : AsEmpValid0 (bi_emp_valid P) P | 0.
-Proof. by rewrite /AsEmpValid. Qed.
-Global Instance as_emp_valid_entails {PROP : bi} (P Q : PROP) : AsEmpValid0 (P ⊢ Q) (P -∗ Q).
-Proof. split. apply bi.entails_wand. apply bi.wand_entails. Qed.
-Global Instance as_emp_valid_equiv {PROP : bi} (P Q : PROP) : AsEmpValid0 (P ≡ Q) (P ∗-∗ Q).
-Proof. split. apply bi.equiv_wand_iff. apply bi.wand_iff_equiv. Qed.
-
-Global Instance as_emp_valid_forall {A : Type} (φ : A → Prop) (P : A → PROP) :
-  (∀ x, AsEmpValid (φ x) (P x)) → AsEmpValid (∀ x, φ x) (∀ x, P x).
-Proof.
-  rewrite /AsEmpValid=>H1. split=>H2.
-  - apply bi.forall_intro=>?. apply H1, H2.
-  - intros x. apply H1. revert H2. by rewrite (bi.forall_elim x).
-Qed.
-
-(* We add a useless hypothesis [BiEmbed PROP PROP'] in order to make
-   sure this instance is not used when there is no embedding between
-   PROP and PROP'.
-   The first [`{BiEmbed PROP PROP'}] is not considered as a premise by
-   Coq TC search mechanism because the rest of the hypothesis is dependent
-   on it. *)
-Global Instance as_emp_valid_embed `{BiEmbed PROP PROP'} (φ : Prop) (P : PROP) :
-  BiEmbed PROP PROP' →
-  AsEmpValid0 φ P → AsEmpValid φ ⎡P⎤.
-Proof. rewrite /AsEmpValid0 /AsEmpValid=> _ ->. rewrite embed_emp_valid //. Qed.
 End bi_instances.

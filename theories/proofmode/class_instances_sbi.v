@@ -554,7 +554,7 @@ Proof. by rewrite /AddModal !embed_fupd. Qed.
 (* ElimAcc *)
 Global Instance elim_acc_vs `{BiFUpd PROP} {X} E1 E2 E α β γ Q :
   (* FIXME: Why %I? ElimAcc sets the right scopes! *)
-  ElimAcc (X:=X) E1 E2 α β γ
+  ElimAcc (X:=X) (fupd E1 E2) (fupd E2 E1) α β γ
           (|={E1,E}=> Q)
           (λ x, |={E2}=> (β x ∗ (coq_tactics.maybe_wand (γ x) (|={E1,E}=> Q))))%I.
 Proof.
@@ -567,35 +567,6 @@ Qed.
 (* IntoAcc *)
 (* TODO: We could have instances from "unfolded" accessors with or without
    the first binder. *)
-
-(* ElimInv *)
-Global Instance elim_inv_acc_without_close `{BiFUpd PROP} {X : Type}
-       φ Pinv Pin
-       E1 E2 α β γ Q (Q' : X → PROP) :
-  IntoAcc (X:=X) Pinv φ Pin E1 E2 α β γ →
-  ElimAcc (X:=X) E1 E2 α β γ Q Q' →
-  ElimInv φ Pinv Pin α None Q Q'.
-Proof.
-  rewrite /ElimAcc /IntoAcc /ElimInv.
-  iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
-  iApply (Helim with "[Hcont]").
-  - iIntros (x) "Hα". iApply "Hcont". iSplitL; done.
-  - iApply (Hacc with "Hinv Hin"). done.
-Qed.
-
-Global Instance elim_inv_acc_with_close `{BiFUpd PROP} {X : Type}
-       φ Pinv Pin
-       E1 E2 α β γ Q Q' :
-  IntoAcc Pinv φ Pin E1 E2 α β γ →
-  (∀ R, ElimModal True false false (|={E1,E2}=> R) R Q Q') →
-  ElimInv (X:=X) φ Pinv Pin α (Some (λ x, β x ={E2,E1}=∗ default emp (γ x) id))%I
-          Q (λ _, Q').
-Proof.
-  rewrite /ElimAcc /IntoAcc /ElimInv.
-  iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
-  iMod (Hacc with "Hinv Hin") as (x) "[Hα Hclose]"; first done.
-  iApply "Hcont". simpl. iSplitL "Hα"; done.
-Qed.
 
 (* IntoLater *)
 Global Instance into_laterN_0 only_head P : IntoLaterN only_head 0 P P.

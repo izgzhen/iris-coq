@@ -115,7 +115,7 @@ Section proofs.
 
   Global Instance into_acc_na p F E N P :
     IntoAcc (X:=unit) (na_inv p N P)
-            (↑N ⊆ E ∧ ↑N ⊆ F) (na_own p F) E E
+            (↑N ⊆ E ∧ ↑N ⊆ F) (na_own p F) (fupd E E) (fupd E E)
             (λ _, ▷ P ∗ na_own p (F∖↑N))%I (λ _, ▷ P ∗ na_own p (F∖↑N))%I
               (λ _, Some (na_own p F))%I.
   Proof.

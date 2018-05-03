@@ -518,23 +518,23 @@ Hint Mode IntoInv + ! - : typeclass_instances.
     usable and general form would use telescopes and also allow binders for the
     closing view shift.  [γ] is an [option] to make it easy for ElimAcc
     instances to recognize the [emp] case and make it look nicer. *)
-Definition accessor `{BiFUpd PROP} {X : Type} (E1 E2 : coPset)
+Definition accessor {PROP : bi} {X : Type} (M1 M2 : PROP → PROP)
            (α β : X → PROP) (γ : X → option PROP) : PROP :=
-  (|={E1,E2}=> ∃ x, α x ∗ (β x ={E2,E1}=∗ default emp (γ x) id))%I.
+  M1 (∃ x, α x ∗ (β x -∗ M2 (default emp (γ x) id)))%I.
 
 (* Typeclass for assertions around which accessors can be elliminated.
-   Inputs: [Q], [α], [β], [γ]
+   Inputs: [Q], [E1], [E2], [α], [β], [γ]
    Outputs: [Q']
-   In/Out (can be an evar and will not usually be instantiated): [E1], [E2]
 
    Elliminates an accessor [accessor E1 E2 α β γ] in goal [Q'], turning the goal
    into [Q'] with a new assumption [α x]. *)
-Class ElimAcc `{BiFUpd PROP} {X : Type} E1 E2 (α β : X → PROP) (γ : X → option PROP)
+Class ElimAcc {PROP : bi} {X : Type} (M1 M2 : PROP → PROP)
+      (α β : X → PROP) (γ : X → option PROP)
       (Q : PROP) (Q' : X → PROP) :=
-  elim_acc : ((∀ x, α x -∗ Q' x) -∗ accessor E1 E2 α β γ -∗ Q).
-Arguments ElimAcc {_} {_} {_} _ _ _%I _%I _%I _%I : simpl never.
-Arguments elim_acc {_} {_} {_} _ _ _%I _%I _%I _%I {_}.
-Hint Mode ElimAcc + + ! - - ! ! ! ! - : typeclass_instances.
+  elim_acc : ((∀ x, α x -∗ Q' x) -∗ accessor M1 M2 α β γ -∗ Q).
+Arguments ElimAcc {_} {_} _%I _%I _%I _%I _%I _%I : simpl never.
+Arguments elim_acc {_} {_} _%I _%I _%I _%I _%I _%I {_}.
+Hint Mode ElimAcc + ! ! ! ! ! ! ! - : typeclass_instances.
 
 (* Turn [P] into an accessor.
    Inputs:
@@ -543,14 +543,15 @@ Hint Mode ElimAcc + + ! - - ! ! ! ! - : typeclass_instances.
    - [Pin]: additional logic assertion needed for starting the accessor.
    - [φ]: additional Coq assertion needed for starting the accessor.
    - [X] [α], [β], [γ]: the accessor parameters.
-   In/Out (can be an evar and will not usually be instantiated): [E1], [E2]
+   - [M1], [M2]: the two accessor modalities (they will typically still have
+     some evars though, e.g. for the masks)
 *)
-Class IntoAcc `{BiFUpd PROP} (Pacc : PROP) (φ : Prop) (Pin : PROP)
-      {X : Type} E1 E2 (α β : X → PROP) (γ : X → option PROP) :=
-  into_acc : φ → Pacc -∗ Pin -∗ accessor E1 E2 α β γ.
-Arguments IntoAcc {_} {_} _%I _ _%I {_} _ _ _%I _%I _%I : simpl never.
-Arguments into_acc {_} {_} _%I _ _%I {_} _ _ _%I _%I _%I {_} : simpl never.
-Hint Mode IntoAcc + - ! - - - - - - - - : typeclass_instances.
+Class IntoAcc {PROP : bi} {X : Type} (Pacc : PROP) (φ : Prop) (Pin : PROP)
+      (M1 M2 : PROP → PROP) (α β : X → PROP) (γ : X → option PROP) :=
+  into_acc : φ → Pacc -∗ Pin -∗ accessor M1 M2 α β γ.
+Arguments IntoAcc {_} {_} _%I _ _%I _%I _%I _%I _%I _%I : simpl never.
+Arguments into_acc {_} {_} _%I _ _%I _%I _%I _%I _%I _%I {_} : simpl never.
+Hint Mode IntoAcc + - ! - - - - - - - : typeclass_instances.
 
 (* The typeclass used for the [iInv] tactic.
    Input: [Pinv]

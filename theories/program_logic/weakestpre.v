@@ -407,7 +407,8 @@ Section proofmode_classes.
 
   Global Instance elim_acc_wp {X} E1 E2 α β γ e s Φ :
     Atomic (stuckness_to_atomicity s) e →
-    ElimAcc (X:=X) E1 E2 α β γ (WP e @ s; E1 {{ Φ }})
+    ElimAcc (X:=X) (fupd E1 E2) (fupd E2 E1)
+            α β γ (WP e @ s; E1 {{ Φ }})
             (λ x, WP e @ s; E2 {{ v, |={E2}=> β x ∗ coq_tactics.maybe_wand (γ x) (Φ v) }})%I.
   Proof.
     intros ?. rewrite /ElimAcc. setoid_rewrite coq_tactics.maybe_wand_sound.
@@ -417,7 +418,8 @@ Section proofmode_classes.
   Qed.
 
   Global Instance elim_acc_wp_nonatomic {X} E α β γ e s Φ :
-    ElimAcc (X:=X) E E α β γ (WP e @ s; E {{ Φ }})
+    ElimAcc (X:=X) (fupd E E) (fupd E E)
+            α β γ (WP e @ s; E {{ Φ }})
             (λ x, WP e @ s; E {{ v, |={E}=> β x ∗ coq_tactics.maybe_wand (γ x) (Φ v) }})%I.
   Proof.
     rewrite /ElimAcc. setoid_rewrite coq_tactics.maybe_wand_sound.
