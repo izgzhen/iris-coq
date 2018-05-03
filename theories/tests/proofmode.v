@@ -460,4 +460,10 @@ Proof.
   - iDestruct "H" as "[_ [$ _]]".
   - iDestruct "H" as "[_ [_ #$]]".
 Qed.
+
+Lemma test_and_sep_affine_bi `{BiAffine PROP} P Q : □ P ∧ Q ⊢ □ P ∗ Q.
+Proof.
+  iIntros "[??]". iSplit; last done.
+  lazymatch goal with |- coq_tactics.envs_entails _ (□ P) => done end.
+Qed.
 End tests.

@@ -23,7 +23,7 @@ Proof. by rewrite /IntoAbsorbingly -absorbingly_True_emp absorbingly_pure. Qed.
 Global Instance into_absorbingly_absorbing P : Absorbing P → IntoAbsorbingly P P | 1.
 Proof. intros. by rewrite /IntoAbsorbingly absorbing_absorbingly. Qed.
 Global Instance into_absorbingly_intuitionistically P :
-  IntoAbsorbingly (<pers> P) (□ P) | 0.
+  IntoAbsorbingly (<pers> P) (□ P) | 2.
 Proof.
   by rewrite /IntoAbsorbingly -absorbingly_intuitionistically_into_persistently.
 Qed.
