@@ -158,12 +158,6 @@ Global Instance later_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@sbi_later PROP).
 Proof. intros P Q; apply later_mono. Qed.
 
-Lemma later_intro P : P ⊢ ▷ P.
-Proof.
-  rewrite -(and_elim_l (▷ P)%I P) -(löb (▷ P ∧ P)%I).
-  apply impl_intro_l. by rewrite {1}(and_elim_r (▷ P)%I).
-Qed.
-
 Lemma later_True : ▷ True ⊣⊢ True.
 Proof. apply (anti_symm (⊢)); auto using later_intro. Qed.
 Lemma later_emp `{!BiAffine PROP} : ▷ emp ⊣⊢ emp.
@@ -208,6 +202,45 @@ Global Instance later_persistent P : Persistent P → Persistent (▷ P).
 Proof. intros. by rewrite /Persistent -later_persistently {1}(persistent P). Qed.
 Global Instance later_absorbing P : Absorbing P → Absorbing (▷ P).
 Proof. intros ?. by rewrite /Absorbing -later_absorbingly absorbing. Qed.
+
+Section löb.
+  (* Proof following https://en.wikipedia.org/wiki/L%C3%B6b's_theorem#Proof_of_L%C3%B6b's_theorem *)
+  Definition flöb_pre (P Ψ : PROP) : PROP := (▷ Ψ → P)%I.
+
+  Local Instance flöb_pre_contractive P : Contractive (flöb_pre P).
+  Proof. solve_contractive. Qed.
+
+  Context `{Cofe PROP}.
+
+  Definition flöb (P : PROP) := fixpoint (flöb_pre P).
+
+  Lemma weak_löb P : (▷ P ⊢ P) → (True ⊢ P).
+  Proof.
+    set (Ψ := flöb P). assert (Ψ ⊣⊢ (▷ Ψ → P)) as HΨ.
+    { exact: fixpoint_unfold. }
+    intros HP. rewrite -HP.
+    assert (Ψ ⊢ (▷ Ψ → P)) as HΨ'%entails_impl_True by by rewrite -HΨ.
+    rewrite ->(later_intro (Ψ → _))%I in HΨ'.
+    rewrite ->later_impl in HΨ'.
+    rewrite ->later_impl in HΨ'.
+    assert (▷ Ψ ⊢ P) as HΨP.
+    { rewrite -HP. rewrite -(idemp (∧) (▷ Ψ))%I {2}(later_intro (▷ Ψ))%I.
+      apply impl_elim_l', entails_impl_True. done. }
+    rewrite -HΨP HΨ -2!later_intro.
+    apply (entails_impl_True _ P). done.
+  Qed.
+
+  Lemma löb P : (▷ P → P) ⊢ P.
+  Proof.
+    apply entails_impl_True, weak_löb. apply impl_intro_r.
+    rewrite -{2}(idemp (∧) (▷ P → P))%I.
+    rewrite {2}(later_intro (▷ P → P))%I.
+    rewrite later_impl.
+    rewrite assoc impl_elim_l.
+    rewrite impl_elim_r. done.
+  Qed.
+
+End löb.
 
 (* Iterated later modality *)
 Global Instance laterN_ne m : NonExpansive (@sbi_laterN PROP m).
@@ -379,7 +412,7 @@ Proof. intros; rewrite /Timeless except_0_and later_and; auto. Qed.
 Global Instance or_timeless P Q : Timeless P → Timeless Q → Timeless (P ∨ Q).
 Proof. intros; rewrite /Timeless except_0_or later_or; auto. Qed.
 
-Global Instance impl_timeless P Q : Timeless Q → Timeless (P → Q).
+Global Instance impl_timeless `{Cofe PROP} P Q : Timeless Q → Timeless (P → Q).
 Proof.
   rewrite /Timeless=> HQ. rewrite later_false_em.
   apply or_mono, impl_intro_l; first done.
@@ -392,7 +425,7 @@ Proof.
   intros; rewrite /Timeless except_0_sep later_sep; auto using sep_mono.
 Qed.
 
-Global Instance wand_timeless P Q : Timeless Q → Timeless (P -∗ Q).
+Global Instance wand_timeless `{Cofe PROP} P Q : Timeless Q → Timeless (P -∗ Q).
 Proof.
   rewrite /Timeless=> HQ. rewrite later_false_em.
   apply or_mono, wand_intro_l; first done.

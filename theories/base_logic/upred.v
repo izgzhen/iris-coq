@@ -508,9 +508,9 @@ Proof.
   - (* (P ⊢ Q) → ▷ P ⊢ ▷ Q *)
     intros P Q.
     unseal=> HP; split=>-[|n] x ??; [done|apply HP; eauto using cmra_validN_S].
-  - (* (▷ P → P) ⊢ P *)
-    intros P. unseal; split=> n x ? HP; induction n as [|n IH]; [by apply HP|].
-    apply HP, IH, uPred_mono with (S n) x; eauto using cmra_validN_S.
+  - (* P ⊢ ▷ P *)
+    intros P. unseal; split=> n x ? HP. destruct n; first done. simpl.
+    apply uPred_mono with (S n) x; eauto using cmra_validN_S.
   - (* (∀ a, ▷ Φ a) ⊢ ▷ ∀ a, Φ a *)
     intros A Φ. unseal; by split=> -[|n] x.
   - (* (▷ ∃ a, Φ a) ⊢ ▷ False ∨ (∃ a, ▷ Φ a) *)

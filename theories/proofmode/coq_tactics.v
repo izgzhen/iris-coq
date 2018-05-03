@@ -1396,7 +1396,7 @@ Proof.
   - by rewrite Hs //= right_id.
 Qed.
 
-Lemma tac_löb Δ Δ' i Q :
+Lemma tac_löb `{Cofe PROP} Δ Δ' i Q :
   env_spatial_is_nil Δ = true →
   envs_app true (Esnoc Enil i (▷ Q)%I) Δ = Some Δ' →
   envs_entails Δ' Q → envs_entails Δ Q.

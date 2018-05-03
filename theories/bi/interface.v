@@ -146,7 +146,7 @@ Section bi_mixin.
     sbi_mixin_later_eq_2 {A : ofeT} (x y : A) : ▷ (x ≡ y) ⊢ Next x ≡ Next y;
 
     sbi_mixin_later_mono P Q : (P ⊢ Q) → ▷ P ⊢ ▷ Q;
-    sbi_mixin_löb P : (▷ P → P) ⊢ P;
+    sbi_mixin_later_intro P : P ⊢ ▷ P;
 
     sbi_mixin_later_forall_2 {A} (Φ : A → PROP) : (∀ a, ▷ Φ a) ⊢ ▷ ∀ a, Φ a;
     sbi_mixin_later_exist_false {A} (Φ : A → PROP) :
@@ -454,8 +454,8 @@ Proof. eapply sbi_mixin_later_eq_2, sbi_sbi_mixin. Qed.
 
 Lemma later_mono P Q : (P ⊢ Q) → ▷ P ⊢ ▷ Q.
 Proof. eapply sbi_mixin_later_mono, sbi_sbi_mixin. Qed.
-Lemma löb P : (▷ P → P) ⊢ P.
-Proof. eapply sbi_mixin_löb, sbi_sbi_mixin. Qed.
+Lemma later_intro P : P ⊢ ▷ P.
+Proof. eapply sbi_mixin_later_intro, sbi_sbi_mixin. Qed.
 
 Lemma later_forall_2 {A} (Φ : A → PROP) : (∀ a, ▷ Φ a) ⊢ ▷ ∀ a, Φ a.
 Proof. eapply sbi_mixin_later_forall_2, sbi_sbi_mixin. Qed.

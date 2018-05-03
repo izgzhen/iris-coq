@@ -1,9 +1,9 @@
 From iris.proofmode Require Import tactics intro_patterns.
 From stdpp Require Import gmap hlist.
-Set Default Proof Using "Type".
+Set Default Proof Using "Type*".
 
 Section tests.
-Context {PROP : sbi}.
+Context {PROP : sbi} `{Cofe PROP}.
 Implicit Types P Q R : PROP.
 
 Lemma demo_0 P Q : □ (P ∨ Q) -∗ (∀ x, ⌜x = 0⌝ ∨ ⌜x = 1⌝) → (Q ∨ P).
@@ -381,8 +381,8 @@ Proof. iIntros (Hφ). iAssert ⌜φ⌝%I with "[%]" as "$"; auto with iFrame. Qe
 
 Lemma test_iEval x y : ⌜ (y + x)%nat = 1 ⌝ -∗ ⌜ S (x + y) = 2%nat ⌝ : PROP.
 Proof.
-  iIntros (H).
-  iEval (rewrite (Nat.add_comm x y) // H).
+  iIntros (Hn).
+  iEval (rewrite (Nat.add_comm x y) // Hn).
   done.
 Qed.
 
