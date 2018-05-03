@@ -124,11 +124,14 @@ Arguments from_affinely {_} _%I _%I {_}.
 Hint Mode FromAffinely + ! - : typeclass_instances.
 Hint Mode FromAffinely + - ! : typeclass_instances.
 
+(** The [IntoAbsorbingly P Q] class is used to add an [<absorb>] modality to
+the proposition [Q].
+
+The input is [Q] and the output is [P]. *)
 Class IntoAbsorbingly {PROP : bi} (P Q : PROP) :=
   into_absorbingly : P ⊢ <absorb> Q.
 Arguments IntoAbsorbingly {_} _%I _%I.
 Arguments into_absorbingly {_} _%I _%I {_}.
-Hint Mode IntoAbsorbingly + ! -  : typeclass_instances.
 Hint Mode IntoAbsorbingly + - ! : typeclass_instances.
 
 (*
