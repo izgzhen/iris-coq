@@ -24,16 +24,16 @@ Section definition.
           ((α x ={Ei, Eo}=∗ P) ∧ (∀ y, β x y ={Ei, Eo}=∗ Φ x y))
     )%I.
 
-  Lemma atomic_step_mono Eo Ei α P1 P2 β Φ :
-    □ (P1 -∗ P2) -∗
-    □ (atomic_step Eo Ei α P1 β Φ -∗ atomic_step Eo Ei α P2 β Φ).
+  Lemma atomic_step_wand Eo Ei α P1 P2 β Φ1 Φ2 :
+    ((P1 -∗ P2) ∧ (∀ x y, Φ1 x y -∗ Φ2 x y)) -∗
+    (atomic_step Eo Ei α P1 β Φ1 -∗ atomic_step Eo Ei α P2 β Φ2).
   Proof.
-    iIntros "#HP12 !# AS". iMod "AS" as (x) "[Hα Hclose]".
+    iIntros "HP12 AS". iMod "AS" as (x) "[Hα Hclose]".
     iModIntro. iExists x. iFrame "Hα". iSplit.
     - iIntros "Hα". iDestruct "Hclose" as "[Hclose _]".
       iApply "HP12". iApply "Hclose". done.
     - iIntros (y) "Hβ". iDestruct "Hclose" as "[_ Hclose]".
-      iApply "Hclose". done.
+      iApply "HP12". iApply "Hclose". done.
   Qed.
 
   Lemma atomic_step_mask Eo Em α P β Φ :
@@ -64,8 +64,8 @@ Section definition.
     constructor.
     - iIntros (P1 P2) "#HP12". iIntros ([]) "AU".
       iDestruct "AU" as (P) "[HP #AS]". iExists P. iFrame.
-      iIntros "!# HP". iApply (atomic_step_mono with "HP12").
-      iApply "AS"; done.
+      iIntros "!# HP". iApply (atomic_step_wand with "[HP12]"); last by iApply "AS".
+      iSplit; last by eauto. iApply "HP12".
     - intros ??. solve_proper.
   Qed.
 
@@ -143,7 +143,7 @@ Section lemmas.
     iApply HAU. by iFrame.
   Qed.
 
-  Lemma astep_intro Eo Ei α P β Φ x :
+  Lemma astep_intro x Eo Ei α P β Φ :
     Ei ⊆ Eo → α x -∗
     ((α x ={Eo}=∗ P) ∧ (∀ y, β x y ={Eo}=∗ Φ x y)) -∗
     atomic_step Eo Ei α P β Φ.
@@ -177,6 +177,79 @@ Section lemmas.
       iMod ("Hclose'" with "Hβ") as "[Hβ' HΦ]".
       iMod ("Hclose" with "Hβ'") as "Hγ'".
       iModIntro. destruct (γ' x'); iApply "HΦ"; done.
+  Qed.
+
+  Lemma astep_astep {A' B'} E1 E2 E3
+        α P β Φ
+        (α' : A' → PROP) P' (β' Φ' : A' → B' → PROP) :
+    atomic_step E1 E2 α P β Φ -∗
+    (∀ x, α x -∗ atomic_step E2 E3 α' (α x ∗ (P ={E1}=∗ P')) β'
+            (λ x' y', (α x ∗ (P ={E1}=∗ Φ' x' y'))
+                    ∨ ∃ y, β x y ∗ (Φ x y ={E1}=∗ Φ' x' y'))) -∗
+    atomic_step E1 E3 α' P' β' Φ'.
+  Proof.
+    iIntros "Hupd Hstep". iMod ("Hupd") as (x) "[Hα Hclose]".
+    iMod ("Hstep" with "Hα") as (x') "[Hα' Hclose']".
+    iModIntro. iExists x'. iFrame "Hα'". iSplit.
+    - iIntros "Hα'". iDestruct "Hclose'" as "[Hclose' _]".
+      iMod ("Hclose'" with "Hα'") as "[Hα Hupd]".
+      iDestruct "Hclose" as "[Hclose _]".
+      iMod ("Hclose" with "Hα"). iApply "Hupd". auto.
+    - iIntros (y') "Hβ'". iDestruct "Hclose'" as "[_ Hclose']".
+      iMod ("Hclose'" with "Hβ'") as "[[Hα HΦ']|Hcont]".
+      + (* Abort the step we are eliminating *)
+        iDestruct "Hclose" as "[Hclose _]".
+        iMod ("Hclose" with "Hα") as "HP".
+        iApply "HΦ'". done.
+      + (* Complete the step we are eliminating *)
+        iDestruct "Hclose" as "[_ Hclose]".
+        iDestruct "Hcont" as (y) "[Hβ HΦ']".
+        iMod ("Hclose" with "Hβ") as "HΦ".
+        iApply "HΦ'". done.
+  Qed.
+
+  Lemma astep_aupd {A' B'} E1 E2 Eo Em
+        α β Φ
+        (α' : A' → PROP) P' (β' Φ' : A' → B' → PROP) :
+    Eo ⊆ E1 →
+    atomic_update Eo Em α β Φ -∗
+    (∀ x, α x -∗ atomic_step (E1∖Em) E2 α' (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ P')) β'
+            (λ x' y', (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ Φ' x' y'))
+                    ∨ ∃ y, β x y ∗ (Φ x y ={E1}=∗ Φ' x' y'))) -∗
+    atomic_step E1 E2 α' P' β' Φ'.
+  Proof.
+    iIntros (?) "Hupd Hstep". iApply (astep_astep with "[Hupd] Hstep").
+    iApply aupd_acc; done.
+  Qed.
+
+  Lemma astep_aupd_commit {A' B'} E1 E2 Eo Em
+        α β Φ
+        (α' : A' → PROP) P' (β' Φ' : A' → B' → PROP) :
+    Eo ⊆ E1 →
+    atomic_update Eo Em α β Φ -∗
+    (∀ x, α x -∗ atomic_step (E1∖Em) E2 α' (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ P')) β'
+            (λ x' y', ∃ y, β x y ∗ (Φ x y ={E1}=∗ Φ' x' y'))) -∗
+    atomic_step E1 E2 α' P' β' Φ'.
+  Proof.
+    iIntros (?) "Hupd Hstep". iApply (astep_aupd with "Hupd"); first done.
+    iIntros (x) "Hα". iApply atomic_step_wand; last first.
+    { iApply "Hstep". done. }
+    iSplit; first by eauto. iIntros (??) "?". by iRight.
+  Qed.
+
+  Lemma astep_aupd_abort {A' B'} E1 E2 Eo Em
+        α β Φ
+        (α' : A' → PROP) P' (β' Φ' : A' → B' → PROP) :
+    Eo ⊆ E1 →
+    atomic_update Eo Em α β Φ -∗
+    (∀ x, α x -∗ atomic_step (E1∖Em) E2 α' (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ P')) β'
+            (λ x' y', α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ Φ' x' y'))) -∗
+    atomic_step E1 E2 α' P' β' Φ'.
+  Proof.
+    iIntros (?) "Hupd Hstep". iApply (astep_aupd with "Hupd"); first done.
+    iIntros (x) "Hα". iApply atomic_step_wand; last first.
+    { iApply "Hstep". done. }
+    iSplit; first by eauto. iIntros (??) "?". by iLeft.
   Qed.
 
 End lemmas.

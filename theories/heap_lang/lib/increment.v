@@ -29,24 +29,24 @@ Section increment.
     iIntros (Q Φ) "HQ AU". iLöb as "IH". wp_let.
     wp_apply (load_spec with "[HQ]"); first by iAccu.
     (* Prove the atomic shift for load *)
-    iAuIntro.
-    iMod (aupd_acc with "AU") as (x) "[H↦ [Hclose _]]"; first solve_ndisj.
-    iModIntro. iExists (#x, 1%Qp). iFrame "H↦". iSplit; first done.
-    iIntros ([]) "H↦". iMod ("Hclose" with "H↦") as "AU". iIntros "!> HQ".
+    iAuIntro. iApply (astep_aupd_abort with "AU"); first done.
+    iIntros (x) "H↦".
+    iApply (astep_intro (_, _) with "[H↦]"); [solve_ndisj|done|iSplit].
+    { iIntros "$ !> $ !> //". }
+    iIntros ([]) "$ !> AU !> HQ".
     (* Now go on *)
     wp_let. wp_op. wp_bind (aheap.(cas) _)%I.
     wp_apply (cas_spec with "[HQ]"); first by iAccu.
     (* Prove the atomic shift for CAS *)
-    iAuIntro.
-    iMod (aupd_acc with "AU") as (x') "[H↦ Hclose]"; first solve_ndisj.
-    iModIntro. iExists #x'. iFrame. iSplit.
-    { iDestruct "Hclose" as "[Hclose _]". iApply "Hclose". }
-    iIntros ([]). destruct (decide (#x' = #x)) as [[= Hx]|Hx].
-    - iIntros "H↦". iDestruct "Hclose" as "[_ Hclose]". subst.
-      iMod ("Hclose" $! () with "H↦") as "HΦ". iIntros "!> HQ".
+    iAuIntro. iApply (astep_aupd with "AU"); first done.
+    iIntros (x') "H↦".
+    iApply (astep_intro with "[H↦]"); [solve_ndisj|done|iSplit].
+    { iIntros "$ !> $ !> //". }
+    iIntros ([]) "H↦ !>".
+    destruct (decide (#x' = #x)) as [[= ->]|Hx].
+    - iRight. iExists (). iFrame. iIntros "HΦ !> HQ".
       wp_if. by iApply "HΦ".
-    - iDestruct "Hclose" as "[Hclose _]". iIntros "H↦".
-      iMod ("Hclose" with "H↦") as "AU". iIntros "!> HQ".
+    - iLeft. iFrame. iIntros "AU !> HQ".
       wp_if. iApply ("IH" with "HQ"). done.
   Qed.
 
@@ -70,8 +70,8 @@ Section increment_client.
     iAssert (□ WP incr primitive_atomic_heap #l {{ _, True }})%I as "#Aupd".
     { iAlways. wp_apply (incr_spec with "[]"); first by iAccu. clear x.
       iAuIntro. iInv nroot as (x) ">H↦".
-      iApply (astep_intro with "[H↦]"); [solve_ndisj|done|].
-      iSplit; first by eauto 10.
+      iApply (astep_intro with "[H↦]"); [solve_ndisj|done|iSplit].
+      { by eauto 10. }
       iIntros ([]) "H↦ !>". iSplitL "H↦"; first by eauto 10.
       (* The continuation: From after the atomic triple to the postcondition of the WP *)
       done.
