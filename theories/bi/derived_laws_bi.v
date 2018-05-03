@@ -113,6 +113,16 @@ Lemma True_intro P : P ⊢ True.
 Proof. by apply pure_intro. Qed.
 Hint Immediate False_elim.
 
+Lemma entails_eq_True P Q : (P ⊢ Q) ↔ ((P → Q)%I ≡ True%I).
+Proof.
+  split=>EQ.
+  - apply bi.equiv_spec; split; [by apply True_intro|].
+    apply impl_intro_r. rewrite and_elim_r //.
+  - trans (P ∧ True)%I.
+    + apply and_intro; first done. by apply pure_intro.
+    + rewrite -EQ impl_elim_r. done.
+Qed.
+
 Lemma and_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ∧ P' ⊢ Q ∧ Q'.
 Proof. auto. Qed.
 Lemma and_mono_l P P' Q : (P ⊢ Q) → P ∧ P' ⊢ Q ∧ P'.
@@ -1428,13 +1438,8 @@ Qed.
 Lemma limit_preserving_entails {A : ofeT} `{Cofe A} (Φ Ψ : A → PROP) :
   NonExpansive Φ → NonExpansive Ψ → LimitPreserving (λ x, Φ x ⊢ Ψ x).
 Proof.
-  intros HΦ HΨ c Hc.
-  assert (Heq : ∀ P Q : PROP, (∀ n, (P → Q)%I ≡{n}≡ True%I) ↔ (P -∗ Q)).
-  { intros ??. rewrite -equiv_dist. split=>EQ.
-    - by rewrite -(left_id True%I bi_and P) -EQ impl_elim_l.
-    - apply bi.equiv_spec; split; [by apply True_intro|].
-      apply impl_intro_l. by rewrite right_id. }
-  apply Heq=>n. rewrite conv_compl. by apply Heq.
+  intros HΦ HΨ c Hc. apply entails_eq_True, equiv_dist=>n.
+  rewrite conv_compl. apply equiv_dist, entails_eq_True. done.
 Qed.
 Lemma limit_preserving_equiv {A : ofeT} `{Cofe A} (Φ Ψ : A → PROP) :
   NonExpansive Φ → NonExpansive Ψ → LimitPreserving (λ x, Φ x ⊣⊢ Ψ x).
