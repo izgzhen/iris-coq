@@ -1659,8 +1659,7 @@ Tactic Notation "iLöbCore" "as" constr (IH) :=
      refine should use the other unification algorithm, which should
      not have this issue. *)
   notypeclasses refine (tac_löb _ _ IH _ _ _ _);
-    [iSolveTC || fail "iLöb: PROP is not a Cofe"
-    |reflexivity || fail "iLöb: spatial context not empty, this should not happen"
+    [reflexivity || fail "iLöb: spatial context not empty, this should not happen"
     |env_reflexivity || fail "iLöb:" IH "not fresh"|].
 
 Tactic Notation "iLöbRevert" constr(Hs) "with" tactic(tac) :=

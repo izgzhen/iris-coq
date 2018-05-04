@@ -210,8 +210,6 @@ Section löb.
   Local Instance flöb_pre_contractive P : Contractive (flöb_pre P).
   Proof. solve_contractive. Qed.
 
-  Context `{Cofe PROP}.
-
   Definition flöb (P : PROP) := fixpoint (flöb_pre P).
 
   Lemma weak_löb P : (▷ P ⊢ P) → (True ⊢ P).
@@ -412,7 +410,7 @@ Proof. intros; rewrite /Timeless except_0_and later_and; auto. Qed.
 Global Instance or_timeless P Q : Timeless P → Timeless Q → Timeless (P ∨ Q).
 Proof. intros; rewrite /Timeless except_0_or later_or; auto. Qed.
 
-Global Instance impl_timeless `{Cofe PROP} P Q : Timeless Q → Timeless (P → Q).
+Global Instance impl_timeless P Q : Timeless Q → Timeless (P → Q).
 Proof.
   rewrite /Timeless=> HQ. rewrite later_false_em.
   apply or_mono, impl_intro_l; first done.
@@ -425,7 +423,7 @@ Proof.
   intros; rewrite /Timeless except_0_sep later_sep; auto using sep_mono.
 Qed.
 
-Global Instance wand_timeless `{Cofe PROP} P Q : Timeless Q → Timeless (P -∗ Q).
+Global Instance wand_timeless P Q : Timeless Q → Timeless (P -∗ Q).
 Proof.
   rewrite /Timeless=> HQ. rewrite later_false_em.
   apply or_mono, wand_intro_l; first done.
