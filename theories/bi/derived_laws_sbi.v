@@ -205,26 +205,17 @@ Proof. intros ?. by rewrite /Absorbing -later_absorbingly absorbing. Qed.
 
 Section löb.
   (* Proof following https://en.wikipedia.org/wiki/L%C3%B6b's_theorem#Proof_of_L%C3%B6b's_theorem *)
-  Definition flöb_pre (P Ψ : PROP) : PROP := (▷ Ψ → P)%I.
-
-  Local Instance flöb_pre_contractive P : Contractive (flöb_pre P).
-  Proof. solve_contractive. Qed.
-
-  Definition flöb (P : PROP) := fixpoint (flöb_pre P).
-
   Lemma weak_löb P : (▷ P ⊢ P) → (True ⊢ P).
   Proof.
-    set (Ψ := flöb P). assert (Ψ ⊣⊢ (▷ Ψ → P)) as HΨ.
-    { exact: fixpoint_unfold. }
+    pose (flöb_pre (P Q : PROP) := (▷ Q → P)%I).
+    assert (∀ P, Contractive (flöb_pre P)) by solve_contractive.
+    set (Q := fixpoint (flöb_pre P)).
+    assert (Q ⊣⊢ (▷ Q → P)) as HQ by (exact: fixpoint_unfold).
     intros HP. rewrite -HP.
-    assert (Ψ ⊢ (▷ Ψ → P)) as HΨ'%entails_impl_True by by rewrite -HΨ.
-    rewrite ->(later_intro (Ψ → _))%I in HΨ'.
-    rewrite ->later_impl in HΨ'.
-    rewrite ->later_impl in HΨ'.
-    assert (▷ Ψ ⊢ P) as HΨP.
-    { rewrite -HP. rewrite -(idemp (∧) (▷ Ψ))%I {2}(later_intro (▷ Ψ))%I.
-      apply impl_elim_l', entails_impl_True. done. }
-    rewrite -HΨP HΨ -2!later_intro.
+    assert (▷ Q ⊢ P) as HQP.
+    { rewrite -HP. rewrite -(idemp (∧) (▷ Q))%I {2}(later_intro (▷ Q))%I.
+      by rewrite {1}HQ {1}later_impl impl_elim_l. }
+    rewrite -HQP HQ -2!later_intro.
     apply (entails_impl_True _ P). done.
   Qed.
 
@@ -237,7 +228,6 @@ Section löb.
     rewrite assoc impl_elim_l.
     rewrite impl_elim_r. done.
   Qed.
-
 End löb.
 
 (* Iterated later modality *)
