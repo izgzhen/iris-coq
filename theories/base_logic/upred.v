@@ -509,7 +509,7 @@ Proof.
     intros P Q.
     unseal=> HP; split=>-[|n] x ??; [done|apply HP; eauto using cmra_validN_S].
   - (* P ⊢ ▷ P *)
-    intros P. unseal; split=> n x ? HP. destruct n; first done. simpl.
+    intros P. unseal; split=> -[|n] /= x ? HP; first done.
     apply uPred_mono with (S n) x; eauto using cmra_validN_S.
   - (* (∀ a, ▷ Φ a) ⊢ ▷ ∀ a, Φ a *)
     intros A Φ. unseal; by split=> -[|n] x.
