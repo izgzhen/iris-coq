@@ -122,6 +122,8 @@ Proof.
     + apply and_intro; first done. by apply pure_intro.
     + rewrite -EQ impl_elim_r. done.
 Qed.
+Lemma entails_impl_True P Q : (P ⊢ Q) ↔ (True ⊢ (P → Q)).
+Proof. rewrite entails_eq_True equiv_spec; naive_solver. Qed.
 
 Lemma and_mono P P' Q Q' : (P ⊢ Q) → (P' ⊢ Q') → P ∧ P' ⊢ Q ∧ Q'.
 Proof. auto. Qed.

@@ -336,8 +336,7 @@ Proof.
   - intros A x y. split=> i. by apply bi.later_eq_1.
   - intros A x y. split=> i. by apply bi.later_eq_2.
   - intros P Q [?]. split=> i. by apply bi.later_mono.
-  - intros P. split=> i /=.
-    setoid_rewrite bi.pure_impl_forall. rewrite /= !bi.forall_elim //. by apply bi.löb.
+  - intros P. split=> i /=. by apply bi.later_intro.
   - intros A Ψ. split=> i. by apply bi.later_forall_2.
   - intros A Ψ. split=> i. by apply bi.later_exist_false.
   - intros P Q. split=> i. by apply bi.later_sep_1.

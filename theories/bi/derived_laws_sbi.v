@@ -158,12 +158,6 @@ Global Instance later_flip_mono' :
   Proper (flip (⊢) ==> flip (⊢)) (@sbi_later PROP).
 Proof. intros P Q; apply later_mono. Qed.
 
-Lemma later_intro P : P ⊢ ▷ P.
-Proof.
-  rewrite -(and_elim_l (▷ P)%I P) -(löb (▷ P ∧ P)%I).
-  apply impl_intro_l. by rewrite {1}(and_elim_r (▷ P)%I).
-Qed.
-
 Lemma later_True : ▷ True ⊣⊢ True.
 Proof. apply (anti_symm (⊢)); auto using later_intro. Qed.
 Lemma later_emp `{!BiAffine PROP} : ▷ emp ⊣⊢ emp.
@@ -208,6 +202,34 @@ Global Instance later_persistent P : Persistent P → Persistent (▷ P).
 Proof. intros. by rewrite /Persistent -later_persistently {1}(persistent P). Qed.
 Global Instance later_absorbing P : Absorbing P → Absorbing (▷ P).
 Proof. intros ?. by rewrite /Absorbing -later_absorbingly absorbing. Qed.
+
+Section löb.
+  (* Proof following https://en.wikipedia.org/wiki/L%C3%B6b's_theorem#Proof_of_L%C3%B6b's_theorem.
+     Their Ψ is called Q in our proof. *)
+  Lemma weak_löb P : (▷ P ⊢ P) → (True ⊢ P).
+  Proof.
+    pose (flöb_pre (P Q : PROP) := (▷ Q → P)%I).
+    assert (∀ P, Contractive (flöb_pre P)) by solve_contractive.
+    set (Q := fixpoint (flöb_pre P)).
+    assert (Q ⊣⊢ (▷ Q → P)) as HQ by (exact: fixpoint_unfold).
+    intros HP. rewrite -HP.
+    assert (▷ Q ⊢ P) as HQP.
+    { rewrite -HP. rewrite -(idemp (∧) (▷ Q))%I {2}(later_intro (▷ Q))%I.
+      by rewrite {1}HQ {1}later_impl impl_elim_l. }
+    rewrite -HQP HQ -2!later_intro.
+    apply (entails_impl_True _ P). done.
+  Qed.
+
+  Lemma löb P : (▷ P → P) ⊢ P.
+  Proof.
+    apply entails_impl_True, weak_löb. apply impl_intro_r.
+    rewrite -{2}(idemp (∧) (▷ P → P))%I.
+    rewrite {2}(later_intro (▷ P → P))%I.
+    rewrite later_impl.
+    rewrite assoc impl_elim_l.
+    rewrite impl_elim_r. done.
+  Qed.
+End löb.
 
 (* Iterated later modality *)
 Global Instance laterN_ne m : NonExpansive (@sbi_laterN PROP m).
