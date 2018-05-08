@@ -204,7 +204,8 @@ Global Instance later_absorbing P : Absorbing P → Absorbing (▷ P).
 Proof. intros ?. by rewrite /Absorbing -later_absorbingly absorbing. Qed.
 
 Section löb.
-  (* Proof following https://en.wikipedia.org/wiki/L%C3%B6b's_theorem#Proof_of_L%C3%B6b's_theorem *)
+  (* Proof following https://en.wikipedia.org/wiki/L%C3%B6b's_theorem#Proof_of_L%C3%B6b's_theorem.
+     Their Ψ is called Q in our proof. *)
   Lemma weak_löb P : (▷ P ⊢ P) → (True ⊢ P).
   Proof.
     pose (flöb_pre (P Q : PROP) := (▷ Q → P)%I).
