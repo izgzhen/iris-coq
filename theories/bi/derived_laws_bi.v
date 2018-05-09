@@ -1181,6 +1181,9 @@ Proof. destruct p; simpl; auto using intuitionistically_sep. Qed.
 Lemma intuitionistically_if_idemp p P : □?p □?p P ⊣⊢ □?p P.
 Proof. destruct p; simpl; auto using intuitionistically_idemp. Qed.
 
+Lemma intuitionistically_if_unfold p P : □?p P ⊣⊢ <affine>?p <pers>?p P.
+Proof. by destruct p. Qed.
+
 (* Properties of persistent propositions *)
 Global Instance Persistent_proper : Proper ((≡) ==> iff) (@Persistent PROP).
 Proof. solve_proper. Qed.
@@ -1288,6 +1291,8 @@ Global Instance sep_affine P Q : Affine P → Affine Q → Affine (P ∗ Q).
 Proof. rewrite /Affine=>-> ->. by rewrite left_id. Qed.
 Global Instance affinely_affine P : Affine (<affine> P).
 Proof. rewrite /bi_affinely. apply _. Qed.
+Global Instance affinely_if_affine p P : Affine P → Affine (<affine>?p P).
+Proof. destruct p; simpl; apply _. Qed.
 Global Instance intuitionistically_affine P : Affine (□ P).
 Proof. rewrite /bi_intuitionistically. apply _. Qed.
 
