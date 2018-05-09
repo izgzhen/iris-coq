@@ -215,9 +215,12 @@ Proof.
   rewrite {1}(persistent ⌜φ⌝%I) //.
 Qed.
 
-Global Instance from_pure_absorbingly P φ :
-  FromPure true P φ → FromPure false (<absorb> P) φ.
-Proof. rewrite /FromPure=> <- /=. by rewrite persistent_absorbingly_affinely. Qed.
+Global Instance from_pure_absorbingly P φ p :
+  FromPure true P φ → FromPure p (<absorb> P) φ.
+Proof.
+  rewrite /FromPure=> <- /=.
+  rewrite persistent_absorbingly_affinely affinely_if_elim //.
+Qed.
 Global Instance from_pure_embed `{BiEmbed PROP PROP'} a P φ :
   FromPure a P φ → FromPure a ⎡P⎤ φ.
 Proof. rewrite /FromPure=> <-. by rewrite -embed_pure embed_affinely_if_2. Qed.

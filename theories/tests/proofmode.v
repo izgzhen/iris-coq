@@ -389,6 +389,10 @@ Qed.
 Lemma test_iIntros_pure_neg : (⌜ ¬False ⌝ : PROP)%I.
 Proof. by iIntros (?). Qed.
 
+Lemma test_iPureIntro_absorbing (φ : Prop) :
+  φ → sbi_emp_valid (PROP:=PROP) (<absorb> ⌜φ⌝)%I.
+Proof. intros ?. iPureIntro. done. Qed.
+
 Lemma test_iFrame_later_1 P Q : P ∗ ▷ Q -∗ ▷ (P ∗ ▷ Q).
 Proof. iIntros "H". iFrame "H". auto. Qed.
 
