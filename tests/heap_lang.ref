@@ -35,7 +35,7 @@
   Σ : gFunctors
   H : heapG Σ
   fun1, fun2, fun3 : expr
-  Φ : language.val heap_lang → iProp Σ
+  Φ : language.val heap_lang → iPropI Σ
   ============================
   --------------------------------------∗
   WP let: "val1" := fun1 #() in
@@ -48,7 +48,7 @@
   Σ : gFunctors
   H : heapG Σ
   fun1, fun2, fun3 : expr
-  Φ : language.val heap_lang → iProp Σ
+  Φ : language.val heap_lang → iPropI Σ
   E : coPset
   ============================
   --------------------------------------∗
