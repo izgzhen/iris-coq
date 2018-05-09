@@ -50,6 +50,11 @@ Section gmultiset.
   Proof. split. done. intros X. by rewrite gmultiset_op_union left_id_L. done. Qed.
   Canonical Structure gmultisetUR := UcmraT (gmultiset K) gmultiset_ucmra_mixin.
 
+  Global Instance gmultiset_cancelable X : Cancelable X.
+  Proof.
+    apply: discrete_cancelable=> Y Z _ ?. fold_leibniz. by apply (inj (X ∪)).
+  Qed.
+
   Lemma gmultiset_opM X mY : X ⋅? mY = X ∪ from_option id ∅ mY.
   Proof. destruct mY; by rewrite /= ?right_id_L. Qed.
 
@@ -71,7 +76,6 @@ Section gmultiset.
     repeat (rewrite multiplicity_difference || rewrite multiplicity_union).
     omega.
   Qed.
-
 End gmultiset.
 
 Arguments gmultisetC _ {_ _}.
