@@ -651,7 +651,7 @@ Global Instance persistently_if_objective P p `{!Objective P} : Objective (<pers
 Proof. rewrite /bi_persistently_if. destruct p; apply _. Qed.
 Global Instance affinely_if_objective P p `{!Objective P} : Objective (<affine>?p P).
 Proof. rewrite /bi_affinely_if. destruct p; apply _. Qed.
-Global Instance intuitionistically_if_objective P p `{!Objective P} : Objective (<affine>?p P).
+Global Instance intuitionistically_if_objective P p `{!Objective P} : Objective (□?p P).
 Proof. rewrite /bi_intuitionistically_if. destruct p; apply _. Qed.
 
 (** monPred_in *)
@@ -670,10 +670,10 @@ Qed.
 Global Instance monPred_at_monoid_and_homomorphism i :
   MonoidHomomorphism bi_and bi_and (≡) (flip monPred_at i).
 Proof. split; [split|]; try apply _. apply monPred_at_and. apply monPred_at_pure. Qed.
-Global Instance monPred_at_monoid_or_homomorphism :
+Global Instance monPred_at_monoid_or_homomorphism i :
   MonoidHomomorphism bi_or bi_or (≡) (flip monPred_at i).
 Proof. split; [split|]; try apply _. apply monPred_at_or. apply monPred_at_pure. Qed.
-Global Instance monPred_at_monoid_sep_homomorphism :
+Global Instance monPred_at_monoid_sep_homomorphism i :
   MonoidHomomorphism bi_sep bi_sep (≡) (flip monPred_at i).
 Proof. split; [split|]; try apply _. apply monPred_at_sep. apply monPred_at_emp. Qed.
 
@@ -839,14 +839,14 @@ Qed.
 
 (** Objective  *)
 Global Instance internal_eq_objective {A : ofeT} (x y : A) :
-  @Objective I PROP (x ≡ y)%I.
+  @Objective I PROP (x ≡ y).
 Proof. intros ??. by unseal. Qed.
 
-Global Instance later_objective P `{!Objective P} : Objective (▷ P)%I.
+Global Instance later_objective P `{!Objective P} : Objective (▷ P).
 Proof. intros ??. unseal. by rewrite objective_at. Qed.
-Global Instance laterN_objective P `{!Objective P} n : Objective (▷^n P)%I.
+Global Instance laterN_objective P `{!Objective P} n : Objective (▷^n P).
 Proof. induction n; apply _. Qed.
-Global Instance except0_objective P `{!Objective P} : Objective (◇ P)%I.
+Global Instance except0_objective P `{!Objective P} : Objective (◇ P).
 Proof. rewrite /sbi_except_0. apply _. Qed.
 
 (** FUpd  *)
@@ -916,11 +916,8 @@ Proof.
     do 3 apply bi.forall_intro => ?. f_equiv. rewrite bi.forall_elim //.
   - intros P. split=> i /=. apply bi.forall_intro=>_. by apply plainly_emp_intro.
   - intros P Q. split=> i. apply bi.sep_elim_l, _.
-  - intros P Q. split=> i /=.
-    rewrite <-(sig_monPred_sig P), <-(sig_monPred_sig Q), <-(bi.f_equiv _).
-    rewrite -bi.sig_equivI /= -bi.fun_ext. f_equiv=> j.
-    rewrite -prop_ext !(bi.forall_elim j) !bi.pure_impl_forall
-            !bi.forall_elim //.
+  - intros P Q. split=> i /=. rewrite (monPred_equivI P Q). f_equiv=> j.
+    by rewrite -prop_ext !(bi.forall_elim j) !bi.pure_True // !bi.True_impl.
   - intros P. split=> i /=.
     rewrite bi.later_forall. f_equiv=> j. by rewrite -later_plainly_1.
   - intros P. split=> i /=.
