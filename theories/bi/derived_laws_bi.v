@@ -1272,7 +1272,7 @@ Section persistent_bi_absorbing.
 End persistent_bi_absorbing.
 
 (* Affine instances *)
-Global Instance emp_affine_l : Affine (PROP:=PROP) emp.
+Global Instance emp_affine : Affine (PROP:=PROP) emp.
 Proof. by rewrite /Affine. Qed.
 Global Instance False_affine : Affine (PROP:=PROP) False.
 Proof. by rewrite /Affine False_elim. Qed.
