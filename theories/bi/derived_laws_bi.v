@@ -1274,6 +1274,8 @@ End persistent_bi_absorbing.
 (* Affine instances *)
 Global Instance emp_affine_l : Affine (PROP:=PROP) emp.
 Proof. by rewrite /Affine. Qed.
+Global Instance False_affine : Affine (PROP:=PROP) False.
+Proof. by rewrite /Affine False_elim. Qed.
 Global Instance and_affine_l P Q : Affine P → Affine (P ∧ Q).
 Proof. rewrite /Affine=> ->; auto. Qed.
 Global Instance and_affine_r P Q : Affine Q → Affine (P ∧ Q).
