@@ -136,8 +136,8 @@ Definition prop_of_env {PROP : bi} (Γ : env PROP) : PROP :=
   in
   match Γ with Enil => emp%I | Esnoc Γ _ P => aux Γ P end.
 
-Definition maybe_wand {PROP : bi} (P : option PROP) (Q : PROP) : PROP :=
-  match P with
+Definition maybe_wand {PROP : bi} (mP : option PROP) (Q : PROP) : PROP :=
+  match mP with
   | None => Q
   | Some P => (P -∗ Q)%I
   end.
@@ -444,9 +444,9 @@ Proof.
   rewrite /= assoc (comm _ P0 P) IH //.
 Qed.
 
-Lemma maybe_wand_sound (P : option PROP) Q :
-  maybe_wand P Q ⊣⊢ (default emp P id -∗ Q).
-Proof. destruct P; simpl; first done. rewrite emp_wand //. Qed.
+Lemma maybe_wand_sound (mP : option PROP) Q :
+  maybe_wand mP Q ⊣⊢ (default emp mP id -∗ Q).
+Proof. destruct mP; simpl; first done. rewrite emp_wand //. Qed.
 
 Global Instance envs_Forall2_refl (R : relation PROP) :
   Reflexive R → Reflexive (envs_Forall2 R).

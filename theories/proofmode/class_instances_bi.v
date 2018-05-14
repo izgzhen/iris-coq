@@ -843,9 +843,9 @@ Proof. by rewrite /AddModal !embed_bupd. Qed.
 (* ElimInv *)
 Global Instance elim_inv_acc_without_close {X : Type}
        φ Pinv Pin
-       M1 M2 α β γ Q (Q' : X → PROP) :
-  IntoAcc (X:=X) Pinv φ Pin M1 M2 α β γ →
-  ElimAcc (X:=X) M1 M2 α β γ Q Q' →
+       M1 M2 α β mγ Q (Q' : X → PROP) :
+  IntoAcc (X:=X) Pinv φ Pin M1 M2 α β mγ →
+  ElimAcc (X:=X) M1 M2 α β mγ Q Q' →
   ElimInv φ Pinv Pin α None Q Q'.
 Proof.
   rewrite /ElimAcc /IntoAcc /ElimInv.
@@ -857,10 +857,10 @@ Qed.
 
 Global Instance elim_inv_acc_with_close {X : Type}
        φ Pinv Pin
-       M1 M2 α β γ Q Q' :
-  IntoAcc Pinv φ Pin M1 M2 α β γ →
+       M1 M2 α β mγ Q Q' :
+  IntoAcc Pinv φ Pin M1 M2 α β mγ →
   (∀ R, ElimModal True false false (M1 R) R Q Q') →
-  ElimInv (X:=X) φ Pinv Pin α (Some (λ x, β x -∗ M2 (proofmode.base.from_option id emp (γ x))))%I
+  ElimInv (X:=X) φ Pinv Pin α (Some (λ x, β x -∗ M2 (proofmode.base.from_option id emp (mγ x))))%I
           Q (λ _, Q').
 Proof.
   rewrite /ElimAcc /IntoAcc /ElimInv.

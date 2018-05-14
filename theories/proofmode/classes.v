@@ -519,8 +519,8 @@ Hint Mode IntoInv + ! - : typeclass_instances.
     closing view shift.  [γ] is an [option] to make it easy for ElimAcc
     instances to recognize the [emp] case and make it look nicer. *)
 Definition accessor {PROP : bi} {X : Type} (M1 M2 : PROP → PROP)
-           (α β : X → PROP) (γ : X → option PROP) : PROP :=
-  M1 (∃ x, α x ∗ (β x -∗ M2 (default emp (γ x) id)))%I.
+           (α β : X → PROP) (mγ : X → option PROP) : PROP :=
+  M1 (∃ x, α x ∗ (β x -∗ M2 (default emp (mγ x) id)))%I.
 
 (* Typeclass for assertions around which accessors can be elliminated.
    Inputs: [Q], [E1], [E2], [α], [β], [γ]
@@ -529,9 +529,9 @@ Definition accessor {PROP : bi} {X : Type} (M1 M2 : PROP → PROP)
    Elliminates an accessor [accessor E1 E2 α β γ] in goal [Q'], turning the goal
    into [Q'] with a new assumption [α x]. *)
 Class ElimAcc {PROP : bi} {X : Type} (M1 M2 : PROP → PROP)
-      (α β : X → PROP) (γ : X → option PROP)
+      (α β : X → PROP) (mγ : X → option PROP)
       (Q : PROP) (Q' : X → PROP) :=
-  elim_acc : ((∀ x, α x -∗ Q' x) -∗ accessor M1 M2 α β γ -∗ Q).
+  elim_acc : ((∀ x, α x -∗ Q' x) -∗ accessor M1 M2 α β mγ -∗ Q).
 Arguments ElimAcc {_} {_} _%I _%I _%I _%I _%I _%I : simpl never.
 Arguments elim_acc {_} {_} _%I _%I _%I _%I _%I _%I {_}.
 Hint Mode ElimAcc + ! ! ! ! ! ! ! - : typeclass_instances.
@@ -547,8 +547,8 @@ Hint Mode ElimAcc + ! ! ! ! ! ! ! - : typeclass_instances.
      some evars though, e.g. for the masks)
 *)
 Class IntoAcc {PROP : bi} {X : Type} (Pacc : PROP) (φ : Prop) (Pin : PROP)
-      (M1 M2 : PROP → PROP) (α β : X → PROP) (γ : X → option PROP) :=
-  into_acc : φ → Pacc -∗ Pin -∗ accessor M1 M2 α β γ.
+      (M1 M2 : PROP → PROP) (α β : X → PROP) (mγ : X → option PROP) :=
+  into_acc : φ → Pacc -∗ Pin -∗ accessor M1 M2 α β mγ.
 Arguments IntoAcc {_} {_} _%I _ _%I _%I _%I _%I _%I _%I : simpl never.
 Arguments into_acc {_} {_} _%I _ _%I _%I _%I _%I _%I _%I {_} : simpl never.
 Hint Mode IntoAcc + - ! - - - - - - - : typeclass_instances.
@@ -574,9 +574,9 @@ Hint Mode IntoAcc + - ! - - - - - - - : typeclass_instances.
    TODO: Add support for a binder (like accessors have it).
 *)
 Class ElimInv {PROP : bi} {X : Type} (φ : Prop)
-      (Pinv Pin : PROP) (Pout : X → PROP) (Pclose : option (X → PROP))
+      (Pinv Pin : PROP) (Pout : X → PROP) (mPclose : option (X → PROP))
       (Q : PROP) (Q' : X → PROP) :=
-  elim_inv : φ → Pinv ∗ Pin ∗ (∀ x, Pout x ∗ (default (λ _, emp) Pclose id) x -∗ Q' x) ⊢ Q.
+  elim_inv : φ → Pinv ∗ Pin ∗ (∀ x, Pout x ∗ (default (λ _, emp) mPclose id) x -∗ Q' x) ⊢ Q.
 Arguments ElimInv {_} {_} _ _%I _%I _%I _%I _%I _%I : simpl never.
 Arguments elim_inv {_} {_} _ _%I _%I _%I _%I _%I _%I {_}.
 Hint Mode ElimInv + - - ! - - ! ! - : typeclass_instances.
