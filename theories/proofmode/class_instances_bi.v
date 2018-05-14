@@ -851,7 +851,7 @@ Proof.
   rewrite /ElimAcc /IntoAcc /ElimInv.
   iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
   iApply (Helim with "[Hcont]").
-  - iIntros (x) "Hα". iApply "Hcont". iSplitL; done.
+  - iIntros (x) "Hα". iApply "Hcont". iSplitL; simpl; done.
   - iApply (Hacc with "Hinv Hin"). done.
 Qed.
 
@@ -860,7 +860,7 @@ Global Instance elim_inv_acc_with_close {X : Type}
        M1 M2 α β γ Q Q' :
   IntoAcc Pinv φ Pin M1 M2 α β γ →
   (∀ R, ElimModal True false false (M1 R) R Q Q') →
-  ElimInv (X:=X) φ Pinv Pin α (Some (λ x, β x -∗ M2 (default emp (γ x) id)))%I
+  ElimInv (X:=X) φ Pinv Pin α (Some (λ x, β x -∗ M2 (proofmode.base.from_option id emp (γ x))))%I
           Q (λ _, Q').
 Proof.
   rewrite /ElimAcc /IntoAcc /ElimInv.

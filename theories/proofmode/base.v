@@ -84,6 +84,11 @@ Qed.
 Lemma ident_beq_reflect i1 i2 : reflect (i1 = i2) (ident_beq i1 i2).
 Proof. apply iff_reflect. by rewrite ident_beq_true. Qed.
 
+(** Copies of some definitions so we can control their unfolding *)
 Definition option_bind {A B} (f : A → option B) (mx : option A) : option B :=
   match mx with Some x => f x | None => None end.
-Arguments option_bind _ _ _ !_ /.
+Arguments option_bind {_ _} _ !_ / : assert.
+
+Definition from_option {A B} (f : A → B) (y : B) (mx : option A) : B :=
+  match mx with None => y | Some x => f x end.
+Arguments from_option {_ _} _ _ !_ / : assert.

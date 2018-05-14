@@ -1101,7 +1101,7 @@ Lemma tac_inv_elim {X : Type} Δ Δ' i j φ p Pinv Pin Pout (Pclose : option (X 
   φ →
   (∀ R, ∃ Δ'',
     envs_app false (Esnoc Enil j
-                    (Pin -∗ (∀ x, Pout x -∗ default (Q' x) Pclose (λ Pclose, Pclose x -∗ Q' x)) -∗ R)%I) Δ'
+            (Pin -∗ (∀ x, Pout x -∗ from_option (λ Pclose, Pclose x -∗ Q' x) (Q' x) Pclose) -∗ R)%I) Δ'
       = Some Δ'' ∧
     envs_entails Δ'' R) →
   envs_entails Δ Q.

@@ -7,8 +7,11 @@ From stdpp Require Import hlist pretty.
 Set Default Proof Using "Type".
 Export ident.
 
+(** These are all proofmode-internal definitions and hence unfolding them should
+not affect the user's goal. *)
+(* TODO: Can we option_bind, from_option, maybe_wand reduce only if applied to a constructor? *)
 Declare Reduction env_cbv := cbv [
-  option_bind from_option (* TODO: Can we make these (and maybe_wand) reduce only if applied to a constructor? *)
+  option_bind from_option
   beq ascii_beq string_beq positive_beq Pos.succ ident_beq
   env_lookup env_lookup_delete env_delete env_app env_replace env_dom
   env_intuitionistic env_spatial env_counter env_spatial_is_nil envs_dom
