@@ -41,7 +41,7 @@ Instance: Params (@ownP) 3.
 (* Adequacy *)
 Theorem ownP_adequacy Σ `{ownPPreG Λ Σ} s e σ φ :
   (∀ `{ownPG Λ Σ}, ownP σ ⊢ WP e @ s; ⊤ {{ v, ⌜φ v⌝ }}) →
-  adequate s e σ φ.
+  adequate s e σ (λ v _, φ v).
 Proof.
   intros Hwp. apply (wp_adequacy Σ _).
   iIntros (?). iMod (own_alloc (● (Excl' (σ : leibnizC _)) ⋅ ◯ (Excl' σ)))
