@@ -231,6 +231,20 @@ Proof.
   - apply impl_intro_r, impl_elim_r', exist_elim=>x.
     apply impl_intro_r. by rewrite (forall_elim x) impl_elim_r.
 Qed.
+Lemma forall_unit (Ψ : unit → PROP) :
+  (∀ x, Ψ x) ⊣⊢ Ψ ().
+Proof.
+  apply (anti_symm (⊢)).
+  - rewrite (forall_elim ()) //.
+  - apply forall_intro=>[[]]. done.
+Qed.
+Lemma exist_unit (Ψ : unit → PROP) :
+  (∃ x, Ψ x) ⊣⊢ Ψ ().
+Proof.
+  apply (anti_symm (⊢)).
+  - apply exist_elim=>[[]]. done.
+  - rewrite -(exist_intro ()). done.
+Qed.
 
 Lemma or_and_l P Q R : P ∨ Q ∧ R ⊣⊢ (P ∨ Q) ∧ (P ∨ R).
 Proof.

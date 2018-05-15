@@ -73,9 +73,8 @@ Section proofs.
   Lemma cinv_cancel E N γ P : ↑N ⊆ E → cinv N γ P -∗ cinv_own γ 1 ={E}=∗ ▷ P.
   Proof.
     iIntros (?) "#Hinv Hγ". iDestruct "Hinv" as (P') "[#HP' Hinv]".
-    iInv N as "[HP|>Hγ']" "Hclose".
-    - iMod ("Hclose" with "[Hγ]") as "_"; first by eauto. iModIntro. iNext.
-      iApply "HP'". done.
+    iInv N as "[HP|>Hγ']".
+    - iModIntro. iFrame "Hγ". iModIntro. iApply "HP'". done.
     - iDestruct (cinv_own_1_l with "Hγ Hγ'") as %[].
   Qed.
 
@@ -92,15 +91,15 @@ Section proofs.
   Qed.
 
   Global Instance into_inv_cinv N γ P : IntoInv (cinv N γ P) N.
-  Global Instance elim_inv_cinv p γ E N P Q Q' :
-    (∀ R, ElimModal True false false (|={E,E∖↑N}=> R) R Q Q') →
-    ElimInv (↑N ⊆ E) (cinv N γ P) (cinv_own γ p)
-      (▷ P ∗ cinv_own γ p) (▷ P ={E∖↑N,E}=∗ True) Q Q'.
+
+  Global Instance into_acc_cinv E N γ P p :
+    IntoAcc (X:=unit) (cinv N γ P)
+            (↑N ⊆ E) (cinv_own γ p) (fupd E (E∖↑N)) (fupd (E∖↑N) E)
+            (λ _, ▷ P ∗ cinv_own γ p)%I (λ _, ▷ P)%I (λ _, None)%I.
   Proof.
-    rewrite /ElimInv /ElimModal. iIntros (Helim ?) "(#H1&Hown&H2)".
-    iApply Helim; [done|]; simpl. iSplitR "H2"; [|done].
-    iMod (cinv_open E N γ p P with "[#] [Hown]") as "(HP&Hown&Hclose)"; auto. 
-    by iFrame.
+    rewrite /IntoAcc /accessor. iIntros (?) "#Hinv Hown".
+    rewrite exist_unit -assoc.
+    iApply (cinv_open with "Hinv"); done.
   Qed.
 End proofs.
 

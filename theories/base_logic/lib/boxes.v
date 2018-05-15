@@ -130,11 +130,11 @@ Lemma slice_delete_empty E q f P Q γ :
 Proof.
   iIntros (??) "[#HγQ Hinv] H". iDestruct "H" as (Φ) "[#HeqP Hf]".
   iExists ([∗ map] γ'↦_ ∈ delete γ f, Φ γ')%I.
-  iInv N as (b) "[>Hγ _]" "Hclose".
+  iInv N as (b) "[>Hγ _]".
   iDestruct (big_opM_delete _ f _ false with "Hf")
     as "[[>Hγ' #[HγΦ ?]] ?]"; first done.
   iDestruct (box_own_auth_agree γ b false with "[-]") as %->; first by iFrame.
-  iMod ("Hclose" with "[Hγ]"); first iExists false; eauto.
+  iModIntro. iSplitL "Hγ"; first iExists false; eauto.
   iModIntro. iNext. iSplit.
   - iDestruct (box_own_agree γ Q (Φ γ) with "[#]") as "HeqQ"; first by eauto.
     iNext. iRewrite "HeqP". iRewrite "HeqQ". by rewrite -big_opM_delete.
@@ -147,11 +147,11 @@ Lemma slice_fill E q f γ P Q :
   slice N γ Q -∗ ▷ Q -∗ ▷?q box N f P ={E}=∗ ▷?q box N (<[γ:=true]> f) P.
 Proof.
   iIntros (??) "#[HγQ Hinv] HQ H"; iDestruct "H" as (Φ) "[#HeqP Hf]".
-  iInv N as (b') "[>Hγ _]" "Hclose".
+  iInv N as (b') "[>Hγ _]".
   iDestruct (big_opM_delete _ f _ false with "Hf")
     as "[[>Hγ' #[HγΦ Hinv']] ?]"; first done.
   iMod (box_own_auth_update γ b' false true with "[$Hγ $Hγ']") as "[Hγ Hγ']".
-  iMod ("Hclose" with "[Hγ HQ]"); first (iNext; iExists true; by iFrame).
+  iModIntro. iSplitL "Hγ HQ"; first (iNext; iExists true; by iFrame).
   iModIntro; iNext; iExists Φ; iSplit.
   - by rewrite big_opM_insert_override.
   - rewrite -insert_delete big_opM_insert ?lookup_delete //.
@@ -164,13 +164,13 @@ Lemma slice_empty E q f P Q γ :
   slice N γ Q -∗ ▷?q box N f P ={E}=∗ ▷ Q ∗ ▷?q box N (<[γ:=false]> f) P.
 Proof.
   iIntros (??) "#[HγQ Hinv] H"; iDestruct "H" as (Φ) "[#HeqP Hf]".
-  iInv N as (b) "[>Hγ HQ]" "Hclose".
+  iInv N as (b) "[>Hγ HQ]".
   iDestruct (big_opM_delete _ f with "Hf")
     as "[[>Hγ' #[HγΦ Hinv']] ?]"; first done.
   iDestruct (box_own_auth_agree γ b true with "[-]") as %->; first by iFrame.
   iFrame "HQ".
   iMod (box_own_auth_update γ with "[$Hγ $Hγ']") as "[Hγ Hγ']".
-  iMod ("Hclose" with "[Hγ]"); first (iNext; iExists false; by repeat iSplit).
+  iModIntro. iSplitL "Hγ"; first (iNext; iExists false; by repeat iSplit).
   iModIntro; iNext; iExists Φ; iSplit.
   - by rewrite big_opM_insert_override.
   - rewrite -insert_delete big_opM_insert ?lookup_delete //.
@@ -213,9 +213,9 @@ Proof.
   rewrite -big_opM_opM big_opM_fmap; iApply (fupd_big_sepM _ _ f).
   iApply (@big_sepM_impl with "Hf").
   iIntros "!#" (γ b' ?) "[(Hγ' & #$ & #$) HΦ]".
-  iInv N as (b) "[>Hγ _]" "Hclose".
+  iInv N as (b) "[>Hγ _]".
   iMod (box_own_auth_update γ with "[Hγ Hγ']") as "[Hγ $]"; first by iFrame.
-  iApply "Hclose". iNext; iExists true. by iFrame.
+  iModIntro. iSplitL; last done. iNext; iExists true. iFrame.
 Qed.
 
 Lemma box_empty E f P :
@@ -230,10 +230,10 @@ Proof.
   { rewrite -big_opM_opM -fupd_big_sepM. iApply (@big_sepM_impl with "[$Hf]").
     iIntros "!#" (γ b ?) "(Hγ' & #HγΦ & #Hinv)".
     assert (true = b) as <- by eauto.
-    iInv N as (b) "[>Hγ HΦ]" "Hclose".
+    iInv N as (b) "[>Hγ HΦ]".
     iDestruct (box_own_auth_agree γ b true with "[-]") as %->; first by iFrame.
     iMod (box_own_auth_update γ true true false with "[$Hγ $Hγ']") as "[Hγ $]".
-    iMod ("Hclose" with "[Hγ]"); first (iNext; iExists false; iFrame; eauto).
+    iModIntro. iSplitL "Hγ"; first (iNext; iExists false; iFrame; eauto).
     iFrame "HγΦ Hinv". by iApply "HΦ". }
   iModIntro; iSplitL "HΦ".
   - rewrite internal_eq_iff later_iff big_sepM_later. by iApply "HeqP".

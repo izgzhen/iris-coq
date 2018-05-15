@@ -519,25 +519,73 @@ Class IntoInv {PROP : bi} (P: PROP) (N: namespace).
 Arguments IntoInv {_} _%I _.
 Hint Mode IntoInv + ! - : typeclass_instances.
 
-(* Input: [Pinv]
+(** Accessors.
+    This definition only exists for the purpose of the proof mode; a truly
+    usable and general form would use telescopes and also allow binders for the
+    closing view shift.  [γ] is an [option] to make it easy for ElimAcc
+    instances to recognize the [emp] case and make it look nicer. *)
+Definition accessor {PROP : bi} {X : Type} (M1 M2 : PROP → PROP)
+           (α β : X → PROP) (mγ : X → option PROP) : PROP :=
+  M1 (∃ x, α x ∗ (β x -∗ M2 (default emp (mγ x) id)))%I.
+
+(* Typeclass for assertions around which accessors can be elliminated.
+   Inputs: [Q], [E1], [E2], [α], [β], [γ]
+   Outputs: [Q']
+
+   Elliminates an accessor [accessor E1 E2 α β γ] in goal [Q'], turning the goal
+   into [Q'] with a new assumption [α x]. *)
+Class ElimAcc {PROP : bi} {X : Type} (M1 M2 : PROP → PROP)
+      (α β : X → PROP) (mγ : X → option PROP)
+      (Q : PROP) (Q' : X → PROP) :=
+  elim_acc : ((∀ x, α x -∗ Q' x) -∗ accessor M1 M2 α β mγ -∗ Q).
+Arguments ElimAcc {_} {_} _%I _%I _%I _%I _%I _%I : simpl never.
+Arguments elim_acc {_} {_} _%I _%I _%I _%I _%I _%I {_}.
+Hint Mode ElimAcc + ! ! ! ! ! ! ! - : typeclass_instances.
+
+(* Turn [P] into an accessor.
+   Inputs:
+   - [Pacc]: the assertion to be turned into an accessor (e.g. an invariant)
+   Outputs:
+   - [Pin]: additional logic assertion needed for starting the accessor.
+   - [φ]: additional Coq assertion needed for starting the accessor.
+   - [X] [α], [β], [γ]: the accessor parameters.
+   - [M1], [M2]: the two accessor modalities (they will typically still have
+     some evars though, e.g. for the masks)
+*)
+Class IntoAcc {PROP : bi} {X : Type} (Pacc : PROP) (φ : Prop) (Pin : PROP)
+      (M1 M2 : PROP → PROP) (α β : X → PROP) (mγ : X → option PROP) :=
+  into_acc : φ → Pacc -∗ Pin -∗ accessor M1 M2 α β mγ.
+Arguments IntoAcc {_} {_} _%I _ _%I _%I _%I _%I _%I _%I : simpl never.
+Arguments into_acc {_} {_} _%I _ _%I _%I _%I _%I _%I _%I {_} : simpl never.
+Hint Mode IntoAcc + - ! - - - - - - - : typeclass_instances.
+
+(* The typeclass used for the [iInv] tactic.
+   Input: [Pinv]
    Arguments:
    - [Pinv] is an invariant assertion
-   - [Pin] is an additional assertion needed for opening an invariant
+   - [Pin] is an additional logic assertion needed for opening an invariant
+   - [φ] is an additional Coq assertion needed for opening an invariant
    - [Pout] is the assertion obtained by opening the invariant
-   - [Pclose] is the assertion which contains an update modality to close the invariant
+   - [Pclose] is the closing view shift.  It must be (Some _) or None
+     when doing typeclass search as instances are allowed to make a
+     case distinction on whether the user wants a closing view-shift or not.
    - [Q] is a goal on which iInv may be invoked
    - [Q'] is the transformed goal that must be proved after opening the invariant.
 
-   There are similarities to the definition of ElimModal, however we
-   want to be general enough to support uses in settings where there
-   is not a clearly associated instance of ElimModal of the right form
-   (e.g. to handle Iris 2.0 usage of iInv).
+   Most users will never want to instantiate this; there is a general instance
+   based on [ElimAcc] and [IntoAcc].  However, logics like Iris 2 that support
+   invariants but not mask-changing fancy updates can use this class directly to
+   still benefit from [iInv].
+
+   TODO: Add support for a binder (like accessors have it).
 *)
-Class ElimInv {PROP : bi} (φ : Prop) (Pinv Pin Pout Pclose Q Q' : PROP) :=
-  elim_inv : φ → Pinv ∗ Pin ∗ (Pout ∗ Pclose -∗ Q') ⊢ Q.
-Arguments ElimInv {_} _ _%I _%I _%I _%I _%I : simpl never.
-Arguments elim_inv {_} _ _%I _%I _%I _%I _%I _%I _%I.
-Hint Mode ElimInv + - ! - - - ! - : typeclass_instances.
+Class ElimInv {PROP : bi} {X : Type} (φ : Prop)
+      (Pinv Pin : PROP) (Pout : X → PROP) (mPclose : option (X → PROP))
+      (Q : PROP) (Q' : X → PROP) :=
+  elim_inv : φ → Pinv ∗ Pin ∗ (∀ x, Pout x ∗ (default (λ _, emp) mPclose id) x -∗ Q' x) ⊢ Q.
+Arguments ElimInv {_} {_} _ _%I _%I _%I _%I _%I _%I : simpl never.
+Arguments elim_inv {_} {_} _ _%I _%I _%I _%I _%I _%I {_}.
+Hint Mode ElimInv + - - ! - - ! ! - : typeclass_instances.
 
 (* We make sure that tactics that perform actions on *specific* hypotheses or
 parts of the goal look through the [tc_opaque] connective, which is used to make
@@ -585,6 +633,6 @@ Instance elim_modal_tc_opaque {PROP : bi} φ p p' (P P' Q Q' : PROP) :
   ElimModal φ p p' P P' Q Q' → ElimModal φ p p' (tc_opaque P) P' Q Q' := id.
 Instance into_inv_tc_opaque {PROP : bi} (P : PROP) N :
   IntoInv P N → IntoInv (tc_opaque P) N := id.
-Instance elim_inv_tc_opaque {PROP : bi} φ (Pinv Pin Pout Pclose Q Q' : PROP) :
-  ElimInv φ Pinv Pin Pout Pclose Q Q' →
+Instance elim_inv_tc_opaque {PROP : sbi} {X} φ Pinv Pin Pout Pclose Q Q' :
+  ElimInv (PROP:=PROP) (X:=X) φ Pinv Pin Pout Pclose Q Q' →
   ElimInv φ (tc_opaque Pinv) Pin Pout Pclose Q Q' := id.

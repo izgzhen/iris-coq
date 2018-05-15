@@ -63,6 +63,13 @@ Section iris_tests.
   Lemma test_iInv_0 N P: inv N (<pers> P) ={⊤}=∗ ▷ P.
   Proof.
     iIntros "#H".
+    iInv N as "#H2".
+    iModIntro. iSplit; auto.
+  Qed.
+
+  Lemma test_iInv_0_with_close N P: inv N (<pers> P) ={⊤}=∗ ▷ P.
+  Proof.
+    iIntros "#H".
     iInv N as "#H2" "Hclose".
     iMod ("Hclose" with "H2").
     iModIntro. by iNext.
@@ -73,12 +80,19 @@ Section iris_tests.
     inv N (<pers> P) ={E}=∗ ▷ P.
   Proof.
     iIntros (?) "#H".
-    iInv N as "#H2" "Hclose".
-    iMod ("Hclose" with "H2").
-    iModIntro. by iNext.
+    iInv N as "#H2".
+    iModIntro. iSplit; auto.
   Qed.
 
   Lemma test_iInv_2 γ p N P:
+    cinv N γ (<pers> P) ∗ cinv_own γ p ={⊤}=∗ cinv_own γ p ∗ ▷ P.
+  Proof.
+    iIntros "(#?&?)".
+    iInv N as "(#HP&Hown)".
+    iModIntro. iSplit; auto with iFrame.
+  Qed.
+
+  Lemma test_iInv_2_with_close γ p N P:
     cinv N γ (<pers> P) ∗ cinv_own γ p ={⊤}=∗ cinv_own γ p ∗ ▷ P.
   Proof.
     iIntros "(#?&?)".
@@ -92,12 +106,21 @@ Section iris_tests.
       ={⊤}=∗ cinv_own γ p1 ∗ cinv_own γ p2  ∗ ▷ P.
   Proof.
     iIntros "(#?&Hown1&Hown2)".
-    iInv N with "[Hown2 //]" as "(#HP&Hown2)" "Hclose".
-    iMod ("Hclose" with "HP").
-    iModIntro. iFrame. by iNext.
+    iInv N with "[Hown2 //]" as "(#HP&Hown2)".
+    iModIntro. iSplit; auto with iFrame.
   Qed.
 
   Lemma test_iInv_4 t N E1 E2 P:
+    ↑N ⊆ E2 →
+    na_inv t N (<pers> P) ∗ na_own t E1 ∗ na_own t E2
+         ⊢ |={⊤}=> na_own t E1 ∗ na_own t E2  ∗ ▷ P.
+  Proof.
+    iIntros (?) "(#?&Hown1&Hown2)".
+    iInv N as "(#HP&Hown2)".
+    iModIntro. iSplitL "Hown2"; auto with iFrame.
+  Qed.
+
+  Lemma test_iInv_4_with_close t N E1 E2 P:
     ↑N ⊆ E2 →
     na_inv t N (<pers> P) ∗ na_own t E1 ∗ na_own t E2
          ⊢ |={⊤}=> na_own t E1 ∗ na_own t E2  ∗ ▷ P.
@@ -116,10 +139,8 @@ Section iris_tests.
       ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&Hown1&Hown2)".
-    iInv N with "Hown2" as "(#HP&Hown2)" "Hclose".
-    iMod ("Hclose" with "[HP Hown2]").
-    { iFrame. done. }
-    iModIntro. iFrame. by iNext.
+    iInv N with "Hown2" as "(#HP&Hown2)".
+    iModIntro. iSplitL "Hown2"; auto with iFrame.
   Qed.
 
   Lemma test_iInv_6 t N E1 E2 P:
@@ -128,10 +149,8 @@ Section iris_tests.
       ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&Hown1&Hown2)".
-    iInv N with "Hown1" as "(#HP&Hown1)" "Hclose".
-    iMod ("Hclose" with "[HP Hown1]").
-    { iFrame. done. }
-    iModIntro. iFrame. by iNext.
+    iInv N with "Hown1" as "(#HP&Hown1)".
+    iModIntro. iSplitL "Hown1"; auto with iFrame.
   Qed.
 
   (* test robustness in presence of other invariants *)
@@ -141,18 +160,15 @@ Section iris_tests.
       ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&#?&#?&Hown1&Hown2)".
-    iInv N3 with "Hown1" as "(#HP&Hown1)" "Hclose".
-    iMod ("Hclose" with "[HP Hown1]").
-    { iFrame. done. }
-    iModIntro. iFrame. by iNext.
+    iInv N3 with "Hown1" as "(#HP&Hown1)".
+    iModIntro. iSplitL "Hown1"; auto with iFrame.
   Qed.
 
   (* iInv should work even where we have "inv N P" in which P contains an evar *)
   Lemma test_iInv_8 N : ∃ P, inv N P ={⊤}=∗ P ≡ True ∧ inv N P.
   Proof.
     eexists. iIntros "#H".
-    iInv N as "HP" "Hclose".
-    iMod ("Hclose" with "[$HP]"). auto.
+    iInv N as "HP". iFrame "HP". auto.
   Qed.
 
   (* test selection by hypothesis name instead of namespace *)
@@ -162,9 +178,8 @@ Section iris_tests.
       ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&#HInv&#?&Hown1&Hown2)".
-    iInv "HInv" with "Hown1" as "(#HP&Hown1)" "Hclose".
-    iMod ("Hclose" with "[$HP $Hown1]").
-    iModIntro. iFrame. by iNext.
+    iInv "HInv" with "Hown1" as "(#HP&Hown1)".
+    iModIntro. iSplitL "Hown1"; auto with iFrame.
   Qed.
 
   (* test selection by hypothesis name instead of namespace *)
@@ -174,27 +189,24 @@ Section iris_tests.
       ={⊤}=∗ na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&#HInv&#?&Hown1&Hown2)".
-    iInv "HInv" as "(#HP&Hown1)" "Hclose".
-    iMod ("Hclose" with "[$HP $Hown1]").
-    iModIntro. iFrame. by iNext.
+    iInv "HInv" as "(#HP&Hown1)".
+    iModIntro. iSplitL "Hown1"; auto with iFrame.
   Qed.
 
   (* test selection by ident name *)
   Lemma test_iInv_11 N P: inv N (<pers> P) ={⊤}=∗ ▷ P.
   Proof.
     let H := iFresh in
-    (iIntros H; iInv H as "#H2" "Hclose").
-    iMod ("Hclose" with "H2").
-    iModIntro. by iNext.
+    (iIntros H; iInv H as "#H2"). auto.
   Qed.
 
   (* error messages *)
   Lemma test_iInv_12 N P: inv N (<pers> P) ={⊤}=∗ True.
   Proof.
     iIntros "H".
-    Fail iInv 34 as "#H2" "Hclose".
-    Fail iInv nroot as "#H2" "Hclose".
-    Fail iInv "H2" as "#H2" "Hclose".
+    Fail iInv 34 as "#H2".
+    Fail iInv nroot as "#H2".
+    Fail iInv "H2" as "#H2".
     done.
   Qed.
 
@@ -202,9 +214,7 @@ Section iris_tests.
   Lemma test_iInv_13 N:
     inv N (∃ (v1 v2 v3 : nat), emp ∗ emp ∗ emp) ={⊤}=∗ ▷ emp.
   Proof.
-    iIntros "H"; iInv "H" as (v1 v2 v3) "(?&?&_)" "Hclose".
-    iMod ("Hclose" with "[]").
-    { iNext; iExists O; done. }
-    iModIntro. by iNext.
+    iIntros "H"; iInv "H" as (v1 v2 v3) "(?&?&_)".
+    eauto.
   Qed.
 End iris_tests.

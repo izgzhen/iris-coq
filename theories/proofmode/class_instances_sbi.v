@@ -1,6 +1,6 @@
 From stdpp Require Import nat_cancel.
 From iris.bi Require Import bi tactics.
-From iris.proofmode Require Import modality_instances classes.
+From iris.proofmode Require Import modality_instances classes class_instances_bi ltac_tactics.
 Set Default Proof Using "Type".
 Import bi.
 
@@ -550,6 +550,23 @@ Global Instance add_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
        E1 E2 (P P' : PROP') (Q : PROP) :
   AddModal P P' (|={E1,E2}=> ⎡Q⎤)%I → AddModal P P' ⎡|={E1,E2}=> Q⎤.
 Proof. by rewrite /AddModal !embed_fupd. Qed.
+
+(* ElimAcc *)
+Global Instance elim_acc_vs `{BiFUpd PROP} {X} E1 E2 E α β mγ Q :
+  (* FIXME: Why %I? ElimAcc sets the right scopes! *)
+  ElimAcc (X:=X) (fupd E1 E2) (fupd E2 E1) α β mγ
+          (|={E1,E}=> Q)
+          (λ x, |={E2}=> (β x ∗ (coq_tactics.maybe_wand (mγ x) (|={E1,E}=> Q))))%I.
+Proof.
+  rewrite /ElimAcc. setoid_rewrite coq_tactics.maybe_wand_sound.
+  iIntros "Hinner >Hacc". iDestruct "Hacc" as (x) "[Hα Hclose]".
+  iMod ("Hinner" with "Hα") as "[Hβ Hfin]".
+  iMod ("Hclose" with "Hβ") as "Hγ". by iApply "Hfin".
+Qed.
+
+(* IntoAcc *)
+(* TODO: We could have instances from "unfolded" accessors with or without
+   the first binder. *)
 
 (* IntoLater *)
 Global Instance into_laterN_0 only_head P : IntoLaterN only_head 0 P P.

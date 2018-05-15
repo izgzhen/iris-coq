@@ -88,20 +88,18 @@ Section proof.
   Proof.
     iIntros (Φ) "[Hl Ht] HΦ". iDestruct "Hl" as (lo ln ->) "#Hinv".
     iLöb as "IH". wp_rec. subst. wp_let. wp_proj. wp_bind (! _)%E.
-    iInv N as (o n) "(Hlo & Hln & Ha)" "Hclose".
+    iInv N as (o n) "(Hlo & Hln & Ha)".
     wp_load. destruct (decide (x = o)) as [->|Hneq].
     - iDestruct "Ha" as "[Hainv [[Ho HR] | Haown]]".
-      + iMod ("Hclose" with "[Hlo Hln Hainv Ht]") as "_".
+      + iModIntro. iSplitL "Hlo Hln Hainv Ht".
         { iNext. iExists o, n. iFrame. }
-        iModIntro. wp_let. wp_op. case_bool_decide; [|done].
-        wp_if.
+        wp_let. wp_op. case_bool_decide; [|done]. wp_if.
         iApply ("HΦ" with "[-]"). rewrite /locked. iFrame. eauto.
       + iDestruct (own_valid_2 with "Ht Haown") as % [_ ?%gset_disj_valid_op].
         set_solver.
-    - iMod ("Hclose" with "[Hlo Hln Ha]").
+    - iModIntro. iSplitL "Hlo Hln Ha".
       { iNext. iExists o, n. by iFrame. }
-      iModIntro. wp_let.
-      wp_op. case_bool_decide; [simplify_eq |].
+      wp_let. wp_op. case_bool_decide; [simplify_eq |].
       wp_if. iApply ("IH" with "Ht"). iNext. by iExact "HΦ".
   Qed.
 
@@ -110,30 +108,28 @@ Section proof.
   Proof.
     iIntros (ϕ) "Hl HΦ". iDestruct "Hl" as (lo ln ->) "#Hinv".
     iLöb as "IH". wp_rec. wp_bind (! _)%E. simplify_eq/=. wp_proj.
-    iInv N as (o n) "[Hlo [Hln Ha]]" "Hclose".
-    wp_load. iMod ("Hclose" with "[Hlo Hln Ha]") as "_".
+    iInv N as (o n) "[Hlo [Hln Ha]]".
+    wp_load. iModIntro. iSplitL "Hlo Hln Ha".
     { iNext. iExists o, n. by iFrame. }
-    iModIntro. wp_let. wp_proj. wp_op.
-    wp_bind (CAS _ _ _).
-    iInv N as (o' n') "(>Hlo' & >Hln' & >Hauth & Haown)" "Hclose".
+    wp_let. wp_proj. wp_op. wp_bind (CAS _ _ _).
+    iInv N as (o' n') "(>Hlo' & >Hln' & >Hauth & Haown)".
     destruct (decide (#n' = #n))%V as [[= ->%Nat2Z.inj] | Hneq].
-    - wp_cas_suc.
-      iMod (own_update with "Hauth") as "[Hauth Hofull]".
+    - iMod (own_update with "Hauth") as "[Hauth Hofull]".
       { eapply auth_update_alloc, prod_local_update_2.
         eapply (gset_disj_alloc_empty_local_update _ {[ n ]}).
         apply (seq_set_S_disjoint 0). }
       rewrite -(seq_set_S_union_L 0).
-      iMod ("Hclose" with "[Hlo' Hln' Haown Hauth]") as "_".
+      wp_cas_suc. iModIntro. iSplitL "Hlo' Hln' Haown Hauth".
       { iNext. iExists o', (S n).
         rewrite Nat2Z.inj_succ -Z.add_1_r. by iFrame. }
-      iModIntro. wp_if.
+      wp_if.
       iApply (wait_loop_spec γ (#lo, #ln) with "[-HΦ]").
       + iFrame. rewrite /is_lock; eauto 10.
       + by iNext.
-    - wp_cas_fail.
-      iMod ("Hclose" with "[Hlo' Hln' Hauth Haown]") as "_".
+    - wp_cas_fail. iModIntro.
+      iSplitL "Hlo' Hln' Hauth Haown".
       { iNext. iExists o', n'. by iFrame. }
-      iModIntro. wp_if. by iApply "IH"; auto.
+      wp_if. by iApply "IH"; auto.
   Qed.
 
   Lemma release_spec γ lk R :
@@ -142,15 +138,15 @@ Section proof.
     iIntros (Φ) "(Hl & Hγ & HR) HΦ". iDestruct "Hl" as (lo ln ->) "#Hinv".
     iDestruct "Hγ" as (o) "Hγo".
     wp_let. wp_proj. wp_proj. wp_bind (! _)%E.
-    iInv N as (o' n) "(>Hlo & >Hln & >Hauth & Haown)" "Hclose".
+    iInv N as (o' n) "(>Hlo & >Hln & >Hauth & Haown)".
     wp_load.
     iDestruct (own_valid_2 with "Hauth Hγo") as
       %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
-    iMod ("Hclose" with "[Hlo Hln Hauth Haown]") as "_".
+    iModIntro. iSplitL "Hlo Hln Hauth Haown".
     { iNext. iExists o, n. by iFrame. }
-    iModIntro. wp_op.
-    iInv N as (o' n') "(>Hlo & >Hln & >Hauth & Haown)" "Hclose".
-    wp_store.
+    wp_op.
+    iInv N as (o' n') "(>Hlo & >Hln & >Hauth & Haown)".
+    iApply wp_fupd. wp_store.
     iDestruct (own_valid_2 with "Hauth Hγo") as
       %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
     iDestruct "Haown" as "[[Hγo' _]|Haown]".
@@ -158,8 +154,8 @@ Section proof.
     iMod (own_update_2 with "Hauth Hγo") as "[Hauth Hγo]".
     { apply auth_update, prod_local_update_1.
       by apply option_local_update, (exclusive_local_update _ (Excl (S o))). }
-    iMod ("Hclose" with "[Hlo Hln Hauth Haown Hγo HR]") as "_"; last by iApply "HΦ".
-    iNext. iExists (S o), n'.
+    iModIntro. iSplitR "HΦ"; last by iApply "HΦ".
+    iIntros "!> !>". iExists (S o), n'.
     rewrite Nat2Z.inj_succ -Z.add_1_r. iFrame. iLeft. by iFrame.
   Qed.
 End proof.

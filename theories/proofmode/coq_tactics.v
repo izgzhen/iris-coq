@@ -136,6 +136,12 @@ Definition prop_of_env {PROP : bi} (Γ : env PROP) : PROP :=
   in
   match Γ with Enil => emp%I | Esnoc Γ _ P => aux Γ P end.
 
+Definition maybe_wand {PROP : bi} (mP : option PROP) (Q : PROP) : PROP :=
+  match mP with
+  | None => Q
+  | Some P => (P -∗ Q)%I
+  end.
+
 (* Coq versions of the tactics *)
 Section bi_tactics.
 Context {PROP : bi}.
@@ -438,6 +444,10 @@ Proof.
   rewrite /= assoc (comm _ P0 P) IH //.
 Qed.
 
+Lemma maybe_wand_sound (mP : option PROP) Q :
+  maybe_wand mP Q ⊣⊢ (default emp mP id -∗ Q).
+Proof. destruct mP; simpl; first done. rewrite emp_wand //. Qed.
+
 Global Instance envs_Forall2_refl (R : relation PROP) :
   Reflexive R → Reflexive (envs_Forall2 R).
 Proof. by constructor. Qed.
@@ -736,6 +746,7 @@ Proof.
   rewrite envs_lookup_sound // envs_split_sound //.
   rewrite (envs_app_singleton_sound Δ2) //; simpl.
   rewrite HP1 into_wand /= -(add_modal P1' P1 Q). cancel [P1'].
+
   apply wand_intro_l. by rewrite assoc !wand_elim_r.
 Qed.
 
@@ -1065,22 +1076,6 @@ Proof.
   rewrite HΔ. by eapply elim_modal.
 Qed.
 
-(** * Invariants *)
-Lemma tac_inv_elim Δ Δ' i j φ p P Pin Pout Pclose Q Q' :
-  envs_lookup_delete false i Δ = Some (p, P, Δ') →
-  ElimInv φ P Pin Pout Pclose Q Q' →
-  φ →
-  (∀ R, ∃ Δ'',
-    envs_app false (Esnoc Enil j (Pin -∗ (Pout -∗ Pclose -∗ Q') -∗ R)%I) Δ' = Some Δ'' ∧
-    envs_entails Δ'' R) →
-  envs_entails Δ Q.
-Proof.
-  rewrite envs_entails_eq=> /envs_lookup_delete_Some [? ->] ?? /(_ Q) [Δ'' [? <-]].
-  rewrite (envs_lookup_sound' _ false) // envs_app_singleton_sound //; simpl.
-  apply wand_elim_r', wand_mono; last done. apply wand_intro_r, wand_intro_r.
-  rewrite intuitionistically_if_elim -assoc wand_curry. auto.
-Qed.
-
 (** * Accumulate hypotheses *)
 Lemma tac_accu Δ P :
   prop_of_env (env_spatial Δ) = P →
@@ -1098,6 +1093,26 @@ Proof.
   rewrite envs_entails_eq => <-. by setoid_rewrite <-envs_incr_counter_equiv.
 Qed.
 
+(** * Invariants *)
+Lemma tac_inv_elim {X : Type} Δ Δ' i j φ p Pinv Pin Pout (Pclose : option (X → PROP))
+      Q (Q' : X → PROP) :
+  envs_lookup_delete false i Δ = Some (p, Pinv, Δ') →
+  ElimInv φ Pinv Pin Pout Pclose Q Q' →
+  φ →
+  (∀ R, ∃ Δ'',
+    envs_app false (Esnoc Enil j
+            (Pin -∗ (∀ x, Pout x -∗ from_option (λ Pclose, Pclose x -∗ Q' x) (Q' x) Pclose) -∗ R)%I) Δ'
+      = Some Δ'' ∧
+    envs_entails Δ'' R) →
+  envs_entails Δ Q.
+Proof.
+  rewrite envs_entails_eq=> /envs_lookup_delete_Some [? ->] Hinv ? /(_ Q) [Δ'' [? <-]].
+  rewrite (envs_lookup_sound' _ false) // envs_app_singleton_sound //; simpl.
+  apply wand_elim_r', wand_mono; last done. apply wand_intro_r, wand_intro_r.
+  rewrite intuitionistically_if_elim -assoc. destruct Pclose; simpl in *.
+  - setoid_rewrite wand_curry. auto.
+  - setoid_rewrite <-(right_id emp%I _ (Pout _)). auto.
+Qed.
 
 End bi_tactics.
 
