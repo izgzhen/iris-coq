@@ -105,4 +105,17 @@ Section frac_auth.
   Proof.
     intros. by apply auth_update, option_local_update, prod_local_update_2.
   Qed.
+
+  Lemma frac_auth_update_alloc q a b c :
+    (∀ n : nat, ✓{n} a → ✓{n} (c ⋅ a)) →
+    ●! a ⋅ ◯!{q} b ~~> ●! (c ⋅ a) ⋅ ◯!{q} (c ⋅ b).
+  Proof. intros ?. by apply frac_auth_update, op_local_update. Qed.
+
+  Lemma frac_auth_dealloc q a b c `{!Cancelable c} :
+    ●! (c ⋅ a) ⋅ ◯!{q} (c ⋅ b) ~~> ●! a ⋅ ◯!{q} b.
+  Proof.
+    apply frac_auth_update.
+    move=> n [x|] /= Hvalid Heq; split; eauto using cmra_validN_op_r.
+    eapply (cancelableN c); by rewrite ?assoc.
+  Qed.
 End frac_auth.

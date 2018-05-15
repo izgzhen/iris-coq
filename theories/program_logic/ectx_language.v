@@ -101,7 +101,7 @@ Section ectx_language.
   Definition head_irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ e' σ' efs, ¬head_step e σ e' σ' efs.
   Definition head_stuck (e : expr Λ) (σ : state Λ) :=
-    to_val e = None ∧ ∀ K e', e = fill K e' → head_irreducible e' σ.
+    to_val e = None ∧ head_irreducible e σ.
 
   (* All non-value redexes are at the root.  In other words, all sub-redexes are
      values. *)
@@ -168,9 +168,8 @@ Section ectx_language.
   Lemma head_stuck_stuck e σ :
     head_stuck e σ → sub_redexes_are_values e → stuck e σ.
   Proof.
-    move=>[] ? Hirr ?. split; first done.
-    apply prim_head_irreducible; last done.
-    apply (Hirr empty_ectx). by rewrite fill_empty.
+    intros [] ?. split; first done.
+    by apply prim_head_irreducible.
   Qed.
 
   Lemma ectx_language_atomic a e :
