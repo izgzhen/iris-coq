@@ -12,7 +12,8 @@ $(TESTFILES:.v=.vo): %.vo: %.v $(VFILES:.v=.vo)
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
 	  TMPFILE="$$(tempfile -p test- -s "-$$TEST")" && \
 	  $(TIMER) $(COQC) $(COQDEBUG) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) $< $(TIMING_EXTRA) > "$$TMPFILE" && \
-	  diff --color=auto -u "tests/$$TEST.ref" "$$TMPFILE"
+	  (diff --color=auto -u "tests/$$TEST.ref" "$$TMPFILE" || (rm "tests/$$TEST.vo" "$$TMPFILE" && exit 1)) && \
+	  rm "$$TMPFILE"
 
 # a target, for convenience sake, to create the .ref file with the current output
 ref: $(TESTFILES:.v=.ref)
