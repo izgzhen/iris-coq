@@ -11,7 +11,7 @@ $(TESTFILES:.v=.vo): %.vo: %.v $(VFILES:.v=.vo)
 	$(SHOW)COQC [test] $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
 	  TMPFILE="$$(tempfile -p test- -s "-$$TEST")" && \
-	  $(TIMER) $(COQC) $(COQDEBUG) $(TIMING_ARG) $(COQFLAGS) $< $(TIMING_EXTRA) > "$$TMPFILE" && \
+	  $(TIMER) $(COQC) $(COQDEBUG) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) $< $(TIMING_EXTRA) > "$$TMPFILE" && \
 	  diff --color=auto -u "tests/$$TEST.ref" "$$TMPFILE"
 
 # a target, for convenience sake, to create the .ref file with the current output
@@ -21,4 +21,4 @@ ref: $(TESTFILES:.v=.ref)
 tests/%.ref: tests/%.v $(VFILES:.v=.vo)
 	$(SHOW)COQC [ref] $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
-	  $(TIMER) $(COQC) $(COQDEBUG) $(TIMING_ARG) $(COQFLAGS) $< $(TIMING_EXTRA) > "tests/$$TEST.ref"
+	  $(TIMER) $(COQC) $(COQDEBUG) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) $< $(TIMING_EXTRA) > "tests/$$TEST.ref"
