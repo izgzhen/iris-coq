@@ -2,6 +2,7 @@ From iris.algebra Require Export cmra.
 From stdpp Require Export gmap.
 From iris.algebra Require Import updates local_updates.
 From iris.base_logic Require Import base_logic.
+From iris.algebra Require Import proofmode_classes.
 Set Default Proof Using "Type".
 
 Section cofe.
@@ -236,6 +237,9 @@ Qed.
 Lemma op_singleton (i : K) (x y : A) :
   {[ i := x ]} ⋅ {[ i := y ]} = ({[ i := x ⋅ y ]} : gmap K A).
 Proof. by apply (merge_singleton _ _ _ x y). Qed.
+Global Instance is_op_singleton i a a1 a2 :
+  IsOp a a1 a2 → IsOp' ({[ i := a ]} : gmap K A) {[ i := a1 ]} {[ i := a2 ]}.
+Proof. rewrite /IsOp' /IsOp=> ->. by rewrite -op_singleton. Qed.
 
 Global Instance gmap_core_id m : (∀ x : A, CoreId x) → CoreId m.
 Proof.
