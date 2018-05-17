@@ -81,13 +81,13 @@ Section frac_auth.
   Lemma frac_auth_frag_valid q a : ✓ (◯!{q} a) ↔ ✓ q ∧ ✓ a.
   Proof. done. Qed.
 
-  Lemma frag_auth_op q1 q2 a1 a2 : ◯!{q1+q2} (a1 ⋅ a2) ≡ ◯!{q1} a1 ⋅ ◯!{q2} a2.
+  Lemma frac_auth_frag_op q1 q2 a1 a2 : ◯!{q1+q2} (a1 ⋅ a2) ≡ ◯!{q1} a1 ⋅ ◯!{q2} a2.
   Proof. done. Qed.
 
   Lemma frac_auth_frag_validN_op_1_l n q a b : ✓{n} (◯!{1} a ⋅ ◯!{q} b) → False.
-  Proof. rewrite -frag_auth_op frac_auth_frag_validN=> -[/exclusiveN_l []]. Qed.
+  Proof. rewrite -frac_auth_frag_op frac_auth_frag_validN=> -[/exclusiveN_l []]. Qed.
   Lemma frac_auth_frag_valid_op_1_l q a b : ✓ (◯!{1} a ⋅ ◯!{q} b) → False.
-  Proof. rewrite -frag_auth_op frac_auth_frag_valid=> -[/exclusive_l []]. Qed.
+  Proof. rewrite -frac_auth_frag_op frac_auth_frag_valid=> -[/exclusive_l []]. Qed.
 
   Global Instance is_op_frac_auth (q q1 q2 : frac) (a a1 a2 : A) :
     IsOp q q1 q2 → IsOp a a1 a2 → IsOp' (◯!{q} a) (◯!{q1} a1) (◯!{q2} a2).
@@ -97,7 +97,7 @@ Section frac_auth.
     CoreId a → IsOp q q1 q2 → IsOp' (◯!{q} a) (◯!{q1} a) (◯!{q2} a).
   Proof.
     rewrite /IsOp' /IsOp=> ? /leibniz_equiv_iff ->.
-    by rewrite -frag_auth_op -core_id_dup.
+    by rewrite -frac_auth_frag_op -core_id_dup.
   Qed.
 
   Lemma frac_auth_update q a b a' b' :

@@ -22,6 +22,8 @@ Changes in Coq:
   - `IntoLaterN'` → `IntoLaterN` (this one _should_ strip a later)
   - `IntoLaterNEnv` → `MaybeIntoLaterNEnv`
   - `IntoLaterNEnvs` → `MaybeIntoLaterNEnvs`
+* Rename:
+  - `frag_auth_op` → `frac_auth_frag_op`
 * `namespaces` has been moved to std++.
 
 ## Iris 3.1.0 (released 2017-12-19)
