@@ -988,6 +988,8 @@ Proof.
   by rewrite /bi_intuitionistically -persistently_True_emp persistently_pure
              affinely_True_emp affinely_emp.
 Qed.
+Lemma intuitionistically_False : □ False ⊣⊢ False.
+Proof. by rewrite /bi_intuitionistically persistently_pure affinely_False. Qed.
 Lemma intuitionistically_True_emp : □ True ⊣⊢ emp.
 Proof.
   rewrite -intuitionistically_emp /bi_intuitionistically
@@ -1179,6 +1181,8 @@ Proof. destruct p; simpl; auto using intuitionistically_intro'. Qed.
 
 Lemma intuitionistically_if_emp p : □?p emp ⊣⊢ emp.
 Proof. destruct p; simpl; auto using intuitionistically_emp. Qed.
+Lemma intuitionistically_if_False p : □?p False ⊣⊢ False.
+Proof. destruct p; simpl; auto using intuitionistically_False. Qed.
 Lemma intuitionistically_if_and p P Q : □?p (P ∧ Q) ⊣⊢ □?p P ∧ □?p Q.
 Proof. destruct p; simpl; auto using intuitionistically_and. Qed.
 Lemma intuitionistically_if_or p P Q : □?p (P ∨ Q) ⊣⊢ □?p P ∨ □?p Q.
