@@ -106,7 +106,7 @@ Section contrib_spec.
   (** The main proofs. *)
   Lemma ccounter_op γ q1 q2 n1 n2 :
     ccounter γ (q1 + q2) (n1 + n2) ⊣⊢ ccounter γ q1 n1 ∗ ccounter γ q2 n2.
-  Proof. by rewrite /ccounter frag_auth_op -own_op. Qed.
+  Proof. by rewrite /ccounter frac_auth_frag_op -own_op. Qed.
 
   Lemma newcounter_contrib_spec (R : iProp Σ) :
     {{{ True }}} newcounter #()
