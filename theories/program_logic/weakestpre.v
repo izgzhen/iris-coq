@@ -9,6 +9,7 @@ Class irisG' (Λstate : Type) (Σ : gFunctors) := IrisG {
   state_interp : Λstate → iProp Σ;
 }.
 Notation irisG Λ Σ := (irisG' (state Λ) Σ).
+Global Opaque iris_invG.
 
 Inductive stuckness := NotStuck | MaybeStuck.
 
