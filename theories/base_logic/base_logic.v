@@ -37,27 +37,6 @@ Proof.
   rewrite -cmra_valid_intro //. by apply pure_intro.
 Qed.
 
-(* FromOp *)
-(* TODO: Worst case there could be a lot of backtracking on these instances,
-try to refactor. *)
-Global Instance is_op_pair {A B : cmraT} (a b1 b2 : A) (a' b1' b2' : B) :
-  IsOp a b1 b2 → IsOp a' b1' b2' → IsOp' (a,a') (b1,b1') (b2,b2').
-Proof. by constructor. Qed.
-Global Instance is_op_pair_core_id_l {A B : cmraT} (a : A) (a' b1' b2' : B) :
-  CoreId  a → IsOp a' b1' b2' → IsOp' (a,a') (a,b1') (a,b2').
-Proof. constructor=> //=. by rewrite -core_id_dup. Qed.
-Global Instance is_op_pair_core_id_r {A B : cmraT} (a b1 b2 : A) (a' : B) :
-  CoreId a' → IsOp a b1 b2 → IsOp' (a,a') (b1,a') (b2,a').
-Proof. constructor=> //=. by rewrite -core_id_dup. Qed.
-
-Global Instance is_op_Some {A : cmraT} (a : A) b1 b2 :
-  IsOp a b1 b2 → IsOp' (Some a) (Some b1) (Some b2).
-Proof. by constructor. Qed.
-(* This one has a higher precendence than [is_op_op] so we get a [+] instead of
-an [⋅]. *)
-Global Instance is_op_plus (n1 n2 : nat) : IsOp (n1 + n2) n1 n2.
-Proof. done. Qed.
-
 Global Instance from_sep_ownM (a b1 b2 : M) :
   IsOp a b1 b2 →
   FromSep (uPred_ownM a) (uPred_ownM b1) (uPred_ownM b2).
