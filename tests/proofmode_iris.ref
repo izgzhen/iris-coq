@@ -1,0 +1,110 @@
+1 subgoal
+  
+  Σ : gFunctors
+  H : invG Σ
+  H0 : cinvG Σ
+  H1 : na_invG Σ
+  N : namespace
+  P : uPredI (iResUR Σ)
+  ============================
+  "H" : inv N (<pers> P)%I
+  "H2" : ▷ <pers> P
+  --------------------------------------□
+  |={⊤ ∖ ↑N}=> ▷ <pers> P ∗ (|={⊤}=> ▷ P)
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : invG Σ
+  H0 : cinvG Σ
+  H1 : na_invG Σ
+  N : namespace
+  P : uPredI (iResUR Σ)
+  ============================
+  "H" : inv N (<pers> P)%I
+  "H2" : ▷ <pers> P
+  --------------------------------------□
+  "Hclose" : ▷ <pers> P ={⊤ ∖ ↑N,⊤}=∗ emp
+  --------------------------------------∗
+  |={⊤ ∖ ↑N,⊤}=> ▷ P
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : invG Σ
+  H0 : cinvG Σ
+  H1 : na_invG Σ
+  γ : gname
+  p : Qp
+  N : namespace
+  P : uPredI (iResUR Σ)
+  ============================
+  _ : cinv N γ (<pers> P)%I
+  "HP" : ▷ <pers> P
+  --------------------------------------□
+  "Hown" : cinv_own γ p
+  --------------------------------------∗
+  |={⊤ ∖ ↑N}=> ▷ <pers> P ∗ (|={⊤}=> cinv_own γ p ∗ ▷ P)
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : invG Σ
+  H0 : cinvG Σ
+  H1 : na_invG Σ
+  γ : gname
+  p : Qp
+  N : namespace
+  P : uPredI (iResUR Σ)
+  ============================
+  _ : cinv N γ (<pers> P)%I
+  "HP" : ▷ <pers> P
+  --------------------------------------□
+  "Hown" : cinv_own γ p
+  "Hclose" : ▷ <pers> P ={⊤ ∖ ↑N,⊤}=∗ emp
+  --------------------------------------∗
+  |={⊤ ∖ ↑N,⊤}=> cinv_own γ p ∗ ▷ P
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : invG Σ
+  H0 : cinvG Σ
+  H1 : na_invG Σ
+  t : na_inv_pool_name
+  N : namespace
+  E1, E2 : coPset
+  P : uPredI (iResUR Σ)
+  H2 : ↑N ⊆ E2
+  ============================
+  _ : na_inv t N (<pers> P)%I
+  "HP" : ▷ <pers> P
+  --------------------------------------□
+  "Hown1" : na_own t E1
+  "Hown2" : na_own t (E2 ∖ ↑N)
+  --------------------------------------∗
+  |={⊤}=> (▷ <pers> P ∗ na_own t (E2 ∖ ↑N))
+          ∗ (na_own t E2 ={⊤}=∗ na_own t E1 ∗ na_own t E2 ∗ ▷ P)
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : invG Σ
+  H0 : cinvG Σ
+  H1 : na_invG Σ
+  t : na_inv_pool_name
+  N : namespace
+  E1, E2 : coPset
+  P : uPredI (iResUR Σ)
+  H2 : ↑N ⊆ E2
+  ============================
+  _ : na_inv t N (<pers> P)%I
+  "HP" : ▷ <pers> P
+  --------------------------------------□
+  "Hown1" : na_own t E1
+  "Hown2" : na_own t (E2 ∖ ↑N)
+  "Hclose" : ▷ <pers> P ∗ na_own t (E2 ∖ ↑N) ={⊤}=∗ 
+  id (na_own t E2)
+  --------------------------------------∗
+  |={⊤}=> na_own t E1 ∗ na_own t E2 ∗ ▷ P
+  

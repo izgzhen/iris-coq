@@ -63,14 +63,14 @@ Section iris_tests.
   Lemma test_iInv_0 N P: inv N (<pers> P) ={⊤}=∗ ▷ P.
   Proof.
     iIntros "#H".
-    iInv N as "#H2".
+    iInv N as "#H2". Show.
     iModIntro. iSplit; auto.
   Qed.
 
   Lemma test_iInv_0_with_close N P: inv N (<pers> P) ={⊤}=∗ ▷ P.
   Proof.
     iIntros "#H".
-    iInv N as "#H2" "Hclose".
+    iInv N as "#H2" "Hclose". Show.
     iMod ("Hclose" with "H2").
     iModIntro. by iNext.
   Qed.
@@ -88,7 +88,7 @@ Section iris_tests.
     cinv N γ (<pers> P) ∗ cinv_own γ p ={⊤}=∗ cinv_own γ p ∗ ▷ P.
   Proof.
     iIntros "(#?&?)".
-    iInv N as "(#HP&Hown)".
+    iInv N as "(#HP&Hown)". Show.
     iModIntro. iSplit; auto with iFrame.
   Qed.
 
@@ -96,7 +96,7 @@ Section iris_tests.
     cinv N γ (<pers> P) ∗ cinv_own γ p ={⊤}=∗ cinv_own γ p ∗ ▷ P.
   Proof.
     iIntros "(#?&?)".
-    iInv N as "(#HP&Hown)" "Hclose".
+    iInv N as "(#HP&Hown)" "Hclose". Show.
     iMod ("Hclose" with "HP").
     iModIntro. iFrame. by iNext.
   Qed.
@@ -116,7 +116,7 @@ Section iris_tests.
          ⊢ |={⊤}=> na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&Hown1&Hown2)".
-    iInv N as "(#HP&Hown2)".
+    iInv N as "(#HP&Hown2)". Show.
     iModIntro. iSplitL "Hown2"; auto with iFrame.
   Qed.
 
@@ -126,7 +126,7 @@ Section iris_tests.
          ⊢ |={⊤}=> na_own t E1 ∗ na_own t E2  ∗ ▷ P.
   Proof.
     iIntros (?) "(#?&Hown1&Hown2)".
-    iInv N as "(#HP&Hown2)" "Hclose".
+    iInv N as "(#HP&Hown2)" "Hclose". Show.
     iMod ("Hclose" with "[HP Hown2]").
     { iFrame. done. }
     iModIntro. iFrame. by iNext.
