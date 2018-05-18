@@ -927,20 +927,6 @@ Local Tactic Notation "iAndDestructChoice" constr(H) "as" constr(d) constr(H') :
      fail "iAndDestructChoice: cannot destruct" P
     |env_reflexivity || fail "iAndDestructChoice:" H' " not fresh"|].
 
-(** * Combinining hypotheses *)
-Tactic Notation "iCombine" constr(Hs) "as" constr(H) :=
-  let Hs := words Hs in
-  let Hs := eval vm_compute in (INamed <$> Hs) in
-  eapply tac_combine with _ _ Hs _ _ H _;
-    [env_reflexivity ||
-     let Hs := iMissingHyps Hs in
-     fail "iCombine: hypotheses" Hs "not found"
-    |iSolveTC
-    |env_reflexivity || fail "iCombine:" H "not fresh"|].
-
-Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(H) :=
-  iCombine [H1;H2] as H.
-
 (** * Existential *)
 Tactic Notation "iExists" uconstr(x1) :=
   iStartProof;
@@ -1097,6 +1083,22 @@ Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1)
     simple_intropattern(x5) simple_intropattern(x6) simple_intropattern(x7)
     simple_intropattern(x8) ")" constr(pat) :=
   iExistDestruct H as x1 H; iDestructHyp H as ( x2 x3 x4 x5 x6 x7 x8 ) pat.
+
+(** * Combinining hypotheses *)
+Tactic Notation "iCombine" constr(Hs) "as" constr(pat) :=
+  let Hs := words Hs in
+  let Hs := eval vm_compute in (INamed <$> Hs) in
+  let H := iFresh in
+  eapply tac_combine with _ _ Hs _ _ H _;
+    [env_reflexivity ||
+     let Hs := iMissingHyps Hs in
+     fail "iCombine: hypotheses" Hs "not found"
+    |iSolveTC
+    |env_reflexivity || fail "iCombine:" H "not fresh"
+    |iDestructHyp H as pat].
+
+Tactic Notation "iCombine" constr(H1) constr(H2) "as" constr(pat) :=
+  iCombine [H1;H2] as pat.
 
 (** * Introduction tactic *)
 Tactic Notation "iIntros" constr(pat) :=

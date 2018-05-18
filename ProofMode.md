@@ -108,8 +108,8 @@ Separating logic specific tactics
 
   This tactic finishes the goal in case everything in the conclusion has been
   framed.
-- `iCombine "H1" "H2" as "H"` : turns `H1 : P1` and `H2 : P2` into
-  `H : P1 ∗ P2`.
+- `iCombine "H1" "H2" as "pat"` : turns `H1 : P1` and `H2 : P2` into
+  `P1 ∗ P2`, on which `iDetruct ... as pat` is called.
 
 Modalities
 ----------

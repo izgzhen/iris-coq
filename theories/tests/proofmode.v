@@ -197,6 +197,10 @@ Lemma test_iCombine_persistent P Q R `{!Persistent R} :
   P -∗ Q -∗ R → R ∗ Q ∗ P ∗ R ∨ False.
 Proof. iIntros "HP HQ #HR". iCombine "HR HQ HP HR" as "H". auto. Qed.
 
+Lemma test_iCombine_frame P Q R `{!Persistent R} :
+  P -∗ Q -∗ R → R ∗ Q ∗ P ∗ R.
+Proof. iIntros "HP HQ #HR". iCombine "HQ HP HR" as "$". by iFrame. Qed.
+
 Lemma test_iNext_evar P : P -∗ True.
 Proof.
   iIntros "HP". iAssert (▷ _ -∗ ▷ P)%I as "?"; last done.
