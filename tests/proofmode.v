@@ -8,9 +8,9 @@ Implicit Types P Q R : PROP.
 
 Lemma demo_0 P Q : □ (P ∨ Q) -∗ (∀ x, ⌜x = 0⌝ ∨ ⌜x = 1⌝) → (Q ∨ P).
 Proof.
-  iIntros "H #H2". iDestruct "H" as "###H".
+  iIntros "H #H2". Show. iDestruct "H" as "###H".
   (* should remove the disjunction "H" *)
-  iDestruct "H" as "[#?|#?]"; last by iLeft.
+  iDestruct "H" as "[#?|#?]"; last by iLeft. Show.
   (* should keep the disjunction "H" because it is instantiated *)
   iDestruct ("H2" $! 10) as "[%|%]". done. done.
 Qed.
