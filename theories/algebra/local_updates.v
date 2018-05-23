@@ -52,6 +52,13 @@ Section updates.
     apply (cancelableN x); first done. by rewrite -cmra_op_opM_assoc.
   Qed.
 
+  Lemma replace_local_update x y `{!IdFree x} :
+    ✓ y → (x, x) ~l~> (y, y).
+  Proof.
+    intros ? n mz ? Heq; simpl in *; split; first by apply cmra_valid_validN.
+    destruct mz as [z|]; [|done]. by destruct (id_freeN_r n n x z).
+  Qed.
+
   Lemma local_update_discrete `{!CmraDiscrete A} (x y x' y' : A) :
     (x,y) ~l~> (x',y') ↔ ∀ mz, ✓ x → x ≡ y ⋅? mz → ✓ x' ∧ x' ≡ y' ⋅? mz.
   Proof.
