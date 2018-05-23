@@ -64,10 +64,10 @@ Lemma cmra_updateP_op (P1 P2 Q : A → Prop) x1 x2 :
 Proof.
   intros Hx1 Hx2 Hy n mz ?.
   destruct (Hx1 n (Some (x2 ⋅? mz))) as (y1&?&?).
-  { by rewrite /= -cmra_opM_assoc. }
+  { by rewrite /= -cmra_op_opM_assoc. }
   destruct (Hx2 n (Some (y1 ⋅? mz))) as (y2&?&?).
-  { by rewrite /= -cmra_opM_assoc (comm _ x2) cmra_opM_assoc. }
-  exists (y1 ⋅ y2); split; last rewrite (comm _ y1) cmra_opM_assoc; auto.
+  { by rewrite /= -cmra_op_opM_assoc (comm _ x2) cmra_op_opM_assoc. }
+  exists (y1 ⋅ y2); split; last rewrite (comm _ y1) cmra_op_opM_assoc; auto.
 Qed.
 Lemma cmra_updateP_op' (P1 P2 : A → Prop) x1 x2 :
   x1 ~~>: P1 → x2 ~~>: P2 →
@@ -79,7 +79,7 @@ Proof.
 Qed.
 
 Lemma cmra_update_op_l x y : x ⋅ y ~~> x.
-Proof. intros n mz. rewrite comm cmra_opM_assoc. apply cmra_validN_op_r. Qed.
+Proof. intros n mz. rewrite comm cmra_op_opM_assoc. apply cmra_validN_op_r. Qed.
 Lemma cmra_update_op_r x y : x ⋅ y ~~> y.
 Proof. rewrite comm. apply cmra_update_op_l. Qed.
 

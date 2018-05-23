@@ -327,7 +327,7 @@ Global Instance IdFree_proper : Proper ((≡) ==> iff) (@IdFree A).
 Proof. intros x y Hxy. rewrite /IdFree. by setoid_rewrite Hxy. Qed.
 
 (** ** Op *)
-Lemma cmra_opM_assoc x y mz : (x ⋅ y) ⋅? mz ≡ x ⋅ (y ⋅? mz).
+Lemma cmra_op_opM_assoc x y mz : (x ⋅ y) ⋅? mz ≡ x ⋅ (y ⋅? mz).
 Proof. destruct mz; by rewrite /= -?assoc. Qed.
 
 (** ** Validity *)
@@ -662,8 +662,8 @@ Section cmra_leibniz.
   Lemma cmra_pcore_idemp_L x cx : pcore x = Some cx → pcore cx = Some cx.
   Proof. unfold_leibniz. apply cmra_pcore_idemp'. Qed.
 
-  Lemma cmra_opM_assoc_L x y mz : (x ⋅ y) ⋅? mz = x ⋅ (y ⋅? mz).
-  Proof. unfold_leibniz. apply cmra_opM_assoc. Qed.
+  Lemma cmra_op_opM_assoc_L x y mz : (x ⋅ y) ⋅? mz = x ⋅ (y ⋅? mz).
+  Proof. unfold_leibniz. apply cmra_op_opM_assoc. Qed.
 
   (** ** Core *)
   Lemma cmra_pcore_r_L x cx : pcore x = Some cx → x ⋅ cx = x.
@@ -1334,8 +1334,14 @@ Section option.
   Lemma op_is_Some ma mb : is_Some (ma ⋅ mb) ↔ is_Some ma ∨ is_Some mb.
   Proof. rewrite -!not_eq_None_Some op_None. destruct ma, mb; naive_solver. Qed.
 
-  Lemma cmra_opM_assoc' a mb mc : a ⋅? mb ⋅? mc ≡ a ⋅? (mb ⋅ mc).
+  Lemma cmra_opM_opM_assoc a mb mc : a ⋅? mb ⋅? mc ≡ a ⋅? (mb ⋅ mc).
   Proof. destruct mb, mc; by rewrite /= -?assoc. Qed.
+  Lemma cmra_opM_opM_assoc_L `{!LeibnizEquiv A} a mb mc : a ⋅? mb ⋅? mc = a ⋅? (mb ⋅ mc).
+  Proof. unfold_leibniz. apply cmra_opM_opM_assoc. Qed.
+  Lemma cmra_opM_opM_swap a mb mc : a ⋅? mb ⋅? mc ≡ a ⋅? mc ⋅? mb.
+  Proof. by rewrite !cmra_opM_opM_assoc (comm _ mb). Qed.
+  Lemma cmra_opM_opM_swap_L `{!LeibnizEquiv A} a mb mc : a ⋅? mb ⋅? mc = a ⋅? mc ⋅? mb.
+  Proof. by rewrite !cmra_opM_opM_assoc_L (comm_L _ mb). Qed.
 
   Global Instance Some_core_id a : CoreId a → CoreId (Some a).
   Proof. by constructor. Qed.

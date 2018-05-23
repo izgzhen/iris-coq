@@ -24,6 +24,9 @@ Changes in Coq:
   - `IntoLaterNEnvs` → `MaybeIntoLaterNEnvs`
 * Rename:
   - `frag_auth_op` → `frac_auth_frag_op`
+  - `cmra_opM_assoc` → `cmra_op_opM_assoc`
+  - `cmra_opM_assoc_L` → `cmra_op_opM_assoc_L`
+  - `cmra_opM_assoc'` → `cmra_opM_opM_assoc`
 * `namespaces` has been moved to std++.
 
 ## Iris 3.1.0 (released 2017-12-19)

@@ -29,7 +29,7 @@ Section updates.
     (∀ n, ✓{n} x → ✓{n} (z ⋅ x)) → (x,y) ~l~> (z ⋅ x, z ⋅ y).
   Proof.
     intros Hv n mz Hxv Hx; simpl in *; split; [by auto|].
-    by rewrite Hx -cmra_opM_assoc.
+    by rewrite Hx -cmra_op_opM_assoc.
   Qed.
   Lemma op_local_update_discrete `{!CmraDiscrete A} x y z :
     (✓ x → ✓ (z ⋅ x)) → (x,y) ~l~> (z ⋅ x, z ⋅ y).
@@ -41,15 +41,15 @@ Section updates.
     (x,y) ~l~> (x',y') → (x,y ⋅ yf) ~l~> (x', y' ⋅ yf).
   Proof.
     intros Hup n mz Hxv Hx; simpl in *.
-    destruct (Hup n (Some (yf ⋅? mz))); [done|by rewrite /= -cmra_opM_assoc|].
-    by rewrite cmra_opM_assoc.
+    destruct (Hup n (Some (yf ⋅? mz))); [done|by rewrite /= -cmra_op_opM_assoc|].
+    by rewrite cmra_op_opM_assoc.
   Qed.
 
   Lemma cancel_local_update x y z `{!Cancelable x} :
     (x ⋅ y, x ⋅ z) ~l~> (y, z).
   Proof.
     intros n f ? Heq. split; first by eapply cmra_validN_op_r.
-    apply (cancelableN x); first done. by rewrite -cmra_opM_assoc.
+    apply (cancelableN x); first done. by rewrite -cmra_op_opM_assoc.
   Qed.
 
   Lemma local_update_discrete `{!CmraDiscrete A} (x y x' y' : A) :
