@@ -7,7 +7,6 @@ Set Default Proof Using "Type".
 another [uPred] module is by Jason Gross and described in:
 https://sympa.inria.fr/sympa/arc/coq-club/2016-12/msg00069.html *)
 Module Import uPred.
-  Export upred.uPred.
   Export derived.uPred.
   Export bi.
 End uPred.
@@ -25,7 +24,7 @@ Global Instance from_pure_cmra_valid {A : cmraT} af (a : A) :
   @FromPure (uPredI M) af (✓ a) (✓ a).
 Proof.
   rewrite /FromPure. eapply bi.pure_elim; [by apply affinely_if_elim|]=> ?.
-  rewrite -cmra_valid_intro //. by apply pure_intro.
+  rewrite -cmra_valid_intro //.
 Qed.
 
 Global Instance from_sep_ownM (a b1 b2 : M) :

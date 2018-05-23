@@ -1,9 +1,21 @@
-From iris.base_logic Require Export upred.
+From iris.base_logic Require Export bi.
 From iris.bi Require Export bi.
 Set Default Proof Using "Type".
-Import upred.uPred bi.
+Import bi.
 
 Module uPred.
+
+(* New unseal tactic that also unfolds the BI layer *)
+Ltac unseal := (* Coq unfold is used to circumvent bug #5699 in rewrite /foo *)
+  unfold bi_emp; simpl; unfold sbi_emp; simpl;
+  unfold uPred_emp, bupd, bi_bupd_bupd, bi_pure,
+  bi_and, bi_or, bi_impl, bi_forall, bi_exist,
+  bi_sep, bi_wand, bi_persistently, sbi_internal_eq, sbi_later; simpl;
+  unfold sbi_emp, sbi_pure, sbi_and, sbi_or, sbi_impl, sbi_forall, sbi_exist,
+  sbi_internal_eq, sbi_sep, sbi_wand, sbi_persistently; simpl;
+  unfold plainly, bi_plainly_plainly; simpl;
+  uPred_primitive.unseal.
+
 Section derived.
 Context {M : ucmraT}.
 Implicit Types φ : Prop.
@@ -14,7 +26,57 @@ Implicit Types A : Type.
 Notation "P ⊢ Q" := (bi_entails (PROP:=uPredI M) P%I Q%I).
 Notation "P ⊣⊢ Q" := (equiv (A:=uPredI M) P%I Q%I).
 
-(* Own and valid derived *)
+(** Propers *)
+Global Instance uPred_valid_proper : Proper ((⊣⊢) ==> iff) (@uPred_valid M).
+Proof. solve_proper. Qed.
+Global Instance uPred_valid_mono : Proper ((⊢) ==> impl) (@uPred_valid M).
+Proof. solve_proper. Qed.
+Global Instance uPred_valid_flip_mono :
+  Proper (flip (⊢) ==> flip impl) (@uPred_valid M).
+Proof. solve_proper. Qed.
+
+Global Existing Instance uPred_primitive.ownM_ne.
+Global Instance ownM_proper: Proper ((≡) ==> (⊣⊢)) (@uPred_ownM M) := ne_proper _.
+
+Global Existing Instance uPred_primitive.cmra_valid_ne.
+Global Instance cmra_valid_proper {A : cmraT} :
+  Proper ((≡) ==> (⊣⊢)) (@uPred_cmra_valid M A) := ne_proper _.
+
+(** Re-exporting primitive Own and valid lemmas *)
+Lemma ownM_op (a1 a2 : M) :
+  uPred_ownM (a1 ⋅ a2) ⊣⊢ uPred_ownM a1 ∗ uPred_ownM a2.
+Proof. exact: uPred_primitive.ownM_op. Qed.
+Lemma persistently_ownM_core (a : M) : uPred_ownM a ⊢ <pers> uPred_ownM (core a).
+Proof. exact: uPred_primitive.persistently_ownM_core. Qed.
+Lemma ownM_unit P : P ⊢ (uPred_ownM ε).
+Proof. exact: uPred_primitive.ownM_unit. Qed.
+Lemma later_ownM a : ▷ uPred_ownM a ⊢ ∃ b, uPred_ownM b ∧ ▷ (a ≡ b).
+Proof. exact: uPred_primitive.later_ownM. Qed.
+Lemma bupd_ownM_updateP x (Φ : M → Prop) :
+  x ~~>: Φ → uPred_ownM x ⊢ |==> ∃ y, ⌜Φ y⌝ ∧ uPred_ownM y.
+Proof. exact: uPred_primitive.bupd_ownM_updateP. Qed.
+
+Lemma ownM_valid (a : M) : uPred_ownM a ⊢ ✓ a.
+Proof. exact: uPred_primitive.ownM_valid. Qed.
+Lemma cmra_valid_intro {A : cmraT} P (a : A) : ✓ a → P ⊢ (✓ a).
+Proof. exact: uPred_primitive.cmra_valid_intro. Qed.
+Lemma cmra_valid_elim {A : cmraT} (a : A) : ¬ ✓{0} a → ✓ a ⊢ False.
+Proof. exact: uPred_primitive.cmra_valid_elim. Qed.
+Lemma plainly_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ ■ ✓ a.
+Proof. exact: uPred_primitive.plainly_cmra_valid_1. Qed.
+Lemma cmra_valid_weaken {A : cmraT} (a b : A) : ✓ (a ⋅ b) ⊢ ✓ a.
+Proof. exact: uPred_primitive.cmra_valid_weaken. Qed.
+Lemma prod_validI {A B : cmraT} (x : A * B) : ✓ x ⊣⊢ ✓ x.1 ∧ ✓ x.2.
+Proof. exact: uPred_primitive.prod_validI. Qed.
+Lemma option_validI {A : cmraT} (mx : option A) :
+  ✓ mx ⊣⊢ match mx with Some x => ✓ x | None => True : uPred M end.
+Proof. exact: uPred_primitive.option_validI. Qed.
+Lemma discrete_valid {A : cmraT} `{!CmraDiscrete A} (a : A) : ✓ a ⊣⊢ ⌜✓ a⌝.
+Proof. exact: uPred_primitive.discrete_valid. Qed.
+Lemma ofe_fun_validI `{B : A → ucmraT} (g : ofe_fun B) : ✓ g ⊣⊢ ∀ i, ✓ g i.
+Proof. exact: uPred_primitive.ofe_fun_validI. Qed.
+
+(** Own and valid derived *)
 Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ <pers> (✓ a : uPred M).
 Proof. by rewrite {1}plainly_cmra_valid_1 plainly_elim_persistently. Qed.
 Lemma intuitionistically_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.

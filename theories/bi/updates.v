@@ -7,12 +7,9 @@ Class BUpd (PROP : Type) : Type := bupd : PROP → PROP.
 Instance : Params (@bupd) 2.
 Hint Mode BUpd ! : typeclass_instances.
 
-Notation "|==> Q" := (bupd Q)
-  (at level 99, Q at level 200, format "|==>  Q") : bi_scope.
-Notation "P ==∗ Q" := (P ⊢ |==> Q)
-  (at level 99, Q at level 200, only parsing) : stdpp_scope.
-Notation "P ==∗ Q" := (P -∗ |==> Q)%I
-  (at level 99, Q at level 200, format "P  ==∗  Q") : bi_scope.
+Notation "|==> Q" := (bupd Q) : bi_scope.
+Notation "P ==∗ Q" := (P ⊢ |==> Q) (only parsing) : stdpp_scope.
+Notation "P ==∗ Q" := (P -∗ |==> Q)%I : bi_scope.
 
 Class FUpd (PROP : Type) : Type := fupd : coPset → coPset → PROP → PROP.
 Instance: Params (@fupd) 4.

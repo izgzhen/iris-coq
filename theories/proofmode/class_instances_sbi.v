@@ -354,7 +354,7 @@ Global Instance into_forall_wand_pure φ P Q :
 Proof.
   rewrite /FromPureT /FromPure /IntoForall=> -[φ' [-> <-]] /=.
   apply forall_intro=>? /=.
-  by rewrite -(pure_intro True%I) // /bi_affinely right_id emp_wand.
+  by rewrite -(pure_intro _ True%I) // /bi_affinely right_id emp_wand.
 Qed.
 
 Global Instance into_forall_plainly `{BiPlainly PROP} {A} P (Φ : A → PROP) :

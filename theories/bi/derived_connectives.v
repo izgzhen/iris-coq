@@ -11,7 +11,7 @@ Definition bi_wand_iff {PROP : bi} (P Q : PROP) : PROP :=
   ((P -∗ Q) ∧ (Q -∗ P))%I.
 Arguments bi_wand_iff {_} _%I _%I : simpl never.
 Instance: Params (@bi_wand_iff) 1.
-Infix "∗-∗" := bi_wand_iff (at level 95, no associativity) : bi_scope.
+Infix "∗-∗" := bi_wand_iff : bi_scope.
 
 Class Persistent {PROP : bi} (P : PROP) := persistent : P ⊢ <pers> P.
 Arguments Persistent {_} _%I : simpl never.
@@ -23,8 +23,7 @@ Definition bi_affinely {PROP : bi} (P : PROP) : PROP := (emp ∧ P)%I.
 Arguments bi_affinely {_} _%I : simpl never.
 Instance: Params (@bi_affinely) 1.
 Typeclasses Opaque bi_affinely.
-Notation "'<affine>' P" := (bi_affinely P)
-  (at level 20, right associativity) : bi_scope.
+Notation "'<affine>' P" := (bi_affinely P) : bi_scope.
 
 Class Affine {PROP : bi} (Q : PROP) := affine : Q ⊢ emp.
 Arguments Affine {_} _%I : simpl never.
@@ -43,8 +42,7 @@ Definition bi_absorbingly {PROP : bi} (P : PROP) : PROP := (True ∗ P)%I.
 Arguments bi_absorbingly {_} _%I : simpl never.
 Instance: Params (@bi_absorbingly) 1.
 Typeclasses Opaque bi_absorbingly.
-Notation "'<absorb>' P" := (bi_absorbingly P)
-  (at level 20, right associativity) : bi_scope.
+Notation "'<absorb>' P" := (bi_absorbingly P) : bi_scope.
 
 Class Absorbing {PROP : bi} (P : PROP) := absorbing : <absorb> P ⊢ P.
 Arguments Absorbing {_} _%I : simpl never.
@@ -56,35 +54,28 @@ Definition bi_persistently_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
 Arguments bi_persistently_if {_} !_ _%I /.
 Instance: Params (@bi_persistently_if) 2.
 Typeclasses Opaque bi_persistently_if.
-Notation "'<pers>?' p P" := (bi_persistently_if p P)
-  (at level 20, p at level 9, P at level 20,
-   right associativity, format "'<pers>?' p  P") : bi_scope.
+Notation "'<pers>?' p P" := (bi_persistently_if p P) : bi_scope.
 
 Definition bi_affinely_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
   (if p then <affine> P else P)%I.
 Arguments bi_affinely_if {_} !_ _%I /.
 Instance: Params (@bi_affinely_if) 2.
 Typeclasses Opaque bi_affinely_if.
-Notation "'<affine>?' p P" := (bi_affinely_if p P)
-  (at level 20, p at level 9, P at level 20,
-   right associativity, format "'<affine>?' p  P") : bi_scope.
+Notation "'<affine>?' p P" := (bi_affinely_if p P) : bi_scope.
 
 Definition bi_intuitionistically {PROP : bi} (P : PROP) : PROP :=
   (<affine> <pers> P)%I.
 Arguments bi_intuitionistically {_} _%I : simpl never.
 Instance: Params (@bi_intuitionistically) 1.
 Typeclasses Opaque bi_intuitionistically.
-Notation "□ P" := (bi_intuitionistically P)%I
-  (at level 20, right associativity) : bi_scope.
+Notation "□ P" := (bi_intuitionistically P) : bi_scope.
 
 Definition bi_intuitionistically_if {PROP : bi} (p : bool) (P : PROP) : PROP :=
   (if p then □ P else P)%I.
 Arguments bi_intuitionistically_if {_} !_ _%I /.
 Instance: Params (@bi_intuitionistically_if) 2.
 Typeclasses Opaque bi_intuitionistically_if.
-Notation "'□?' p P" := (bi_intuitionistically_if p P)
-  (at level 20, p at level 9, P at level 20,
-   right associativity, format "'□?' p  P") : bi_scope.
+Notation "'□?' p P" := (bi_intuitionistically_if p P) : bi_scope.
 
 Fixpoint bi_hexist {PROP : bi} {As} : himpl As PROP → PROP :=
   match As return himpl As PROP → PROP with
@@ -101,14 +92,12 @@ Definition sbi_laterN {PROP : sbi} (n : nat) (P : PROP) : PROP :=
   Nat.iter n sbi_later P.
 Arguments sbi_laterN {_} !_%nat_scope _%I.
 Instance: Params (@sbi_laterN) 2.
-Notation "▷^ n P" := (sbi_laterN n P)
-  (at level 20, n at level 9, P at level 20, format "▷^ n  P") : bi_scope.
-Notation "▷? p P" := (sbi_laterN (Nat.b2n p) P)
-  (at level 20, p at level 9, P at level 20, format "▷? p  P") : bi_scope.
+Notation "▷^ n P" := (sbi_laterN n P) : bi_scope.
+Notation "▷? p P" := (sbi_laterN (Nat.b2n p) P) : bi_scope.
 
 Definition sbi_except_0 {PROP : sbi} (P : PROP) : PROP := (▷ False ∨ P)%I.
 Arguments sbi_except_0 {_} _%I : simpl never.
-Notation "◇ P" := (sbi_except_0 P) (at level 20, right associativity) : bi_scope.
+Notation "◇ P" := (sbi_except_0 P) : bi_scope.
 Instance: Params (@sbi_except_0) 1.
 Typeclasses Opaque sbi_except_0.
 

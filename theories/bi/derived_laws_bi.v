@@ -531,7 +531,7 @@ Lemma pure_wand_forall φ P `{!Absorbing P} : (⌜φ⌝ -∗ P) ⊣⊢ (∀ _ : 
 Proof.
   apply (anti_symm _).
   - apply forall_intro=> Hφ.
-    by rewrite -(left_id emp%I _ (_ -∗ _)%I) (pure_intro emp%I φ) // wand_elim_r.
+    by rewrite -(left_id emp%I _ (_ -∗ _)%I) (pure_intro φ emp%I) // wand_elim_r.
   - apply wand_intro_l, wand_elim_l', pure_elim'=> Hφ.
     apply wand_intro_l. rewrite (forall_elim Hφ) comm. by apply absorbing.
 Qed.
