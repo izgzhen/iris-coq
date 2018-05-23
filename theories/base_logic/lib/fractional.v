@@ -1,5 +1,5 @@
 From stdpp Require Import gmap gmultiset.
-From iris.base_logic Require Export derived.
+From iris.base_logic Require Export base_logic.
 From iris.base_logic Require Import big_op.
 From iris.proofmode Require Import classes class_instances.
 Set Default Proof Using "Type".
