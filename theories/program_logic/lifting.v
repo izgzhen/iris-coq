@@ -104,7 +104,7 @@ Proof.
   iApply (wp_lift_pure_det_step with "[HWP]").
   - intros σ. specialize (pure_exec_safe σ). destruct s; eauto using reducible_not_val.
   - destruct s; naive_solver.
-  - by rewrite bi.big_sepL_nil right_id.
+  - by rewrite big_sepL_nil right_id.
 Qed.
 
 Lemma wp_pure_step_later `{Inhabited (state Λ)} s E e1 e2 φ Φ :
