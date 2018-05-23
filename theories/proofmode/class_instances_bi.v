@@ -868,15 +868,16 @@ Proof.
 Qed.
 
 Global Instance elim_inv_acc_with_close {X : Type}
-       φ Pinv Pin
+       φ1 φ2 Pinv Pin
        M1 M2 α β mγ Q Q' :
-  IntoAcc Pinv φ Pin M1 M2 α β mγ →
-  (∀ R, ElimModal True false false (M1 R) R Q Q') →
-  ElimInv (X:=X) φ Pinv Pin α (Some (λ x, β x -∗ M2 (proofmode.base.from_option id emp (mγ x))))%I
+  IntoAcc Pinv φ1 Pin M1 M2 α β mγ →
+  (∀ R, ElimModal φ2 false false (M1 R) R Q Q') →
+  ElimInv (X:=X) (φ1 ∧ φ2) Pinv Pin
+          α (Some (λ x, β x -∗ M2 (proofmode.base.from_option id emp (mγ x))))%I
           Q (λ _, Q').
 Proof.
   rewrite /ElimAcc /IntoAcc /ElimInv.
-  iIntros (Hacc Helim Hφ) "(Hinv & Hin & Hcont)".
+  iIntros (Hacc Helim [??]) "(Hinv & Hin & Hcont)".
   iMod (Hacc with "Hinv Hin") as (x) "[Hα Hclose]"; first done.
   iApply "Hcont". simpl. iSplitL "Hα"; done.
 Qed.
