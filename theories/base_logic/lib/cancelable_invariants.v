@@ -71,6 +71,21 @@ Section proofs.
     iIntros "!>". iExists P. iSplit; last done. iIntros "!# !>"; iSplit; auto.
   Qed.
 
+  Lemma cinv_open_strong E N γ p P :
+    ↑N ⊆ E →
+    cinv N γ P -∗ cinv_own γ p ={E,E∖↑N}=∗
+    ▷ P ∗ cinv_own γ p ∗ (▷ P ∨ cinv_own γ 1 ={E∖↑N,E}=∗ True).
+  Proof.
+    iIntros (?) "#Hinv Hγ". iDestruct "Hinv" as (P') "[#HP' Hinv]".
+    iInv N as "[HP | >Hγ']" "Hclose".
+    - iIntros "!> {$Hγ}". iSplitL "HP".
+      + iNext. iApply "HP'". done.
+      + iIntros "[HP|Hγ]".
+        * iApply "Hclose". iLeft. iNext. by iApply "HP'".
+        * iApply "Hclose". iRight. by iNext.
+    - iDestruct (cinv_own_1_l with "Hγ' Hγ") as %[].
+  Qed.
+
   Lemma cinv_alloc E N P : ▷ P ={E}=∗ ∃ γ, cinv N γ P ∗ cinv_own γ 1.
   Proof.
     iIntros "HP". iMod (cinv_alloc_strong ∅ E N) as (γ _) "[Hγ Halloc]".
@@ -79,22 +94,18 @@ Section proofs.
 
   Lemma cinv_cancel E N γ P : ↑N ⊆ E → cinv N γ P -∗ cinv_own γ 1 ={E}=∗ ▷ P.
   Proof.
-    iIntros (?) "#Hinv Hγ". iDestruct "Hinv" as (P') "[#HP' Hinv]".
-    iInv N as "[HP|>Hγ']".
-    - iModIntro. iFrame "Hγ". iModIntro. iApply "HP'". done.
-    - iDestruct (cinv_own_1_l with "Hγ Hγ'") as %[].
+    iIntros (?) "#Hinv Hγ".
+    iMod (cinv_open_strong with "Hinv Hγ") as "($ & Hγ & H)"; first done.
+    iApply "H". by iRight.
   Qed.
 
   Lemma cinv_open E N γ p P :
     ↑N ⊆ E →
     cinv N γ P -∗ cinv_own γ p ={E,E∖↑N}=∗ ▷ P ∗ cinv_own γ p ∗ (▷ P ={E∖↑N,E}=∗ True).
   Proof.
-    iIntros (?) "#Hinv Hγ". iDestruct "Hinv" as (P') "[#HP' Hinv]".
-    iInv N as "[HP | >Hγ']" "Hclose".
-    - iIntros "!> {$Hγ}". iSplitL "HP".
-      + iNext. iApply "HP'". done.
-      + iIntros "HP". iApply "Hclose". iLeft. iNext. by iApply "HP'".
-    - iDestruct (cinv_own_1_l with "Hγ' Hγ") as %[].
+    iIntros (?) "#Hinv Hγ".
+    iMod (cinv_open_strong with "Hinv Hγ") as "($ & $ & H)"; first done.
+    iIntros "!> HP". iApply "H"; auto.
   Qed.
 
   Global Instance into_inv_cinv N γ P : IntoInv (cinv N γ P) N.
