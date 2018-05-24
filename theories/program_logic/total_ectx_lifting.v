@@ -43,7 +43,7 @@ Lemma twp_lift_atomic_head_step {s E Φ} e1 :
     ⌜head_reducible e1 σ1⌝ ∗
     ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={E}=∗
       state_interp σ2 ∗
-      default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
+      from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
   iIntros (?) "H". iApply twp_lift_atomic_step; eauto.
@@ -56,7 +56,7 @@ Lemma twp_lift_atomic_head_step_no_fork {s E Φ} e1 :
   (∀ σ1, state_interp σ1 ={E}=∗
     ⌜head_reducible e1 σ1⌝ ∗
     ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={E}=∗
-      ⌜efs = []⌝ ∗ state_interp σ2 ∗ default False (to_val e2) Φ)
+      ⌜efs = []⌝ ∗ state_interp σ2 ∗ from_option Φ False (to_val e2))
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
   iIntros (?) "H". iApply twp_lift_atomic_head_step; eauto.
