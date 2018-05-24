@@ -445,7 +445,7 @@ Proof.
 Qed.
 
 Lemma maybe_wand_sound (mP : option PROP) Q :
-  maybe_wand mP Q ⊣⊢ (default emp mP id -∗ Q).
+  maybe_wand mP Q ⊣⊢ (from_option id emp mP -∗ Q).
 Proof. destruct mP; simpl; first done. rewrite emp_wand //. Qed.
 
 Global Instance envs_Forall2_refl (R : relation PROP) :

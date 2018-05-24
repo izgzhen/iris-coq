@@ -71,7 +71,7 @@ Lemma wp_lift_atomic_step {s E Φ} e1 :
     ⌜if s is NotStuck then reducible e1 σ1 else True⌝ ∗
     ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={E}=∗
       state_interp σ2 ∗
-      default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
+      from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
   iIntros (?) "H". iApply (wp_lift_step s E _ e1)=>//; iIntros (σ1) "Hσ1".

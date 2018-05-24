@@ -138,7 +138,7 @@ Section lifting.
   Lemma ownP_lift_atomic_step {s E Φ} e1 σ1 :
     (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (▷ ownP σ1 ∗ ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2 -∗
-      default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
+      from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     iIntros (?) "[Hσ H]"; iApply ownP_lift_step.
@@ -240,7 +240,7 @@ Section ectx_lifting.
     head_reducible e1 σ1 →
     ▷ ownP σ1 ∗ ▷ (∀ e2 σ2 efs,
     ⌜head_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2 -∗
-      default False (to_val e2) Φ ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
+      from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     iIntros (?) "[? H]". iApply ownP_lift_atomic_step; eauto.
