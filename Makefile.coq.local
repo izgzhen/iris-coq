@@ -10,7 +10,7 @@ test: $(TESTFILES:.v=.vo)
 $(TESTFILES:.v=.vo): %.vo: %.v $(VFILES:.v=.vo)
 	$(SHOW)COQC [test] $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
-	  TMPFILE="$$(tempfile -p test- -s "-$$TEST")" && \
+	  TMPFILE="$$(mktemp)" && \
 	  $(TIMER) $(COQC) $(COQDEBUG) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) $< $(TIMING_EXTRA) > "$$TMPFILE" && \
 	  (diff --color=auto -u "tests/$$TEST.ref" "$$TMPFILE" || (rm "tests/$$TEST.vo" "$$TMPFILE" && exit 1)) && \
 	  rm "$$TMPFILE"
