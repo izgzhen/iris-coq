@@ -6,8 +6,15 @@ Module Import bi.
   Export bi.interface.bi.
   Export bi.derived_laws_bi.bi.
   Export bi.derived_laws_sbi.bi.
+  (* For better compatibility with some developments created during
+     gen_proofmode times, also provide bigops inside the bi
+     module. *)
   Export bi.big_op.bi.
 End bi.
+
+(* For better compatibility with pre-gen_proofmode-Iris, also provide
+   bigops outside of the bi module. *)
+Export bi.big_op.bi.
 
 (* Hint DB for the logic *)
 Hint Resolve pure_intro.

@@ -170,7 +170,7 @@ Section lifting.
     {{{ ▷ ownP σ1 }}} e1 @ s; E {{{ RET v2; ownP σ2 }}}.
   Proof.
     intros. rewrite -(ownP_lift_atomic_det_step σ1 v2 σ2 []); [|done..].
-    rewrite bi.big_sepL_nil right_id. by apply bi.wand_intro_r.
+    rewrite big_sepL_nil right_id. by apply bi.wand_intro_r.
   Qed.
 
   Lemma ownP_lift_pure_det_step `{Inhabited (state Λ)} {s E Φ} e1 e2 efs :
@@ -188,7 +188,7 @@ Section lifting.
     (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
-    intros. rewrite -(wp_lift_pure_det_step e1 e2 []) ?bi.big_sepL_nil ?right_id; eauto.
+    intros. rewrite -(wp_lift_pure_det_step e1 e2 []) ?big_sepL_nil ?right_id; eauto.
   Qed.
 End lifting.
 
