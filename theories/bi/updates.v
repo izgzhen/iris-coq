@@ -15,37 +15,19 @@ Class FUpd (PROP : Type) : Type := fupd : coPset → coPset → PROP → PROP.
 Instance: Params (@fupd) 4.
 Hint Mode FUpd ! : typeclass_instances.
 
-Notation "|={ E1 , E2 }=> Q" := (fupd E1 E2 Q)
-  (at level 99, E1, E2 at level 50, Q at level 200,
-   format "|={ E1 , E2 }=>  Q") : bi_scope.
-Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)%I
-  (at level 99, E1,E2 at level 50, Q at level 200,
-   format "P  ={ E1 , E2 }=∗  Q") : bi_scope.
-Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)
-  (at level 99, E1, E2 at level 50, Q at level 200, only parsing) : stdpp_scope.
+Notation "|={ E1 , E2 }=> Q" := (fupd E1 E2 Q) : bi_scope.
+Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q)%I : bi_scope.
+Notation "P ={ E1 , E2 }=∗ Q" := (P -∗ |={E1,E2}=> Q) : stdpp_scope.
 
-Notation "|={ E }=> Q" := (fupd E E Q)
-  (at level 99, E at level 50, Q at level 200,
-   format "|={ E }=>  Q") : bi_scope.
-Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)%I
-  (at level 99, E at level 50, Q at level 200,
-   format "P  ={ E }=∗  Q") : bi_scope.
-Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)
-  (at level 99, E at level 50, Q at level 200, only parsing) : stdpp_scope.
+Notation "|={ E }=> Q" := (fupd E E Q) : bi_scope.
+Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)%I : bi_scope.
+Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q) : stdpp_scope.
 
 (** Fancy updates that take a step. *)
-Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E1}=> Q))%I
-  (at level 99, E1, E2 at level 50, Q at level 200,
-   format "|={ E1 , E2 }▷=>  Q") : bi_scope.
-Notation "P ={ E1 , E2 }▷=∗ Q" := (P -∗ |={ E1 , E2 }▷=> Q)%I
-  (at level 99, E1, E2 at level 50, Q at level 200,
-   format "P  ={ E1 , E2 }▷=∗  Q") : bi_scope.
-Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I
-  (at level 99, E at level 50, Q at level 200,
-   format "|={ E }▷=>  Q") : bi_scope.
-Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I
-  (at level 99, E at level 50, Q at level 200,
-   format "P  ={ E }▷=∗  Q") : bi_scope.
+Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E1}=> Q))%I : bi_scope.
+Notation "P ={ E1 , E2 }▷=∗ Q" := (P -∗ |={ E1 , E2 }▷=> Q)%I : bi_scope.
+Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I : bi_scope.
+Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I : bi_scope.
 
 (** Bundled versions  *)
 (* Mixins allow us to create instances easily without having to use Program *)
