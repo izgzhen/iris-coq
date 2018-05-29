@@ -386,6 +386,38 @@ Global Instance into_wand_forall {A} p q (Φ : A → PROP) P Q x :
   IntoWand p q (Φ x) P Q → IntoWand p q (∀ x, Φ x) P Q.
 Proof. rewrite /IntoWand=> <-. by rewrite (forall_elim x). Qed.
 
+Global Instance into_wand_affine p q R P Q :
+  IntoWand p q R P Q → IntoWand p q (<affine> R) (<affine> P) (<affine> Q).
+Proof.
+  rewrite /IntoWand /= => HR. apply wand_intro_r. destruct p; simpl in *.
+  - rewrite (affinely_elim R) -(affine_affinely (□ R)%I) HR. destruct q; simpl in *.
+    + rewrite (affinely_elim P) -{2}(affine_affinely (□ P)%I).
+      by rewrite affinely_sep_2 wand_elim_l.
+    + by rewrite affinely_sep_2 wand_elim_l.
+  - rewrite HR. destruct q; simpl in *.
+    + rewrite (affinely_elim P) -{2}(affine_affinely (□ P)%I).
+      by rewrite affinely_sep_2 wand_elim_l.
+    + by rewrite affinely_sep_2 wand_elim_l.
+Qed.
+(* In case the argument is affine, but the wand resides in the spatial context,
+we can only eliminate the affine modality in the argument. This would lead to
+the following instance:
+
+  IntoWand false q R P Q → IntoWand' false q R (<affine> P) Q.
+
+This instance is redundant, however, since the elimination of the affine
+modality is already covered by the [IntoAssumption] instances that are used at
+the leaves of the instance search for [IntoWand]. *)
+Global Instance into_wand_affine_args q R P Q :
+  IntoWand true q R P Q → IntoWand' true q R (<affine> P) (<affine> Q).
+Proof.
+  rewrite /IntoWand' /IntoWand /= => HR. apply wand_intro_r.
+  rewrite -(affine_affinely (□ R)%I) HR. destruct q; simpl.
+  - rewrite (affinely_elim P) -{2}(affine_affinely (□ P)%I).
+    by rewrite affinely_sep_2 wand_elim_l.
+  - by rewrite affinely_sep_2 wand_elim_l.
+Qed.
+
 Global Instance into_wand_intuitionistically p q R P Q :
   IntoWand p q R P Q → IntoWand p q (□ R) P Q.
 Proof. by rewrite /IntoWand intuitionistically_elim. Qed.
