@@ -482,18 +482,51 @@ Global Instance elim_modal_at_fupd_hyp `{BiFUpd PROP} φ p p' E1 E2 P 𝓟 𝓟'
   ElimModal φ p p' ((|={E1,E2}=> P) i) 𝓟' 𝓠 𝓠'.
 Proof. by rewrite /MakeMonPredAt /ElimModal monPred_at_fupd=><-. Qed.
 
+(* This instances are awfully specific, but that's what is needed. *)
+Global Instance elim_acc_at_fupd `{BiFUpd PROP} {X : Type} E1 E2 E
+       M1 M2 α β mγ Q (Q' : X → monPred) i :
+  ElimAcc (X:=X) M1 M2 α β mγ (|={E1,E}=> Q i)
+          (λ x, |={E2}=> β x ∗ (coq_tactics.maybe_wand (mγ x) (|={E1,E}=> Q' x i)))%I →
+  ElimAcc (X:=X) M1 M2 α β mγ ((|={E1,E}=> Q) i)
+          (λ x, (|={E2}=> ⎡β x⎤ ∗
+                         (coq_tactics.maybe_wand
+                            (match mγ x with Some 𝓟 => Some ⎡𝓟⎤ | None => None end)
+                            (|={E1,E}=> Q' x))) i)%I
+  | 1.
+Proof.
+  rewrite /ElimAcc monPred_at_fupd=><-. apply bi.forall_mono=>x.
+  destruct (mγ x); simpl.
+  - rewrite monPred_at_fupd monPred_at_sep monPred_wand_force monPred_at_fupd !monPred_at_embed //.
+  - rewrite monPred_at_fupd monPred_at_sep monPred_at_fupd !monPred_at_embed //.
+Qed.
+(* A separate, higher-priority instance for unit because otherwise unification
+fails. *)
+Global Instance elim_acc_at_fupd_unit `{BiFUpd PROP} E1 E2 E
+       M1 M2 α β mγ Q Q' i :
+  ElimAcc (X:=unit) M1 M2 α β mγ (|={E1,E}=> Q i)
+          (λ x, |={E2}=> β x ∗ (coq_tactics.maybe_wand (mγ x) (|={E1,E}=> Q' i)))%I →
+  ElimAcc (X:=unit) M1 M2 α β mγ ((|={E1,E}=> Q) i)
+          (λ x, (|={E2}=> ⎡β x⎤ ∗
+                         (coq_tactics.maybe_wand
+                            (match mγ x with Some 𝓟 => Some ⎡𝓟⎤ | None => None end)
+                            (|={E1,E}=> Q'))) i)%I
+  | 0.
+Proof. exact: elim_acc_at_fupd. Qed.
+
 Global Instance add_modal_at_fupd_goal `{BiFUpd PROP} E1 E2 𝓟 𝓟' Q i :
   AddModal 𝓟 𝓟' (|={E1,E2}=> Q i) → AddModal 𝓟 𝓟' ((|={E1,E2}=> Q) i).
 Proof. by rewrite /AddModal !monPred_at_fupd. Qed.
 
+(* This hard-codes the fact that ElimInv with_close returns a
+   [(λ _, ...)] as Q'. *)
 Global Instance elim_inv_embed_with_close {X : Type} φ
        𝓟inv 𝓟in (𝓟out 𝓟close : X → PROP)
        Pin (Pout Pclose : X → monPred)
-       Q (Q' : X → monPred) :
-  (∀ i, ElimInv φ 𝓟inv 𝓟in 𝓟out (Some 𝓟close) (Q i) (λ x, Q' x i)) →
+       Q Q' :
+  (∀ i, ElimInv φ 𝓟inv 𝓟in 𝓟out (Some 𝓟close) (Q i) (λ _, Q' i)) →
   MakeEmbed 𝓟in Pin → (∀ x, MakeEmbed (𝓟out x) (Pout x)) →
   (∀ x, MakeEmbed (𝓟close x) (Pclose x)) →
-  ElimInv (X:=X) φ ⎡𝓟inv⎤ Pin Pout (Some Pclose) Q Q'.
+  ElimInv (X:=X) φ ⎡𝓟inv⎤ Pin Pout (Some Pclose) Q (λ _, Q').
 Proof.
   rewrite /MakeEmbed /ElimInv=>H <- Hout Hclose ?. iStartProof PROP.
   setoid_rewrite <-Hout. setoid_rewrite <-Hclose.

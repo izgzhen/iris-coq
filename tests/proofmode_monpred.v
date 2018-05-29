@@ -29,7 +29,8 @@ Section tests.
 
   Lemma test_intowand_1 P Q : (P -∗ Q) -∗ P -∗ Q.
   Proof.
-    iStartProof PROP. iIntros (i) "HW". iIntros (j ->) "HP". by iApply "HW".
+    iStartProof PROP. iIntros (i) "HW". Show.
+    iIntros (j ->) "HP". Show. by iApply "HW".
   Qed.
   Lemma test_intowand_2 P Q : (P -∗ Q) -∗ P -∗ Q.
   Proof.
@@ -85,7 +86,7 @@ Section tests.
 
   Lemma test_iModIntro_embed_objective P `{!Objective Q} 𝓟 𝓠 :
     □ P -∗ Q -∗ ⎡𝓟⎤ -∗ ⎡𝓠⎤ -∗ ⎡ ∀ i, 𝓟 ∗ 𝓠 ∗ Q i ⎤.
-  Proof. iIntros "#H1 H2 H3 H4". iAlways. iFrame. Qed.
+  Proof. iIntros "#H1 H2 H3 H4". iAlways. Show. iFrame. Qed.
 
   Lemma test_iModIntro_embed_nested P 𝓟 𝓠 :
     □ P -∗ ⎡◇ 𝓟⎤ -∗ ⎡◇ 𝓠⎤ -∗ ⎡ ◇ (𝓟 ∗ 𝓠) ⎤.
@@ -93,7 +94,7 @@ Section tests.
 
   Lemma test_into_wand_embed 𝓟 𝓠 :
     (𝓟 -∗ ◇ 𝓠) →
-    ⎡𝓟⎤ ⊢@{monPredSI} ◇ ⎡𝓠⎤.
+    ⎡𝓟⎤ ⊢@{monPredI} ◇ ⎡𝓠⎤.
   Proof.
     iIntros (HPQ) "HP".
     iMod (HPQ with "[-]") as "$"; last by auto.

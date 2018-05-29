@@ -1,4 +1,4 @@
-From iris.proofmode Require Import tactics.
+From iris.proofmode Require Import tactics monpred.
 From iris.base_logic Require Import base_logic.
 From iris.base_logic.lib Require Import invariants cancelable_invariants na_invariants.
 
@@ -50,6 +50,7 @@ End base_logic_tests.
 
 Section iris_tests.
   Context `{invG Σ, cinvG Σ, na_invG Σ}.
+  Implicit Types P Q R : iProp Σ.
 
   Lemma test_masks  N E P Q R :
     ↑N ⊆ E →
@@ -218,3 +219,32 @@ Section iris_tests.
     eauto.
   Qed.
 End iris_tests.
+
+Section monpred_tests.
+  Context `{invG Σ}.
+  Context {I : biIndex}.
+  Local Notation monPred := (monPred I (iPropI Σ)).
+  Local Notation monPredI := (monPredI I (iPropI Σ)).
+  Local Notation monPredSI := (monPredSI I (iPropSI Σ)).
+  Implicit Types P Q R : monPred.
+  Implicit Types 𝓟 𝓠 𝓡 : iProp Σ.
+
+  Lemma test_iInv N E 𝓟 :
+    ↑N ⊆ E →
+    ⎡inv N 𝓟⎤ ⊢@{monPredI} |={E}=> emp.
+  Proof.
+    iIntros (?) "Hinv".
+    iInv N as "HP". Show.
+    iFrame "HP". auto.
+  Qed.
+
+  Lemma test_iInv_with_close N E 𝓟 :
+    ↑N ⊆ E →
+    ⎡inv N 𝓟⎤ ⊢@{monPredI} |={E}=> emp.
+  Proof.
+    iIntros (?) "Hinv".
+    iInv N as "HP" "Hclose". Show.
+    iMod ("Hclose" with "HP"). auto.
+  Qed.
+
+End monpred_tests.

@@ -552,11 +552,11 @@ Global Instance add_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
 Proof. by rewrite /AddModal !embed_fupd. Qed.
 
 (* ElimAcc *)
-Global Instance elim_acc_vs `{BiFUpd PROP} {X} E1 E2 E α β mγ Q :
+Global Instance elim_acc_fupd `{BiFUpd PROP} {X} E1 E2 E α β mγ Q :
   (* FIXME: Why %I? ElimAcc sets the right scopes! *)
   ElimAcc (X:=X) (fupd E1 E2) (fupd E2 E1) α β mγ
           (|={E1,E}=> Q)
-          (λ x, |={E2}=> (β x ∗ (coq_tactics.maybe_wand (mγ x) (|={E1,E}=> Q))))%I.
+          (λ x, |={E2}=> β x ∗ (coq_tactics.maybe_wand (mγ x) (|={E1,E}=> Q)))%I.
 Proof.
   rewrite /ElimAcc. setoid_rewrite coq_tactics.maybe_wand_sound.
   iIntros "Hinner >Hacc". iDestruct "Hacc" as (x) "[Hα Hclose]".
