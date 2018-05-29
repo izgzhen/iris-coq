@@ -2,6 +2,7 @@ From iris.algebra Require Export big_op.
 From iris.bi Require Import derived_laws_sbi plainly.
 From stdpp Require Import countable fin_collections functions.
 Set Default Proof Using "Type".
+Import interface.bi derived_laws_bi.bi.
 
 (* Notations *)
 Notation "'[∗' 'list]' k ↦ x ∈ l , P" := (big_opL bi_sep (λ k x, P) l)
@@ -40,8 +41,6 @@ Notation "'[∗' 'mset]' x ∈ X , P" := (big_opMS bi_sep (λ x, P) X)
    format "[∗  mset]  x  ∈  X ,  P") : bi_scope.
 
 (** * Properties *)
-Module bi.
-Import interface.bi derived_laws_bi.bi.
 Section bi_big_op.
 Context {PROP : bi}.
 Implicit Types Ps Qs : list PROP.
@@ -876,4 +875,3 @@ Section gmultiset.
   End plainly.
 End gmultiset.
 End sbi_big_op.
-End bi.

@@ -2096,13 +2096,13 @@ below; see the discussion in !75 for further details. *)
 Hint Extern 0 (envs_entails _ (_ ≡ _)) =>
   rewrite envs_entails_eq; apply bi.internal_eq_refl.
 Hint Extern 0 (envs_entails _ (big_opL _ _ _)) =>
-  rewrite envs_entails_eq; apply bi.big_sepL_nil'.
+  rewrite envs_entails_eq; apply big_sepL_nil'.
 Hint Extern 0 (envs_entails _ (big_opM _ _ _)) =>
-  rewrite envs_entails_eq; apply bi.big_sepM_empty'.
+  rewrite envs_entails_eq; apply big_sepM_empty'.
 Hint Extern 0 (envs_entails _ (big_opS _ _ _)) =>
-  rewrite envs_entails_eq; apply bi.big_sepS_empty'.
+  rewrite envs_entails_eq; apply big_sepS_empty'.
 Hint Extern 0 (envs_entails _ (big_opMS _ _ _)) =>
-  rewrite envs_entails_eq; apply bi.big_sepMS_empty'.
+  rewrite envs_entails_eq; apply big_sepMS_empty'.
 
 Hint Extern 0 (envs_entails _ (∀ _, _)) => iIntros.
 Hint Extern 0 (envs_entails _ (_ → _)) => iIntros.

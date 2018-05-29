@@ -185,7 +185,7 @@ Lemma test_TC_resolution `{!BiAffine PROP} (Φ : nat → PROP) l x :
   x ∈ l → ([∗ list] y ∈ l, Φ y) -∗ Φ x.
 Proof.
   iIntros (Hp) "HT".
-  iDestruct (bi.big_sepL_elem_of _ _ _ Hp with "HT") as "Hp".
+  iDestruct (big_sepL_elem_of _ _ _ Hp with "HT") as "Hp".
   done.
 Qed.
 
