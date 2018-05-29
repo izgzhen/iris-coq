@@ -395,15 +395,9 @@ Proof. by rewrite /IntoWand /= intuitionistically_persistently_elim. Qed.
 Global Instance into_wand_persistently_false q R P Q :
   Absorbing R → IntoWand false q R P Q → IntoWand false q (<pers> R) P Q.
 Proof. intros ?. by rewrite /IntoWand persistently_elim. Qed.
-Global Instance into_wand_embed `{BiEmbed PROP PROP'} p q (PP QQ RR : PROP) (P : PROP') :
-  IntoWand p q RR PP QQ →
-  IntoEmbed P PP →
-  IntoWand p q ⎡RR⎤ P ⎡QQ⎤.
-Proof.
-  rewrite /IntoEmbed /IntoWand !embed_intuitionistically_if_2=> -> ->.
-  apply bi.wand_intro_l.
-  by rewrite embed_intuitionistically_if_2 -embed_sep bi.wand_elim_r.
-Qed.
+Global Instance into_wand_embed `{BiEmbed PROP PROP'} p q R P Q :
+  IntoWand p q R P Q → IntoWand p q ⎡R⎤ ⎡P⎤ ⎡Q⎤.
+Proof. by rewrite /IntoWand !embed_intuitionistically_if_2 -embed_wand=> ->. Qed.
 
 (* FromWand *)
 Global Instance from_wand_wand P1 P2 : FromWand (P1 -∗ P2) P1 P2.
