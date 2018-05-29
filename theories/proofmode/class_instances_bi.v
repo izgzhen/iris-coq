@@ -419,8 +419,8 @@ Proof.
 Qed.
 
 Global Instance into_wand_intuitionistically p q R P Q :
-  IntoWand p q R P Q → IntoWand p q (□ R) P Q.
-Proof. by rewrite /IntoWand intuitionistically_elim. Qed.
+  IntoWand true q R P Q → IntoWand p q (□ R) P Q.
+Proof. rewrite /IntoWand /= => ->. by rewrite {1}intuitionistically_if_elim. Qed.
 Global Instance into_wand_persistently_true q R P Q :
   IntoWand true q R P Q → IntoWand true q (<pers> R) P Q.
 Proof. by rewrite /IntoWand /= intuitionistically_persistently_elim. Qed.
