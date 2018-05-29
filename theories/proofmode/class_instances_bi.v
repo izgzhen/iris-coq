@@ -427,9 +427,33 @@ Proof. by rewrite /IntoWand /= intuitionistically_persistently_elim. Qed.
 Global Instance into_wand_persistently_false q R P Q :
   Absorbing R → IntoWand false q R P Q → IntoWand false q (<pers> R) P Q.
 Proof. intros ?. by rewrite /IntoWand persistently_elim. Qed.
+
 Global Instance into_wand_embed `{BiEmbed PROP PROP'} p q R P Q :
   IntoWand p q R P Q → IntoWand p q ⎡R⎤ ⎡P⎤ ⎡Q⎤.
 Proof. by rewrite /IntoWand !embed_intuitionistically_if_2 -embed_wand=> ->. Qed.
+
+(* There are two versions for [IntoWand ⎡RR⎤ ...] with the argument being
+[<affine> ⎡PP⎤]. When the wand [⎡RR⎤] resides in the intuitionistic context
+the result of wand elimination will have the affine modality. Otherwise, it
+won't. Note that when the wand [⎡RR⎤] is under an affine modality, the instance
+[into_wand_affine] would already have been used. *)
+Global Instance into_wand_affine_embed_true `{BiEmbed PROP PROP'} q (PP QQ RR : PROP) :
+  IntoWand true q RR PP QQ → IntoWand true q ⎡RR⎤ (<affine> ⎡PP⎤) (<affine> ⎡QQ⎤) | 100.
+Proof.
+  rewrite /IntoWand /=.
+  rewrite -(intuitionistically_idemp ⎡ _ ⎤%I) embed_intuitionistically_2=> ->.
+  apply bi.wand_intro_l. destruct q; simpl.
+  - rewrite affinely_elim  -(intuitionistically_idemp ⎡ _ ⎤%I).
+    rewrite embed_intuitionistically_2 intuitionistically_sep_2 -embed_sep.
+    by rewrite wand_elim_r intuitionistically_affinely.
+  - by rewrite intuitionistically_affinely affinely_sep_2 -embed_sep wand_elim_r.
+Qed.
+Global Instance into_wand_affine_embed_false `{BiEmbed PROP PROP'} q (PP QQ RR : PROP) :
+  IntoWand false q RR (<affine> PP) QQ → IntoWand false q ⎡RR⎤ (<affine> ⎡PP⎤) ⎡QQ⎤ | 100.
+Proof.
+  rewrite /IntoWand /= => ->.
+  by rewrite embed_affinely_2 embed_intuitionistically_if_2 embed_wand.
+Qed.
 
 (* FromWand *)
 Global Instance from_wand_wand P1 P2 : FromWand (P1 -∗ P2) P1 P2.
