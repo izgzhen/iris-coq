@@ -55,7 +55,7 @@ Section gmultiset.
     apply: discrete_cancelable=> Y Z _ ?. fold_leibniz. by apply (inj (X ∪)).
   Qed.
 
-  Lemma gmultiset_opM X mY : X ⋅? mY = X ∪ from_option id ∅ mY.
+  Lemma gmultiset_opM X mY : X ⋅? mY = X ∪ default ∅ mY.
   Proof. destruct mY; by rewrite /= ?right_id_L. Qed.
 
   Lemma gmultiset_update X Y : X ~~> Y.

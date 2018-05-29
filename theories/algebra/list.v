@@ -56,7 +56,7 @@ Canonical Structure listC := OfeT (list A) list_ofe_mixin.
 
 Program Definition list_chain
     (c : chain listC) (x : A) (k : nat) : chain A :=
-  {| chain_car n := from_option id x (c n !! k) |}.
+  {| chain_car n := default x (c n !! k) |}.
 Next Obligation. intros c x k n i ?. by rewrite /= (chain_cauchy c n i). Qed.
 Definition list_compl `{Cofe A} : Compl listC := λ c,
   match c 0 with
@@ -354,7 +354,7 @@ Section properties.
     x ~~>: P → (∀ y, P y → Q [y]) → [x] ~~>: Q.
   Proof.
     rewrite !cmra_total_updateP=> Hup HQ n lf /list_lookup_validN Hv.
-    destruct (Hup n (from_option id ε (lf !! 0))) as (y&?&Hv').
+    destruct (Hup n (default ε (lf !! 0))) as (y&?&Hv').
     { move: (Hv 0). by destruct lf; rewrite /= ?right_id. }
     exists [y]; split; first by auto.
     apply list_lookup_validN=> i.

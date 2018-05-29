@@ -13,7 +13,7 @@ Module bi_reflection. Section bi_reflection.
   Fixpoint eval (Σ : list PROP) (e : expr) : PROP :=
     match e with
     | EEmp => emp
-    | EVar n => from_option id emp (Σ !! n)
+    | EVar n => default emp (Σ !! n)
     | ESep e1 e2 => eval Σ e1 ∗ eval Σ e2
     end%I.
   Fixpoint flatten (e : expr) : list nat :=
@@ -23,7 +23,7 @@ Module bi_reflection. Section bi_reflection.
     | ESep e1 e2 => flatten e1 ++ flatten e2
     end.
 
-  Notation eval_list Σ l := ([∗ list] n ∈ l, from_option id emp (Σ !! n))%I.
+  Notation eval_list Σ l := ([∗ list] n ∈ l, default emp (Σ !! n))%I.
 
   Lemma eval_flatten Σ e : eval Σ e ⊣⊢ eval_list Σ (flatten e).
   Proof.

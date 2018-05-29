@@ -905,7 +905,7 @@ Section option.
   Canonical Structure optionC := OfeT (option A) option_ofe_mixin.
 
   Program Definition option_chain (c : chain optionC) (x : A) : chain A :=
-    {| chain_car n := from_option id x (c n) |}.
+    {| chain_car n := default x (c n) |}.
   Next Obligation. intros c x n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
   Definition option_compl `{Cofe A} : Compl optionC := λ c,
     match c 0 with Some x => Some (compl (option_chain c x)) | None => None end.

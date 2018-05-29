@@ -179,7 +179,7 @@ Class Core (A : Type) := core : A → A.
 Hint Mode Core ! : typeclass_instances.
 Instance: Params (@core) 2.
 
-Instance core' `{PCore A} : Core A := λ x, from_option id x (pcore x).
+Instance core' `{PCore A} : Core A := λ x, default x (pcore x).
 Arguments core' _ _ _ /.
 
 (** * CMRAs with a unit element *)
