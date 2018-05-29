@@ -482,14 +482,12 @@ Proof. apply _. Qed.
 (** The class [IntoEmbed P Q] is used to transform hypotheses while introducing
 embeddings using [iModIntro].
 
-Input: the proposition [P], output: the proposition [Q] so that [P ⊢ ⎡Q⎤].
-Also used backwards, i.e. Input [Q] and output [P]. *)
+Input: the proposition [P], output: the proposition [Q] so that [P ⊢ ⎡Q⎤]. *)
 Class IntoEmbed {PROP PROP' : bi} `{BiEmbed PROP PROP'} (P : PROP') (Q : PROP) :=
   into_embed : P ⊢ ⎡Q⎤.
 Arguments IntoEmbed {_ _ _} _%I _%I.
 Arguments into_embed {_ _ _} _%I _%I {_}.
 Hint Mode IntoEmbed + + + ! -  : typeclass_instances.
-Hint Mode IntoEmbed + + + - !  : typeclass_instances.
 
 (* We use two type classes for [AsEmpValid], in order to avoid loops in
    typeclass search. Indeed, the [as_emp_valid_embed] instance would try
