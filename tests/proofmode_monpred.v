@@ -91,10 +91,18 @@ Section tests.
     □ P -∗ ⎡◇ 𝓟⎤ -∗ ⎡◇ 𝓠⎤ -∗ ⎡ ◇ (𝓟 ∗ 𝓠) ⎤.
   Proof. iIntros "#H1 H2 H3". iModIntro ⎡ _ ⎤%I. by iSplitL "H2". Qed.
 
-  (* This is a hack to avoid avoid coq bug #5735: sections variables
-     ignore hint modes. So we assume the instances in a way that
-     cannot be used by type class resolution, and then declare the
-     instance. as such. *)
+  Lemma test_into_wand_embed 𝓟 𝓠 :
+    (𝓟 -∗ ◇ 𝓠) →
+    ⎡𝓟⎤ ⊢@{monPredSI} ◇ ⎡𝓠⎤.
+  Proof.
+    iIntros (HPQ) "HP".
+    iMod (HPQ with "[-]") as "$"; last by auto.
+    iAssumption.
+  Qed.
+
+  (* This is a hack to avoid avoid coq bug #5735: sections variables ignore hint
+     modes. So we assume the instances in a way that cannot be used by type
+     class resolution, and then separately declare the instance as such. *)
   Context (FU0 : BiFUpd PROP * unit).
   Instance FU : BiFUpd PROP := fst FU0.
 
