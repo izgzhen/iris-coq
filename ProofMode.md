@@ -41,8 +41,8 @@ Context management
   the resulting goal.
 - `iPoseProof pm_trm as (x1 ... xn) "ipat"` : put `pm_trm` into the context and
   eliminates it. This tactic is essentially the same as `iDestruct` with the
-  difference that when `pm_trm` is a non-univerisally quantified spatial
-  hypothesis, it will not throw the hypothesis away.
+  difference that when `pm_trm` is a non-univerisally quantified persistent
+  hypothesis, it will not throw away the hypothesis.
 - `iAssert P with "spat" as "ipat"` : generates a new subgoal `P` and adds the
   hypothesis `P` to the current goal. The specialization pattern `spat`
   specifies which hypotheses will be consumed by proving `P`. The introduction
