@@ -8,7 +8,7 @@ all: Makefile.coq
 
 clean: Makefile.coq
 	+@make -f Makefile.coq clean
-	find theories \( -name "*.v.d" -o -name "*.vo" -o -name "*.aux" -o -name "*.cache" -o -name "*.glob" -o -name "*.vio" \) -print -delete
+	find theories $$(test -d tests && echo tests) \( -name "*.v.d" -o -name "*.vo" -o -name "*.aux" -o -name "*.cache" -o -name "*.glob" -o -name "*.vio" \) -print -delete
 	rm -f Makefile.coq
 .PHONY: clean
 
@@ -33,7 +33,7 @@ build-dep: build-dep/opam phony
 	@# dependencies, but does not actually install anything.
 	@# Reinstalling is needed with opam 1 in case the pin already exists, but the builddep
 	@# package changed.
-	@BUILD_DEP_PACKAGE="$$(egrep "^name:" build-dep/opam | sed 's/^name: *"\(.*\)" */\1/')"; \
+	@BUILD_DEP_PACKAGE="$$(egrep "^name:" build-dep/opam | sed 's/^name: *"\(.*\)" */\1/')" && \
 	  echo "# Pinning build-dep package." && \
 	  opam pin add -k path $(OPAMFLAGS) "$$BUILD_DEP_PACKAGE".dev build-dep && \
 	  ((! opam --version | grep "^1\." > /dev/null) || ( \
