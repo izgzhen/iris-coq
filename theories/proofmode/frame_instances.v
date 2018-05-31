@@ -270,6 +270,9 @@ Proof. rewrite /Frame /MakeEmbed -embed_internal_eq. apply (frame_embed p P Q). 
 
 Global Instance make_laterN_true n : @KnownMakeLaterN PROP n True True | 0.
 Proof. by rewrite /KnownMakeLaterN /MakeLaterN laterN_True. Qed.
+Global Instance make_laterN_emp `{!BiAffine PROP} n :
+  @KnownMakeLaterN PROP n emp emp | 0.
+Proof. by rewrite /KnownMakeLaterN /MakeLaterN laterN_emp. Qed.
 Global Instance make_laterN_0 P : MakeLaterN 0 P P | 0.
 Proof. by rewrite /MakeLaterN. Qed.
 Global Instance make_laterN_1 P : MakeLaterN 1 P (▷ P) | 2.

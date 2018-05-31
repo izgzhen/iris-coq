@@ -158,6 +158,9 @@ Lemma test_iFrame_conjunction_2 P Q :
   P -∗ Q -∗ (P ∧ P) ∗ (Q ∧ Q).
 Proof. iIntros "HP HQ". iFrame "HP HQ". Qed.
 
+Lemma test_iFrame_later `{BiAffine PROP} P Q : P -∗ Q -∗ ▷ P ∗ Q.
+Proof. iIntros "H1 H2". by iFrame "H1". Qed.
+
 Lemma test_iAssert_modality P : ◇ False -∗ ▷ P.
 Proof.
   iIntros "HF".
