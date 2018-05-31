@@ -14,6 +14,8 @@ Reserved Notation "'⌜' φ '⌝'" (at level 1, φ at level 200, format "⌜ φ 
 Reserved Notation "P ∗ Q" (at level 80, right associativity).
 Reserved Notation "P -∗ Q" (at level 99, Q at level 200, right associativity).
 
+Reserved Notation "⎡ P ⎤".
+
 (** Modalities *)
 Reserved Notation "'<pers>' P" (at level 20, right associativity).
 Reserved Notation "'<pers>?' p P" (at level 20, p at level 9, P at level 20,
