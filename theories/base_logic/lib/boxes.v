@@ -14,7 +14,7 @@ Class boxG Σ :=
 Definition boxΣ : gFunctors := #[ GFunctor (authR (optionUR (exclR boolC)) *
                                             optionRF (agreeRF (▶ ∙)) ) ].
 
-Instance subG_stsΣ Σ : subG boxΣ Σ → boxG Σ.
+Instance subG_boxΣ Σ : subG boxΣ Σ → boxG Σ.
 Proof. solve_inG. Qed.
 
 Section box_defs.
