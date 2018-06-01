@@ -30,14 +30,14 @@ Section demo.
   Proof.
     iIntros "[HP [HΨ HR]]".
     iDestruct "HΨ" as (x) "HΨ".
-    iExists x.
-    iSplitL "HΨ". iAssumption. iAssumption.
+    iExists x. Show.
+    iSplitL "HΨ". Show. iAssumption. Show. iAssumption.
   Qed.
 
   (* The short version in IPM, as in the paper *)
   Lemma sep_exist_short A (P R: iProp) (Ψ: A → iProp) :
     P ∗ (∃ a, Ψ a) ∗ R ⊢ ∃ a, Ψ a ∗ P.
-  Proof. iIntros "[HP [HΨ HR]]". iFrame "HP". iAssumption. Qed.
+  Proof. iIntros "[HP [HΨ HR]]". Show. iFrame "HP". iAssumption. Qed.
 
   (* An even shorter version in IPM, using the frame introduction pattern `$` *)
   Lemma sep_exist_shorter A (P R: iProp) (Ψ: A → iProp) :
@@ -239,8 +239,8 @@ Section counter_proof.
     {{ C l n }} read #l {{ v, ∃ m : nat, ⌜v = #m ∧ n ≤ m⌝ ∧ C l m }}.
   Proof.
     iIntros "!# Hl /=". iDestruct "Hl" as (N γ) "[#Hinv Hγf]".
-    rewrite /read /=. wp_let. iApply wp_inv_open; last iFrame "Hinv"; auto.
-    iDestruct 1 as (c) "[Hl Hγ]". wp_load.
+    rewrite /read /=. wp_let. Show. iApply wp_inv_open; last iFrame "Hinv"; auto.
+    iDestruct 1 as (c) "[Hl Hγ]". wp_load. Show.
     iDestruct (own_valid γ (Frag n ⋅ Auth c) with "[-]") as % ?%auth_frag_valid.
     { iApply own_op. by iFrame. }
     rewrite (auth_frag_op c c); last lia; iDestruct "Hγ" as "[Hγ Hγf']".

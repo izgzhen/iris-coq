@@ -1,0 +1,94 @@
+1 subgoal
+  
+  M : ucmraT
+  A : Type
+  P, R : iProp
+  Ψ : A → iProp
+  x : A
+  ============================
+  "HP" : P
+  "HΨ" : Ψ x
+  "HR" : R
+  --------------------------------------∗
+  Ψ x ∗ P
+  
+2 subgoals
+  
+  M : ucmraT
+  A : Type
+  P, R : iProp
+  Ψ : A → iProp
+  x : A
+  ============================
+  "HΨ" : Ψ x
+  --------------------------------------∗
+  Ψ x
+  
+
+subgoal 2 is:
+ "HP" : P
+"HR" : R
+--------------------------------------∗
+P
+
+1 subgoal
+  
+  M : ucmraT
+  A : Type
+  P, R : iProp
+  Ψ : A → iProp
+  x : A
+  ============================
+  "HP" : P
+  "HR" : R
+  --------------------------------------∗
+  P
+  
+1 subgoal
+  
+  M : ucmraT
+  A : Type
+  P, R : iProp
+  Ψ : A → iProp
+  ============================
+  "HP" : P
+  "HΨ" : ∃ a : A, Ψ a
+  "HR" : R
+  --------------------------------------∗
+  ∃ a : A, Ψ a ∗ P
+  
+1 subgoal
+  
+  Σ : gFunctors
+  heapG0 : heapG Σ
+  counterG0 : counterG Σ
+  l : loc
+  n : nat
+  N : namespace
+  γ : gname
+  ============================
+  "Hinv" : inv N (I γ l)
+  --------------------------------------□
+  "Hγf" : own γ (Frag n)
+  --------------------------------------∗
+  WP ! #l {{ v, ∃ m : nat, ⌜v = #m ∧ n ≤ m⌝ ∧ C l m }}
+  
+1 subgoal
+  
+  Σ : gFunctors
+  heapG0 : heapG Σ
+  counterG0 : counterG Σ
+  l : loc
+  n : nat
+  N : namespace
+  γ : gname
+  c : nat
+  ============================
+  "Hinv" : inv N (I γ l)
+  --------------------------------------□
+  "Hγf" : own γ (Frag n)
+  "Hl" : l ↦ #c
+  "Hγ" : own γ (Auth c)
+  --------------------------------------∗
+  ▷ I γ l ∗ (∃ m : nat, ⌜#c = #m ∧ n ≤ m⌝ ∧ C l m)
+  
