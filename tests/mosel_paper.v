@@ -12,9 +12,9 @@ Lemma example_1 {PROP : bi} {A : Type} (P : PROP) (Φ Ψ : A → PROP) :
   P ∗ (∃ a, Φ a ∨ Ψ a) -∗ ∃ a, (P ∗ Φ a) ∨ (P ∗ Ψ a).
 Proof.
   iIntros "[HP H]". Show.
-  iDestruct "H" as (x) "[H1|H2]". Show.
-  - iExists x. iLeft. iSplitL "HP"; iAssumption.
-  - iExists x. iRight. iSplitL "HP"; iAssumption.
+  iDestruct "H" as (x) "[H1|H2]".
+  - Show. iExists x. iLeft. iSplitL "HP"; iAssumption.
+  - Show. iExists x. iRight. iSplitL "HP"; iAssumption.
 Qed.
 Lemma example {PROP : bi} {A : Type} (P : PROP) (Φ Ψ : A → PROP) :
 P ∗ (∃ a, Φ a ∨ Ψ a) -∗ ∃ a, (P ∗ Φ a) ∨ (P ∗ Ψ a).
