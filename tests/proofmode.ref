@@ -19,3 +19,15 @@
   --------------------------------------□
   Q ∨ P
   
+1 subgoal
+  
+  PROP : sbi
+  P, Q : PROP
+  Persistent0 : Persistent P
+  Persistent1 : Persistent Q
+  ============================
+  _ : P
+  _ : Q
+  --------------------------------------□
+  <affine> (P ∗ Q)
+  

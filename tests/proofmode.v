@@ -54,7 +54,7 @@ Qed.
 
 Lemma test_iDestruct_and_emp P Q `{!Persistent P, !Persistent Q} :
   P ∧ emp -∗ emp ∧ Q -∗ <affine> (P ∗ Q).
-Proof. iIntros "[#? _] [_ #?]". auto. Qed.
+Proof. iIntros "[#? _] [_ #?]". Show. auto. Qed.
 
 Lemma test_iIntros_persistent P Q `{!Persistent Q} : (P → Q → P ∧ Q)%I.
 Proof. iIntros "H1 #H2". by iFrame "∗#". Qed.
