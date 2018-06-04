@@ -18,15 +18,16 @@ Section definition.
     (Φ : A → B → PROP) (* post-condition *)
   .
 
-(** atomic_step as the "introduction form" of atomic updates *)
-  Definition atomic_step Eo Ei α P β Φ : PROP :=
+  (** atomic_acc as the "introduction form" of atomic updates: An accessor
+      that can be aborted back to [P]. *)
+  Definition atomic_acc Eo Ei α P β Φ : PROP :=
     (|={Eo, Ei}=> ∃ x, α x ∗
           ((α x ={Ei, Eo}=∗ P) ∧ (∀ y, β x y ={Ei, Eo}=∗ Φ x y))
     )%I.
 
-  Lemma atomic_step_wand Eo Ei α P1 P2 β Φ1 Φ2 :
+  Lemma atomic_acc_wand Eo Ei α P1 P2 β Φ1 Φ2 :
     ((P1 -∗ P2) ∧ (∀ x y, Φ1 x y -∗ Φ2 x y)) -∗
-    (atomic_step Eo Ei α P1 β Φ1 -∗ atomic_step Eo Ei α P2 β Φ2).
+    (atomic_acc Eo Ei α P1 β Φ1 -∗ atomic_acc Eo Ei α P2 β Φ2).
   Proof.
     iIntros "HP12 AS". iMod "AS" as (x) "[Hα Hclose]".
     iModIntro. iExists x. iFrame "Hα". iSplit.
@@ -36,8 +37,8 @@ Section definition.
       iApply "HP12". iApply "Hclose". done.
   Qed.
 
-  Lemma atomic_step_mask Eo Em α P β Φ :
-    atomic_step Eo (Eo∖Em) α P β Φ ⊣⊢ ∀ E, ⌜Eo ⊆ E⌝ → atomic_step E (E∖Em) α P β Φ.
+  Lemma atomic_acc_mask Eo Em α P β Φ :
+    atomic_acc Eo (Eo∖Em) α P β Φ ⊣⊢ ∀ E, ⌜Eo ⊆ E⌝ → atomic_acc E (E∖Em) α P β Φ.
   Proof.
     iSplit; last first.
     { iIntros "Hstep". iApply ("Hstep" with "[% //]"). }
@@ -50,21 +51,22 @@ Section definition.
     - iIntros (y) "Hβ". iApply "Hclose'". iApply "Hclose". done.
   Qed.
 
-(** atomic_update as a fixed-point of the equation
+  (** atomic_update as a fixed-point of the equation
    AU = ∃ P. ▷ P ∗ □ (▷ P ==∗ α ∗ (α ==∗ AU) ∧ (β ==∗ Q))
- *)
+      = ∃ P. ▷ P ∗ □ (▷ P -∗ atomic_acc α AU β Q)
+  *)
   Context Eo Em α β Φ.
 
   Definition atomic_update_pre (Ψ : () → PROP) (_ : ()) : PROP :=
     (∃ (P : PROP), ▷ P ∗
-     □ (▷ P -∗ atomic_step Eo (Eo∖Em) α (Ψ ()) β Φ))%I.
+     □ (▷ P -∗ atomic_acc Eo (Eo∖Em) α (Ψ ()) β Φ))%I.
 
   Local Instance atomic_update_pre_mono : BiMonoPred atomic_update_pre.
   Proof.
     constructor.
     - iIntros (P1 P2) "#HP12". iIntros ([]) "AU".
       iDestruct "AU" as (P) "[HP #AS]". iExists P. iFrame.
-      iIntros "!# HP". iApply (atomic_step_wand with "[HP12]"); last by iApply "AS".
+      iIntros "!# HP". iApply (atomic_acc_wand with "[HP12]"); last by iApply "AS".
       iSplit; last by eauto. iApply "HP12".
     - intros ??. solve_proper.
   Qed.
@@ -87,14 +89,14 @@ Section lemmas.
 
   Local Existing Instance atomic_update_pre_mono.
 
-  Global Instance atomic_step_ne Eo Em n :
+  Global Instance atomic_acc_ne Eo Em n :
     Proper (
         pointwise_relation A (dist n) ==>
         dist n ==>
         pointwise_relation A (pointwise_relation B (dist n)) ==>
         pointwise_relation A (pointwise_relation B (dist n)) ==>
         dist n
-    ) (atomic_step (PROP:=PROP) Eo Em).
+    ) (atomic_acc (PROP:=PROP) Eo Em).
   Proof. solve_proper. Qed.
 
   Global Instance atomic_update_ne Eo Em n :
@@ -112,12 +114,12 @@ Section lemmas.
   Lemma aupd_acc  Eo Em E α β Φ :
     Eo ⊆ E →
     atomic_update Eo Em α β Φ -∗
-    atomic_step E (E∖Em) α (atomic_update Eo Em α β Φ) β Φ.
+    atomic_acc E (E∖Em) α (atomic_update Eo Em α β Φ) β Φ.
   Proof using Type*.
     rewrite atomic_update_eq {1}/atomic_update_def /=. iIntros (HE) "HUpd".
     iPoseProof (greatest_fixpoint_unfold_1 with "HUpd") as "HUpd".
     iDestruct "HUpd" as (P) "(HP & Hshift)".
-    iRevert (E HE). iApply atomic_step_mask.
+    iRevert (E HE). iApply atomic_acc_mask.
     iApply "Hshift". done.
   Qed.
 
@@ -132,7 +134,7 @@ Section lemmas.
 
   Lemma aupd_intro P Q α β Eo Em Φ :
     Affine P → Persistent P → Laterable Q →
-    (P ∗ Q -∗ atomic_step Eo (Eo∖Em) α Q β Φ) →
+    (P ∗ Q -∗ atomic_acc Eo (Eo∖Em) α Q β Φ) →
     P ∗ Q -∗ atomic_update Eo Em α β Φ.
   Proof.
     rewrite atomic_update_eq {1}/atomic_update_def /=.
@@ -143,10 +145,10 @@ Section lemmas.
     iApply HAU. by iFrame.
   Qed.
 
-  Lemma astep_intro x Eo Ei α P β Φ :
+  Lemma aacc_intro x Eo Ei α P β Φ :
     Ei ⊆ Eo → α x -∗
     ((α x ={Eo}=∗ P) ∧ (∀ y, β x y ={Eo}=∗ Φ x y)) -∗
-    atomic_step Eo Ei α P β Φ.
+    atomic_acc Eo Ei α P β Φ.
   Proof.
     iIntros (?) "Hα Hclose".
     iMod fupd_intro_mask' as "Hclose'"; last iModIntro; first set_solver.
@@ -155,10 +157,10 @@ Section lemmas.
     - iIntros (y) "Hβ". iMod "Hclose'" as "_". iApply "Hclose". done.
   Qed.
 
-  Global Instance elim_acc_astep {X} E1 E2 Ei (α' β' : X → PROP) γ' α β Pas Φ :
+  Global Instance elim_acc_aacc {X} E1 E2 Ei (α' β' : X → PROP) γ' α β Pas Φ :
     ElimAcc (X:=X) (fupd E1 E2) (fupd E2 E1) α' β' γ'
-            (atomic_step E1 Ei α Pas β Φ)
-            (λ x', atomic_step E2 Ei α (β' x' ∗ coq_tactics.maybe_wand (γ' x') Pas)%I β
+            (atomic_acc E1 Ei α Pas β Φ)
+            (λ x', atomic_acc E2 Ei α (β' x' ∗ coq_tactics.maybe_wand (γ' x') Pas)%I β
                 (λ x y, β' x' ∗ coq_tactics.maybe_wand (γ' x') (Φ x y)))%I.
   Proof.
     rewrite /ElimAcc.
@@ -179,14 +181,14 @@ Section lemmas.
       iModIntro. destruct (γ' x'); iApply "HΦ"; done.
   Qed.
 
-  Lemma astep_astep {A' B'} E1 E2 E3
+  Lemma aacc_aacc {A' B'} E1 E2 E3
         α P β Φ
         (α' : A' → PROP) P' (β' Φ' : A' → B' → PROP) :
-    atomic_step E1 E2 α P β Φ -∗
-    (∀ x, α x -∗ atomic_step E2 E3 α' (α x ∗ (P ={E1}=∗ P')) β'
+    atomic_acc E1 E2 α P β Φ -∗
+    (∀ x, α x -∗ atomic_acc E2 E3 α' (α x ∗ (P ={E1}=∗ P')) β'
             (λ x' y', (α x ∗ (P ={E1}=∗ Φ' x' y'))
                     ∨ ∃ y, β x y ∗ (Φ x y ={E1}=∗ Φ' x' y'))) -∗
-    atomic_step E1 E3 α' P' β' Φ'.
+    atomic_acc E1 E3 α' P' β' Φ'.
   Proof.
     iIntros "Hupd Hstep". iMod ("Hupd") as (x) "[Hα Hclose]".
     iMod ("Hstep" with "Hα") as (x') "[Hα' Hclose']".
@@ -208,46 +210,46 @@ Section lemmas.
         iApply "HΦ'". done.
   Qed.
 
-  Lemma astep_aupd {A' B'} E1 E2 Eo Em
+  Lemma aacc_aupd {A' B'} E1 E2 Eo Em
         α β Φ
         (α' : A' → PROP) P' (β' Φ' : A' → B' → PROP) :
     Eo ⊆ E1 →
     atomic_update Eo Em α β Φ -∗
-    (∀ x, α x -∗ atomic_step (E1∖Em) E2 α' (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ P')) β'
+    (∀ x, α x -∗ atomic_acc (E1∖Em) E2 α' (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ P')) β'
             (λ x' y', (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ Φ' x' y'))
                     ∨ ∃ y, β x y ∗ (Φ x y ={E1}=∗ Φ' x' y'))) -∗
-    atomic_step E1 E2 α' P' β' Φ'.
+    atomic_acc E1 E2 α' P' β' Φ'.
   Proof.
-    iIntros (?) "Hupd Hstep". iApply (astep_astep with "[Hupd] Hstep").
+    iIntros (?) "Hupd Hstep". iApply (aacc_aacc with "[Hupd] Hstep").
     iApply aupd_acc; done.
   Qed.
 
-  Lemma astep_aupd_commit {A' B'} E1 E2 Eo Em
+  Lemma aacc_aupd_commit {A' B'} E1 E2 Eo Em
         α β Φ
         (α' : A' → PROP) P' (β' Φ' : A' → B' → PROP) :
     Eo ⊆ E1 →
     atomic_update Eo Em α β Φ -∗
-    (∀ x, α x -∗ atomic_step (E1∖Em) E2 α' (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ P')) β'
+    (∀ x, α x -∗ atomic_acc (E1∖Em) E2 α' (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ P')) β'
             (λ x' y', ∃ y, β x y ∗ (Φ x y ={E1}=∗ Φ' x' y'))) -∗
-    atomic_step E1 E2 α' P' β' Φ'.
+    atomic_acc E1 E2 α' P' β' Φ'.
   Proof.
-    iIntros (?) "Hupd Hstep". iApply (astep_aupd with "Hupd"); first done.
-    iIntros (x) "Hα". iApply atomic_step_wand; last first.
+    iIntros (?) "Hupd Hstep". iApply (aacc_aupd with "Hupd"); first done.
+    iIntros (x) "Hα". iApply atomic_acc_wand; last first.
     { iApply "Hstep". done. }
     iSplit; first by eauto. iIntros (??) "?". by iRight.
   Qed.
 
-  Lemma astep_aupd_abort {A' B'} E1 E2 Eo Em
+  Lemma aacc_aupd_abort {A' B'} E1 E2 Eo Em
         α β Φ
         (α' : A' → PROP) P' (β' Φ' : A' → B' → PROP) :
     Eo ⊆ E1 →
     atomic_update Eo Em α β Φ -∗
-    (∀ x, α x -∗ atomic_step (E1∖Em) E2 α' (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ P')) β'
+    (∀ x, α x -∗ atomic_acc (E1∖Em) E2 α' (α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ P')) β'
             (λ x' y', α x ∗ (atomic_update Eo Em α β Φ ={E1}=∗ Φ' x' y'))) -∗
-    atomic_step E1 E2 α' P' β' Φ'.
+    atomic_acc E1 E2 α' P' β' Φ'.
   Proof.
-    iIntros (?) "Hupd Hstep". iApply (astep_aupd with "Hupd"); first done.
-    iIntros (x) "Hα". iApply atomic_step_wand; last first.
+    iIntros (?) "Hupd Hstep". iApply (aacc_aupd with "Hupd"); first done.
+    iIntros (x) "Hα". iApply atomic_acc_wand; last first.
     { iApply "Hstep". done. }
     iSplit; first by eauto. iIntros (??) "?". by iLeft.
   Qed.
@@ -264,13 +266,13 @@ Section proof_mode.
     Timeless (PROP:=PROP) emp →
     TCForall Laterable (env_to_list Γs) →
     P = prop_of_env Γs →
-    envs_entails (Envs Γp Γs n) (atomic_step Eo (Eo∖Em) α P β Φ) →
+    envs_entails (Envs Γp Γs n) (atomic_acc Eo (Eo∖Em) α P β Φ) →
     envs_entails (Envs Γp Γs n) (atomic_update Eo Em α β Φ).
   Proof.
-    intros ? HΓs ->. rewrite envs_entails_eq of_envs_eq' /atomic_step /=.
+    intros ? HΓs ->. rewrite envs_entails_eq of_envs_eq' /atomic_acc /=.
     setoid_rewrite prop_of_env_sound =>HAU.
     apply aupd_intro; [apply _..|]. done.
-  Qed. 
+  Qed.
 End proof_mode.
 
 (** Now the coq-level tactics *)

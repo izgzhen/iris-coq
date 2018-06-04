@@ -29,18 +29,18 @@ Section increment.
     iIntros (Q Φ) "HQ AU". iLöb as "IH". wp_let.
     wp_apply (load_spec with "[HQ]"); first by iAccu.
     (* Prove the atomic shift for load *)
-    iAuIntro. iApply (astep_aupd_abort with "AU"); first done.
+    iAuIntro. iApply (aacc_aupd_abort with "AU"); first done.
     iIntros (x) "H↦".
-    iApply (astep_intro (_, _) with "[H↦]"); [solve_ndisj|done|iSplit].
+    iApply (aacc_intro (_, _) with "[H↦]"); [solve_ndisj|done|iSplit].
     { iIntros "$ !> $ !> //". }
     iIntros ([]) "$ !> AU !> HQ".
     (* Now go on *)
     wp_let. wp_op. wp_bind (aheap.(cas) _)%I.
     wp_apply (cas_spec with "[HQ]"); first by iAccu.
     (* Prove the atomic shift for CAS *)
-    iAuIntro. iApply (astep_aupd with "AU"); first done.
+    iAuIntro. iApply (aacc_aupd with "AU"); first done.
     iIntros (x') "H↦".
-    iApply (astep_intro with "[H↦]"); [solve_ndisj|done|iSplit].
+    iApply (aacc_intro with "[H↦]"); [solve_ndisj|done|iSplit].
     { iIntros "$ !> $ !> //". }
     iIntros ([]) "H↦ !>".
     destruct (decide (#x' = #x)) as [[= ->]|Hx].
@@ -70,7 +70,7 @@ Section increment_client.
     iAssert (□ WP incr primitive_atomic_heap #l {{ _, True }})%I as "#Aupd".
     { iAlways. wp_apply (incr_spec with "[]"); first by iAccu. clear x.
       iAuIntro. iInv nroot as (x) ">H↦".
-      iApply (astep_intro with "[H↦]"); [solve_ndisj|done|iSplit].
+      iApply (aacc_intro with "[H↦]"); [solve_ndisj|done|iSplit].
       { by eauto 10. }
       iIntros ([]) "H↦ !>". iSplitL "H↦"; first by eauto 10.
       (* The continuation: From after the atomic triple to the postcondition of the WP *)
