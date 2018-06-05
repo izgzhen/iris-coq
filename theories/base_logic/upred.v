@@ -348,7 +348,7 @@ Definition unseal_eqs :=
   uPred_exist_eq, uPred_internal_eq_eq, uPred_sep_eq, uPred_wand_eq,
   uPred_plainly_eq, uPred_persistently_eq, uPred_later_eq, uPred_ownM_eq,
   uPred_cmra_valid_eq, @uPred_bupd_eq).
-Ltac unseal := (* Coq unfold is used to circumvent bug #5699 in rewrite /foo *)
+Ltac unseal :=
   rewrite !unseal_eqs /=.
 
 Section primitive.

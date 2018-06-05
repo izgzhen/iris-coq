@@ -2,7 +2,7 @@ From iris.bi Require Export derived_connectives updates plainly.
 From iris.base_logic Require Export upred.
 Import uPred_primitive.
 
-(** BI and other MoSeL instances for uPred.  This file does *not* unseal. *)
+(** BI instances for uPred.  This file does *not* unseal. *)
 
 Definition uPred_emp {M} : uPred M := uPred_pure True.
 
@@ -124,7 +124,7 @@ Proof.
   - exact: later_plainly_1.
   - exact: later_plainly_2.
 Qed.
-Instance uPred_plainlyC M : BiPlainly (uPredSI M) :=
+Global Instance uPred_plainlyC M : BiPlainly (uPredSI M) :=
   {| bi_plainly_mixin := uPred_plainly_mixin M |}.
 
 Lemma uPred_bupd_mixin M : BiBUpdMixin (uPredI M) uPred_bupd.
@@ -136,15 +136,18 @@ Proof.
   - exact: bupd_trans.
   - exact: bupd_frame_r.
 Qed.
-Instance uPred_bi_bupd M : BiBUpd (uPredI M) := {| bi_bupd_mixin := uPred_bupd_mixin M |}.
+Global Instance uPred_bi_bupd M : BiBUpd (uPredI M) := {| bi_bupd_mixin := uPred_bupd_mixin M |}.
 
-Instance uPred_bi_bupd_plainly M : BiBUpdPlainly (uPredSI M).
+Global Instance uPred_bi_bupd_plainly M : BiBUpdPlainly (uPredSI M).
 Proof. exact: bupd_plainly. Qed.
 
 (** extra BI instances *)
 
 Global Instance uPred_affine : BiAffine (uPredI M) | 0.
 Proof. intros P Q. exact: pure_intro. Qed.
+(* Also add this to the global hint database, otherwise [eauto] won't work for
+many lemmas that have [BiAffine] as a premise. *)
+Hint Immediate uPred_affine.
 
 Global Instance uPred_plainly_exist_1 : BiPlainlyExist (uPredSI M).
 Proof. exact: @plainly_exist_1. Qed.

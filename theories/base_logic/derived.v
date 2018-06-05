@@ -138,7 +138,4 @@ Global Instance uPred_ownM_sep_homomorphism :
 Proof. split; [split; try apply _|]. apply ownM_op. apply ownM_unit'. Qed.
 End derived.
 
-(* Also add this to the global hint database, otherwise [eauto] won't work for
-many lemmas that have [BiAffine] as a premise. *)
-Hint Immediate uPred_affine.
 End uPred.
