@@ -51,7 +51,7 @@ Proof.
   - exact: persistently_mono.
   - exact: persistently_idemp_2.
   - (* emp ⊢ <pers> emp (ADMISSIBLE) *)
-    trans (uPred_forall (M:=M) (fun _ : False => uPred_persistently uPred_emp)).
+    trans (uPred_forall (M:=M) (λ _ : False, uPred_persistently uPred_emp)).
     + apply forall_intro=>[[]].
     + etrans; first exact: persistently_forall_2.
       apply persistently_mono. exact: pure_intro.
@@ -111,7 +111,7 @@ Proof.
   - exact: plainly_impl_plainly.
   - (* P ⊢ ■ emp (ADMISSIBLE) *)
     intros P.
-    trans (uPred_forall (M:=M) (fun _ : False => uPred_plainly uPred_emp)).
+    trans (uPred_forall (M:=M) (λ _ : False , uPred_plainly uPred_emp)).
     + apply forall_intro=>[[]].
     + etrans; first exact: plainly_forall_2.
       apply plainly_mono. exact: pure_intro.
