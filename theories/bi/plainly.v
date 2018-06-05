@@ -5,8 +5,7 @@ Import interface.bi derived_laws_bi.bi derived_laws_sbi.bi.
 Class Plainly (A : Type) := plainly : A → A.
 Hint Mode Plainly ! : typeclass_instances.
 Instance: Params (@plainly) 2.
-Notation "■ P" := (plainly P)%I
-  (at level 20, right associativity) : bi_scope.
+Notation "■ P" := (plainly P) : bi_scope.
 
 (* Mixins allow us to create instances easily without having to use Program *)
 Record BiPlainlyMixin (PROP : sbi) `(Plainly PROP) := {
@@ -96,9 +95,7 @@ Arguments plainly_if {_ _} !_ _%I /.
 Instance: Params (@plainly_if) 2.
 Typeclasses Opaque plainly_if.
 
-Notation "■? p P" := (plainly_if p P)%I
-  (at level 20, p at level 9, P at level 20,
-   right associativity, format "■? p  P") : bi_scope.
+Notation "■? p P" := (plainly_if p P) : bi_scope.
 
 (* Derived laws *)
 Section plainly_derived.
@@ -167,7 +164,7 @@ Proof.
   - by rewrite plainly_elim_persistently persistently_pure.
   - apply pure_elim'=> Hφ.
     trans (∀ x : False, ■ True : PROP)%I; [by apply forall_intro|].
-    rewrite plainly_forall_2. by rewrite -(pure_intro _ φ).
+    rewrite plainly_forall_2. by rewrite -(pure_intro φ).
 Qed.
 Lemma plainly_forall {A} (Ψ : A → PROP) : ■ (∀ a, Ψ a) ⊣⊢ ∀ a, ■ (Ψ a).
 Proof.

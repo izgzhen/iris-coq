@@ -214,8 +214,8 @@ End Bi.
 
 Arguments monPred_objectively {_ _} _%I.
 Arguments monPred_subjectively {_ _} _%I.
-Notation "'<obj>' P" := (monPred_objectively P) (at level 20, right associativity) : bi_scope.
-Notation "'<subj>' P" := (monPred_subjectively P) (at level 20, right associativity) : bi_scope.
+Notation "'<obj>' P" := (monPred_objectively P) : bi_scope.
+Notation "'<subj>' P" := (monPred_subjectively P) : bi_scope.
 
 Section Sbi.
 Context {I : biIndex} {PROP : sbi}.

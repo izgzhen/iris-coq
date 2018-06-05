@@ -1,7 +1,10 @@
-From iris.base_logic Require Export upred.
+From iris.base_logic Require Export bi.
 From iris.bi Require Export bi.
 Set Default Proof Using "Type".
-Import upred.uPred bi.
+Import bi base_logic.bi.uPred.
+
+(** Derived laws for Iris-specific primitive connectives (own, valid).
+    This file does NOT unseal! *)
 
 Module uPred.
 Section derived.
@@ -14,7 +17,20 @@ Implicit Types A : Type.
 Notation "P ⊢ Q" := (bi_entails (PROP:=uPredI M) P%I Q%I).
 Notation "P ⊣⊢ Q" := (equiv (A:=uPredI M) P%I Q%I).
 
-(* Own and valid derived *)
+(** Propers *)
+Global Instance uPred_valid_proper : Proper ((⊣⊢) ==> iff) (@uPred_valid M).
+Proof. solve_proper. Qed.
+Global Instance uPred_valid_mono : Proper ((⊢) ==> impl) (@uPred_valid M).
+Proof. solve_proper. Qed.
+Global Instance uPred_valid_flip_mono :
+  Proper (flip (⊢) ==> flip impl) (@uPred_valid M).
+Proof. solve_proper. Qed.
+
+Global Instance ownM_proper: Proper ((≡) ==> (⊣⊢)) (@uPred_ownM M) := ne_proper _.
+Global Instance cmra_valid_proper {A : cmraT} :
+  Proper ((≡) ==> (⊣⊢)) (@uPred_cmra_valid M A) := ne_proper _.
+
+(** Own and valid derived *)
 Lemma persistently_cmra_valid_1 {A : cmraT} (a : A) : ✓ a ⊢ <pers> (✓ a : uPred M).
 Proof. by rewrite {1}plainly_cmra_valid_1 plainly_elim_persistently. Qed.
 Lemma intuitionistically_ownM (a : M) : CoreId a → □ uPred_ownM a ⊣⊢ uPred_ownM a.
@@ -43,7 +59,7 @@ Proof.
   by apply bupd_mono, exist_elim=> y'; apply pure_elim_l=> ->.
 Qed.
 
-(* Timeless instances *)
+(** Timeless instances *)
 Global Instance valid_timeless {A : cmraT} `{CmraDiscrete A} (a : A) :
   Timeless (✓ a : uPred M)%I.
 Proof. rewrite /Timeless !discrete_valid. apply (timeless _). Qed.
@@ -56,12 +72,12 @@ Proof.
     auto using and_elim_l, and_elim_r.
 Qed.
 
-(* Plainness *)
+(** Plainness *)
 Global Instance cmra_valid_plain {A : cmraT} (a : A) :
   Plain (✓ a : uPred M)%I.
 Proof. rewrite /Persistent. apply plainly_cmra_valid_1. Qed.
 
-(* Persistence *)
+(** Persistence *)
 Global Instance cmra_valid_persistent {A : cmraT} (a : A) :
   Persistent (✓ a : uPred M)%I.
 Proof. rewrite /Persistent. apply persistently_cmra_valid_1. Qed.
@@ -70,13 +86,19 @@ Proof.
   intros. rewrite /Persistent -{2}(core_id_core a). apply persistently_ownM_core.
 Qed.
 
-(* For big ops *)
+(** For big ops *)
 Global Instance uPred_ownM_sep_homomorphism :
   MonoidHomomorphism op uPred_sep (≡) (@uPred_ownM M).
 Proof. split; [split; try apply _|]. apply ownM_op. apply ownM_unit'. Qed.
+
+
+(** Consistency/soundness statement *)
+Corollary consistency_modal n : ¬ (▷^n False : uPred M)%I.
+Proof. exact (soundness False n). Qed.
+
+Corollary consistency : ¬(False : uPred M)%I.
+Proof. exact (consistency_modal 0). Qed.
+
 End derived.
 
-(* Also add this to the global hint database, otherwise [eauto] won't work for
-many lemmas that have [BiAffine] as a premise. *)
-Hint Immediate uPred_affine.
 End uPred.

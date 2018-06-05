@@ -118,7 +118,7 @@ Lemma own_alloc_strong a (G : gset gname) :
 Proof.
   intros Ha.
   rewrite -(bupd_mono (∃ m, ⌜∃ γ, γ ∉ G ∧ m = iRes_singleton γ a⌝ ∧ uPred_ownM m)%I).
-  - rewrite /uPred_valid /bi_emp_valid ownM_unit.
+  - rewrite /uPred_valid /bi_emp_valid (ownM_unit emp).
     eapply bupd_ownM_updateP, (ofe_fun_singleton_updateP_empty (inG_id _));
       first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
       naive_solver.
@@ -168,7 +168,7 @@ Arguments own_update_3 {_ _} [_] _ _ _ _ _ _.
 
 Lemma own_unit A `{inG Σ (A:ucmraT)} γ : (|==> own γ ε)%I.
 Proof.
-  rewrite /uPred_valid /bi_emp_valid ownM_unit !own_eq /own_def.
+  rewrite /uPred_valid /bi_emp_valid (ownM_unit emp) !own_eq /own_def.
   apply bupd_ownM_update, ofe_fun_singleton_update_empty.
   apply (alloc_unit_singleton_update (cmra_transport inG_prf ε)); last done.
   - apply cmra_transport_valid, ucmra_unit_valid.

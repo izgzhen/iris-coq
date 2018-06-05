@@ -1,6 +1,5 @@
 From iris.program_logic Require Export weakestpre.
 From iris.algebra Require Import gmap auth agree gset coPset.
-From iris.base_logic Require Import soundness.
 From iris.base_logic.lib Require Import wsat.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".

@@ -5,40 +5,26 @@ Set Default Proof Using "Type".
 Import interface.bi derived_laws_bi.bi.
 
 (* Notations *)
-Notation "'[∗' 'list]' k ↦ x ∈ l , P" := (big_opL bi_sep (λ k x, P) l)
-  (at level 200, l at level 10, k, x at level 1, right associativity,
-   format "[∗  list]  k ↦ x  ∈  l ,  P") : bi_scope.
-Notation "'[∗' 'list]' x ∈ l , P" := (big_opL bi_sep (λ _ x, P) l)
-  (at level 200, l at level 10, x at level 1, right associativity,
-   format "[∗  list]  x  ∈  l ,  P") : bi_scope.
+Notation "'[∗' 'list]' k ↦ x ∈ l , P" :=
+  (big_opL bi_sep (λ k x, P) l) : bi_scope.
+Notation "'[∗' 'list]' x ∈ l , P" :=
+  (big_opL bi_sep (λ _ x, P) l) : bi_scope.
 
-Notation "'[∗]' Ps" :=
-  (big_opL bi_sep (λ _ x, x) Ps) (at level 20) : bi_scope.
+Notation "'[∗]' Ps" := (big_opL bi_sep (λ _ x, x) Ps) : bi_scope.
 
-Notation "'[∧' 'list]' k ↦ x ∈ l , P" := (big_opL bi_and (λ k x, P) l)
-  (at level 200, l at level 10, k, x at level 1, right associativity,
-   format "[∧  list]  k ↦ x  ∈  l ,  P") : bi_scope.
-Notation "'[∧' 'list]' x ∈ l , P" := (big_opL bi_and (λ _ x, P) l)
-  (at level 200, l at level 10, x at level 1, right associativity,
-   format "[∧  list]  x  ∈  l ,  P") : bi_scope.
+Notation "'[∧' 'list]' k ↦ x ∈ l , P" :=
+  (big_opL bi_and (λ k x, P) l) : bi_scope.
+Notation "'[∧' 'list]' x ∈ l , P" :=
+  (big_opL bi_and (λ _ x, P) l) : bi_scope.
 
-Notation "'[∧]' Ps" :=
-  (big_opL bi_and (λ _ x, x) Ps) (at level 20) : bi_scope.
+Notation "'[∧]' Ps" := (big_opL bi_and (λ _ x, x) Ps) : bi_scope.
 
-Notation "'[∗' 'map]' k ↦ x ∈ m , P" := (big_opM bi_sep (λ k x, P) m)
-  (at level 200, m at level 10, k, x at level 1, right associativity,
-   format "[∗  map]  k ↦ x  ∈  m ,  P") : bi_scope.
-Notation "'[∗' 'map]' x ∈ m , P" := (big_opM bi_sep (λ _ x, P) m)
-  (at level 200, m at level 10, x at level 1, right associativity,
-   format "[∗  map]  x  ∈  m ,  P") : bi_scope.
+Notation "'[∗' 'map]' k ↦ x ∈ m , P" := (big_opM bi_sep (λ k x, P) m) : bi_scope.
+Notation "'[∗' 'map]' x ∈ m , P" := (big_opM bi_sep (λ _ x, P) m) : bi_scope.
 
-Notation "'[∗' 'set]' x ∈ X , P" := (big_opS bi_sep (λ x, P) X)
-  (at level 200, X at level 10, x at level 1, right associativity,
-   format "[∗  set]  x  ∈  X ,  P") : bi_scope.
+Notation "'[∗' 'set]' x ∈ X , P" := (big_opS bi_sep (λ x, P) X) : bi_scope.
 
-Notation "'[∗' 'mset]' x ∈ X , P" := (big_opMS bi_sep (λ x, P) X)
-  (at level 200, X at level 10, x at level 1, right associativity,
-   format "[∗  mset]  x  ∈  X ,  P") : bi_scope.
+Notation "'[∗' 'mset]' x ∈ X , P" := (big_opMS bi_sep (λ x, P) X) : bi_scope.
 
 (** * Properties *)
 Section bi_big_op.

@@ -26,6 +26,7 @@ theories/algebra/gmultiset.v
 theories/algebra/coPset.v
 theories/algebra/deprecated.v
 theories/algebra/proofmode_classes.v
+theories/bi/notation.v
 theories/bi/interface.v
 theories/bi/derived_connectives.v
 theories/bi/derived_laws_bi.v
@@ -44,9 +45,10 @@ theories/bi/lib/laterable.v
 theories/bi/lib/atomic.v
 theories/bi/lib/core.v
 theories/base_logic/upred.v
+theories/base_logic/bi.v
 theories/base_logic/derived.v
+theories/base_logic/proofmode.v
 theories/base_logic/base_logic.v
-theories/base_logic/soundness.v
 theories/base_logic/double_negation.v
 theories/base_logic/lib/iprop.v
 theories/base_logic/lib/own.v

@@ -1,18 +1,6 @@
 From iris.algebra Require Export ofe.
+From iris.bi Require Export notation.
 Set Primitive Projections.
-
-Reserved Notation "P ⊢ Q" (at level 99, Q at level 200, right associativity).
-Reserved Notation "P '⊢@{' PROP } Q" (at level 99, Q at level 200, right associativity).
-Reserved Notation "('⊢@{' PROP } )" (at level 99).
-Reserved Notation "P ⊣⊢ Q" (at level 95, no associativity).
-Reserved Notation "P '⊣⊢@{' PROP } Q" (at level 95, no associativity).
-Reserved Notation "('⊣⊢@{' PROP } )" (at level 95).
-Reserved Notation "'emp'".
-Reserved Notation "'⌜' φ '⌝'" (at level 1, φ at level 200, format "⌜ φ ⌝").
-Reserved Notation "P ∗ Q" (at level 80, right associativity).
-Reserved Notation "P -∗ Q" (at level 99, Q at level 200, right associativity).
-Reserved Notation "'<pers>' P" (at level 20, right associativity).
-Reserved Notation "▷ P" (at level 20, right associativity).
 
 Section bi_mixin.
   Context {PROP : Type} `{Dist PROP, Equiv PROP}.
@@ -77,7 +65,7 @@ Section bi_mixin.
     bi_mixin_persistently_ne : NonExpansive bi_persistently;
 
     (** Higher-order logic *)
-    bi_mixin_pure_intro P (φ : Prop) : φ → P ⊢ ⌜ φ ⌝;
+    bi_mixin_pure_intro (φ : Prop) P : φ → P ⊢ ⌜ φ ⌝;
     bi_mixin_pure_elim' (φ : Prop) P : (φ → True ⊢ P) → ⌜ φ ⌝ ⊢ P;
     (* This is actually derivable if we assume excluded middle in Coq,
        via [(∀ a, φ a) ∨ (∃ a, ¬φ a)]. *)
@@ -195,7 +183,6 @@ Instance: Params (@bi_sep) 1.
 Instance: Params (@bi_wand) 1.
 Instance: Params (@bi_persistently) 1.
 
-Delimit Scope bi_scope with I.
 Arguments bi_car : simpl never.
 Arguments bi_dist : simpl never.
 Arguments bi_equiv : simpl never.
@@ -347,7 +334,7 @@ Global Instance persistently_ne : NonExpansive (@bi_persistently PROP).
 Proof. eapply bi_mixin_persistently_ne, bi_bi_mixin. Qed.
 
 (* Higher-order logic *)
-Lemma pure_intro P (φ : Prop) : φ → P ⊢ ⌜ φ ⌝.
+Lemma pure_intro (φ : Prop) P : φ → P ⊢ ⌜ φ ⌝.
 Proof. eapply bi_mixin_pure_intro, bi_bi_mixin. Qed.
 Lemma pure_elim' (φ : Prop) P : (φ → True ⊢ P) → ⌜ φ ⌝ ⊢ P.
 Proof. eapply bi_mixin_pure_elim', bi_bi_mixin. Qed.
