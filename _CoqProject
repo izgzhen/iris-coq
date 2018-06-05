@@ -47,6 +47,7 @@ theories/bi/lib/core.v
 theories/base_logic/upred.v
 theories/base_logic/bi.v
 theories/base_logic/derived.v
+theories/base_logic/proofmode.v
 theories/base_logic/base_logic.v
 theories/base_logic/double_negation.v
 theories/base_logic/lib/iprop.v
