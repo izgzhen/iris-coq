@@ -167,8 +167,9 @@ Implicit Types A : Type.
 Notation "P ⊢ Q" := (bi_entails (PROP:=uPredI M) P%I Q%I).
 Notation "P ⊣⊢ Q" := (equiv (A:=uPredI M) P%I Q%I).
 
-Global Existing Instance uPred_primitive.ownM_ne.
-Global Existing Instance uPred_primitive.cmra_valid_ne.
+Global Instance ownM_ne : NonExpansive (@uPred_ownM M) := uPred_primitive.ownM_ne.
+Global Instance cmra_valid_ne {A : cmraT} : NonExpansive (@uPred_cmra_valid M A)
+  := uPred_primitive.cmra_valid_ne.
 
 (** Re-exporting primitive Own and valid lemmas *)
 Lemma ownM_op (a1 a2 : M) :
