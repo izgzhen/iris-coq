@@ -832,7 +832,7 @@ Lemma tac_specialize_persistent_helper_done Δ i q P :
   envs_entails Δ (<absorb> P).
 Proof.
   rewrite envs_entails_eq /bi_absorbingly=> /envs_lookup_sound=> ->.
-  rewrite intuitionistically_if_elim comm. f_equiv; auto.
+  rewrite intuitionistically_if_elim comm. f_equiv; auto using pure_intro.
 Qed.
 
 Lemma tac_revert Δ Δ' i p P Q :

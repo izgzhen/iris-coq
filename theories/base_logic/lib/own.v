@@ -128,7 +128,7 @@ Qed.
 Lemma own_alloc a : ✓ a → (|==> ∃ γ, own γ a)%I.
 Proof.
   intros Ha. rewrite /uPred_valid /bi_emp_valid (own_alloc_strong a ∅) //; [].
-  apply bupd_mono, exist_mono=>?. eauto with I.
+  apply bupd_mono, exist_mono=>?. eauto using and_elim_r.
 Qed.
 
 (** ** Frame preserving updates *)
