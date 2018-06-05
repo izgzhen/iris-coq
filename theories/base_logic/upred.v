@@ -1,6 +1,7 @@
 From iris.algebra Require Export cmra updates.
 From iris.bi Require Import notation.
 From stdpp Require Import finite.
+From Coq.Init Require Import Nat.
 Set Default Proof Using "Type".
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etrans; [|eassumption].
@@ -798,6 +799,14 @@ Proof. unseal; split=> n x _. by rewrite /= -cmra_discrete_valid_iff. Qed.
 
 Lemma ofe_fun_validI `{B : A → ucmraT} (g : ofe_fun B) : ✓ g ⊣⊢ ∀ i, ✓ g i.
 Proof. by unseal. Qed.
+
+(** Consistency/soundness statement *)
+Lemma soundness φ n : (True ⊢ iter n uPred_later (⌜ φ ⌝)%I) → φ.
+Proof.
+  cut (iter n (@uPred_later M) (⌜ φ ⌝)%I n ε → φ).
+  { intros help H. eapply help, H; eauto using ucmra_unit_validN. by unseal. }
+  unseal. induction n as [|n IH]=> H; auto.
+Qed.
 
 End primitive.
 End uPred_primitive.

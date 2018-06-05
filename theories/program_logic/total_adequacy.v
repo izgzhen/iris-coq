@@ -1,7 +1,6 @@
 From iris.program_logic Require Export total_weakestpre adequacy.
 From iris.algebra Require Import gmap auth agree gset coPset list.
 From iris.bi Require Import big_op fixpoint.
-From iris.base_logic Require Import soundness.
 From iris.base_logic.lib Require Import wsat.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".

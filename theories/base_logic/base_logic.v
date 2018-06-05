@@ -7,8 +7,9 @@ Set Default Proof Using "Type".
 another [uPred] module is by Jason Gross and described in:
 https://sympa.inria.fr/sympa/arc/coq-club/2016-12/msg00069.html *)
 Module Import uPred.
+  Export base_logic.bi.uPred.
   Export derived.uPred.
-  Export bi.
+  Export bi.bi.
 End uPred.
 
 (* Setup of the proof mode *)
