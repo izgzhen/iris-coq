@@ -152,7 +152,7 @@ Implicit Types P Q : PROP.
 Lemma of_envs_eq Δ :
   of_envs Δ = (⌜envs_wf Δ⌝ ∧ □ [∧] env_intuitionistic Δ ∗ [∗] env_spatial Δ)%I.
 Proof. done. Qed.
-(** An environment is a ∗ of something persistent and the spatial environment.
+(** An environment is a ∗ of something intuitionistic and the spatial environment.
 TODO: Can we define it as such? *)
 Lemma of_envs_eq' Δ :
   of_envs Δ ⊣⊢ (⌜envs_wf Δ⌝ ∧ □ [∧] env_intuitionistic Δ) ∗ [∗] env_spatial Δ.
