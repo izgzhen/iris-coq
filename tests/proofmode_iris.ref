@@ -103,8 +103,7 @@
   --------------------------------------□
   "Hown1" : na_own t E1
   "Hown2" : na_own t (E2 ∖ ↑N)
-  "Hclose" : ▷ <pers> P ∗ na_own t (E2 ∖ ↑N) ={⊤}=∗ 
-  id (na_own t E2)
+  "Hclose" : ▷ <pers> P ∗ na_own t (E2 ∖ ↑N) ={⊤}=∗ id (na_own t E2)
   --------------------------------------∗
   |={⊤}=> na_own t E1 ∗ na_own t E2 ∗ ▷ P
   

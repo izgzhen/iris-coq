@@ -37,6 +37,39 @@ Lemma demo_3 P1 P2 P3 :
   P1 ∗ P2 ∗ P3 -∗ P1 ∗ ▷ (P2 ∗ ∃ x, (P3 ∧ ⌜x = 0⌝) ∨ P3).
 Proof. iIntros "($ & $ & $)". iNext. by iExists 0. Qed.
 
+(* Test line breaking of long assumptions. *)
+Section linebreaks.
+Lemma print_long_line P :
+  (P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P) ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P
+  -∗ P.
+Proof.
+  iIntros "HP". Show.
+Abort.
+Lemma print_long_line_anon P :
+  (P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P) ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P
+  -∗ P.
+Proof.
+  iIntros "?". Show.
+Abort.
+
+(* This is specifically crafted such that not having the `hv` in
+   the proofmode notation breaks the output. *)
+Local Notation "'TESTNOTATION' '{{' P '|' Q '}' '}'" := (P ∧ Q)%I
+  (format "'TESTNOTATION'  '{{'  P  '|'  Q  '}' '}'") : bi_scope.
+Lemma print_long_line P :
+  TESTNOTATION {{ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P | P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P }}
+  -∗ P.
+Proof.
+  iIntros "HP". Show.
+Abort.
+Lemma print_long_line_anon P :
+  TESTNOTATION {{ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P | P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P }}
+  -∗ P.
+Proof.
+  iIntros "?". Show.
+Abort.
+End linebreaks.
+
 Definition foo (P : PROP) := (P -∗ P)%I.
 Definition bar : PROP := (∀ P, foo P)%I.
 

@@ -22,6 +22,46 @@
 1 subgoal
   
   PROP : sbi
+  P : PROP
+  ============================
+  "HP" : (P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P)
+         ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P
+  --------------------------------------∗
+  P
+  
+1 subgoal
+  
+  PROP : sbi
+  P : PROP
+  ============================
+  _ : (P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P)
+      ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P
+  --------------------------------------∗
+  P
+  
+1 subgoal
+  
+  PROP : sbi
+  P : PROP
+  ============================
+  "HP" : TESTNOTATION {{ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P | 
+         P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P }}
+  --------------------------------------∗
+  P
+  
+1 subgoal
+  
+  PROP : sbi
+  P : PROP
+  ============================
+  _ : TESTNOTATION {{ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P | 
+      P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P }}
+  --------------------------------------∗
+  P
+  
+1 subgoal
+  
+  PROP : sbi
   P, Q : PROP
   Persistent0 : Persistent P
   Persistent1 : Persistent Q
