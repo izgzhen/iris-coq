@@ -54,35 +54,35 @@ Instance: Params (@wp) 6.
 
 Notation "'WP' e @ s ; E {{ Φ } }" := (wp s E e%E Φ)
   (at level 20, e, Φ at level 200,
-   format "'[hv' 'WP'  e  '/' @  s ;  E  {{  Φ  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' @  s ;  E  {{  Φ  } } ']'") : bi_scope.
 Notation "'WP' e @ E {{ Φ } }" := (wp NotStuck E e%E Φ)
   (at level 20, e, Φ at level 200,
-   format "'[hv' 'WP'  e  '/' @  E  {{  Φ  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' @  E  {{  Φ  } } ']'") : bi_scope.
 Notation "'WP' e @ E ? {{ Φ } }" := (wp MaybeStuck E e%E Φ)
   (at level 20, e, Φ at level 200,
-   format "'[hv' 'WP'  e  '/' @  E  ? {{  Φ  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' @  E  ? {{  Φ  } } ']'") : bi_scope.
 Notation "'WP' e {{ Φ } }" := (wp NotStuck ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
-   format "'[hv' 'WP'  e  '/' {{  Φ  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' {{  Φ  } } ']'") : bi_scope.
 Notation "'WP' e ? {{ Φ } }" := (wp MaybeStuck ⊤ e%E Φ)
   (at level 20, e, Φ at level 200,
-   format "'[hv' 'WP'  e  '/' ? {{  Φ  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' ? {{  Φ  } } ']'") : bi_scope.
 
 Notation "'WP' e @ s ; E {{ v , Q } }" := (wp s E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[hv' 'WP'  e  '/' @  s ;  E  {{  v ,  Q  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' @  s ;  E  {{  v ,  Q  } } ']'") : bi_scope.
 Notation "'WP' e @ E {{ v , Q } }" := (wp NotStuck E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[hv' 'WP'  e  '/' @  E  {{  v ,  Q  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' @  E  {{  v ,  Q  } } ']'") : bi_scope.
 Notation "'WP' e @ E ? {{ v , Q } }" := (wp MaybeStuck E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[hv' 'WP'  e  '/' @  E  ? {{  v ,  Q  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' @  E  ? {{  v ,  Q  } } ']'") : bi_scope.
 Notation "'WP' e {{ v , Q } }" := (wp NotStuck ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[hv' 'WP'  e  '/' {{  v ,  Q  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' {{  v ,  Q  } } ']'") : bi_scope.
 Notation "'WP' e ? {{ v , Q } }" := (wp MaybeStuck ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[hv' 'WP'  e  '/' ? {{  v ,  Q  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' ? {{  v ,  Q  } } ']'") : bi_scope.
 
 (* Texan triples *)
 Notation "'{{{' P } } } e @ s ; E {{{ x .. y , 'RET' pat ; Q } } }" :=

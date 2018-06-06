@@ -501,7 +501,7 @@ Proof.
   iIntros "?". Show.
 Abort.
 
-(* This is specifically crafted such that not having the `hv` in
+(* This is specifically crafted such that not having the printing box in
    the proofmode notation breaks the output. *)
 Local Notation "'TESTNOTATION' '{{' P '|' Q '}' '}'" := (P ∧ Q)%I
   (format "'TESTNOTATION'  '{{'  P  '|'  '/' Q  '}' '}'") : bi_scope.
