@@ -517,6 +517,17 @@ Lemma print_long_line_anon (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : 
 Proof.
   iIntros "?". Show.
 Abort.
+
+Lemma long_fupd E (PPPPPPPPPPPPPPPPP QQQQQQQQQQQQQQQQQQ : PROP) :
+  PPPPPPPPPPPPPPPPP ={E}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ.
+Proof.
+  iStartProof. Show.
+Abort.
+Lemma long_fupd_maskchanging E1 E2 (PPPPPPPPPPPPPPPPP QQQQQQQQQQQQQQQQQQ : PROP) :
+  PPPPPPPPPPPPPPPPP ={E1,E2}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ.
+Proof.
+  iStartProof. Show.
+Abort.
 End linebreaks.
 
 End printing_tests.

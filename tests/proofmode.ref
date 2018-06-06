@@ -75,3 +75,25 @@
   --------------------------------------∗
   True
   
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  E : coPset.coPset
+  PPPPPPPPPPPPPPPPP, QQQQQQQQQQQQQQQQQQ : PROP
+  ============================
+  --------------------------------------∗
+  PPPPPPPPPPPPPPPPP ={E}=∗
+    QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+  
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  E1, E2 : coPset.coPset
+  PPPPPPPPPPPPPPPPP, QQQQQQQQQQQQQQQQQQ : PROP
+  ============================
+  --------------------------------------∗
+  PPPPPPPPPPPPPPPPP ={E1,E2}=∗
+    QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+  
