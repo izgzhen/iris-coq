@@ -115,6 +115,11 @@ Section tests.
     P -∗ (∀ Q Φ, Q -∗ WP e {{ Φ }}) -∗ WP e {{ _, True }}.
   Proof. iIntros "HP HW". wp_apply "HW". iExact "HP". Qed.
 
+End tests.
+
+Section printing_tests.
+  Context `{heapG Σ}.
+
   Lemma wp_print_long_expr (fun1 fun2 fun3 : expr) :
     True -∗ WP let: "val1" := fun1 #() in
        let: "val2" := fun2 "val1" in
@@ -124,7 +129,7 @@ Section tests.
     iIntros "_". Show.
   Abort.
 
-End tests.
+End printing_tests.
 
 Lemma heap_e_adequate σ : adequate NotStuck heap_e σ (= #2).
 Proof. eapply (heap_adequacy heapΣ)=> ?. by apply heap_e_spec. Qed.

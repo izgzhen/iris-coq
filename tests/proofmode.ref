@@ -22,6 +22,19 @@
 1 subgoal
   
   PROP : sbi
+  P, Q : PROP
+  Persistent0 : Persistent P
+  Persistent1 : Persistent Q
+  ============================
+  _ : P
+  _ : Q
+  --------------------------------------□
+  <affine> (P ∗ Q)
+  
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
   P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
   ============================
   "HP" : P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
@@ -32,6 +45,7 @@
 1 subgoal
   
   PROP : sbi
+  BiFUpd0 : BiFUpd PROP
   P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
   ============================
   _ : P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
@@ -42,6 +56,7 @@
 1 subgoal
   
   PROP : sbi
+  BiFUpd0 : BiFUpd PROP
   P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
   ============================
   "HP" : TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P |
@@ -52,22 +67,11 @@
 1 subgoal
   
   PROP : sbi
+  BiFUpd0 : BiFUpd PROP
   P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
   ============================
   _ : TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P |
       P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
   --------------------------------------∗
   True
-  
-1 subgoal
-  
-  PROP : sbi
-  P, Q : PROP
-  Persistent0 : Persistent P
-  Persistent1 : Persistent Q
-  ============================
-  _ : P
-  _ : Q
-  --------------------------------------□
-  <affine> (P ∗ Q)
   

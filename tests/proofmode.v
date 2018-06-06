@@ -37,41 +37,6 @@ Lemma demo_3 P1 P2 P3 :
   P1 ∗ P2 ∗ P3 -∗ P1 ∗ ▷ (P2 ∗ ∃ x, (P3 ∧ ⌜x = 0⌝) ∨ P3).
 Proof. iIntros "($ & $ & $)". iNext. by iExists 0. Qed.
 
-(* Test line breaking of long assumptions. *)
-Section linebreaks.
-Lemma print_long_line (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
-  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P ∗
-  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
-  -∗ True.
-Proof.
-  iIntros "HP". Show.
-Abort.
-Lemma print_long_line_anon (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
-  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P ∗
-  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
-  -∗ True.
-Proof.
-  iIntros "?". Show.
-Abort.
-
-(* This is specifically crafted such that not having the `hv` in
-   the proofmode notation breaks the output. *)
-Local Notation "'TESTNOTATION' '{{' P '|' Q '}' '}'" := (P ∧ Q)%I
-  (format "'TESTNOTATION'  '{{'  P  '|'  '/' Q  '}' '}'") : bi_scope.
-Lemma print_long_line (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
-  TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P | P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
-  -∗ True.
-Proof.
-  iIntros "HP". Show.
-Abort.
-Lemma print_long_line_anon (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
-  TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P | P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
-  -∗ True.
-Proof.
-  iIntros "?". Show.
-Abort.
-End linebreaks.
-
 Definition foo (P : PROP) := (P -∗ P)%I.
 Definition bar : PROP := (∀ P, foo P)%I.
 
@@ -513,3 +478,45 @@ Proof.
   lazymatch goal with |- coq_tactics.envs_entails _ (□ P) => done end.
 Qed.
 End tests.
+
+(** Test specifically if certain things print correctly. *)
+Section printing_tests.
+Context {PROP : sbi} `{!BiFUpd PROP}.
+Implicit Types P Q R : PROP.
+
+(* Test line breaking of long assumptions. *)
+Section linebreaks.
+Lemma print_long_line (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P ∗
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
+  -∗ True.
+Proof.
+  iIntros "HP". Show.
+Abort.
+Lemma print_long_line_anon (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P ∗
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
+  -∗ True.
+Proof.
+  iIntros "?". Show.
+Abort.
+
+(* This is specifically crafted such that not having the `hv` in
+   the proofmode notation breaks the output. *)
+Local Notation "'TESTNOTATION' '{{' P '|' Q '}' '}'" := (P ∧ Q)%I
+  (format "'TESTNOTATION'  '{{'  P  '|'  '/' Q  '}' '}'") : bi_scope.
+Lemma print_long_line (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
+  TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P | P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
+  -∗ True.
+Proof.
+  iIntros "HP". Show.
+Abort.
+Lemma print_long_line_anon (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
+  TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P | P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
+  -∗ True.
+Proof.
+  iIntros "?". Show.
+Abort.
+End linebreaks.
+
+End printing_tests.
