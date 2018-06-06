@@ -12,7 +12,9 @@ Reserved Notation "('⊣⊢@{' PROP } )" (at level 95).
 Reserved Notation "'emp'".
 Reserved Notation "'⌜' φ '⌝'" (at level 1, φ at level 200, format "⌜ φ ⌝").
 Reserved Notation "P ∗ Q" (at level 80, right associativity).
-Reserved Notation "P -∗ Q" (at level 99, Q at level 200, right associativity).
+Reserved Notation "P -∗ Q"
+  (at level 99, Q at level 200, right associativity,
+   format "'[' P  '/' -∗  Q ']'").
 
 Reserved Notation "⎡ P ⎤".
 
@@ -51,34 +53,34 @@ Reserved Notation "'<subj>' P" (at level 20, right associativity).
 (** Update modalities *)
 Reserved Notation "|==> Q" (at level 99, Q at level 200, format "|==>  Q").
 Reserved Notation "P ==∗ Q"
-  (at level 99, Q at level 200, format "'[  ' P  ==∗  '/' Q ']'").
+  (at level 99, Q at level 200, format "'[' P  '/' ==∗  Q ']'").
 
 Reserved Notation "|={ E1 , E2 }=> Q"
   (at level 99, E1, E2 at level 50, Q at level 200,
    format "|={ E1 , E2 }=>  Q").
 Reserved Notation "P ={ E1 , E2 }=∗ Q"
   (at level 99, E1,E2 at level 50, Q at level 200,
-   format "'[  ' P  ={ E1 , E2 }=∗  '/' Q ']'").
+   format "'[' P  '/' ={ E1 , E2 }=∗  Q ']'").
 
 Reserved Notation "|={ E }=> Q"
   (at level 99, E at level 50, Q at level 200,
    format "|={ E }=>  Q").
 Reserved Notation "P ={ E }=∗ Q"
   (at level 99, E at level 50, Q at level 200,
-   format "'[  ' P  ={ E }=∗  '/' Q ']'").
+   format "'[' P  '/' ={ E }=∗  Q ']'").
 
 Reserved Notation "|={ E1 , E2 }▷=> Q"
   (at level 99, E1, E2 at level 50, Q at level 200,
    format "|={ E1 , E2 }▷=>  Q").
 Reserved Notation "P ={ E1 , E2 }▷=∗ Q"
   (at level 99, E1, E2 at level 50, Q at level 200,
-   format "'[  ' P  ={ E1 , E2 }▷=∗  '/' Q ']'").
+   format "'[' P  '/' ={ E1 , E2 }▷=∗  Q ']'").
 Reserved Notation "|={ E }▷=> Q"
   (at level 99, E at level 50, Q at level 200,
    format "|={ E }▷=>  Q").
 Reserved Notation "P ={ E }▷=∗ Q"
   (at level 99, E at level 50, Q at level 200,
-   format "'[  ' P  ={ E }▷=∗  '/' Q ']'").
+   format "'[' P  '/' ={ E }▷=∗  Q ']'").
 
 (** Big Ops *)
 Reserved Notation "'[∗' 'list]' k ↦ x ∈ l , P"
