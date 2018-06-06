@@ -22,42 +22,42 @@
 1 subgoal
   
   PROP : sbi
-  P : PROP
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
   ============================
-  "HP" : (P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P)
-         ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P
+  "HP" : P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
+         ∗ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
   --------------------------------------∗
-  P
+  True
   
 1 subgoal
   
   PROP : sbi
-  P : PROP
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
   ============================
-  _ : (P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P)
-      ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P
+  _ : P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
+      ∗ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
   --------------------------------------∗
-  P
+  True
   
 1 subgoal
   
   PROP : sbi
-  P : PROP
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
   ============================
-  "HP" : TESTNOTATION {{ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P | 
-         P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P }}
+  "HP" : TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P |
+         P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
   --------------------------------------∗
-  P
+  True
   
 1 subgoal
   
   PROP : sbi
-  P : PROP
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
   ============================
-  _ : TESTNOTATION {{ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P | 
-      P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P }}
+  _ : TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P |
+      P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
   --------------------------------------∗
-  P
+  True
   
 1 subgoal
   

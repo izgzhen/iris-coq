@@ -39,15 +39,17 @@ Proof. iIntros "($ & $ & $)". iNext. by iExists 0. Qed.
 
 (* Test line breaking of long assumptions. *)
 Section linebreaks.
-Lemma print_long_line P :
-  (P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P) ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P
-  -∗ P.
+Lemma print_long_line (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P ∗
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
+  -∗ True.
 Proof.
   iIntros "HP". Show.
 Abort.
-Lemma print_long_line_anon P :
-  (P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P) ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P
-  -∗ P.
+Lemma print_long_line_anon (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P ∗
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
+  -∗ True.
 Proof.
   iIntros "?". Show.
 Abort.
@@ -55,16 +57,16 @@ Abort.
 (* This is specifically crafted such that not having the `hv` in
    the proofmode notation breaks the output. *)
 Local Notation "'TESTNOTATION' '{{' P '|' Q '}' '}'" := (P ∧ Q)%I
-  (format "'TESTNOTATION'  '{{'  P  '|'  Q  '}' '}'") : bi_scope.
-Lemma print_long_line P :
-  TESTNOTATION {{ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P | P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P }}
-  -∗ P.
+  (format "'TESTNOTATION'  '{{'  P  '|'  '/' Q  '}' '}'") : bi_scope.
+Lemma print_long_line (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
+  TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P | P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
+  -∗ True.
 Proof.
   iIntros "HP". Show.
 Abort.
-Lemma print_long_line_anon P :
-  TESTNOTATION {{ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P | P ∗ P ∗ P ∗ P ∗ P ∗ P ∗ P }}
-  -∗ P.
+Lemma print_long_line_anon (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
+  TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P | P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
+  -∗ True.
 Proof.
   iIntros "?". Show.
 Abort.
