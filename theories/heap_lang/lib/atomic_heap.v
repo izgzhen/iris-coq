@@ -6,7 +6,7 @@ From iris.heap_lang Require Import proofmode notation.
 Set Default Proof Using "Type".
 
 (** A general logically atomic interface for a heap. *)
-Structure atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
+Class atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
   (* -- operations -- *)
   alloc : val;
   load : val;
@@ -37,6 +37,24 @@ Structure atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
         RET #(if decide (v = w1) then true else false) >>>;
 }.
 Arguments atomic_heap _ {_}.
+
+(** Notation for heap primitives, in a module so you can import it separately. *)
+Module notation.
+Notation "l ↦{ q } v" := (mapsto l q v)
+  (at level 20, q at level 50, format "l  ↦{ q }  v") : bi_scope.
+Notation "l ↦ v" := (mapsto l 1 v) (at level 20) : bi_scope.
+
+Notation "l ↦{ q } -" := (∃ v, l ↦{q} v)%I
+  (at level 20, q at level 50, format "l  ↦{ q }  -") : bi_scope.
+Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : bi_scope.
+
+Notation "'ref' e" := (alloc e) : expr_scope.
+Notation "! e" := (load e) : expr_scope.
+Notation "e1 <- e2" := (store (e1, e2)%E) : expr_scope.
+
+Notation CAS e1 e2 e3 := (cas (e1, e2, e3)%E).
+
+End notation.
 
 (** Proof that the primitive physical operations of heap_lang satisfy said interface. *)
 Definition primitive_alloc : val :=
@@ -88,10 +106,12 @@ Section proof.
     destruct (decide (v = w1)) as [<-|Hv]; [wp_cas_suc|wp_cas_fail];
     iMod ("Hclose" with "H↦") as "HΦ"; by iApply "HΦ".
   Qed.
-
-  Definition primitive_atomic_heap : atomic_heap Σ :=
-    {| alloc_spec := primitive_alloc_spec;
-       load_spec := primitive_load_spec;
-       store_spec := primitive_store_spec;
-       cas_spec := primitive_cas_spec |}.
 End proof.
+
+(* NOT an instance because users should choose explicitly to use it
+     (using [Explicit Instance]). *)
+Definition primitive_atomic_heap `{!heapG Σ} : atomic_heap Σ :=
+  {| alloc_spec := primitive_alloc_spec;
+     load_spec := primitive_load_spec;
+     store_spec := primitive_store_spec;
+     cas_spec := primitive_cas_spec |}.

@@ -9,18 +9,19 @@ atomicity. *)
 
 (* TODO: Move this to iris-examples once gen_proofmode is merged. *)
 Section increment.
-  Context `{!heapG Σ} (aheap: atomic_heap Σ).
+  Context `{!heapG Σ} {aheap: atomic_heap Σ}.
+
+  Import atomic_heap.notation.
 
   Definition incr: val :=
     rec: "incr" "l" :=
-       let: "oldv" := aheap.(load) "l" in
-       if: aheap.(cas) ("l", "oldv", ("oldv" + #1))
+       let: "oldv" := !"l" in
+       if: CAS "l" "oldv" ("oldv" + #1)
          then "oldv" (* return old value if success *)
          else "incr" "l".
 
   Lemma incr_spec (l: loc) :
-    <<< ∀ (v : Z), aheap.(mapsto) l 1 #v >>> incr #l @ ⊤
-    <<< aheap.(mapsto) l 1 #(v + 1), RET #v >>>.
+    <<< ∀ (v : Z), l ↦ #v >>> incr #l @ ⊤ <<< l ↦ #(v + 1), RET #v >>>.
   Proof.
     iIntros (Q Φ) "HQ AU". iLöb as "IH". wp_let.
     wp_apply (load_spec with "[HQ]"); first by iAccu.
@@ -32,7 +33,7 @@ Section increment.
     { iIntros "$ !> $ !> //". }
     iIntros "$ !> AU !> HQ".
     (* Now go on *)
-    wp_let. wp_op. wp_bind (aheap.(cas) _)%I.
+    wp_let. wp_op. wp_bind (CAS _ _ _)%I.
     wp_apply (cas_spec with "[HQ]"); [done|iAccu|].
     (* Prove the atomic shift for CAS *)
     iAuIntro. iApply (aacc_aupd with "AU"); first done.
@@ -55,10 +56,12 @@ End increment.
 Section increment_client.
   Context `{!heapG Σ, !spawnG Σ}.
 
+  Existing Instance primitive_atomic_heap.
+
   Definition incr_client : val :=
     λ: "x",
        let: "l" := ref "x" in
-       incr primitive_atomic_heap "l" ||| incr primitive_atomic_heap "l".
+       incr "l" ||| incr "l".
 
   Lemma incr_client_safe (x: Z):
     WP incr_client #x {{ _, True }}%I.
@@ -67,7 +70,7 @@ Section increment_client.
     iMod (inv_alloc nroot _ (∃x':Z, l ↦ #x')%I with "[Hl]") as "#Hinv"; first eauto.
     (* FIXME: I am only using persistent stuff, so I should be allowed
        to move this to the persisten context even without the additional □. *)
-    iAssert (□ WP incr primitive_atomic_heap #l {{ _, True }})%I as "#Aupd".
+    iAssert (□ WP incr #l {{ _, True }})%I as "#Aupd".
     { iAlways. wp_apply (incr_spec with "[]"); first by iAccu. clear x.
       iAuIntro. iInv nroot as (x) ">H↦".
       (* FIXME: Oh wow this is bad. *)
