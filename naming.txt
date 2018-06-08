@@ -1,3 +1,5 @@
+------------------ Naming conventions for variables/arguments/hypotheses in the Coq development ------------------
+
 == small letters ==
 a : A : cmraT or cofeT
 b : B : cmraT or cofeT
@@ -63,3 +65,14 @@ Z : sets
 == capital greek letters ==
 Φ : general predicate (over uPred, iProp or Prop)
 Ψ : general predicate (over uPred, iProp or Prop)
+
+------------------ Naming conventions for definitions in the Coq development ------------------
+
+== Postfixes (may be combined) ==
+
+C: OFEs
+R: resource algebras and cameras
+F: functors
+UR: unital cameras or resources algebras
+T: canonical structurs with extra algebraic structure (for example ofeT for OFEs, cmraT for cameras)
+G: global camera functor management
