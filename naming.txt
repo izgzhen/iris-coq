@@ -66,13 +66,14 @@ Z : sets
 Φ : general predicate (over uPred, iProp or Prop)
 Ψ : general predicate (over uPred, iProp or Prop)
 
------------------- Naming conventions for definitions in the Coq development ------------------
+------------------ Naming conventions for algebraic classes in the Coq development ------------------
 
-== Postfixes (may be combined) ==
+== Suffixes ==
+
+T: canonical structurs (for example ofeT for OFEs, cmraT for cameras)
 
 C: OFEs
-R: resource algebras and cameras
-F: functors
+R: cameras
 UR: unital cameras or resources algebras
-T: canonical structurs with extra algebraic structure (for example ofeT for OFEs, cmraT for cameras)
+F: functors (can be combined with all of the above, e.g. CF is an OFE functor)
 G: global camera functor management
