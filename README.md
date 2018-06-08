@@ -81,7 +81,8 @@ followed by `make build-dep`.
   document is [available online](http://plv.mpi-sws.org/iris/appendix-3.1.pdf).
 * Information on how to set up your editor for unicode input and output is
   collected in [Editor.md](Editor.md).
-* The Iris Proof Mode (IPM) is documented at [ProofMode.md](ProofMode.md)
+* The Iris Proof Mode (IPM) is documented at [ProofMode.md](ProofMode.md).
+* Naming conventions are documented at [Naming.md](Naming.md).
 
 ## Case Studies
 
