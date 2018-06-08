@@ -75,10 +75,9 @@
 
 ## Suffixes
 
-* T: canonical structurs (for example ofeT for OFEs, cmraT for cameras)
-
 * C: OFEs
 * R: cameras
 * UR: unital cameras or resources algebras
 * F: functors (can be combined with all of the above, e.g. CF is an OFE functor)
 * G: global camera functor management
+* T: canonical structurs for algebraic classes (for example ofeT for OFEs, cmraT for cameras)
