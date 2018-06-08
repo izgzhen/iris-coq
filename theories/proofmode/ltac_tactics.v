@@ -66,7 +66,7 @@ Tactic Notation "iStartProof" :=
   lazymatch goal with
   | |- envs_entails _ _ => idtac
   | |- ?φ => notypeclasses refine (as_emp_valid_2 φ _ _);
-               [apply _ || fail "iStartProof: not a Bi entailment"
+               [iSolveTC || fail "iStartProof: not a Bi entailment"
                |apply tac_adequate]
   end.
 
@@ -87,7 +87,7 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
      [bi_car _], and hence trigger the canonical structures mechanism
      to find the corresponding bi. *)
   | |- ?φ => notypeclasses refine ((λ P : PROP, @as_emp_valid_2 φ _ P) _ _ _);
-               [apply _ || fail "iStartProof: not a Bi entailment"
+               [iSolveTC || fail "iStartProof: not a Bi entailment"
                |apply tac_adequate]
   end.
 
@@ -171,7 +171,7 @@ Ltac iElaborateSelPat pat :=
 Local Ltac iClearHyp H :=
   eapply tac_clear with _ H _ _; (* (i:=H) *)
     [env_reflexivity || fail "iClear:" H "not found"
-    |env_cbv; apply _ ||
+    |env_cbv; iSolveTC ||
      let P := match goal with |- TCOr (Affine ?P) _ => P end in
      fail "iClear:" H ":" P "not affine and the goal not absorbing"
     |].
@@ -192,10 +192,10 @@ Tactic Notation "iClear" "(" ident_list(xs) ")" constr(Hs) :=
 Tactic Notation "iExact" constr(H) :=
   eapply tac_assumption with _ H _ _; (* (i:=H) *)
     [env_reflexivity || fail "iExact:" H "not found"
-    |apply _ ||
+    |iSolveTC ||
      let P := match goal with |- FromAssumption _ ?P _ => P end in
      fail "iExact:" H ":" P "does not match goal"
-    |env_cbv; apply _ ||
+    |env_cbv; iSolveTC ||
      fail "iExact:" H "not absorbing and the remaining hypotheses not affine"].
 
 Tactic Notation "iAssumptionCore" :=
@@ -223,7 +223,7 @@ Tactic Notation "iAssumption" :=
         eapply (tac_assumption _ _ j p P);
           [env_reflexivity
           |apply Hass
-          |env_cbv; apply _ ||
+          |env_cbv; iSolveTC ||
            fail 1 "iAssumption:" j "not absorbing and the remaining hypotheses not affine"]
        |assert (P = False%I) as Hass by reflexivity;
         apply (tac_false_destruct _ j p P);
@@ -244,10 +244,10 @@ Tactic Notation "iExFalso" := apply tac_ex_falso.
 Local Tactic Notation "iPersistent" constr(H) :=
   eapply tac_persistent with _ H _ _ _; (* (i:=H) *)
     [env_reflexivity || fail "iPersistent:" H "not found"
-    |apply _ ||
+    |iSolveTC ||
      let P := match goal with |- IntoPersistent _ ?P _ => P end in
      fail "iPersistent:" P "not persistent"
-    |env_cbv; apply _ ||
+    |env_cbv; iSolveTC ||
      let P := match goal with |- TCOr (Affine ?P) _ => P end in
      fail "iPersistent:" P "not affine and the goal not absorbing"
     |env_reflexivity|].
@@ -255,10 +255,10 @@ Local Tactic Notation "iPersistent" constr(H) :=
 Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
   eapply tac_pure with _ H _ _ _; (* (i:=H1) *)
     [env_reflexivity || fail "iPure:" H "not found"
-    |apply _ ||
+    |iSolveTC ||
      let P := match goal with |- IntoPure ?P _ => P end in
      fail "iPure:" P "not pure"
-    |env_cbv; apply _ ||
+    |env_cbv; iSolveTC ||
      let P := match goal with |- TCOr (Affine ?P) _ => P end in
      fail "iPure:" P "not affine and the goal not absorbing"
     |intros pat].
@@ -266,14 +266,14 @@ Local Tactic Notation "iPure" constr(H) "as" simple_intropattern(pat) :=
 Tactic Notation "iEmpIntro" :=
   iStartProof;
   eapply tac_emp_intro;
-    [env_cbv; apply _ ||
+    [env_cbv; iSolveTC ||
      fail "iEmpIntro: spatial context contains non-affine hypotheses"].
 
 Tactic Notation "iPureIntro" :=
   iStartProof;
   eapply tac_pure_intro;
     [env_reflexivity
-    |apply _ ||
+    |iSolveTC ||
      let P := match goal with |- FromPure _ ?P _ => P end in
      fail "iPureIntro:" P "not pure"
     |].
@@ -290,14 +290,14 @@ Local Ltac iFramePure t :=
   iStartProof;
   let φ := type of t in
   eapply (tac_frame_pure _ _ _ _ t);
-    [apply _ || fail "iFrame: cannot frame" φ
+    [iSolveTC || fail "iFrame: cannot frame" φ
     |iFrameFinish].
 
 Local Ltac iFrameHyp H :=
   iStartProof;
   eapply tac_frame with _ H _ _ _;
     [env_reflexivity || fail "iFrame:" H "not found"
-    |apply _ ||
+    |iSolveTC ||
      let R := match goal with |- Frame _ ?R _ _ => R end in
      fail "iFrame: cannot frame" R
     |iFrameFinish].
@@ -389,7 +389,7 @@ Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
      lazymatch goal with
      | |- envs_entails _ _ =>
        eapply tac_forall_intro;
-       [apply _ ||
+       [iSolveTC ||
               let P := match goal with |- FromForall ?P _ => P end in
               fail "iIntro: cannot turn" P "into a universal quantifier"
        |lazy beta; intros x]
@@ -400,17 +400,17 @@ Local Tactic Notation "iIntro" constr(H) :=
   first
   [ (* (?Q → _) *)
     eapply tac_impl_intro with _ H _ _ _; (* (i:=H) *)
-      [apply _
-      |env_cbv; apply _ ||
+      [iSolveTC
+      |env_cbv; iSolveTC ||
        let P := lazymatch goal with |- Persistent ?P => P end in
        fail 1 "iIntro: introducing non-persistent" H ":" P
               "into non-empty spatial context"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
-      |apply _
+      |iSolveTC
       |]
   | (* (_ -∗ _) *)
     eapply tac_wand_intro with _ H _ _; (* (i:=H) *)
-      [apply _
+      [iSolveTC
       | env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
   | fail "iIntro: nothing to introduce" ].
@@ -420,19 +420,19 @@ Local Tactic Notation "iIntro" "#" constr(H) :=
   first
   [ (* (?P → _) *)
     eapply tac_impl_intro_persistent with _ H _ _ _; (* (i:=H) *)
-      [apply _
-      |apply _ ||
+      [iSolveTC
+      |iSolveTC ||
        let P := match goal with |- IntoPersistent _ ?P _ => P end in
        fail 1 "iIntro:" P "not persistent"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
       |]
   | (* (?P -∗ _) *)
     eapply tac_wand_intro_persistent with _ H _ _ _; (* (i:=H) *)
-      [ apply _
-      | apply _ ||
+      [ iSolveTC
+      | iSolveTC ||
        let P := match goal with |- IntoPersistent _ ?P _ => P end in
        fail 1 "iIntro:" P "not persistent"
-      |apply _ ||
+      |iSolveTC ||
        let P := match goal with |- TCOr (Affine ?P) _ => P end in
        fail 1 "iIntro:" P "not affine and the goal not absorbing"
       |env_reflexivity || fail 1 "iIntro:" H "not fresh"
@@ -443,11 +443,11 @@ Local Tactic Notation "iIntro" "_" :=
   first
   [ (* (?Q → _) *)
     iStartProof; eapply tac_impl_intro_drop;
-    [ apply _ | ]
+    [ iSolveTC | ]
   | (* (_ -∗ _) *)
     iStartProof; eapply tac_wand_intro_drop;
-      [ apply _
-      | apply _ ||
+      [ iSolveTC
+      | iSolveTC ||
        let P := match goal with |- TCOr (Affine ?P) _ => P end in
        fail 1 "iIntro:" P "not affine and the goal not absorbing"
       |]
