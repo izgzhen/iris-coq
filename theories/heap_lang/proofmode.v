@@ -59,7 +59,7 @@ Proof. rewrite envs_entails_eq=> ? ->. by apply twp_value. Qed.
 
 Ltac wp_value_head :=
   first [eapply tac_wp_value || eapply tac_twp_value];
-    [apply _
+    [iSolveTC
     |iEval (lazy beta; simpl of_val)].
 
 Tactic Notation "wp_pure" open_constr(efoc) :=
@@ -70,9 +70,9 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
     reshape_expr e ltac:(fun K e' =>
       unify e' efoc;
       eapply (tac_wp_pure _ _ _ _ (fill K e'));
-      [apply _                        (* PureExec *)
+      [iSolveTC                       (* PureExec *)
       |try fast_done                  (* The pure condition for PureExec *)
-      |apply _                        (* IntoLaters *)
+      |iSolveTC                       (* IntoLaters *)
       |wp_expr_simpl_subst; try wp_value_head (* new goal *)
       ])
     || fail "wp_pure: cannot find" efoc "in" e "or" efoc "is not a redex"
@@ -81,7 +81,7 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
     reshape_expr e ltac:(fun K e' =>
       unify e' efoc;
       eapply (tac_twp_pure _ _ _ (fill K e'));
-      [apply _                        (* PureExec *)
+      [iSolveTC                       (* PureExec *)
       |try fast_done                  (* The pure condition for PureExec *)
       |wp_expr_simpl_subst; try wp_value_head (* new goal *)
       ])
@@ -325,14 +325,14 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_wp_alloc _ _ _ _ H K); [apply _|..])
+         eapply (tac_wp_alloc _ _ _ _ H K); [iSolveTC|..])
       |fail 1 "wp_alloc: cannot find 'Alloc' in" e];
-    [apply _
+    [iSolveTC
     |finish ()]
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_twp_alloc _ _ _ H K); [apply _|..])
+         eapply (tac_twp_alloc _ _ _ H K); [iSolveTC|..])
       |fail 1 "wp_alloc: cannot find 'Alloc' in" e];
     finish ()
   | _ => fail "wp_alloc: not a 'wp'"
@@ -351,7 +351,7 @@ Tactic Notation "wp_load" :=
     first
       [reshape_expr e ltac:(fun K e' => eapply (tac_wp_load _ _ _ _ _ K))
       |fail 1 "wp_load: cannot find 'Load' in" e];
-    [apply _
+    [iSolveTC
     |solve_mapsto ()
     |wp_expr_simpl; try wp_value_head]
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
@@ -374,16 +374,16 @@ Tactic Notation "wp_store" :=
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_wp_store _ _ _ _ _ _ K); [apply _|..])
+         eapply (tac_wp_store _ _ _ _ _ _ K); [iSolveTC|..])
       |fail 1 "wp_store: cannot find 'Store' in" e];
-    [apply _
+    [iSolveTC
     |solve_mapsto ()
     |env_cbv; reflexivity
     |finish ()]
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_twp_store _ _ _ _ _ K); [apply _|..])
+         eapply (tac_twp_store _ _ _ _ _ K); [iSolveTC|..])
       |fail 1 "wp_store: cannot find 'Store' in" e];
     [solve_mapsto ()
     |env_cbv; reflexivity
@@ -400,16 +400,16 @@ Tactic Notation "wp_cas_fail" :=
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_wp_cas_fail _ _ _ _ _ K); [apply _|apply _|..])
+         eapply (tac_wp_cas_fail _ _ _ _ _ K); [iSolveTC|iSolveTC|..])
       |fail 1 "wp_cas_fail: cannot find 'CAS' in" e];
-    [apply _
+    [iSolveTC
     |solve_mapsto ()
     |try congruence
     |simpl; try wp_value_head]
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_twp_cas_fail _ _ _ _ K); [apply _|apply _|..])
+         eapply (tac_twp_cas_fail _ _ _ _ K); [iSolveTC|iSolveTC|..])
       |fail 1 "wp_cas_fail: cannot find 'CAS' in" e];
     [solve_mapsto ()
     |try congruence
@@ -426,9 +426,9 @@ Tactic Notation "wp_cas_suc" :=
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_wp_cas_suc _ _ _ _ _ _ K); [apply _|apply _|..])
+         eapply (tac_wp_cas_suc _ _ _ _ _ _ K); [iSolveTC|iSolveTC|..])
       |fail 1 "wp_cas_suc: cannot find 'CAS' in" e];
-    [apply _
+    [iSolveTC
     |solve_mapsto ()
     |try congruence
     |env_cbv; reflexivity
@@ -436,7 +436,7 @@ Tactic Notation "wp_cas_suc" :=
   | |- envs_entails _ (twp ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_twp_cas_suc _ _ _ _ _ K); [apply _|apply _|..])
+         eapply (tac_twp_cas_suc _ _ _ _ _ K); [iSolveTC|iSolveTC|..])
       |fail 1 "wp_cas_suc: cannot find 'CAS' in" e];
     [solve_mapsto ()
     |try congruence
@@ -454,16 +454,16 @@ Tactic Notation "wp_faa" :=
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_wp_faa _ _ _ _ _ _ K); [apply _|..])
+         eapply (tac_wp_faa _ _ _ _ _ _ K); [iSolveTC|..])
       |fail 1 "wp_faa: cannot find 'CAS' in" e];
-    [apply _
+    [iSolveTC
     |solve_mapsto ()
     |env_cbv; reflexivity
     |wp_expr_simpl; try wp_value_head]
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_twp_faa _ _ _ _ _ K); [apply _|..])
+         eapply (tac_twp_faa _ _ _ _ _ K); [iSolveTC|..])
       |fail 1 "wp_faa: cannot find 'CAS' in" e];
     [solve_mapsto ()
     |env_cbv; reflexivity
