@@ -806,6 +806,8 @@ Proof. rewrite /IntoForall=> HP. by rewrite HP persistently_forall. Qed.
 Global Instance into_forall_embed `{BiEmbed PROP PROP'} {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall ⎡P⎤ (λ a, ⎡Φ a⎤%I).
 Proof. by rewrite /IntoForall -embed_forall => <-. Qed.
+Global Instance into_forall_wand P Q : IntoForall (P -∗ Q) (λ _ : bi_emp_valid P, Q).
+Proof. rewrite /IntoForall. apply forall_intro=><-. rewrite emp_wand //. Qed.
 
 (* FromForall *)
 Global Instance from_forall_forall {A} (Φ : A → PROP) :
