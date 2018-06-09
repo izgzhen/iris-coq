@@ -1,4 +1,4 @@
-From iris.bi Require Import bi.
+From iris.bi Require Import bi telescopes.
 From iris.proofmode Require Import base environments.
 
 Declare Reduction pm_cbv := cbv [
@@ -18,9 +18,11 @@ Declare Reduction pm_cbv := cbv [
 Declare Reduction pm_cbn := cbn [
   (* PM option combinators *)
   pm_option_bind pm_from_option pm_option_fun
+  (* telescope combinators *)
+  tele_fold tele_bind tele_app
   (* BI connectives *)
   bi_persistently_if bi_affinely_if bi_intuitionistically_if
-  bi_wandM
+  bi_wandM bi_tforall bi_texist
 ].
 Ltac pm_eval t :=
   let u := eval pm_cbv in t in

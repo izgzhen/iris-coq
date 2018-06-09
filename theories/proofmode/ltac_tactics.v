@@ -1,6 +1,6 @@
 From iris.proofmode Require Import coq_tactics reduction.
 From iris.proofmode Require Import base intro_patterns spec_patterns sel_patterns.
-From iris.bi Require Export bi.
+From iris.bi Require Export bi telescopes.
 From stdpp Require Import namespaces.
 From iris.proofmode Require Export classes notation.
 From stdpp Require Import hlist pretty.
@@ -2193,6 +2193,8 @@ Hint Extern 0 (envs_entails _ (big_opMS _ _ _)) =>
 Hint Extern 0 (envs_entails _ (∀ _, _)) => iIntros.
 Hint Extern 0 (envs_entails _ (_ → _)) => iIntros.
 Hint Extern 0 (envs_entails _ (_ -∗ _)) => iIntros.
+(* Multi-intro doesn't work for custom binders. *)
+Hint Extern 0 (envs_entails _ (∀.. _, _)) => iIntros (?).
 
 Hint Extern 1 (envs_entails _ (_ ∧ _)) => iSplit.
 Hint Extern 1 (envs_entails _ (_ ∗ _)) => iSplit.
@@ -2202,6 +2204,7 @@ Hint Extern 1 (envs_entails _ (<pers> _)) => iAlways.
 Hint Extern 1 (envs_entails _ (<affine> _)) => iAlways.
 Hint Extern 1 (envs_entails _ (□ _)) => iAlways.
 Hint Extern 1 (envs_entails _ (∃ _, _)) => iExists _.
+Hint Extern 1 (envs_entails _ (∃.. _, _)) => iExists _.
 Hint Extern 1 (envs_entails _ (◇ _)) => iModIntro.
 Hint Extern 1 (envs_entails _ (_ ∨ _)) => iLeft.
 Hint Extern 1 (envs_entails _ (_ ∨ _)) => iRight.

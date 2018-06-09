@@ -1,5 +1,5 @@
 From stdpp Require Import nat_cancel.
-From iris.bi Require Import bi tactics.
+From iris.bi Require Import bi tactics telescopes.
 From iris.proofmode Require Import base modality_instances classes ltac_tactics.
 Set Default Proof Using "Type".
 Import bi.
@@ -412,6 +412,10 @@ Qed.
 Global Instance into_wand_forall {A} p q (Φ : A → PROP) P Q x :
   IntoWand p q (Φ x) P Q → IntoWand p q (∀ x, Φ x) P Q.
 Proof. rewrite /IntoWand=> <-. by rewrite (forall_elim x). Qed.
+
+Global Instance into_wand_tforall {A} p q (Φ : tele_arg A → PROP) P Q x :
+  IntoWand p q (Φ x) P Q → IntoWand p q (∀.. x, Φ x) P Q.
+Proof. rewrite /IntoWand=> <-. by rewrite bi_tforall_forall (forall_elim x). Qed.
 
 Global Instance into_wand_affine p q R P Q :
   IntoWand p q R P Q → IntoWand p q (<affine> R) (<affine> P) (<affine> Q).
@@ -841,8 +845,11 @@ Global Instance into_or_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
 Proof. by rewrite /IntoOr -embed_or => <-. Qed.
 
 (** FromExist *)
-Global Instance from_exist_exist {A} (Φ : A → PROP): FromExist (∃ a, Φ a) Φ.
+Global Instance from_exist_exist {A} (Φ : A → PROP) : FromExist (∃ a, Φ a) Φ.
 Proof. by rewrite /FromExist. Qed.
+Global Instance from_exist_texist {A} (Φ : tele_arg A → PROP) :
+  FromExist (∃.. a, Φ a) Φ.
+Proof. by rewrite /FromExist bi_texist_exist. Qed.
 Global Instance from_exist_pure {A} (φ : A → Prop) :
   @FromExist PROP A ⌜∃ x, φ x⌝ (λ a, ⌜φ a⌝)%I.
 Proof. by rewrite /FromExist pure_exist. Qed.
@@ -871,6 +878,9 @@ Qed.
 (** IntoExist *)
 Global Instance into_exist_exist {A} (Φ : A → PROP) : IntoExist (∃ a, Φ a) Φ.
 Proof. by rewrite /IntoExist. Qed.
+Global Instance into_exist_texist {A} (Φ : tele_arg A → PROP) :
+  IntoExist (∃.. a, Φ a) Φ.
+Proof. by rewrite /IntoExist bi_texist_exist. Qed.
 Global Instance into_exist_pure {A} (φ : A → Prop) :
   @IntoExist PROP A ⌜∃ x, φ x⌝ (λ a, ⌜φ a⌝)%I.
 Proof. by rewrite /IntoExist pure_exist. Qed.
@@ -906,6 +916,8 @@ Proof. by rewrite /IntoExist -embed_exist => <-. Qed.
 (** IntoForall *)
 Global Instance into_forall_forall {A} (Φ : A → PROP) : IntoForall (∀ a, Φ a) Φ.
 Proof. by rewrite /IntoForall. Qed.
+Global Instance into_forall_tforall {A} (Φ : tele_arg A → PROP) : IntoForall (∀.. a, Φ a) Φ.
+Proof. by rewrite /IntoForall bi_tforall_forall. Qed.
 Global Instance into_forall_affinely {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (<affine> P) (λ a, <affine> (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP affinely_forall. Qed.
@@ -946,6 +958,9 @@ Proof. rewrite /IntoForall. apply forall_intro=><-. rewrite -True_emp True_impl 
 Global Instance from_forall_forall {A} (Φ : A → PROP) :
   FromForall (∀ x, Φ x)%I Φ.
 Proof. by rewrite /FromForall. Qed.
+Global Instance from_forall_tforall {A} (Φ : tele_arg A → PROP) :
+  FromForall (∀.. x, Φ x)%I Φ.
+Proof. by rewrite /FromForall bi_tforall_forall. Qed.
 Global Instance from_forall_pure {A} (φ : A → Prop) :
   @FromForall PROP A (⌜∀ a : A, φ a⌝)%I (λ a, ⌜ φ a ⌝)%I.
 Proof. by rewrite /FromForall pure_forall. Qed.
