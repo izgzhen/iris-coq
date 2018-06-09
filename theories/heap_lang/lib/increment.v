@@ -2,12 +2,12 @@ From iris.base_logic.lib Require Export invariants.
 From iris.program_logic Require Export atomic.
 From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation atomic_heap par.
+From iris.bi.lib Require Import fractional.
 Set Default Proof Using "Type".
 
 (** Show that implementing fetch-and-add on top of CAS preserves logical
 atomicity. *)
 
-(* TODO: Move this to iris-examples once gen_proofmode is merged. *)
 Section increment.
   Context `{!heapG Σ} {aheap: atomic_heap Σ}.
 
@@ -25,7 +25,7 @@ Section increment.
   Proof.
     iIntros (Q Φ) "HQ AU". iLöb as "IH". wp_let.
     wp_apply (load_spec with "[HQ]"); first by iAccu.
-    (* Prove the atomic shift for load *)
+    (* Prove the atomic update for load *)
     iAuIntro. iApply (aacc_aupd_abort with "AU"); first done.
     iIntros (x) "H↦".
     (* FIXME: Oh wow this is bad. *)
@@ -35,7 +35,7 @@ Section increment.
     (* Now go on *)
     wp_let. wp_op. wp_bind (CAS _ _ _)%I.
     wp_apply (cas_spec with "[HQ]"); [done|iAccu|].
-    (* Prove the atomic shift for CAS *)
+    (* Prove the atomic update for CAS *)
     iAuIntro. iApply (aacc_aupd with "AU"); first done.
     iIntros (x') "H↦".
     (* FIXME: Oh wow this is bad. *)
@@ -49,6 +49,36 @@ Section increment.
       wp_if. by iApply "HΦ".
     - iLeft. iFrame. iIntros "AU !> HQ".
       wp_if. iApply ("IH" with "HQ"). done.
+  Qed.
+
+  Definition weak_incr: val :=
+    rec: "weak_incr" "l" :=
+       let: "oldv" := !"l" in
+       "l" <- ("oldv" + #1);;
+       "oldv" (* return old value *).
+
+  (* TODO: Generalize to q and 1-q, based on some theory for a "maybe-mapsto"
+     connective that works on [option Qp] (the type of 1-q). *)
+  Lemma weak_incr_spec (l: loc) (v : Z) :
+    l ↦{1/2} #v -∗
+    <<< ∀ (v' : Z), l ↦{1/2} #v' >>>
+      weak_incr #l @ ⊤
+    <<< ⌜v = v'⌝ ∗ l ↦ #(v + 1), RET #v >>>.
+  Proof.
+    iIntros "Hl" (Q Φ) "HQ AU". wp_let.
+    wp_apply (atomic_wp_seq $! (load_spec _) with "Hl").
+    iIntros "Hl". wp_let. wp_op.
+    wp_apply (store_spec with "[HQ]"); first by iAccu.
+    (* Prove the atomic update for store *)
+    iAuIntro. iApply (aacc_aupd_commit with "AU"); first done.
+    iIntros (x) "H↦".
+    iDestruct (mapsto_agree with "Hl H↦") as %[= <-].
+    iCombine "Hl" "H↦" as "Hl".
+    (* FIXME: Oh wow this is bad. *)
+    iApply (aacc_intro $! ([tele_arg _] : [tele (_:val)]) with "[Hl]"); [solve_ndisj|done|simpl; iSplit].
+    { simpl. iIntros "[$ $] !> $ !> //". }
+    iIntros "$ !>". iSplit; first done.
+    iIntros "HΦ !> HQ". wp_seq. iApply "HΦ". done.
   Qed.
 
 End increment.
