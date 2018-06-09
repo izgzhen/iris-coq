@@ -1,8 +1,8 @@
 From iris.heap_lang Require Export lifting notation.
-From iris.base_logic.lib Require Export invariants.
 From iris.program_logic Require Export atomic.
 From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation.
+From iris.bi.lib Require Import fractional.
 Set Default Proof Using "Type".
 
 (** A general logically atomic interface for a heap. *)
@@ -13,13 +13,16 @@ Class atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
   store : val;
   cas : val;
   (* -- predicates -- *)
-  (* name is used to associate locked with is_lock *)
   mapsto (l : loc) (q: Qp) (v : val) : iProp Σ;
-  (* -- general properties -- *)
-  mapsto_timeless l q v : Timeless (mapsto l q v);
+  (* -- mapsto properties -- *)
+  mapsto_timeless l q v :> Timeless (mapsto l q v);
+  mapsto_fractional l v :> Fractional (λ q, mapsto l q v);
+  mapsto_as_fractional l q v :>
+    AsFractional (mapsto l q v) (λ q, mapsto l q v) q;
+  mapsto_agree l q1 q2 v1 v2 :> mapsto l q1 v1 -∗ mapsto l q2 v2 -∗ ⌜v1 = v2⌝;
   (* -- operation specs -- *)
-  alloc_spec v :
-    {{{ True }}} alloc v {{{ l, RET #l; mapsto l 1 v }}};
+  alloc_spec e v :
+    IntoVal e v → {{{ True }}} alloc e {{{ l, RET #l; mapsto l 1 v }}};
   load_spec (l : loc) :
     <<< ∀ (v : val) q, mapsto l q v >>> load #l @ ⊤ <<< mapsto l q v, RET v >>>;
   store_spec (l : loc) (e : expr) (w : val) :
@@ -69,10 +72,10 @@ Definition primitive_cas : val :=
 Section proof.
   Context `{!heapG Σ}.
 
-  Lemma primitive_alloc_spec v :
-    {{{ True }}} primitive_alloc v {{{ l, RET #l; l ↦ v }}}.
+  Lemma primitive_alloc_spec e v :
+    IntoVal e v → {{{ True }}} primitive_alloc e {{{ l, RET #l; l ↦ v }}}.
   Proof.
-    iIntros (Φ) "_ HΦ". wp_let. wp_alloc l. iApply "HΦ". done.
+    iIntros (<- Φ) "_ HΦ". wp_let. wp_alloc l. iApply "HΦ". done.
   Qed.
 
   Lemma primitive_load_spec (l : loc) :
@@ -114,4 +117,5 @@ Definition primitive_atomic_heap `{!heapG Σ} : atomic_heap Σ :=
   {| alloc_spec := primitive_alloc_spec;
      load_spec := primitive_load_spec;
      store_spec := primitive_store_spec;
-     cas_spec := primitive_cas_spec |}.
+     cas_spec := primitive_cas_spec;
+     mapsto_agree := gen_heap.mapsto_agree  |}.
