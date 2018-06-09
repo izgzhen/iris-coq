@@ -1,3 +1,4 @@
+From stdpp Require Import namespaces.
 From iris.program_logic Require Export weakestpre.
 From iris.proofmode Require Import tactics classes.
 From iris.bi.lib Require Export atomic.
@@ -90,3 +91,22 @@ Notation "'<<<' α '>>>' e @ Eo '<<<' β , 'RET' v '>>>'" :=
   (at level 20, Eo, α, β, v at level 200,
    format "'[hv' '<<<'  α  '>>>'  '/  ' e  @  Eo  '/' '[    ' '<<<'  β ,  '/' 'RET'  v  '>>>' ']' ']'")
   : stdpp_scope.
+
+(** Theory *)
+Section lemmas.
+  Context `{irisG Λ Σ} {TA TB : tele}.
+  Notation iProp := (iProp Σ).
+  Implicit Types (α : TA → iProp) (β : TA → TB → iProp) (f : TA → TB → val Λ).
+
+  Lemma atomic_wp_seq e Eo α β f {HL : ∀.. x, Laterable (α x)} :
+    atomic_wp e Eo α β f -∗
+    ∀ Φ, ∀.. x, α x -∗ (∀.. y, β x y -∗ Φ (f x y)) -∗ WP e {{ Φ }}.
+  Proof.
+    rewrite ->tforall_forall in HL.
+    iIntros "Hwp" (Φ x) "Hα HΦ". iApply ("Hwp" with "[HΦ]"); first iAccu.
+    iAuIntro. iApply (aacc_intro with "Hα"); first solve_ndisj.
+    iSplit; first by eauto. iIntros (y) "Hβ !>".
+    (* FIXME: Using ssreflect rewrite does not work? *)
+    rewrite ->!tele_app_bind. iIntros "HΦ". iApply "HΦ". done.
+  Qed.
+End lemmas.
