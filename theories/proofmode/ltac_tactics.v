@@ -149,28 +149,28 @@ Local Inductive esel_pat :=
   | ESelPure
   | ESelIdent : bool → ident → esel_pat.
 
+Ltac iElaborateSelPat_go pat Δ Hs :=
+  lazymatch pat with
+  | [] => eval cbv in Hs
+  | SelPure :: ?pat =>  iElaborateSelPat_go pat Δ (ESelPure :: Hs)
+  | SelPersistent :: ?pat =>
+    let Hs' := eval env_cbv in (env_dom (env_intuitionistic Δ)) in
+    let Δ' := eval env_cbv in (envs_clear_persistent Δ) in
+    iElaborateSelPat_go pat Δ' ((ESelIdent true <$> Hs') ++ Hs)
+  | SelSpatial :: ?pat =>
+    let Hs' := eval env_cbv in (env_dom (env_spatial Δ)) in
+    let Δ' := eval env_cbv in (envs_clear_spatial Δ) in
+    iElaborateSelPat_go pat Δ' ((ESelIdent false <$> Hs') ++ Hs)
+  | SelIdent ?H :: ?pat =>
+    lazymatch eval env_cbv in (envs_lookup_delete false H Δ) with
+    | Some (?p,_,?Δ') =>  iElaborateSelPat_go pat Δ' (ESelIdent p H :: Hs)
+    | None => fail "iElaborateSelPat:" H "not found"
+    end
+  end.
 Ltac iElaborateSelPat pat :=
-  let rec go pat Δ Hs :=
-    lazymatch pat with
-    | [] => eval cbv in Hs
-    | SelPure :: ?pat => go pat Δ (ESelPure :: Hs)
-    | SelPersistent :: ?pat =>
-       let Hs' := eval env_cbv in (env_dom (env_intuitionistic Δ)) in
-       let Δ' := eval env_cbv in (envs_clear_persistent Δ) in
-       go pat Δ' ((ESelIdent true <$> Hs') ++ Hs)
-    | SelSpatial :: ?pat =>
-       let Hs' := eval env_cbv in (env_dom (env_spatial Δ)) in
-       let Δ' := eval env_cbv in (envs_clear_spatial Δ) in
-       go pat Δ' ((ESelIdent false <$> Hs') ++ Hs)
-    | SelIdent ?H :: ?pat =>
-       lazymatch eval env_cbv in (envs_lookup_delete false H Δ) with
-       | Some (?p,_,?Δ') => go pat Δ' (ESelIdent p H :: Hs)
-       | None => fail "iElaborateSelPat:" H "not found"
-       end
-    end in
   lazymatch goal with
   | |- envs_entails ?Δ _ =>
-    let pat := sel_pat.parse pat in go pat Δ (@nil esel_pat)
+    let pat := sel_pat.parse pat in iElaborateSelPat_go pat Δ (@nil esel_pat)
   end.
 
 Local Ltac iClearHyp H :=
@@ -351,16 +351,17 @@ Tactic Notation "iFrame" "(" constr(t1) constr(t2) constr(t3) constr(t4)
     constr(t5) constr(t6) constr(t7) constr(t8)")" :=
   iFramePure t1; iFrame ( t2 t3 t4 t5 t6 t7 t8 ).
 
+Local Ltac iFrame_go Hs :=
+  lazymatch Hs with
+  | [] => idtac
+  | SelPure :: ?Hs => iFrameAnyPure; iFrame_go Hs
+  | SelPersistent :: ?Hs => iFrameAnyPersistent; iFrame_go Hs
+  | SelSpatial :: ?Hs => iFrameAnySpatial; iFrame_go Hs
+  | SelIdent ?H :: ?Hs => iFrameHyp H; iFrame_go Hs
+  end.
+
 Tactic Notation "iFrame" constr(Hs) :=
-  let rec go Hs :=
-    lazymatch Hs with
-    | [] => idtac
-    | SelPure :: ?Hs => iFrameAnyPure; go Hs
-    | SelPersistent :: ?Hs => iFrameAnyPersistent; go Hs
-    | SelSpatial :: ?Hs => iFrameAnySpatial; go Hs
-    | SelIdent ?H :: ?Hs => iFrameHyp H; go Hs
-    end
-  in let Hs := sel_pat.parse Hs in go Hs.
+  let Hs := sel_pat.parse Hs in iFrame_go Hs.
 Tactic Notation "iFrame" "(" constr(t1) ")" constr(Hs) :=
   iFramePure t1; iFrame Hs.
 Tactic Notation "iFrame" "(" constr(t1) constr(t2) ")" constr(Hs) :=
@@ -514,7 +515,7 @@ Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
     end in
   go xs.
 
-Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
+Ltac iSpecializePat_go H1 pats :=
   let solve_to_wand H1 :=
     iSolveTC ||
     let P := match goal with |- IntoWand _ _ ?P _ _ => P end in
@@ -527,12 +528,11 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
        fail "iSpecialize: cannot solve" Q "using done"
     | false => idtac
     end in
-  let rec go H1 pats :=
-    lazymatch pats with
+  lazymatch pats with
     | [] => idtac
     | SForall :: ?pats =>
        idtac "[IPM] The * specialization pattern is deprecated because it is applied implicitly.";
-       go H1 pats
+       iSpecializePat_go H1 pats
     | SIdent ?H2 :: ?pats =>
        notypeclasses refine (tac_specialize _ _ _ H2 _ H1 _ _ _ _ _ _ _ _ _ _);
          [env_reflexivity || fail "iSpecialize:" H2 "not found"
@@ -541,7 +541,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
           let P := match goal with |- IntoWand _ _ ?P ?Q _ => P end in
           let Q := match goal with |- IntoWand _ _ ?P ?Q _ => Q end in
           fail "iSpecialize: cannot instantiate" P "with" Q
-         |env_reflexivity|go H1 pats]
+         |env_reflexivity|iSpecializePat_go H1 pats]
     | SPureGoal ?d :: ?pats =>
        notypeclasses refine (tac_specialize_assert_pure _ _ H1 _ _ _ _ _ _ _ _ _ _ _ _);
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
@@ -551,7 +551,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
           fail "iSpecialize:" Q "not pure"
          |env_reflexivity
          |solve_done d (*goal*)
-         |go H1 pats]
+         |iSpecializePat_go H1 pats]
     | SGoal (SpecGoal GPersistent false ?Hs_frame [] ?d) :: ?pats =>
        notypeclasses refine (tac_specialize_assert_persistent _ _ _ H1 _ _ _ _ _ _ _ _ _ _ _ _ _);
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
@@ -562,7 +562,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
          |iSolveTC
          |env_reflexivity
          |iFrame Hs_frame; solve_done d (*goal*)
-         |go H1 pats]
+         |iSpecializePat_go H1 pats]
     | SGoal (SpecGoal GPersistent _ _ _ _) :: ?pats =>
        fail "iSpecialize: cannot select hypotheses for persistent premise"
     | SGoal (SpecGoal ?m ?lr ?Hs_frame ?Hs ?d) :: ?pats =>
@@ -578,7 +578,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
           let Hs' := iMissingHyps Hs' in
           fail "iSpecialize: hypotheses" Hs' "not found"
          |iFrame Hs_frame; solve_done d (*goal*)
-         |go H1 pats]
+         |iSpecializePat_go H1 pats]
     | SAutoFrame GPersistent :: ?pats =>
        notypeclasses refine (tac_specialize_assert_persistent _ _ _ H1 _ _ _ _ _ _ _ _ _ _ _ _ _);
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
@@ -588,7 +588,7 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
           fail "iSpecialize:" Q "not persistent"
          |env_reflexivity
          |solve [iFrame "∗ #"]
-         |go H1 pats]
+         |iSpecializePat_go H1 pats]
     | SAutoFrame ?m :: ?pats =>
        notypeclasses refine (tac_specialize_frame _ _ H1 _ _ _ _ _ _ _ _ _ _ _ _);
          [env_reflexivity || fail "iSpecialize:" H1 "not found"
@@ -602,8 +602,11 @@ Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
             |notypeclasses refine (tac_unlock_True _ _ _)
             |iFrame "∗ #"; notypeclasses refine (tac_unlock _ _ _)
             |fail "iSpecialize: premise cannot be solved by framing"]
-         |exact eq_refl]; iIntro H1; go H1 pats
-    end in let pats := spec_pat.parse pat in go H pats.
+         |exact eq_refl]; iIntro H1; iSpecializePat_go H1 pats
+    end.
+
+Local Tactic Notation "iSpecializePat" open_constr(H) constr(pat) :=
+  let pats := spec_pat.parse pat in iSpecializePat_go H pats.
 
 (* The argument [p] denotes whether the conclusion of the specialized term is
 persistent. If so, one can use all spatial hypotheses for both proving the
