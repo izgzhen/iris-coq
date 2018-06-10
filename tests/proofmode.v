@@ -482,9 +482,9 @@ Qed.
 
 Lemma test_and_sep_affine_bi `{BiAffine PROP} P Q : □ P ∧ Q ⊢ □ P ∗ Q.
 Proof.
-  iIntros "[??]". iSplit; last done.
-  lazymatch goal with |- coq_tactics.envs_entails _ (□ P) => done end.
+  iIntros "[??]". iSplit; last done. Show. done.
 Qed.
+
 End tests.
 
 (** Test specifically if certain things print correctly. *)

@@ -34,6 +34,17 @@
 1 subgoal
   
   PROP : sbi
+  H : BiAffine PROP
+  P, Q : PROP
+  ============================
+  _ : □ P
+  _ : Q
+  --------------------------------------∗
+  □ P
+  
+1 subgoal
+  
+  PROP : sbi
   BiFUpd0 : BiFUpd PROP
   P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
   ============================
