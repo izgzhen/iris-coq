@@ -44,7 +44,7 @@ Ltac iSolveTC :=
 (** Tactic used for solving side-conditions arising from TC resolution in iMod
 and iInv. *)
 Ltac iSolveSideCondition :=
-  try (split_and?; solve [ fast_done | solve_ndisj ]).
+  split_and?; try solve [ fast_done | solve_ndisj ].
 
 (** * Misc *)
 
