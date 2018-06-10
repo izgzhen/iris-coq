@@ -8,7 +8,7 @@ Section sbi_instances.
 Context {PROP : sbi}.
 Implicit Types P Q R : PROP.
 
-(* FromAssumption *)
+(** FromAssumption *)
 Global Instance from_assumption_later p P Q :
   FromAssumption p P Q → KnownRFromAssumption p P (▷ Q)%I.
 Proof. rewrite /KnownRFromAssumption /FromAssumption=>->. apply later_intro. Qed.
@@ -39,7 +39,7 @@ Proof.
   rewrite plainly_elim_persistently intuitionistically_into_persistently //.
 Qed.
 
-(* FromPure *)
+(** FromPure *)
 Global Instance from_pure_internal_eq af {A : ofeT} (a b : A) :
   @FromPure PROP af (a ≡ b) (a ≡ b).
 Proof. by rewrite /FromPure pure_internal_eq affinely_if_elim. Qed.
@@ -61,7 +61,7 @@ Global Instance from_pure_plainly `{BiPlainly PROP} P φ :
   FromPure false P φ → FromPure false (■ P) φ.
 Proof. rewrite /FromPure=> <-. by rewrite plainly_pure. Qed.
 
-(* IntoPure *)
+(** IntoPure *)
 Global Instance into_pure_eq {A : ofeT} (a b : A) :
   Discrete a → @IntoPure PROP (a ≡ b) (a ≡ b).
 Proof. intros. by rewrite /IntoPure discrete_eq. Qed.
@@ -70,7 +70,7 @@ Global Instance into_pure_plainly `{BiPlainly PROP} P φ :
   IntoPure P φ → IntoPure (■ P) φ.
 Proof. rewrite /IntoPure=> ->. apply: plainly_elim. Qed.
 
-(* IntoWand *)
+(** IntoWand *)
 Global Instance into_wand_later p q R P Q :
   IntoWand p q R P Q → IntoWand p q (▷ R) (▷ P) (▷ Q).
 Proof.
@@ -144,7 +144,7 @@ Global Instance into_wand_plainly_false `{BiPlainly PROP} q R P Q :
   Absorbing R → IntoWand false q R P Q → IntoWand false q (■ R) P Q.
 Proof. intros ?. by rewrite /IntoWand plainly_elim. Qed.
 
-(* FromAnd *)
+(** FromAnd *)
 Global Instance from_and_later P Q1 Q2 :
   FromAnd P Q1 Q2 → FromAnd (▷ P) (▷ Q1) (▷ Q2).
 Proof. rewrite /FromAnd=> <-. by rewrite later_and. Qed.
@@ -159,7 +159,7 @@ Global Instance from_and_plainly `{BiPlainly PROP} P Q1 Q2 :
   FromAnd P Q1 Q2 → FromAnd (■ P) (■ Q1) (■ Q2).
 Proof. rewrite /FromAnd=> <-. by rewrite plainly_and. Qed.
 
-(* FromSep *)
+(** FromSep *)
 Global Instance from_sep_later P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (▷ P) (▷ Q1) (▷ Q2).
 Proof. rewrite /FromSep=> <-. by rewrite later_sep. Qed.
@@ -181,7 +181,7 @@ Global Instance from_sep_plainly `{BiPlainly PROP} P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (■ P) (■ Q1) (■ Q2).
 Proof. rewrite /FromSep=> <-. by rewrite plainly_sep_2. Qed.
 
-(* IntoAnd *)
+(** IntoAnd *)
 Global Instance into_and_later p P Q1 Q2 :
   IntoAnd p P Q1 Q2 → IntoAnd p (▷ P) (▷ Q1) (▷ Q2).
 Proof.
@@ -213,7 +213,7 @@ Proof.
   - intros ->. by rewrite plainly_and.
 Qed.
 
-(* IntoSep *)
+(** IntoSep *)
 Global Instance into_sep_later P Q1 Q2 :
   IntoSep P Q1 Q2 → IntoSep (▷ P) (▷ Q1) (▷ Q2).
 Proof. rewrite /IntoSep=> ->. by rewrite later_sep. Qed.
@@ -248,7 +248,7 @@ Proof.
   rewrite /IntoSep /= => -> ??. by rewrite sep_and plainly_and plainly_and_sep_l_1.
 Qed.
 
-(* FromOr *)
+(** FromOr *)
 Global Instance from_or_later P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (▷ P) (▷ Q1) (▷ Q2).
 Proof. rewrite /FromOr=><-. by rewrite later_or. Qed.
@@ -276,7 +276,7 @@ Global Instance from_or_plainly `{BiPlainly PROP} P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr (■ P) (■ Q1) (■ Q2).
 Proof. rewrite /FromOr=> <-. by rewrite -plainly_or_2. Qed.
 
-(* IntoOr *)
+(** IntoOr *)
 Global Instance into_or_later P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (▷ P) (▷ Q1) (▷ Q2).
 Proof. rewrite /IntoOr=>->. by rewrite later_or. Qed.
@@ -291,7 +291,7 @@ Global Instance into_or_plainly `{BiPlainly PROP, BiPlainlyExist PROP} P Q1 Q2 :
   IntoOr P Q1 Q2 → IntoOr (■ P) (■ Q1) (■ Q2).
 Proof. rewrite /IntoOr=>->. by rewrite plainly_or. Qed.
 
-(* FromExist *)
+(** FromExist *)
 Global Instance from_exist_later {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (▷ P) (λ a, ▷ (Φ a))%I.
 Proof.
@@ -321,7 +321,7 @@ Global Instance from_exist_plainly `{BiPlainly PROP} {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist (■ P) (λ a, ■ (Φ a))%I.
 Proof. rewrite /FromExist=> <-. by rewrite -plainly_exist_2. Qed.
 
-(* IntoExist *)
+(** IntoExist *)
 Global Instance into_exist_later {A} P (Φ : A → PROP) :
   IntoExist P Φ → Inhabited A → IntoExist (▷ P) (λ a, ▷ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP ?. by rewrite HP later_exist. Qed.
@@ -336,7 +336,7 @@ Global Instance into_exist_plainly `{BiPlainlyExist PROP} {A} P (Φ : A → PROP
   IntoExist P Φ → IntoExist (■ P) (λ a, ■ (Φ a))%I.
 Proof. rewrite /IntoExist=> HP. by rewrite HP plainly_exist. Qed.
 
-(* IntoForall *)
+(** IntoForall *)
 Global Instance into_forall_later {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (▷ P) (λ a, ▷ (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP later_forall. Qed.
@@ -348,7 +348,7 @@ Global Instance into_forall_plainly `{BiPlainly PROP} {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (■ P) (λ a, ■ (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP plainly_forall. Qed.
 
-(* FromForall *)
+(** FromForall *)
 Global Instance from_forall_later {A} P (Φ : A → PROP) :
   FromForall P Φ → FromForall (▷ P)%I (λ a, ▷ (Φ a))%I.
 Proof. rewrite /FromForall=> <-. by rewrite later_forall. Qed.
@@ -360,7 +360,7 @@ Global Instance from_forall_plainly `{BiPlainly PROP} {A} P (Φ : A → PROP) :
   FromForall P Φ → FromForall (■ P)%I (λ a, ■ (Φ a))%I.
 Proof. rewrite /FromForall=> <-. by rewrite plainly_forall. Qed.
 
-(* IsExcept0 *)
+(** IsExcept0 *)
 Global Instance is_except_0_except_0 P : IsExcept0 (◇ P).
 Proof. by rewrite /IsExcept0 except_0_idemp. Qed.
 Global Instance is_except_0_later P : IsExcept0 (▷ P).
@@ -377,7 +377,7 @@ Global Instance is_except_0_fupd `{BiFUpd PROP} E1 E2 P :
   IsExcept0 (|={E1,E2}=> P).
 Proof. by rewrite /IsExcept0 except_0_fupd. Qed.
 
-(* FromModal *)
+(** FromModal *)
 Global Instance from_modal_later P :
   FromModal (modality_laterN 1) (▷^1 P) (▷ P) P.
 Proof. by rewrite /FromModal. Qed.
@@ -409,7 +409,7 @@ Global Instance from_modal_plainly_embed `{BiPlainly PROP, BiPlainly PROP',
   FromModal modality_plainly sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof. rewrite /FromModal /= =><-. by rewrite embed_plainly. Qed.
 
-(* IntoInternalEq *)
+(** IntoInternalEq *)
 Global Instance into_internal_eq_internal_eq {A : ofeT} (x y : A) :
   @IntoInternalEq PROP A (x ≡ y) x y.
 Proof. by rewrite /IntoInternalEq. Qed.
@@ -433,7 +433,7 @@ Global Instance into_internal_eq_embed
   IntoInternalEq P x y → IntoInternalEq ⎡P⎤ x y.
 Proof. rewrite /IntoInternalEq=> ->. by rewrite embed_internal_eq. Qed.
 
-(* IntoExcept0 *)
+(** IntoExcept0 *)
 Global Instance into_except_0_except_0 P : IntoExcept0 (◇ P) P.
 Proof. by rewrite /IntoExcept0. Qed.
 Global Instance into_except_0_later P : Timeless P → IntoExcept0 (▷ P) P.
@@ -460,7 +460,7 @@ Global Instance into_except_0_embed `{SbiEmbed PROP PROP'} P Q :
   IntoExcept0 P Q → IntoExcept0 ⎡P⎤ ⎡Q⎤.
 Proof. rewrite /IntoExcept0=> ->. by rewrite embed_except_0. Qed.
 
-(* ElimModal *)
+(** ElimModal *)
 Global Instance elim_modal_timeless p P Q :
   IntoExcept0 P P' → IsExcept0 Q → ElimModal True p p P P' Q Q.
 Proof.
@@ -502,7 +502,7 @@ Global Instance elim_modal_embed_fupd_hyp `{BiEmbedFUpd PROP PROP'}
   ElimModal φ p p' ⎡|={E1,E2}=> P⎤ P' Q Q'.
 Proof. by rewrite /ElimModal embed_fupd. Qed.
 
-(* AddModal *)
+(** AddModal *)
 (* High priority to add a ▷ rather than a ◇ when P is timeless. *)
 Global Instance add_modal_later_except_0 P Q :
   Timeless P → AddModal (▷ P) P (◇ Q) | 0.
@@ -538,7 +538,7 @@ Global Instance add_modal_embed_fupd_goal `{BiEmbedFUpd PROP PROP'}
   AddModal P P' (|={E1,E2}=> ⎡Q⎤)%I → AddModal P P' ⎡|={E1,E2}=> Q⎤.
 Proof. by rewrite /AddModal !embed_fupd. Qed.
 
-(* ElimAcc *)
+(** ElimAcc *)
 Global Instance elim_acc_fupd `{BiFUpd PROP} {X} E1 E2 E α β mγ Q :
   (* FIXME: Why %I? ElimAcc sets the right scopes! *)
   ElimAcc (X:=X) (fupd E1 E2) (fupd E2 E1) α β mγ
@@ -551,11 +551,11 @@ Proof.
   iMod ("Hclose" with "Hβ") as "Hγ". by iApply "Hfin".
 Qed.
 
-(* IntoAcc *)
+(** IntoAcc *)
 (* TODO: We could have instances from "unfolded" accessors with or without
    the first binder. *)
 
-(* IntoLater *)
+(** IntoLater *)
 Global Instance into_laterN_0 only_head P : IntoLaterN only_head 0 P P.
 Proof. by rewrite /IntoLaterN /MaybeIntoLaterN. Qed.
 Global Instance into_laterN_later only_head n n' m' P Q lQ :
