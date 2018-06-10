@@ -124,6 +124,10 @@ Proof.
   by rewrite forall_elim.
 Qed.
 
+Global Instance from_assumption_bupd `{BiBUpd PROP} p P Q :
+  FromAssumption p P Q → KnownRFromAssumption p P (|==> Q).
+Proof. rewrite /KnownRFromAssumption /FromAssumption=>->. apply bupd_intro. Qed.
+
 (** IntoPure *)
 Global Instance into_pure_pure φ : @IntoPure PROP ⌜φ⌝ φ.
 Proof. by rewrite /IntoPure. Qed.
@@ -252,6 +256,10 @@ Global Instance from_pure_embed `{BiEmbed PROP PROP'} a P φ :
   FromPure a P φ → FromPure a ⎡P⎤ φ.
 Proof. rewrite /FromPure=> <-. by rewrite -embed_pure embed_affinely_if_2. Qed.
 
+Global Instance from_pure_bupd `{BiBUpd PROP} a P φ :
+  FromPure a P φ → FromPure a (|==> P) φ.
+Proof. rewrite /FromPure=> <-. apply bupd_intro. Qed.
+
 (** IntoPersistent *)
 Global Instance into_persistent_persistently p P Q :
   IntoPersistent true P Q → IntoPersistent p (<pers> P) Q | 0.
@@ -325,6 +333,10 @@ Global Instance from_modal_intuitionistically_embed `{BiEmbed PROP PROP'} `(sel 
   FromModal modality_intuitionistically sel P Q →
   FromModal modality_intuitionistically sel ⎡P⎤ ⎡Q⎤ | 100.
 Proof. rewrite /FromModal /= =><-. by rewrite embed_intuitionistically_2. Qed.
+
+Global Instance from_modal_bupd `{BiBUpd PROP} P :
+  FromModal modality_id (|==> P) (|==> P) P.
+Proof. by rewrite /FromModal /= -bupd_intro. Qed.
 
 (** IntoWand *)
 Global Instance into_wand_wand p q P Q P' :
@@ -455,6 +467,26 @@ Proof.
   by rewrite embed_affinely_2 embed_intuitionistically_if_2 embed_wand.
 Qed.
 
+
+Global Instance into_wand_bupd `{BiBUpd PROP} p q R P Q :
+  IntoWand false false R P Q → IntoWand p q (|==> R) (|==> P) (|==> Q).
+Proof.
+  rewrite /IntoWand /= => HR. rewrite !intuitionistically_if_elim HR.
+  apply wand_intro_l. by rewrite bupd_sep wand_elim_r.
+Qed.
+Global Instance into_wand_bupd_persistent `{BiBUpd PROP} p q R P Q :
+  IntoWand false q R P Q → IntoWand p q (|==> R) P (|==> Q).
+Proof.
+  rewrite /IntoWand /= => HR. rewrite intuitionistically_if_elim HR.
+  apply wand_intro_l. by rewrite bupd_frame_l wand_elim_r.
+Qed.
+Global Instance into_wand_bupd_args `{BiBUpd PROP} p q R P Q :
+  IntoWand p false R P Q → IntoWand' p q R (|==> P) (|==> Q).
+Proof.
+  rewrite /IntoWand' /IntoWand /= => ->.
+  apply wand_intro_l. by rewrite intuitionistically_if_elim bupd_wand_r.
+Qed.
+
 (** FromWand *)
 Global Instance from_wand_wand P1 P2 : FromWand (P1 -∗ P2) P1 P2.
 Proof. by rewrite /FromWand. Qed.
@@ -549,6 +581,10 @@ Global Instance from_sep_big_sepL_app {A} (Φ : nat → A → PROP) l1 l2 :
   FromSep ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
 Proof. by rewrite /FromSep big_opL_app. Qed.
+
+Global Instance from_sep_bupd `{BiBUpd PROP} P Q1 Q2 :
+  FromSep P Q1 Q2 → FromSep (|==> P) (|==> Q1) (|==> Q2).
+Proof. rewrite /FromSep=><-. apply bupd_sep. Qed.
 
 (** IntoAnd *)
 Global Instance into_and_and p P Q : IntoAnd p (P ∧ Q) P Q | 10.
@@ -712,6 +748,13 @@ Global Instance from_or_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   FromOr P Q1 Q2 → FromOr ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
 Proof. by rewrite /FromOr -embed_or => <-. Qed.
 
+Global Instance from_or_bupd `{BiBUpd PROP} P Q1 Q2 :
+  FromOr P Q1 Q2 → FromOr (|==> P) (|==> Q1) (|==> Q2).
+Proof.
+  rewrite /FromOr=><-.
+  apply or_elim; apply bupd_mono; auto using or_intro_l, or_intro_r.
+Qed.
+
 (** IntoOr *)
 Global Instance into_or_or P Q : IntoOr (P ∨ Q) P Q.
 Proof. by rewrite /IntoOr. Qed.
@@ -755,6 +798,12 @@ Proof. rewrite /FromExist=> <-. by rewrite persistently_exist. Qed.
 Global Instance from_exist_embed `{BiEmbed PROP PROP'} {A} P (Φ : A → PROP) :
   FromExist P Φ → FromExist ⎡P⎤ (λ a, ⎡Φ a⎤%I).
 Proof. by rewrite /FromExist -embed_exist => <-. Qed.
+
+Global Instance from_exist_bupd `{BiBUpd PROP} {A} P (Φ : A → PROP) :
+  FromExist P Φ → FromExist (|==> P) (λ a, |==> Φ a)%I.
+Proof.
+  rewrite /FromExist=><-. apply exist_elim=> a. by rewrite -(exist_intro a).
+Qed.
 
 (** IntoExist *)
 Global Instance into_exist_exist {A} (Φ : A → PROP) : IntoExist (∃ a, Φ a) Φ.
@@ -925,6 +974,9 @@ Global Instance add_modal_embed_bupd_goal `{BiEmbedBUpd PROP PROP'}
        (P P' : PROP') (Q : PROP) :
   AddModal P P' (|==> ⎡Q⎤)%I → AddModal P P' ⎡|==> Q⎤.
 Proof. by rewrite /AddModal !embed_bupd. Qed.
+
+Global Instance add_modal_bupd `{BiBUpd PROP} P Q : AddModal (|==> P) P (|==> Q).
+Proof. by rewrite /AddModal bupd_frame_r wand_elim_r bupd_trans. Qed.
 
 (** ElimInv *)
 Global Instance elim_inv_acc_without_close {X : Type}
