@@ -111,6 +111,10 @@ Lemma test_iSpecialize_auto_frame P Q R :
   (P -∗ True -∗ True -∗ Q -∗ R) -∗ P -∗ Q -∗ R.
 Proof. iIntros "H ? HQ". by iApply ("H" with "[$]"). Qed.
 
+Lemma test_iSpecialize_pure (φ : Prop) Q R:
+  φ → (⌜φ⌝ -∗ Q) → Q.
+Proof. iIntros (HP HPQ). iDestruct (HPQ $! HP) as "?". done. Qed.
+
 Lemma test_iSpecialize_Coq_entailment P Q R :
   P → (P -∗ Q) → Q.
 Proof. iIntros (HP HPQ). iDestruct (HPQ $! HP) as "?". done. Qed.
