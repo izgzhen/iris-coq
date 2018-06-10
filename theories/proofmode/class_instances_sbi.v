@@ -343,19 +343,6 @@ Proof. rewrite /IntoForall=> HP. by rewrite HP later_forall. Qed.
 Global Instance into_forall_except_0 {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (◇ P) (λ a, ◇ (Φ a))%I.
 Proof. rewrite /IntoForall=> HP. by rewrite HP except_0_forall. Qed.
-Global Instance into_forall_impl_pure φ P Q :
-  FromPureT false P φ → IntoForall (P → Q) (λ _ : φ, Q).
-Proof.
-  rewrite /FromPureT /FromPure /IntoForall=> -[φ' [-> <-]].
-  by rewrite pure_impl_forall.
-Qed.
-Global Instance into_forall_wand_pure φ P Q :
-  FromPureT true P φ → IntoForall (P -∗ Q) (λ _ : φ, Q).
-Proof.
-  rewrite /FromPureT /FromPure /IntoForall=> -[φ' [-> <-]] /=.
-  apply forall_intro=>? /=.
-  by rewrite -(pure_intro _ True%I) // /bi_affinely right_id emp_wand.
-Qed.
 
 Global Instance into_forall_plainly `{BiPlainly PROP} {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (■ P) (λ a, ■ (Φ a))%I.
