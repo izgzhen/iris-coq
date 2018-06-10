@@ -57,3 +57,8 @@
   --------------------------------------∗
   ∀ _ : (), ∃ _ : (), emp
   
+The command has indeed failed with message:
+In nested Ltac calls to "iFrame (constr)",
+"<iris.proofmode.ltac_tactics.iFrame_go>" and
+"<iris.proofmode.ltac_tactics.iFrameHyp>", last call failed.
+Tactic failure: iFrame: cannot frame (P i).
