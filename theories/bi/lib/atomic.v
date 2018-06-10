@@ -259,6 +259,22 @@ Section lemmas.
     iDestruct "HUpd" as (P) "(HP & Hshift)". by iApply "Hshift".
   Qed.
 
+  (* This lets you eliminate atomic updates with iMod. *)
+  Global Instance elim_mod_aupd φ Eo Ei E α β Φ Q Q' :
+    (∀ R, ElimModal φ false false (|={E,Ei}=> R) R Q Q') →
+    ElimModal (φ ∧ Eo ⊆ E) false false
+              (atomic_update Eo Ei α β Φ)
+              (∃.. x, α x ∗
+                       (α x ={Ei,E}=∗ atomic_update Eo Ei α β Φ) ∧
+                       (∀.. y, β x y ={Ei,E}=∗ Φ x y))
+              Q Q'.
+  Proof.
+    intros ?. rewrite /ElimModal /= =>-[??]. iIntros "[AU Hcont]".
+    iPoseProof (aupd_aacc with "AU") as "AC".
+    iMod (atomic_acc_mask_weaken with "AC"); first done.
+    iApply "Hcont". done.
+  Qed.
+
   Global Instance aupd_laterable Eo Ei α β Φ :
     Laterable (atomic_update Eo Ei α β Φ).
   Proof.
@@ -293,6 +309,7 @@ Section lemmas.
     - iIntros (y) "Hβ". iMod "Hclose'" as "_". iApply "Hclose". done.
   Qed.
 
+  (* This lets you open invariants etc. when the goal is an atomic accessor. *)
   Global Instance elim_acc_aacc {X} E1 E2 Ei (α' β' : X → PROP) γ' α β Pas Φ :
     ElimAcc (X:=X) (fupd E1 E2) (fupd E2 E1) α' β' γ'
             (atomic_acc E1 Ei α Pas β Φ)
@@ -318,6 +335,16 @@ Section lemmas.
       iMod ("Hclose" with "Hβ'") as "Hγ'".
       iModIntro. destruct (γ' x'); iApply "HΦ"; done.
   Qed.
+
+  (* Everything that fancy updates can eliminate without changing, atomic
+  accessors can eliminate as well.  This is a forwarding instance needed becuase
+  atomic_acc is becoming opaque. *)
+  Global Instance elim_modal_acc p q φ P P' Eo Ei α Pas β Φ :
+    (∀ Q, ElimModal φ p q P P' (|={Eo,Ei}=> Q) (|={Eo,Ei}=> Q)) →
+    ElimModal φ p q P P'
+              (atomic_acc Eo Ei α Pas β Φ)
+              (atomic_acc Eo Ei α Pas β Φ).
+  Proof. intros Helim. apply Helim. Qed.
 
   Lemma aacc_aacc {TA' TB' : tele} E1 E1' E2 E3
         α P β Φ
@@ -423,3 +450,6 @@ Tactic Notation "iAuIntro" :=
   | iSolveTC || fail "iAuIntro: not all spatial assumptions are laterable"
   | (* P = ...: make the P pretty *) pm_reflexivity
   | (* the new proof mode goal *) ].
+
+(* From here on, prevent TC search from implicitly unfolding these. *)
+Typeclasses Opaque atomic_acc atomic_update.

@@ -83,7 +83,7 @@ Section proof.
     <<< l ↦{q} v, RET v >>>.
   Proof.
     iIntros (Q Φ) "? AU". wp_let.
-    iMod (aupd_aacc with "AU") as (v q) "[H↦ [_ Hclose]]".
+    iMod "AU" as (v q) "[H↦ [_ Hclose]]".
     wp_load. iMod ("Hclose" with "H↦") as "HΦ". by iApply "HΦ".
   Qed.
 
@@ -93,7 +93,7 @@ Section proof.
     <<< l ↦ w, RET #() >>>.
   Proof.
     iIntros (<- Q Φ) "? AU". wp_let. wp_proj. wp_proj.
-    iMod (aupd_aacc with "AU") as (v) "[H↦ [_ Hclose]]".
+    iMod "AU" as (v) "[H↦ [_ Hclose]]".
     wp_store. iMod ("Hclose" with "H↦") as "HΦ". by iApply "HΦ".
   Qed.
 
@@ -105,7 +105,7 @@ Section proof.
         RET #(if decide (v = w1) then true else false) >>>.
   Proof.
     iIntros (<- <- ? Q Φ) "? AU". wp_let. repeat wp_proj.
-    iMod (aupd_aacc with "AU") as (v) "[H↦ [_ Hclose]]".
+    iMod "AU" as (v) "[H↦ [_ Hclose]]".
     destruct (decide (v = w1)) as [<-|Hv]; [wp_cas_suc|wp_cas_fail];
     iMod ("Hclose" with "H↦") as "HΦ"; by iApply "HΦ".
   Qed.
