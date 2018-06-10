@@ -450,6 +450,13 @@ Tactic Notation "iAuIntro" :=
   | iSolveTC || fail "iAuIntro: not all spatial assumptions are laterable"
   | (* P = ...: make the P pretty *) pm_reflexivity
   | (* the new proof mode goal *) ].
+Tactic Notation "iAaccIntro" "with" constr(sel) :=
+  iStartProof; lazymatch goal with
+  | |- environments.envs_entails _ (@atomic_acc ?PROP ?H ?TA ?TB ?Eo ?Ei ?α ?P ?β ?Φ) =>
+    iApply (@aacc_intro PROP H TA TB Eo Ei α P β Φ with sel);
+    first try solve_ndisj; last iSplit
+  | _ => fail "iAAccIntro: Goal is not an atomic accessor"
+  end.
 
 (* From here on, prevent TC search from implicitly unfolding these. *)
 Typeclasses Opaque atomic_acc atomic_update.

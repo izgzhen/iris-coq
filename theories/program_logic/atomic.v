@@ -104,8 +104,7 @@ Section lemmas.
   Proof.
     rewrite ->tforall_forall in HL.
     iIntros "Hwp" (Φ x) "Hα HΦ". iApply ("Hwp" with "[HΦ]"); first iAccu.
-    iAuIntro. iApply (aacc_intro with "Hα"); first solve_ndisj.
-    iSplit; first by eauto. iIntros (y) "Hβ !>".
+    iAuIntro. iAaccIntro with "Hα"; first by eauto. iIntros (y) "Hβ !>".
     (* FIXME: Using ssreflect rewrite does not work? *)
     rewrite ->!tele_app_bind. iIntros "HΦ". iApply "HΦ". done.
   Qed.

@@ -27,22 +27,14 @@ Section increment.
     wp_apply (load_spec with "[HQ]"); first by iAccu.
     (* Prove the atomic update for load *)
     iAuIntro. iApply (aacc_aupd_abort with "AU"); first done.
-    iIntros (x) "H↦".
-    (* FIXME: Oh wow this is bad. *)
-    iApply (aacc_intro $! ([tele_arg _; _] : [tele (_:val) (_:Qp)]) with "[H↦]"); [solve_ndisj|done|iSplit].
-    { iIntros "$ !> $ !> //". }
+    iIntros (x) "H↦". iAaccIntro with "H↦"; first by eauto with iFrame.
     iIntros "$ !> AU !> HQ".
     (* Now go on *)
     wp_let. wp_op. wp_bind (CAS _ _ _)%I.
     wp_apply (cas_spec with "[HQ]"); [done|iAccu|].
     (* Prove the atomic update for CAS *)
     iAuIntro. iApply (aacc_aupd with "AU"); first done.
-    iIntros (x') "H↦".
-    (* FIXME: Oh wow this is bad. *)
-    iApply (aacc_intro $! ([tele_arg _] : [tele (_:val)]) with "[H↦]"); [solve_ndisj|simpl; by auto with iFrame|iSplit].
-    { eauto 10 with iFrame. }
-    (* FIXME: Manual reduction should not be needed. *)
-    reduction.pm_reduce.
+    iIntros (x') "H↦". iAaccIntro with "H↦"; first by eauto with iFrame.
     iIntros "H↦ !>".
     destruct (decide (#x' = #x)) as [[= ->]|Hx].
     - iRight. iFrame. iIntros "HΦ !> HQ".
@@ -73,10 +65,8 @@ Section increment.
     iAuIntro. iApply (aacc_aupd_commit with "AU"); first done.
     iIntros (x) "H↦".
     iDestruct (mapsto_agree with "Hl H↦") as %[= <-].
-    iCombine "Hl" "H↦" as "Hl".
-    (* FIXME: Oh wow this is bad. *)
-    iApply (aacc_intro $! ([tele_arg _] : [tele (_:val)]) with "[Hl]"); [solve_ndisj|done|simpl; iSplit].
-    { simpl. iIntros "[$ $] !> $ !> //". }
+    iCombine "Hl" "H↦" as "Hl". iAaccIntro with "Hl".
+    { iIntros "[$ $]"; eauto. }
     iIntros "$ !>". iSplit; first done.
     iIntros "HΦ !> HQ". wp_seq. iApply "HΦ". done.
   Qed.
@@ -101,11 +91,8 @@ Section increment_client.
     (* FIXME: I am only using persistent stuff, so I should be allowed
        to move this to the persisten context even without the additional □. *)
     iAssert (□ WP incr #l {{ _, True }})%I as "#Aupd".
-    { iAlways. wp_apply (incr_spec with "[]"); first by iAccu. clear x.
-      iAuIntro. iInv nroot as (x) ">H↦".
-      (* FIXME: Oh wow this is bad. *)
-      iApply (aacc_intro $! ([tele_arg _] : [tele (_:Z)]) with "[H↦]"); [solve_ndisj|done|iSplit].
-      { by eauto 10. }
+    { iAlways. wp_apply incr_spec; first by iAccu. clear x.
+      iAuIntro. iInv nroot as (x) ">H↦". iAaccIntro with "H↦"; first by eauto 10.
       iIntros "H↦ !>". iSplitL "H↦"; first by eauto 10.
       (* The continuation: From after the atomic triple to the postcondition of the WP *)
       done.
