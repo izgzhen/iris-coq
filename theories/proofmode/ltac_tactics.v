@@ -41,6 +41,11 @@ performance and horrible error messages, so we wrap it in a [once]. *)
 Ltac iSolveTC :=
   solve [once (typeclasses eauto)].
 
+(** Tactic used for solving side-conditions arising from TC resolution in iMod
+and iInv. *)
+Ltac iSolveSideCondition :=
+  split_and?; try solve [ fast_done | solve_ndisj ].
+
 (** * Misc *)
 
 Ltac iMissingHyps Hs :=
@@ -1005,7 +1010,7 @@ Tactic Notation "iModCore" constr(H) :=
      let P := match goal with |- ElimModal _ _ _ ?P _ _ _ => P end in
      let Q := match goal with |- ElimModal _ _ _ _ _ ?Q _ => Q end in
      fail "iMod: cannot eliminate modality " P "in" Q
-    |try fast_done (* optional side-condition *)
+    |iSolveSideCondition
     |env_reflexivity|].
 
 (** * Basic destruct tactic *)
@@ -1920,7 +1925,7 @@ Tactic Notation "iInvCore" constr(select) "with" constr(pats) "as" open_constr(H
     [iSolveTC ||
      let I := match goal with |- ElimInv _ ?I  _ _ _ _ _ => I end in
      fail "iInv: cannot eliminate invariant " I
-    |try (split_and?; solve [ fast_done | solve_ndisj ])
+    |iSolveSideCondition
     |let R := fresh in intros R; eexists; split; [env_reflexivity|];
      (* Now we are left proving [envs_entails Δ'' R]. *)
      iSpecializePat H pats; last (
