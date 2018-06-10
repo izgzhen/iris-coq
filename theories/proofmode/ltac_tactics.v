@@ -982,7 +982,7 @@ Tactic Notation "iModIntro" uconstr(sel) :=
      | MIEnvIsEmpty => fail "iModIntro: persistent context is non-empty"
      end
     |iSolveTC ||
-     let s := lazymatch goal with |- IntoModalPersistentEnv _ _ _ ?s => s end in
+     let s := lazymatch goal with |- IntoModalSpatialEnv _ _ _ ?s _ => s end in
      lazymatch eval hnf in s with
      | MIEnvForall ?C => fail "iModIntro: spatial context does not satisfy" C
      | MIEnvIsEmpty => fail "iModIntro: spatial context is non-empty"
