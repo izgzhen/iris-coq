@@ -192,12 +192,12 @@ Lemma plainly_sep_dup P : ■ P ⊣⊢ ■ P ∗ ■ P.
 Proof.
   apply (anti_symm _).
   - rewrite -{1}(idemp bi_and (■ _)%I).
-    by rewrite -{2}(left_id emp%I _ (■ _)%I) plainly_and_sep_assoc and_elim_l.
+    by rewrite -{2}(emp_sep (■ _)%I) plainly_and_sep_assoc and_elim_l.
   - by rewrite plainly_absorb.
 Qed.
 
 Lemma plainly_and_sep_l_1 P Q : ■ P ∧ Q ⊢ ■ P ∗ Q.
-Proof. by rewrite -{1}(left_id emp%I _ Q%I) plainly_and_sep_assoc and_elim_l. Qed.
+Proof. by rewrite -{1}(emp_sep Q%I) plainly_and_sep_assoc and_elim_l. Qed.
 Lemma plainly_and_sep_r_1 P Q : P ∧ ■ Q ⊢ P ∗ ■ Q.
 Proof. by rewrite !(comm _ P) plainly_and_sep_l_1. Qed.
 
@@ -206,7 +206,7 @@ Proof. apply (anti_symm _); eauto using plainly_mono, plainly_emp_intro. Qed.
 Lemma plainly_and_sep P Q : ■ (P ∧ Q) ⊢ ■ (P ∗ Q).
 Proof.
   rewrite plainly_and.
-  rewrite -{1}plainly_idemp -plainly_and -{1}(left_id emp%I _ Q%I).
+  rewrite -{1}plainly_idemp -plainly_and -{1}(emp_sep Q%I).
   by rewrite plainly_and_sep_assoc (comm bi_and) plainly_and_emp_elim.
 Qed.
 
@@ -249,7 +249,7 @@ Proof. intros; rewrite -plainly_and_sep_r_1; auto. Qed.
 Lemma plainly_impl_wand_2 P Q : ■ (P -∗ Q) ⊢ ■ (P → Q).
 Proof.
   apply plainly_intro', impl_intro_r.
-  rewrite -{2}(left_id emp%I _ P%I) plainly_and_sep_assoc.
+  rewrite -{2}(emp_sep P%I) plainly_and_sep_assoc.
   by rewrite (comm bi_and) plainly_and_emp_elim wand_elim_l.
 Qed.
 

@@ -373,12 +373,13 @@ Proof.
   apply sep_mono_r, wand_elim_r.
 Qed.
 
-Lemma emp_wand P : (emp -∗ P) ⊣⊢ P.
+Global Instance emp_wand : LeftId (⊣⊢) emp%I (@bi_wand PROP).
 Proof.
-  apply (anti_symm _).
+  intros P. apply (anti_symm _).
   - by rewrite -[(emp -∗ P)%I]left_id wand_elim_r.
   - apply wand_intro_l. by rewrite left_id.
 Qed.
+
 Lemma False_wand P : (False -∗ P) ⊣⊢ True.
 Proof.
   apply (anti_symm (⊢)); [by auto|].
@@ -426,7 +427,7 @@ Lemma wand_iff_refl P : emp ⊢ P ∗-∗ P.
 Proof. apply and_intro; apply wand_intro_l; by rewrite right_id. Qed.
 
 Lemma wand_entails P Q : (P -∗ Q)%I → P ⊢ Q.
-Proof. intros. rewrite -[P]left_id. by apply wand_elim_l'. Qed.
+Proof. intros. rewrite -[P]emp_sep. by apply wand_elim_l'. Qed.
 Lemma entails_wand P Q : (P ⊢ Q) → (P -∗ Q)%I.
 Proof. intros ->. apply wand_intro_r. by rewrite left_id. Qed.
 
@@ -531,7 +532,7 @@ Lemma pure_wand_forall φ P `{!Absorbing P} : (⌜φ⌝ -∗ P) ⊣⊢ (∀ _ : 
 Proof.
   apply (anti_symm _).
   - apply forall_intro=> Hφ.
-    by rewrite -(left_id emp%I _ (_ -∗ _)%I) (pure_intro φ emp%I) // wand_elim_r.
+    rewrite -(pure_intro φ emp%I) // emp_wand //.
   - apply wand_intro_l, wand_elim_l', pure_elim'=> Hφ.
     apply wand_intro_l. rewrite (forall_elim Hφ) comm. by apply absorbing.
 Qed.
@@ -667,8 +668,8 @@ Lemma True_affine_all_affine P : Affine (PROP:=PROP) True → Affine P.
 Proof. rewrite /Affine=> <-; auto. Qed.
 Lemma emp_absorbing_all_absorbing P : Absorbing (PROP:=PROP) emp → Absorbing P.
 Proof.
-  intros. rewrite /Absorbing -{2}(left_id emp%I _ P).
-  by rewrite -(absorbing emp) absorbingly_sep_l left_id.
+  intros. rewrite /Absorbing -{2}(emp_sep P).
+  rewrite -(absorbing emp) absorbingly_sep_l left_id //.
 Qed.
 
 Lemma sep_elim_l P Q `{H : TCOr (Affine Q) (Absorbing P)} : P ∗ Q ⊢ P.
@@ -819,8 +820,8 @@ Lemma persistently_and_emp_elim P : emp ∧ <pers> P ⊢ P.
 Proof. by rewrite comm persistently_and_sep_elim_emp right_id and_elim_r. Qed.
 Lemma persistently_into_absorbingly P : <pers> P ⊢ <absorb> P.
 Proof.
-  rewrite -(right_id True%I _ (<pers> _)%I) -{1}(left_id emp%I _ True%I).
-  by rewrite persistently_and_sep_assoc (comm bi_and) persistently_and_emp_elim comm.
+  rewrite -(right_id True%I _ (<pers> _)%I) -{1}(emp_sep True%I).
+  rewrite persistently_and_sep_assoc (comm bi_and) persistently_and_emp_elim comm //.
 Qed.
 Lemma persistently_elim P `{!Absorbing P} : <pers> P ⊢ P.
 Proof. by rewrite persistently_into_absorbingly absorbing_absorbingly. Qed.
@@ -846,14 +847,14 @@ Lemma persistently_sep_dup P : <pers> P ⊣⊢ <pers> P ∗ <pers> P.
 Proof.
   apply (anti_symm _).
   - rewrite -{1}(idemp bi_and (<pers> _)%I).
-    by rewrite -{2}(left_id emp%I _ (<pers> _)%I)
+    by rewrite -{2}(emp_sep (<pers> _)%I)
       persistently_and_sep_assoc and_elim_l.
   - by rewrite persistently_absorbing.
 Qed.
 
 Lemma persistently_and_sep_l_1 P Q : <pers> P ∧ Q ⊢ <pers> P ∗ Q.
 Proof.
-  by rewrite -{1}(left_id emp%I _ Q%I) persistently_and_sep_assoc and_elim_l.
+  by rewrite -{1}(emp_sep Q%I) persistently_and_sep_assoc and_elim_l.
 Qed.
 Lemma persistently_and_sep_r_1 P Q : P ∧ <pers> Q ⊢ P ∗ <pers> Q.
 Proof. by rewrite !(comm _ P) persistently_and_sep_l_1. Qed.
@@ -861,7 +862,7 @@ Proof. by rewrite !(comm _ P) persistently_and_sep_l_1. Qed.
 Lemma persistently_and_sep P Q : <pers> (P ∧ Q) ⊢ <pers> (P ∗ Q).
 Proof.
   rewrite persistently_and.
-  rewrite -{1}persistently_idemp -persistently_and -{1}(left_id emp%I _ Q%I).
+  rewrite -{1}persistently_idemp -persistently_and -{1}(emp_sep Q%I).
   by rewrite persistently_and_sep_assoc (comm bi_and) persistently_and_emp_elim.
 Qed.
 
@@ -914,7 +915,7 @@ Proof. intros; rewrite -persistently_and_sep_r_1; auto. Qed.
 Lemma persistently_impl_wand_2 P Q : <pers> (P -∗ Q) ⊢ <pers> (P → Q).
 Proof.
   apply persistently_intro', impl_intro_r.
-  rewrite -{2}(left_id emp%I _ P%I) persistently_and_sep_assoc.
+  rewrite -{2}(emp_sep P%I) persistently_and_sep_assoc.
   by rewrite (comm bi_and) persistently_and_emp_elim wand_elim_l.
 Qed.
 

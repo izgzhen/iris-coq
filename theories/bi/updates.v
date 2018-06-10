@@ -1,5 +1,6 @@
 From stdpp Require Import coPset.
 From iris.bi Require Import interface derived_laws_sbi big_op plainly.
+Import interface.bi derived_laws_bi.bi derived_laws_sbi.bi.
 
 (* We first define operational type classes for the notations, and then later
 bundle these operational type classes with the laws. *)
@@ -135,9 +136,9 @@ Section bupd_derived.
   Lemma bupd_frame_l R Q : (R ∗ |==> Q) ==∗ R ∗ Q.
   Proof. rewrite !(comm _ R); apply bupd_frame_r. Qed.
   Lemma bupd_wand_l P Q : (P -∗ Q) ∗ (|==> P) ==∗ Q.
-  Proof. by rewrite bupd_frame_l bi.wand_elim_l. Qed.
+  Proof. by rewrite bupd_frame_l wand_elim_l. Qed.
   Lemma bupd_wand_r P Q : (|==> P) ∗ (P -∗ Q) ==∗ Q.
-  Proof. by rewrite bupd_frame_r bi.wand_elim_r. Qed.
+  Proof. by rewrite bupd_frame_r wand_elim_r. Qed.
   Lemma bupd_sep P Q : (|==> P) ∗ (|==> Q) ==∗ P ∗ Q.
   Proof. by rewrite bupd_frame_r bupd_frame_l bupd_trans. Qed.
 End bupd_derived.
@@ -148,8 +149,8 @@ Section bupd_derived_sbi.
 
   Lemma except_0_bupd P : ◇ (|==> P) ⊢ (|==> ◇ P).
   Proof.
-    rewrite /sbi_except_0. apply bi.or_elim; eauto using bupd_mono, bi.or_intro_r.
-    by rewrite -bupd_intro -bi.or_intro_l.
+    rewrite /sbi_except_0. apply or_elim; eauto using bupd_mono, or_intro_r.
+    by rewrite -bupd_intro -or_intro_l.
   Qed.
 
   Lemma bupd_plain P `{BiBUpdPlainly PROP, !Plain P} : (|==> P) ⊢ P.
@@ -180,14 +181,14 @@ Section fupd_derived.
   Lemma fupd_frame_l E1 E2 P Q : (P ∗ |={E1,E2}=> Q) ={E1,E2}=∗ P ∗ Q.
   Proof. rewrite !(comm _ P); apply fupd_frame_r. Qed.
   Lemma fupd_wand_l E1 E2 P Q : (P -∗ Q) ∗ (|={E1,E2}=> P) ={E1,E2}=∗ Q.
-  Proof. by rewrite fupd_frame_l bi.wand_elim_l. Qed.
+  Proof. by rewrite fupd_frame_l wand_elim_l. Qed.
   Lemma fupd_wand_r E1 E2 P Q : (|={E1,E2}=> P) ∗ (P -∗ Q) ={E1,E2}=∗ Q.
-  Proof. by rewrite fupd_frame_r bi.wand_elim_r. Qed.
+  Proof. by rewrite fupd_frame_r wand_elim_r. Qed.
 
   Lemma fupd_trans_frame E1 E2 E3 P Q :
     ((Q ={E2,E3}=∗ emp) ∗ |={E1,E2}=> (Q ∗ P)) ={E1,E3}=∗ P.
   Proof.
-    rewrite fupd_frame_l assoc -(comm _ Q) bi.wand_elim_r.
+    rewrite fupd_frame_l assoc -(comm _ Q) wand_elim_r.
     by rewrite fupd_frame_r left_id fupd_trans.
   Qed.
 
@@ -199,7 +200,7 @@ Section fupd_derived.
     E1 ## Ef → (|={E1,E2}=> P) ={E1 ∪ Ef,E2 ∪ Ef}=∗ P.
   Proof.
     intros ?. rewrite -fupd_mask_frame_r' //. f_equiv.
-    apply bi.impl_intro_l, bi.and_elim_r.
+    apply impl_intro_l, and_elim_r.
   Qed.
   Lemma fupd_mask_mono E1 E2 P : E1 ⊆ E2 → (|={E1}=> P) ={E2}=∗ P.
   Proof.
@@ -226,8 +227,8 @@ Section fupd_derived.
     (Q -∗ |={E∖E2,E'}=> (∀ R, (|={E1∖E2,E1}=> R) -∗ |={E∖E2,E}=> R) -∗  P) -∗
     (|={E,E'}=> P).
   Proof.
-    intros HE. apply bi.wand_intro_r. rewrite fupd_frame_r.
-    rewrite bi.wand_elim_r. clear Q.
+    intros HE. apply wand_intro_r. rewrite fupd_frame_r.
+    rewrite wand_elim_r. clear Q.
     rewrite -(fupd_mask_frame E E'); first apply fupd_mono; last done.
     (* The most horrible way to apply fupd_intro_mask *)
     rewrite -[X in (X -∗ _)](right_id emp%I).
@@ -235,9 +236,9 @@ Section fupd_derived.
     { rewrite {1}(union_difference_L _ _ HE). set_solver. }
     rewrite fupd_frame_l fupd_frame_r. apply fupd_elim.
     apply fupd_mono.
-    eapply bi.wand_apply;
-      last (apply bi.sep_mono; first reflexivity); first reflexivity.
-    apply bi.forall_intro=>R. apply bi.wand_intro_r.
+    eapply wand_apply;
+      last (apply sep_mono; first reflexivity); first reflexivity.
+    apply forall_intro=>R. apply wand_intro_r.
     rewrite fupd_frame_r. apply fupd_elim. rewrite left_id.
     rewrite (fupd_mask_frame_r _ _ (E ∖ E1)); last set_solver+.
     rewrite {4}(union_difference_L _ _ HE). done.
@@ -271,16 +272,16 @@ Section fupd_derived.
   Lemma fupd_plain `{BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 P Q `{!Plain P} :
     E1 ⊆ E2 → (Q -∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
   Proof.
-    intros HE. rewrite -(fupd_plain' _ _ E1) //. apply bi.wand_intro_l.
-    by rewrite bi.wand_elim_r -fupd_intro.
+    intros HE. rewrite -(fupd_plain' _ _ E1) //. apply wand_intro_l.
+    by rewrite wand_elim_r -fupd_intro.
   Qed.
 
   (** Fancy updates that take a step derived rules. *)
   Lemma step_fupd_wand E1 E2 P Q : (|={E1,E2}▷=> P) -∗ (P -∗ Q) -∗ |={E1,E2}▷=> Q.
   Proof.
-    apply bi.wand_intro_l.
-    by rewrite (bi.later_intro (P -∗ Q)%I) fupd_frame_l -bi.later_sep fupd_frame_l
-               bi.wand_elim_l.
+    apply wand_intro_l.
+    by rewrite (later_intro (P -∗ Q)%I) fupd_frame_l -later_sep fupd_frame_l
+               wand_elim_l.
   Qed.
 
   Lemma step_fupd_mask_frame_r E1 E2 Ef P :
@@ -292,13 +293,13 @@ Section fupd_derived.
   Lemma step_fupd_mask_mono E1 E2 F1 F2 P :
     F1 ⊆ F2 → E1 ⊆ E2 → (|={E1,F2}▷=> P) ⊢ |={E2,F1}▷=> P.
   Proof.
-    intros ??. rewrite -(left_id emp%I _ (|={E1,F2}▷=> P)%I).
+    intros ??. rewrite -(emp_sep (|={E1,F2}▷=> P)%I).
     rewrite (fupd_intro_mask E2 E1 emp%I) //.
     rewrite fupd_frame_r -(fupd_trans E2 E1 F1). f_equiv.
     rewrite fupd_frame_l -(fupd_trans E1 F2 F1). f_equiv.
     rewrite (fupd_intro_mask F2 F1 (|={_,_}=> emp)%I) //.
     rewrite fupd_frame_r. f_equiv.
-    rewrite [X in (X ∗ _)%I]bi.later_intro -bi.later_sep. f_equiv.
+    rewrite [X in (X ∗ _)%I]later_intro -later_sep. f_equiv.
     rewrite fupd_frame_r -(fupd_trans F1 F2 E2). f_equiv.
     rewrite fupd_frame_l -(fupd_trans F2 E1 E2). f_equiv.
     by rewrite fupd_frame_r left_id.
