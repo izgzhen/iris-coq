@@ -806,13 +806,29 @@ Proof. rewrite /IntoForall=> HP. by rewrite HP persistently_forall. Qed.
 Global Instance into_forall_embed `{BiEmbed PROP PROP'} {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall ⎡P⎤ (λ a, ⎡Φ a⎤%I).
 Proof. by rewrite /IntoForall -embed_forall => <-. Qed.
-(* These instances must be used only after [into_forall_wand_pure] in
-[class_instances_sbi] failed. *)
-Global Instance into_forall_wand P Q : IntoForall (P -∗ Q) (λ _ : bi_emp_valid P, Q) | 10.
+
+(* These instances must be used only after [into_forall_wand_pure] and
+[into_forall_wand_pure]. *)
+Global Instance into_forall_wand P Q :
+  IntoForall (P -∗ Q) (λ _ : bi_emp_valid P, Q) | 10.
 Proof. rewrite /IntoForall. apply forall_intro=><-. rewrite emp_wand //. Qed.
 Global Instance into_forall_impl `{!BiAffine PROP} P Q :
   IntoForall (P → Q) (λ _ : bi_emp_valid P, Q) | 10.
 Proof. rewrite /IntoForall. apply forall_intro=><-. rewrite -True_emp True_impl //. Qed.
+
+Global Instance into_forall_impl_pure φ P Q :
+  FromPureT false P φ → IntoForall (P → Q) (λ _ : φ, Q).
+Proof.
+  rewrite /FromPureT /FromPure /IntoForall=> -[φ' [-> <-]].
+  by rewrite pure_impl_forall.
+Qed.
+Global Instance into_forall_wand_pure φ P Q :
+  FromPureT true P φ → IntoForall (P -∗ Q) (λ _ : φ, Q).
+Proof.
+  rewrite /FromPureT /FromPure /IntoForall=> -[φ' [-> <-]] /=.
+  apply forall_intro=>? /=.
+  by rewrite -(pure_intro _ True%I) // /bi_affinely right_id emp_wand.
+Qed.
 
 (* FromForall *)
 Global Instance from_forall_forall {A} (Φ : A → PROP) :
