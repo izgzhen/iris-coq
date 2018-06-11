@@ -86,7 +86,7 @@ End plainly_laws.
 Class Plain `{BiPlainly PROP} (P : PROP) := plain : P ⊢ ■ P.
 Arguments Plain {_ _} _%I : simpl never.
 Arguments plain {_ _} _%I {_}.
-Hint Mode Plain + ! ! : typeclass_instances.
+Hint Mode Plain + - ! : typeclass_instances.
 Instance: Params (@Plain) 1.
 
 Definition plainly_if `{!BiPlainly PROP} (p : bool) (P : PROP) : PROP :=
