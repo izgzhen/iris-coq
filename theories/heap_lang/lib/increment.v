@@ -1,4 +1,3 @@
-From iris.heap_lang Require Export lifting notation.
 From iris.base_logic.lib Require Export invariants.
 From iris.program_logic Require Export atomic.
 From iris.proofmode Require Import tactics.
