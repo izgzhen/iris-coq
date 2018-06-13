@@ -70,7 +70,7 @@ Section sep_list.
     Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (=) ==> (⊢))
            (big_opL (@bi_sep PROP) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
-  Global Instance big_sep_mono' :
+  Global Instance big_sepL_id_mono' :
     Proper (Forall2 (⊢) ==> (⊢)) (big_opL (@bi_sep M) (λ _ P, P)).
   Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
@@ -238,7 +238,7 @@ Section and_list.
     Proper (pointwise_relation _ (pointwise_relation _ (⊢)) ==> (=) ==> (⊢))
            (big_opL (@bi_and PROP) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
-  Global Instance big_and_mono' :
+  Global Instance big_andL_id_mono' :
     Proper (Forall2 (⊢) ==> (⊢)) (big_opL (@bi_and M) (λ _ P, P)).
   Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
