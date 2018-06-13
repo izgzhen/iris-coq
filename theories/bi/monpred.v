@@ -825,6 +825,8 @@ Lemma monPred_at_internal_eq {A : ofeT} i (a b : A) :
 Proof. rewrite monPred_internal_eq_unfold. by apply monPred_at_embed. Qed.
 Lemma monPred_at_later i P : (▷ P) i ⊣⊢ ▷ P i.
 Proof. by unseal. Qed.
+Lemma monPred_at_laterN n i P : (▷^n P) i ⊣⊢ ▷^n P i.
+Proof. induction n; first done. rewrite /= monPred_at_later IHn //. Qed.
 Lemma monPred_at_except_0 i P : (◇ P) i ⊣⊢ ◇ P i.
 Proof. by unseal. Qed.
 

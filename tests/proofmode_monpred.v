@@ -120,12 +120,50 @@ Section tests.
     iIntros "[$ #HP]". iFrame "HP".
   Qed.
 
+  Lemma test_iNext_Bi P :
+    @bi_entails monPredI (▷ P) (▷ P).
+  Proof. iIntros "H". by iNext. Qed.
+
+  (** Test monPred_at framing *)
   Lemma test_iFrame_monPred_at_wand (P Q : monPred) i :
     P i -∗ (Q -∗ P) i.
   Proof. iIntros "$". Show. Abort.
 
-  Lemma test_iNext_Bi P :
-    @bi_entails monPredI (▷ P) (▷ P).
-  Proof. iIntros "H". by iNext. Qed.
+  Program Definition monPred_id (R : monPred) : monPred :=
+    MonPred (λ V, R V) _.
+  Next Obligation. intros ? ???. eauto. Qed.
+
+  Lemma test_iFrame_monPred_id (Q R : monPred) i :
+    Q i ∗ R i -∗ (Q ∗ monPred_id R) i.
+  Proof.
+    iIntros "(HQ & HR)". iFrame "HR". iAssumption.
+  Qed.
+
+  Lemma test_iFrame_rel P i j ij :
+    IsBiIndexRel i ij → IsBiIndexRel j ij →
+    P i -∗ P j -∗ P ij ∗ P ij.
+  Proof. iIntros (??) "HPi HPj". iFrame. Qed.
+
+  Lemma test_iFrame_later_rel `{!BiAffine PROP} P i j :
+    IsBiIndexRel i j →
+    ▷ (P i) -∗ (▷ P) j.
+  Proof. iIntros (?) "?". iFrame. Qed.
+
+  Lemma test_iFrame_laterN n P i :
+    ▷^n (P i) -∗ (▷^n P) i.
+  Proof. iIntros "?". iFrame. Qed.
+
+  Lemma test_iFrame_quantifiers P i :
+    P i -∗ (∀ _:(), ∃ _:(), P) i.
+  Proof. iIntros "?". iFrame. Show. iIntros ([]). iExists (). iEmpIntro. Qed.
+
+  Lemma test_iFrame_embed (P : PROP) i :
+    P -∗ (embed (B:=monPredI) P) i.
+  Proof. iIntros "$". Qed.
+
+  (* Make sure search doesn't diverge on an evar *)
+  Lemma test_iFrame_monPred_at_evar (P : monPred) i j :
+    P i -∗ ∃ Q, (Q j).
+  Proof. iIntros "HP". iExists _. Fail iFrame "HP". Abort.
 
 End tests.
