@@ -32,7 +32,7 @@ Definition wp_pre `{irisG Λ Σ} (s : stuckness)
   | Some v => |={E}=> Φ v
   | None => ∀ σ1,
      state_interp σ1 ={E,∅}=∗ ⌜if s is NotStuck then reducible e1 σ1 else True⌝ ∗
-     ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={∅}=∗ ▷ |={∅,E}=>
+     ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={∅,∅,E}▷=∗
        state_interp σ2 ∗ wp E e2 Φ ∗
        [∗ list] ef ∈ efs, wp ⊤ ef (λ _, True)
   end%I.

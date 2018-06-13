@@ -25,10 +25,14 @@ Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q)%I : bi_scope.
 Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q) : stdpp_scope.
 
 (** Fancy updates that take a step. *)
-Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E1}=> Q))%I : bi_scope.
-Notation "P ={ E1 , E2 }▷=∗ Q" := (P -∗ |={ E1 , E2 }▷=> Q)%I : bi_scope.
+Notation "|={ E1 , E2 , E3 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E3}=> Q))%I : bi_scope.
+Notation "P ={ E1 , E2 , E3 }▷=∗ Q" := (P -∗ |={ E1,E2,E3 }▷=> Q)%I : bi_scope.
+Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2,E1}▷=> Q)%I : bi_scope.
+Notation "P ={ E1 , E2 }▷=∗ Q" := (P -∗ |={ E1 , E2, E1 }▷=> Q)%I : bi_scope.
 Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I : bi_scope.
 Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I : bi_scope.
+
+
 
 (** Bundled versions  *)
 (* Mixins allow us to create instances easily without having to use Program *)
@@ -277,15 +281,15 @@ Section fupd_derived.
   Qed.
 
   (** Fancy updates that take a step derived rules. *)
-  Lemma step_fupd_wand E1 E2 P Q : (|={E1,E2}▷=> P) -∗ (P -∗ Q) -∗ |={E1,E2}▷=> Q.
+  Lemma step_fupd_wand E1 E2 E3 P Q : (|={E1,E2,E3}▷=> P) -∗ (P -∗ Q) -∗ |={E1,E2,E3}▷=> Q.
   Proof.
     apply wand_intro_l.
     by rewrite (later_intro (P -∗ Q)%I) fupd_frame_l -later_sep fupd_frame_l
                wand_elim_l.
   Qed.
 
-  Lemma step_fupd_mask_frame_r E1 E2 Ef P :
-    E1 ## Ef → E2 ## Ef → (|={E1,E2}▷=> P) ⊢ |={E1 ∪ Ef,E2 ∪ Ef}▷=> P.
+  Lemma step_fupd_mask_frame_r E1 E2 E3 Ef P :
+    E1 ## Ef → E2 ## Ef → (|={E1,E2,E3}▷=> P) ⊢ |={E1 ∪ Ef,E2 ∪ Ef,E3 ∪ Ef}▷=> P.
   Proof.
     intros. rewrite -fupd_mask_frame_r //. do 2 f_equiv. by apply fupd_mask_frame_r.
   Qed.
