@@ -407,7 +407,7 @@ Inductive head_step : expr → state → expr → state → list (expr) → Prop
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) []
-   | FaaS l i1 e2 i2 σ :
+  | FaaS l i1 e2 i2 σ :
      to_val e2 = Some (LitV (LitInt i2)) →
      σ !! l = Some (LitV (LitInt i1)) →
      head_step (FAA (Lit $ LitLoc l) e2) σ (Lit $ LitInt i1) (<[l:=LitV (LitInt (i1 + i2))]>σ) [].
