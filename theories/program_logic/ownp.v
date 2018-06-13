@@ -14,7 +14,8 @@ Notation ownPG Λ Σ := (ownPG' (state Λ) (observation Λ) Σ).
 
 Instance ownPG_irisG `{ownPG' Λstate Λobservation Σ} : irisG' Λstate Λobservation Σ := {
   iris_invG := ownP_invG;
-  state_interp σ κs := (own ownP_name (● (Excl' (σ:leibnizC Λstate))))%I
+  state_interp σ κs _ := (own ownP_name (● (Excl' (σ:leibnizC Λstate))))%I;
+  fork_post := True%I;
 }.
 Global Opaque iris_invG.
 
@@ -64,14 +65,13 @@ Proof.
   iIntros (? κs κs').
   iMod (own_alloc (● (Excl' (σ1 : leibnizC _)) ⋅ ◯ (Excl' σ1)))
     as (γσ) "[Hσ Hσf]"; first done.
-  iExists (λ σ κs',
-           own γσ (● (Excl' (σ:leibnizC _))))%I.
+  iExists (λ σ κs' _, own γσ (● (Excl' (σ:leibnizC _))))%I, True%I.
   iFrame "Hσ".
   iMod (Hwp (OwnPG _ _ _ _ _ γσ) with "[Hσf]") as "[$ H]";
     first by rewrite /ownP; iFrame.
-  iIntros "!> Hσ". iMod "H" as (σ2') "[Hσf %]". rewrite/ownP.
-  iDestruct (own_valid_2 with "Hσ Hσf") as %[Hp _]%auth_valid_discrete_2.
-  pose proof (Excl_included _ _ Hp) as Hp'. apply leibniz_equiv in Hp'. inversion Hp'; subst. auto.
+  iIntros "!> Hσ". iMod "H" as (σ2') "[Hσf %]". rewrite /ownP.
+  iDestruct (own_valid_2 with "Hσ Hσf")
+    as %[Hp%Excl_included _]%auth_valid_discrete_2; simplify_eq; auto.
 Qed.
 
 
@@ -82,13 +82,11 @@ Section lifting.
   Implicit Types e : expr Λ.
   Implicit Types Φ : val Λ → iProp Σ.
 
-  Lemma ownP_eq σ1 σ2 κs : state_interp σ1 κs -∗ ownP σ2 -∗ ⌜σ1 = σ2⌝.
+  Lemma ownP_eq σ1 σ2 κs n : state_interp σ1 κs n -∗ ownP σ2 -∗ ⌜σ1 = σ2⌝.
   Proof.
     iIntros "Hσ● Hσ◯". rewrite /ownP.
-    iDestruct (own_valid_2 with "Hσ● Hσ◯")
-      as %[Hps _]%auth_valid_discrete_2.
-    pose proof (leibniz_equiv _ _ (Excl_included _ _ Hps)) as ->.
-    done.
+    iDestruct (own_valid_2 with "Hσ● Hσ◯") as %[Hps _]%auth_valid_discrete_2.
+    by pose proof (leibniz_equiv _ _ (Excl_included _ _ Hps)) as ->.
   Qed.
   Lemma ownP_state_twice σ1 σ2 : ownP σ1 ∗ ownP σ2 ⊢ False.
   Proof. rewrite /ownP -own_op own_valid. by iIntros (?). Qed.
@@ -108,7 +106,7 @@ Section lifting.
       iMod "H" as (σ1) "[Hred _]"; iDestruct "Hred" as %Hred.
       destruct s; last done. apply reducible_not_val in Hred.
       move: Hred; by rewrite to_of_val.
-    - iApply wp_lift_step; [done|]; iIntros (σ1 κ κs) "Hσκs".
+    - iApply wp_lift_step; [done|]; iIntros (σ1 κ κs n) "Hσκs".
       iMod "H" as (σ1' ?) "[>Hσf H]".
       iDestruct (ownP_eq with "Hσκs Hσf") as %<-.
       iModIntro; iSplit; [by destruct s|]; iNext; iIntros (e2 σ2 efs Hstep).
@@ -127,7 +125,7 @@ Section lifting.
     - apply of_to_val in EQe as <-. iApply fupd_wp.
       iMod "H" as (σ1) "[H _]". iDestruct "H" as %[Hnv _]. exfalso.
       by rewrite to_of_val in Hnv.
-    - iApply wp_lift_stuck; [done|]. iIntros (σ1 κs) "Hσ".
+    - iApply wp_lift_stuck; [done|]. iIntros (σ1 κs n) "Hσ".
       iMod "H" as (σ1') "(% & >Hσf)".
       by iDestruct (ownP_eq with "Hσ Hσf") as %->.
   Qed.
@@ -142,7 +140,7 @@ Section lifting.
     iIntros (Hsafe Hstep) "H"; iApply wp_lift_step.
     { specialize (Hsafe inhabitant). destruct s; last done.
       by eapply reducible_not_val. }
-    iIntros (σ1 κ κs) "Hσ". iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
+    iIntros (σ1 κ κs n) "Hσ". iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
     iModIntro; iSplit; [by destruct s|]; iNext; iIntros (e2 σ2 efs ?).
     destruct (Hstep σ1 κ e2 σ2 efs); auto; subst.
     by iMod "Hclose"; iModIntro; iFrame; iApply "H".
@@ -206,7 +204,7 @@ Section lifting.
     (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
-    intros. rewrite -(wp_lift_pure_det_step e1 e2 []) ?big_sepL_nil ?right_id; eauto.
+    intros. rewrite -(wp_lift_pure_det_step e1 e2 []) // ?big_sepL_nil ?right_id; eauto.
   Qed.
 End lifting.
 
@@ -297,7 +295,7 @@ Section ectx_lifting.
     ▷ (WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof using Hinh.
-    iIntros (??) "H"; iApply wp_lift_pure_det_step; eauto.
+    iIntros (??) "H"; iApply wp_lift_pure_det_step; try by eauto.
     by destruct s; eauto using reducible_not_val.
   Qed.
 
