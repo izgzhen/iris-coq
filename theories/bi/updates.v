@@ -32,8 +32,6 @@ Notation "P ={ E1 , E2 }▷=∗ Q" := (P -∗ |={ E1 , E2, E1 }▷=> Q)%I : bi_s
 Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I : bi_scope.
 Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I : bi_scope.
 
-
-
 (** Bundled versions  *)
 (* Mixins allow us to create instances easily without having to use Program *)
 Record BiBUpdMixin (PROP : bi) `(BUpd PROP) := {
