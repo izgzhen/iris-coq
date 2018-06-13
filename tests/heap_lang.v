@@ -1,8 +1,7 @@
-(** This file is essentially a bunch of testcases. *)
 From iris.program_logic Require Export weakestpre total_weakestpre.
-From iris.heap_lang Require Export lang.
-From iris.heap_lang Require Import adequacy.
-From iris.heap_lang Require Import proofmode notation.
+From iris.heap_lang Require Import lang adequacy proofmode notation.
+(* Import lang *again*. This used to break notation. *)
+From iris.heap_lang Require Import lang.
 Set Default Proof Using "Type".
 
 Section tests.

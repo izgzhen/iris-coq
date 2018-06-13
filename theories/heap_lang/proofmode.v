@@ -2,6 +2,7 @@ From iris.program_logic Require Export weakestpre total_weakestpre.
 From iris.proofmode Require Import coq_tactics.
 From iris.proofmode Require Export tactics.
 From iris.heap_lang Require Export tactics lifting.
+From iris.heap_lang Require Import notation.
 Set Default Proof Using "Type".
 Import uPred.
 

@@ -529,13 +529,3 @@ Canonical Structure heap_lang := LanguageOfEctx heap_ectx_lang.
 
 (* Prefer heap_lang names over ectx_language names. *)
 Export heap_lang.
-
-(** Define some derived forms *)
-Notation Lam x e := (Rec BAnon x e).
-Notation Let x e1 e2 := (App (Lam x e2) e1).
-Notation Seq e1 e2 := (Let BAnon e1 e2).
-Notation LamV x e := (RecV BAnon x e).
-Notation LetCtx x e2 := (AppRCtx (LamV x e2)).
-Notation SeqCtx e2 := (LetCtx BAnon e2).
-Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).
-Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)).
