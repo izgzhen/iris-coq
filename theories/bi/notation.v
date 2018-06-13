@@ -96,6 +96,13 @@ Reserved Notation "'[∗' 'list]' x ∈ l , P"
   (at level 200, l at level 10, x at level 1, right associativity,
    format "[∗  list]  x  ∈  l ,  P").
 
+Reserved Notation "'[∗' 'list]' k ↦ x1 ; x2 ∈ l1 ; l2 , P"
+  (at level 200, l1, l2 at level 10, k, x1, x2 at level 1, right associativity,
+   format "[∗  list]  k ↦ x1 ; x2  ∈  l1 ; l2 ,  P").
+Reserved Notation "'[∗' 'list]' x1 ; x2 ∈ l1 ; l2 , P"
+  (at level 200, l1, l2 at level 10, x1, x2 at level 1, right associativity,
+   format "[∗  list]  x1 ; x2  ∈  l1 ; l2 ,  P").
+
 Reserved Notation "'[∗]' Ps" (at level 20).
 
 Reserved Notation "'[∧' 'list]' k ↦ x ∈ l , P"

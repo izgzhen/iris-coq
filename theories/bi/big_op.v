@@ -4,6 +4,21 @@ From stdpp Require Import countable fin_collections functions.
 Set Default Proof Using "Type".
 Import interface.bi derived_laws_bi.bi derived_laws_sbi.bi.
 
+(** A version of the separating big operator that ranges over two lists. This
+version also ensures that both lists have the same length. Although this version
+can be defined in terms of the unary using a [zip] (see [big_sepL2_alt]), we do
+not define it that way to get better computational behavior (for [simpl]). *)
+Fixpoint big_sepL2 {PROP : bi} {A B}
+    (Φ : nat → A → B → PROP) (l1 : list A) (l2 : list B) : PROP :=
+  match l1, l2 with
+  | [], [] => emp
+  | x1 :: l1, x2 :: l2 => Φ 0 x1 x2 ∗ big_sepL2 (λ n, Φ (S n)) l1 l2
+  | _, _ => False
+  end%I.
+Instance: Params (@big_sepL2) 3.
+Arguments big_sepL2 {PROP A B} _ !_ !_ /.
+Typeclasses Opaque big_sepL2.
+
 (* Notations *)
 Notation "'[∗' 'list]' k ↦ x ∈ l , P" :=
   (big_opL bi_sep (λ k x, P) l) : bi_scope.
@@ -11,6 +26,11 @@ Notation "'[∗' 'list]' x ∈ l , P" :=
   (big_opL bi_sep (λ _ x, P) l) : bi_scope.
 
 Notation "'[∗]' Ps" := (big_opL bi_sep (λ _ x, x) Ps) : bi_scope.
+
+Notation "'[∗' 'list]' k ↦ x1 ; x2 ∈ l1 ; l2 , P" :=
+  (big_sepL2 (λ k x1 x2, P) l1 l2) : bi_scope.
+Notation "'[∗' 'list]' x1 ; x2 ∈ l1 ; l2 , P" :=
+  (big_sepL2 (λ _ x1 x2, P) l1 l2) : bi_scope.
 
 Notation "'[∧' 'list]' k ↦ x ∈ l , P" :=
   (big_opL bi_and (λ k x, P) l) : bi_scope.
@@ -185,7 +205,7 @@ Section sep_list.
   Proof. induction 1; simpl; apply _. Qed.
 End sep_list.
 
-Section sep_list2.
+Section sep_list_more.
   Context {A : Type}.
   Implicit Types l : list A.
   Implicit Types Φ Ψ : nat → A → PROP.
@@ -199,6 +219,217 @@ Section sep_list2.
     - by rewrite big_sepL_emp left_id.
     - by rewrite IH.
   Qed.
+End sep_list_more.
+
+Lemma big_sepL2_alt {A B} (Φ : nat → A → B → PROP) l1 l2 :
+  ([∗ list] k↦y1;y2 ∈ l1; l2, Φ k y1 y2)
+  ⊣⊢ ⌜ length l1 = length l2 ⌝ ∧ [∗ list] k ↦ y ∈ zip l1 l2, Φ k (y.1) (y.2).
+Proof.
+  apply (anti_symm _).
+  - apply and_intro.
+    + revert Φ l2. induction l1 as [|x1 l1 IH]=> Φ -[|x2 l2] /=;
+        auto using pure_intro, False_elim.
+      rewrite IH sep_elim_r. apply pure_mono; auto.
+    + revert Φ l2. induction l1 as [|x1 l1 IH]=> Φ -[|x2 l2] /=;
+        auto using pure_intro, False_elim.
+      by rewrite IH.
+  - apply pure_elim_l=> /Forall2_same_length Hl. revert Φ.
+    induction Hl as [|x1 l1 x2 l2 _ _ IH]=> Φ //=. by rewrite -IH.
+Qed.
+
+(** ** Big ops over two lists *)
+Section sep_list2.
+  Context {A B : Type}.
+  Implicit Types Φ Ψ : nat → A → B → PROP.
+
+  Lemma big_sepL2_nil Φ : ([∗ list] k↦y1;y2 ∈ []; [], Φ k y1 y2) ⊣⊢ emp.
+  Proof. done. Qed.
+  Lemma big_sepL2_nil' `{BiAffine PROP} P Φ : P ⊢ [∗ list] k↦y1;y2 ∈ [];[], Φ k y1 y2.
+  Proof. apply (affine _). Qed.
+
+  Lemma big_sepL2_cons Φ x1 x2 l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ x1 :: l1; x2 :: l2, Φ k y1 y2)
+    ⊣⊢ Φ 0 x1 x2 ∗ [∗ list] k↦y1;y2 ∈ l1;l2, Φ (S k) y1 y2.
+  Proof. done. Qed.
+  Lemma big_sepL2_cons_inv_l Φ x1 l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ x1 :: l1; l2, Φ k y1 y2) -∗
+    ∃ x2 l2', ⌜ l2 = x2 :: l2' ⌝ ∧
+              Φ 0 x1 x2 ∗ [∗ list] k↦y1;y2 ∈ l1;l2', Φ (S k) y1 y2.
+  Proof.
+    destruct l2 as [|x2 l2]; simpl; auto using False_elim.
+    by rewrite -(exist_intro x2) -(exist_intro l2) pure_True // left_id.
+  Qed.
+  Lemma big_sepL2_cons_inv_r Φ x2 l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ l1; x2 :: l2, Φ k y1 y2) -∗
+    ∃ x1 l1', ⌜ l1 = x1 :: l1' ⌝ ∧
+              Φ 0 x1 x2 ∗ [∗ list] k↦y1;y2 ∈ l1';l2, Φ (S k) y1 y2.
+  Proof.
+    destruct l1 as [|x1 l1]; simpl; auto using False_elim.
+    by rewrite -(exist_intro x1) -(exist_intro l1) pure_True // left_id.
+  Qed.
+
+  Lemma big_sepL2_singleton Φ x1 x2 :
+    ([∗ list] k↦y1;y2 ∈ [x1];[x2], Φ k y1 y2) ⊣⊢ Φ 0 x1 x2.
+  Proof. by rewrite /= right_id. Qed.
+
+  Lemma big_sepL2_length Φ l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ l1; l2, Φ k y1 y2) -∗ ⌜ length l1 = length l2 ⌝.
+  Proof. by rewrite big_sepL2_alt and_elim_l. Qed.
+
+  Lemma big_sepL2_app Φ l1 l2 l1' l2' :
+    ([∗ list] k↦y1;y2 ∈ l1; l1', Φ k y1 y2) -∗
+    ([∗ list] k↦y1;y2 ∈ l2; l2', Φ (length l1 + k) y1 y2) -∗
+    ([∗ list] k↦y1;y2 ∈ l1 ++ l2; l1' ++ l2', Φ k y1 y2).
+  Proof.
+    apply wand_intro_r. revert Φ l1'. induction l1 as [|x1 l1 IH]=> Φ -[|x1' l1'] /=.
+    - by rewrite left_id.
+    - rewrite left_absorb. apply False_elim.
+    - rewrite left_absorb. apply False_elim.
+    - by rewrite -assoc IH.
+  Qed.
+  Lemma big_sepL2_app_inv_l Φ l1' l1'' l2 :
+    ([∗ list] k↦y1;y2 ∈ l1' ++ l1''; l2, Φ k y1 y2) -∗
+    ∃ l2' l2'', ⌜ l2 = l2' ++ l2'' ⌝ ∧
+                ([∗ list] k↦y1;y2 ∈ l1';l2', Φ k y1 y2) ∗
+                ([∗ list] k↦y1;y2 ∈ l1'';l2'', Φ (length l1' + k) y1 y2).
+  Proof.
+    rewrite -(exist_intro (take (length l1') l2))
+      -(exist_intro (drop (length l1') l2)) take_drop pure_True // left_id.
+    revert Φ l2. induction l1' as [|x1 l1' IH]=> Φ -[|x2 l2] /=;
+       [by rewrite left_id|by rewrite left_id|apply False_elim|].
+    by rewrite IH -assoc.
+  Qed.
+  Lemma big_sepL2_app_inv_r Φ l1 l2' l2'' :
+    ([∗ list] k↦y1;y2 ∈ l1; l2' ++ l2'', Φ k y1 y2) -∗
+    ∃ l1' l1'', ⌜ l1 = l1' ++ l1'' ⌝ ∧
+                ([∗ list] k↦y1;y2 ∈ l1';l2', Φ k y1 y2) ∗
+                ([∗ list] k↦y1;y2 ∈ l1'';l2'', Φ (length l2' + k) y1 y2).
+  Proof.
+    rewrite -(exist_intro (take (length l2') l1))
+      -(exist_intro (drop (length l2') l1)) take_drop pure_True // left_id.
+    revert Φ l1. induction l2' as [|x2 l2' IH]=> Φ -[|x1 l1] /=;
+       [by rewrite left_id|by rewrite left_id|apply False_elim|].
+    by rewrite IH -assoc.
+  Qed.
+
+  Lemma big_sepL2_mono Φ Ψ l1 l2 :
+    (∀ k y1 y2, l1 !! k = Some y1 → l2 !! k = Some y2 → Φ k y1 y2 ⊢ Ψ k y1 y2) →
+    ([∗ list] k ↦ y1;y2 ∈ l1;l2, Φ k y1 y2) ⊢ [∗ list] k ↦ y1;y2 ∈ l1;l2, Ψ k y1 y2.
+  Proof.
+    intros H. rewrite !big_sepL2_alt. f_equiv. apply big_sepL_mono=> k [y1 y2].
+    rewrite lookup_zip_with=> ?; simplify_option_eq; auto.
+  Qed.
+  Lemma big_sepL2_proper Φ Ψ l1 l2 :
+    (∀ k y1 y2, l1 !! k = Some y1 → l2 !! k = Some y2 → Φ k y1 y2 ⊣⊢ Ψ k y1 y2) →
+    ([∗ list] k ↦ y1;y2 ∈ l1;l2, Φ k y1 y2) ⊣⊢ [∗ list] k ↦ y1;y2 ∈ l1;l2, Ψ k y1 y2.
+  Proof.
+    intros; apply (anti_symm _);
+      apply big_sepL2_mono; auto using equiv_entails, equiv_entails_sym.
+  Qed.
+
+  Global Instance big_sepL2_ne n :
+    Proper (pointwise_relation _ (pointwise_relation _ (pointwise_relation _ (dist n)))
+      ==> (=) ==> (=) ==> (dist n))
+           (big_sepL2 (PROP:=PROP) (A:=A) (B:=B)).
+  Proof.
+    intros Φ1 Φ2 HΦ x1 ? <- x2 ? <-. rewrite !big_sepL2_alt. f_equiv.
+    f_equiv=> k [y1 y2]. apply HΦ.
+  Qed.
+  Global Instance big_sepL2_mono' :
+    Proper (pointwise_relation _ (pointwise_relation _ (pointwise_relation _ (⊢)))
+      ==> (=) ==> (=) ==> (⊢))
+           (big_sepL2 (PROP:=PROP) (A:=A) (B:=B)).
+  Proof. intros f g Hf l1 ? <- l2 ? <-. apply big_sepL2_mono; intros; apply Hf. Qed.
+  Global Instance big_sepL2_proper' :
+    Proper (pointwise_relation _ (pointwise_relation _ (pointwise_relation _ (⊣⊢)))
+      ==> (=) ==> (=) ==> (⊣⊢))
+           (big_sepL2 (PROP:=PROP) (A:=A) (B:=B)).
+  Proof. intros f g Hf l1 ? <- l2 ? <-. apply big_sepL2_proper; intros; apply Hf. Qed.
+
+  Lemma big_sepL2_lookup_acc Φ l1 l2 i x1 x2 :
+    l1 !! i = Some x1 → l2 !! i = Some x2 →
+    ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2) ⊢
+    Φ i x1 x2 ∗ (Φ i x1 x2 -∗ ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2)).
+  Proof.
+    intros Hl1 Hl2. rewrite big_sepL2_alt. apply pure_elim_l=> Hl.
+    rewrite {1}big_sepL_lookup_acc; last by rewrite lookup_zip_with; simplify_option_eq.
+    by rewrite pure_True // left_id.
+  Qed.
+
+  Lemma big_sepL2_lookup Φ l1 l2 i x1 x2 `{!Absorbing (Φ i x1 x2)} :
+    l1 !! i = Some x1 → l2 !! i = Some x2 →
+    ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2) ⊢ Φ i x1 x2.
+  Proof. intros. rewrite big_sepL2_lookup_acc //. by rewrite sep_elim_l. Qed.
+
+  Lemma big_sepL2_fmap_l {A'} (f : A → A') (Φ : nat → A' → B → PROP) l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ f <$> l1; l2, Φ k y1 y2)
+    ⊣⊢ ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k (f y1) y2).
+  Proof.
+    rewrite !big_sepL2_alt fmap_length zip_with_fmap_l zip_with_zip big_sepL_fmap.
+    by f_equiv; f_equiv=> k [??].
+  Qed.
+  Lemma big_sepL2_fmap_r {B'} (g : B → B') (Φ : nat → A → B' → PROP) l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ l1; g <$> l2, Φ k y1 y2)
+    ⊣⊢ ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 (g y2)).
+  Proof.
+    rewrite !big_sepL2_alt fmap_length zip_with_fmap_r zip_with_zip big_sepL_fmap.
+    by f_equiv; f_equiv=> k [??].
+  Qed.
+
+  Lemma big_sepL2_sepL2 Φ Ψ l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2 ∗ Ψ k y1 y2)
+    ⊣⊢ ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2) ∗ ([∗ list] k↦y1;y2 ∈ l1;l2, Ψ k y1 y2).
+  Proof.
+    rewrite !big_sepL2_alt big_sepL_sepL !persistent_and_affinely_sep_l.
+    rewrite -assoc (assoc _ _ (<affine> _)%I). rewrite -(comm bi_sep (<affine> _)%I).
+    rewrite -assoc (assoc _ _ (<affine> _)%I) -!persistent_and_affinely_sep_l.
+    by rewrite affinely_and_r persistent_and_affinely_sep_l idemp.
+  Qed.
+
+  Lemma big_sepL2_and Φ Ψ l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2 ∧ Ψ k y1 y2)
+    ⊢ ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2) ∧ ([∗ list] k↦y1;y2 ∈ l1;l2, Ψ k y1 y2).
+  Proof. auto using and_intro, big_sepL2_mono, and_elim_l, and_elim_r. Qed.
+
+  Lemma big_sepL2_persistently `{BiAffine PROP} Φ l1 l2 :
+    <pers> ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2)
+    ⊣⊢ [∗ list] k↦y1;y2 ∈ l1;l2, <pers> (Φ k y1 y2).
+  Proof.
+    by rewrite !big_sepL2_alt persistently_and persistently_pure big_sepL_persistently.
+  Qed.
+
+  Lemma big_sepL2_impl Φ Ψ l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2) -∗
+    □ (∀ k x1 x2,
+      ⌜l1 !! k = Some x1⌝ → ⌜l2 !! k = Some x2⌝ → Φ k x1 x2 -∗ Ψ k x1 x2) -∗
+    [∗ list] k↦y1;y2 ∈ l1;l2, Ψ k y1 y2.
+  Proof.
+    apply wand_intro_l. revert Φ Ψ l2.
+    induction l1 as [|x1 l1 IH]=> Φ Ψ [|x2 l2] /=; [by rewrite sep_elim_r..|].
+    rewrite intuitionistically_sep_dup -assoc [(□ _ ∗ _)%I]comm -!assoc assoc.
+    apply sep_mono.
+    - rewrite (forall_elim 0) (forall_elim x1) (forall_elim x2) !pure_True // !True_impl.
+      by rewrite intuitionistically_elim wand_elim_l.
+    - rewrite comm -(IH (Φ ∘ S) (Ψ ∘ S)) /=.
+      apply sep_mono_l, affinely_mono, persistently_mono.
+      apply forall_intro=> k. by rewrite (forall_elim (S k)).
+  Qed.
+
+  Global Instance big_sepL2_nil_persistent Φ :
+    Persistent ([∗ list] k↦y1;y2 ∈ []; [], Φ k y1 y2).
+  Proof. simpl; apply _. Qed.
+  Global Instance big_sepL2_persistent Φ l1 l2 :
+    (∀ k x1 x2, Persistent (Φ k x1 x2)) →
+    Persistent ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2).
+  Proof. rewrite big_sepL2_alt. apply _. Qed.
+
+  Global Instance big_sepL2_nil_affine Φ :
+    Affine ([∗ list] k↦y1;y2 ∈ []; [], Φ k y1 y2).
+  Proof. simpl; apply _. Qed.
+  Global Instance big_sepL2_affine Φ l1 l2 :
+    (∀ k x1 x2, Affine (Φ k x1 x2)) →
+    Affine ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2).
+  Proof. rewrite big_sepL2_alt. apply _. Qed.
 End sep_list2.
 
 Section and_list.
@@ -756,6 +987,51 @@ Section list.
     Proof. revert Φ. induction l as [|x l IH]=> Φ ? /=; apply _. Qed.
   End plainly.
 End list.
+
+Section list2.
+  Context {A B : Type}.
+  Implicit Types Φ Ψ : nat → A → B → PROP.
+
+  Lemma big_sepL2_later_2 Φ l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ l1;l2, ▷ Φ k y1 y2) ⊢ ▷ [∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2.
+  Proof.
+    rewrite !big_sepL2_alt bi.later_and big_sepL_later_2.
+    auto using and_mono, later_intro.
+  Qed.
+
+  Lemma big_sepL2_laterN_2 Φ n l1 l2 :
+    ([∗ list] k↦y1;y2 ∈ l1;l2, ▷^n Φ k y1 y2) ⊢ ▷^n [∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2.
+  Proof.
+    rewrite !big_sepL2_alt bi.laterN_and big_sepL_laterN_2.
+    auto using and_mono, laterN_intro.
+  Qed.
+
+  Global Instance big_sepL2_nil_timeless `{!Timeless (emp%I : PROP)} Φ :
+    Timeless ([∗ list] k↦y1;y2 ∈ []; [], Φ k y1 y2).
+  Proof. simpl; apply _. Qed.
+  Global Instance big_sepL2_timeless `{!Timeless (emp%I : PROP)} Φ l1 l2 :
+    (∀ k x1 x2, Timeless (Φ k x1 x2)) →
+    Timeless ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2).
+  Proof. rewrite big_sepL2_alt. apply _. Qed.
+
+  Section plainly.
+    Context `{!BiPlainly PROP}.
+
+    Lemma big_sepL2_plainly `{!BiAffine PROP} Φ l1 l2 :
+      ■ ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2)
+      ⊣⊢ [∗ list] k↦y1;y2 ∈ l1;l2, ■ (Φ k y1 y2).
+    Proof. by rewrite !big_sepL2_alt plainly_and plainly_pure big_sepL_plainly. Qed.
+
+    Global Instance big_sepL2_nil_plain `{!BiAffine PROP} Φ :
+      Plain ([∗ list] k↦y1;y2 ∈ []; [], Φ k y1 y2).
+    Proof. simpl; apply _. Qed.
+
+    Global Instance big_sepL2_plain `{!BiAffine PROP} Φ l1 l2 :
+      (∀ k x1 x2, Plain (Φ k x1 x2)) →
+      Plain ([∗ list] k↦y1;y2 ∈ l1;l2, Φ k y1 y2).
+    Proof. rewrite big_sepL2_alt. apply _. Qed.
+  End plainly.
+End list2.
 
 (** ** Big ops over finite maps *)
 Section gmap.
