@@ -107,6 +107,24 @@
   --------------------------------------∗
   |={⊤}=> na_own t E1 ∗ na_own t E2 ∗ ▷ P
   
+The command has indeed failed with message:
+In nested Ltac calls to "iInv (constr) as (constr)",
+"iInvCore (constr) in (tactic)" and
+"iInvCore (constr) with (constr) as (open_constr) in (tactic)", last call
+failed.
+Tactic failure: iInv: selector 34 is not of the right type .
+The command has indeed failed with message:
+In nested Ltac calls to "iInv (constr) as (constr)",
+"iInvCore (constr) in (tactic)" and
+"iInvCore (constr) with (constr) as (open_constr) in (tactic)", last call
+failed.
+Tactic failure: iInv: invariant nroot not found.
+The command has indeed failed with message:
+In nested Ltac calls to "iInv (constr) as (constr)",
+"iInvCore (constr) in (tactic)" and
+"iInvCore (constr) with (constr) as (open_constr) in (tactic)", last call
+failed.
+Tactic failure: iInv: invariant "H2" not found.
 1 subgoal
   
   Σ : gFunctors

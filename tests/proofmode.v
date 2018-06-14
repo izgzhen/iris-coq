@@ -499,14 +499,7 @@ Lemma print_long_line (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PRO
   P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
   -∗ True.
 Proof.
-  iIntros "HP". Show.
-Abort.
-Lemma print_long_line_anon (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
-  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P ∗
-  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
-  -∗ True.
-Proof.
-  iIntros "?". Show.
+  iIntros "HP". Show. Undo. iIntros "?". Show.
 Abort.
 
 (* This is specifically crafted such that not having the printing box in
@@ -517,13 +510,7 @@ Lemma print_long_line (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP)
   TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P | P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
   -∗ True.
 Proof.
-  iIntros "HP". Show.
-Abort.
-Lemma print_long_line_anon (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
-  TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P | P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
-  -∗ True.
-Proof.
-  iIntros "?". Show.
+  iIntros "HP". Show. Undo. iIntros "?". Show.
 Abort.
 
 Lemma long_impl (PPPPPPPPPPPPPPPPP QQQQQQQQQQQQQQQQQQ : PROP) :
@@ -560,3 +547,28 @@ Abort.
 End linebreaks.
 
 End printing_tests.
+
+(** Test error messages *)
+Section error_tests.
+Context {PROP : sbi}.
+Implicit Types P Q R : PROP.
+
+Lemma iAlways_spatial_non_empty P :
+  P -∗ □ emp.
+Proof. iIntros "HP". Fail iAlways. Abort.
+
+Lemma iDestruct_bad_name P :
+  P -∗ P.
+Proof. iIntros "HP". Fail iDestruct "HQ" as "HP". Abort.
+
+Lemma iIntros_dup_name P :
+  P -∗ ∀ x y : (), P.
+Proof. iIntros "HP" (x). Fail iIntros (x). Abort.
+
+Lemma iSplit_one_of_many P :
+  P -∗ P -∗ P ∗ P.
+Proof.
+  iIntros "HP1 HP2". Fail iSplitL "HP1 HPx". Fail iSplitL "HPx HP1".
+Abort.
+
+End error_tests.

@@ -7,11 +7,13 @@ TESTFILES=$(wildcard tests/*.v)
 test: $(TESTFILES:.v=.vo)
 .PHONY: test
 
+COQ_TEST=$(COQTOP) $(COQDEBUG) -batch -test-mode
+
 $(TESTFILES:.v=.vo): %.vo: %.v $(VFILES:.v=.vo)
-	$(SHOW)COQC [test] $<
+	$(SHOW)COQTOP [test] $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
 	  TMPFILE="$$(mktemp)" && \
-	  $(TIMER) $(COQC) $(COQDEBUG) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) $< $(TIMING_EXTRA) > "$$TMPFILE" && \
+	  $(TIMER) $(COQ_TEST) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) -load-vernac-source $< $(TIMING_EXTRA) > "$$TMPFILE" && \
 	  (diff -u "tests/$$TEST.ref" "$$TMPFILE" || (rm "tests/$$TEST.vo" "$$TMPFILE" && exit 1)) && \
 	  rm "$$TMPFILE"
 
@@ -20,6 +22,6 @@ ref: $(TESTFILES:.v=.ref)
 .PHONY: ref
 
 tests/%.ref: tests/%.v $(VFILES:.v=.vo)
-	$(SHOW)COQC [ref] $<
+	$(SHOW)COQTOP [ref] $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
-	  $(TIMER) $(COQC) $(COQDEBUG) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) $< $(TIMING_EXTRA) > "tests/$$TEST.ref"
+	  $(TIMER) $(COQ_TEST) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) -load-vernac-source $< $(TIMING_EXTRA) > "tests/$$TEST.ref"

@@ -31,6 +31,39 @@
   --------------------------------------□
   <affine> (P ∗ Q)
   
+The command has indeed failed with message:
+Ltac call to "done" failed.
+No applicable tactic.
+The command has indeed failed with message:
+In nested Ltac calls to "iClear (constr)", "iElaborateSelPat" and
+"iElaborateSelPat_go", last call failed.
+Tactic failure: iElaborateSelPat: (INamed "HQ") not found.
+The command has indeed failed with message:
+In nested Ltac calls to "iClear (constr)", "iElaborateSelPat" and
+"iElaborateSelPat_go", last call failed.
+Tactic failure: iElaborateSelPat: (INamed "HQ") not found.
+The command has indeed failed with message:
+In nested Ltac calls to "iSpecialize (open_constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) with (open_constr) (open_constr) as (constr)",
+"iSpecializePat (open_constr) (constr)" and "iSpecializePat_go", last call
+failed.
+Tactic failure: iSpecialize: cannot instantiate (∀ _ : φ, P -∗ False)%I with
+P.
+The command has indeed failed with message:
+In nested Ltac calls to "iSpecialize (open_constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) with (open_constr) (open_constr) as (constr)",
+"iSpecializePat (open_constr) (constr)" and "iSpecializePat_go", last call
+failed.
+Tactic failure: iSpecialize: cannot instantiate (⌜φ⌝ → P -∗ False)%I with P.
+The command has indeed failed with message:
+In nested Ltac calls to "iFrame (constr)",
+"<iris.proofmode.ltac_tactics.iFrame_go>" and
+"<iris.proofmode.ltac_tactics.iFrameHyp>", last call failed.
+Tactic failure: iFrame: cannot frame Q.
 1 subgoal
   
   PROP : sbi
@@ -151,3 +184,22 @@
   ={E1,E2}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
              ={E1,E2}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
   
+The command has indeed failed with message:
+In nested Ltac calls to "iAlways", "iModIntro" and 
+"iModIntro (uconstr)", last call failed.
+Tactic failure: iModIntro: spatial context is non-empty.
+The command has indeed failed with message:
+In nested Ltac calls to "iDestruct (open_constr) as (constr)",
+"iDestructCore (open_constr) as (constr) (tactic)" and
+"iDestructCore (open_constr) as (constr) (tactic)", last call failed.
+Tactic failure: iDestruct: (INamed "HQ") not found.
+The command has indeed failed with message:
+In nested Ltac calls to "iIntros ( (intropattern) )",
+"iIntro ( (intropattern) )" and "intros x", last call failed.
+x is already used.
+The command has indeed failed with message:
+Ltac call to "iSplitL (constr)" failed.
+Tactic failure: iSplitL: hypotheses ["HPx"] not found.
+The command has indeed failed with message:
+Ltac call to "iSplitL (constr)" failed.
+Tactic failure: iSplitL: hypotheses ["HPx"] not found.
