@@ -128,6 +128,15 @@ Section printing_tests.
     iIntros "_". Show.
   Abort.
 
+  Lemma texan_triple_long_expr (fun1 fun2 fun3 : expr) :
+    {{{ True }}}
+       let: "val1" := fun1 #() in
+       let: "val2" := fun2 "val1" in
+       let: "val3" := fun3 "val2" in
+       if: "val1" = "val2" then "val" else "val3"
+    {{{ (x y : val) (z : Z), RET (x, y, #z); True }}}.
+  Proof. Show. Abort.
+
 End printing_tests.
 
 Lemma heap_e_adequate σ : adequate NotStuck heap_e σ (= #2).

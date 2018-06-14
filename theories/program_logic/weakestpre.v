@@ -89,93 +89,75 @@ Notation "'{{{' P } } } e @ s ; E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E {{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  s ;  E  {{{  x .. y ,  RET  pat ;  Q  } } }") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  @  s ;  E  '/' {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e @ E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  E  {{{  x .. y ,  RET  pat ;  Q  } } }") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  @  E  '/' {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e @ E ? {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?{{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  E  ? {{{  x .. y ,  RET  pat ;  Q  } } }") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  @  E  ? '/' {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  {{{  x .. y ,   RET  pat ;  Q  } } }") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  '/' {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e ? {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?{{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  ? {{{  x .. y ,   RET  pat ;  Q  } } }") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  ? '/' {{{  x  ..  y ,   RET  pat ;  Q  } } } ']'") : bi_scope.
+
 Notation "'{{{' P } } } e @ s ; E {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ s; E {{ Φ }})%I
     (at level 20,
-     format "{{{  P  } } }  e  @  s ;  E  {{{  RET  pat ;  Q  } } }") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  @  s ;  E  '/' {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e @ E {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }})%I
     (at level 20,
-     format "{{{  P  } } }  e  @  E  {{{  RET  pat ;  Q  } } }") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  @  E  '/' {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e @ E ? {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E ?{{ Φ }})%I
     (at level 20,
-     format "{{{  P  } } }  e  @  E  ? {{{  RET  pat ;  Q  } } }") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  @  E  ? '/' {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }})%I
     (at level 20,
-     format "{{{  P  } } }  e  {{{  RET  pat ;  Q  } } }") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  '/' {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e ? {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e ?{{ Φ }})%I
     (at level 20,
-     format "{{{  P  } } }  e  ? {{{  RET  pat ;  Q  } } }") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  ? '/' {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
 
+(* Aliases for stdpp scope -- they inherit the levels and format from above. *)
 Notation "'{{{' P } } } e @ s ; E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E {{ Φ }})
-    (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  s ;  E  {{{  x .. y ,  RET  pat ;  Q  } } }") : stdpp_scope.
+      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E {{ Φ }}) : stdpp_scope.
 Notation "'{{{' P } } } e @ E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }})
-    (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  E  {{{  x .. y ,  RET  pat ;  Q  } } }") : stdpp_scope.
+      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }}) : stdpp_scope.
 Notation "'{{{' P } } } e @ E ? {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?{{ Φ }})
-    (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  @  E  ? {{{  x .. y ,  RET  pat ;  Q  } } }") : stdpp_scope.
+      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?{{ Φ }}) : stdpp_scope.
 Notation "'{{{' P } } } e {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }})
-    (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  {{{  x .. y ,  RET  pat ;  Q  } } }") : stdpp_scope.
+      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }}) : stdpp_scope.
 Notation "'{{{' P } } } e ? {{{ x .. y , 'RET' pat ; Q } } }" :=
   (∀ Φ : _ → uPred _,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?{{ Φ }})
-    (at level 20, x closed binder, y closed binder,
-     format "{{{  P  } } }  e  ? {{{  x .. y ,  RET  pat ;  Q  } } }") : stdpp_scope.
+      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?{{ Φ }}) : stdpp_scope.
 Notation "'{{{' P } } } e @ s ; E {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ s; E {{ Φ }})
-    (at level 20,
-     format "{{{  P  } } }  e  @  s ;  E  {{{  RET  pat ;  Q  } } }") : stdpp_scope.
+  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ s; E {{ Φ }}) : stdpp_scope.
 Notation "'{{{' P } } } e @ E {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }})
-    (at level 20,
-     format "{{{  P  } } }  e  @  E  {{{  RET  pat ;  Q  } } }") : stdpp_scope.
+  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }}) : stdpp_scope.
 Notation "'{{{' P } } } e @ E ? {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E ?{{ Φ }})
-    (at level 20,
-     format "{{{  P  } } }  e  @  E  ? {{{  RET  pat ;  Q  } } }") : stdpp_scope.
+  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E ?{{ Φ }}) : stdpp_scope.
 Notation "'{{{' P } } } e {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }})
-    (at level 20,
-     format "{{{  P  } } }  e  {{{  RET  pat ;  Q  } } }") : stdpp_scope.
+  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }}) : stdpp_scope.
 Notation "'{{{' P } } } e ? {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e ?{{ Φ }})
-    (at level 20,
-     format "{{{  P  } } }  e  ? {{{  RET  pat ;  Q  } } }") : stdpp_scope.
+  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e ?{{ Φ }}) : stdpp_scope.
 
 Section wp.
 Context `{irisG Λ Σ}.
