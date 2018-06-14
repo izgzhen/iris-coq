@@ -121,7 +121,7 @@ Section tests.
   Qed.
 
   Lemma test_iNext_Bi P :
-    @bi_entails monPredI (▷ P) (▷ P).
+    ▷ P ⊢@{monPredI} ▷ P.
   Proof. iIntros "H". by iNext. Qed.
 
   (** Test monPred_at framing *)
