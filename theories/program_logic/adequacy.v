@@ -77,8 +77,8 @@ Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (?) "[(Hw & HE & Hσ) H]".
   rewrite (val_stuck e1 σ1 e2 σ2 efs) // uPred_fupd_eq.
   iMod ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
-  iModIntro; iNext.
-  iMod ("H" $! e2 σ2 efs with "[%] [$Hw $HE]") as ">($ & $ & $ & $)"; auto.
+  iMod ("H" $! e2 σ2 efs with "[//] [$Hw $HE]") as ">(Hw & HE & H)".
+  iIntros "!> !>". by iMod ("H" with "[$Hw $HE]") as ">($ & $ & $)".
 Qed.
 
 Lemma wptp_step s e1 t1 t2 σ1 σ2 Φ :
