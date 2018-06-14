@@ -21,7 +21,7 @@ Class FrameMonPredAt {I : biIndex} {PROP : bi} (p : bool) (i : I)
       (𝓡 : PROP) (P : monPred I PROP) (𝓠 : PROP) :=
   frame_monPred_at : □?p 𝓡 ∗ 𝓠 -∗ P i.
 Arguments FrameMonPredAt {_ _} _ _ _%I _%I _%I.
-Hint Mode FrameMonPredAt + + + + ! ! - : typeclass_instances.
+Hint Mode FrameMonPredAt + + + - ! ! - : typeclass_instances.
 
 Section modalities.
   Context {I : biIndex} {PROP : bi}.
