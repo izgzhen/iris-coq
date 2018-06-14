@@ -4,6 +4,9 @@ From stdpp Require Export strings.
 From stdpp Require Import gmap.
 Set Default Proof Using "Type".
 
+Delimit Scope expr_scope with E.
+Delimit Scope val_scope with V.
+
 Module heap_lang.
 Open Scope Z_scope.
 
@@ -529,3 +532,14 @@ Canonical Structure heap_lang := LanguageOfEctx heap_ectx_lang.
 
 (* Prefer heap_lang names over ectx_language names. *)
 Export heap_lang.
+
+(** Define some derived forms. *)
+Notation Lam x e := (Rec BAnon x e) (only parsing).
+Notation Let x e1 e2 := (App (Lam x e2) e1) (only parsing).
+Notation Seq e1 e2 := (Let BAnon e1 e2) (only parsing).
+Notation LamV x e := (RecV BAnon x e) (only parsing).
+Notation LetCtx x e2 := (AppRCtx (LamV x e2)) (only parsing).
+Notation SeqCtx e2 := (LetCtx BAnon e2) (only parsing).
+Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)) (only parsing).
+
+Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).

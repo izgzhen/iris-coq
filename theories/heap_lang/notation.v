@@ -2,16 +2,8 @@ From iris.program_logic Require Import language.
 From iris.heap_lang Require Export lang tactics.
 Set Default Proof Using "Type".
 
-(** Define some derived forms. Happens in the same file because the order of
-    this and the following notations being defined is very relevant. *)
-Notation Lam x e := (Rec BAnon x e).
-Notation Let x e1 e2 := (App (Lam x e2) e1).
-Notation Seq e1 e2 := (Let BAnon e1 e2).
-Notation LamV x e := (RecV BAnon x e).
-Notation LetCtx x e2 := (AppRCtx (LamV x e2)).
-Notation SeqCtx e2 := (LetCtx BAnon e2).
-Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).
-Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)).
+Delimit Scope expr_scope with E.
+Delimit Scope val_scope with V.
 
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
