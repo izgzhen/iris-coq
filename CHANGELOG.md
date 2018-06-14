@@ -10,7 +10,7 @@ Changes in and extensions of the theory:
 * [#] Change in the definition of WP, so that there is a fancy update between
   the quantification over the next states and the later modality. This makes it
   possible to prove more powerful lifting lemmas: The new versions feature an
-  "update that take a step".
+  "update that takes a step".
 * [#] Add weakest preconditions for total program correctness.
 * [#] "(Potentially) stuck" weakest preconditions are no longer considered
   experimental.
