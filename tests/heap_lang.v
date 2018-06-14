@@ -119,11 +119,33 @@ End tests.
 Section printing_tests.
   Context `{heapG Σ}.
 
+  (* These terms aren't even closed, but that's not what this is about.  The
+  length of the variable names etc. has been carefully chosen to trigger
+  particular behavior of the Coq pretty printer. *)
+
   Lemma wp_print_long_expr (fun1 fun2 fun3 : expr) :
     True -∗ WP let: "val1" := fun1 #() in
        let: "val2" := fun2 "val1" in
        let: "val3" := fun3 "val2" in
        if: "val1" = "val2" then "val" else "val3"  {{ _, True }}.
+  Proof.
+    iIntros "_". Show.
+  Abort.
+
+  Lemma wp_print_long_expr (fun1 fun2 fun3 : expr) Φ :
+    True -∗ WP let: "val1" := fun1 #() in
+       let: "val2" := fun2 "val1" in
+       let: "v" := fun3 "v" in
+       if: "v" = "v" then "v" else "v"  {{ Φ }}.
+  Proof.
+    iIntros "_". Show.
+  Abort.
+
+  Lemma wp_print_long_expr (fun1 fun2 fun3 : expr) Φ E :
+    True -∗ WP let: "val1" := fun1 #() in
+       let: "val2" := fun2 "val1" in
+       let: "v" := fun3 "v" in
+       if: "v" = "v" then "v" else "v" @ E {{ Φ }}.
   Proof.
     iIntros "_". Show.
   Abort.

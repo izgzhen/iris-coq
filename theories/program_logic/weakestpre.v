@@ -53,53 +53,48 @@ Arguments wp {_ _ _} _ _ _%E _.
 Instance: Params (@wp) 6.
 
 Notation "'WP' e @ s ; E {{ Φ } }" := (wp s E e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' @  s ;  E  {{  Φ  } } ']'") : bi_scope.
+  (at level 20, e, Φ at level 200, only parsing) : bi_scope.
 Notation "'WP' e @ E {{ Φ } }" := (wp NotStuck E e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' @  E  {{  Φ  } } ']'") : bi_scope.
+  (at level 20, e, Φ at level 200, only parsing) : bi_scope.
 Notation "'WP' e @ E ? {{ Φ } }" := (wp MaybeStuck E e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' @  E  ? {{  Φ  } } ']'") : bi_scope.
+  (at level 20, e, Φ at level 200, only parsing) : bi_scope.
 Notation "'WP' e {{ Φ } }" := (wp NotStuck ⊤ e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' {{  Φ  } } ']'") : bi_scope.
+  (at level 20, e, Φ at level 200, only parsing) : bi_scope.
 Notation "'WP' e ? {{ Φ } }" := (wp MaybeStuck ⊤ e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' ? {{  Φ  } } ']'") : bi_scope.
+  (at level 20, e, Φ at level 200, only parsing) : bi_scope.
 
 Notation "'WP' e @ s ; E {{ v , Q } }" := (wp s E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' @  s ;  E  {{  v ,  Q  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' '[          ' @  s ;  E  {{  v ,  Q  } } ']' ']'") : bi_scope.
 Notation "'WP' e @ E {{ v , Q } }" := (wp NotStuck E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' @  E  {{  v ,  Q  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' '[       ' @  E  {{  v ,  Q  } } ']' ']'") : bi_scope.
 Notation "'WP' e @ E ? {{ v , Q } }" := (wp MaybeStuck E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' @  E  ? {{  v ,  Q  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' '[        ' @  E  ? {{  v ,  Q  } } ']' ']'") : bi_scope.
 Notation "'WP' e {{ v , Q } }" := (wp NotStuck ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' {{  v ,  Q  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' '[   ' {{  v ,  Q  } } ']' ']'") : bi_scope.
 Notation "'WP' e ? {{ v , Q } }" := (wp MaybeStuck ⊤ e%E (λ v, Q))
   (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' ? {{  v ,  Q  } } ']'") : bi_scope.
+   format "'[' 'WP'  e  '/' '[    ' ? {{  v ,  Q  } } ']' ']'") : bi_scope.
 
 (* Texan triples *)
 Notation "'{{{' P } } } e @ s ; E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E {{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "'[hv' {{{  P  } } }  '/  ' e  @  s ;  E  '/' {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  s ;  E  {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e @ E {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "'[hv' {{{  P  } } }  '/  ' e  @  E  '/' {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  E  {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e @ E ? {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?{{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "'[hv' {{{  P  } } }  '/  ' e  @  E  ? '/' {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  E  ? {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }})%I
@@ -109,20 +104,20 @@ Notation "'{{{' P } } } e ? {{{ x .. y , 'RET' pat ; Q } } }" :=
   (□ ∀ Φ,
       P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?{{ Φ }})%I
     (at level 20, x closed binder, y closed binder,
-     format "'[hv' {{{  P  } } }  '/  ' e  ? '/' {{{  x  ..  y ,   RET  pat ;  Q  } } } ']'") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  '/' ? {{{  x  ..  y ,   RET  pat ;  Q  } } } ']'") : bi_scope.
 
 Notation "'{{{' P } } } e @ s ; E {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ s; E {{ Φ }})%I
     (at level 20,
-     format "'[hv' {{{  P  } } }  '/  ' e  @  s ;  E  '/' {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  s ;  E  {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e @ E {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }})%I
     (at level 20,
-     format "'[hv' {{{  P  } } }  '/  ' e  @  E  '/' {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  E  {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e @ E ? {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E ?{{ Φ }})%I
     (at level 20,
-     format "'[hv' {{{  P  } } }  '/  ' e  @  E  ? '/' {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  E  ? {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
 Notation "'{{{' P } } } e {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }})%I
     (at level 20,
@@ -130,7 +125,7 @@ Notation "'{{{' P } } } e {{{ 'RET' pat ; Q } } }" :=
 Notation "'{{{' P } } } e ? {{{ 'RET' pat ; Q } } }" :=
   (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e ?{{ Φ }})%I
     (at level 20,
-     format "'[hv' {{{  P  } } }  '/  ' e  ? '/' {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
+     format "'[hv' {{{  P  } } }  '/  ' e  '/' ? {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
 
 (* Aliases for stdpp scope -- they inherit the levels and format from above. *)
 Notation "'{{{' P } } } e @ s ; E {{{ x .. y , 'RET' pat ; Q } } }" :=
