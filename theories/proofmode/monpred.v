@@ -15,6 +15,14 @@ Proof. by rewrite /IsBiIndexRel. Qed.
 Hint Extern 1 (IsBiIndexRel _ _) => unfold IsBiIndexRel; assumption
             : typeclass_instances.
 
+(** Frame [𝓡] into the goal [monPred_at P i] and determine the remainder [𝓠].
+    Used when framing encounters a monPred_at in the goal. *)
+Class FrameMonPredAt {I : biIndex} {PROP : bi} (p : bool) (i : I)
+      (𝓡 : PROP) (P : monPred I PROP) (𝓠 : PROP) :=
+  frame_monPred_at : □?p 𝓡 ∗ 𝓠 -∗ P i.
+Arguments FrameMonPredAt {_ _} _ _ _%I _%I _%I.
+Hint Mode FrameMonPredAt + + + + ! ! - : typeclass_instances.
+
 Section modalities.
   Context {I : biIndex} {PROP : bi}.
 
@@ -340,24 +348,77 @@ Proof.
   by rewrite monPred_at_forall.
 Qed.
 
-(* FIXME : there are two good ways to frame under a call to
-   monPred_at. This may cause some backtracking in the typeclass
-   search, and hence performance issues. *)
-Global Instance frame_monPred_at p P Q 𝓠 R i j :
-  IsBiIndexRel i j → Frame p R P Q → MakeMonPredAt j Q 𝓠 →
-  Frame p (R i) (P j) 𝓠.
+(* Framing. *)
+Global Instance frame_monPred_at_enter p i 𝓡 P 𝓠 :
+  FrameMonPredAt p i 𝓡 P 𝓠 → Frame p 𝓡 (P i) 𝓠.
+Proof. intros. done. Qed.
+Global Instance frame_monPred_at_here p P i j :
+  IsBiIndexRel i j → FrameMonPredAt p j (P i) P emp | 0.
 Proof.
-  rewrite /Frame /MakeMonPredAt /bi_affinely_if /bi_persistently_if
-          /IsBiIndexRel=> Hij <- <-.
-  destruct p; by rewrite Hij monPred_at_sep ?monPred_at_affinely ?monPred_at_persistently.
+  rewrite /FrameMonPredAt /IsBiIndexRel right_id bi.intuitionistically_if_elim=> -> //.
 Qed.
-Global Instance frame_monPred_at_embed i p P Q 𝓠 𝓡 :
-  Frame p ⎡𝓡⎤ P Q → MakeMonPredAt i Q 𝓠 → Frame p 𝓡 (P i) 𝓠.
+
+Global Instance frame_monPred_at_embed p 𝓡 𝓠 𝓟 i :
+  Frame p 𝓡 𝓟 𝓠 → FrameMonPredAt p i 𝓡 (embed (B:=monPredI) 𝓟) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_embed. Qed.
+Global Instance frame_monPred_at_sep p P Q 𝓡 𝓠 i :
+  Frame p 𝓡 (P i ∗ Q i) 𝓠 → FrameMonPredAt p i 𝓡 (P ∗ Q) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_sep. Qed.
+Global Instance frame_monPred_at_and p P Q 𝓡 𝓠 i :
+  Frame p 𝓡 (P i ∧ Q i) 𝓠 → FrameMonPredAt p i 𝓡 (P ∧ Q) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_and. Qed.
+Global Instance frame_monPred_at_or p P Q 𝓡 𝓠 i :
+  Frame p 𝓡 (P i ∨ Q i) 𝓠 → FrameMonPredAt p i 𝓡 (P ∨ Q) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_or. Qed.
+Global Instance frame_monPred_at_wand p P R Q1 Q2 i j :
+  IsBiIndexRel i j →
+  Frame p R Q1 Q2 →
+  FrameMonPredAt p j (R i) (P -∗ Q1) ((P -∗ Q2) i).
 Proof.
-  rewrite /Frame /MakeMonPredAt /bi_affinely_if /bi_persistently_if=> <- <-.
-  destruct p; by rewrite monPred_at_sep ?monPred_at_affinely
-                         ?monPred_at_persistently monPred_at_embed.
+  rewrite /Frame /FrameMonPredAt=>-> Hframe.
+  rewrite -monPred_at_intuitionistically_if -monPred_at_sep. apply monPred_in_entails.
+  change ((□?p R ∗ (P -∗ Q2)) -∗ P -∗ Q1). apply bi.wand_intro_r.
+  rewrite -assoc bi.wand_elim_l. done.
 Qed.
+Global Instance frame_monPred_at_impl P R Q1 Q2 i j :
+  IsBiIndexRel i j →
+  Frame true R Q1 Q2 →
+  FrameMonPredAt true j (R i) (P → Q1) ((P → Q2) i).
+Proof.
+  rewrite /Frame /FrameMonPredAt=>-> Hframe.
+  rewrite -monPred_at_intuitionistically_if -monPred_at_sep. apply monPred_in_entails.
+  change ((□ R ∗ (P → Q2)) -∗ P → Q1).
+  rewrite -bi.persistently_and_intuitionistically_sep_l. apply bi.impl_intro_r.
+  rewrite -assoc bi.impl_elim_l bi.persistently_and_intuitionistically_sep_l. done.
+Qed.
+Global Instance frame_monPred_at_forall {X : Type} p (Ψ : X → monPred) 𝓡 𝓠 i :
+  Frame p 𝓡 (∀ x, Ψ x i) 𝓠 → FrameMonPredAt p i 𝓡 (∀ x, Ψ x) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_forall. Qed.
+Global Instance frame_monPred_at_exist {X : Type} p (Ψ : X → monPred) 𝓡 𝓠 i :
+  Frame p 𝓡 (∃ x, Ψ x i) 𝓠 → FrameMonPredAt p i 𝓡 (∃ x, Ψ x) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_exist. Qed.
+
+Global Instance frame_monPred_at_absorbingly p P 𝓡 𝓠 i :
+  Frame p 𝓡 (<absorb> P i) 𝓠 → FrameMonPredAt p i 𝓡 (<absorb> P) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_absorbingly. Qed.
+Global Instance frame_monPred_at_affinely p P 𝓡 𝓠 i :
+  Frame p 𝓡 (<affine> P i) 𝓠 → FrameMonPredAt p i 𝓡 (<affine> P) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_affinely. Qed.
+Global Instance frame_monPred_at_persistently p P 𝓡 𝓠 i :
+  Frame p 𝓡 (<pers> P i) 𝓠 → FrameMonPredAt p i 𝓡 (<pers> P) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_persistently. Qed.
+Global Instance frame_monPred_at_intuitionistically p P 𝓡 𝓠 i :
+  Frame p 𝓡 (□ P i) 𝓠 → FrameMonPredAt p i 𝓡 (□ P) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_intuitionistically. Qed.
+Global Instance frame_monPred_at_objectively p P 𝓡 𝓠 i :
+  Frame p 𝓡 (∀ i, P i) 𝓠 → FrameMonPredAt p i 𝓡 (<obj> P) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_objectively. Qed.
+Global Instance frame_monPred_at_subjectively p P 𝓡 𝓠 i :
+  Frame p 𝓡 (∃ i, P i) 𝓠 → FrameMonPredAt p i 𝓡 (<subj> P) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_subjectively. Qed.
+Global Instance frame_monPred_at_bupd `{BiBUpd PROP} p P 𝓡 𝓠 i :
+  Frame p 𝓡 (|==> P i) 𝓠 → FrameMonPredAt p i 𝓡 (|==> P) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_bupd. Qed.
 
 Global Instance into_embed_objective P :
   Objective P → IntoEmbed P (∀ i, P i).
@@ -471,6 +532,16 @@ Proof.
   rewrite /FromModal /MakeMonPredAt=> <- <-. elim n=>//= ? ->.
   by rewrite monPred_at_later.
 Qed.
+
+Global Instance frame_monPred_at_later p P 𝓡 𝓠 i :
+  Frame p 𝓡 (▷ P i) 𝓠 → FrameMonPredAt p i 𝓡 (▷ P) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_later. Qed.
+Global Instance frame_monPred_at_laterN p n P 𝓡 𝓠 i :
+  Frame p 𝓡 (▷^n P i) 𝓠 → FrameMonPredAt p i 𝓡 (▷^n P) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_laterN. Qed.
+Global Instance frame_monPred_at_fupd `{BiFUpd PROP} E1 E2 p P 𝓡 𝓠 i :
+  Frame p 𝓡 (|={E1,E2}=> P i) 𝓠 → FrameMonPredAt p i 𝓡 (|={E1,E2}=> P) 𝓠.
+Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_fupd. Qed.
 
 Global Instance elim_modal_at_fupd_goal `{BiFUpd PROP} φ p p' E1 E2 E3 𝓟 𝓟' Q Q' i :
   ElimModal φ p p' 𝓟 𝓟' (|={E1,E3}=> Q i) (|={E2,E3}=> Q' i) →
