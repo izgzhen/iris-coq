@@ -147,6 +147,9 @@ Qed.
 Lemma to_val_is_Some e :
   is_Some (to_val e) → is_Some (heap_lang.to_val (to_expr e)).
 Proof. intros [v ?]; exists v; eauto using to_val_Some. Qed.
+Lemma expr_of_val e v :
+  to_val e = Some v → of_val v = W.to_expr e.
+Proof. intros ?. apply of_to_val, to_val_Some. done. Qed.
 
 Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
   match e with
@@ -217,8 +220,8 @@ Hint Extern 0 (Closed _ _) => solve_closed : typeclass_instances.
 Ltac solve_into_val :=
   match goal with
   | |- IntoVal ?e ?v =>
-     let e' := W.of_expr e in change (to_val (W.to_expr e') = Some v);
-     apply W.to_val_Some; simpl; unfold W.to_expr; reflexivity
+     let e' := W.of_expr e in change (of_val v = W.to_expr e');
+     apply W.expr_of_val; simpl; unfold W.to_expr; reflexivity
   end.
 Hint Extern 10 (IntoVal _ _) => solve_into_val : typeclass_instances.
 

@@ -21,13 +21,13 @@ Context `{!heapG Σ, !spawnG Σ}.
    brought together.  That is strictly stronger than first stripping a later
    and then merging them, as demonstrated by [tests/joining_existentials.v].
    This is why these are not Texan triples. *)
-Lemma par_spec (Ψ1 Ψ2 : val → iProp Σ) e (f1 f2 : val) (Φ : val → iProp Σ)
-    `{Hef : !IntoVal e (f1,f2)} :
+Lemma par_spec (Ψ1 Ψ2 : val → iProp Σ) e (f1 f2 : val) (Φ : val → iProp Σ) :
+  IntoVal e (f1,f2) →
   WP f1 #() {{ Ψ1 }} -∗ WP f2 #() {{ Ψ2 }} -∗
   (▷ ∀ v1 v2, Ψ1 v1 ∗ Ψ2 v2 -∗ ▷ Φ (v1,v2)%V) -∗
   WP par e {{ Φ }}.
 Proof.
-  apply of_to_val in Hef as <-. iIntros "Hf1 Hf2 HΦ".
+  iIntros (<-) "Hf1 Hf2 HΦ".
   rewrite /par /=. wp_let. wp_proj.
   wp_apply (spawn_spec parN with "Hf1").
   iIntros (l) "Hl". wp_let. wp_proj. wp_bind (f2 _).

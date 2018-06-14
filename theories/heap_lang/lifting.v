@@ -125,7 +125,7 @@ Lemma wp_alloc s E e v :
   IntoVal e v →
   {{{ True }}} Alloc e @ s; E {{{ l, RET LitV (LitLoc l); l ↦ v }}}.
 Proof.
-  iIntros (<-%of_to_val Φ) "_ HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
+  iIntros (<- Φ) "_ HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>"; iSplit; first by auto.
   iNext; iIntros (v2 σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_alloc with "Hσ") as "[Hσ Hl]"; first done.
@@ -135,7 +135,7 @@ Lemma twp_alloc s E e v :
   IntoVal e v →
   [[{ True }]] Alloc e @ s; E [[{ l, RET LitV (LitLoc l); l ↦ v }]].
 Proof.
-  iIntros (<-%of_to_val Φ) "_ HΦ". iApply twp_lift_atomic_head_step_no_fork; auto.
+  iIntros (<- Φ) "_ HΦ". iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>"; iSplit; first by auto.
   iIntros (v2 σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_alloc with "Hσ") as "[Hσ Hl]"; first done.
@@ -165,7 +165,7 @@ Lemma wp_store s E l v' e v :
   IntoVal e v →
   {{{ ▷ l ↦ v' }}} Store (Lit (LitLoc l)) e @ s; E {{{ RET LitV LitUnit; l ↦ v }}}.
 Proof.
-  iIntros (<-%of_to_val Φ) ">Hl HΦ".
+  iIntros (<- Φ) ">Hl HΦ".
   iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2 σ2 efs Hstep); inv_head_step.
@@ -176,7 +176,7 @@ Lemma twp_store s E l v' e v :
   IntoVal e v →
   [[{ l ↦ v' }]] Store (Lit (LitLoc l)) e @ s; E [[{ RET LitV LitUnit; l ↦ v }]].
 Proof.
-  iIntros (<-%of_to_val Φ) "Hl HΦ".
+  iIntros (<- Φ) "Hl HΦ".
   iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (v2 σ2 efs Hstep); inv_head_step.
@@ -189,7 +189,7 @@ Lemma wp_cas_fail s E l q v' e1 v1 e2 :
   {{{ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ s; E
   {{{ RET LitV (LitBool false); l ↦{q} v' }}}.
 Proof.
-  iIntros (<-%of_to_val [v2 <-%of_to_val] ? Φ) ">Hl HΦ".
+  iIntros (<- [v2 <-%of_to_val] ? Φ) ">Hl HΦ".
   iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
@@ -200,7 +200,7 @@ Lemma twp_cas_fail s E l q v' e1 v1 e2 :
   [[{ l ↦{q} v' }]] CAS (Lit (LitLoc l)) e1 e2 @ s; E
   [[{ RET LitV (LitBool false); l ↦{q} v' }]].
 Proof.
-  iIntros (<-%of_to_val [v2 <-%of_to_val] ? Φ) "Hl HΦ".
+  iIntros (<- [v2 <-%of_to_val] ? Φ) "Hl HΦ".
   iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (v2' σ2 efs Hstep); inv_head_step.
@@ -212,7 +212,7 @@ Lemma wp_cas_suc s E l e1 v1 e2 v2 :
   {{{ ▷ l ↦ v1 }}} CAS (Lit (LitLoc l)) e1 e2 @ s; E
   {{{ RET LitV (LitBool true); l ↦ v2 }}}.
 Proof.
-  iIntros (<-%of_to_val <-%of_to_val Φ) ">Hl HΦ".
+  iIntros (<- <- Φ) ">Hl HΦ".
   iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
@@ -224,7 +224,7 @@ Lemma twp_cas_suc s E l e1 v1 e2 v2 :
   [[{ l ↦ v1 }]] CAS (Lit (LitLoc l)) e1 e2 @ s; E
   [[{ RET LitV (LitBool true); l ↦ v2 }]].
 Proof.
-  iIntros (<-%of_to_val <-%of_to_val Φ) "Hl HΦ".
+  iIntros (<- <- Φ) "Hl HΦ".
   iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (v2' σ2 efs Hstep); inv_head_step.
@@ -237,7 +237,7 @@ Lemma wp_faa s E l i1 e2 i2 :
   {{{ ▷ l ↦ LitV (LitInt i1) }}} FAA (Lit (LitLoc l)) e2 @ s; E
   {{{ RET LitV (LitInt i1); l ↦ LitV (LitInt (i1 + i2)) }}}.
 Proof.
-  iIntros (<-%of_to_val Φ) ">Hl HΦ".
+  iIntros (<- Φ) ">Hl HΦ".
   iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
@@ -249,7 +249,7 @@ Lemma twp_faa s E l i1 e2 i2 :
   [[{ l ↦ LitV (LitInt i1) }]] FAA (Lit (LitLoc l)) e2 @ s; E
   [[{ RET LitV (LitInt i1); l ↦ LitV (LitInt (i1 + i2)) }]].
 Proof.
-  iIntros (<-%of_to_val Φ) "Hl HΦ".
+  iIntros (<- Φ) "Hl HΦ".
   iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (v2' σ2 efs Hstep); inv_head_step.

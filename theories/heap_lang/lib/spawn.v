@@ -44,10 +44,11 @@ Global Instance join_handle_ne n l :
 Proof. solve_proper. Qed.
 
 (** The main proofs. *)
-Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) `{Hef : !IntoVal e f} :
+Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) :
+  IntoVal e f →
   {{{ WP f #() {{ Ψ }} }}} spawn e {{{ l, RET #l; join_handle l Ψ }}}.
 Proof.
-  apply of_to_val in Hef as <-. iIntros (Φ) "Hf HΦ". rewrite /spawn /=.
+  iIntros (<- Φ) "Hf HΦ". rewrite /spawn /=.
   wp_let. wp_alloc l as "Hl". wp_let.
   iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?".

@@ -160,7 +160,7 @@ Section language.
 
   (* This is a family of frequent assumptions for PureExec *)
   Class IntoVal (e : expr Λ) (v : val Λ) :=
-    into_val : to_val e = Some v.
+    into_val : of_val v = e.
 
   Class AsVal (e : expr Λ) := as_val : is_Some (to_val e).
   (* There is no instance [IntoVal → AsVal] as often one can solve [AsVal] more
