@@ -370,18 +370,22 @@ Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_and. Qed.
 Global Instance frame_monPred_at_or p P Q 𝓡 𝓠 i :
   Frame p 𝓡 (P i ∨ Q i) 𝓠 → FrameMonPredAt p i 𝓡 (P ∨ Q) 𝓠.
 Proof. rewrite /Frame /FrameMonPredAt=> ->. by rewrite monPred_at_or. Qed.
-Global Instance frame_monPred_at_wand p P R Q1 Q2 i :
-  Frame p R Q1 Q2 → FrameMonPredAt p i (R i) (P -∗ Q1) ((P -∗ Q2) i).
+Global Instance frame_monPred_at_wand p P R Q1 Q2 i j :
+  IsBiIndexRel i j →
+  Frame p R Q1 Q2 →
+  FrameMonPredAt p j (R i) (P -∗ Q1) ((P -∗ Q2) i).
 Proof.
-  rewrite /Frame /FrameMonPredAt=>Hframe.
+  rewrite /Frame /FrameMonPredAt=>-> Hframe.
   rewrite -monPred_at_intuitionistically_if -monPred_at_sep. apply monPred_in_entails.
   change ((□?p R ∗ (P -∗ Q2)) -∗ P -∗ Q1). apply bi.wand_intro_r.
   rewrite -assoc bi.wand_elim_l. done.
 Qed.
-Global Instance frame_monPred_at_impl P R Q1 Q2 i :
-  Frame true R Q1 Q2 → FrameMonPredAt true i (R i) (P → Q1) ((P → Q2) i).
+Global Instance frame_monPred_at_impl P R Q1 Q2 i j :
+  IsBiIndexRel i j →
+  Frame true R Q1 Q2 →
+  FrameMonPredAt true j (R i) (P → Q1) ((P → Q2) i).
 Proof.
-  rewrite /Frame /FrameMonPredAt=>Hframe.
+  rewrite /Frame /FrameMonPredAt=>-> Hframe.
   rewrite -monPred_at_intuitionistically_if -monPred_at_sep. apply monPred_in_entails.
   change ((□ R ∗ (P → Q2)) -∗ P → Q1).
   rewrite -bi.persistently_and_intuitionistically_sep_l. apply bi.impl_intro_r.
