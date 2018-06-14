@@ -52,6 +52,8 @@ Definition wp_eq : @wp = @wp_def := wp_aux.(seal_eq).
 Arguments wp {_ _ _} _ _ _%E _.
 Instance: Params (@wp) 6.
 
+(* Notations without binder -- only parsing because they overlap with the
+notations with binder. *)
 Notation "'WP' e @ s ; E {{ Φ } }" := (wp s E e%E Φ)
   (at level 20, e, Φ at level 200, only parsing) : bi_scope.
 Notation "'WP' e @ E {{ Φ } }" := (wp NotStuck E e%E Φ)
@@ -63,6 +65,9 @@ Notation "'WP' e {{ Φ } }" := (wp NotStuck ⊤ e%E Φ)
 Notation "'WP' e ? {{ Φ } }" := (wp MaybeStuck ⊤ e%E Φ)
   (at level 20, e, Φ at level 200, only parsing) : bi_scope.
 
+(* Notations with binder.  The indentation for the inner format block is chosen
+such that *if* one has a single-character mask (e.g. [E]), the second line
+should align with the binder(s) on the first line. *)
 Notation "'WP' e @ s ; E {{ v , Q } }" := (wp s E e%E (λ v, Q))
   (at level 20, e, Q at level 200,
    format "'[' 'WP'  e  '/' '[          ' @  s ;  E  {{  v ,  Q  } } ']' ']'") : bi_scope.
