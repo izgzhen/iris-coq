@@ -35,6 +35,33 @@
   Σ : gFunctors
   H : heapG Σ
   fun1, fun2, fun3 : expr
+  Φ : language.val heap_lang → iProp Σ
+  ============================
+  --------------------------------------∗
+  WP let: "val1" := fun1 #() in
+     let: "val2" := fun2 "val1" in
+     let: "v" := fun3 "v" in if: "v" = "v" then "v" else "v" 
+  {{ v, Φ v }}
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  fun1, fun2, fun3 : expr
+  Φ : language.val heap_lang → iProp Σ
+  E : coPset
+  ============================
+  --------------------------------------∗
+  WP let: "val1" := fun1 #() in
+     let: "val2" := fun2 "val1" in
+     let: "v" := fun3 "v" in if: "v" = "v" then "v" else "v" 
+  @ E {{ v, Φ v }}
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  fun1, fun2, fun3 : expr
   ============================
   {{{ True }}}
     let: "val1" := fun1 #() in
