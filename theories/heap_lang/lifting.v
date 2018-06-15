@@ -51,8 +51,8 @@ Local Hint Resolve to_of_val.
 Local Ltac solve_exec_safe := intros; subst; do 3 eexists; econstructor; eauto.
 Local Ltac solve_exec_puredet := simpl; intros; by inv_head_step.
 Local Ltac solve_pure_exec :=
-  unfold IntoVal, AsVal in *; subst;
-  repeat match goal with H : is_Some _ |- _ => destruct H as [??] end;
+  unfold IntoVal in *;
+  repeat match goal with H : AsVal _ |- _ => destruct H as [??] end; subst;
   apply det_head_step_pure_exec; [ solve_exec_safe | solve_exec_puredet ].
 
 Class AsRec (e : expr) (f x : binder) (erec : expr) :=
@@ -189,7 +189,7 @@ Lemma wp_cas_fail s E l q v' e1 v1 e2 :
   {{{ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ s; E
   {{{ RET LitV (LitBool false); l ↦{q} v' }}}.
 Proof.
-  iIntros (<- [v2 <-%of_to_val] ? Φ) ">Hl HΦ".
+  iIntros (<- [v2 <-] ? Φ) ">Hl HΦ".
   iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
@@ -200,7 +200,7 @@ Lemma twp_cas_fail s E l q v' e1 v1 e2 :
   [[{ l ↦{q} v' }]] CAS (Lit (LitLoc l)) e1 e2 @ s; E
   [[{ RET LitV (LitBool false); l ↦{q} v' }]].
 Proof.
-  iIntros (<- [v2 <-%of_to_val] ? Φ) "Hl HΦ".
+  iIntros (<- [v2 <-] ? Φ) "Hl HΦ".
   iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (v2' σ2 efs Hstep); inv_head_step.

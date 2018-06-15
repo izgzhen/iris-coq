@@ -32,7 +32,8 @@ Changes in Coq:
   - `cmra_opM_assoc_L` → `cmra_op_opM_assoc_L`
   - `cmra_opM_assoc'` → `cmra_opM_opM_assoc`
 * `namespaces` has been moved to std++.
-* Changed `IntoVal` to be directly usable for rewriting `e` into `of_val v`.
+* Changed `IntoVal` to be directly usable for rewriting `e` into `of_val v`, and
+  changed `AsVal` to be usable for rewriting via the `[v <-]` destruct pattern.
 
 ## Iris 3.1.0 (released 2017-12-19)
 
