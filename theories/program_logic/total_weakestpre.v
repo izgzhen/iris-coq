@@ -50,142 +50,13 @@ Qed.
 Definition twp_def `{irisG Λ Σ} (s : stuckness) (E : coPset)
     (e : expr Λ) (Φ : val Λ → iProp Σ) :
   iProp Σ := bi_least_fixpoint (twp_pre' s) (E,e,Φ).
-Definition twp_aux : seal (@twp_def). by eexists. Qed.
-Definition twp := twp_aux.(unseal).
-Definition twp_eq : @twp = @twp_def := twp_aux.(seal_eq).
-
-Arguments twp {_ _ _} _ _ _%E _.
-Instance: Params (@twp) 6.
-
-(* Note that using '[[' instead of '[{' results in conflicts with the list
-notations. *)
-Notation "'WP' e @ s ; E [{ Φ } ]" := (twp s E e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' @  s ;  E  [{  Φ  } ] ']'") : bi_scope.
-Notation "'WP' e @ E [{ Φ } ]" := (twp NotStuck E e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' @  E  [{  Φ  } ] ']'") : bi_scope.
-Notation "'WP' e @ E ? [{ Φ } ]" := (twp MaybeStuck E e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' @  E  ? [{  Φ  } ] ']'") : bi_scope.
-Notation "'WP' e [{ Φ } ]" := (twp NotStuck ⊤ e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' [{  Φ  } ] ']'") : bi_scope.
-Notation "'WP' e ? [{ Φ } ]" := (twp MaybeStuck ⊤ e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' ? [{  Φ  } ] ']'") : bi_scope.
-
-Notation "'WP' e @ s ; E [{ v , Q } ]" := (twp s E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' @  s ;  E  [{  v ,  Q  } ] ']'") : bi_scope.
-Notation "'WP' e @ E [{ v , Q } ]" := (twp NotStuck E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' @  E  [{  v ,  Q  } ] ']'") : bi_scope.
-Notation "'WP' e @ E ? [{ v , Q } ]" := (twp MaybeStuck E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' @  E  ? [{  v ,  Q  } ] ']'") : bi_scope.
-Notation "'WP' e [{ v , Q } ]" := (twp NotStuck ⊤ e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' [{  v ,  Q  } ] ']'") : bi_scope.
-Notation "'WP' e ? [{ v , Q } ]" := (twp MaybeStuck ⊤ e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' ? [{  v ,  Q  } ] ']'") : bi_scope.
-
-(* Texan triples *)
-Notation "'[[{' P } ] ] e @ s ; E [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E [{ Φ }])%I
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  s ;  E  [[{  x .. y ,  RET  pat ;  Q } ] ]") : bi_scope.
-Notation "'[[{' P } ] ] e @ E [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E [{ Φ }])%I
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  E  [[{  x .. y ,  RET  pat ;  Q } ] ]") : bi_scope.
-Notation "'[[{' P } ] ] e @ E ? [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?[{ Φ }])%I
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  E  ? [[{  x .. y ,  RET  pat ;  Q } ] ]") : bi_scope.
-Notation "'[[{' P } ] ] e [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e [{ Φ }])%I
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  [[{  x .. y ,   RET  pat ;  Q } ] ]") : bi_scope.
-Notation "'[[{' P } ] ] e ? [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?[{ Φ }])%I
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  ? [[{  x .. y ,   RET  pat ;  Q } ] ]") : bi_scope.
-Notation "'[[{' P } ] ] e @ s ; E [[{ 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ s; E [{ Φ }])%I
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  s ;  E  [[{  RET  pat ;  Q } ] ]") : bi_scope.
-Notation "'[[{' P } ] ] e @ E [[{ 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ E [{ Φ }])%I
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  E  [[{  RET  pat ;  Q } ] ]") : bi_scope.
-Notation "'[[{' P } ] ] e @ E ? [[{ 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ E ?[{ Φ }])%I
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  E  ? [[{  RET  pat ;  Q } ] ]") : bi_scope.
-Notation "'[[{' P } ] ] e [[{ 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ, P -∗ (Q -∗ Φ pat%V) -∗ WP e [{ Φ }])%I
-    (at level 20,
-     format "[[{  P  } ] ]  e  [[{  RET  pat ;  Q } ] ]") : bi_scope.
-Notation "'[[{' P } ] ] e ? [[{ 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ, P -∗ (Q -∗ Φ pat%V) -∗ WP e ?[{ Φ }])%I
-    (at level 20,
-     format "[[{  P  } ] ]  e  ? [[{  RET  pat ;  Q } ] ]") : bi_scope.
-
-Notation "'[[{' P } ] ] e @ s ; E [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E [{ Φ }])
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  s ;  E  [[{  x .. y ,  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e @ E [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E [{ Φ }])
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  E  [[{  x .. y ,  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e @ E ? [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?[{ Φ }])
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  E  ? [[{  x .. y ,  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e [{ Φ }])
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  [[{  x .. y ,  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e ? [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?[{ Φ }])
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  ? [[{  x .. y ,  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e @ s ; E [[{ 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ s; E [{ Φ }])
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  s ;  E  [[{  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e @ E [[{ 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ E [{ Φ }])
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  E  [[{  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e @ E ? [[{ 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ E ?[{ Φ }])
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  E  ? [[{  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e [[{ 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _, P -∗ (Q -∗ Φ pat%V) -∗ WP e [{ Φ }])
-    (at level 20,
-     format "[[{  P  } ] ]  e  [[{  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e ? [[{ 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _, P -∗ (Q -∗ Φ pat%V) -∗ WP e ?[{ Φ }])
-    (at level 20,
-     format "[[{  P  } ] ]  e  ? [[{  RET  pat ;  Q } ] ]") : stdpp_scope.
+Definition twp_aux `{irisG Λ Σ} : seal (@twp_def Λ Σ _). by eexists. Qed.
+Instance twp' `{irisG Λ Σ} : Twp Λ (iProp Σ) stuckness := twp_aux.(unseal).
+Definition twp_eq `{irisG Λ Σ} : twp = @twp_def Λ Σ _ := twp_aux.(seal_eq).
 
 Section twp.
 Context `{irisG Λ Σ}.
+Implicit Types s : stuckness.
 Implicit Types P : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 Implicit Types v : val Λ.
@@ -210,12 +81,12 @@ Proof.
 Qed.
 
 Global Instance twp_ne s E e n :
-  Proper (pointwise_relation _ (dist n) ==> dist n) (@twp Λ Σ _ s E e).
+  Proper (pointwise_relation _ (dist n) ==> dist n) (twp (PROP:=iProp Σ) s E e).
 Proof.
   intros Φ1 Φ2 HΦ. rewrite !twp_eq. by apply (least_fixpoint_ne _), pair_ne, HΦ.
 Qed.
 Global Instance twp_proper s E e :
-  Proper (pointwise_relation _ (≡) ==> (≡)) (@twp Λ Σ _ s E e).
+  Proper (pointwise_relation _ (≡) ==> (≡)) (twp (PROP:=iProp Σ) s E e).
 Proof.
   by intros Φ Φ' ?; apply equiv_dist=>n; apply twp_ne=>v; apply equiv_dist.
 Qed.
@@ -339,7 +210,7 @@ Lemma twp_mask_mono s E1 E2 e Φ :
   E1 ⊆ E2 → WP e @ s; E1 [{ Φ }] -∗ WP e @ s; E2 [{ Φ }].
 Proof. iIntros (?) "H"; iApply (twp_strong_mono with "H"); auto. Qed.
 Global Instance twp_mono' s E e :
-  Proper (pointwise_relation _ (⊢) ==> (⊢)) (@twp Λ Σ _ s E e).
+  Proper (pointwise_relation _ (⊢) ==> (⊢)) (twp (PROP:=iProp Σ) s E e).
 Proof. by intros Φ Φ' ?; apply twp_mono. Qed.
 
 Lemma twp_value s E Φ e v `{!IntoVal e v} : Φ v -∗ WP e @ s; E [{ Φ }].

@@ -1,5 +1,6 @@
 From iris.base_logic.lib Require Export fancy_updates.
 From iris.program_logic Require Export language.
+From iris.bi Require Export weakestpre.
 From iris.proofmode Require Import tactics classes.
 Set Default Proof Using "Type".
 Import uPred.
@@ -10,20 +11,6 @@ Class irisG' (Λstate : Type) (Σ : gFunctors) := IrisG {
 }.
 Notation irisG Λ Σ := (irisG' (state Λ) Σ).
 Global Opaque iris_invG.
-
-Inductive stuckness := NotStuck | MaybeStuck.
-
-Definition stuckness_leb (s1 s2 : stuckness) : bool :=
-  match s1, s2 with
-  | MaybeStuck, NotStuck => false
-  | _, _ => true
-  end.
-Instance stuckness_le : SqSubsetEq stuckness := stuckness_leb.
-Instance stuckness_le_po : PreOrder stuckness_le.
-Proof. split; by repeat intros []. Qed.
-
-Definition stuckness_to_atomicity (s : stuckness) : atomicity :=
-  if s is MaybeStuck then StronglyAtomic else WeaklyAtomic.
 
 Definition wp_pre `{irisG Λ Σ} (s : stuckness)
     (wp : coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
@@ -45,119 +32,9 @@ Qed.
 
 Definition wp_def `{irisG Λ Σ} (s : stuckness) :
   coPset → expr Λ → (val Λ → iProp Σ) → iProp Σ := fixpoint (wp_pre s).
-Definition wp_aux : seal (@wp_def). by eexists. Qed.
-Definition wp := wp_aux.(unseal).
-Definition wp_eq : @wp = @wp_def := wp_aux.(seal_eq).
-
-Arguments wp {_ _ _} _ _ _%E _.
-Instance: Params (@wp) 6.
-
-(* Notations without binder -- only parsing because they overlap with the
-notations with binder. *)
-Notation "'WP' e @ s ; E {{ Φ } }" := (wp s E e%E Φ)
-  (at level 20, e, Φ at level 200, only parsing) : bi_scope.
-Notation "'WP' e @ E {{ Φ } }" := (wp NotStuck E e%E Φ)
-  (at level 20, e, Φ at level 200, only parsing) : bi_scope.
-Notation "'WP' e @ E ? {{ Φ } }" := (wp MaybeStuck E e%E Φ)
-  (at level 20, e, Φ at level 200, only parsing) : bi_scope.
-Notation "'WP' e {{ Φ } }" := (wp NotStuck ⊤ e%E Φ)
-  (at level 20, e, Φ at level 200, only parsing) : bi_scope.
-Notation "'WP' e ? {{ Φ } }" := (wp MaybeStuck ⊤ e%E Φ)
-  (at level 20, e, Φ at level 200, only parsing) : bi_scope.
-
-(* Notations with binder.  The indentation for the inner format block is chosen
-such that *if* one has a single-character mask (e.g. [E]), the second line
-should align with the binder(s) on the first line. *)
-Notation "'WP' e @ s ; E {{ v , Q } }" := (wp s E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' '[          ' @  s ;  E  {{  v ,  Q  } } ']' ']'") : bi_scope.
-Notation "'WP' e @ E {{ v , Q } }" := (wp NotStuck E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' '[       ' @  E  {{  v ,  Q  } } ']' ']'") : bi_scope.
-Notation "'WP' e @ E ? {{ v , Q } }" := (wp MaybeStuck E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' '[        ' @  E  ? {{  v ,  Q  } } ']' ']'") : bi_scope.
-Notation "'WP' e {{ v , Q } }" := (wp NotStuck ⊤ e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' '[   ' {{  v ,  Q  } } ']' ']'") : bi_scope.
-Notation "'WP' e ? {{ v , Q } }" := (wp MaybeStuck ⊤ e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' '[    ' ? {{  v ,  Q  } } ']' ']'") : bi_scope.
-
-(* Texan triples *)
-Notation "'{{{' P } } } e @ s ; E {{{ x .. y , 'RET' pat ; Q } } }" :=
-  (□ ∀ Φ,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E {{ Φ }})%I
-    (at level 20, x closed binder, y closed binder,
-     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  s ;  E  {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
-Notation "'{{{' P } } } e @ E {{{ x .. y , 'RET' pat ; Q } } }" :=
-  (□ ∀ Φ,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }})%I
-    (at level 20, x closed binder, y closed binder,
-     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  E  {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
-Notation "'{{{' P } } } e @ E ? {{{ x .. y , 'RET' pat ; Q } } }" :=
-  (□ ∀ Φ,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?{{ Φ }})%I
-    (at level 20, x closed binder, y closed binder,
-     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  E  ? {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
-Notation "'{{{' P } } } e {{{ x .. y , 'RET' pat ; Q } } }" :=
-  (□ ∀ Φ,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }})%I
-    (at level 20, x closed binder, y closed binder,
-     format "'[hv' {{{  P  } } }  '/  ' e  '/' {{{  x  ..  y ,  RET  pat ;  Q  } } } ']'") : bi_scope.
-Notation "'{{{' P } } } e ? {{{ x .. y , 'RET' pat ; Q } } }" :=
-  (□ ∀ Φ,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?{{ Φ }})%I
-    (at level 20, x closed binder, y closed binder,
-     format "'[hv' {{{  P  } } }  '/  ' e  '/' ? {{{  x  ..  y ,   RET  pat ;  Q  } } } ']'") : bi_scope.
-
-Notation "'{{{' P } } } e @ s ; E {{{ 'RET' pat ; Q } } }" :=
-  (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ s; E {{ Φ }})%I
-    (at level 20,
-     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  s ;  E  {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
-Notation "'{{{' P } } } e @ E {{{ 'RET' pat ; Q } } }" :=
-  (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }})%I
-    (at level 20,
-     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  E  {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
-Notation "'{{{' P } } } e @ E ? {{{ 'RET' pat ; Q } } }" :=
-  (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E ?{{ Φ }})%I
-    (at level 20,
-     format "'[hv' {{{  P  } } }  '/  ' e  '/' @  E  ? {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
-Notation "'{{{' P } } } e {{{ 'RET' pat ; Q } } }" :=
-  (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }})%I
-    (at level 20,
-     format "'[hv' {{{  P  } } }  '/  ' e  '/' {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
-Notation "'{{{' P } } } e ? {{{ 'RET' pat ; Q } } }" :=
-  (□ ∀ Φ, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e ?{{ Φ }})%I
-    (at level 20,
-     format "'[hv' {{{  P  } } }  '/  ' e  '/' ? {{{  RET  pat ;  Q  } } } ']'") : bi_scope.
-
-(* Aliases for stdpp scope -- they inherit the levels and format from above. *)
-Notation "'{{{' P } } } e @ s ; E {{{ x .. y , 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E {{ Φ }}) : stdpp_scope.
-Notation "'{{{' P } } } e @ E {{{ x .. y , 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E {{ Φ }}) : stdpp_scope.
-Notation "'{{{' P } } } e @ E ? {{{ x .. y , 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?{{ Φ }}) : stdpp_scope.
-Notation "'{{{' P } } } e {{{ x .. y , 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e {{ Φ }}) : stdpp_scope.
-Notation "'{{{' P } } } e ? {{{ x .. y , 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ ▷ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?{{ Φ }}) : stdpp_scope.
-Notation "'{{{' P } } } e @ s ; E {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ s; E {{ Φ }}) : stdpp_scope.
-Notation "'{{{' P } } } e @ E {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E {{ Φ }}) : stdpp_scope.
-Notation "'{{{' P } } } e @ E ? {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e @ E ?{{ Φ }}) : stdpp_scope.
-Notation "'{{{' P } } } e {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e {{ Φ }}) : stdpp_scope.
-Notation "'{{{' P } } } e ? {{{ 'RET' pat ; Q } } }" :=
-  (∀ Φ : _ → uPred _, P -∗ ▷ (Q -∗ Φ pat%V) -∗ WP e ?{{ Φ }}) : stdpp_scope.
+Definition wp_aux `{irisG Λ Σ} : seal (@wp_def Λ Σ _). by eexists. Qed.
+Instance wp' `{irisG Λ Σ} : Wp Λ (iProp Σ) stuckness := wp_aux.(unseal).
+Definition wp_eq `{irisG Λ Σ} : wp = @wp_def Λ Σ _ := wp_aux.(seal_eq).
 
 Section wp.
 Context `{irisG Λ Σ}.
@@ -168,11 +45,12 @@ Implicit Types v : val Λ.
 Implicit Types e : expr Λ.
 
 (* Weakest pre *)
-Lemma wp_unfold s E e Φ : WP e @ s; E {{ Φ }} ⊣⊢ wp_pre s (wp s) E e Φ.
+Lemma wp_unfold s E e Φ :
+  WP e @ s; E {{ Φ }} ⊣⊢ wp_pre s (wp (PROP:=iProp Σ)  s) E e Φ.
 Proof. rewrite wp_eq. apply (fixpoint_unfold (wp_pre s)). Qed.
 
 Global Instance wp_ne s E e n :
-  Proper (pointwise_relation _ (dist n) ==> dist n) (@wp Λ Σ _ s E e).
+  Proper (pointwise_relation _ (dist n) ==> dist n) (wp (PROP:=iProp Σ) s E e).
 Proof.
   revert e. induction (lt_wf n) as [n _ IH]=> e Φ Ψ HΦ.
   rewrite !wp_unfold /wp_pre.
@@ -183,7 +61,7 @@ Proof.
   intros v. eapply dist_le; eauto with omega.
 Qed.
 Global Instance wp_proper s E e :
-  Proper (pointwise_relation _ (≡) ==> (≡)) (@wp Λ Σ _ s E e).
+  Proper (pointwise_relation _ (≡) ==> (≡)) (wp (PROP:=iProp Σ) s E e).
 Proof.
   by intros Φ Φ' ?; apply equiv_dist=>n; apply wp_ne=>v; apply equiv_dist.
 Qed.
@@ -294,7 +172,7 @@ Proof. apply wp_stuck_mono. by destruct s. Qed.
 Lemma wp_mask_mono s E1 E2 e Φ : E1 ⊆ E2 → WP e @ s; E1 {{ Φ }} ⊢ WP e @ s; E2 {{ Φ }}.
 Proof. iIntros (?) "H"; iApply (wp_strong_mono with "H"); auto. Qed.
 Global Instance wp_mono' s E e :
-  Proper (pointwise_relation _ (⊢) ==> (⊢)) (@wp Λ Σ _ s E e).
+  Proper (pointwise_relation _ (⊢) ==> (⊢)) (wp (PROP:=iProp Σ) s E e).
 Proof. by intros Φ Φ' ?; apply wp_mono. Qed.
 
 Lemma wp_value s E Φ e v `{!IntoVal e v} : Φ v ⊢ WP e @ s; E {{ Φ }}.
@@ -411,5 +289,4 @@ Section proofmode_classes.
     iApply (wp_wand with "[Hinner Hα]"); first by iApply "Hinner".
     iIntros (v) ">[Hβ HΦ]". iApply "HΦ". by iApply "Hclose".
   Qed.
-
 End proofmode_classes.
