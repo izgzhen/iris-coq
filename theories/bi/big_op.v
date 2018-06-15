@@ -2,7 +2,7 @@ From iris.algebra Require Export big_op.
 From iris.bi Require Import derived_laws_sbi plainly.
 From stdpp Require Import countable fin_collections functions.
 Set Default Proof Using "Type".
-Import interface.bi derived_laws_bi.bi.
+Import interface.bi derived_laws_bi.bi derived_laws_sbi.bi.
 
 (* Notations *)
 Notation "'[∗' 'list]' k ↦ x ∈ l , P" :=
