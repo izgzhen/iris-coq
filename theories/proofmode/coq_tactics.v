@@ -7,8 +7,6 @@ Import env_notations.
 
 Local Notation "b1 && b2" := (if b1 then b2 else false) : bool_scope.
 
-Notation pm_maybe_wand mP Q := (pm_from_option (λ P, P -∗ Q)%I Q%I mP).
-
 (* Coq versions of the tactics *)
 Section bi_tactics.
 Context {PROP : bi}.
@@ -335,10 +333,6 @@ Proof.
   - by rewrite right_id.
   - rewrite /= IH (comm _ Q _) assoc. done.
 Qed.
-
-Lemma pm_maybe_wand_sound mP Q :
-  pm_maybe_wand mP Q ⊣⊢ (default emp mP -∗ Q).
-Proof. destruct mP; simpl; first done. rewrite emp_wand //. Qed.
 
 Global Instance envs_Forall2_refl (R : relation PROP) :
   Reflexive R → Reflexive (envs_Forall2 R).
@@ -996,7 +990,7 @@ Lemma tac_inv_elim {X : Type} Δ Δ' i j φ p Pinv Pin Pout (Pclose : option (X 
   (∀ R, ∃ Δ'',
     envs_app false (Esnoc Enil j
       (Pin -∗
-       (∀ x, Pout x -∗ pm_maybe_wand (pm_option_fun Pclose x) (Q' x)) -∗
+       (∀ x, Pout x -∗ pm_option_fun Pclose x -∗? Q' x) -∗
        R
       )%I) Δ'
       = Some Δ'' ∧

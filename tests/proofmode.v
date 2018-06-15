@@ -508,6 +508,43 @@ Lemma test_big_sepL2_iFrame (Φ : nat → nat → PROP) (l1 l2 : list nat) P :
   Φ 0 10 -∗ ([∗ list] y1;y2 ∈ l1;l2, Φ y1 y2) -∗
   ([∗ list] y1;y2 ∈ (0 :: l1);(10 :: l2), Φ y1 y2).
 Proof. iIntros "$ ?". iFrame. Qed.
+
+Lemma test_lemma_1 (b : bool) :
+  emp ⊢@{PROP} □?b True.
+Proof. destruct b; simpl; eauto. Qed.
+Lemma test_reducing_after_iDestruct : emp ⊢@{PROP} True.
+Proof.
+  iIntros "H". iDestruct (test_lemma_1 true with "H") as "H". Show. done.
+Qed.
+
+Lemma test_lemma_2 (b : bool) :
+  □?b emp ⊢@{PROP} emp.
+Proof. destruct b; simpl; eauto. Qed.
+Lemma test_reducing_after_iApply : emp ⊢@{PROP} emp.
+Proof.
+  iIntros "#H". iApply (test_lemma_2 true). Show. auto.
+Qed.
+
+Lemma test_lemma_3 (b : bool) :
+  □?b emp ⊢@{PROP} ⌜b = b⌝.
+Proof. destruct b; simpl; eauto. Qed.
+Lemma test_reducing_after_iApply_late_evar : emp ⊢@{PROP} ⌜true = true⌝.
+Proof.
+  iIntros "#H". iApply (test_lemma_3). Show. auto.
+Qed.
+
+Section wandM.
+Import proofmode.base.
+Lemma test_wandM mP Q R :
+  (mP -∗? Q) -∗ (Q -∗ R) -∗ (mP -∗? R).
+Proof.
+  iIntros "HPQ HQR HP". Show.
+  iApply "HQR". iApply "HPQ". Show.
+  done.
+Qed.
+
+End wandM.
+
 End tests.
 
 (** Test specifically if certain things print correctly. *)

@@ -161,13 +161,6 @@ Arguments IntoWand' {_} _ _ _%I _%I _%I : simpl never.
 Hint Mode IntoWand' + + + ! ! - : typeclass_instances.
 Hint Mode IntoWand' + + + ! - ! : typeclass_instances.
 
-Instance into_wand_wand' {PROP : bi} p q (P Q P' Q' : PROP) :
-  IntoWand' p q (P -∗ Q) P' Q' → IntoWand p q (P -∗ Q) P' Q' | 100.
-Proof. done. Qed.
-Instance into_wand_impl' {PROP : bi} p q (P Q P' Q' : PROP) :
-  IntoWand' p q (P → Q) P' Q' → IntoWand p q (P → Q) P' Q' | 100.
-Proof. done. Qed.
-
 Class FromWand {PROP : bi} (P Q1 Q2 : PROP) := from_wand : (Q1 -∗ Q2) ⊢ P.
 Arguments FromWand {_} _%I _%I _%I : simpl never.
 Arguments from_wand {_} _%I _%I _%I {_}.

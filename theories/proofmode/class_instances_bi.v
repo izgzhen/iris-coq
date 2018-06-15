@@ -340,6 +340,16 @@ Global Instance from_modal_bupd `{BiBUpd PROP} P :
 Proof. by rewrite /FromModal /= -bupd_intro. Qed.
 
 (** IntoWand *)
+Global Instance into_wand_wand' p q (P Q P' Q' : PROP) :
+  IntoWand' p q (P -∗ Q) P' Q' → IntoWand p q (P -∗ Q) P' Q' | 100.
+Proof. done. Qed.
+Global Instance into_wand_impl' p q (P Q P' Q' : PROP) :
+  IntoWand' p q (P → Q) P' Q' → IntoWand p q (P → Q) P' Q' | 100.
+Proof. done. Qed.
+Global Instance into_wand_wandM' p q mP (Q P' Q' : PROP) :
+  IntoWand' p q (mP -∗? Q) P' Q' → IntoWand p q (mP -∗? Q) P' Q' | 100.
+Proof. done. Qed.
+
 Global Instance into_wand_wand p q P Q P' :
   FromAssumption q P P' → IntoWand p q (P' -∗ Q) P Q.
 Proof.
@@ -373,6 +383,10 @@ Proof.
   rewrite /FromAssumption /IntoWand /= => <-. apply wand_intro_l.
   rewrite sep_and [(□ (_ → _))%I]intuitionistically_elim impl_elim_r //.
 Qed.
+
+Global Instance into_wand_wandM p q mP' P Q :
+  FromAssumption q P (pm_default emp%I mP') → IntoWand p q (mP' -∗? Q) P Q.
+Proof. rewrite /IntoWand wandM_sound. exact: into_wand_wand. Qed.
 
 Global Instance into_wand_and_l p q R1 R2 P' Q' :
   IntoWand p q R1 P' Q' → IntoWand p q (R1 ∧ R2) P' Q'.
@@ -491,6 +505,9 @@ Qed.
 (** FromWand *)
 Global Instance from_wand_wand P1 P2 : FromWand (P1 -∗ P2) P1 P2.
 Proof. by rewrite /FromWand. Qed.
+Global Instance from_wand_wandM mP1 P2 :
+  FromWand (mP1 -∗? P2) (pm_default emp mP1)%I P2.
+Proof. by rewrite /FromWand wandM_sound. Qed.
 Global Instance from_wand_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   FromWand P Q1 Q2 → FromWand ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
 Proof. by rewrite /FromWand -embed_wand => <-. Qed.
@@ -974,6 +991,10 @@ Proof.
   rewrite /ElimModal=> H Hφ. apply wand_intro_r.
   rewrite wand_curry -assoc (comm _ (□?p' _)%I) -wand_curry wand_elim_l; auto.
 Qed.
+Global Instance elim_modal_wandM φ p p' P P' Q Q' mR :
+  ElimModal φ p p' P P' Q Q' →
+  ElimModal φ p p' P P' (mR -∗? Q) (mR -∗? Q').
+Proof. rewrite /ElimModal !wandM_sound. exact: elim_modal_wand. Qed.
 Global Instance elim_modal_forall {A} φ p p' P P' (Φ Ψ : A → PROP) :
   (∀ x, ElimModal φ p p' P P' (Φ x) (Ψ x)) → ElimModal φ p p' P P' (∀ x, Φ x) (∀ x, Ψ x).
 Proof.
@@ -1011,6 +1032,9 @@ Proof.
   rewrite /AddModal=> H. apply wand_intro_r.
   by rewrite wand_curry -assoc (comm _ P') -wand_curry wand_elim_l.
 Qed.
+Global Instance add_modal_wandM P P' Q mR :
+  AddModal P P' Q → AddModal P P' (mR -∗? Q).
+Proof. rewrite /AddModal wandM_sound. exact: add_modal_wand. Qed.
 Global Instance add_modal_forall {A} P P' (Φ : A → PROP) :
   (∀ x, AddModal P P' (Φ x)) → AddModal P P' (∀ x, Φ x).
 Proof.

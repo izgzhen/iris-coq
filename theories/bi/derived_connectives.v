@@ -106,3 +106,15 @@ Arguments Timeless {_} _%I : simpl never.
 Arguments timeless {_} _%I {_}.
 Hint Mode Timeless + ! : typeclass_instances.
 Instance: Params (@Timeless) 1.
+
+(** An optional precondition [mP] to [Q].
+    TODO: We may actually consider generalizing this to a list of preconditions,
+    and e.g. also using it for texan triples. *)
+Definition bi_wandM {PROP : bi} (mP : option PROP) (Q : PROP) : PROP :=
+  match mP with
+  | None => Q
+  | Some P => (P -∗ Q)%I
+  end.
+Arguments bi_wandM {_} !_%I _%I /.
+Notation "mP -∗? Q" := (bi_wandM mP Q)
+  (at level 99, Q at level 200, right associativity) : bi_scope.

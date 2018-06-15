@@ -2007,7 +2007,7 @@ Tactic Notation "iInvCore" constr(select) "with" constr(pats) "as" open_constr(H
      iSpecializePat H pats; last (
        iApplyHyp H; clear R; pm_reduce;
        (* Now the goal is
-          [∀ x, Pout x -∗ pm_maybe_wand (pm_option_fun Pclose x) (Q' x)],
+          [∀ x, Pout x -∗ pm_option_fun Pclose x -∗? Q' x],
           reduced because we can rely on Pclose being a constructor. *)
        let x := fresh in
        iIntros (x);
