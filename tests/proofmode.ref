@@ -78,6 +78,19 @@ Tactic failure: iFrame: cannot frame Q.
 1 subgoal
   
   PROP : sbi
+  x : nat
+  l : list nat
+  P : PROP
+  ============================
+  "HP" : P
+  _ : [∗ list] y ∈ l, <affine> ⌜y = y⌝
+  _ : <affine> ⌜x = x⌝ ∗ ([∗ list] y ∈ l, <affine> ⌜y = y⌝)
+  --------------------------------------∗
+  P
+  
+1 subgoal
+  
+  PROP : sbi
   BiFUpd0 : BiFUpd PROP
   P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
   ============================

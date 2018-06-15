@@ -7,7 +7,7 @@
   N : namespace
   P : iProp Σ
   ============================
-  "H" : inv N (<pers> P)%I
+  "H" : inv N (<pers> P)
   "H2" : ▷ <pers> P
   --------------------------------------□
   |={⊤ ∖ ↑N}=> ▷ <pers> P ∗ (|={⊤}=> ▷ P)
@@ -21,7 +21,7 @@
   N : namespace
   P : iProp Σ
   ============================
-  "H" : inv N (<pers> P)%I
+  "H" : inv N (<pers> P)
   "H2" : ▷ <pers> P
   --------------------------------------□
   "Hclose" : ▷ <pers> P ={⊤ ∖ ↑N,⊤}=∗ emp
@@ -39,7 +39,7 @@
   N : namespace
   P : iProp Σ
   ============================
-  _ : cinv N γ (<pers> P)%I
+  _ : cinv N γ (<pers> P)
   "HP" : ▷ <pers> P
   --------------------------------------□
   "Hown" : cinv_own γ p
@@ -57,7 +57,7 @@
   N : namespace
   P : iProp Σ
   ============================
-  _ : cinv N γ (<pers> P)%I
+  _ : cinv N γ (<pers> P)
   "HP" : ▷ <pers> P
   --------------------------------------□
   "Hown" : cinv_own γ p
@@ -77,7 +77,7 @@
   P : iProp Σ
   H2 : ↑N ⊆ E2
   ============================
-  _ : na_inv t N (<pers> P)%I
+  _ : na_inv t N (<pers> P)
   "HP" : ▷ <pers> P
   --------------------------------------□
   "Hown1" : na_own t E1
@@ -98,7 +98,7 @@
   P : iProp Σ
   H2 : ↑N ⊆ E2
   ============================
-  _ : na_inv t N (<pers> P)%I
+  _ : na_inv t N (<pers> P)
   "HP" : ▷ <pers> P
   --------------------------------------□
   "Hown1" : na_own t E1

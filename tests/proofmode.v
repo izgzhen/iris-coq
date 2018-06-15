@@ -485,6 +485,12 @@ Proof.
   iIntros "[??]". iSplit; last done. Show. done.
 Qed.
 
+Lemma test_big_sepL_simpl x (l : list nat) P :
+  P -∗
+  ([∗ list] k↦y ∈ l, <affine> ⌜ y = y ⌝) -∗
+  ([∗ list] y ∈ x :: l, <affine> ⌜ y = y ⌝) -∗
+  P.
+Proof. iIntros "HP ?? /=". Show. done. Qed.
 End tests.
 
 (** Test specifically if certain things print correctly. *)
