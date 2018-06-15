@@ -553,14 +553,17 @@ Section error_tests.
 Context {PROP : sbi}.
 Implicit Types P Q R : PROP.
 
+Check "iAlways_spatial_non_empty".
 Lemma iAlways_spatial_non_empty P :
   P -∗ □ emp.
 Proof. iIntros "HP". Fail iAlways. Abort.
 
+Check "iDestruct_bad_name".
 Lemma iDestruct_bad_name P :
   P -∗ P.
 Proof. iIntros "HP". Fail iDestruct "HQ" as "HP". Abort.
 
+Check "iIntros_dup_name".
 Lemma iIntros_dup_name P Q :
   P -∗ Q -∗ ∀ x y : (), P.
 Proof.
@@ -568,16 +571,46 @@ Proof.
   iIntros "HQ" (x). Fail iIntros (x).
 Abort.
 
+Check "iSplit_one_of_many".
 Lemma iSplit_one_of_many P :
   P -∗ P -∗ P ∗ P.
 Proof.
   iIntros "HP1 HP2". Fail iSplitL "HP1 HPx". Fail iSplitL "HPx HP1".
 Abort.
 
-Lemma iExact_not_found P :
-  P -∗ P.
+Check "iExact_fail".
+Lemma iExact_fail P Q :
+  <affine> P -∗ Q -∗ <affine> P.
 Proof.
-  iIntros "HP". Fail iExact "HQ".
+  iIntros "HP". Fail iExact "HQ". iIntros "HQ". Fail iExact "HQ". Fail iExact "HP".
 Abort.
+
+Check "iClear_fail".
+Lemma iClear_fail P : P -∗ P.
+Proof. Fail iClear "HP". iIntros "HP". Fail iClear "HP". Abort.
+
+Check "iSpecializeArgs_fail".
+Lemma iSpecializeArgs_fail P :
+  (∀ x : nat, P) -∗ P.
+Proof. iIntros "HP". Fail iSpecialize ("HP" $! true). Abort.
+
+Check "iStartProof_fail".
+Lemma iStartProof_fail : 0 = 0.
+Proof. Fail iStartProof. Abort.
+
+Check "iPoseProof_fail".
+Lemma iPoseProof_fail P : P -∗ P.
+Proof.
+  Fail iPoseProof (eq_refl 0) as "H".
+  iIntros "H". Fail iPoseProof bi.and_intro as "H".
+Abort.
+
+Check "iRevert_fail".
+Lemma iRevert_fail P : P -∗ P.
+Proof. Fail iRevert "H". Abort.
+
+Check "iDestruct_fail".
+Lemma iDestruct_fail P : P -∗ <absorb> P.
+Proof. iIntros "HP". Fail iDestruct "HP" as "{HP}". Fail iDestruct "HP" as "[{HP}]". Abort.
 
 End error_tests.

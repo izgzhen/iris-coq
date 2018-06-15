@@ -62,7 +62,7 @@ Tactic Notation "iStartProof" :=
   lazymatch goal with
   | |- envs_entails _ _ => idtac
   | |- ?φ => notypeclasses refine (as_emp_valid_2 φ _ _);
-               [iSolveTC || fail "iStartProof: not a Bi entailment"
+               [iSolveTC || fail "iStartProof: not a BI assertion"
                |apply tac_adequate]
   end.
 
@@ -83,7 +83,7 @@ Tactic Notation "iStartProof" uconstr(PROP) :=
      [bi_car _], and hence trigger the canonical structures mechanism
      to find the corresponding bi. *)
   | |- ?φ => notypeclasses refine ((λ P : PROP, @as_emp_valid_2 φ _ P) _ _ _);
-               [iSolveTC || fail "iStartProof: not a Bi entailment"
+               [iSolveTC || fail "iStartProof: not a BI assertion"
                |apply tac_adequate]
   end.
 
@@ -133,8 +133,12 @@ possible in Ltac2. *)
 (** * Context manipulation *)
 Tactic Notation "iRename" constr(H1) "into" constr(H2) :=
   eapply tac_rename with _ H1 H2 _ _; (* (i:=H1) (j:=H2) *)
-    [pm_reflexivity || fail "iRename:" H1 "not found"
-    |pm_reflexivity || fail "iRename:" H2 "not fresh"|].
+    [pm_reflexivity ||
+     let H1 := pretty_ident H1 in
+     fail "iRename:" H1 "not found"
+    |pm_reflexivity ||
+     let H2 := pretty_ident H2 in
+     fail "iRename:" H2 "not fresh"|].
 
 Local Inductive esel_pat :=
   | ESelPure
@@ -172,18 +176,19 @@ Local Ltac iClearHyp H :=
      let H := pretty_ident H in
      fail "iClear:" H "not found"
     |pm_reduce; iSolveTC ||
+     let H := pretty_ident H in
      let P := match goal with |- TCOr (Affine ?P) _ => P end in
      fail "iClear:" H ":" P "not affine and the goal not absorbing"
     |].
 
+Local Ltac iClear_go Hs :=
+  lazymatch Hs with
+  | [] => idtac
+  | ESelPure :: ?Hs => clear; iClear_go Hs
+  | ESelIdent _ ?H :: ?Hs => iClearHyp H; iClear_go Hs
+  end.
 Tactic Notation "iClear" constr(Hs) :=
-  let rec go Hs :=
-    lazymatch Hs with
-    | [] => idtac
-    | ESelPure :: ?Hs => clear; go Hs
-    | ESelIdent _ ?H :: ?Hs => iClearHyp H; go Hs
-    end in
-  let Hs := iElaborateSelPat Hs in iStartProof; go Hs.
+  iStartProof; let Hs := iElaborateSelPat Hs in iClear_go Hs.
 
 Tactic Notation "iClear" "(" ident_list(xs) ")" constr(Hs) :=
   iClear Hs; clear xs.
@@ -192,11 +197,14 @@ Tactic Notation "iClear" "(" ident_list(xs) ")" constr(Hs) :=
 Tactic Notation "iExact" constr(H) :=
   eapply tac_assumption with _ H _ _; (* (i:=H) *)
     [pm_reflexivity ||
+     let H := pretty_ident H in
      fail "iExact:" H "not found"
     |iSolveTC ||
+     let H := pretty_ident H in
      let P := match goal with |- FromAssumption _ ?P _ => P end in
      fail "iExact:" H ":" P "does not match goal"
     |pm_reduce; iSolveTC ||
+     let H := pretty_ident H in
      fail "iExact:" H "not absorbing and the remaining hypotheses not affine"].
 
 Tactic Notation "iAssumptionCore" :=
@@ -508,8 +516,7 @@ type classes in the arguments `xs` are resolved at arbitrary moments. Tactics
 like `apply`, `split` and `eexists` wrongly trigger type class search to resolve
 these holes. To avoid TC being triggered too eagerly, this tactic uses `refine`
 at most places instead of `apply`. *)
-Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
-  let rec go xs :=
+Local Ltac iSpecializeArgs_go H xs :=
     lazymatch xs with
     | hnil => idtac
     | hcons ?x ?xs =>
@@ -523,9 +530,10 @@ Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
          |lazymatch goal with (* Force [A] in [ex_intro] to deal with coercions. *)
           | |- ∃ _ : ?A, _ =>
             notypeclasses refine (@ex_intro A _ x (conj _ _))
-          end; [shelve..|pm_reflexivity|go xs]]
-    end in
-  go xs.
+          end; [shelve..|pm_reflexivity|iSpecializeArgs_go H xs]]
+    end.
+Local Tactic Notation "iSpecializeArgs" constr(H) open_constr(xs) :=
+  iSpecializeArgs_go H xs.
 
 Ltac iSpecializePat_go H1 pats :=
   let solve_to_wand H1 :=
@@ -737,7 +745,7 @@ Tactic Notation "iIntoEmpValid" open_constr(t) :=
       | let tT' := eval cbv zeta in tT in go_specialize t tT'
       | let tT' := eval cbv zeta in tT in
         notypeclasses refine (as_emp_valid_1 tT _ _);
-          [iSolveTC || fail "iPoseProof: not a BI assertion"
+          [iSolveTC || fail 1 "iPoseProof: not a BI assertion"
           |exact t]]
   with go_specialize t tT :=
     lazymatch tT with                (* We do not use hnf of tT, because, if
@@ -843,7 +851,7 @@ Tactic Notation "iRevert" constr(Hs) :=
           fail "iRevert:" H "not found"
          |pm_reduce; go Hs]
     end in
-  let Hs := iElaborateSelPat Hs in iStartProof; go Hs.
+  iStartProof; let Hs := iElaborateSelPat Hs in go Hs.
 
 Tactic Notation "iRevert" "(" ident(x1) ")" :=
   iForallRevert x1.

@@ -184,15 +184,21 @@ Tactic failure: iFrame: cannot frame Q.
   ={E1,E2}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
              ={E1,E2}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
   
+"iAlways_spatial_non_empty"
+     : string
 The command has indeed failed with message:
 In nested Ltac calls to "iAlways", "iModIntro" and 
 "iModIntro (uconstr)", last call failed.
 Tactic failure: iModIntro: spatial context is non-empty.
+"iDestruct_bad_name"
+     : string
 The command has indeed failed with message:
 In nested Ltac calls to "iDestruct (open_constr) as (constr)",
 "iDestructCore (open_constr) as (constr) (tactic)" and
 "iDestructCore (open_constr) as (constr) (tactic)", last call failed.
 Tactic failure: iDestruct: "HQ" not found.
+"iIntros_dup_name"
+     : string
 The command has indeed failed with message:
 In nested Ltac calls to "iIntros (constr)", "iIntros_go" and
 "iIntro (constr)", last call failed.
@@ -201,12 +207,87 @@ The command has indeed failed with message:
 In nested Ltac calls to "iIntros ( (intropattern) )",
 "iIntro ( (intropattern) )" and "intros x", last call failed.
 x is already used.
+"iSplit_one_of_many"
+     : string
 The command has indeed failed with message:
 Ltac call to "iSplitL (constr)" failed.
 Tactic failure: iSplitL: hypotheses ["HPx"] not found.
 The command has indeed failed with message:
 Ltac call to "iSplitL (constr)" failed.
 Tactic failure: iSplitL: hypotheses ["HPx"] not found.
+"iExact_fail"
+     : string
 The command has indeed failed with message:
 Ltac call to "iExact (constr)" failed.
 Tactic failure: iExact: "HQ" not found.
+The command has indeed failed with message:
+Ltac call to "iExact (constr)" failed.
+Tactic failure: iExact: "HQ" : Q does not match goal.
+The command has indeed failed with message:
+Ltac call to "iExact (constr)" failed.
+Tactic failure: iExact: "HP"
+not absorbing and the remaining hypotheses not affine.
+"iClear_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iClear (constr)", "iElaborateSelPat" and
+"<iris.proofmode.ltac_tactics.iElaborateSelPat_go>", last call failed.
+Tactic failure: iElaborateSelPat: "HP" not found.
+The command has indeed failed with message:
+In nested Ltac calls to "iClear (constr)",
+"<iris.proofmode.ltac_tactics.iClear_go>" and
+"<iris.proofmode.ltac_tactics.iClearHyp>", last call failed.
+Tactic failure: iClear: "HP" : P not affine and the goal not absorbing.
+"iSpecializeArgs_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iSpecialize (open_constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) with (open_constr) (open_constr) as (constr)",
+"iSpecializeArgs (constr) (open_constr)",
+"<iris.proofmode.ltac_tactics.iSpecializeArgs_go>" and
+"notypeclasses refine (uconstr)", last call failed.
+In environment
+PROP : sbi
+P : PROP
+The term "true" has type "bool" while it is expected to have type "nat".
+"iStartProof_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iStartProof" and "iStartProof", last call failed.
+Tactic failure: iStartProof: not a BI assertion.
+"iPoseProof_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iPoseProof (open_constr) as (constr)" and
+"iPoseProofCore (open_constr) as (constr) (constr) (tactic)", last call
+failed.
+Tactic failure: iPoseProof: not a BI assertion.
+The command has indeed failed with message:
+In nested Ltac calls to "iPoseProof (open_constr) as (constr)" and
+"iPoseProofCore (open_constr) as (constr) (constr) (tactic)", last call
+failed.
+Tactic failure: iRename: "H" not fresh.
+"iRevert_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iRevert (constr)", "iElaborateSelPat" and
+"<iris.proofmode.ltac_tactics.iElaborateSelPat_go>", last call failed.
+Tactic failure: iElaborateSelPat: "H" not found.
+"iDestruct_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iDestruct (open_constr) as (constr)",
+"iDestructCore (open_constr) as (constr) (tactic)",
+"iDestructCore (open_constr) as (constr) (tactic)" and
+"iDestructCore (open_constr) as (constr) (tactic)", last call failed.
+Tactic failure: iDestruct: "{HP}"
+should contain exactly one proper introduction pattern.
+The command has indeed failed with message:
+In nested Ltac calls to "iDestruct (open_constr) as (constr)",
+"iDestructCore (open_constr) as (constr) (tactic)",
+"iDestructCore (open_constr) as (constr) (tactic)" and
+"iDestructCore (open_constr) as (constr) (tactic)", last call failed.
+Tactic failure: iDestruct: (IList [[IClear (sel_patterns.SelIdent "HP")]])
+invalid.
