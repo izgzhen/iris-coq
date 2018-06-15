@@ -536,15 +536,17 @@ Global Instance from_and_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   FromAnd P Q1 Q2 → FromAnd ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
 Proof. by rewrite /FromAnd -embed_and => <-. Qed.
 
-Global Instance from_and_big_sepL_cons_persistent {A} (Φ : nat → A → PROP) x l :
+Global Instance from_and_big_sepL_cons_persistent {A} (Φ : nat → A → PROP) l x l' :
+  IsCons l x l' →
   Persistent (Φ 0 x) →
-  FromAnd ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
-Proof. intros. by rewrite /FromAnd big_opL_cons persistent_and_sep_1. Qed.
-Global Instance from_and_big_sepL_app_persistent {A} (Φ : nat → A → PROP) l1 l2 :
+  FromAnd ([∗ list] k ↦ y ∈ l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l', Φ (S k) y).
+Proof. rewrite /IsCons=> -> ?. by rewrite /FromAnd big_sepL_cons persistent_and_sep_1. Qed.
+Global Instance from_and_big_sepL_app_persistent {A} (Φ : nat → A → PROP) l l1 l2 :
+  IsApp l l1 l2 →
   (∀ k y, Persistent (Φ k y)) →
-  FromAnd ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
+  FromAnd ([∗ list] k ↦ y ∈ l, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
-Proof. intros. by rewrite /FromAnd big_opL_app persistent_and_sep_1. Qed.
+Proof. rewrite /IsApp=> -> ?. by rewrite /FromAnd big_sepL_app persistent_and_sep_1. Qed.
 
 (** FromSep *)
 Global Instance from_sep_sep P1 P2 : FromSep (P1 ∗ P2) P1 P2 | 100.
@@ -575,13 +577,15 @@ Global Instance from_sep_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
 Proof. by rewrite /FromSep -embed_sep => <-. Qed.
 
-Global Instance from_sep_big_sepL_cons {A} (Φ : nat → A → PROP) x l :
-  FromSep ([∗ list] k ↦ y ∈ x :: l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l, Φ (S k) y).
-Proof. by rewrite /FromSep big_sepL_cons. Qed.
-Global Instance from_sep_big_sepL_app {A} (Φ : nat → A → PROP) l1 l2 :
-  FromSep ([∗ list] k ↦ y ∈ l1 ++ l2, Φ k y)
+Global Instance from_sep_big_sepL_cons {A} (Φ : nat → A → PROP) l x l' :
+  IsCons l x l' →
+  FromSep ([∗ list] k ↦ y ∈ l, Φ k y) (Φ 0 x) ([∗ list] k ↦ y ∈ l', Φ (S k) y).
+Proof. rewrite /IsCons=> ->. by rewrite /FromSep big_sepL_cons. Qed.
+Global Instance from_sep_big_sepL_app {A} (Φ : nat → A → PROP) l l1 l2 :
+  IsApp l l1 l2 →
+  FromSep ([∗ list] k ↦ y ∈ l, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
-Proof. by rewrite /FromSep big_opL_app. Qed.
+Proof. rewrite /IsApp=> ->. by rewrite /FromSep big_opL_app. Qed.
 
 Global Instance from_sep_bupd `{BiBUpd PROP} P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (|==> P) (|==> Q1) (|==> Q2).
