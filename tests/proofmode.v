@@ -561,14 +561,23 @@ Lemma iDestruct_bad_name P :
   P -∗ P.
 Proof. iIntros "HP". Fail iDestruct "HQ" as "HP". Abort.
 
-Lemma iIntros_dup_name P :
-  P -∗ ∀ x y : (), P.
-Proof. iIntros "HP" (x). Fail iIntros (x). Abort.
+Lemma iIntros_dup_name P Q :
+  P -∗ Q -∗ ∀ x y : (), P.
+Proof.
+  iIntros "HP". Fail iIntros "HP".
+  iIntros "HQ" (x). Fail iIntros (x).
+Abort.
 
 Lemma iSplit_one_of_many P :
   P -∗ P -∗ P ∗ P.
 Proof.
   iIntros "HP1 HP2". Fail iSplitL "HP1 HPx". Fail iSplitL "HPx HP1".
+Abort.
+
+Lemma iExact_not_found P :
+  P -∗ P.
+Proof.
+  iIntros "HP". Fail iExact "HQ".
 Abort.
 
 End error_tests.

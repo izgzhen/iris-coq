@@ -37,11 +37,11 @@ No applicable tactic.
 The command has indeed failed with message:
 In nested Ltac calls to "iClear (constr)", "iElaborateSelPat" and
 "iElaborateSelPat_go", last call failed.
-Tactic failure: iElaborateSelPat: (INamed "HQ") not found.
+Tactic failure: iElaborateSelPat: "HQ" not found.
 The command has indeed failed with message:
 In nested Ltac calls to "iClear (constr)", "iElaborateSelPat" and
 "iElaborateSelPat_go", last call failed.
-Tactic failure: iElaborateSelPat: (INamed "HQ") not found.
+Tactic failure: iElaborateSelPat: "HQ" not found.
 The command has indeed failed with message:
 In nested Ltac calls to "iSpecialize (open_constr)",
 "iSpecializeCore (open_constr) as (constr)",
@@ -192,7 +192,11 @@ The command has indeed failed with message:
 In nested Ltac calls to "iDestruct (open_constr) as (constr)",
 "iDestructCore (open_constr) as (constr) (tactic)" and
 "iDestructCore (open_constr) as (constr) (tactic)", last call failed.
-Tactic failure: iDestruct: (INamed "HQ") not found.
+Tactic failure: iDestruct: "HQ" not found.
+The command has indeed failed with message:
+In nested Ltac calls to "iIntros (constr)", "iIntros_go" and
+"iIntro (constr)", last call failed.
+Tactic failure: iIntro: "HP" not fresh.
 The command has indeed failed with message:
 In nested Ltac calls to "iIntros ( (intropattern) )",
 "iIntro ( (intropattern) )" and "intros x", last call failed.
@@ -203,3 +207,6 @@ Tactic failure: iSplitL: hypotheses ["HPx"] not found.
 The command has indeed failed with message:
 Ltac call to "iSplitL (constr)" failed.
 Tactic failure: iSplitL: hypotheses ["HPx"] not found.
+The command has indeed failed with message:
+Ltac call to "iExact (constr)" failed.
+Tactic failure: iExact: "HQ" not found.
