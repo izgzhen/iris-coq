@@ -277,6 +277,9 @@ Hint Mode AddModal + - ! ! : typeclass_instances.
 Lemma add_modal_id {PROP : bi} (P Q : PROP) : AddModal P P Q.
 Proof. by rewrite /AddModal wand_elim_r. Qed.
 
+(** We use the classes [IsCons] and [IsApp] to make sure that instances such as
+[frame_big_sepL_cons] and [frame_big_sepL_app] cannot be applied repeatedly
+often when having [ [∗ list] k ↦ x ∈ ?e, Φ k x] with [?e] an evar. *)
 Class IsCons {A} (l : list A) (x : A) (k : list A) := is_cons : l = x :: k.
 Class IsApp {A} (l k1 k2 : list A) := is_app : l = k1 ++ k2.
 Global Hint Mode IsCons + ! - - : typeclass_instances.

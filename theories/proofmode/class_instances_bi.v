@@ -713,9 +713,6 @@ Proof.
   by rewrite sep_and intuitionistically_and and_sep_intuitionistically.
 Qed.
 
-(* We use [IsCons] and [IsApp] to make sure that [frame_big_sepL_cons] and
-[frame_big_sepL_app] cannot be applied repeatedly often when having
-[ [∗ list] k ↦ x ∈ ?e, Φ k x] with [?e] an evar. *)
 Global Instance into_sep_big_sepL_cons {A} (Φ : nat → A → PROP) l x l' :
   IsCons l x l' →
   IntoSep ([∗ list] k ↦ y ∈ l, Φ k y)
