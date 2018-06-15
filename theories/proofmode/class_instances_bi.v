@@ -1,12 +1,13 @@
 From stdpp Require Import nat_cancel.
 From iris.bi Require Import bi tactics.
-From iris.proofmode Require Import modality_instances classes ltac_tactics.
+From iris.proofmode Require Import base modality_instances classes ltac_tactics.
 Set Default Proof Using "Type".
 Import bi.
 
 Section bi_instances.
 Context {PROP : bi}.
 Implicit Types P Q R : PROP.
+Implicit Types mP : option PROP.
 
 (** AsEmpValid *)
 Global Instance as_emp_valid_emp_valid {PROP : bi} (P : PROP) : AsEmpValid0 (bi_emp_valid P) P | 0.
@@ -999,7 +1000,8 @@ Global Instance elim_inv_acc_with_close {X : Type}
   IntoAcc Pinv φ1 Pin M1 M2 α β mγ →
   (∀ R, ElimModal φ2 false false (M1 R) R Q Q') →
   ElimInv (X:=X) (φ1 ∧ φ2) Pinv Pin
-          α (Some (λ x, β x -∗ M2 (proofmode.base.from_option id emp (mγ x))))%I
+          α
+          (Some (λ x, β x -∗ M2 (pm_default emp (mγ x))))%I
           Q (λ _, Q').
 Proof.
   rewrite /ElimAcc /IntoAcc /ElimInv.

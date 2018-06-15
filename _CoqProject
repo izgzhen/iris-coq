@@ -99,6 +99,7 @@ theories/proofmode/tokens.v
 theories/proofmode/coq_tactics.v
 theories/proofmode/ltac_tactics.v
 theories/proofmode/environments.v
+theories/proofmode/reduction.v
 theories/proofmode/intro_patterns.v
 theories/proofmode/spec_patterns.v
 theories/proofmode/sel_patterns.v
