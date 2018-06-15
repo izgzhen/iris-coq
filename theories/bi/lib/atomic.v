@@ -1,7 +1,7 @@
 From iris.bi Require Export bi updates.
 From iris.bi.lib Require Import fixpoint laterable.
 From stdpp Require Import coPset namespaces.
-From iris.proofmode Require Import coq_tactics tactics.
+From iris.proofmode Require Import coq_tactics tactics reduction.
 Set Default Proof Using "Type".
 
 (** Conveniently split a conjunction on both assumption and conclusion. *)
@@ -160,8 +160,8 @@ Section lemmas.
   Global Instance elim_acc_aacc {X} E1 E2 Ei (α' β' : X → PROP) γ' α β Pas Φ :
     ElimAcc (X:=X) (fupd E1 E2) (fupd E2 E1) α' β' γ'
             (atomic_acc E1 Ei α Pas β Φ)
-            (λ x', atomic_acc E2 Ei α (β' x' ∗ coq_tactics.maybe_wand (γ' x') Pas)%I β
-                (λ x y, β' x' ∗ coq_tactics.maybe_wand (γ' x') (Φ x y)))%I.
+            (λ x', atomic_acc E2 Ei α (β' x' ∗ pm_maybe_wand (γ' x') Pas)%I β
+                (λ x y, β' x' ∗ pm_maybe_wand (γ' x') (Φ x y)))%I.
   Proof.
     rewrite /ElimAcc.
     (* FIXME: Is there any way to prevent maybe_wand from unfolding?
@@ -281,5 +281,5 @@ Tactic Notation "iAuIntro" :=
   iStartProof; eapply tac_aupd_intro; [
     iSolveTC || fail "iAuIntro: emp is not timeless"
   | iSolveTC || fail "iAuIntro: not all spatial assumptions are laterable"
-  | (* P = ...: make the P pretty *) env_reflexivity
+  | (* P = ...: make the P pretty *) pm_reflexivity
   | (* the new proof mode goal *) ].

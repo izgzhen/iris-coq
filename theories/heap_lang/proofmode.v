@@ -1,5 +1,5 @@
 From iris.program_logic Require Export weakestpre total_weakestpre.
-From iris.proofmode Require Import coq_tactics.
+From iris.proofmode Require Import coq_tactics reduction.
 From iris.proofmode Require Export tactics.
 From iris.heap_lang Require Export tactics lifting.
 From iris.heap_lang Require Import notation.
@@ -319,7 +319,7 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
   let finish _ :=
     first [intros l | fail 1 "wp_alloc:" l "not fresh"];
       eexists; split;
-        [env_cbv; reflexivity || fail "wp_alloc:" H "not fresh"
+        [pm_reflexivity || fail "wp_alloc:" H "not fresh"
         |wp_expr_simpl; try wp_value_head] in
   iStartProof;
   lazymatch goal with
@@ -379,7 +379,7 @@ Tactic Notation "wp_store" :=
       |fail 1 "wp_store: cannot find 'Store' in" e];
     [iSolveTC
     |solve_mapsto ()
-    |env_cbv; reflexivity
+    |pm_reflexivity
     |finish ()]
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     first
@@ -387,7 +387,7 @@ Tactic Notation "wp_store" :=
          eapply (tac_twp_store _ _ _ _ _ K); [iSolveTC|..])
       |fail 1 "wp_store: cannot find 'Store' in" e];
     [solve_mapsto ()
-    |env_cbv; reflexivity
+    |pm_reflexivity
     |finish ()]
   | _ => fail "wp_store: not a 'wp'"
   end.
@@ -432,7 +432,7 @@ Tactic Notation "wp_cas_suc" :=
     [iSolveTC
     |solve_mapsto ()
     |try congruence
-    |env_cbv; reflexivity
+    |pm_reflexivity
     |simpl; try wp_value_head]
   | |- envs_entails _ (twp ?E ?e ?Q) =>
     first
@@ -441,7 +441,7 @@ Tactic Notation "wp_cas_suc" :=
       |fail 1 "wp_cas_suc: cannot find 'CAS' in" e];
     [solve_mapsto ()
     |try congruence
-    |env_cbv; reflexivity
+    |pm_reflexivity
     |wp_expr_simpl; try wp_value_head]
   | _ => fail "wp_cas_suc: not a 'wp'"
   end.
@@ -459,7 +459,7 @@ Tactic Notation "wp_faa" :=
       |fail 1 "wp_faa: cannot find 'CAS' in" e];
     [iSolveTC
     |solve_mapsto ()
-    |env_cbv; reflexivity
+    |pm_reflexivity
     |wp_expr_simpl; try wp_value_head]
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     first
@@ -467,7 +467,7 @@ Tactic Notation "wp_faa" :=
          eapply (tac_twp_faa _ _ _ _ _ K); [iSolveTC|..])
       |fail 1 "wp_faa: cannot find 'CAS' in" e];
     [solve_mapsto ()
-    |env_cbv; reflexivity
+    |pm_reflexivity
     |wp_expr_simpl; try wp_value_head]
   | _ => fail "wp_faa: not a 'wp'"
   end.

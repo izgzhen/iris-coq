@@ -3,6 +3,8 @@ From iris.algebra Require Export base.
 From Coq Require Import Ascii.
 Set Default Proof Using "Type".
 
+(** * Utility definitions used by the proofmode *)
+
 (* Directions of rewrites *)
 Inductive direction := Left | Right.
 
@@ -84,11 +86,18 @@ Qed.
 Lemma ident_beq_reflect i1 i2 : reflect (i1 = i2) (ident_beq i1 i2).
 Proof. apply iff_reflect. by rewrite ident_beq_true. Qed.
 
-(** Copies of some definitions so we can control their unfolding *)
-Definition option_bind {A B} (f : A → option B) (mx : option A) : option B :=
+(** Copies of some [option] combinators for better reduction control. *)
+Definition pm_option_bind {A B} (f : A → option B) (mx : option A) : option B :=
   match mx with Some x => f x | None => None end.
-Arguments option_bind {_ _} _ !_ / : assert.
+Arguments pm_option_bind {_ _} _ !_ /.
 
-Definition from_option {A B} (f : A → B) (y : B) (mx : option A) : B :=
+Definition pm_from_option {A B} (f : A → B) (y : B) (mx : option A) : B :=
   match mx with None => y | Some x => f x end.
-Arguments from_option {_ _} _ _ !_ / : assert.
+Arguments pm_from_option {_ _} _ _ !_ /.
+
+Definition pm_option_fun {A B} (f : option (A → B)) (x : A) : option B :=
+  match f with None => None | Some f => Some (f x) end.
+Arguments pm_option_fun {_ _} !_ _ /.
+
+(* Can't write [id] here as that would not reduce. *)
+Notation pm_default := (pm_from_option (λ x, x)).
