@@ -89,7 +89,21 @@ Global Instance frame_big_sepL_app {A} p (Φ : nat → A → PROP) R Q l l1 l2 :
   Frame p R (([∗ list] k ↦ y ∈ l1, Φ k y) ∗
            [∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y) Q →
   Frame p R ([∗ list] k ↦ y ∈ l, Φ k y) Q.
-Proof. rewrite /IsApp=>->. by rewrite /Frame big_opL_app. Qed.
+Proof. rewrite /IsApp=>->. by rewrite /Frame big_sepL_app. Qed.
+
+Global Instance frame_big_sepL2_cons {A B} p (Φ : nat → A → B → PROP)
+    R Q l1 x1 l1' l2 x2 l2' :
+  IsCons l1 x1 l1' → IsCons l2 x2 l2' →
+  Frame p R (Φ 0 x1 x2 ∗ [∗ list] k ↦ y1;y2 ∈ l1';l2', Φ (S k) y1 y2) Q →
+  Frame p R ([∗ list] k ↦ y1;y2 ∈ l1;l2, Φ k y1 y2) Q.
+Proof. rewrite /IsCons=>-> ->. by rewrite /Frame big_sepL2_cons. Qed.
+Global Instance frame_big_sepL2_app {A B} p (Φ : nat → A → B → PROP)
+    R Q l1 l1' l1'' l2 l2' l2'' :
+  IsApp l1 l1' l1'' → IsApp l2 l2' l2'' →
+  Frame p R (([∗ list] k ↦ y1;y2 ∈ l1';l2', Φ k y1 y2) ∗
+           [∗ list] k ↦ y1;y2 ∈ l1'';l2'', Φ (length l1' + k) y1 y2) Q →
+  Frame p R ([∗ list] k ↦ y1;y2 ∈ l1;l2, Φ k y1 y2) Q.
+Proof. rewrite /IsApp /Frame=>-> -> ->. apply wand_elim_l', big_sepL2_app. Qed.
 
 Global Instance make_and_true_l P : KnownLMakeAnd True P P.
 Proof. apply left_id, _. Qed.
