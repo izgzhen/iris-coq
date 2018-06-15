@@ -36,11 +36,11 @@ Ltac call to "done" failed.
 No applicable tactic.
 The command has indeed failed with message:
 In nested Ltac calls to "iClear (constr)", "iElaborateSelPat" and
-"iElaborateSelPat_go", last call failed.
+"<iris.proofmode.ltac_tactics.iElaborateSelPat_go>", last call failed.
 Tactic failure: iElaborateSelPat: "HQ" not found.
 The command has indeed failed with message:
 In nested Ltac calls to "iClear (constr)", "iElaborateSelPat" and
-"iElaborateSelPat_go", last call failed.
+"<iris.proofmode.ltac_tactics.iElaborateSelPat_go>", last call failed.
 Tactic failure: iElaborateSelPat: "HQ" not found.
 The command has indeed failed with message:
 In nested Ltac calls to "iSpecialize (open_constr)",

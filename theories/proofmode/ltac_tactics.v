@@ -140,7 +140,7 @@ Local Inductive esel_pat :=
   | ESelPure
   | ESelIdent : bool → ident → esel_pat.
 
-Ltac iElaborateSelPat_go pat Δ Hs :=
+Local Ltac iElaborateSelPat_go pat Δ Hs :=
   lazymatch pat with
   | [] => eval cbv in Hs
   | SelPure :: ?pat =>  iElaborateSelPat_go pat Δ (ESelPure :: Hs)
