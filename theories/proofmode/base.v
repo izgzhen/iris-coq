@@ -8,13 +8,20 @@ Set Default Proof Using "Type".
 (* Directions of rewrites *)
 Inductive direction := Left | Right.
 
-(* Some specific versions of operations on strings for the proof mode. We need
-those so that we can make [cbv] unfold just them, but not the actual operations
-that may appear in users' proofs. *)
+(* Some specific versions of operations on strings, booleans, positive for the
+proof mode. We need those so that we can make [cbv] unfold just them, but not
+the actual operations that may appear in users' proofs. *)
 Local Notation "b1 && b2" := (if b1 then b2 else false) : bool_scope.
 
 Lemma lazy_andb_true (b1 b2 : bool) : b1 && b2 = true ↔ b1 = true ∧ b2 = true.
 Proof. destruct b1, b2; intuition congruence. Qed.
+
+Fixpoint Pos_succ (x : positive) : positive :=
+  match x with
+  | (p~1)%positive => ((Pos_succ p)~0)%positive
+  | (p~0)%positive => (p~1)%positive
+  | 1%positive => 2%positive
+  end.
 
 Definition beq (b1 b2 : bool) : bool :=
   match b1, b2 with

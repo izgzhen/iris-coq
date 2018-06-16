@@ -312,7 +312,7 @@ Definition envs_clear_persistent {PROP} (Δ : envs PROP) : envs PROP :=
   Envs Enil (env_spatial Δ) (env_counter Δ).
 
 Definition envs_incr_counter {PROP} (Δ : envs PROP) : envs PROP :=
-  Envs (env_intuitionistic Δ) (env_spatial Δ) (Pos.succ (env_counter Δ)).
+  Envs (env_intuitionistic Δ) (env_spatial Δ) (Pos_succ (env_counter Δ)).
 
 Fixpoint envs_split_go {PROP}
     (js : list ident) (Δ1 Δ2 : envs PROP) : option (envs PROP * envs PROP) :=
