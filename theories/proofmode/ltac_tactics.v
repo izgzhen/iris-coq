@@ -769,6 +769,26 @@ The tactic [iApply] uses laxy type class inference, so that evars can first be
 instantiated by matching with the goal, whereas [iDestruct] does not, because
 eliminations may not be performed when type classes have not been resolved.
 *)
+Local Ltac iPoseProofCore_go Htmp t goal_tac :=
+  lazymatch type of t with
+  | ident =>
+    eapply tac_pose_proof_hyp with _ _ t _ Htmp _;
+    [pm_reflexivity ||
+     let t := pretty_ident t in
+     fail "iPoseProof:" t "not found"
+    |pm_reflexivity ||
+     let Htmp := pretty_ident Htmp in
+     fail "iPoseProof:" Htmp "not fresh"
+    |goal_tac ()]
+  | _ =>
+    eapply tac_pose_proof with _ Htmp _; (* (j:=H) *)
+    [iIntoEmpValid t
+    |pm_reflexivity ||
+     let Htmp := pretty_ident Htmp in
+     fail "iPoseProof:" Htmp "not fresh"
+    |goal_tac ()]
+  end;
+  try iSolveTC.
 Tactic Notation "iPoseProofCore" open_constr(lem)
     "as" constr(p) constr(lazy_tc) tactic(tac) :=
   iStartProof;
@@ -780,29 +800,9 @@ Tactic Notation "iPoseProofCore" open_constr(lem)
     | ITrm ?t ?xs ?pat => iSpecializeCore (ITrm Htmp xs pat) as p
     | _ => idtac
     end in
-  let go goal_tac :=
-    lazymatch type of t with
-    | ident =>
-       eapply tac_pose_proof_hyp with _ _ t _ Htmp _;
-         [pm_reflexivity ||
-          let t := pretty_ident t in
-          fail "iPoseProof:" t "not found"
-         |pm_reflexivity ||
-          let Htmp := pretty_ident Htmp in
-          fail "iPoseProof:" Htmp "not fresh"
-         |goal_tac ()]
-    | _ =>
-       eapply tac_pose_proof with _ Htmp _; (* (j:=H) *)
-         [iIntoEmpValid t
-         |pm_reflexivity ||
-          let Htmp := pretty_ident Htmp in
-          fail "iPoseProof:" Htmp "not fresh"
-         |goal_tac ()]
-    end;
-    try iSolveTC in
   lazymatch eval compute in lazy_tc with
-  | true => go ltac:(fun _ => spec_tac (); last (tac Htmp))
-  | false => go spec_tac; last (tac Htmp)
+  | true => iPoseProofCore_go Htmp t ltac:(fun _ => spec_tac (); last (tac Htmp))
+  | false => iPoseProofCore_go Htmp t spec_tac; last (tac Htmp)
   end.
 
 (** * Apply *)

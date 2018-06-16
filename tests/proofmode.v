@@ -636,4 +636,8 @@ Check "iDestruct_fail".
 Lemma iDestruct_fail P : P -∗ <absorb> P.
 Proof. iIntros "HP". Fail iDestruct "HP" as "{HP}". Fail iDestruct "HP" as "[{HP}]". Abort.
 
+Check "iApply_fail".
+Lemma iApply_fail P Q : P -∗ Q.
+Proof. iIntros "HP". Fail iApply "HP". Abort.
+
 End error_tests.

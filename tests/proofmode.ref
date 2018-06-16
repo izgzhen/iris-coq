@@ -330,3 +330,16 @@ In nested Ltac calls to "iDestruct (open_constr) as (constr)",
 "iDestructCore (open_constr) as (constr) (tactic)", last call failed.
 Tactic failure: iDestruct: (IList [[IClear (sel_patterns.SelIdent "HP")]])
 invalid.
+"iApply_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iApply (open_constr)",
+"iPoseProofCore (open_constr) as (constr) (constr) (tactic)",
+"<iris.proofmode.ltac_tactics.iPoseProofCore_go>",
+"<iris.proofmode.ltac_tactics.iPoseProofCore_go>",
+"<iris.proofmode.ltac_tactics.iPoseProofCore_go>", 
+"goal_tac" (bound to
+fun _ => <ssreflect_plugin::ssrtclseq@0> spec_tac ltac:(()) ; last  tac Htmp) and
+"<ssreflect_plugin::ssrtclseq@0> spec_tac ltac:(()) ; last  tac Htmp", last
+call failed.
+Tactic failure: iApply: cannot apply P.
