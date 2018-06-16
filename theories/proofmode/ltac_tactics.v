@@ -2091,6 +2091,8 @@ Hint Extern 0 (envs_entails _ (_ ≡ _)) =>
   rewrite envs_entails_eq; apply bi.internal_eq_refl.
 Hint Extern 0 (envs_entails _ (big_opL _ _ _)) =>
   rewrite envs_entails_eq; apply big_sepL_nil'.
+Hint Extern 0 (envs_entails _ (big_sepL2 _ _ _)) =>
+  rewrite envs_entails_eq; apply big_sepL2_nil'.
 Hint Extern 0 (envs_entails _ (big_opM _ _ _)) =>
   rewrite envs_entails_eq; apply big_sepM_empty'.
 Hint Extern 0 (envs_entails _ (big_opS _ _ _)) =>

@@ -548,6 +548,28 @@ Global Instance from_and_big_sepL_app_persistent {A} (Φ : nat → A → PROP) l
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
 Proof. rewrite /IsApp=> -> ?. by rewrite /FromAnd big_sepL_app persistent_and_sep_1. Qed.
 
+Global Instance from_and_big_sepL2_cons_persistent {A B}
+    (Φ : nat → A → B → PROP) l1 x1 l1' l2 x2 l2' :
+  IsCons l1 x1 l1' → IsCons l2 x2 l2' →
+  Persistent (Φ 0 x1 x2) →
+  FromAnd ([∗ list] k ↦ y1;y2 ∈ l1;l2, Φ k y1 y2)
+    (Φ 0 x1 x2) ([∗ list] k ↦ y1;y2 ∈ l1';l2', Φ (S k) y1 y2).
+Proof.
+  rewrite /IsCons=> -> -> ?.
+  by rewrite /FromAnd big_sepL2_cons persistent_and_sep_1.
+Qed.
+Global Instance from_and_big_sepL2_app_persistent {A B}
+    (Φ : nat → A → B → PROP) l1 l1' l1'' l2 l2' l2'' :
+  IsApp l1 l1' l1'' → IsApp l2 l2' l2'' →
+  (∀ k y1 y2, Persistent (Φ k y1 y2)) →
+  FromAnd ([∗ list] k ↦ y1;y2 ∈ l1;l2, Φ k y1 y2)
+    ([∗ list] k ↦ y1;y2 ∈ l1';l2', Φ k y1 y2)
+    ([∗ list] k ↦ y1;y2 ∈ l1'';l2'', Φ (length l1' + k) y1 y2).
+Proof.
+  rewrite /IsApp=> -> -> ?. rewrite /FromAnd persistent_and_sep_1.
+  apply wand_elim_l', big_sepL2_app.
+Qed.
+
 (** FromSep *)
 Global Instance from_sep_sep P1 P2 : FromSep (P1 ∗ P2) P1 P2 | 100.
 Proof. by rewrite /FromSep. Qed.
@@ -586,6 +608,20 @@ Global Instance from_sep_big_sepL_app {A} (Φ : nat → A → PROP) l l1 l2 :
   FromSep ([∗ list] k ↦ y ∈ l, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
 Proof. rewrite /IsApp=> ->. by rewrite /FromSep big_opL_app. Qed.
+
+Global Instance from_sep_big_sepL2_cons {A B} (Φ : nat → A → B → PROP)
+    l1 x1 l1' l2 x2 l2' :
+  IsCons l1 x1 l1' → IsCons l2 x2 l2' →
+  FromSep ([∗ list] k ↦ y1;y2 ∈ l1;l2, Φ k y1 y2)
+    (Φ 0 x1 x2) ([∗ list] k ↦ y1;y2 ∈ l1';l2', Φ (S k) y1 y2).
+Proof. rewrite /IsCons=> -> ->. by rewrite /FromSep big_sepL2_cons. Qed.
+Global Instance from_sep_big_sepL2_app {A B} (Φ : nat → A → B → PROP)
+    l1 l1' l1'' l2 l2' l2'' :
+  IsApp l1 l1' l1'' → IsApp l2 l2' l2'' →
+  FromSep ([∗ list] k ↦ y1;y2 ∈ l1;l2, Φ k y1 y2)
+    ([∗ list] k ↦ y1;y2 ∈ l1';l2', Φ k y1 y2)
+    ([∗ list] k ↦ y1;y2 ∈ l1'';l2'', Φ (length l1' + k) y1 y2).
+Proof. rewrite /IsApp=>-> ->. apply wand_elim_l', big_sepL2_app. Qed.
 
 Global Instance from_sep_bupd `{BiBUpd PROP} P Q1 Q2 :
   FromSep P Q1 Q2 → FromSep (|==> P) (|==> Q1) (|==> Q2).
@@ -727,6 +763,14 @@ Global Instance into_sep_big_sepL_app {A} (Φ : nat → A → PROP) l l1 l2 :
   IntoSep ([∗ list] k ↦ y ∈ l, Φ k y)
     ([∗ list] k ↦ y ∈ l1, Φ k y) ([∗ list] k ↦ y ∈ l2, Φ (length l1 + k) y).
 Proof. rewrite /IsApp=>->. by rewrite /IntoSep big_sepL_app. Qed.
+
+(* No instance for app, since that only works when the LHSs have the same length *)
+Global Instance into_sep_big_sepL2_cons {A B}
+    (Φ : nat → A → B → PROP) l1 x1 l1' l2 x2 l2' :
+  IsCons l1 x1 l1' → IsCons l2 x2 l2' →
+  IntoSep ([∗ list] k ↦ y1;y2 ∈ l1;l2, Φ k y1 y2)
+    (Φ 0 x1 x2) ([∗ list] k ↦ y1;y2 ∈ l1';l2', Φ (S k) y1 y2).
+Proof. rewrite /IsCons=>-> ->. by rewrite /IntoSep big_sepL2_cons. Qed.
 
 (** FromOr *)
 Global Instance from_or_or P1 P2 : FromOr (P1 ∨ P2) P1 P2.
