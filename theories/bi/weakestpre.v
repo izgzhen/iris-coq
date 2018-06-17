@@ -23,7 +23,10 @@ thread IDs (as in iGPS).
 
 For the case of stuckness bits, there are two specific notations
 [WP e @ E {{ Φ }}] and [WP e @ E ?{{ Φ }}], which forces [A] to be [stuckness],
-and [s] to be [NotStuck] or [MaybeStuck]. *)
+and [s] to be [NotStuck] or [MaybeStuck].  This will fail to typecheck if [A] is
+not [stuckness].  If we ever want to use the notation [WP e @ E {{ Φ }}] with a
+different [A], the plan is to generalize the notation to use [Inhabited] instead
+to pick a default value depending on [A]. *)
 Class Wp (Λ : language) (PROP A : Type) :=
   wp : A → coPset → expr Λ → (val Λ → PROP) → PROP.
 Arguments wp {_ _ _ _} _ _ _%E _%I.
