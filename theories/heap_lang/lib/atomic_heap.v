@@ -82,7 +82,7 @@ Section proof.
               (λ v (_:()), l ↦ w)%I
               (λ _ _, #()%V).
   Proof.
-    iIntros (<-%of_to_val Q Φ) "? AU". wp_let. wp_proj. wp_proj.
+    iIntros (<- Q Φ) "? AU". wp_let. wp_proj. wp_proj.
     iMod (aupd_acc with "AU") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
     wp_store. iMod ("Hclose" $! () with "H↦") as "HΦ". by iApply "HΦ".
   Qed.
@@ -95,7 +95,7 @@ Section proof.
               (λ v (_:()), if decide (v = w1) then l ↦ w2 else l ↦ v)%I
               (λ v _, #(if decide (v = w1) then true else false)%V).
   Proof.
-    iIntros (<-%of_to_val <-%of_to_val Q Φ) "? AU". wp_let. repeat wp_proj.
+    iIntros (<- <- Q Φ) "? AU". wp_let. repeat wp_proj.
     iMod (aupd_acc with "AU") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
     destruct (decide (v = w1)) as [Hv|Hv]; [wp_cas_suc|wp_cas_fail];
     iMod ("Hclose" $! () with "H↦") as "HΦ"; by iApply "HΦ".

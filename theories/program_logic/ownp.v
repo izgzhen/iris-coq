@@ -147,7 +147,7 @@ Section lifting.
     iNext; iIntros (e2 σ2 efs) "% Hσ".
     iDestruct ("H" $! e2 σ2 efs with "[] [Hσ]") as "[HΦ $]"; [by eauto..|].
     destruct (to_val e2) eqn:?; last by iExFalso.
-    by iMod "Hclose"; iApply wp_value; auto using to_of_val.
+    iMod "Hclose"; iApply wp_value; last done. by apply of_to_val.
   Qed.
 
   Lemma ownP_lift_atomic_det_step {s E Φ e1} σ1 v2 σ2 efs :

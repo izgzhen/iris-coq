@@ -213,14 +213,14 @@ Global Instance twp_mono' s E e :
   Proper (pointwise_relation _ (⊢) ==> (⊢)) (twp (PROP:=iProp Σ) s E e).
 Proof. by intros Φ Φ' ?; apply twp_mono. Qed.
 
-Lemma twp_value s E Φ e v `{!IntoVal e v} : Φ v -∗ WP e @ s; E [{ Φ }].
-Proof. intros; rewrite -(of_to_val e v) //; by apply twp_value'. Qed.
+Lemma twp_value s E Φ e v : IntoVal e v → Φ v -∗ WP e @ s; E [{ Φ }].
+Proof. intros <-. by apply twp_value'. Qed.
 Lemma twp_value_fupd' s E Φ v : (|={E}=> Φ v) -∗ WP of_val v @ s; E [{ Φ }].
 Proof. intros. by rewrite -twp_fupd -twp_value'. Qed.
-Lemma twp_value_fupd s E Φ e v `{!IntoVal e v} : (|={E}=> Φ v) -∗ WP e @ s; E [{ Φ }].
-Proof. intros. rewrite -twp_fupd -twp_value //. Qed.
-Lemma twp_value_inv s E Φ e v `{!IntoVal e v} : WP e @ s; E [{ Φ }] ={E}=∗ Φ v.
-Proof. intros; rewrite -(of_to_val e v) //; by apply twp_value_inv'. Qed.
+Lemma twp_value_fupd s E Φ e v : IntoVal e v → (|={E}=> Φ v) -∗ WP e @ s; E [{ Φ }].
+Proof. intros ?. rewrite -twp_fupd -twp_value //. Qed.
+Lemma twp_value_inv s E Φ e v : IntoVal e v → WP e @ s; E [{ Φ }] ={E}=∗ Φ v.
+Proof. intros <-. by apply twp_value_inv'. Qed.
 
 Lemma twp_frame_l s E e Φ R : R ∗ WP e @ s; E [{ Φ }] -∗ WP e @ s; E [{ v, R ∗ Φ v }].
 Proof. iIntros "[? H]". iApply (twp_strong_mono with "H"); auto with iFrame. Qed.

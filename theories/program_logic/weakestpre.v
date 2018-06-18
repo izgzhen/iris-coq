@@ -175,15 +175,15 @@ Global Instance wp_mono' s E e :
   Proper (pointwise_relation _ (⊢) ==> (⊢)) (wp (PROP:=iProp Σ) s E e).
 Proof. by intros Φ Φ' ?; apply wp_mono. Qed.
 
-Lemma wp_value s E Φ e v `{!IntoVal e v} : Φ v ⊢ WP e @ s; E {{ Φ }}.
-Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value'. Qed.
+Lemma wp_value s E Φ e v : IntoVal e v → Φ v ⊢ WP e @ s; E {{ Φ }}.
+Proof. intros <-. by apply wp_value'. Qed.
 Lemma wp_value_fupd' s E Φ v : (|={E}=> Φ v) ⊢ WP of_val v @ s; E {{ Φ }}.
 Proof. intros. by rewrite -wp_fupd -wp_value'. Qed.
 Lemma wp_value_fupd s E Φ e v `{!IntoVal e v} :
   (|={E}=> Φ v) ⊢ WP e @ s; E {{ Φ }}.
 Proof. intros. rewrite -wp_fupd -wp_value //. Qed.
-Lemma wp_value_inv s E Φ e v `{!IntoVal e v} : WP e @ s; E {{ Φ }} ={E}=∗ Φ v.
-Proof. intros; rewrite -(of_to_val e v) //; by apply wp_value_inv'. Qed.
+Lemma wp_value_inv s E Φ e v : IntoVal e v → WP e @ s; E {{ Φ }} ={E}=∗ Φ v.
+Proof. intros <-. by apply wp_value_inv'. Qed.
 
 Lemma wp_frame_l s E e Φ R : R ∗ WP e @ s; E {{ Φ }} ⊢ WP e @ s; E {{ v, R ∗ Φ v }}.
 Proof. iIntros "[? H]". iApply (wp_strong_mono with "H"); auto with iFrame. Qed.

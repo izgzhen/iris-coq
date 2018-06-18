@@ -94,7 +94,7 @@ Proof.
   iMod (fupd_intro_mask' E2 ∅) as "Hclose"; [set_solver|]. iIntros "!> !>".
   iMod "Hclose" as "_". iMod "H" as "($ & HΦ & $)".
   destruct (to_val e2) eqn:?; last by iExFalso.
-  by iApply wp_value.
+  iApply wp_value; last done. by apply of_to_val.
 Qed.
 
 Lemma wp_lift_atomic_step {s E Φ} e1 :
