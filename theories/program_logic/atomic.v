@@ -122,4 +122,16 @@ Section lemmas.
     iMod ("HΦ") as "[_ [_ Hclose]]". iMod ("Hclose" with "Hβ") as "HΦ".
     rewrite ->!tele_app_bind. iApply "HΦ". done.
   Qed.
+
+  (* Way to prove an atomic triple without seeing the Q *)
+  Lemma wp_atomic_intro e Eo α β f :
+    (∀ (Φ : val Λ → iProp),
+             atomic_update Eo ∅ α β (λ.. x y, Φ (f x y)) -∗
+             WP e {{ Φ }}) -∗
+    atomic_wp e Eo α β f.
+  Proof.
+    iIntros "Hwp" (Q Φ) "HQ AU". iApply (wp_wand with "[-HQ]").
+    { iApply ("Hwp" $! (λ v, Q -∗ Φ v)%I). done. }
+    iIntros (v) "HΦ". iApply "HΦ". done.
+  Qed.
 End lemmas.

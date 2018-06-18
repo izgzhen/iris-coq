@@ -23,24 +23,24 @@ Section increment.
   Lemma incr_spec (l: loc) :
     <<< ∀ (v : Z), l ↦ #v >>> incr #l @ ⊤ <<< l ↦ #(v + 1), RET #v >>>.
   Proof.
-    iIntros (Q Φ) "HQ AU". iLöb as "IH". wp_let.
-    wp_apply (load_spec with "[HQ]"); first by iAccu.
+    iApply wp_atomic_intro. iIntros (Φ) "AU". iLöb as "IH". wp_let.
+    wp_apply load_spec; first by iAccu.
     (* Prove the atomic update for load *)
     iAuIntro. iApply (aacc_aupd_abort with "AU"); first done.
     iIntros (x) "H↦". iAaccIntro with "H↦"; first by eauto with iFrame.
-    iIntros "$ !> AU !> HQ".
+    iIntros "$ !> AU !> _".
     (* Now go on *)
     wp_let. wp_op. wp_bind (CAS _ _ _)%I.
-    wp_apply (cas_spec with "[HQ]"); [done|iAccu|].
+    wp_apply cas_spec; [done|iAccu|].
     (* Prove the atomic update for CAS *)
     iAuIntro. iApply (aacc_aupd with "AU"); first done.
     iIntros (x') "H↦". iAaccIntro with "H↦"; first by eauto with iFrame.
     iIntros "H↦ !>".
     destruct (decide (#x' = #x)) as [[= ->]|Hx].
-    - iRight. iFrame. iIntros "HΦ !> HQ".
+    - iRight. iFrame. iIntros "HΦ !> _".
       wp_if. by iApply "HΦ".
-    - iLeft. iFrame. iIntros "AU !> HQ".
-      wp_if. iApply ("IH" with "HQ"). done.
+    - iLeft. iFrame. iIntros "AU !> _".
+      wp_if. iApply "IH". done.
   Qed.
 
   Definition weak_incr: val :=
@@ -57,10 +57,10 @@ Section increment.
       weak_incr #l @ ⊤
     <<< ⌜v = v'⌝ ∗ l ↦ #(v + 1), RET #v >>>.
   Proof.
-    iIntros "Hl" (Q Φ) "HQ AU". wp_let.
+    iIntros "Hl". iApply wp_atomic_intro. iIntros (Φ) "AU". wp_let.
     wp_apply (atomic_wp_seq $! (load_spec _) with "Hl").
     iIntros "Hl". wp_let. wp_op.
-    wp_apply (store_spec with "[HQ]"); first by iAccu.
+    wp_apply store_spec; first by iAccu.
     (* Prove the atomic update for store *)
     iAuIntro. iApply (aacc_aupd_commit with "AU"); first done.
     iIntros (x) "H↦".
@@ -68,7 +68,7 @@ Section increment.
     iCombine "Hl" "H↦" as "Hl". iAaccIntro with "Hl".
     { iIntros "[$ $]"; eauto. }
     iIntros "$ !>". iSplit; first done.
-    iIntros "HΦ !> HQ". wp_seq. iApply "HΦ". done.
+    iIntros "HΦ !> _". wp_seq. done.
   Qed.
 
 End increment.
