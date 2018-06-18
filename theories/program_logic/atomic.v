@@ -108,4 +108,18 @@ Section lemmas.
     (* FIXME: Using ssreflect rewrite does not work? *)
     rewrite ->!tele_app_bind. iIntros "HΦ". iApply "HΦ". done.
   Qed.
+
+  (* Sequential triples with a persistent precondition and no initial quantifier
+  are atomic. *)
+  Lemma seq_wp_atomic e Eo (α : [tele] → iProp) (β : [tele] → TB → iProp)
+        (f : [tele] → TB → val Λ) {HP : ∀.. x, Persistent (α x)} :
+    (∀ Φ, ∀.. x, α x -∗ (∀.. y, β x y -∗ Φ (f x y)) -∗ WP e {{ Φ }}) -∗
+    atomic_wp e Eo α β f.
+  Proof.
+    simpl in HP. iIntros "Hwp" (Q Φ) "HQ HΦ". iApply fupd_wp.
+    iMod ("HΦ") as "[#Hα [Hclose _]]". iMod ("Hclose" with "Hα") as "HΦ".
+    iApply wp_fupd. iApply ("Hwp" with "Hα"). iIntros "!>" (y) "Hβ".
+    iMod ("HΦ") as "[_ [_ Hclose]]". iMod ("Hclose" with "Hβ") as "HΦ".
+    rewrite ->!tele_app_bind. iApply "HΦ". done.
+  Qed.
 End lemmas.
