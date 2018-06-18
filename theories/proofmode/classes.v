@@ -505,16 +505,19 @@ Hint Mode IntoEmbed + + + ! -  : typeclass_instances.
    No Hint Modes are declared here. The appropriate one would be
    [Hint Mode - ! -], but the fact that Coq ignores primitive
    projections for hints modes would make this fail.*)
-Class AsEmpValid {PROP : bi} (φ : Prop) (P : PROP) := as_emp_valid : φ ↔ P.
+Class AsEmpValid {PROP : bi} (φ : Prop) (P : PROP) :=
+  as_emp_valid : φ ↔ bi_emp_valid P.
 Arguments AsEmpValid {_} _%type _%I.
 Class AsEmpValid0 {PROP : bi} (φ : Prop) (P : PROP) :=
   as_emp_valid_here : AsEmpValid φ P.
 Arguments AsEmpValid0 {_} _%type _%I.
 Existing Instance as_emp_valid_here | 0.
 
-Lemma as_emp_valid_1 (φ : Prop) {PROP : bi} (P : PROP) `{!AsEmpValid φ P} : φ → P.
+Lemma as_emp_valid_1 (φ : Prop) {PROP : bi} (P : PROP) `{!AsEmpValid φ P} :
+  φ → bi_emp_valid P.
 Proof. by apply as_emp_valid. Qed.
-Lemma as_emp_valid_2 (φ : Prop) {PROP : bi} (P : PROP) `{!AsEmpValid φ P} : P → φ.
+Lemma as_emp_valid_2 (φ : Prop) {PROP : bi} (P : PROP) `{!AsEmpValid φ P} :
+  bi_emp_valid P → φ.
 Proof. by apply as_emp_valid. Qed.
 
 (* Input: [P]; Outputs: [N],
