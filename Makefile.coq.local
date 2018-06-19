@@ -19,7 +19,7 @@ tests/.coqdeps.d: $(TESTFILES)
 	$(HIDE)$(COQDEP) -dyndep var $(COQMF_COQLIBS_NOML) $^ $(redir_if_ok)
 -include tests/.coqdeps.d
 
-$(TESTFILES:.v=.vo):
+$(TESTFILES:.v=.vo): %.vo: %.v
 	$(SHOW)COQTOP [test] $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
 	  TMPFILE="$$(mktemp)" && \
