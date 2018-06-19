@@ -64,21 +64,19 @@ Section definition.
   Qed.
 
   (** atomic_update as a fixed-point of the equation
-   AU = ∃ P. ▷ P ∗ □ (▷ P ==∗ α ∗ (α ==∗ AU) ∧ (β ==∗ Q))
-      = ∃ P. ▷ P ∗ □ (▷ P -∗ atomic_acc α AU β Q)
+   AU = make_laterable $ atomic_acc α AU β Q
   *)
   Context Eo Ei α β Φ.
 
   Definition atomic_update_pre (Ψ : () → PROP) (_ : ()) : PROP :=
-    (∃ (P : PROP), ▷ P ∗
-     □ (▷ P -∗ atomic_acc Eo Ei α (Ψ ()) β Φ))%I.
+    make_laterable $ atomic_acc Eo Ei α (Ψ ()) β Φ.
 
   Local Instance atomic_update_pre_mono : BiMonoPred atomic_update_pre.
   Proof.
     constructor.
     - iIntros (P1 P2) "#HP12". iIntros ([]) "AU".
-      iDestruct "AU" as (P) "[HP #AS]". iExists P. iFrame.
-      iIntros "!# HP". iApply (atomic_acc_wand with "[HP12]"); last by iApply "AS".
+      iApply (make_laterable_wand with "[] AU").
+      iIntros "!# AA". iApply (atomic_acc_wand with "[HP12] AA").
       iSplit; last by eauto. iApply "HP12".
     - intros ??. solve_proper.
   Qed.
@@ -256,7 +254,7 @@ Section lemmas.
   Proof using Type*.
     rewrite atomic_update_eq {1}/atomic_update_def /=. iIntros "HUpd".
     iPoseProof (greatest_fixpoint_unfold_1 with "HUpd") as "HUpd".
-    iDestruct "HUpd" as (P) "(HP & Hshift)". by iApply "Hshift".
+    iApply make_laterable_elim. done.
   Qed.
 
   (* This lets you eliminate atomic updates with iMod. *)
@@ -278,10 +276,8 @@ Section lemmas.
   Global Instance aupd_laterable Eo Ei α β Φ :
     Laterable (atomic_update Eo Ei α β Φ).
   Proof.
-    rewrite /Laterable atomic_update_eq {1}/atomic_update_def /=. iIntros "AU".
-    iPoseProof (greatest_fixpoint_unfold_1 with "AU") as (P) "[HP #AS]".
-    iExists P. iFrame. iIntros "!# HP !>".
-    iApply greatest_fixpoint_unfold_2. iExists P. iFrame "#∗".
+    rewrite atomic_update_eq {1}/atomic_update_def greatest_fixpoint_unfold.
+    apply _.
   Qed.
 
   Lemma aupd_intro P Q α β Eo Ei Φ :
@@ -292,8 +288,7 @@ Section lemmas.
     rewrite atomic_update_eq {1}/atomic_update_def /=.
     iIntros (??? HAU) "[#HP HQ]".
     iApply (greatest_fixpoint_coind _ (λ _, Q)); last done. iIntros "!#" ([]) "HQ".
-    iDestruct (laterable with "HQ") as (Q') "[HQ' #HQi]". iExists Q'. iFrame.
-    iIntros "!# HQ'". iDestruct ("HQi" with "HQ'") as ">HQ {HQi}".
+    iApply (make_laterable_intro with "[] HQ"). iIntros "!# >HQ".
     iApply HAU. by iFrame.
   Qed.
 
