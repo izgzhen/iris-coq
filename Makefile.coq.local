@@ -1,5 +1,5 @@
-# run tests after real-all
-post-all:: test
+# run tests with main build
+real-all: test
 
 # the test suite
 TESTFILES=$(wildcard tests/*.v)
@@ -8,25 +8,32 @@ test: $(TESTFILES:.v=.vo)
 .PHONY: test
 
 COQ_TEST=$(COQTOP) $(COQDEBUG) -batch -test-mode
-REF_FILTER=egrep -v '(^Welcome to Coq|^Skipping rcfile loading.$$)'
 
 # Can't use pipes because that discards error codes and dash provides no way to control that.
 # Also egrep errors if it doesn't match anything, we have to ignore that.
 # Oh Unix...
+REF_FILTER=egrep -v '(^Welcome to Coq|^Skipping rcfile loading.$$)'
 
-$(TESTFILES:.v=.vo): %.vo: %.v $(VFILES:.v=.vo)
+tests/.coqdeps.d: $(TESTFILES)
+	$(SHOW)'COQDEP [tests]'
+	$(HIDE)$(COQDEP) -dyndep var $(COQMF_COQLIBS_NOML) $^ $(redir_if_ok)
+-include tests/.coqdeps.d
+
+$(TESTFILES:.v=.vo):
 	$(SHOW)COQTOP [test] $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
 	  TMPFILE="$$(mktemp)" && \
 	  $(TIMER) $(COQ_TEST) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) -load-vernac-source $< $(TIMING_EXTRA) > "$$TMPFILE" && \
 	  ($(REF_FILTER) < "$$TMPFILE" > "$$TMPFILE.filtered" || true) && \
 	  (diff -u "tests/$$TEST.ref" "$$TMPFILE.filtered" || rm -f "tests/$$TEST.vo" "$$TMPFILE" "$$TMPFILE.filtered") && \
-	  rm "$$TMPFILE" "$$TMPFILE.filtered"
+	  rm "$$TMPFILE" "$$TMPFILE.filtered" && \
+	  touch $@
 
 # a target, for convenience sake, to create the .ref file with the current output
 ref: $(TESTFILES:.v=.ref)
 .PHONY: ref
 
+# coqdep doesn't emit dependencies for these so we just depend on everything
 tests/%.ref: tests/%.v $(VFILES:.v=.vo)
 	$(SHOW)COQTOP [ref] $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
