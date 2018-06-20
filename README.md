@@ -118,6 +118,6 @@ The files in `tests/` are test cases.  Each of the `.v` files comes with a
 matching `.ref` file containing the expected output of `coqc`.  Adding `Show.`
 in selected places in the proofs makes `coqc` print the current goal state.
 This is used to make sure the proof mode prints goals and reduces terms the way
-we expect it to.  You can run `make ref` to re-generate all the `.ref` files;
+we expect it to.  You can run `MAKE_REF=1 make` to re-generate all the `.ref` files;
 this is useful after adding or removing `Show.` from a test.  If you do this,
 make sure to check the diff for any unexpected changes in the output!
