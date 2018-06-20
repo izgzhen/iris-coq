@@ -20,7 +20,7 @@ tests/.coqdeps.d: $(TESTFILES)
 -include tests/.coqdeps.d
 
 $(TESTFILES:.v=.vo): %.vo: %.v $(if $(MAKE_REF),,%.ref)
-	$(SHOW)COQTOP [test] $<
+	$(SHOW)COQTOP [$(if $(MAKE_REF),ref,test)] $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
 	  TMPFILE="$$(mktemp)" && \
 	  $(TIMER) $(COQ_TEST) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) -load-vernac-source $< $(TIMING_EXTRA) > "$$TMPFILE" && \
