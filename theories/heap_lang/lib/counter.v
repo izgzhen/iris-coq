@@ -130,7 +130,7 @@ Section contrib_spec.
     wp_bind (CAS _ _ _). iInv N as (c') ">[Hγ Hl]".
     destruct (decide (c' = c)) as [->|].
     - iMod (own_update_2 with "Hγ Hγf") as "[Hγ Hγf]".
-      { apply frac_auth_update, (nat_local_update _ _ (S c) (S n)); omega. }
+      { apply frac_auth_update, (nat_local_update _ _ (S c) (S n)); lia. }
       wp_cas_suc. iModIntro. iSplitL "Hl Hγ".
       { iNext. iExists (S c). rewrite Nat2Z.inj_succ Z.add_1_l. by iFrame. }
       wp_if. by iApply "HΦ".

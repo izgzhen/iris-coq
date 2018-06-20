@@ -5,7 +5,7 @@ From Coq.Init Require Import Nat.
 Set Default Proof Using "Type".
 Local Hint Extern 1 (_ ≼ _) => etrans; [eassumption|].
 Local Hint Extern 1 (_ ≼ _) => etrans; [|eassumption].
-Local Hint Extern 10 (_ ≤ _) => omega.
+Local Hint Extern 10 (_ ≤ _) => lia.
 
 (** The basic definition of the uPred type, its metric and functor laws.
     You probably do not want to import this file. Instead, import
@@ -466,7 +466,7 @@ Qed.
 
 Lemma later_contractive : Contractive (@uPred_later M).
 Proof.
-  unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try omega.
+  unseal; intros [|n] P Q HPQ; split=> -[|n'] x ?? //=; try lia.
   apply HPQ; eauto using cmra_validN_S.
 Qed.
 

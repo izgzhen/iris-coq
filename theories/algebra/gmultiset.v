@@ -74,7 +74,7 @@ Section gmultiset.
     rewrite local_update_unital_discrete=> Z' _ /leibniz_equiv_iff->.
     split. done. rewrite !gmultiset_op_union=> x.
     repeat (rewrite multiplicity_difference || rewrite multiplicity_union).
-    omega.
+    lia.
   Qed.
 End gmultiset.
 

@@ -90,7 +90,7 @@ Proof.
     * rewrite comm -assoc. done.
     * rewrite comm -assoc. done.
     * exists y'. split=>//. by exists x'.
- - intros; assert (n' < a). omega.
+ - intros; assert (n' < a). lia.
     move: laterN_small. uPred.unseal.
     naive_solver.
 Qed.
@@ -178,22 +178,22 @@ Lemma nnupd_nnupd_k_dist k P: (|=n=> P)%I ≡{k}≡ (|=n=>_k P)%I.
       case (decide (k' < n)).
       ** move: laterN_small; uPred.unseal; naive_solver.
       ** intros. exfalso. eapply HnnP; eauto.
-         assert (n ≤ k'). omega.
+         assert (n ≤ k'). lia.
          intros n'' x'' ???.
          specialize (HPF n'' x''). exfalso.
          eapply laterN_big; last (unseal; eauto).
-         eauto. omega.
+         eauto. lia.
     * inversion Hle; simpl; subst.
       ** unseal. intros (HnnP&HnnP_IH) n k' x' ?? HPF.
          case (decide (k' < n)).
          *** move: laterN_small; uPred.unseal; naive_solver.
-         *** intros. exfalso. assert (n ≤ k'). omega.
-             assert (n = S k ∨ n < S k) as [->|] by omega.
+         *** intros. exfalso. assert (n ≤ k'). lia.
+             assert (n = S k ∨ n < S k) as [->|] by lia.
              **** eapply laterN_big; eauto; unseal.
                   eapply HnnP; eauto. move: HPF; by unseal.
              **** move:nnupd_k_elim. unseal. intros Hnnupdk.
                   eapply laterN_big; eauto. unseal.
-                  eapply (Hnnupdk n k); first omega; eauto.
+                  eapply (Hnnupdk n k); first lia; eauto.
                   exists x, x'. split_and!; eauto. eapply uPred_mono; eauto.
       ** intros HP. eapply IHk; auto.
          move:HP. unseal. intros (?&?); naive_solver.
@@ -265,7 +265,7 @@ Proof.
     exfalso. eapply laterN_big; last (uPred.unseal; eapply (Hwand n' x')); eauto.
     * rewrite comm. done.
     * rewrite comm. done.
-  - intros; assert (n' < a). omega.
+  - intros; assert (n' < a). lia.
     move: laterN_small. uPred.unseal.
     naive_solver.
 Qed.
@@ -286,7 +286,7 @@ Proof using Type*.
   red; rewrite //= => n' x' ???.
   case (decide (n' = k)); intros.
   - subst. exfalso. eapply Hfal. rewrite (comm op); eauto.
-  - assert (n' < k). omega.
+  - assert (n' < k). lia.
     move: laterN_small. uPred.unseal. naive_solver.
 Qed.
 End classical.
@@ -306,7 +306,7 @@ Proof.
   split. unseal. intros n' ?? Hupd.
   case (decide (n' < n)).
   - intros. move: laterN_small. unseal. naive_solver.
-  - intros. assert (n ≤ n'). omega.
+  - intros. assert (n ≤ n'). lia.
     exfalso. specialize (Hupd n' ε).
     eapply Hdne. intros Hfal.
     eapply laterN_big; eauto.
@@ -326,14 +326,14 @@ Proof.
     specialize (Hf3 (S k) (S k) ε). rewrite right_id in Hf3 *. unseal.
     intros Hf3. eapply Hf3; eauto.
     intros ??? Hx'. rewrite left_id in Hx' *=> Hx'.
-    assert (n' < S k ∨ n' = S k) as [|] by omega.
+    assert (n' < S k ∨ n' = S k) as [|] by lia.
     * intros. move:(laterN_small n' (S k) x' False). rewrite //=. unseal. intros Hsmall.
       eapply Hsmall; eauto.
     * subst. intros. exfalso. eapply Hf2. exists x'. split; eauto using cmra_validN_S.
   - intros k P x Hx. rewrite ?Nat_iter_S_r.
-    replace (S (S n) + k) with (S n + (S k)) by omega.
-    replace (S n + k) with (n + (S k)) by omega.
-    intros. eapply IHn. replace (S n + S k) with (S (S n) + k) by omega. eauto.
+    replace (S (S n) + k) with (S n + (S k)) by lia.
+    replace (S n + k) with (n + (S k)) by lia.
+    intros. eapply IHn. replace (S n + S k) with (S (S n) + k) by lia. eauto.
     rewrite ?Nat_iter_S_r. eauto.
 Qed.
 
@@ -356,7 +356,7 @@ Proof.
   destruct n.
   - rewrite //=; unseal; auto.
   - intros ??? Hfal.
-    eapply (adequacy_helper2 _ n 1); (replace (S n + 1) with (S (S n)) by omega); eauto.
+    eapply (adequacy_helper2 _ n 1); (replace (S n + 1) with (S (S n)) by lia); eauto.
     unseal. intros (x'&?&Hphi). simpl in *.
     eapply Hfal. auto.
 Qed.

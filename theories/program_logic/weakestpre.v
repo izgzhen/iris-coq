@@ -58,7 +58,7 @@ Proof.
   (* FIXME: reflexivity, as being called many times by f_equiv and f_contractive
   is very slow here *)
   do 18 (f_contractive || f_equiv). apply IH; first lia.
-  intros v. eapply dist_le; eauto with omega.
+  intros v. eapply dist_le; eauto with lia.
 Qed.
 Global Instance wp_proper s E e :
   Proper (pointwise_relation _ (≡) ==> (≡)) (wp (PROP:=iProp Σ) s E e).

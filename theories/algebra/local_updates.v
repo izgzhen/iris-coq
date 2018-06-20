@@ -179,7 +179,7 @@ Proof.
   move=>Hex. apply local_update_unital=>n z /= Hy Heq. split; first done.
   destruct z as [z|]; last done. exfalso.
   move: Hy. rewrite Heq /= -Some_op=>Hy. eapply Hex.
-  eapply cmra_validN_le. eapply Hy. omega.
+  eapply cmra_validN_le. eapply Hy. lia.
 Qed.
 
 (** * Natural numbers  *)

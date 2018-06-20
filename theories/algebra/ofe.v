@@ -178,7 +178,7 @@ Section ofe.
   Lemma conv_compl' `{Cofe A} n (c : chain A) : compl c ≡{n}≡ c (S n).
   Proof.
     transitivity (c n); first by apply conv_compl. symmetry.
-    apply chain_cauchy. omega.
+    apply chain_cauchy. lia.
   Qed.
 
   Lemma discrete_iff n (x : A) `{!Discrete x} y : x ≡ y ↔ x ≡{n}≡ y.
@@ -292,9 +292,9 @@ Program Definition fixpoint_chain {A : ofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : chain A := {| chain_car i := Nat.iter (S i) f inhabitant |}.
 Next Obligation.
   intros A ? f ? n.
-  induction n as [|n IH]=> -[|i] //= ?; try omega.
+  induction n as [|n IH]=> -[|i] //= ?; try lia.
   - apply (contractive_0 f).
-  - apply (contractive_S f), IH; auto with omega.
+  - apply (contractive_S f), IH; auto with lia.
 Qed.
 
 Program Definition fixpoint_def `{Cofe A, Inhabited A} (f : A → A)
@@ -341,7 +341,7 @@ Section fixpoint.
     intros ? [x Hx] Hincr Hlim. set (chcar i := Nat.iter (S i) f x).
     assert (Hcauch : ∀ n i : nat, n ≤ i → chcar i ≡{n}≡ chcar n).
     { intros n. rewrite /chcar. induction n as [|n IH]=> -[|i] //=;
-        eauto using contractive_0, contractive_S with omega. }
+        eauto using contractive_0, contractive_S with lia. }
     set (fp2 := compl {| chain_cauchy := Hcauch |}).
     assert (f fp2 ≡ fp2).
     { apply equiv_dist=>n. rewrite /fp2 (conv_compl n) /= /chcar.
@@ -856,7 +856,7 @@ Section discrete_ofe.
     { compl c := c 0 }.
   Next Obligation.
     intros n c. rewrite /compl /=;
-    symmetry; apply (chain_cauchy c 0 n). omega.
+    symmetry; apply (chain_cauchy c 0 n). lia.
   Qed.
 End discrete_ofe.
 
