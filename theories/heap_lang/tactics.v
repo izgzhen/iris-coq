@@ -96,6 +96,7 @@ Ltac of_expr e :=
      let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(FAA e1 e2)
   | to_expr ?e => e
   | of_val ?v => constr:(Val v (of_val v) (to_of_val v))
+  | language.of_val ?v => constr:(Val v (of_val v) (to_of_val v))
   | _ => match goal with
          | H : to_val e = Some ?v |- _ => constr:(Val v e H)
          | H : Closed [] e |- _ => constr:(@ClosedExpr e H)
