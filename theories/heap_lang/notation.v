@@ -8,6 +8,7 @@ Delimit Scope val_scope with V.
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
 Coercion LitLoc : loc >-> base_lit.
+Coercion LitProphecy : proph >-> base_lit.
 
 Coercion App : expr >-> Funclass.
 Coercion of_val : val >-> expr.

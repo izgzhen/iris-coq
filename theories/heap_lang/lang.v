@@ -23,9 +23,10 @@ Open Scope Z_scope.
 
 (** Expressions and vals. *)
 Definition loc := positive. (* Really, any countable type. *)
+Definition proph := positive.
 
 Inductive base_lit : Set :=
-  | LitInt (n : Z) | LitBool (b : bool) | LitUnit | LitLoc (l : loc).
+  | LitInt (n : Z) | LitBool (b : bool) | LitUnit | LitLoc (l : loc) | LitProphecy (p: proph).
 Inductive un_op : Set :=
   | NegOp | MinusUnOp.
 Inductive bin_op : Set :=
@@ -192,11 +193,13 @@ Defined.
 Instance base_lit_countable : Countable base_lit.
 Proof.
  refine (inj_countable' (λ l, match l with
-  | LitInt n => inl (inl n) | LitBool b => inl (inr b)
-  | LitUnit => inr (inl ()) | LitLoc l => inr (inr l)
+  | LitInt n => (inl (inl n), None) | LitBool b => (inl (inr b), None)
+  | LitUnit => (inr (inl ()), None) | LitLoc l => (inr (inr l), None)
+  | LitProphecy p => (inr (inl ()), Some p)
   end) (λ l, match l with
-  | inl (inl n) => LitInt n | inl (inr b) => LitBool b
-  | inr (inl ()) => LitUnit | inr (inr l) => LitLoc l
+  | (inl (inl n), None) => LitInt n | (inl (inr b), None) => LitBool b
+  | (inr (inl ()), None) => LitUnit | (inr (inr l), None) => LitLoc l
+  | (_, Some p) => LitProphecy p                                                                 
   end) _); by intros [].
 Qed.
 Instance un_op_finite : Countable un_op.
