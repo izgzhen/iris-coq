@@ -15,12 +15,12 @@ COQ_TEST=$(COQTOP) $(COQDEBUG) -batch -test-mode
 REF_FILTER=egrep -v '(^Welcome to Coq|^Skipping rcfile loading.$$)'
 
 tests/.coqdeps.d: $(TESTFILES)
-	$(SHOW)'COQDEP [tests]'
+	$(SHOW)'COQDEP TESTFILES'
 	$(HIDE)$(COQDEP) -dyndep var $(COQMF_COQLIBS_NOML) $^ $(redir_if_ok)
 -include tests/.coqdeps.d
 
 $(TESTFILES:.v=.vo): %.vo: %.v $(if $(MAKE_REF),,%.ref)
-	$(SHOW)COQTOP [$(if $(MAKE_REF),ref,test)] $<
+	$(SHOW)$(if $(MAKE_REF),COQTEST [ref],COQTEST) $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
 	  TMPFILE="$$(mktemp)" && \
 	  $(TIMER) $(COQ_TEST) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) -load-vernac-source $< $(TIMING_EXTRA) > "$$TMPFILE" && \
