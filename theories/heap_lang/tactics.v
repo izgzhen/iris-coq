@@ -138,16 +138,13 @@ Fixpoint to_val (e : expr) : option val :=
   | _ => None
   end.
 Lemma to_val_Some e v :
-  to_val e = Some v → of_val v = W.to_expr e.
+  to_val e = Some v → heap_lang.of_val v = W.to_expr e.
 Proof.
   revert v. induction e; intros; simplify_option_eq; try f_equal; auto using of_to_val.
 Qed.
 Lemma to_val_is_Some e :
-  is_Some (to_val e) → ∃ v, of_val v = to_expr e.
+  is_Some (to_val e) → ∃ v, heap_lang.of_val v = to_expr e.
 Proof. intros [v ?]; exists v; eauto using to_val_Some. Qed.
-Lemma to_val_is_Some' e :
-  is_Some (to_val e) → is_Some (heap_lang.to_val (to_expr e)).
-Proof. intros [v ?]%to_val_is_Some. exists v. rewrite -to_of_val. by f_equal. Qed.
 
 Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
   match e with
@@ -202,8 +199,8 @@ Proof.
       inversion 1; simplify_eq/=; rewrite ?to_of_val; eauto.
     unfold subst'; repeat (simplify_eq/=; case_match=>//); eauto.
   - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct e=> //; destruct Ki; repeat (simplify_eq/=; case_match=>//);
-      naive_solver eauto using to_val_is_Some'.
+    destruct e=> //; destruct Ki; repeat (simplify_eq/=; case_match=>//); try
+      naive_solver eauto using as_val_is_Some, to_val_is_Some.
 Qed.
 End W.
 

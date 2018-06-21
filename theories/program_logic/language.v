@@ -170,4 +170,7 @@ Section language.
     apply TCForall_Forall, Forall_fmap, Forall_true=> v.
     rewrite /AsVal /=; eauto.
   Qed.
+  Lemma as_val_is_Some e :
+    (∃ v, of_val v = e) → is_Some (to_val e).
+  Proof. intros [v <-]. rewrite to_of_val. eauto. Qed.
 End language.
