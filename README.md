@@ -14,23 +14,28 @@ For a version compatible with Coq 8.6, have a look at the
 If you need to work with Coq 8.5, please check out the
 [iris-3.0 branch](https://gitlab.mpi-sws.org/FP/iris-coq/tree/iris-3.0).
 
-## Installing via opam
+## Working *with* Iris
 
-To obtain the latest stable release via opam (1.2.2 or newer), you have to add
-the Coq opam repository:
+To use Iris in your own proofs, we recommend you install Iris via opam (1.2.2 or
+newer).  To obtain the latest stable release, you have to add the Coq opam
+repository:
 
     opam repo add coq-released https://coq.inria.fr/opam/released
 
-Then you can do `opam install coq-iris`.
-
-To obtain a development version, add the Iris opam repository:
+To obtain a development version, also add the Iris opam repository:
 
     opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git
 
-## Building from source
+Either way, you can now do `opam install coq-iris`.  To fetch updates later, run
+`opam update && opam upgrade`.  However, notice that we do not guarnatee
+backwards-compatibility, so upgrading Iris may break your Iris-using
+developments.
 
-When building Iris from source, we recommend to use opam (1.2.2 or newer) for
-installing Iris's dependencies.  This requires the following two repositories:
+## Working *on* Iris
+
+To work on Iris itself, you need to install its build-dependencies.  Again we
+recommend you do that with opam (1.2.2 or newer).  This requires the following
+two repositories:
 
     opam repo add coq-released https://coq.inria.fr/opam/released
     opam repo add iris-dev https://gitlab.mpi-sws.org/FP/opam-dev.git
