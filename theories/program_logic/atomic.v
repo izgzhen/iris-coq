@@ -105,7 +105,7 @@ Section lemmas.
     rewrite ->tforall_forall in HL.
     iIntros "Hwp" (Φ x) "Hα HΦ". iApply ("Hwp" with "[HΦ]"); first iAccu.
     iAuIntro. iAaccIntro with "Hα"; first by eauto. iIntros (y) "Hβ !>".
-    (* FIXME: Using ssreflect rewrite does not work? *)
+    (* FIXME: Using ssreflect rewrite does not work, see Coq bug #7773. *)
     rewrite ->!tele_app_bind. iIntros "HΦ". iApply "HΦ". done.
   Qed.
 
@@ -120,6 +120,7 @@ Section lemmas.
     iMod ("HΦ") as "[#Hα [Hclose _]]". iMod ("Hclose" with "Hα") as "HΦ".
     iApply wp_fupd. iApply ("Hwp" with "Hα"). iIntros "!>" (y) "Hβ".
     iMod ("HΦ") as "[_ [_ Hclose]]". iMod ("Hclose" with "Hβ") as "HΦ".
+    (* FIXME: Using ssreflect rewrite does not work, see Coq bug #7773. *)
     rewrite ->!tele_app_bind. iApply "HΦ". done.
   Qed.
 
