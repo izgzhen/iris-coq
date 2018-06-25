@@ -1,3 +1,4 @@
+From stdpp Require Import namespaces.
 From iris.program_logic Require Export weakestpre.
 From iris.algebra Require Import gmap auth agree gset coPset.
 From iris.base_logic.lib Require Import wsat.
@@ -202,4 +203,21 @@ Proof.
   rewrite {1}uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
   iDestruct "Hwp" as (Istate) "(HIstate & Hwp & Hclose)".
   iApply (@wptp_invariance _ _ (IrisG _ _ Hinv Istate)); eauto with iFrame.
+Qed.
+
+(* An equivalent version that does not require finding [fupd_intro_mask'], but
+can be confusing to use. *)
+Corollary wp_invariance' Σ Λ `{invPreG Σ} s e σ1 t2 σ2 φ :
+  (∀ `{Hinv : invG Σ},
+     (|={⊤}=> ∃ stateI : state Λ → iProp Σ,
+       let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
+       stateI σ1 ∗ WP e @ s; ⊤ {{ _, True }} ∗ (stateI σ2 -∗ ∃ E, |={⊤,E}=> ⌜φ⌝))%I) →
+  rtc step ([e], σ1) (t2, σ2) →
+  φ.
+Proof.
+  intros Hwp. eapply wp_invariance; first done.
+  intros Hinv. iMod (Hwp Hinv) as (stateI) "(? & ? & Hφ)".
+  iModIntro. iExists stateI. iFrame. iIntros "Hσ".
+  iDestruct ("Hφ" with "Hσ") as (E) ">Hφ".
+  iMod (fupd_intro_mask') as "_"; last by iModIntro. solve_ndisj.
 Qed.
