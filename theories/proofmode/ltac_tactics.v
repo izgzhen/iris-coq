@@ -680,7 +680,7 @@ Tactic Notation "iSpecializeCore" open_constr(H)
           fail "iSpecialize:" H "not found"
          |iSpecializePat H pat;
            [..
-           |refine (tac_specialize_persistent_helper_done _ H _ _ _);
+           |notypeclasses refine (tac_specialize_persistent_helper_done _ H _ _ _);
             pm_reflexivity]
          |iSolveTC ||
           let Q := match goal with |- IntoPersistent _ ?Q _ => Q end in
