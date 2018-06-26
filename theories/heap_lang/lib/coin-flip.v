@@ -93,13 +93,20 @@ Section prophecy.
     (* -- predicates -- *)
     is_prophecy : proph -> val -> iProp Σ;
     (* -- general properties -- *)
-    new_prophecy_spec :
-      {{{ True }}} new_prophecy #() {{{ p, RET #p; ∃ v, is_prophecy p #v }}};
-    resolve_prophecy_spec p v w :
-      {{{ is_prophecy p v }}} resolve_prophecy #p w {{{ RET w; ⌜v = w⌝ }}} 
+    new_prophecy_spec:
+      {{{ True }}} new_prophecy #() {{{ p, RET #p; ∃ v, is_prophecy p v }}};
+    resolve_prophecy_spec p v e w:
+      IntoVal e w ->
+      {{{ is_prophecy p v }}} resolve_prophecy #p e {{{ RET w; ⌜v = w⌝ }}} 
   }.
     
   Context `{pr: prophecy}.
+
+  Definition val_to_bool v : bool :=
+    match v with
+    | LitV (LitBool b) => b
+    | _                => true
+    end.
 
   Definition lateChoice_proph: val :=
     λ: "x",
@@ -107,12 +114,6 @@ Section prophecy.
       "x" <- #0 ;;
       let: "r" := rand #() in
       resolve_prophecy pr "p" "r".
-
-  Definition val_to_bool v :=
-    match v with
-    | LitBool b => Some b
-    | _         => None
-    end.
   
   Lemma lateChoice_proph_spec (x: loc) :
     <<< x ↦ - >>>
@@ -128,24 +129,11 @@ Section prophecy.
     iMod "AU" as "[Hl [_ Hclose]]".
     iDestruct "Hl" as (v') "Hl".
     wp_store.
-    destruct (val_to_bool v) eqn:Heq.
-    - iMod ("Hclose" $! b with "[Hl]") as "HΦ"; first by eauto.
-      iModIntro. wp_seq. wp_apply rand_spec; try done.
-      iIntros (b') "_". wp_let.
-      iDestruct (resolve_prophecy_spec with "Hp") as "Hs".
-      iAssert (▷(⌜#v = #b'⌝ -∗ Φ #b'))%I with "[HΦ]" as "Hb". {
-        iNext. iIntros "Heq". destruct v; inversion Heq; subst. iDestruct "Heq" as %->. done.
-      }
-      iSpecialize ("Hs" with "Hb"). done.
-    - iMod ("Hclose" $! true with "[Hl]") as "HΦ"; first by eauto.
-      iModIntro. wp_seq. wp_apply rand_spec; try done.
-      iIntros (b') "_". wp_let.
-      iDestruct (resolve_prophecy_spec with "Hp") as "Hs". 
-      iAssert (▷(⌜#v = #b'⌝ -∗ Φ #b'))%I with "[HΦ]" as "Hb". {
-        iNext. iIntros "Heq". iDestruct "Heq" as %[=Heq'].
-        destruct v; inversion Heq; inversion Heq'.
-      }
-      iSpecialize ("Hs" with "Hb"). done.
+    iMod ("Hclose" $! (val_to_bool v) with "[Hl]") as "HΦ"; first by eauto.
+    iModIntro. wp_seq. wp_apply rand_spec; try done.
+    iIntros (b') "_". wp_let.
+    iApply (resolve_prophecy_spec with "Hp").
+    iNext. iIntros (->). done.
   Qed.
 
 End prophecy.
