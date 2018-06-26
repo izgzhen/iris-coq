@@ -8,6 +8,7 @@ test: $(TESTFILES:.v=.vo)
 .PHONY: test
 
 COQ_TEST=$(COQTOP) $(COQDEBUG) -batch -test-mode
+COQ_BROKEN=$(shell echo "$(COQ_VERSION)" | egrep "^8\.9" > /dev/null && echo 1)
 
 # Can't use pipes because that discards error codes and dash provides no way to control that.
 # Also egrep errors if it doesn't match anything, we have to ignore that.
@@ -20,13 +21,16 @@ tests/.coqdeps.d: $(TESTFILES)
 -include tests/.coqdeps.d
 
 $(TESTFILES:.v=.vo): %.vo: %.v $(if $(MAKE_REF),,%.ref)
-	$(SHOW)$(if $(MAKE_REF),COQTEST [ref],COQTEST) $<
+	$(SHOW)$(if $(COQ_BROKEN),COQTEST [ignore],$(if $(MAKE_REF),COQTEST [ref],COQTEST)) $<
 	$(HIDE)TEST="$$(basename -s .v $<)" && \
 	  TMPFILE="$$(mktemp)" && \
 	  $(TIMER) $(COQ_TEST) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) -load-vernac-source $< $(TIMING_EXTRA) > "$$TMPFILE" && \
 	  ($(REF_FILTER) < "$$TMPFILE" > "$$TMPFILE.filtered" || true) && \
-	  $(if $(MAKE_REF), \
-	    mv "$$TMPFILE.filtered" "tests/$$TEST.ref", \
-	    diff -u "tests/$$TEST.ref" "$$TMPFILE.filtered") && \
+	  $(if $(COQ_BROKEN), true, \
+	    $(if $(MAKE_REF), \
+	      mv "$$TMPFILE.filtered" "tests/$$TEST.ref", \
+	      diff -u "tests/$$TEST.ref" "$$TMPFILE.filtered" \
+            ) \
+          ) && \
 	  rm -f "$$TMPFILE" "$$TMPFILE.filtered" && \
 	  touch $@

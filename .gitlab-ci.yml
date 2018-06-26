@@ -29,7 +29,6 @@ variables:
 build-coq.dev:
   <<: *template
   variables:
-    MAKE_REF: "1" # don't check test output
     OPAM_PINS: "coq version dev"
     VALIDATE: "1"
 
