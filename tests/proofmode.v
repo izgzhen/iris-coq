@@ -534,15 +534,14 @@ Proof.
 Qed.
 
 Section wandM.
-Import proofmode.base.
-Lemma test_wandM mP Q R :
-  (mP -∗? Q) -∗ (Q -∗ R) -∗ (mP -∗? R).
-Proof.
-  iIntros "HPQ HQR HP". Show.
-  iApply "HQR". iApply "HPQ". Show.
-  done.
-Qed.
-
+  Import proofmode.base.
+  Lemma test_wandM mP Q R :
+    (mP -∗? Q) -∗ (Q -∗ R) -∗ (mP -∗? R).
+  Proof.
+    iIntros "HPQ HQR HP". Show.
+    iApply "HQR". iApply "HPQ". Show.
+    done.
+  Qed.
 End wandM.
 
 End tests.

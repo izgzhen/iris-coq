@@ -23,8 +23,8 @@ Notation "'∀..' x .. y , P" := (bi_tforall (λ x, .. (bi_tforall (λ y, P)) ..
 Section telescope_quantifiers.
   Context {PROP : bi} {TT : tele}.
 
-  Lemma bi_tforall_forall (Ψ : TT -> PROP) :
-    (bi_tforall Ψ) ⊣⊢ (bi_forall Ψ).
+  Lemma bi_tforall_forall (Ψ : TT → PROP) :
+    bi_tforall Ψ ⊣⊢ bi_forall Ψ.
   Proof.
     symmetry. unfold bi_tforall. induction TT as [|X ft IH].
     - simpl. apply (anti_symm _).
@@ -36,11 +36,11 @@ Section telescope_quantifiers.
         by rewrite (forall_elim (TargS a p)).
       + move/tele_arg_inv : (a) => [x [pf ->]] {a} /=.
         setoid_rewrite <- IH.
-        do 2 rewrite forall_elim. done.
+        rewrite 2!forall_elim. done.
   Qed.
 
-  Lemma bi_texist_exist (Ψ : TT -> PROP) :
-    (bi_texist Ψ) ⊣⊢ (bi_exist Ψ).
+  Lemma bi_texist_exist (Ψ : TT → PROP) :
+    bi_texist Ψ ⊣⊢ bi_exist Ψ.
   Proof.
     symmetry. unfold bi_texist. induction TT as [|X ft IH].
     - simpl. apply (anti_symm _).
