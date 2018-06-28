@@ -37,7 +37,7 @@ Structure atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
     IntoVal e1 w1 → IntoVal e2 w2 →
     atomic_wp (cas (#l, e1, e2))%E
               ⊤ ⊤
-              (λ v, mapsto l 1 v)
+              (λ v, ⌜vals_cas_compare_safe v w1⌝ ∗ mapsto l 1 v)%I
               (λ v (_:()), if decide (v = w1) then mapsto l 1 w2 else mapsto l 1 v)
               (λ v _, #(if decide (v = w1) then true else false)%V);
 }.
@@ -91,12 +91,12 @@ Section proof.
     IntoVal e1 w1 → IntoVal e2 w2 →
     atomic_wp (primitive_cas (#l, e1, e2))%E
               ⊤ ⊤
-              (λ v, l ↦ v)%I
+              (λ v, ⌜vals_cas_compare_safe v w1⌝ ∗ l ↦ v)%I
               (λ v (_:()), if decide (v = w1) then l ↦ w2 else l ↦ v)%I
               (λ v _, #(if decide (v = w1) then true else false)%V).
   Proof.
     iIntros (<- <- Q Φ) "? AU". wp_let. repeat wp_proj.
-    iMod (aupd_acc with "AU") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
+    iMod (aupd_acc with "AU") as (v) "[[% H↦] [_ Hclose]]"; first solve_ndisj.
     destruct (decide (v = w1)) as [Hv|Hv]; [wp_cas_suc|wp_cas_fail];
     iMod ("Hclose" $! () with "H↦") as "HΦ"; by iApply "HΦ".
   Qed.

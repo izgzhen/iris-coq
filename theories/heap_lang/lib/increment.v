@@ -39,8 +39,8 @@ Section increment.
     (* Prove the atomic shift for CAS *)
     iAuIntro. iApply (aacc_aupd with "AU"); first done.
     iIntros (x') "H↦".
-    iApply (aacc_intro with "[H↦]"); [solve_ndisj|done|iSplit].
-    { iIntros "$ !> $ !> //". }
+    iApply (aacc_intro with "[H↦]"); [solve_ndisj|simpl;by auto with iFrame|iSplit].
+    { iIntros "[_ $] !> $ !> //". }
     iIntros ([]) "H↦ !>".
     destruct (decide (#x' = #x)) as [[= ->]|Hx].
     - iRight. iExists (). iFrame. iIntros "HΦ !> HQ".

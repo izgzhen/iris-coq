@@ -361,6 +361,23 @@ Definition bin_op_eval (op : bin_op) (v1 v2 : val) : option val :=
   | _, _ => None
   end.
 
+(** Return whether it is possible to use CAS to compare vl (current value) with v1 (netest value). *)
+Definition vals_cas_compare_safe (vl v1 : val) : Prop :=
+  match vl, v1 with
+  | LitV _, LitV _ => True
+  (* We want to support CAS'ing [NONEV := InjLV LitUnit] to [SOMEV #l := InjRV
+  (LitV l)].  An implementation of this is possible if literals have an invalid
+  bit pattern that can be used to represent NONE. *)
+  | InjLV (LitV LitUnit), InjLV (LitV LitUnit) => True
+  | InjLV (LitV LitUnit), InjRV (LitV _) => True
+  | InjRV (LitV _), InjLV (LitV LitUnit) => True
+  | _, _ => False
+  end.
+(** Just a sanity check. *)
+Lemma vals_cas_compare_safe_sym vl v1 :
+  vals_cas_compare_safe vl v1 → vals_cas_compare_safe v1 vl.
+Proof. rewrite /vals_cas_compare_safe. repeat case_match; done. Qed.
+
 Inductive head_step : expr → state → expr → state → list (expr) → Prop :=
   | BetaS f x e1 e2 v2 e' σ :
      to_val e2 = Some v2 →
@@ -405,10 +422,12 @@ Inductive head_step : expr → state → expr → state → list (expr) → Prop
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some vl → vl ≠ v1 →
+     vals_cas_compare_safe vl v1 →
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool false) σ []
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
+     vals_cas_compare_safe v1 v1 →
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) []
   | FaaS l i1 e2 i2 σ :
      to_val e2 = Some (LitV (LitInt i2)) →
