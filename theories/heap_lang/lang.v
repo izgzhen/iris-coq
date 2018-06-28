@@ -66,6 +66,9 @@ Inductive expr :=
   | CAS (e0 : expr) (e1 : expr) (e2 : expr)
   | FAA (e1 : expr) (e2 : expr).
 
+Notation NONE := (InjL (Lit LitUnit)) (only parsing).
+Notation SOME x := (InjR x) (only parsing).
+
 Bind Scope expr_scope with expr.
 
 Fixpoint is_closed (X : list string) (e : expr) : bool :=
@@ -93,6 +96,9 @@ Inductive val :=
   | PairV (v1 v2 : val)
   | InjLV (v : val)
   | InjRV (v : val).
+
+Notation NONEV := (InjLV (LitV LitUnit)) (only parsing).
+Notation SOMEV x := (InjRV x) (only parsing).
 
 Bind Scope val_scope with val.
 
@@ -365,12 +371,12 @@ Definition bin_op_eval (op : bin_op) (v1 v2 : val) : option val :=
 Definition vals_cas_compare_safe (vl v1 : val) : Prop :=
   match vl, v1 with
   | LitV _, LitV _ => True
-  (* We want to support CAS'ing [NONEV := InjLV LitUnit] to [SOMEV #l := InjRV
-  (LitV l)].  An implementation of this is possible if literals have an invalid
-  bit pattern that can be used to represent NONE. *)
-  | InjLV (LitV LitUnit), InjLV (LitV LitUnit) => True
-  | InjLV (LitV LitUnit), InjRV (LitV _) => True
-  | InjRV (LitV _), InjLV (LitV LitUnit) => True
+  (* We want to support CAS'ing [NONEV] to [SOMEV #l].  An implementation of
+  this is possible if literals have an invalid bit pattern that can be used to
+  represent NONE. *)
+  | NONEV, NONEV => True
+  | NONEV, SOMEV (LitV _) => True
+  | SOMEV (LitV _), NONEV => True
   | _, _ => False
   end.
 (** Just a sanity check. *)
