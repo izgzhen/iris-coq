@@ -254,7 +254,7 @@ We assume that $M$ has a unit $\munit$, and hence its core is total.
 (If $M$ is an exclusive monoid, the construction is very similar to a half-ownership monoid with two asymmetric halves.)
 \begin{align*}
 \authm(M) \eqdef{}& \maybe{\exm(M)} \times M \\
-\mval( (x, \meltB ) ) \eqdef{}& \setComp{ n }{ n \in \mval(\meltB) \land (x = \mnocore \lor \Exists \melt. x = \exinj(\melt) \land \meltB \mincl_n \melt) } \\
+\mval( (x, \meltB ) ) \eqdef{}& \setComp{ n }{ (x = \mnocore \land n \in \mval(\meltB)) \lor (\Exists \melt. x = \exinj(\melt) \land \meltB \mincl_n \melt \land n \in \mval(\melt)) } \\
   (x_1, \meltB_1) \mtimes (x_2, \meltB_2) \eqdef{}& (x_1 \mtimes x_2, \meltB_2 \mtimes \meltB_2) \\
   \mcore{(x, \meltB)} \eqdef{}& (\mnocore, \mcore\meltB) \\
   (x_1, \meltB_1) \nequiv{n} (x_2, \meltB_2) \eqdef{}& x_1 \nequiv{n} x_2 \land \meltB_1 \nequiv{n} \meltB_2
