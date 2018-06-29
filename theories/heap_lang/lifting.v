@@ -185,22 +185,22 @@ Proof.
 Qed.
 
 Lemma wp_cas_fail s E l q v' e1 v1 e2 :
-  IntoVal e1 v1 → AsVal e2 → v' ≠ v1 →
+  IntoVal e1 v1 → AsVal e2 → v' ≠ v1 → vals_cas_compare_safe v' v1 →
   {{{ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ s; E
   {{{ RET LitV (LitBool false); l ↦{q} v' }}}.
 Proof.
-  iIntros (<- [v2 <-] ? Φ) ">Hl HΦ".
+  iIntros (<- [v2 <-] ?? Φ) ">Hl HΦ".
   iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
   iModIntro; iSplit=> //. iFrame. by iApply "HΦ".
 Qed.
 Lemma twp_cas_fail s E l q v' e1 v1 e2 :
-  IntoVal e1 v1 → AsVal e2 → v' ≠ v1 →
+  IntoVal e1 v1 → AsVal e2 → v' ≠ v1 → vals_cas_compare_safe v' v1 →
   [[{ l ↦{q} v' }]] CAS (Lit (LitLoc l)) e1 e2 @ s; E
   [[{ RET LitV (LitBool false); l ↦{q} v' }]].
 Proof.
-  iIntros (<- [v2 <-] ? Φ) "Hl HΦ".
+  iIntros (<- [v2 <-] ?? Φ) "Hl HΦ".
   iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (v2' σ2 efs Hstep); inv_head_step.
@@ -208,11 +208,11 @@ Proof.
 Qed.
 
 Lemma wp_cas_suc s E l e1 v1 e2 v2 :
-  IntoVal e1 v1 → IntoVal e2 v2 →
+  IntoVal e1 v1 → IntoVal e2 v2 → vals_cas_compare_safe v1 v1 →
   {{{ ▷ l ↦ v1 }}} CAS (Lit (LitLoc l)) e1 e2 @ s; E
   {{{ RET LitV (LitBool true); l ↦ v2 }}}.
 Proof.
-  iIntros (<- <- Φ) ">Hl HΦ".
+  iIntros (<- <- ? Φ) ">Hl HΦ".
   iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
@@ -220,11 +220,11 @@ Proof.
   iModIntro. iSplit=>//. by iApply "HΦ".
 Qed.
 Lemma twp_cas_suc s E l e1 v1 e2 v2 :
-  IntoVal e1 v1 → IntoVal e2 v2 →
+  IntoVal e1 v1 → IntoVal e2 v2 → vals_cas_compare_safe v1 v1 →
   [[{ l ↦ v1 }]] CAS (Lit (LitLoc l)) e1 e2 @ s; E
   [[{ RET LitV (LitBool true); l ↦ v2 }]].
 Proof.
-  iIntros (<- <- Φ) "Hl HΦ".
+  iIntros (<- <- ? Φ) "Hl HΦ".
   iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1) "Hσ !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (v2' σ2 efs Hstep); inv_head_step.

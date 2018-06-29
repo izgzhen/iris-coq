@@ -224,18 +224,18 @@ Qed.
 Lemma tac_wp_cas_fail Δ Δ' s E i K l q v e1 v1 e2 Φ :
   IntoVal e1 v1 → AsVal e2 →
   MaybeIntoLaterNEnvs 1 Δ Δ' →
-  envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 →
+  envs_lookup i Δ' = Some (false, l ↦{q} v)%I → v ≠ v1 → vals_cas_compare_safe v v1 →
   envs_entails Δ' (WP fill K (Lit (LitBool false)) @ s; E {{ Φ }}) →
   envs_entails Δ (WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ s; E {{ Φ }}).
 Proof.
-  rewrite envs_entails_eq=> ??????.
+  rewrite envs_entails_eq=> ???????.
   rewrite -wp_bind. eapply wand_apply; first exact: wp_cas_fail.
   rewrite into_laterN_env_sound -later_sep envs_lookup_split //; simpl.
   by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 Lemma tac_twp_cas_fail Δ s E i K l q v e1 v1 e2 Φ :
   IntoVal e1 v1 → AsVal e2 →
-  envs_lookup i Δ = Some (false, l ↦{q} v)%I → v ≠ v1 →
+  envs_lookup i Δ = Some (false, l ↦{q} v)%I → v ≠ v1 → vals_cas_compare_safe v v1 →
   envs_entails Δ (WP fill K (Lit (LitBool false)) @ s; E [{ Φ }]) →
   envs_entails Δ (WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ s; E [{ Φ }]).
 Proof.
@@ -247,19 +247,19 @@ Qed.
 Lemma tac_wp_cas_suc Δ Δ' Δ'' s E i K l v e1 v1 e2 v2 Φ :
   IntoVal e1 v1 → IntoVal e2 v2 →
   MaybeIntoLaterNEnvs 1 Δ Δ' →
-  envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 →
+  envs_lookup i Δ' = Some (false, l ↦ v)%I → v = v1 → vals_cas_compare_safe v v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ' = Some Δ'' →
   envs_entails Δ'' (WP fill K (Lit (LitBool true)) @ s; E {{ Φ }}) →
   envs_entails Δ (WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ s; E {{ Φ }}).
 Proof.
-  rewrite envs_entails_eq=> ???????; subst.
+  rewrite envs_entails_eq=> ????????; subst.
   rewrite -wp_bind. eapply wand_apply; first exact: wp_cas_suc.
   rewrite into_laterN_env_sound -later_sep envs_simple_replace_sound //; simpl.
   rewrite right_id. by apply later_mono, sep_mono_r, wand_mono.
 Qed.
 Lemma tac_twp_cas_suc Δ Δ' s E i K l v e1 v1 e2 v2 Φ :
   IntoVal e1 v1 → IntoVal e2 v2 →
-  envs_lookup i Δ = Some (false, l ↦ v)%I → v = v1 →
+  envs_lookup i Δ = Some (false, l ↦ v)%I → v = v1 → vals_cas_compare_safe v v1 →
   envs_simple_replace i false (Esnoc Enil i (l ↦ v2)) Δ = Some Δ' →
   envs_entails Δ' (WP fill K (Lit (LitBool true)) @ s; E [{ Φ }]) →
   envs_entails Δ (WP fill K (CAS (Lit (LitLoc l)) e1 e2) @ s; E [{ Φ }]).
@@ -406,6 +406,7 @@ Tactic Notation "wp_cas_fail" :=
     [iSolveTC
     |solve_mapsto ()
     |try congruence
+    |fast_done || fail "wp_cas_fail: Values are not safe to compare for CAS"
     |simpl; try wp_value_head]
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     first
@@ -414,6 +415,7 @@ Tactic Notation "wp_cas_fail" :=
       |fail 1 "wp_cas_fail: cannot find 'CAS' in" e];
     [solve_mapsto ()
     |try congruence
+    |fast_done || fail "wp_cas_fail: Values are not safe to compare for CAS"
     |wp_expr_simpl; try wp_value_head]
   | _ => fail "wp_cas_fail: not a 'wp'"
   end.
@@ -432,6 +434,7 @@ Tactic Notation "wp_cas_suc" :=
     [iSolveTC
     |solve_mapsto ()
     |try congruence
+    |fast_done || fail "wp_cas_suc: Values are not safe to compare for CAS"
     |pm_reflexivity
     |simpl; try wp_value_head]
   | |- envs_entails _ (twp ?E ?e ?Q) =>
@@ -441,6 +444,7 @@ Tactic Notation "wp_cas_suc" :=
       |fail 1 "wp_cas_suc: cannot find 'CAS' in" e];
     [solve_mapsto ()
     |try congruence
+    |fast_done || fail "wp_cas_suc: Values are not safe to compare for CAS"
     |pm_reflexivity
     |wp_expr_simpl; try wp_value_head]
   | _ => fail "wp_cas_suc: not a 'wp'"
