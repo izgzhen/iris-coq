@@ -145,7 +145,7 @@ Notice also that the core of an RA is a strict generalization of the unit that a
 
 \begin{defn}
   It is possible to do a \emph{frame-preserving update} from $\melt \in \monoid$ to $\meltsB \subseteq \monoid$, written $\melt \mupd \meltsB$, if
-  \[ \All \maybe{\melt_\f} \in \maybe\monoid. \melt \mtimes \mvalFull(\maybe{\melt_\f}) \Ra \Exists \meltB \in \meltsB. \meltB \mtimes \mvalFull(\maybe{\melt_\f}) \]
+  \[ \All \maybe{\melt_\f} \in \maybe\monoid. \mvalFull(\melt \mtimes \maybe{\melt_\f}) \Ra \Exists \meltB \in \meltsB. \mvalFull(\meltB \mtimes \maybe{\melt_\f}) \]
 
   We further define $\melt \mupd \meltB \eqdef \melt \mupd \set\meltB$.
 \end{defn}
