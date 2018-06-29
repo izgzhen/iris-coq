@@ -11,7 +11,8 @@ Hint Mode Laterable + ! : typeclass_instances.
 
 Section instances.
   Context {PROP : sbi}.
-  Implicit Type (P : PROP).
+  Implicit Types P : PROP.
+  Implicit Types Ps : list PROP.
 
   Global Instance later_laterable P : Laterable (▷ P).
   Proof.
@@ -54,6 +55,6 @@ Section instances.
   Global Instance big_sepL_laterable Ps :
     Timeless (PROP:=PROP) emp →
     TCForall Laterable Ps →
-    Laterable (PROP:=PROP) ([∗] Ps).
+    Laterable ([∗] Ps).
   Proof. induction 2; simpl; apply _. Qed.
 End instances.
