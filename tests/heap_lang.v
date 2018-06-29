@@ -170,6 +170,13 @@ Section error_tests.
   Proof.
     iIntros "H↦". Fail wp_cas_suc.
   Abort.
+
+  Check "not_cas".
+  Lemma not_cas :
+    (WP #() {{ _, True }})%I.
+  Proof.
+    Fail wp_cas_suc.
+  Abort.
 End error_tests.
 
 Lemma heap_e_adequate σ : adequate NotStuck heap_e σ (= #2).

@@ -73,3 +73,8 @@
 The command has indeed failed with message:
 Ltac call to "wp_cas_suc" failed.
 Tactic failure: wp_cas_suc: Values are not safe to compare for CAS.
+"not_cas"
+     : string
+The command has indeed failed with message:
+Ltac call to "wp_cas_suc" failed.
+Tactic failure: wp_cas_suc: cannot find 'CAS' in (#())%E.
