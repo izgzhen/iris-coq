@@ -406,7 +406,7 @@ Tactic Notation "wp_cas_fail" :=
     [iSolveTC
     |solve_mapsto ()
     |try congruence
-    |done
+    |fast_done || fail "wp_cas_fail: Values are not safe to compare for CAS"
     |simpl; try wp_value_head]
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     first
@@ -415,7 +415,7 @@ Tactic Notation "wp_cas_fail" :=
       |fail 1 "wp_cas_fail: cannot find 'CAS' in" e];
     [solve_mapsto ()
     |try congruence
-    |done
+    |fast_done || fail "wp_cas_fail: Values are not safe to compare for CAS"
     |wp_expr_simpl; try wp_value_head]
   | _ => fail "wp_cas_fail: not a 'wp'"
   end.
@@ -434,7 +434,7 @@ Tactic Notation "wp_cas_suc" :=
     [iSolveTC
     |solve_mapsto ()
     |try congruence
-    |done
+    |fast_done || fail "wp_cas_suc: Values are not safe to compare for CAS"
     |pm_reflexivity
     |simpl; try wp_value_head]
   | |- envs_entails _ (twp ?E ?e ?Q) =>
@@ -444,7 +444,7 @@ Tactic Notation "wp_cas_suc" :=
       |fail 1 "wp_cas_suc: cannot find 'CAS' in" e];
     [solve_mapsto ()
     |try congruence
-    |done
+    |fast_done || fail "wp_cas_suc: Values are not safe to compare for CAS"
     |pm_reflexivity
     |wp_expr_simpl; try wp_value_head]
   | _ => fail "wp_cas_suc: not a 'wp'"

@@ -161,5 +161,16 @@ Section printing_tests.
 
 End printing_tests.
 
+Section error_tests.
+  Context `{heapG Σ}.
+
+  Check "not_cas_compare_safe".
+  Lemma not_cas_compare_safe (l : loc) (v : val) :
+    l ↦ v -∗ WP CAS #l v v {{ _, True }}.
+  Proof.
+    iIntros "H↦". Fail wp_cas_suc.
+  Abort.
+End error_tests.
+
 Lemma heap_e_adequate σ : adequate NotStuck heap_e σ (= #2).
 Proof. eapply (heap_adequacy heapΣ)=> ?. by apply heap_e_spec. Qed.
