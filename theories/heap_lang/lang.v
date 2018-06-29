@@ -370,13 +370,16 @@ Definition bin_op_eval (op : bin_op) (v1 v2 : val) : option val :=
 (** Return whether it is possible to use CAS to compare vl (current value) with v1 (netest value). *)
 Definition vals_cas_compare_safe (vl v1 : val) : Prop :=
   match vl, v1 with
+  (* We allow comparing literals with each other. *)
   | LitV _, LitV _ => True
-  (* We want to support CAS'ing [NONEV] to [SOMEV #l].  An implementation of
-  this is possible if literals have an invalid bit pattern that can be used to
-  represent NONE. *)
+  (* We assume that [NONEV] is represented as a NULL-pointer and [SOMEV x] as a
+  pointer to a location (never written to after allocation) storing [x].  Then
+  comparing [NONEV] with [NONEV] or [SOMEV x] is possible atomically by testing
+  for NULL.  Comparing [SOMEV x] with [SOMEV y] is not possible though. *)
   | NONEV, NONEV => True
-  | NONEV, SOMEV (LitV _) => True
-  | SOMEV (LitV _), NONEV => True
+  | NONEV, SOMEV _ => True
+  | SOMEV _, NONEV => True
+  (* We don't allow comparing anything else. *)
   | _, _ => False
   end.
 (** Just a sanity check. *)
