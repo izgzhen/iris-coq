@@ -19,6 +19,8 @@ Section tests.
     end.
   Qed.
 
+  Definition val_scope_test_1 := SOMEV (#(), #()).
+
   Definition heap_e : expr :=
     let: "x" := ref #1 in "x" <- !"x" + #1 ;; !"x".
 

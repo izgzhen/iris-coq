@@ -66,10 +66,10 @@ Inductive expr :=
   | CAS (e0 : expr) (e1 : expr) (e2 : expr)
   | FAA (e1 : expr) (e2 : expr).
 
+Bind Scope expr_scope with expr.
+
 Notation NONE := (InjL (Lit LitUnit)) (only parsing).
 Notation SOME x := (InjR x) (only parsing).
-
-Bind Scope expr_scope with expr.
 
 Fixpoint is_closed (X : list string) (e : expr) : bool :=
   match e with
@@ -97,10 +97,10 @@ Inductive val :=
   | InjLV (v : val)
   | InjRV (v : val).
 
+Bind Scope val_scope with val.
+
 Notation NONEV := (InjLV (LitV LitUnit)) (only parsing).
 Notation SOMEV x := (InjRV x) (only parsing).
-
-Bind Scope val_scope with val.
 
 Fixpoint of_val (v : val) : expr :=
   match v with
