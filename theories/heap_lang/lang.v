@@ -367,18 +367,46 @@ Definition bin_op_eval (op : bin_op) (v1 v2 : val) : option val :=
   | _, _ => None
   end.
 
-(** Return whether it is possible to use CAS to compare vl (current value) with v1 (netest value). *)
+(** Return whether it is possible to use CAS to compare vl (current value) with
+v1 (netest value).
+
+We assume the following encoding of values to 64-bit words: The least 3
+significant bits of every word are a "tag", and we have 61 bits of payload,
+which is enough if all pointers are 8-byte-aligned (commong on 64bit
+architectures). The tags have the following meaning:
+
+0: Payload is one of the following finitely many values, which 61 bits are more
+   than enough to encode: LitV LitUnit, LitV (LitBool _), NONEV, SOMEV (LitV
+   LitUnit), SOMEV (LitV (LitBool _)).
+1: Payload is the data for a LitV (LitInt _).
+2: Payload is the data for a SOMEV (LitV (LitInt _)).
+3: Payload is the data for a LitV (LitLoc _).
+4: Payload is the data for a SOMEV (LitV (LitLoc _)).
+5: Value is boxed, i.e., payload is a pointer to some read-only memory area on
+   the heap which stores whether this is a RecV, PairV, InjLV or InjRV and the
+   relevant data for those cases. However, the boxed representation is never
+   used if any of the above representations could be used.
+6: Unused.
+7: Unused.
+
+Ignoring (as usual) the fact that we have to fit the infinite Z/loc into 61
+bits, this means every value is machine-word-sized and can hence be atomically
+read and written. It also justifies the comparisons allowed for CAS: Whenever
+[vals_cas_compare_safe vl v1] holds, equality of the one-word representation of
+[vl] and [v1] is equivalent to equality of the abstract value represented. This
+is clear for [LitV _ == LitV _] and [SOMEV (LitV _) == SOMEV (LitV _)] because
+none of these are boxed. For [NONEV == v], we can't actually atomically load and
+compare the data for boxed values, but that's okay because we only have to know
+if they are equal to [NONEV] which is distinct from all boxed values.
+ *)
 Definition vals_cas_compare_safe (vl v1 : val) : Prop :=
   match vl, v1 with
-  (* We allow comparing literals with each other. *)
+  (* We allow comparing literals with each other, also when wrapped in a SOMEV. *)
   | LitV _, LitV _ => True
-  (* We assume that [NONEV] is represented as a NULL-pointer and [SOMEV x] as a
-  pointer to a location (never written to after allocation) storing [x].  Then
-  comparing [NONEV] with [NONEV] or [SOMEV x] is possible atomically by testing
-  for NULL.  Comparing [SOMEV x] with [SOMEV y] is not possible though. *)
-  | NONEV, NONEV => True
-  | NONEV, SOMEV _ => True
-  | SOMEV _, NONEV => True
+  | SOMEV (LitV _), SOMEV (LitV _) => True
+  (* We allow comparing NONEV to anything. *)
+  | NONEV, _ => True
+  | _, NONEV => True
   (* We don't allow comparing anything else. *)
   | _, _ => False
   end.
