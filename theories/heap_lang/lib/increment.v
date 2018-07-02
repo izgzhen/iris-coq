@@ -35,12 +35,12 @@ Section increment.
     iIntros ([]) "$ !> AU !> HQ".
     (* Now go on *)
     wp_let. wp_op. wp_bind (aheap.(cas) _)%I.
-    wp_apply (cas_spec with "[HQ]"); first by iAccu.
+    wp_apply (cas_spec with "[HQ]"); first done; first by iAccu.
     (* Prove the atomic shift for CAS *)
     iAuIntro. iApply (aacc_aupd with "AU"); first done.
     iIntros (x') "H↦".
-    iApply (aacc_intro with "[H↦]"); [solve_ndisj|simpl;by auto with iFrame|iSplit].
-    { iIntros "[_ $] !> $ !> //". }
+    iApply (aacc_intro with "[H↦]"); [solve_ndisj|done|iSplit].
+    { eauto 10 with iFrame. }
     iIntros ([]) "H↦ !>".
     destruct (decide (#x' = #x)) as [[= ->]|Hx].
     - iRight. iExists (). iFrame. iIntros "HΦ !> HQ".

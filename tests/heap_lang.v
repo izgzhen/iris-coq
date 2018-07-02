@@ -116,6 +116,13 @@ Section tests.
     P -∗ (∀ Q Φ, Q -∗ WP e {{ Φ }}) -∗ WP e {{ _, True }}.
   Proof. iIntros "HP HW". wp_apply "HW". iExact "HP". Qed.
 
+  Lemma wp_cas l v :
+    val_is_unboxed v →
+    l ↦ v -∗ WP CAS #l v v {{ _, True }}.
+  Proof.
+    iIntros (?) "?". wp_cas as ? | ?. done. done.
+  Qed.
+
 End tests.
 
 Section printing_tests.
@@ -165,13 +172,6 @@ End printing_tests.
 
 Section error_tests.
   Context `{heapG Σ}.
-
-  Check "not_cas_compare_safe".
-  Lemma not_cas_compare_safe (l : loc) (v : val) :
-    l ↦ v -∗ WP CAS #l v v {{ _, True }}.
-  Proof.
-    iIntros "H↦". Fail wp_cas_suc.
-  Abort.
 
   Check "not_cas".
   Lemma not_cas :

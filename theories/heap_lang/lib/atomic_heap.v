@@ -33,11 +33,15 @@ Structure atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
               (λ v, mapsto l 1 v)
               (λ v (_:()), mapsto l 1 w)
               (λ _ _, #()%V);
+  (* This spec is slightly weaker than it could be: It is sufficient for [w1]
+  *or* [v] to be unboxed.  However, by writing it this way the [val_is_unboxed]
+  is outside the atomic triple, which makes it much easier to use -- and the
+  spec is still good enough for all our applications. *)
   cas_spec (l : loc) (e1 e2 : expr) (w1 w2 : val) :
-    IntoVal e1 w1 → IntoVal e2 w2 →
+    IntoVal e1 w1 → IntoVal e2 w2 → val_is_unboxed w1 →
     atomic_wp (cas (#l, e1, e2))%E
               ⊤ ⊤
-              (λ v, ⌜vals_cas_compare_safe v w1⌝ ∗ mapsto l 1 v)%I
+              (λ v, mapsto l 1 v)%I
               (λ v (_:()), if decide (v = w1) then mapsto l 1 w2 else mapsto l 1 v)
               (λ v _, #(if decide (v = w1) then true else false)%V);
 }.
@@ -88,16 +92,16 @@ Section proof.
   Qed.
 
   Lemma primitive_cas_spec (l : loc) e1 e2 (w1 w2 : val) :
-    IntoVal e1 w1 → IntoVal e2 w2 →
+    IntoVal e1 w1 → IntoVal e2 w2 → val_is_unboxed w1 →
     atomic_wp (primitive_cas (#l, e1, e2))%E
               ⊤ ⊤
-              (λ v, ⌜vals_cas_compare_safe v w1⌝ ∗ l ↦ v)%I
+              (λ v, l ↦ v)%I
               (λ v (_:()), if decide (v = w1) then l ↦ w2 else l ↦ v)%I
               (λ v _, #(if decide (v = w1) then true else false)%V).
   Proof.
-    iIntros (<- <- Q Φ) "? AU". wp_let. repeat wp_proj.
-    iMod (aupd_acc with "AU") as (v) "[[% H↦] [_ Hclose]]"; first solve_ndisj.
-    destruct (decide (v = w1)) as [Hv|Hv]; [wp_cas_suc|wp_cas_fail];
+    iIntros (<- <- ? Q Φ) "? AU". wp_let. repeat wp_proj.
+    iMod (aupd_acc with "AU") as (v) "[H↦ [_ Hclose]]"; first solve_ndisj.
+    destruct (decide (v = w1)) as [<-|Hv]; [wp_cas_suc|wp_cas_fail];
     iMod ("Hclose" $! () with "H↦") as "HΦ"; by iApply "HΦ".
   Qed.
 

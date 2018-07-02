@@ -68,11 +68,6 @@
     let: "val2" := fun2 "val1" in
     let: "val3" := fun3 "val2" in if: "val1" = "val2" then "val" else "val3"
   {{{ (x y : val) (z : Z), RET (x, y, #z); True }}}
-"not_cas_compare_safe"
-     : string
-The command has indeed failed with message:
-Ltac call to "wp_cas_suc" failed.
-Tactic failure: wp_cas_suc: Values are not safe to compare for CAS.
 "not_cas"
      : string
 The command has indeed failed with message:
