@@ -11,12 +11,33 @@ Changes in and extensions of the theory:
   the quantification over the next states and the later modality. This makes it
   possible to prove more powerful lifting lemmas: The new versions feature an
   "update that takes a step".
+* [#] Weaken the semantics of CAS in heap_lang to be efficiently implementable:
+  CAS may only be used to compare "unboxed" values that can be represented in a
+  single machine word.
 * [#] Add weakest preconditions for total program correctness.
 * [#] "(Potentially) stuck" weakest preconditions are no longer considered
   experimental.
 
 Changes in Coq:
 
+* An all-new generalized proofmode that abstracts away from Iris!  The proofmode
+  can now be used with non-step-indexed and even non-affine (i.e., linear)
+  logics.  TODO: Add reference to paper.  Developments instantiating the
+  proofmode typeclasses may need significant changes.  For developments just
+  using the proofmode tactics, porting should not be too much effort.  Notable
+  things to port are:
+  - All the BI laws moved from the `uPred` module to the `bi` module.  For
+    example, `uPred.later_equivI` became `bi.later_equivI`.
+  - Big-ops are automatically imported, imports of `iris.base_logic.big_op` have
+    to be removed.
+  - The ⊢ notation can sometimes infer different (but convertible) terms when
+    seraching for the BI to use, which (due to Coq limitations) can lead to
+    failing rewrites, in particular when rewriting at function types.
+* The `iInv` tactic can now be used without the second argument (the name for
+  the closing update).  It will then instead add the obligation to close the
+  invariant to the goal.
+* Improved pretty-printing of Iris connectives (in particular WP and fancy
+  updates) when Coq has to line-wrap the output.
 * Rename `timelessP` -> `timeless` (projection of the `Timeless` class)
 * The CMRA axiom `cmra_extend` is now stated in `Type`, using `sigT` instead of
   in `Prop` using `exists`. This makes it possible to define the function space
