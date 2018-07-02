@@ -1,7 +1,6 @@
-# IRIS COQ DEVELOPMENT, MOSEL VERSION
+# IRIS COQ DEVELOPMENT
 
-This is the Coq development of the [Iris Project](http://iris-project.org), in
-the MoSeL version.
+This is the Coq development of the [Iris Project](http://iris-project.org).
 
 A LaTeX version of the core logic definitions and some derived forms is
 available in [docs/iris.tex](docs/iris.tex).  A compiled PDF version of this
