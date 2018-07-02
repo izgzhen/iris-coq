@@ -116,6 +116,13 @@ Section tests.
     P -∗ (∀ Q Φ, Q -∗ WP e {{ Φ }}) -∗ WP e {{ _, True }}.
   Proof. iIntros "HP HW". wp_apply "HW". iExact "HP". Qed.
 
+  Lemma wp_cas l v :
+    val_is_unboxed v →
+    l ↦ v -∗ WP CAS #l v v {{ _, True }}.
+  Proof.
+    iIntros (?) "?". wp_cas as ? | ?. done. done.
+  Qed.
+
 End tests.
 
 Section printing_tests.

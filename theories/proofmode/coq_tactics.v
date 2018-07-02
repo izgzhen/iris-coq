@@ -65,18 +65,27 @@ Proof. apply envs_lookup_sound'. Qed.
 Lemma envs_lookup_persistent_sound Δ i P :
   envs_lookup i Δ = Some (true,P) → of_envs Δ ⊢ □ P ∗ of_envs Δ.
 Proof. intros ?%(envs_lookup_sound' _ false). by destruct Δ. Qed.
+Lemma envs_lookup_sound_2 Δ i p P :
+  envs_wf Δ → envs_lookup i Δ = Some (p,P) →
+  □?p P ∗ of_envs (envs_delete true i p Δ) ⊢ of_envs Δ.
+Proof.
+  rewrite /envs_lookup /of_envs=>Hwf ?. rewrite [⌜envs_wf Δ⌝%I]pure_True // left_id.
+  destruct Δ as [Γp Γs], (Γp !! i) eqn:?; simplify_eq/=.
+  - rewrite (env_lookup_perm Γp) //= intuitionistically_and
+      and_sep_intuitionistically and_elim_r.
+    cancel [□ P]%I. solve_sep_entails.
+  - destruct (Γs !! i) eqn:?; simplify_eq/=.
+    rewrite (env_lookup_perm Γs) //= and_elim_r.
+    cancel [P]. solve_sep_entails.
+Qed.
 
 Lemma envs_lookup_split Δ i p P :
   envs_lookup i Δ = Some (p,P) → of_envs Δ ⊢ □?p P ∗ (□?p P -∗ of_envs Δ).
 Proof.
-  rewrite /envs_lookup /of_envs=>?. apply pure_elim_l=> Hwf.
-  destruct Δ as [Γp Γs], (Γp !! i) eqn:?; simplify_eq/=.
-  - rewrite pure_True // left_id (env_lookup_perm Γp) //=
-      intuitionistically_and and_sep_intuitionistically.
-    cancel [□ P]%I. apply wand_intro_l. solve_sep_entails.
-  - destruct (Γs !! i) eqn:?; simplify_eq/=.
-    rewrite (env_lookup_perm Γs) //=. rewrite pure_True // left_id.
-    cancel [P]. apply wand_intro_l. solve_sep_entails.
+  intros. apply pure_elim with (envs_wf Δ).
+  { rewrite of_envs_eq. apply and_elim_l. }
+  intros. rewrite {1}envs_lookup_sound//.
+  apply sep_mono_r. apply wand_intro_l, envs_lookup_sound_2; done.
 Qed.
 
 Lemma envs_lookup_delete_sound Δ Δ' rp i p P :
@@ -197,6 +206,17 @@ Lemma envs_simple_replace_sound Δ Δ' i p P Γ :
   envs_lookup i Δ = Some (p,P) → envs_simple_replace i p Γ Δ = Some Δ' →
   of_envs Δ ⊢ □?p P ∗ ((if p then □ [∧] Γ else [∗] Γ) -∗ of_envs Δ').
 Proof. intros. by rewrite envs_lookup_sound// envs_simple_replace_sound'//. Qed.
+
+Lemma envs_simple_replace_maybe_sound Δ Δ' i p P Γ :
+  envs_lookup i Δ = Some (p,P) → envs_simple_replace i p Γ Δ = Some Δ' →
+  of_envs Δ ⊢ □?p P ∗ (((if p then □ [∧] Γ else [∗] Γ) -∗ of_envs Δ') ∧ (□?p P -∗ of_envs Δ)).
+Proof.
+  intros. apply pure_elim with (envs_wf Δ).
+  { rewrite of_envs_eq. apply and_elim_l. }
+  intros. rewrite {1}envs_lookup_sound//. apply sep_mono_r, and_intro.
+  - rewrite envs_simple_replace_sound'//.
+  - apply wand_intro_l, envs_lookup_sound_2; done.
+Qed.
 
 Lemma envs_simple_replace_singleton_sound Δ Δ' i p P j Q :
   envs_lookup i Δ = Some (p,P) →
