@@ -59,6 +59,31 @@ In nested Ltac calls to "iSpecialize (open_constr)",
 "iSpecializePat (open_constr) (constr)" and "iSpecializePat_go", last call
 failed.
 Tactic failure: iSpecialize: cannot instantiate (⌜φ⌝ → P -∗ False)%I with P.
+1 subgoal
+  
+  PROP : sbi
+  P, Q : PROP
+  n, m, k : nat
+  ============================
+  --------------------------------------∗
+  ▷^(S n + S m) emp
+  
+1 subgoal
+  
+  PROP : sbi
+  P, Q : PROP
+  ============================
+  --------------------------------------∗
+  ▷ emp
+  
+1 subgoal
+  
+  PROP : sbi
+  P, Q : PROP
+  ============================
+  --------------------------------------∗
+  ▷ emp
+  
 The command has indeed failed with message:
 In nested Ltac calls to "iFrame (constr)",
 "<iris.proofmode.ltac_tactics.iFrame_go>" and

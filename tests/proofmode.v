@@ -367,7 +367,7 @@ Lemma test_iNext_plus_2 P n m : ▷^n ▷^m P -∗ ▷^(n+m) P.
 Proof. iIntros "H". iNext. done. Qed.
 Lemma test_iNext_plus_3 P Q n m k :
   ▷^m ▷^(2 + S n + k) P -∗ ▷^m ▷ ▷^(2 + S n) Q -∗ ▷^k ▷ ▷^(S (S n + S m)) (P ∗ Q).
-Proof. iIntros "H1 H2". iNext. iNext. iNext. iFrame. Qed.
+Proof. iIntros "H1 H2". iNext. iNext. iNext. iFrame. Show. iModIntro. done. Qed.
 
 Lemma test_iNext_unfold P Q n m (R := (▷^n P)%I) :
   R ⊢ ▷^m True.
@@ -409,10 +409,10 @@ Lemma test_iPureIntro_absorbing (φ : Prop) :
 Proof. intros ?. iPureIntro. done. Qed.
 
 Lemma test_iFrame_later_1 P Q : P ∗ ▷ Q -∗ ▷ (P ∗ ▷ Q).
-Proof. iIntros "H". iFrame "H". auto. Qed.
+Proof. iIntros "H". iFrame "H". Show. auto. Qed.
 
 Lemma test_iFrame_later_2 P Q : ▷ P ∗ ▷ Q -∗ ▷ (▷ P ∗ ▷ Q).
-Proof. iIntros "H". iFrame "H". auto. Qed.
+Proof. iIntros "H". iFrame "H". Show. auto. Qed.
 
 Lemma test_with_ident P Q R : P -∗ Q -∗ (P -∗ Q -∗ R) -∗ R.
 Proof.

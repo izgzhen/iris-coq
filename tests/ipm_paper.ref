@@ -1,3 +1,5 @@
+"sep_exist"
+     : string
 1 subgoal
   
   M : ucmraT
@@ -44,6 +46,8 @@ P
   --------------------------------------∗
   P
   
+"sep_exist_short"
+     : string
 1 subgoal
   
   M : ucmraT
@@ -57,6 +61,8 @@ P
   --------------------------------------∗
   ∃ a : A, Ψ a ∗ P
   
+"read_spec"
+     : string
 1 subgoal
   
   Σ : gFunctors

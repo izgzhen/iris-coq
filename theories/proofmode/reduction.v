@@ -22,7 +22,7 @@ Declare Reduction pm_cbn := cbn [
   tele_fold tele_bind tele_app
   (* BI connectives *)
   bi_persistently_if bi_affinely_if bi_intuitionistically_if
-  bi_wandM big_opL
+  bi_wandM sbi_laterN big_opL
   bi_tforall bi_texist
 ].
 Ltac pm_eval t :=

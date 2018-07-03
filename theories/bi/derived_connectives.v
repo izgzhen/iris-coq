@@ -88,8 +88,11 @@ Fixpoint bi_hforall {PROP : bi} {As} : himpl As PROP → PROP :=
   | tcons A As => λ Φ, ∀ x, bi_hforall (Φ x)
   end%I.
 
-Definition sbi_laterN {PROP : sbi} (n : nat) (P : PROP) : PROP :=
-  Nat.iter n sbi_later P.
+Fixpoint sbi_laterN {PROP : sbi} (n : nat) (P : PROP) : PROP :=
+  match n with
+  | O => P
+  | S n' => ▷ sbi_laterN n' P
+  end%I.
 Arguments sbi_laterN {_} !_%nat_scope _%I.
 Instance: Params (@sbi_laterN) 2.
 Notation "▷^ n P" := (sbi_laterN n P) : bi_scope.

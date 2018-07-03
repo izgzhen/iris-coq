@@ -91,8 +91,14 @@ Global Instance uPred_ownM_sep_homomorphism :
   MonoidHomomorphism op uPred_sep (≡) (@uPred_ownM M).
 Proof. split; [split; try apply _|]. apply ownM_op. apply ownM_unit'. Qed.
 
+(** Iterated later *)
+Lemma laterN_iter n P : (▷^n P)%I = Nat.iter n sbi_later P.
+Proof. induction n; f_equal/=; auto. Qed.
 
 (** Consistency/soundness statement *)
+Lemma soundness φ n : (▷^n ⌜ φ ⌝ : uPred M)%I → φ.
+Proof. rewrite laterN_iter. apply soundness_iter. Qed.
+
 Corollary consistency_modal n : ¬ (▷^n False : uPred M)%I.
 Proof. exact (soundness False n). Qed.
 

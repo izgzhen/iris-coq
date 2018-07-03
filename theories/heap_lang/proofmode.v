@@ -27,8 +27,8 @@ Tactic Notation "wp_expr_eval" tactic(t) :=
   | _ => fail "wp_expr_eval: not a 'wp'"
   end.
 
-Ltac wp_expr_simpl := wp_expr_eval simpl.
-Ltac wp_expr_simpl_subst := wp_expr_eval simpl_subst.
+Ltac wp_expr_simpl := (wp_expr_eval simpl); pm_prettify.
+Ltac wp_expr_simpl_subst := (wp_expr_eval simpl_subst); pm_prettify.
 
 Lemma tac_wp_pure `{heapG Σ} Δ Δ' s E e1 e2 φ Φ :
   PureExec φ e1 e2 →
