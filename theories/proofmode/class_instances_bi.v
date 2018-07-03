@@ -879,7 +879,7 @@ Qed.
 Global Instance into_exist_exist {A} (Φ : A → PROP) : IntoExist (∃ a, Φ a) Φ.
 Proof. by rewrite /IntoExist. Qed.
 Global Instance into_exist_texist {A} (Φ : tele_arg A → PROP) :
-  IntoExist (∃.. a, Φ a) Φ.
+  IntoExist (∃.. a, Φ a) Φ | 10.
 Proof. by rewrite /IntoExist bi_texist_exist. Qed.
 Global Instance into_exist_pure {A} (φ : A → Prop) :
   @IntoExist PROP A ⌜∃ x, φ x⌝ (λ a, ⌜φ a⌝)%I.
@@ -916,7 +916,8 @@ Proof. by rewrite /IntoExist -embed_exist => <-. Qed.
 (** IntoForall *)
 Global Instance into_forall_forall {A} (Φ : A → PROP) : IntoForall (∀ a, Φ a) Φ.
 Proof. by rewrite /IntoForall. Qed.
-Global Instance into_forall_tforall {A} (Φ : tele_arg A → PROP) : IntoForall (∀.. a, Φ a) Φ.
+Global Instance into_forall_tforall {A} (Φ : tele_arg A → PROP) :
+  IntoForall (∀.. a, Φ a) Φ | 10.
 Proof. by rewrite /IntoForall bi_tforall_forall. Qed.
 Global Instance into_forall_affinely {A} P (Φ : A → PROP) :
   IntoForall P Φ → IntoForall (<affine> P) (λ a, <affine> (Φ a))%I.

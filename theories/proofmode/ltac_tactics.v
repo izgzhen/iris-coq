@@ -811,7 +811,8 @@ Tactic Notation "iApplyHyp" constr(H) :=
     [eapply tac_apply with _ H _ _ _;
       [pm_reflexivity
       |iSolveTC
-      |pm_reduce (* reduce redexes created by instantiation *)]
+      |pm_prettify (* reduce redexes created by instantiation *)
+      ]
     |iSpecializePat H "[]"; last go H] in
   iExact H ||
   go H ||
@@ -1058,7 +1059,8 @@ Tactic Notation "iModIntro" uconstr(sel) :=
      end
     |pm_reduce; iSolveTC ||
      fail "iModIntro: cannot filter spatial context when goal is not absorbing"
-    |].
+    |pm_prettify (* reduce redexes created by instantiation *)
+    ].
 Tactic Notation "iModIntro" := iModIntro _.
 Tactic Notation "iAlways" := iModIntro.
 

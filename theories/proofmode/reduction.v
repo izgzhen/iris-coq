@@ -31,3 +31,8 @@ Ltac pm_eval t :=
 Ltac pm_reduce :=
   match goal with |- ?u => let v := pm_eval u in change v end.
 Ltac pm_reflexivity := pm_reduce; exact eq_refl.
+
+(** Called e.g. by iApply for redexes that are created by instantiation.
+    This cannot create any envs redexes so we just to the cbn part. *)
+Ltac pm_prettify :=
+  match goal with |- ?u => let v := eval pm_cbn in u in change v end.
