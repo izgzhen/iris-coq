@@ -22,7 +22,8 @@ Declare Reduction pm_cbn := cbn [
   tele_fold tele_bind tele_app
   (* BI connectives *)
   bi_persistently_if bi_affinely_if bi_intuitionistically_if
-  bi_wandM bi_tforall bi_texist
+  bi_wandM big_opL
+  bi_tforall bi_texist
 ].
 Ltac pm_eval t :=
   let u := eval pm_cbv in t in

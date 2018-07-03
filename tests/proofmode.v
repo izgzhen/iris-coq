@@ -490,7 +490,7 @@ Lemma test_big_sepL_simpl x (l : list nat) P :
   ([∗ list] k↦y ∈ l, <affine> ⌜ y = y ⌝) -∗
   ([∗ list] y ∈ x :: l, <affine> ⌜ y = y ⌝) -∗
   P.
-Proof. iIntros "HP ?? /=". Show. done. Qed.
+Proof. iIntros "HP ??". Show. done. Qed.
 
 Lemma test_big_sepL2_simpl x1 x2 (l1 l2 : list nat) P :
   P -∗
