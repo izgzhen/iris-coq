@@ -31,10 +31,10 @@ Lemma rev_acc_wp hd acc xs ys :
     rev hd acc
   [[{ w, RET w; is_list w (reverse xs ++ ys) }]].
 Proof.
-  iIntros (Φ) "[Hxs Hys] HΦ".
+  iIntros (Φ) "[Hxs Hys] HΦ". Show.
   iInduction xs as [|x xs] "IH" forall (hd acc ys Φ);
     iSimplifyEq; wp_rec; wp_let.
-  - wp_match. by iApply "HΦ".
+  - Show. wp_match. by iApply "HΦ".
   - iDestruct "Hxs" as (l hd' ->) "[Hx Hxs]".
     wp_match. wp_load. wp_proj. wp_let. wp_load. wp_proj. wp_let. wp_store.
     iApply ("IH" $! hd' (SOMEV #l) (x :: ys) with "Hxs [Hx Hys]"); simpl.

@@ -67,16 +67,16 @@ Proof.
     iAssert (one_shot_inv γ l ∗ (⌜v = NONEV⌝ ∨ ∃ n : Z,
       ⌜v = SOMEV #n⌝ ∗ own γ (Shot n)))%I with "[Hl Hv]" as "[Hinv #Hv]".
     { iDestruct "Hv" as "[[% ?]|Hv]"; last iDestruct "Hv" as (m) "[% ?]"; subst.
-      + iSplit. iLeft; by iSplitL "Hl". eauto.
+      + Show. iSplit. iLeft; by iSplitL "Hl". eauto.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
     iSplitL "Hinv"; first by eauto.
     iModIntro. wp_let. iIntros "!#". wp_seq.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as (m) "[% Hγ']"; subst.
     { by wp_match. }
     wp_match. wp_bind (! _)%E.
-    iInv N as ">[[Hl Hγ]|H]"; last iDestruct "H" as (m') "[Hl Hγ]".
+    iInv N as "[[Hl >Hγ]|H]"; last iDestruct "H" as (m') "[Hl Hγ]".
     { by iDestruct (own_valid_2 with "Hγ Hγ'") as %?. }
-    wp_load.
+    wp_load. Show.
     iDestruct (own_valid_2 with "Hγ Hγ'") as %?%agree_op_invL'; subst.
     iModIntro. iSplitL "Hl".
     { iNext; iRight; by eauto. }
