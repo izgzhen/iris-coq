@@ -293,7 +293,7 @@ Tactic Notation "iPureIntro" :=
 
 (** Framing *)
 Local Ltac iFrameFinish :=
-  lazy iota beta;
+  pm_prettify;
   try match goal with
   | |- envs_entails _ True => by iPureIntro
   | |- envs_entails _ emp => iEmpIntro
@@ -408,7 +408,7 @@ Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
        [iSolveTC ||
               let P := match goal with |- FromForall ?P _ => P end in
               fail "iIntro: cannot turn" P "into a universal quantifier"
-       |lazy beta; intros x]
+       |pm_prettify; intros x]
      end).
 
 Local Tactic Notation "iIntro" constr(H) :=
@@ -1000,7 +1000,7 @@ Tactic Notation "iExists" uconstr(x1) :=
     [iSolveTC ||
      let P := match goal with |- FromExist ?P _ => P end in
      fail "iExists:" P "not an existential"
-    |cbv beta; eexists x1].
+    |pm_prettify; eexists x1].
 
 Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) :=
   iExists x1; iExists x2.
@@ -1882,7 +1882,7 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) :=
        let P := match goal with |- IntoInternalEq ?P _ _ ⊢ _ => P end in
        fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
-      |intros ??? ->; reflexivity|lazy beta; iClearHyp Heq]).
+      |intros ??? ->; reflexivity|pm_prettify; iClearHyp Heq]).
 
 Tactic Notation "iRewrite" open_constr(lem) := iRewriteCore Right lem.
 Tactic Notation "iRewrite" "-" open_constr(lem) := iRewriteCore Left lem.
@@ -1901,7 +1901,7 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) "in" constr(H) 
        fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
       |intros ??? ->; reflexivity
-      |pm_reflexivity|lazy beta; iClearHyp Heq]).
+      |pm_reflexivity|pm_prettify; iClearHyp Heq]).
 
 Tactic Notation "iRewrite" open_constr(lem) "in" constr(H) :=
   iRewriteCore Right lem in H.
