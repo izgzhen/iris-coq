@@ -247,6 +247,9 @@ Proof. induction n1; f_equiv/=; auto. Qed.
 Lemma laterN_le n1 n2 P : n1 ≤ n2 → ▷^n1 P ⊢ ▷^n2 P.
 Proof. induction 1; simpl; by rewrite -?later_intro. Qed.
 
+Lemma laterN_iter n P : (▷^n P)%I = Nat.iter n sbi_later P.
+Proof. induction n; f_equal/=; auto. Qed.
+
 Lemma laterN_mono n P Q : (P ⊢ Q) → ▷^n P ⊢ ▷^n Q.
 Proof. induction n; simpl; auto. Qed.
 Global Instance laterN_mono' n : Proper ((⊢) ==> (⊢)) (@sbi_laterN PROP n).
