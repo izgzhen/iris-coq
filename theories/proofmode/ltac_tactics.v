@@ -1,6 +1,6 @@
 From iris.proofmode Require Import coq_tactics reduction.
 From iris.proofmode Require Import base intro_patterns spec_patterns sel_patterns.
-From iris.bi Require Export bi.
+From iris.bi Require Export bi telescopes.
 From stdpp Require Import namespaces.
 From iris.proofmode Require Export classes notation.
 From stdpp Require Import hlist pretty.
@@ -293,7 +293,7 @@ Tactic Notation "iPureIntro" :=
 
 (** Framing *)
 Local Ltac iFrameFinish :=
-  lazy iota beta;
+  pm_prettify;
   try match goal with
   | |- envs_entails _ True => by iPureIntro
   | |- envs_entails _ emp => iEmpIntro
@@ -408,7 +408,7 @@ Local Tactic Notation "iIntro" "(" simple_intropattern(x) ")" :=
        [iSolveTC ||
               let P := match goal with |- FromForall ?P _ => P end in
               fail "iIntro: cannot turn" P "into a universal quantifier"
-       |lazy beta; intros x]
+       |pm_prettify; intros x]
      end).
 
 Local Tactic Notation "iIntro" constr(H) :=
@@ -811,7 +811,8 @@ Tactic Notation "iApplyHyp" constr(H) :=
     [eapply tac_apply with _ H _ _ _;
       [pm_reflexivity
       |iSolveTC
-      |pm_reduce (* reduce redexes created by instantiation *)]
+      |pm_prettify (* reduce redexes created by instantiation *)
+      ]
     |iSpecializePat H "[]"; last go H] in
   iExact H ||
   go H ||
@@ -999,7 +1000,7 @@ Tactic Notation "iExists" uconstr(x1) :=
     [iSolveTC ||
      let P := match goal with |- FromExist ?P _ => P end in
      fail "iExists:" P "not an existential"
-    |cbv beta; eexists x1].
+    |pm_prettify; eexists x1].
 
 Tactic Notation "iExists" uconstr(x1) "," uconstr(x2) :=
   iExists x1; iExists x2.
@@ -1058,7 +1059,8 @@ Tactic Notation "iModIntro" uconstr(sel) :=
      end
     |pm_reduce; iSolveTC ||
      fail "iModIntro: cannot filter spatial context when goal is not absorbing"
-    |].
+    |pm_prettify (* reduce redexes created by instantiation *)
+    ].
 Tactic Notation "iModIntro" := iModIntro _.
 Tactic Notation "iAlways" := iModIntro.
 
@@ -1880,7 +1882,7 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) :=
        let P := match goal with |- IntoInternalEq ?P _ _ ⊢ _ => P end in
        fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
-      |intros ??? ->; reflexivity|lazy beta; iClearHyp Heq]).
+      |intros ??? ->; reflexivity|pm_prettify; iClearHyp Heq]).
 
 Tactic Notation "iRewrite" open_constr(lem) := iRewriteCore Right lem.
 Tactic Notation "iRewrite" "-" open_constr(lem) := iRewriteCore Left lem.
@@ -1899,7 +1901,7 @@ Local Tactic Notation "iRewriteCore" constr(lr) open_constr(lem) "in" constr(H) 
        fail "iRewrite:" P "not an equality"
       |iRewriteFindPred
       |intros ??? ->; reflexivity
-      |pm_reflexivity|lazy beta; iClearHyp Heq]).
+      |pm_reflexivity|pm_prettify; iClearHyp Heq]).
 
 Tactic Notation "iRewrite" open_constr(lem) "in" constr(H) :=
   iRewriteCore Right lem in H.
@@ -2007,7 +2009,7 @@ Tactic Notation "iInvCore" constr(select) "with" constr(pats) "as" open_constr(H
      iSpecializePat H pats; last (
        iApplyHyp H; clear R; pm_reduce;
        (* Now the goal is
-          [∀ x, Pout x -∗ pm_maybe_wand (pm_option_fun Pclose x) (Q' x)],
+          [∀ x, Pout x -∗ pm_option_fun Pclose x -∗? Q' x],
           reduced because we can rely on Pclose being a constructor. *)
        let x := fresh in
        iIntros (x);
@@ -2193,6 +2195,8 @@ Hint Extern 0 (envs_entails _ (big_opMS _ _ _)) =>
 Hint Extern 0 (envs_entails _ (∀ _, _)) => iIntros.
 Hint Extern 0 (envs_entails _ (_ → _)) => iIntros.
 Hint Extern 0 (envs_entails _ (_ -∗ _)) => iIntros.
+(* Multi-intro doesn't work for custom binders. *)
+Hint Extern 0 (envs_entails _ (∀.. _, _)) => iIntros (?).
 
 Hint Extern 1 (envs_entails _ (_ ∧ _)) => iSplit.
 Hint Extern 1 (envs_entails _ (_ ∗ _)) => iSplit.
@@ -2202,6 +2206,7 @@ Hint Extern 1 (envs_entails _ (<pers> _)) => iAlways.
 Hint Extern 1 (envs_entails _ (<affine> _)) => iAlways.
 Hint Extern 1 (envs_entails _ (□ _)) => iAlways.
 Hint Extern 1 (envs_entails _ (∃ _, _)) => iExists _.
+Hint Extern 1 (envs_entails _ (∃.. _, _)) => iExists _.
 Hint Extern 1 (envs_entails _ (◇ _)) => iModIntro.
 Hint Extern 1 (envs_entails _ (_ ∨ _)) => iLeft.
 Hint Extern 1 (envs_entails _ (_ ∨ _)) => iRight.

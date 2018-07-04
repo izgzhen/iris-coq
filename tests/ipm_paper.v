@@ -25,6 +25,7 @@ Section demo.
   Qed.
 
   (* The version in IPM *)
+  Check "sep_exist".
   Lemma sep_exist A (P R: iProp) (Ψ: A → iProp) :
     P ∗ (∃ a, Ψ a) ∗ R ⊢ ∃ a, Ψ a ∗ P.
   Proof.
@@ -35,6 +36,7 @@ Section demo.
   Qed.
 
   (* The short version in IPM, as in the paper *)
+  Check "sep_exist_short".
   Lemma sep_exist_short A (P R: iProp) (Ψ: A → iProp) :
     P ∗ (∃ a, Ψ a) ∗ R ⊢ ∃ a, Ψ a ∗ P.
   Proof. iIntros "[HP [HΨ HR]]". Show. iFrame "HP". iAssumption. Qed.
@@ -235,6 +237,7 @@ Section counter_proof.
       wp_if. iApply ("IH" with "[Hγf]"). rewrite {3}/C; eauto 10.
   Qed.
 
+  Check "read_spec".
   Lemma read_spec l n :
     {{ C l n }} read #l {{ v, ∃ m : nat, ⌜v = #m ∧ n ≤ m⌝ ∧ C l m }}.
   Proof.

@@ -460,6 +460,10 @@ Proof.
   - rewrite !and_elim_r wand_elim_r. done.
 Qed.
 
+Lemma wandM_sound (mP : option PROP) Q :
+  (mP -∗? Q) ⊣⊢ (default emp mP -∗ Q).
+Proof. destruct mP; simpl; first done. rewrite emp_wand //. Qed.
+
 (* Pure stuff *)
 Lemma pure_elim φ Q R : (Q ⊢ ⌜φ⌝) → (φ → Q ⊢ R) → Q ⊢ R.
 Proof.

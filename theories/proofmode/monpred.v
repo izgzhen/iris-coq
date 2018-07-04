@@ -1,6 +1,6 @@
 From iris.bi Require Export monpred.
 From iris.bi Require Import plainly.
-From iris.proofmode Require Import tactics modality_instances coq_tactics.
+From iris.proofmode Require Import tactics modality_instances.
 
 Class MakeMonPredAt {I : biIndex} {PROP : bi} (i : I)
       (P : monPred I PROP) (𝓟 : PROP) :=
@@ -557,12 +557,11 @@ Proof. by rewrite /MakeMonPredAt /ElimModal monPred_at_fupd=><-. Qed.
 Global Instance elim_acc_at_fupd `{BiFUpd PROP} {X : Type} E1 E2 E
        M1 M2 α β (mγ : X → option PROP) Q (Q' : X → monPred) i :
   ElimAcc (X:=X) M1 M2 α β mγ (|={E1,E}=> Q i)
-          (λ x, |={E2}=> β x ∗ (pm_maybe_wand (mγ x) (|={E1,E}=> Q' x i)))%I →
+          (λ x, |={E2}=> β x ∗ (mγ x -∗? |={E1,E}=> Q' x i))%I →
   ElimAcc (X:=X) M1 M2 α β mγ ((|={E1,E}=> Q) i)
           (λ x, (|={E2}=> ⎡β x⎤ ∗
-                         (pm_maybe_wand
-                            (match mγ x with Some 𝓟 => Some ⎡𝓟⎤ | None => None end)
-                            (|={E1,E}=> Q' x))) i)%I
+                         (match mγ x with Some 𝓟 => Some ⎡𝓟⎤ | None => None end -∗?
+                            |={E1,E}=> Q' x)) i)%I
   | 1.
 Proof.
   rewrite /ElimAcc monPred_at_fupd=><-. apply bi.forall_mono=>x.
@@ -575,12 +574,11 @@ fails. *)
 Global Instance elim_acc_at_fupd_unit `{BiFUpd PROP} E1 E2 E
        M1 M2 α β mγ Q Q' i :
   ElimAcc (X:=unit) M1 M2 α β mγ (|={E1,E}=> Q i)
-          (λ x, |={E2}=> β x ∗ (pm_maybe_wand (mγ x) (|={E1,E}=> Q' i)))%I →
+          (λ x, |={E2}=> β x ∗ (mγ x -∗? |={E1,E}=> Q' i))%I →
   ElimAcc (X:=unit) M1 M2 α β mγ ((|={E1,E}=> Q) i)
           (λ x, (|={E2}=> ⎡β x⎤ ∗
-                         (pm_maybe_wand
-                            (match mγ x with Some 𝓟 => Some ⎡𝓟⎤ | None => None end)
-                            (|={E1,E}=> Q'))) i)%I
+                         (match mγ x with Some 𝓟 => Some ⎡𝓟⎤ | None => None end -∗?
+                            |={E1,E}=> Q')) i)%I
   | 0.
 Proof. exact: elim_acc_at_fupd. Qed.
 

@@ -160,8 +160,8 @@ Section lemmas.
   Global Instance elim_acc_aacc {X} E1 E2 Ei (α' β' : X → PROP) γ' α β Pas Φ :
     ElimAcc (X:=X) (fupd E1 E2) (fupd E2 E1) α' β' γ'
             (atomic_acc E1 Ei α Pas β Φ)
-            (λ x', atomic_acc E2 Ei α (β' x' ∗ pm_maybe_wand (γ' x') Pas)%I β
-                (λ x y, β' x' ∗ pm_maybe_wand (γ' x') (Φ x y)))%I.
+            (λ x', atomic_acc E2 Ei α (β' x' ∗ (γ' x' -∗? Pas))%I β
+                (λ x y, β' x' ∗ (γ' x' -∗? Φ x y)))%I.
   Proof.
     rewrite /ElimAcc.
     (* FIXME: Is there any way to prevent maybe_wand from unfolding?

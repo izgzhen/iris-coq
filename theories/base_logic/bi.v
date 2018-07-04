@@ -206,7 +206,7 @@ Lemma ofe_fun_validI `{B : A → ucmraT} (g : ofe_fun B) : ✓ g ⊣⊢ ∀ i, �
 Proof. exact: uPred_primitive.ofe_fun_validI. Qed.
 
 (** Consistency/soundness statement *)
-Lemma soundness φ n : (▷^n ⌜ φ ⌝ : uPred M)%I → φ.
+Lemma soundness_iter φ n : Nat.iter n sbi_later (⌜ φ ⌝ : uPred M)%I → φ.
 Proof. exact: uPred_primitive.soundness. Qed.
 
 End restate.

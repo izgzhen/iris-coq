@@ -39,6 +39,7 @@ theories/bi/tactics.v
 theories/bi/monpred.v
 theories/bi/embedding.v
 theories/bi/weakestpre.v
+theories/bi/telescopes.v
 theories/bi/lib/counter_examples.v
 theories/bi/lib/fixpoint.v
 theories/bi/lib/fractional.v

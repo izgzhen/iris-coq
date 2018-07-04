@@ -367,7 +367,7 @@ Lemma test_iNext_plus_2 P n m : ▷^n ▷^m P -∗ ▷^(n+m) P.
 Proof. iIntros "H". iNext. done. Qed.
 Lemma test_iNext_plus_3 P Q n m k :
   ▷^m ▷^(2 + S n + k) P -∗ ▷^m ▷ ▷^(2 + S n) Q -∗ ▷^k ▷ ▷^(S (S n + S m)) (P ∗ Q).
-Proof. iIntros "H1 H2". iNext. iNext. iNext. iFrame. Qed.
+Proof. iIntros "H1 H2". iNext. iNext. iNext. iFrame. Show. iModIntro. done. Qed.
 
 Lemma test_iNext_unfold P Q n m (R := (▷^n P)%I) :
   R ⊢ ▷^m True.
@@ -409,10 +409,10 @@ Lemma test_iPureIntro_absorbing (φ : Prop) :
 Proof. intros ?. iPureIntro. done. Qed.
 
 Lemma test_iFrame_later_1 P Q : P ∗ ▷ Q -∗ ▷ (P ∗ ▷ Q).
-Proof. iIntros "H". iFrame "H". auto. Qed.
+Proof. iIntros "H". iFrame "H". Show. auto. Qed.
 
 Lemma test_iFrame_later_2 P Q : ▷ P ∗ ▷ Q -∗ ▷ (▷ P ∗ ▷ Q).
-Proof. iIntros "H". iFrame "H". auto. Qed.
+Proof. iIntros "H". iFrame "H". Show. auto. Qed.
 
 Lemma test_with_ident P Q R : P -∗ Q -∗ (P -∗ Q -∗ R) -∗ R.
 Proof.
@@ -490,7 +490,7 @@ Lemma test_big_sepL_simpl x (l : list nat) P :
   ([∗ list] k↦y ∈ l, <affine> ⌜ y = y ⌝) -∗
   ([∗ list] y ∈ x :: l, <affine> ⌜ y = y ⌝) -∗
   P.
-Proof. iIntros "HP ?? /=". Show. done. Qed.
+Proof. iIntros "HP ??". Show. done. Qed.
 
 Lemma test_big_sepL2_simpl x1 x2 (l1 l2 : list nat) P :
   P -∗
@@ -508,6 +508,42 @@ Lemma test_big_sepL2_iFrame (Φ : nat → nat → PROP) (l1 l2 : list nat) P :
   Φ 0 10 -∗ ([∗ list] y1;y2 ∈ l1;l2, Φ y1 y2) -∗
   ([∗ list] y1;y2 ∈ (0 :: l1);(10 :: l2), Φ y1 y2).
 Proof. iIntros "$ ?". iFrame. Qed.
+
+Lemma test_lemma_1 (b : bool) :
+  emp ⊢@{PROP} □?b True.
+Proof. destruct b; simpl; eauto. Qed.
+Lemma test_reducing_after_iDestruct : emp ⊢@{PROP} True.
+Proof.
+  iIntros "H". iDestruct (test_lemma_1 true with "H") as "H". Show. done.
+Qed.
+
+Lemma test_lemma_2 (b : bool) :
+  □?b emp ⊢@{PROP} emp.
+Proof. destruct b; simpl; eauto. Qed.
+Lemma test_reducing_after_iApply : emp ⊢@{PROP} emp.
+Proof.
+  iIntros "#H". iApply (test_lemma_2 true). Show. auto.
+Qed.
+
+Lemma test_lemma_3 (b : bool) :
+  □?b emp ⊢@{PROP} ⌜b = b⌝.
+Proof. destruct b; simpl; eauto. Qed.
+Lemma test_reducing_after_iApply_late_evar : emp ⊢@{PROP} ⌜true = true⌝.
+Proof.
+  iIntros "#H". iApply (test_lemma_3). Show. auto.
+Qed.
+
+Section wandM.
+  Import proofmode.base.
+  Lemma test_wandM mP Q R :
+    (mP -∗? Q) -∗ (Q -∗ R) -∗ (mP -∗? R).
+  Proof.
+    iIntros "HPQ HQR HP". Show.
+    iApply "HQR". iApply "HPQ". Show.
+    done.
+  Qed.
+End wandM.
+
 End tests.
 
 (** Test specifically if certain things print correctly. *)
