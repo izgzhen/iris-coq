@@ -197,7 +197,7 @@ Tactic failure: iFrame: cannot frame Q.
   ============================
   "HPQ" : mP -∗? Q
   "HQR" : Q -∗ R
-  "HP" : pm_default emp mP
+  "HP" : default emp mP
   --------------------------------------∗
   R
   
@@ -207,9 +207,25 @@ Tactic failure: iFrame: cannot frame Q.
   mP : option PROP
   Q, R : PROP
   ============================
-  "HP" : pm_default emp mP
+  "HP" : default emp mP
   --------------------------------------∗
-  pm_default emp mP
+  default emp mP
+  
+"elim_mod_accessor"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  X : Type
+  E1, E2 : coPset.coPset
+  α : X → PROP
+  β : X → PROP
+  γ : X → option PROP
+  ============================
+  "Hacc" : ∃ x : X, α x ∗ (β x ={E2,E1}=∗ default emp (γ x))
+  --------------------------------------∗
+  |={E2,E1}=> True
   
 1 subgoal
   

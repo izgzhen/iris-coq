@@ -526,7 +526,7 @@ Hint Mode IntoInv + ! - : typeclass_instances.
     instances to recognize the [emp] case and make it look nicer. *)
 Definition accessor {PROP : bi} {X : Type} (M1 M2 : PROP → PROP)
            (α β : X → PROP) (mγ : X → option PROP) : PROP :=
-  M1 (∃ x, α x ∗ (β x -∗ M2 (pm_default emp (mγ x))))%I.
+  M1 (∃ x, α x ∗ (β x -∗ M2 (default emp (mγ x))))%I.
 
 (* Typeclass for assertions around which accessors can be elliminated.
    Inputs: [Q], [E1], [E2], [α], [β], [γ]
@@ -582,7 +582,7 @@ Hint Mode IntoAcc + - ! - - - - - - - : typeclass_instances.
 Class ElimInv {PROP : bi} {X : Type} (φ : Prop)
       (Pinv Pin : PROP) (Pout : X → PROP) (mPclose : option (X → PROP))
       (Q : PROP) (Q' : X → PROP) :=
-  elim_inv : φ → Pinv ∗ Pin ∗ (∀ x, Pout x ∗ (pm_default (λ _, emp) mPclose) x -∗ Q' x) ⊢ Q.
+  elim_inv : φ → Pinv ∗ Pin ∗ (∀ x, Pout x ∗ (default (λ _, emp) mPclose) x -∗ Q' x) ⊢ Q.
 Arguments ElimInv {_} {_} _ _%I _%I _%I _%I _%I _%I : simpl never.
 Arguments elim_inv {_} {_} _ _%I _%I _%I _%I _%I _%I {_}.
 Hint Mode ElimInv + - - ! - - ! ! - : typeclass_instances.

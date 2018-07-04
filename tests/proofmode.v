@@ -544,12 +544,23 @@ Section wandM.
   Qed.
 End wandM.
 
+Definition big_op_singleton_def (P : nat → PROP) (l : list nat) :=
+  ([∗ list] n ∈ l, P n)%I.
+Lemma test_iApply_big_op_singleton (P : nat → PROP) :
+  P 1 -∗ big_op_singleton_def P [1].
+Proof. iIntros "?". iApply big_sepL_singleton. iAssumption. Qed.
+
 End tests.
 
 (** Test specifically if certain things print correctly. *)
 Section printing_tests.
 Context {PROP : sbi} `{!BiFUpd PROP}.
 Implicit Types P Q R : PROP.
+
+Check "elim_mod_accessor".
+Lemma elim_mod_accessor {X : Type} E1 E2 α (β : X → PROP) γ :
+  accessor (fupd E1 E2) (fupd E2 E1) α β γ -∗ |={E1}=> True.
+Proof. iIntros ">Hacc". Show. Abort.
 
 (* Test line breaking of long assumptions. *)
 Section linebreaks.
