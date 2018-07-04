@@ -1,7 +1,10 @@
 From iris.bi Require Import bi telescopes.
 From iris.proofmode Require Import base environments.
 
-Declare Reduction pm_cbv := cbv [
+(** Called by all tactics to perform computation to lookup items in the
+    context.  We avoid reducing anything user-visible here to make sure we
+    do not reduce e.g. before unification happens in [iApply].*)
+Declare Reduction pm_eval := cbv [
   (* base *)
   base.beq base.Pos_succ base.ascii_beq base.string_beq base.positive_beq base.ident_beq
   (* environments *)
@@ -14,10 +17,15 @@ Declare Reduction pm_cbv := cbv [
   (* PM option combinators *)
   pm_option_bind pm_from_option pm_option_fun
 ].
-(* Some things should only be unfolded according to cbn rules, when
-   certain arguments are constructors. This is because they can appear in
-   the user side of proofs as well. *)
-Declare Reduction pm_cbn := cbn [
+Ltac pm_eval t :=
+  eval pm_eval in t.
+Ltac pm_reduce :=
+  match goal with |- ?u => let v := pm_eval u in change v end.
+Ltac pm_reflexivity := pm_reduce; exact eq_refl.
+
+(** Called by many tactics for redexes that are created by instantiation.
+    This cannot create any envs redexes so we just do the cbn part. *)
+Declare Reduction pm_prettify := cbn [
   (* telescope combinators *)
   tele_fold tele_bind tele_app
   (* BI connectives *)
@@ -25,17 +33,5 @@ Declare Reduction pm_cbn := cbn [
   bi_wandM sbi_laterN
   bi_tforall bi_texist
 ].
-
-(** Called by all tactics to perform computation to lookup items in the
-    context.  We avoid reducing anything user-visible here to make sure we
-    do not reduce e.g. before unification happens in [iApply].*)
-Ltac pm_eval t :=
-  eval pm_cbv in t.
-Ltac pm_reduce :=
-  match goal with |- ?u => let v := pm_eval u in change v end.
-Ltac pm_reflexivity := pm_reduce; exact eq_refl.
-
-(** Called by many tactics for redexes that are created by instantiation.
-    This cannot create any envs redexes so we just do the cbn part. *)
 Ltac pm_prettify :=
-  match goal with |- ?u => let v := eval pm_cbn in u in change v end.
+  match goal with |- ?u => let v := eval pm_prettify in u in change v end.
