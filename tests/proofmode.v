@@ -6,6 +6,7 @@ Section tests.
 Context {PROP : sbi}.
 Implicit Types P Q R : PROP.
 
+Check "demo_0".
 Lemma demo_0 P Q : □ (P ∨ Q) -∗ (∀ x, ⌜x = 0⌝ ∨ ⌜x = 1⌝) → (Q ∨ P).
 Proof.
   iIntros "H #H2". Show. iDestruct "H" as "###H".
@@ -52,6 +53,7 @@ Proof.
   auto.
 Qed.
 
+Check "test_iDestruct_and_emp".
 Lemma test_iDestruct_and_emp P Q `{!Persistent P, !Persistent Q} :
   P ∧ emp -∗ emp ∧ Q -∗ <affine> (P ∗ Q).
 Proof. iIntros "[#? _] [_ #?]". Show. auto. Qed.
@@ -365,6 +367,7 @@ Lemma test_iNext_plus_1 P n1 n2 : ▷ ▷^n1 ▷^n2 P -∗ ▷^n1 ▷^n2 ▷ P.
 Proof. iIntros "H". iNext. iNext. by iNext. Qed.
 Lemma test_iNext_plus_2 P n m : ▷^n ▷^m P -∗ ▷^(n+m) P.
 Proof. iIntros "H". iNext. done. Qed.
+Check "test_iNext_plus_3".
 Lemma test_iNext_plus_3 P Q n m k :
   ▷^m ▷^(2 + S n + k) P -∗ ▷^m ▷ ▷^(2 + S n) Q -∗ ▷^k ▷ ▷^(S (S n + S m)) (P ∗ Q).
 Proof. iIntros "H1 H2". iNext. iNext. iNext. iFrame. Show. iModIntro. done. Qed.
@@ -408,9 +411,11 @@ Lemma test_iPureIntro_absorbing (φ : Prop) :
   φ → sbi_emp_valid (PROP:=PROP) (<absorb> ⌜φ⌝)%I.
 Proof. intros ?. iPureIntro. done. Qed.
 
+Check "test_iFrame_later_1".
 Lemma test_iFrame_later_1 P Q : P ∗ ▷ Q -∗ ▷ (P ∗ ▷ Q).
 Proof. iIntros "H". iFrame "H". Show. auto. Qed.
 
+Check "test_iFrame_later_2".
 Lemma test_iFrame_later_2 P Q : ▷ P ∗ ▷ Q -∗ ▷ (▷ P ∗ ▷ Q).
 Proof. iIntros "H". iFrame "H". Show. auto. Qed.
 
@@ -480,11 +485,13 @@ Proof.
   - iDestruct "H" as "[_ [_ #$]]".
 Qed.
 
+Check "test_and_sep_affine_bi".
 Lemma test_and_sep_affine_bi `{BiAffine PROP} P Q : □ P ∧ Q ⊢ □ P ∗ Q.
 Proof.
   iIntros "[??]". iSplit; last done. Show. done.
 Qed.
 
+Check "test_big_sepL_simpl".
 Lemma test_big_sepL_simpl x (l : list nat) P :
    P -∗
   ([∗ list] k↦y ∈ l, <affine> ⌜ y = y ⌝) -∗
@@ -492,6 +499,7 @@ Lemma test_big_sepL_simpl x (l : list nat) P :
   P.
 Proof. iIntros "HP ??". Show. simpl. Show. done. Qed.
 
+Check "test_big_sepL2_simpl".
 Lemma test_big_sepL2_simpl x1 x2 (l1 l2 : list nat) P :
   P -∗
   ([∗ list] k↦y1;y2 ∈ []; l2, <affine> ⌜ y1 = y2 ⌝) -∗
@@ -499,6 +507,7 @@ Lemma test_big_sepL2_simpl x1 x2 (l1 l2 : list nat) P :
   P ∨ ([∗ list] y1;y2 ∈ x1 :: l1; x2 :: l2, True).
 Proof. iIntros "HP ??". Show. simpl. Show. by iLeft. Qed.
 
+Check "test_big_sepL2_iDestruct".
 Lemma test_big_sepL2_iDestruct (Φ : nat → nat → PROP) x1 x2 (l1 l2 : list nat) :
   ([∗ list] y1;y2 ∈ x1 :: l1; x2 :: l2, Φ y1 y2) -∗
   <absorb> Φ x1 x2.
@@ -512,6 +521,7 @@ Proof. iIntros "$ ?". iFrame. Qed.
 Lemma test_lemma_1 (b : bool) :
   emp ⊢@{PROP} □?b True.
 Proof. destruct b; simpl; eauto. Qed.
+Check "test_reducing_after_iDestruct".
 Lemma test_reducing_after_iDestruct : emp ⊢@{PROP} True.
 Proof.
   iIntros "H". iDestruct (test_lemma_1 true with "H") as "H". Show. done.
@@ -520,6 +530,7 @@ Qed.
 Lemma test_lemma_2 (b : bool) :
   □?b emp ⊢@{PROP} emp.
 Proof. destruct b; simpl; eauto. Qed.
+Check "test_reducing_after_iApply".
 Lemma test_reducing_after_iApply : emp ⊢@{PROP} emp.
 Proof.
   iIntros "#H". iApply (test_lemma_2 true). Show. auto.
@@ -528,6 +539,7 @@ Qed.
 Lemma test_lemma_3 (b : bool) :
   □?b emp ⊢@{PROP} ⌜b = b⌝.
 Proof. destruct b; simpl; eauto. Qed.
+Check "test_reducing_after_iApply_late_evar".
 Lemma test_reducing_after_iApply_late_evar : emp ⊢@{PROP} ⌜true = true⌝.
 Proof.
   iIntros "#H". iApply (test_lemma_3). Show. auto.
@@ -535,6 +547,7 @@ Qed.
 
 Section wandM.
   Import proofmode.base.
+  Check "test_wandM".
   Lemma test_wandM mP Q R :
     (mP -∗? Q) -∗ (Q -∗ R) -∗ (mP -∗? R).
   Proof.
@@ -564,7 +577,8 @@ Proof. iIntros ">Hacc". Show. Abort.
 
 (* Test line breaking of long assumptions. *)
 Section linebreaks.
-Lemma print_long_line (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
+Check "print_long_line_1".
+Lemma print_long_line_1 (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
   P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P ∗
   P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
   -∗ True.
@@ -576,38 +590,45 @@ Abort.
    the proofmode notation breaks the output. *)
 Local Notation "'TESTNOTATION' '{{' P '|' Q '}' '}'" := (P ∧ Q)%I
   (format "'TESTNOTATION'  '{{'  P  '|'  '/' Q  '}' '}'") : bi_scope.
-Lemma print_long_line (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
+Check "print_long_line_2".
+Lemma print_long_line_2 (P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP) :
   TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P | P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
   -∗ True.
 Proof.
   iIntros "HP". Show. Undo. iIntros "?". Show.
 Abort.
 
+Check "long_impl".
 Lemma long_impl (PPPPPPPPPPPPPPPPP QQQQQQQQQQQQQQQQQQ : PROP) :
   (PPPPPPPPPPPPPPPPP → (QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ))%I.
 Proof.
   iStartProof. Show.
 Abort.
+Check "long_impl_nested".
 Lemma long_impl_nested (PPPPPPPPPPPPPPPPP QQQQQQQQQQQQQQQQQQ : PROP) :
   (PPPPPPPPPPPPPPPPP → (QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ) → (QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ))%I.
 Proof.
   iStartProof. Show.
 Abort.
+Check "long_wand".
 Lemma long_wand (PPPPPPPPPPPPPPPPP QQQQQQQQQQQQQQQQQQ : PROP) :
   (PPPPPPPPPPPPPPPPP -∗ (QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ))%I.
 Proof.
   iStartProof. Show.
 Abort.
+Check "long_wand_nested".
 Lemma long_wand_nested (PPPPPPPPPPPPPPPPP QQQQQQQQQQQQQQQQQQ : PROP) :
   (PPPPPPPPPPPPPPPPP -∗ (QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ) -∗ (QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ))%I.
 Proof.
   iStartProof. Show.
 Abort.
+Check "long_fupd".
 Lemma long_fupd E (PPPPPPPPPPPPPPPPP QQQQQQQQQQQQQQQQQQ : PROP) :
   PPPPPPPPPPPPPPPPP ={E}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ.
 Proof.
   iStartProof. Show.
 Abort.
+Check "long_fupd_nested".
 Lemma long_fupd_nested E1 E2 (PPPPPPPPPPPPPPPPP QQQQQQQQQQQQQQQQQQ : PROP) :
   PPPPPPPPPPPPPPPPP ={E1,E2}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
   ={E1,E2}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ.
