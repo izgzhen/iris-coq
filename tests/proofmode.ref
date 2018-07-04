@@ -109,9 +109,35 @@ Tactic failure: iFrame: cannot frame Q.
   ============================
   "HP" : P
   _ : [∗ list] y ∈ l, <affine> ⌜y = y⌝
+  _ : [∗ list] y ∈ (x :: l), <affine> ⌜y = y⌝
+  --------------------------------------∗
+  P
+  
+1 subgoal
+  
+  PROP : sbi
+  x : nat
+  l : list nat
+  P : PROP
+  ============================
+  "HP" : P
+  _ : [∗ list] y ∈ l, <affine> ⌜y = y⌝
   _ : <affine> ⌜x = x⌝ ∗ ([∗ list] y ∈ l, <affine> ⌜y = y⌝)
   --------------------------------------∗
   P
+  
+1 subgoal
+  
+  PROP : sbi
+  x1, x2 : nat
+  l1, l2 : list nat
+  P : PROP
+  ============================
+  "HP" : P
+  _ : [∗ list] y1;y2 ∈ [];l2, <affine> ⌜y1 = y2⌝
+  _ : [∗ list] y1;y2 ∈ (x1 :: l1);((x2 :: l2) ++ l2), <affine> ⌜y1 = y2⌝
+  --------------------------------------∗
+  P ∨ ([∗ list] _;_ ∈ (x1 :: l1);(x2 :: l2), True)
   
 1 subgoal
   

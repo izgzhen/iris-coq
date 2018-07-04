@@ -490,14 +490,14 @@ Lemma test_big_sepL_simpl x (l : list nat) P :
   ([∗ list] k↦y ∈ l, <affine> ⌜ y = y ⌝) -∗
   ([∗ list] y ∈ x :: l, <affine> ⌜ y = y ⌝) -∗
   P.
-Proof. iIntros "HP ??". Show. done. Qed.
+Proof. iIntros "HP ??". Show. simpl. Show. done. Qed.
 
 Lemma test_big_sepL2_simpl x1 x2 (l1 l2 : list nat) P :
   P -∗
   ([∗ list] k↦y1;y2 ∈ []; l2, <affine> ⌜ y1 = y2 ⌝) -∗
   ([∗ list] y1;y2 ∈ x1 :: l1; (x2 :: l2) ++ l2, <affine> ⌜ y1 = y2 ⌝) -∗
   P ∨ ([∗ list] y1;y2 ∈ x1 :: l1; x2 :: l2, True).
-Proof. iIntros "HP ?? /=". Show. by iLeft. Qed.
+Proof. iIntros "HP ??". Show. simpl. Show. by iLeft. Qed.
 
 Lemma test_big_sepL2_iDestruct (Φ : nat → nat → PROP) x1 x2 (l1 l2 : list nat) :
   ([∗ list] y1;y2 ∈ x1 :: l1; x2 :: l2, Φ y1 y2) -∗
