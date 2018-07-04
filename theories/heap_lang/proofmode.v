@@ -365,7 +365,7 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
     first [intros l | fail 1 "wp_alloc:" l "not fresh"];
       eexists; split;
         [pm_reflexivity || fail "wp_alloc:" H "not fresh"
-        |iDestruct Htmp as H; wp_expr_simpl; try wp_value_head] in
+        |iDestructHyp Htmp as H; wp_expr_simpl; try wp_value_head] in
   iStartProof;
   lazymatch goal with
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
