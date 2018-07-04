@@ -360,31 +360,32 @@ Tactic Notation "wp_apply" open_constr(lem) :=
     end).
 
 Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
+  let Htmp := iFresh in
   let finish _ :=
     first [intros l | fail 1 "wp_alloc:" l "not fresh"];
       eexists; split;
         [pm_reflexivity || fail "wp_alloc:" H "not fresh"
-        |wp_expr_simpl; try wp_value_head] in
+        |iDestruct Htmp as H; wp_expr_simpl; try wp_value_head] in
   iStartProof;
   lazymatch goal with
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_wp_alloc _ _ _ _ H K); [iSolveTC|..])
+         eapply (tac_wp_alloc _ _ _ _ Htmp K); [iSolveTC|..])
       |fail 1 "wp_alloc: cannot find 'Alloc' in" e];
     [iSolveTC
     |finish ()]
   | |- envs_entails _ (twp ?s ?E ?e ?Q) =>
     first
       [reshape_expr e ltac:(fun K e' =>
-         eapply (tac_twp_alloc _ _ _ H K); [iSolveTC|..])
+         eapply (tac_twp_alloc _ _ _ Htmp K); [iSolveTC|..])
       |fail 1 "wp_alloc: cannot find 'Alloc' in" e];
     finish ()
   | _ => fail "wp_alloc: not a 'wp'"
   end.
 
 Tactic Notation "wp_alloc" ident(l) :=
-  let H := iFresh in wp_alloc l as H.
+  wp_alloc l as "?".
 
 Tactic Notation "wp_load" :=
   let solve_mapsto _ :=
