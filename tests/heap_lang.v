@@ -27,7 +27,7 @@ Section tests.
   Lemma heap_e_spec E : WP heap_e @ E {{ v, ⌜v = #2⌝ }}%I.
   Proof.
     iIntros "". rewrite /heap_e. Show.
-    wp_alloc l. wp_let. wp_load. Show.
+    wp_alloc l as "?". wp_let. wp_load. Show.
     wp_op. wp_store. by wp_load.
   Qed.
 
@@ -39,7 +39,7 @@ Section tests.
   Lemma heap_e2_spec E : WP heap_e2 @ E [{ v, ⌜v = #2⌝ }]%I.
   Proof.
     iIntros "". rewrite /heap_e2.
-    wp_alloc l. wp_let. wp_alloc l'. wp_let.
+    wp_alloc l as "Hl". Show. wp_let. wp_alloc l'. wp_let.
     wp_load. wp_op. wp_store. wp_load. done.
   Qed.
 
