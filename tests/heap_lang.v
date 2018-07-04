@@ -123,6 +123,14 @@ Section tests.
     iIntros (?) "?". wp_cas as ? | ?. done. done.
   Qed.
 
+  Lemma wp_alloc_split :
+    WP Alloc #0 {{ _, True }}%I.
+  Proof. wp_alloc l as "[Hl1 Hl2]". Show. done. Qed.
+
+  Lemma wp_alloc_drop :
+    WP Alloc #0 {{ _, True }}%I.
+  Proof. wp_alloc l as "_". Show. done. Qed.
+
 End tests.
 
 Section printing_tests.
