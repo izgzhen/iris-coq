@@ -36,6 +36,8 @@ Changes in Coq:
 * The `iInv` tactic can now be used without the second argument (the name for
   the closing update).  It will then instead add the obligation to close the
   invariant to the goal.
+* Added support for defining derived connectives involving n-ary binders using
+  telescopes.
 * Improved pretty-printing of Iris connectives (in particular WP and fancy
   updates) when Coq has to line-wrap the output.
 * Rename `timelessP` -> `timeless` (projection of the `Timeless` class)
