@@ -27,8 +27,8 @@ Tactic Notation "wp_expr_eval" tactic(t) :=
   | _ => fail "wp_expr_eval: not a 'wp'"
   end.
 
-Ltac wp_expr_simpl := (wp_expr_eval simpl); pm_prettify.
-Ltac wp_expr_simpl_subst := (wp_expr_eval simpl_subst); pm_prettify.
+Ltac wp_expr_simpl := wp_expr_eval simpl.
+Ltac wp_expr_simpl_subst := wp_expr_eval simpl_subst.
 
 Lemma tac_wp_pure `{heapG Σ} Δ Δ' s E e1 e2 φ Φ :
   PureExec φ e1 e2 →
@@ -61,7 +61,7 @@ Proof. rewrite envs_entails_eq=> ? ->. by apply twp_value. Qed.
 Ltac wp_value_head :=
   first [eapply tac_wp_value || eapply tac_twp_value];
     [iSolveTC
-    |iEval (lazy beta; simpl of_val)].
+    |reduction.pm_prettify; iEval (simpl of_val)].
 
 Tactic Notation "wp_pure" open_constr(efoc) :=
   iStartProof;
@@ -118,12 +118,12 @@ Proof. rewrite envs_entails_eq=> -> ->. by apply: twp_bind. Qed.
 Ltac wp_bind_core K :=
   lazymatch eval hnf in K with
   | [] => idtac
-  | _ => eapply (tac_wp_bind K); [simpl; reflexivity|lazy beta]
+  | _ => eapply (tac_wp_bind K); [simpl; reflexivity|reduction.pm_prettify]
   end.
 Ltac twp_bind_core K :=
   lazymatch eval hnf in K with
   | [] => idtac
-  | _ => eapply (tac_twp_bind K); [simpl; reflexivity|lazy beta]
+  | _ => eapply (tac_twp_bind K); [simpl; reflexivity|reduction.pm_prettify]
   end.
 
 Tactic Notation "wp_bind" open_constr(efoc) :=
