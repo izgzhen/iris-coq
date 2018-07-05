@@ -21,12 +21,12 @@ spatial context what action should be performed upon introducing the modality:
 
 Formally, these actions correspond to the following inductive type: *)
 
-Inductive modality_intro_spec (PROP1 : bi) : bi → Type :=
-  | MIEnvIsEmpty {PROP2 : bi} : modality_intro_spec PROP1 PROP2
-  | MIEnvForall (C : PROP1 → Prop) : modality_intro_spec PROP1 PROP1
-  | MIEnvTransform {PROP2 : bi} (C : PROP2 → PROP1 → Prop) : modality_intro_spec PROP1 PROP2
-  | MIEnvClear {PROP2} : modality_intro_spec PROP1 PROP2
-  | MIEnvId : modality_intro_spec PROP1 PROP1.
+Inductive modality_action (PROP1 : bi) : bi → Type :=
+  | MIEnvIsEmpty {PROP2 : bi} : modality_action PROP1 PROP2
+  | MIEnvForall (C : PROP1 → Prop) : modality_action PROP1 PROP1
+  | MIEnvTransform {PROP2 : bi} (C : PROP2 → PROP1 → Prop) : modality_action PROP1 PROP2
+  | MIEnvClear {PROP2} : modality_action PROP1 PROP2
+  | MIEnvId : modality_action PROP1 PROP1.
 Arguments MIEnvIsEmpty {_ _}.
 Arguments MIEnvForall {_} _.
 Arguments MIEnvTransform {_ _} _.
@@ -35,8 +35,8 @@ Arguments MIEnvId {_}.
 
 Notation MIEnvFilter C := (MIEnvTransform (TCDiag C)).
 
-Definition modality_intro_spec_intuitionistic {PROP1 PROP2}
-    (s : modality_intro_spec PROP1 PROP2) : (PROP1 → PROP2) → Prop :=
+Definition modality_intuitionistic_action_spec {PROP1 PROP2}
+    (s : modality_action PROP1 PROP2) : (PROP1 → PROP2) → Prop :=
   match s with
   | MIEnvIsEmpty => λ M, True
   | MIEnvForall C => λ M,
@@ -49,8 +49,8 @@ Definition modality_intro_spec_intuitionistic {PROP1 PROP2}
   | MIEnvId => λ M, ∀ P, □ P ⊢ M (□ P)
   end.
 
-Definition modality_intro_spec_spatial {PROP1 PROP2}
-    (s : modality_intro_spec PROP1 PROP2) : (PROP1 → PROP2) → Prop :=
+Definition modality_spatial_action_spec {PROP1 PROP2}
+    (s : modality_action PROP1 PROP2) : (PROP1 → PROP2) → Prop :=
   match s with
   | MIEnvIsEmpty => λ M, True
   | MIEnvForall C => λ M, ∀ P, C P → P ⊢ M P
@@ -62,9 +62,9 @@ Definition modality_intro_spec_spatial {PROP1 PROP2}
 (* A modality is then a record packing together the modality with the laws it
 should satisfy to justify the given actions for both contexts: *)
 Record modality_mixin {PROP1 PROP2 : bi} (M : PROP1 → PROP2)
-    (pspec sspec : modality_intro_spec PROP1 PROP2) := {
-  modality_mixin_intuitionistic : modality_intro_spec_intuitionistic pspec M;
-  modality_mixin_spatial : modality_intro_spec_spatial sspec M;
+    (iaction saction : modality_action PROP1 PROP2) := {
+  modality_mixin_intuitionistic : modality_intuitionistic_action_spec iaction M;
+  modality_mixin_spatial : modality_spatial_action_spec saction M;
   modality_mixin_emp : emp ⊢ M emp;
   modality_mixin_mono P Q : (P ⊢ Q) → M P ⊢ M Q;
   modality_mixin_sep P Q : M P ∗ M Q ⊢ M (P ∗ Q)
@@ -72,29 +72,29 @@ Record modality_mixin {PROP1 PROP2 : bi} (M : PROP1 → PROP2)
 
 Record modality (PROP1 PROP2 : bi) := Modality {
   modality_car :> PROP1 → PROP2;
-  modality_intuitionistic_spec : modality_intro_spec PROP1 PROP2;
-  modality_spatial_spec : modality_intro_spec PROP1 PROP2;
+  modality_intuitionistic_action : modality_action PROP1 PROP2;
+  modality_spatial_action : modality_action PROP1 PROP2;
   modality_mixin_of :
-    modality_mixin modality_car modality_intuitionistic_spec modality_spatial_spec
+    modality_mixin modality_car modality_intuitionistic_action modality_spatial_action
 }.
 Arguments Modality {_ _} _ {_ _} _.
-Arguments modality_intuitionistic_spec {_ _} _.
-Arguments modality_spatial_spec {_ _} _.
+Arguments modality_intuitionistic_action {_ _} _.
+Arguments modality_spatial_action {_ _} _.
 
 Section modality.
   Context {PROP1 PROP2} (M : modality PROP1 PROP2).
 
   Lemma modality_intuitionistic_transform C P Q :
-    modality_intuitionistic_spec M = MIEnvTransform C → C P Q → □ P ⊢ M (□ Q).
+    modality_intuitionistic_action M = MIEnvTransform C → C P Q → □ P ⊢ M (□ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_and_transform C P Q :
-    modality_intuitionistic_spec M = MIEnvTransform C → M P ∧ M Q ⊢ M (P ∧ Q).
+    modality_intuitionistic_action M = MIEnvTransform C → M P ∧ M Q ⊢ M (P ∧ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_spatial_transform C P Q :
-    modality_spatial_spec M = MIEnvTransform C → C P Q → P ⊢ M Q.
+    modality_spatial_action M = MIEnvTransform C → C P Q → P ⊢ M Q.
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_spatial_clear P :
-    modality_spatial_spec M = MIEnvClear → Absorbing (M P).
+    modality_spatial_action M = MIEnvClear → Absorbing (M P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
 
   Lemma modality_emp : emp ⊢ M emp.
@@ -115,23 +115,23 @@ Section modality1.
   Context {PROP} (M : modality PROP PROP).
 
   Lemma modality_intuitionistic_forall C P :
-    modality_intuitionistic_spec M = MIEnvForall C → C P → □ P ⊢ M (□ P).
+    modality_intuitionistic_action M = MIEnvForall C → C P → □ P ⊢ M (□ P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_and_forall C P Q :
-    modality_intuitionistic_spec M = MIEnvForall C → M P ∧ M Q ⊢ M (P ∧ Q).
+    modality_intuitionistic_action M = MIEnvForall C → M P ∧ M Q ⊢ M (P ∧ Q).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_intuitionistic_id P :
-    modality_intuitionistic_spec M = MIEnvId → □ P ⊢ M (□ P).
+    modality_intuitionistic_action M = MIEnvId → □ P ⊢ M (□ P).
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_spatial_forall C P :
-    modality_spatial_spec M = MIEnvForall C → C P → P ⊢ M P.
+    modality_spatial_action M = MIEnvForall C → C P → P ⊢ M P.
   Proof. destruct M as [??? []]; naive_solver. Qed.
   Lemma modality_spatial_id P :
-    modality_spatial_spec M = MIEnvId → P ⊢ M P.
+    modality_spatial_action M = MIEnvId → P ⊢ M P.
   Proof. destruct M as [??? []]; naive_solver. Qed.
 
   Lemma modality_intuitionistic_forall_big_and C Ps :
-    modality_intuitionistic_spec M = MIEnvForall C →
+    modality_intuitionistic_action M = MIEnvForall C →
     Forall C Ps → □ [∧] Ps ⊢ M (□ [∧] Ps).
   Proof.
     induction 2 as [|P Ps ? _ IH]; simpl.
@@ -140,7 +140,7 @@ Section modality1.
       by rewrite {1}(modality_intuitionistic_forall _ P).
   Qed.
   Lemma modality_spatial_forall_big_sep C Ps :
-    modality_spatial_spec M = MIEnvForall C →
+    modality_spatial_action M = MIEnvForall C →
     Forall C Ps → [∗] Ps ⊢ M ([∗] Ps).
   Proof.
     induction 2 as [|P Ps ? _ IH]; simpl.

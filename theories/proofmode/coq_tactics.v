@@ -1068,7 +1068,7 @@ Inputs:
 Outputs:
 - [Γout] : the resulting environment. *)
 Inductive IntoModalPersistentEnv {PROP2} : ∀ {PROP1} (M : modality PROP1 PROP2)
-    (Γin : env PROP2) (Γout : env PROP1), modality_intro_spec PROP1 PROP2 → Prop :=
+    (Γin : env PROP2) (Γout : env PROP1), modality_action PROP1 PROP2 → Prop :=
   | MIEnvIsEmpty_persistent {PROP1} (M : modality PROP1 PROP2) :
      IntoModalPersistentEnv M Enil Enil MIEnvIsEmpty
   | MIEnvForall_persistent (M : modality PROP2 PROP2) (C : PROP2 → Prop) Γ :
@@ -1100,7 +1100,7 @@ Outputs:
 - [Γout] : the resulting environment.
 - [filtered] : a Boolean indicating if non-affine hypotheses have been cleared. *)
 Inductive IntoModalSpatialEnv {PROP2} : ∀ {PROP1} (M : modality PROP1 PROP2)
-    (Γin : env PROP2) (Γout : env PROP1), modality_intro_spec PROP1 PROP2 → bool → Prop :=
+    (Γin : env PROP2) (Γout : env PROP1), modality_action PROP1 PROP2 → bool → Prop :=
   | MIEnvIsEmpty_spatial {PROP1} (M : modality PROP1 PROP2) :
      IntoModalSpatialEnv M Enil Enil MIEnvIsEmpty false
   | MIEnvForall_spatial (M : modality PROP2 PROP2) (C : PROP2 → Prop) Γ :
@@ -1183,8 +1183,8 @@ Section tac_modal_intro.
   (** The actual introduction tactic *)
   Lemma tac_modal_intro {A} (sel : A) Γp Γs n Γp' Γs' Q Q' fi :
     FromModal M sel Q' Q →
-    IntoModalPersistentEnv M Γp Γp' (modality_intuitionistic_spec M) →
-    IntoModalSpatialEnv M Γs Γs' (modality_spatial_spec M) fi →
+    IntoModalPersistentEnv M Γp Γp' (modality_intuitionistic_action M) →
+    IntoModalSpatialEnv M Γs Γs' (modality_spatial_action M) fi →
     (if fi then Absorbing Q' else TCTrue) →
     envs_entails (Envs Γp' Γs' n) Q → envs_entails (Envs Γp Γs n) Q'.
   Proof.
@@ -1199,7 +1199,7 @@ Section tac_modal_intro.
         { destruct HΓs as [| |?????? []| |]; eauto. }
         naive_solver. }
     assert (□ [∧] Γp ⊢ M (□ [∧] Γp'))%I as HMp.
-    { remember (modality_intuitionistic_spec M).
+    { remember (modality_intuitionistic_action M).
       destruct HΓp as [?|M C Γp ?%TCForall_Forall|? M C Γp Γp' []|? M Γp|M Γp]; simpl.
       - rewrite {1}intuitionistically_elim_emp (modality_emp M)
           intuitionistically_True_emp //.
@@ -1210,7 +1210,7 @@ Section tac_modal_intro.
           intuitionistically_True_emp.
       - eauto using modality_intuitionistic_id. }
     move: HQ'; rewrite -HQ pure_True // left_id HMp=> HQ' {HQ Hwf HMp}.
-    remember (modality_spatial_spec M).
+    remember (modality_spatial_action M).
     destruct HΓs as [?|M C Γs ?%TCForall_Forall|? M C Γs Γs' fi []|? M Γs|M Γs]; simpl.
     - by rewrite -HQ' /= !right_id.
     - rewrite -HQ' {1}(modality_spatial_forall_big_sep _ _ Γs) //.
