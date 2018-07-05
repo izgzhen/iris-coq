@@ -557,11 +557,26 @@ Section wandM.
   Qed.
 End wandM.
 
-Definition big_op_singleton_def (P : nat → PROP) (l : list nat) :=
-  ([∗ list] n ∈ l, P n)%I.
-Lemma test_iApply_big_op_singleton (P : nat → PROP) :
-  P 1 -∗ big_op_singleton_def P [1].
-Proof. iIntros "?". iApply big_sepL_singleton. iAssumption. Qed.
+Definition modal_if_def b (P : PROP) :=
+  (□?b P)%I.
+Lemma modal_if_lemma1 b P :
+  False -∗ □?b P.
+Proof. iIntros "?". by iExFalso. Qed.
+Lemma test_iApply_prettification1 (P : PROP) :
+  False -∗ modal_if_def true P.
+Proof.
+  (* Make sure the goal is not prettified before [iApply] unifies. *)
+  iIntros "?". rewrite /modal_if_def. iApply modal_if_lemma1. iAssumption.
+Qed.
+Lemma modal_if_lemma2 P :
+  False -∗ □?false P.
+Proof. iIntros "?". by iExFalso. Qed.
+Lemma test_iApply_prettification2 (P  : PROP) :
+  False -∗ ∃ b, □?b P.
+Proof.
+  (* Make sure the conclusion of the lemma is not prettified too early. *)
+  iIntros "?". iExists _. iApply modal_if_lemma2. done.
+Qed.
 
 End tests.
 
