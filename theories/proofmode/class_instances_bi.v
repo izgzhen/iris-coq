@@ -385,7 +385,7 @@ Proof.
 Qed.
 
 Global Instance into_wand_wandM p q mP' P Q :
-  FromAssumption q P (pm_default emp%I mP') → IntoWand p q (mP' -∗? Q) P Q.
+  FromAssumption q P (default emp%I mP') → IntoWand p q (mP' -∗? Q) P Q.
 Proof. rewrite /IntoWand wandM_sound. exact: into_wand_wand. Qed.
 
 Global Instance into_wand_and_l p q R1 R2 P' Q' :
@@ -510,7 +510,7 @@ Qed.
 Global Instance from_wand_wand P1 P2 : FromWand (P1 -∗ P2) P1 P2.
 Proof. by rewrite /FromWand. Qed.
 Global Instance from_wand_wandM mP1 P2 :
-  FromWand (mP1 -∗? P2) (pm_default emp mP1)%I P2.
+  FromWand (mP1 -∗? P2) (default emp mP1)%I P2.
 Proof. by rewrite /FromWand wandM_sound. Qed.
 Global Instance from_wand_embed `{BiEmbed PROP PROP'} P Q1 Q2 :
   FromWand P Q1 Q2 → FromWand ⎡P⎤ ⎡Q1⎤ ⎡Q2⎤.
@@ -1079,6 +1079,9 @@ Proof.
   - iApply (Hacc with "Hinv Hin"). done.
 Qed.
 
+(* This uses [pm_default] because, after inference, all accessors will have
+[None] or [Some _] there, so we want to reduce the combinator before showing the
+goal to the user. *)
 Global Instance elim_inv_acc_with_close {X : Type}
        φ1 φ2 Pinv Pin
        M1 M2 α β mγ Q Q' :

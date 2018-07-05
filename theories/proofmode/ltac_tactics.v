@@ -1108,7 +1108,7 @@ Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     lazymatch pats with
     | [] =>
       lazymatch found with
-      | true => idtac
+      | true => pm_prettify (* post-tactic prettification *)
       | false => fail "iDestruct:" pat "should contain exactly one proper introduction pattern"
       end
     | ISimpl :: ?pats => simpl; find_pat found pats

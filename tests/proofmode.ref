@@ -1,3 +1,5 @@
+"demo_0"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -19,6 +21,8 @@
   --------------------------------------□
   Q ∨ P
   
+"test_iDestruct_and_emp"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -59,6 +63,8 @@ In nested Ltac calls to "iSpecialize (open_constr)",
 "iSpecializePat (open_constr) (constr)" and "iSpecializePat_go", last call
 failed.
 Tactic failure: iSpecialize: cannot instantiate (⌜φ⌝ → P -∗ False)%I with P.
+"test_iNext_plus_3"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -68,6 +74,8 @@ Tactic failure: iSpecialize: cannot instantiate (⌜φ⌝ → P -∗ False)%I wi
   --------------------------------------∗
   ▷^(S n + S m) emp
   
+"test_iFrame_later_1"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -76,6 +84,8 @@ Tactic failure: iSpecialize: cannot instantiate (⌜φ⌝ → P -∗ False)%I wi
   --------------------------------------∗
   ▷ emp
   
+"test_iFrame_later_2"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -89,6 +99,8 @@ In nested Ltac calls to "iFrame (constr)",
 "<iris.proofmode.ltac_tactics.iFrame_go>" and
 "<iris.proofmode.ltac_tactics.iFrameHyp>", last call failed.
 Tactic failure: iFrame: cannot frame Q.
+"test_and_sep_affine_bi"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -100,6 +112,8 @@ Tactic failure: iFrame: cannot frame Q.
   --------------------------------------∗
   □ P
   
+"test_big_sepL_simpl"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -126,6 +140,8 @@ Tactic failure: iFrame: cannot frame Q.
   --------------------------------------∗
   P
   
+"test_big_sepL2_simpl"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -153,6 +169,8 @@ Tactic failure: iFrame: cannot frame Q.
   --------------------------------------∗
   P ∨ True ∗ ([∗ list] _;_ ∈ l1;l2, True)
   
+"test_big_sepL2_iDestruct"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -165,6 +183,8 @@ Tactic failure: iFrame: cannot frame Q.
   --------------------------------------∗
   <absorb> Φ x1 x2
   
+"test_reducing_after_iDestruct"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -173,6 +193,8 @@ Tactic failure: iFrame: cannot frame Q.
   --------------------------------------∗
   True
   
+"test_reducing_after_iApply"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -181,6 +203,8 @@ Tactic failure: iFrame: cannot frame Q.
   --------------------------------------□
   □ emp
   
+"test_reducing_after_iApply_late_evar"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -189,6 +213,8 @@ Tactic failure: iFrame: cannot frame Q.
   --------------------------------------□
   □ emp
   
+"test_wandM"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -197,7 +223,7 @@ Tactic failure: iFrame: cannot frame Q.
   ============================
   "HPQ" : mP -∗? Q
   "HQR" : Q -∗ R
-  "HP" : pm_default emp mP
+  "HP" : default emp mP
   --------------------------------------∗
   R
   
@@ -207,10 +233,28 @@ Tactic failure: iFrame: cannot frame Q.
   mP : option PROP
   Q, R : PROP
   ============================
-  "HP" : pm_default emp mP
+  "HP" : default emp mP
   --------------------------------------∗
-  pm_default emp mP
+  default emp mP
   
+"elim_mod_accessor"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  X : Type
+  E1, E2 : coPset.coPset
+  α : X → PROP
+  β : X → PROP
+  γ : X → option PROP
+  ============================
+  "Hacc" : ∃ x : X, α x ∗ (β x ={E2,E1}=∗ default emp (γ x))
+  --------------------------------------∗
+  |={E2,E1}=> True
+  
+"print_long_line_1"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -233,6 +277,8 @@ Tactic failure: iFrame: cannot frame Q.
   --------------------------------------∗
   True
   
+"print_long_line_2"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -255,6 +301,8 @@ Tactic failure: iFrame: cannot frame Q.
   --------------------------------------∗
   True
   
+"long_impl"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -265,6 +313,8 @@ Tactic failure: iFrame: cannot frame Q.
   PPPPPPPPPPPPPPPPP
   → QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
   
+"long_impl_nested"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -276,6 +326,8 @@ Tactic failure: iFrame: cannot frame Q.
   → QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
     → QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
   
+"long_wand"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -286,6 +338,8 @@ Tactic failure: iFrame: cannot frame Q.
   PPPPPPPPPPPPPPPPP
   -∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
   
+"long_wand_nested"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -297,6 +351,8 @@ Tactic failure: iFrame: cannot frame Q.
   -∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
      -∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
   
+"long_fupd"
+     : string
 1 subgoal
   
   PROP : sbi
@@ -308,6 +364,8 @@ Tactic failure: iFrame: cannot frame Q.
   PPPPPPPPPPPPPPPPP
   ={E}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
   
+"long_fupd_nested"
+     : string
 1 subgoal
   
   PROP : sbi
