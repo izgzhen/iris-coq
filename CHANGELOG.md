@@ -17,15 +17,19 @@ Changes in and extensions of the theory:
 * [#] Add weakest preconditions for total program correctness.
 * [#] "(Potentially) stuck" weakest preconditions are no longer considered
   experimental.
+* [#] The Löb rule is now a derived rule; it follows from later-intro, later
+  being contractive and the fact that we can take fixpoints of contractive
+  functions.
 
 Changes in Coq:
 
 * An all-new generalized proofmode that abstracts away from Iris!  The proofmode
-  can now be used with non-step-indexed and even non-affine (i.e., linear)
-  logics.  TODO: Add reference to paper.  Developments instantiating the
-  proofmode typeclasses may need significant changes.  For developments just
-  using the proofmode tactics, porting should not be too much effort.  Notable
-  things to port are:
+  can now be used with logics derived from Iris (like iGPS), with
+  non-step-indexed logics and even with non-affine (i.e., linear) logics.  See
+  <http://iris-project.org/mosel/> for the corresponding paper.
+  Developments instantiating the proofmode typeclasses may need significant
+  changes.  For developments just using the proofmode tactics, porting should
+  not be too much effort.  Notable things to port are:
   - All the BI laws moved from the `uPred` module to the `bi` module.  For
     example, `uPred.later_equivI` became `bi.later_equivI`.
   - Big-ops are automatically imported, imports of `iris.base_logic.big_op` have
@@ -38,8 +42,13 @@ Changes in Coq:
   invariant to the goal.
 * Added support for defining derived connectives involving n-ary binders using
   telescopes.
+* The proof mode now more consistently "prettifies" the goal after each tactic.
+  Prettification also simplifies some BI connectives, like conditional
+  modalities and telescope quantifiers.
 * Improved pretty-printing of Iris connectives (in particular WP and fancy
-  updates) when Coq has to line-wrap the output.
+  updates) when Coq has to line-wrap the output.  This goes hand-in-hand with an
+  improved test suite that also tests pretty-printing.
+* Added a `gmultiset` RA.
 * Rename `timelessP` -> `timeless` (projection of the `Timeless` class)
 * The CMRA axiom `cmra_extend` is now stated in `Type`, using `sigT` instead of
   in `Prop` using `exists`. This makes it possible to define the function space
