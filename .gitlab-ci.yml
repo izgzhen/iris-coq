@@ -26,11 +26,11 @@ variables:
 
 ## Build jobs
 
-#build-coq.dev:
-#  <<: *template
-#  variables:
-#    OPAM_PINS: "coq version dev"
-#    VALIDATE: "1"
+build-coq.dev:
+  <<: *template
+  variables:
+    OPAM_PINS: "coq version dev"
+    VALIDATE: "1"
 
 build-coq.8.8.dev:
   <<: *template
