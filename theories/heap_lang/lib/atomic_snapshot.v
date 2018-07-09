@@ -217,29 +217,19 @@ Section atomic_snapshot.
     iMod (own_op with "Ht") as "[Ht● Ht◯]". iModIntro. iFrame.
   Qed.
 
-  Lemma fmap_undo {A B} (f : A -> B) (m : gmap Z A) k v :
-    f <$> m !! k = Some v ->
-    exists v', m !! k = Some v' /\ v = f v'.
-  Proof.
-    intros Hl. destruct (m !! k); inversion Hl. subst. eauto.
-  Qed.
-
   Lemma timestamp_sub γ (T1 T2 : gmap Z val):
     own γ (● gmap_to_UR T1) ∗ own γ (◯ gmap_to_UR T2) -∗
     ⌜forall t x, T2 !! t = Some x -> T1 !! t = Some x⌝.
   Proof.
     iIntros "[Hγ⚫ Hγ◯]".
     iDestruct (own_valid_2 with "Hγ⚫ Hγ◯") as
-        %[H Hv]%auth_valid_discrete_2. iPureIntro. intros t x Ht.
-    pose proof (iffLR (lookup_included (gmap_to_UR T2) (gmap_to_UR T1)) H t) as Hsub.
-    repeat rewrite lookup_fmap in Hsub.
-    rewrite Ht in Hsub. simpl in Hsub.
-    pose proof (mk_is_Some (Some (to_agree x)) _ eq_refl) as Hsome.
-    pose proof (is_Some_included _ _ Hsub Hsome) as Hsome'; clear Hsome.
-    destruct Hsome' as [c Heqx]. rewrite Heqx in Hsub.
-    apply (iffLR (Some_included_total _ _)) in Hsub.
-    destruct (fmap_undo to_agree _ _ _ Heqx) as [c' [Heq1 Heq2]]. subst.
-    apply to_agree_included  in Hsub. apply leibniz_equiv in Hsub. subst. done.
+        %[H Hv]%auth_valid_discrete_2. iPureIntro. intros t x HT2.
+    pose proof (iffLR (lookup_included (gmap_to_UR T2) (gmap_to_UR T1)) H t) as Ht.
+    rewrite !lookup_fmap HT2 /= in Ht.
+    destruct (is_Some_included _ _ Ht) as [? [t2 [Ht2 ->]]%fmap_Some_1]; first by eauto.
+    revert Ht.
+    rewrite Ht2 Some_included_total to_agree_included. fold_leibniz.
+    by intros ->.
   Qed.
 
   Lemma writeY_spec e (y2: val) γ p :
