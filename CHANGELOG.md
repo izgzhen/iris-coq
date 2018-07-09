@@ -23,12 +23,17 @@ Changes in and extensions of the theory:
 
 Changes in Coq:
 
-* An all-new generalized proofmode that abstracts away from Iris!  The proofmode
-  can now be used with logics derived from Iris (like iGPS), with
-  non-step-indexed logics and even with non-affine (i.e., linear) logics.  See
-  <http://iris-project.org/mosel/> for the corresponding paper.
-  Developments instantiating the proofmode typeclasses may need significant
-  changes.  For developments just using the proofmode tactics, porting should
+* An all-new generalized proof mode that abstracts away from Iris!  See
+  <http://iris-project.org/mosel/> for the corresponding paper.  Major new
+  features:
+  - The proof mode can now be used with logics derived from Iris (like iGPS),
+    with non-step-indexed logics and even with non-affine (i.e., linear) logics.
+  - `iModIntro` is more flexible and more powerful, it now also subsumes
+    `iNext` and `iAlways`.
+  - General infrastructure for deriving a logic for monotone predicates over
+    an existing logic (see the paper for more details).
+  Developments instantiating the proof mode typeclasses may need significant
+  changes.  For developments just using the proof mode tactics, porting should
   not be too much effort.  Notable things to port are:
   - All the BI laws moved from the `uPred` module to the `bi` module.  For
     example, `uPred.later_equivI` became `bi.later_equivI`.
