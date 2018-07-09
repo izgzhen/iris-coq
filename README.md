@@ -73,9 +73,10 @@ followed by `make build-dep`.
   constructions that work for any such language.
 * The folder [bi](theories/bi) contains the BI++ laws, as well as derived
   connectives, laws and constructions that are applicable for general BIS.
-* The folder [proofmode](theories/proofmode) contains MoSeL, which extends Coq
-  with contexts for intuitionistic and spatial BI++ assertions. It also contains
-  tactics for interactive proofs. Documentation can be found in
+* The folder [proofmode](theories/proofmode) contains
+  [MoSeL](http://iris-project.org/mosel/), which extends Coq with contexts for
+  intuitionistic and spatial BI++ assertions. It also contains tactics for
+  interactive proofs. Documentation can be found in
   [ProofMode.md](ProofMode.md).
 * The folder [heap_lang](theories/heap_lang) defines the ML-like concurrent heap
   language
