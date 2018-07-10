@@ -6,7 +6,7 @@ Set Default Proof Using "Type".
 
 Definition heap_total Σ `{heapPreG Σ} s e σ φ :
   (∀ `{heapG Σ}, WP e @ s; ⊤ [{ v, ⌜φ v⌝ }]%I) →
-  sn step ([e], σ).
+  sn erased_step ([e], σ).
 Proof.
   intros Hwp; eapply (twp_total _ _); iIntros (?) "".
   iMod (gen_heap_init σ) as (?) "Hh".

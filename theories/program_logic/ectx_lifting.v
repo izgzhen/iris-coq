@@ -18,13 +18,13 @@ Lemma wp_lift_head_step_fupd {s E Φ} e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E,∅}=∗
     ⌜head_reducible e1 σ1⌝ ∗
-    ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={∅,∅,E}▷=∗
+    ∀ κ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={∅,∅,E}▷=∗
       state_interp σ2 ∗ WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
   iIntros (?) "H". iApply wp_lift_step_fupd=>//. iIntros (σ1) "Hσ".
   iMod ("H" with "Hσ") as "[% H]"; iModIntro.
-  iSplit; first by destruct s; eauto. iIntros (e2 σ2 efs) "%".
+  iSplit; first by destruct s; eauto. iIntros (κ e2 σ2 efs) "%".
   iApply "H"; eauto.
 Qed.
 
@@ -32,12 +32,12 @@ Lemma wp_lift_head_step {s E Φ} e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E,∅}=∗
     ⌜head_reducible e1 σ1⌝ ∗
-    ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={∅,E}=∗
+    ▷ ∀ κ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={∅,E}=∗
       state_interp σ2 ∗ WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
   iIntros (?) "H". iApply wp_lift_head_step_fupd; [done|]. iIntros (?) "?".
-  iMod ("H" with "[$]") as "[$ H]". iIntros "!>" (e2 σ2 efs ?) "!> !>". by iApply "H".
+  iMod ("H" with "[$]") as "[$ H]". iIntros "!>" (κ e2 σ2 efs ?) "!> !>". by iApply "H".
 Qed.
 
 Lemma wp_lift_head_stuck E Φ e :
@@ -52,15 +52,15 @@ Qed.
 
 Lemma wp_lift_pure_head_step {s E E' Φ} e1 :
   (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 e2 σ2 efs, head_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
-  (|={E,E'}▷=> ∀ e2 efs σ, ⌜head_step e1 σ e2 σ efs⌝ →
+  (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = None /\ σ1 = σ2) →
+  (|={E,E'}▷=> ∀ κ e2 efs σ, ⌜head_step e1 σ κ e2 σ efs⌝ →
     WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof using Hinh.
   iIntros (??) "H". iApply wp_lift_pure_step; [|by eauto|].
   { by destruct s; auto. }
   iApply (step_fupd_wand with "H"); iIntros "H".
-  iIntros (????). iApply "H"; eauto.
+  iIntros (?????). iApply "H"; eauto.
 Qed.
 
 Lemma wp_lift_pure_head_stuck E Φ e :
@@ -78,43 +78,43 @@ Lemma wp_lift_atomic_head_step_fupd {s E1 E2 Φ} e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E1}=∗
     ⌜head_reducible e1 σ1⌝ ∗
-    ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={E1,E2}▷=∗
+    ∀ κ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={E1,E2}▷=∗
       state_interp σ2 ∗
       from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E1 {{ Φ }}.
 Proof.
   iIntros (?) "H". iApply wp_lift_atomic_step_fupd; [done|].
   iIntros (σ1) "Hσ1". iMod ("H" with "Hσ1") as "[% H]"; iModIntro.
-  iSplit; first by destruct s; auto. iIntros (e2 σ2 efs) "%".
-  iApply "H"; auto.
+  iSplit; first by destruct s; auto. iIntros (κ e2 σ2 efs) "%".
+  iApply "H"; eauto.
 Qed.
 
 Lemma wp_lift_atomic_head_step {s E Φ} e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E}=∗
     ⌜head_reducible e1 σ1⌝ ∗
-    ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={E}=∗
+    ▷ ∀ κ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={E}=∗
       state_interp σ2 ∗
       from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
   iIntros (?) "H". iApply wp_lift_atomic_step; eauto.
   iIntros (σ1) "Hσ1". iMod ("H" with "Hσ1") as "[% H]"; iModIntro.
-  iSplit; first by destruct s; auto. iNext. iIntros (e2 σ2 efs) "%".
-  iApply "H"; auto.
+  iSplit; first by destruct s; auto. iNext. iIntros (κ e2 σ2 efs) "%".
+  iApply "H"; eauto.
 Qed.
 
 Lemma wp_lift_atomic_head_step_no_fork_fupd {s E1 E2 Φ} e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E1}=∗
     ⌜head_reducible e1 σ1⌝ ∗
-    ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={E1,E2}▷=∗
+    ∀ κ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={E1,E2}▷=∗
       ⌜efs = []⌝ ∗ state_interp σ2 ∗ from_option Φ False (to_val e2))
   ⊢ WP e1 @ s; E1 {{ Φ }}.
 Proof.
   iIntros (?) "H". iApply wp_lift_atomic_head_step_fupd; [done|].
   iIntros (σ1) "Hσ1". iMod ("H" $! σ1 with "Hσ1") as "[$ H]"; iModIntro.
-  iIntros (v2 σ2 efs) "%". iMod ("H" $! v2 σ2 efs with "[# //]") as "H".
+  iIntros (κ v2 σ2 efs) "%". iMod ("H" $! κ v2 σ2 efs with "[# //]") as "H".
   iIntros "!> !>". iMod "H" as "(% & $ & $)"; subst; auto.
 Qed.
 
@@ -122,20 +122,20 @@ Lemma wp_lift_atomic_head_step_no_fork {s E Φ} e1 :
   to_val e1 = None →
   (∀ σ1, state_interp σ1 ={E}=∗
     ⌜head_reducible e1 σ1⌝ ∗
-    ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ ={E}=∗
+    ▷ ∀ κ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={E}=∗
       ⌜efs = []⌝ ∗ state_interp σ2 ∗ from_option Φ False (to_val e2))
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
   iIntros (?) "H". iApply wp_lift_atomic_head_step; eauto.
   iIntros (σ1) "Hσ1". iMod ("H" $! σ1 with "Hσ1") as "[$ H]"; iModIntro.
-  iNext; iIntros (v2 σ2 efs) "%".
-  iMod ("H" $! v2 σ2 efs with "[# //]") as "(% & $ & $)"; subst; auto.
+  iNext; iIntros (κ v2 σ2 efs) "%".
+  iMod ("H" $! κ v2 σ2 efs with "[# //]") as "(% & $ & $)"; subst; auto.
 Qed.
 
 Lemma wp_lift_pure_det_head_step {s E E' Φ} e1 e2 efs :
   (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 e2' σ2 efs',
-    head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
+  (∀ σ1 κ e2' σ2 efs',
+    head_step e1 σ1 κ e2' σ2 efs' → κ = None /\ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
   (|={E,E'}▷=> WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof using Hinh.
@@ -146,8 +146,8 @@ Qed.
 Lemma wp_lift_pure_det_head_step_no_fork {s E E' Φ} e1 e2 :
   to_val e1 = None →
   (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 e2' σ2 efs',
-    head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+  (∀ σ1 κ e2' σ2 efs',
+    head_step e1 σ1 κ e2' σ2 efs' → κ = None /\ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
   (|={E,E'}▷=> WP e2 @ s; E {{ Φ }}) ⊢ WP e1 @ s; E {{ Φ }}.
 Proof using Hinh.
   intros. rewrite -(wp_lift_pure_det_step e1 e2 []) /= ?right_id; eauto.
@@ -157,8 +157,8 @@ Qed.
 Lemma wp_lift_pure_det_head_step_no_fork' {s E Φ} e1 e2 :
   to_val e1 = None →
   (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 e2' σ2 efs',
-    head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+  (∀ σ1 κ e2' σ2 efs',
+    head_step e1 σ1 κ e2' σ2 efs' → κ = None /\  σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
   ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
 Proof using Hinh.
   intros. rewrite -[(WP e1 @ s; _ {{ _ }})%I]wp_lift_pure_det_head_step_no_fork //.

@@ -12,7 +12,7 @@ Implicit Types e : expr Λ.
 
 Definition twptp_pre (twptp : list (expr Λ) → iProp Σ)
     (t1 : list (expr Λ)) : iProp Σ :=
-  (∀ t2 σ1 σ2, ⌜step (t1,σ1) (t2,σ2)⌝ -∗
+  (∀ t2 σ1 σ2, ⌜erased_step (t1,σ1) (t2,σ2)⌝ -∗
     state_interp σ1 ={⊤}=∗ state_interp σ2 ∗ twptp t2)%I.
 
 Lemma twptp_pre_mono (twptp1 twptp2 : list (expr Λ) → iProp Σ) :
@@ -51,7 +51,7 @@ Proof.
   iIntros (t1 t1' Ht) "Ht1". iRevert (t1' Ht); iRevert (t1) "Ht1".
   iApply twptp_ind; iIntros "!#" (t1) "IH"; iIntros (t1' Ht).
   rewrite twptp_unfold /twptp_pre. iIntros (t2 σ1 σ2 Hstep) "Hσ".
-  destruct (step_Permutation t1' t1 t2 σ1 σ2) as (t2'&?&?); try done.
+  destruct (erased_step_Permutation t1' t1 t2 σ1 σ2) as (t2'&?&?); try done.
   iMod ("IH" $! t2' with "[% //] Hσ") as "[$ [IH _]]". by iApply "IH".
 Qed.
 
@@ -62,20 +62,20 @@ Proof.
   iRevert (t1) "IH1"; iRevert (t2) "H2".
   iApply twptp_ind; iIntros "!#" (t2) "IH2". iIntros (t1) "IH1".
   rewrite twptp_unfold /twptp_pre. iIntros (t1'' σ1 σ2 Hstep) "Hσ1".
-  destruct Hstep as [e1 σ1' e2 σ2' efs' t1' t2' ?? Hstep]; simplify_eq/=.
+  destruct Hstep as [κ [e1 σ1' e2 σ2' efs' t1' t2' ?? Hstep]]; simplify_eq/=.
   apply app_eq_inv in H as [(t&?&?)|(t&?&?)]; subst.
   - destruct t as [|e1' ?]; simplify_eq/=.
-    + iMod ("IH2" with "[%] Hσ1") as "[$ [IH2 _]]".
+    + iMod ("IH2" with "[%] Hσ1") as "[$ [IH2 _]]". eexists.
       { by eapply step_atomic with (t1:=[]). }
       iModIntro. rewrite -{2}(left_id_L [] (++) (e2 :: _)). iApply "IH2".
       by setoid_rewrite (right_id_L [] (++)).
-    + iMod ("IH1" with "[%] Hσ1") as "[$ [IH1 _]]"; first by econstructor.
+    + iMod ("IH1" with "[%] Hσ1") as "[$ [IH1 _]]"; first by eexists; econstructor.
       iAssert (twptp t2) with "[IH2]" as "Ht2".
       { rewrite twptp_unfold. iApply (twptp_pre_mono with "[] IH2").
         iIntros "!# * [_ ?] //". }
       iModIntro. rewrite -assoc_L (comm _ t2) !cons_middle !assoc_L.
       by iApply "IH1".
-  - iMod ("IH2" with "[%] Hσ1") as "[$ [IH2 _]]"; first by econstructor.
+  - iMod ("IH2" with "[%] Hσ1") as "[$ [IH2 _]]"; first by eexists; econstructor.
     iModIntro. rewrite -assoc. by iApply "IH2".
 Qed.
 
@@ -85,7 +85,7 @@ Proof.
   iRevert (HE). iRevert (e E Φ) "He". iApply twp_ind.
   iIntros "!#" (e E Φ); iIntros "IH" (->).
   rewrite twptp_unfold /twptp_pre /twp_pre. iIntros (t1' σ1' σ2' Hstep) "Hσ1".
-  destruct Hstep as [e1 σ1 e2 σ2 efs [|? t1] t2 ?? Hstep];
+  destruct Hstep as [κ [e1 σ1 e2 σ2 efs [|? t1] t2 ?? Hstep]];
     simplify_eq/=; try discriminate_list.
   destruct (to_val e1) as [v|] eqn:He1.
   { apply val_stuck in Hstep; naive_solver. }
@@ -93,7 +93,7 @@ Proof.
   iMod ("IH" with "[% //]") as "[$ [[IH _] IHfork]]"; iModIntro.
   iApply (twptp_app [_] with "[IH]"); first by iApply "IH".
   clear. iInduction efs as [|e efs] "IH"; simpl.
-  { rewrite twptp_unfold /twptp_pre. iIntros (t2 σ1 σ2 Hstep).
+  { rewrite twptp_unfold /twptp_pre. iIntros (t2 σ1 σ2 [κ Hstep]).
     destruct Hstep; simplify_eq/=; discriminate_list. }
   iDestruct "IHfork" as "[[IH' _] IHfork]".
   iApply (twptp_app [_] with "[IH']"); [by iApply "IH'"|by iApply "IH"].
@@ -101,7 +101,7 @@ Qed.
 
 Notation world σ := (wsat ∗ ownE ⊤ ∗ state_interp σ)%I.
 
-Lemma twptp_total σ t : world σ -∗ twptp t -∗ ▷ ⌜sn step (t, σ)⌝.
+Lemma twptp_total σ t : world σ -∗ twptp t -∗ ▷ ⌜sn erased_step (t, σ)⌝.
 Proof.
   iIntros "Hw Ht". iRevert (σ) "Hw". iRevert (t) "Ht".
   iApply twptp_ind; iIntros "!#" (t) "IH"; iIntros (σ) "(Hw&HE&Hσ)".
@@ -117,7 +117,7 @@ Theorem twp_total Σ Λ `{invPreG Σ} s e σ Φ :
      (|={⊤}=> ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
        stateI σ ∗ WP e @ s; ⊤ [{ Φ }])%I) →
-  sn step ([e], σ). (* i.e. ([e], σ) is strongly normalizing *)
+  sn erased_step ([e], σ). (* i.e. ([e], σ) is strongly normalizing *)
 Proof.
   intros Hwp.
   eapply (soundness (M:=iResUR Σ) _ 1); iIntros "/=".

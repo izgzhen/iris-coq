@@ -7,7 +7,7 @@ Import uPred.
 
 Class irisG' (Λstate : Type) (Σ : gFunctors) := IrisG {
   iris_invG :> invG Σ;
-  state_interp : Λstate → iProp Σ;
+  state_interp : Λstate -> (*list (option Λobservations) → *) iProp Σ;
 }.
 Notation irisG Λ Σ := (irisG' (state Λ) Σ).
 Global Opaque iris_invG.
@@ -19,7 +19,7 @@ Definition wp_pre `{irisG Λ Σ} (s : stuckness)
   | Some v => |={E}=> Φ v
   | None => ∀ σ1,
      state_interp σ1 ={E,∅}=∗ ⌜if s is NotStuck then reducible e1 σ1 else True⌝ ∗
-     ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ ={∅,∅,E}▷=∗
+     ∀ κ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={∅,∅,E}▷=∗
        state_interp σ2 ∗ wp E e2 Φ ∗
        [∗ list] ef ∈ efs, wp ⊤ ef (λ _, True)
   end%I.
@@ -57,8 +57,8 @@ Proof.
   (* FIXME: figure out a way to properly automate this proof *)
   (* FIXME: reflexivity, as being called many times by f_equiv and f_contractive
   is very slow here *)
-  do 18 (f_contractive || f_equiv). apply IH; first lia.
-  intros v. eapply dist_le; eauto with lia.
+  do 20 (f_contractive || f_equiv). apply IH; first lia.
+  intros v. eapply dist_le; eauto with omega.
 Qed.
 Global Instance wp_proper s E e :
   Proper (pointwise_relation _ (≡) ==> (≡)) (wp (PROP:=iProp Σ) s E e).
@@ -81,7 +81,7 @@ Proof.
   { iApply ("HΦ" with "[> -]"). by iApply (fupd_mask_mono E1 _). }
   iIntros (σ1) "Hσ". iMod (fupd_intro_mask' E2 E1) as "Hclose"; first done.
   iMod ("H" with "[$]") as "[% H]".
-  iModIntro. iSplit; [by destruct s1, s2|]. iIntros (e2 σ2 efs Hstep).
+  iModIntro. iSplit; [by destruct s1, s2|]. iIntros (κ e2 σ2 efs Hstep).
   iMod ("H" with "[//]") as "H". iIntros "!> !>". iMod "H" as "($ & H & Hefs)".
   iMod "Hclose" as "_". iModIntro. iSplitR "Hefs".
   - iApply ("IH" with "[//] H HΦ").
@@ -105,13 +105,13 @@ Proof.
   destruct (to_val e) as [v|] eqn:He.
   { by iDestruct "H" as ">>> $". }
   iIntros (σ1) "Hσ". iMod "H". iMod ("H" $! σ1 with "Hσ") as "[$ H]".
-  iModIntro. iIntros (e2 σ2 efs Hstep).
+  iModIntro. iIntros (κ e2 σ2 efs Hstep).
   iMod ("H" with "[//]") as "H". iIntros "!>!>". iMod "H" as "(Hphy & H & $)". destruct s.
   - rewrite !wp_unfold /wp_pre. destruct (to_val e2) as [v2|] eqn:He2.
     + iDestruct "H" as ">> $". by iFrame.
-    + iMod ("H" with "[$]") as "[H _]". iDestruct "H" as %(? & ? & ? & ?).
-      by edestruct (atomic _ _ _ _ Hstep).
-  - destruct (atomic _ _ _ _ Hstep) as [v <-%of_to_val].
+    + iMod ("H" with "[$]") as "[H _]". iDestruct "H" as %(? & ? & ? & ? & ?).
+      by edestruct (atomic _ _ _ _ _ Hstep).
+  - destruct (atomic _ _ _ _ _ Hstep) as [v <-%of_to_val].
     iMod (wp_value_inv' with "H") as ">H". iFrame "Hphy". by iApply wp_value'.
 Qed.
 
@@ -121,7 +121,7 @@ Lemma wp_step_fupd s E1 E2 e P Φ :
 Proof.
   rewrite !wp_unfold /wp_pre. iIntros (-> ?) "HR H".
   iIntros (σ1) "Hσ". iMod "HR". iMod ("H" with "[$]") as "[$ H]".
-  iIntros "!>" (e2 σ2 efs Hstep). iMod ("H" $! e2 σ2 efs with "[% //]") as "H".
+  iIntros "!>" (κ e2 σ2 efs Hstep). iMod ("H" $! κ e2 σ2 efs with "[% //]") as "H".
   iIntros "!>!>". iMod "H" as "($ & H & $)".
   iMod "HR". iModIntro. iApply (wp_strong_mono s s E2 with "H"); [done..|].
   iIntros (v) "H". by iApply "H".
@@ -137,9 +137,9 @@ Proof.
   iIntros (σ1) "Hσ". iMod ("H" with "[$]") as "[% H]". iModIntro; iSplit.
   { iPureIntro. destruct s; last done.
     unfold reducible in *. naive_solver eauto using fill_step. }
-  iIntros (e2 σ2 efs Hstep).
-  destruct (fill_step_inv e σ1 e2 σ2 efs) as (e2'&->&?); auto.
-  iMod ("H" $! e2' σ2 efs with "[//]") as "H". iIntros "!>!>".
+  iIntros (κ e2 σ2 efs Hstep).
+  destruct (fill_step_inv e σ1 κ e2 σ2 efs) as (e2'&->&?); auto.
+  iMod ("H" $! κ e2' σ2 efs with "[//]") as "H". iIntros "!>!>".
   iMod "H" as "($ & H & $)". by iApply "IH".
 Qed.
 
@@ -152,8 +152,8 @@ Proof.
   rewrite fill_not_val //.
   iIntros (σ1) "Hσ". iMod ("H" with "[$]") as "[% H]". iModIntro; iSplit.
   { destruct s; eauto using reducible_fill. }
-  iIntros (e2 σ2 efs Hstep).
-  iMod ("H" $! (K e2) σ2 efs with "[]") as "H"; [by eauto using fill_step|].
+  iIntros (κ e2 σ2 efs Hstep).
+  iMod ("H" $! κ (K e2) σ2 efs with "[]") as "H"; [by eauto using fill_step|].
   iIntros "!>!>". iMod "H" as "($ & H & $)". by iApply "IH".
 Qed.
 

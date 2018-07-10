@@ -37,26 +37,26 @@ Qed.
 Record adequate {Λ} (s : stuckness) (e1 : expr Λ) (σ1 : state Λ)
     (φ : val Λ → state Λ → Prop) := {
   adequate_result t2 σ2 v2 :
-   rtc step ([e1], σ1) (of_val v2 :: t2, σ2) → φ v2 σ2;
+   rtc erased_step ([e1], σ1) (of_val v2 :: t2, σ2) → φ v2 σ2;
   adequate_not_stuck t2 σ2 e2 :
    s = NotStuck →
-   rtc step ([e1], σ1) (t2, σ2) →
+   rtc erased_step ([e1], σ1) (t2, σ2) →
    e2 ∈ t2 → (is_Some (to_val e2) ∨ reducible e2 σ2)
 }.
 
 Theorem adequate_tp_safe {Λ} (e1 : expr Λ) t2 σ1 σ2 φ :
   adequate NotStuck e1 σ1 φ →
-  rtc step ([e1], σ1) (t2, σ2) →
-  Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ t3 σ3, step (t2, σ2) (t3, σ3).
+  rtc erased_step ([e1], σ1) (t2, σ2) →
+  Forall (λ e, is_Some (to_val e)) t2 ∨ ∃ κ t3 σ3, step (t2, σ2) κ (t3, σ3).
 Proof.
   intros Had ?.
   destruct (decide (Forall (λ e, is_Some (to_val e)) t2)) as [|Ht2]; [by left|].
   apply (not_Forall_Exists _), Exists_exists in Ht2; destruct Ht2 as (e2&?&He2).
-  destruct (adequate_not_stuck NotStuck e1 σ1 φ Had t2 σ2 e2) as [?|(e3&σ3&efs&?)];
+  destruct (adequate_not_stuck NotStuck e1 σ1 φ Had t2 σ2 e2) as [?|(κ&e3&σ3&efs&?)];
     rewrite ?eq_None_not_Some; auto.
   { exfalso. eauto. }
   destruct (elem_of_list_split t2 e2) as (t2'&t2''&->); auto.
-  right; exists (t2' ++ e3 :: t2'' ++ efs), σ3; econstructor; eauto.
+  right; exists κ, (t2' ++ e3 :: t2'' ++ efs), σ3; econstructor; eauto.
 Qed.
 
 Section adequacy.
@@ -71,39 +71,41 @@ Notation world σ := (world' ⊤ σ) (only parsing).
 
 Notation wptp s t := ([∗ list] ef ∈ t, WP ef @ s; ⊤ {{ _, True }})%I.
 
-Lemma wp_step s E e1 σ1 e2 σ2 efs Φ :
-  prim_step e1 σ1 e2 σ2 efs →
+Lemma wp_step s E e1 σ1 κ e2 σ2 efs Φ :
+  prim_step e1 σ1 κ e2 σ2 efs →
   world' E σ1 ∗ WP e1 @ s; E {{ Φ }}
   ==∗ ▷ |==> ◇ (world' E σ2 ∗ WP e2 @ s; E {{ Φ }} ∗ wptp s efs).
 Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (?) "[(Hw & HE & Hσ) H]".
-  rewrite (val_stuck e1 σ1 e2 σ2 efs) // uPred_fupd_eq.
+  rewrite (val_stuck e1 σ1 κ e2 σ2 efs) // uPred_fupd_eq.
   iMod ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
-  iMod ("H" $! e2 σ2 efs with "[//] [$Hw $HE]") as ">(Hw & HE & H)".
+  iMod ("H" $! κ e2 σ2 efs with "[//] [$Hw $HE]") as ">(Hw & HE & H)".
   iIntros "!> !>". by iMod ("H" with "[$Hw $HE]") as ">($ & $ & $)".
 Qed.
 
-Lemma wptp_step s e1 t1 t2 σ1 σ2 Φ :
-  step (e1 :: t1,σ1) (t2, σ2) →
+(* should we be able to say that κs = κ :: κs'? *)
+Lemma wptp_step s e1 t1 t2 κ σ1 σ2 Φ :
+  step (e1 :: t1,σ1) κ (t2, σ2) →
   world σ1 ∗ WP e1 @ s; ⊤ {{ Φ }} ∗ wptp s t1
-  ==∗ ∃ e2 t2', ⌜t2 = e2 :: t2'⌝ ∗ ▷ |==> ◇ (world σ2 ∗ WP e2 @ s; ⊤ {{ Φ }} ∗ wptp s t2').
+  ==∗ ∃ e2 t2',
+    ⌜t2 = e2 :: t2'⌝ ∗ ▷ |==> ◇ (world σ2 ∗ WP e2 @ s; ⊤ {{ Φ }} ∗ wptp s t2').
 Proof.
   iIntros (Hstep) "(HW & He & Ht)".
   destruct Hstep as [e1' σ1' e2' σ2' efs [|? t1'] t2' ?? Hstep]; simplify_eq/=.
-  - iExists e2', (t2' ++ efs); iSplitR; first eauto.
+  - iExists e2', (t2' ++ efs); iSplitR; first by eauto.
     iFrame "Ht". iApply wp_step; eauto with iFrame.
   - iExists e, (t1' ++ e2' :: t2' ++ efs); iSplitR; first eauto.
     iDestruct "Ht" as "($ & He' & $)". iFrame "He".
     iApply wp_step; eauto with iFrame.
 Qed.
 
-Lemma wptp_steps s n e1 t1 t2 σ1 σ2 Φ :
-  nsteps step n (e1 :: t1, σ1) (t2, σ2) →
+Lemma wptp_steps s n e1 t1 κs t2 σ1 σ2 Φ :
+  nsteps n (e1 :: t1, σ1) κs (t2, σ2) →
   world σ1 ∗ WP e1 @ s; ⊤ {{ Φ }} ∗ wptp s t1 ⊢
   Nat.iter (S n) (λ P, |==> ▷ P) (∃ e2 t2',
     ⌜t2 = e2 :: t2'⌝ ∗ world σ2 ∗ WP e2 @ s; ⊤ {{ Φ }} ∗ wptp s t2').
 Proof.
-  revert e1 t1 t2 σ1 σ2; simpl; induction n as [|n IH]=> e1 t1 t2 σ1 σ2 /=.
+  revert e1 t1 κs t2 σ1 σ2; simpl; induction n as [|n IH]=> e1 t1 κs t2 σ1 σ2 /=.
   { inversion_clear 1; iIntros "?"; eauto 10. }
   iIntros (Hsteps) "H". inversion_clear Hsteps as [|?? [t1' σ1']].
   iMod (wptp_step with "H") as (e1' t1'') "[% H]"; first eauto; simplify_eq.
@@ -123,8 +125,8 @@ Proof.
   by rewrite bupd_frame_l {1}(later_intro R) -later_sep IH.
 Qed.
 
-Lemma wptp_result s n e1 t1 v2 t2 σ1 σ2 φ :
-  nsteps step n (e1 :: t1, σ1) (of_val v2 :: t2, σ2) →
+Lemma wptp_result s n e1 t1 κs v2 t2 σ1 σ2 φ :
+  nsteps n (e1 :: t1, σ1) κs (of_val v2 :: t2, σ2) →
   world σ1 ∗ WP e1 @ s; ⊤ {{ v, ∀ σ, state_interp σ ={⊤,∅}=∗ ⌜φ v σ⌝ }} ∗ wptp s t1
   ⊢ ▷^(S (S n)) ⌜φ v2 σ2⌝.
 Proof.
@@ -145,8 +147,8 @@ Proof.
   iIntros "!> !> !%". by right.
 Qed.
 
-Lemma wptp_safe n e1 e2 t1 t2 σ1 σ2 Φ :
-  nsteps step n (e1 :: t1, σ1) (t2, σ2) → e2 ∈ t2 →
+Lemma wptp_safe n e1 κs e2 t1 t2 σ1 σ2 Φ :
+  nsteps n (e1 :: t1, σ1) κs (t2, σ2) → e2 ∈ t2 →
   world σ1 ∗ WP e1 {{ Φ }} ∗ wptp NotStuck t1
   ⊢ ▷^(S (S n)) ⌜is_Some (to_val e2) ∨ reducible e2 σ2⌝.
 Proof.
@@ -157,8 +159,8 @@ Proof.
   - iMod (wp_safe with "Hw [Htp]") as "$". by iApply (big_sepL_elem_of with "Htp").
 Qed.
 
-Lemma wptp_invariance s n e1 e2 t1 t2 σ1 σ2 φ Φ :
-  nsteps step n (e1 :: t1, σ1) (t2, σ2) →
+Lemma wptp_invariance s n e1 κs e2 t1 t2 σ1 σ2 φ Φ :
+  nsteps n (e1 :: t1, σ1) κs (t2, σ2) →
   (state_interp σ2 ={⊤,∅}=∗ ⌜φ⌝) ∗ world σ1 ∗ WP e1 @ s; ⊤ {{ Φ }} ∗ wptp s t1
   ⊢ ▷^(S (S n)) ⌜φ⌝.
 Proof.
@@ -178,13 +180,13 @@ Theorem wp_strong_adequacy Σ Λ `{invPreG Σ} s e σ φ :
   adequate s e σ φ.
 Proof.
   intros Hwp; split.
-  - intros t2 σ2 v2 [n ?]%rtc_nsteps.
+  - intros t2 σ2 v2 [n [κs ?]]%erased_steps_nsteps.
     eapply (soundness (M:=iResUR Σ) _ (S (S n))).
     iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp _).
     rewrite {1}uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iApply (@wptp_result _ _ (IrisG _ _ Hinv Istate)); eauto with iFrame.
-  - destruct s; last done. intros t2 σ2 e2 _ [n ?]%rtc_nsteps ?.
+  - destruct s; last done. intros t2 σ2 e2 _ [n [κs ?]]%erased_steps_nsteps ?.
     eapply (soundness (M:=iResUR Σ) _ (S (S n))).
     iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp _).
     rewrite uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
@@ -210,10 +212,10 @@ Theorem wp_invariance Σ Λ `{invPreG Σ} s e σ1 t2 σ2 φ :
      (|={⊤}=> ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
        stateI σ1 ∗ WP e @ s; ⊤ {{ _, True }} ∗ (stateI σ2 ={⊤,∅}=∗ ⌜φ⌝))%I) →
-  rtc step ([e], σ1) (t2, σ2) →
+  rtc erased_step ([e], σ1) (t2, σ2) →
   φ.
 Proof.
-  intros Hwp [n ?]%rtc_nsteps.
+  intros Hwp [n [κs ?]]%erased_steps_nsteps.
   eapply (soundness (M:=iResUR Σ) _ (S (S n))).
   iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp _).
   rewrite {1}uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
@@ -228,7 +230,7 @@ Corollary wp_invariance' Σ Λ `{invPreG Σ} s e σ1 t2 σ2 φ :
      (|={⊤}=> ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
        stateI σ1 ∗ WP e @ s; ⊤ {{ _, True }} ∗ (stateI σ2 -∗ ∃ E, |={⊤,E}=> ⌜φ⌝))%I) →
-  rtc step ([e], σ1) (t2, σ2) →
+  rtc erased_step ([e], σ1) (t2, σ2) →
   φ.
 Proof.
   intros Hwp. eapply wp_invariance; first done.

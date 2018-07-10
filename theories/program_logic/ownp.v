@@ -53,7 +53,7 @@ Qed.
 Theorem ownP_invariance Σ `{ownPPreG Λ Σ} s e σ1 t2 σ2 φ :
   (∀ `{ownPG Λ Σ},
     ownP σ1 ={⊤}=∗ WP e @ s; ⊤ {{ _, True }} ∗ |={⊤,∅}=> ∃ σ', ownP σ' ∧ ⌜φ σ'⌝) →
-  rtc step ([e], σ1) (t2, σ2) →
+  rtc erased_step ([e], σ1) (t2, σ2) →
   φ σ2.
 Proof.
   intros Hwp Hsteps. eapply (wp_invariance Σ Λ s e σ1 t2 σ2 _)=> //.
@@ -87,7 +87,7 @@ Section lifting.
 
   Lemma ownP_lift_step s E Φ e1 :
     (|={E,∅}=> ∃ σ1, ⌜if s is NotStuck then reducible e1 σ1 else to_val e1 = None⌝ ∗ ▷ ownP σ1 ∗
-      ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2
+      ▷ ∀ κ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ -∗ ownP σ2
             ={∅,E}=∗ WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
@@ -98,7 +98,7 @@ Section lifting.
       move: Hred; by rewrite to_of_val.
     - iApply wp_lift_step; [done|]; iIntros (σ1) "Hσ".
       iMod "H" as (σ1' ?) "[>Hσf H]". iDestruct (ownP_eq with "Hσ Hσf") as %->.
-      iModIntro; iSplit; [by destruct s|]; iNext; iIntros (e2 σ2 efs Hstep).
+      iModIntro; iSplit; [by destruct s|]; iNext; iIntros (κ e2 σ2 efs Hstep).
       rewrite /ownP; iMod (own_update_2 with "Hσ Hσf") as "[Hσ Hσf]".
       { by apply auth_update, option_local_update,
           (exclusive_local_update _ (Excl σ2)). }
@@ -120,8 +120,8 @@ Section lifting.
 
   Lemma ownP_lift_pure_step `{Inhabited (state Λ)} s E Φ e1 :
     (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ σ1 e2 σ2 efs, prim_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
-    (▷ ∀ e2 efs σ, ⌜prim_step e1 σ e2 σ efs⌝ →
+    (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = None /\ σ1 = σ2) →
+    (▷ ∀ κ e2 efs σ, ⌜prim_step e1 σ κ e2 σ efs⌝ →
       WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
@@ -129,43 +129,43 @@ Section lifting.
     { specialize (Hsafe inhabitant). destruct s; last done.
       by eapply reducible_not_val. }
     iIntros (σ1) "Hσ". iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
-    iModIntro; iSplit; [by destruct s|]; iNext; iIntros (e2 σ2 efs ?).
-    destruct (Hstep σ1 e2 σ2 efs); auto; subst.
+    iModIntro; iSplit; [by destruct s|]; iNext; iIntros (κ e2 σ2 efs ?).
+    destruct (Hstep σ1 κ e2 σ2 efs); auto; subst.
     by iMod "Hclose"; iModIntro; iFrame; iApply "H".
   Qed.
 
   (** Derived lifting lemmas. *)
   Lemma ownP_lift_atomic_step {s E Φ} e1 σ1 :
     (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (▷ ownP σ1 ∗ ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2 -∗
+    (▷ ownP σ1 ∗ ▷ ∀ κ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ -∗ ownP σ2 -∗
       from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     iIntros (?) "[Hσ H]"; iApply ownP_lift_step.
     iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
     iModIntro; iExists σ1; iFrame; iSplit; first by destruct s.
-    iNext; iIntros (e2 σ2 efs) "% Hσ".
-    iDestruct ("H" $! e2 σ2 efs with "[] [Hσ]") as "[HΦ $]"; [by eauto..|].
+    iNext; iIntros (κ e2 σ2 efs) "% Hσ".
+    iDestruct ("H" $! κ e2 σ2 efs with "[] [Hσ]") as "[HΦ $]"; [by eauto..|].
     destruct (to_val e2) eqn:?; last by iExFalso.
     iMod "Hclose"; iApply wp_value; last done. by apply of_to_val.
   Qed.
 
   Lemma ownP_lift_atomic_det_step {s E Φ e1} σ1 v2 σ2 efs :
     (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ e2' σ2' efs', prim_step e1 σ1 e2' σ2' efs' →
+    (∀ κ e2' σ2' efs', prim_step e1 σ1 κ e2' σ2' efs' →
                      σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
     ▷ ownP σ1 ∗ ▷ (ownP σ2 -∗
       Φ v2 ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     iIntros (? Hdet) "[Hσ1 Hσ2]"; iApply ownP_lift_atomic_step; try done.
-    iFrame; iNext; iIntros (e2' σ2' efs') "% Hσ2'".
+    iFrame; iNext; iIntros (κ e2' σ2' efs') "% Hσ2'".
     edestruct Hdet as (->&Hval&->). done. by rewrite Hval; iApply "Hσ2".
   Qed.
 
   Lemma ownP_lift_atomic_det_step_no_fork {s E e1} σ1 v2 σ2 :
     (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ e2' σ2' efs', prim_step e1 σ1 e2' σ2' efs' →
+    (∀ κ e2' σ2' efs', prim_step e1 σ1 κ e2' σ2' efs' →
       σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
     {{{ ▷ ownP σ1 }}} e1 @ s; E {{{ RET v2; ownP σ2 }}}.
   Proof.
@@ -175,17 +175,17 @@ Section lifting.
 
   Lemma ownP_lift_pure_det_step `{Inhabited (state Λ)} {s E Φ} e1 e2 efs :
     (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
+    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = None /\ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
     ▷ (WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤{{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     iIntros (? Hpuredet) "?"; iApply ownP_lift_pure_step=>//.
-    by apply Hpuredet. by iNext; iIntros (e' efs' σ (_&->&->)%Hpuredet).
+    naive_solver. by iNext; iIntros (κ e' efs' σ (->&_&->&->)%Hpuredet).
   Qed.
 
   Lemma ownP_lift_pure_det_step_no_fork `{Inhabited (state Λ)} {s E Φ} e1 e2 :
     (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ σ1 e2' σ2 efs', prim_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = None /\ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     intros. rewrite -(wp_lift_pure_det_step e1 e2 []) ?big_sepL_nil ?right_id; eauto.
@@ -204,14 +204,14 @@ Section ectx_lifting.
 
   Lemma ownP_lift_head_step s E Φ e1 :
     (|={E,∅}=> ∃ σ1, ⌜head_reducible e1 σ1⌝ ∗ ▷ ownP σ1 ∗
-      ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2
+      ▷ ∀ κ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ -∗ ownP σ2
             ={∅,E}=∗ WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     iIntros "H". iApply ownP_lift_step.
     iMod "H" as (σ1 ?) "[Hσ1 Hwp]". iModIntro. iExists σ1. iSplit.
     { destruct s; try by eauto using reducible_not_val. }
-    iFrame. iNext. iIntros (e2 σ2 efs) "% ?".
+    iFrame. iNext. iIntros (κ e2 σ2 efs) "% ?".
     iApply ("Hwp" with "[]"); eauto.
   Qed.
 
@@ -226,51 +226,52 @@ Section ectx_lifting.
 
   Lemma ownP_lift_pure_head_step s E Φ e1 :
     (∀ σ1, head_reducible e1 σ1) →
-    (∀ σ1 e2 σ2 efs, head_step e1 σ1 e2 σ2 efs → σ1 = σ2) →
-    (▷ ∀ e2 efs σ, ⌜head_step e1 σ e2 σ efs⌝ →
+    (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = None /\ σ1 = σ2) →
+    (▷ ∀ κ e2 efs σ, ⌜head_step e1 σ κ e2 σ efs⌝ →
       WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof using Hinh.
     iIntros (??) "H".  iApply ownP_lift_pure_step; eauto.
     { by destruct s; auto. }
-    iNext. iIntros (????). iApply "H"; eauto.
+    iNext. iIntros (?????). iApply "H"; eauto.
   Qed.
 
   Lemma ownP_lift_atomic_head_step {s E Φ} e1 σ1 :
     head_reducible e1 σ1 →
-    ▷ ownP σ1 ∗ ▷ (∀ e2 σ2 efs,
-    ⌜head_step e1 σ1 e2 σ2 efs⌝ -∗ ownP σ2 -∗
+    ▷ ownP σ1 ∗ ▷ (∀ κ e2 σ2 efs,
+    ⌜head_step e1 σ1 κ e2 σ2 efs⌝ -∗ ownP σ2 -∗
       from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     iIntros (?) "[? H]". iApply ownP_lift_atomic_step; eauto.
     { by destruct s; eauto using reducible_not_val. }
-    iFrame. iNext. iIntros (???) "% ?". iApply ("H" with "[]"); eauto.
+    iFrame. iNext. iIntros (????) "% ?". iApply ("H" with "[]"); eauto.
   Qed.
 
   Lemma ownP_lift_atomic_det_head_step {s E Φ e1} σ1 v2 σ2 efs :
     head_reducible e1 σ1 →
-    (∀ e2' σ2' efs', head_step e1 σ1 e2' σ2' efs' →
+    (∀ κ e2' σ2' efs', head_step e1 σ1 κ e2' σ2' efs' →
       σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
     ▷ ownP σ1 ∗ ▷ (ownP σ2 -∗ Φ v2 ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
-    by destruct s; eauto 10 using ownP_lift_atomic_det_step, reducible_not_val.
+    intros. destruct s; apply ownP_lift_atomic_det_step; try naive_solver.
+    eauto using reducible_not_val.
   Qed.
 
   Lemma ownP_lift_atomic_det_head_step_no_fork {s E e1} σ1 v2 σ2 :
     head_reducible e1 σ1 →
-    (∀ e2' σ2' efs', head_step e1 σ1 e2' σ2' efs' →
+    (∀ κ e2' σ2' efs', head_step e1 σ1 κ e2' σ2' efs' →
       σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
     {{{ ▷ ownP σ1 }}} e1 @ s; E {{{ RET v2; ownP σ2 }}}.
   Proof.
-    intros ???; apply ownP_lift_atomic_det_step_no_fork; eauto.
+    intros ???; apply ownP_lift_atomic_det_step_no_fork; last naive_solver.
     by destruct s; eauto using reducible_not_val.
   Qed.
 
   Lemma ownP_lift_pure_det_head_step {s E Φ} e1 e2 efs :
     (∀ σ1, head_reducible e1 σ1) →
-    (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
+    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = None /\ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
     ▷ (WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof using Hinh.
@@ -280,7 +281,7 @@ Section ectx_lifting.
 
   Lemma ownP_lift_pure_det_head_step_no_fork {s E Φ} e1 e2 :
     (∀ σ1, head_reducible e1 σ1) →
-    (∀ σ1 e2' σ2 efs', head_step e1 σ1 e2' σ2 efs' → σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = None /\ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof using Hinh.
     iIntros (??) "H". iApply ownP_lift_pure_det_step_no_fork; eauto.
