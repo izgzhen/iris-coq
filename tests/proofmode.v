@@ -267,6 +267,15 @@ Proof.
   rewrite (inj_iff S). by iApply ("IH" with "[%]"); first omega.
 Qed.
 
+Lemma test_iInduction_using (m : gmap nat nat) (Φ : nat → nat → PROP) y :
+  ([∗ map] x ↦ i ∈ m, Φ y x) -∗ ([∗ map] x ↦ i ∈ m, emp ∗ Φ y x).
+Proof.
+  iIntros "Hm". iInduction m as [|i x m] "IH" using map_ind forall(y).
+  - by rewrite !big_sepM_empty.
+  - rewrite !big_sepM_insert //. iDestruct "Hm" as "[$ ?]".
+    by iApply "IH".
+Qed.
+
 Lemma test_iIntros_start_proof :
   (True : PROP)%I.
 Proof.

@@ -1630,7 +1630,7 @@ result in the following actions:
 - Introduce the spatial hypotheses and persistent hypotheses involving [x]
 - Introduce the proofmode hypotheses [Hs]
 *)
-Tactic Notation "iInductionCore" constr(x) "as" simple_intropattern(pat) constr(IH) :=
+Tactic Notation "iInductionCore" tactic(tac) "as" constr(IH) :=
   let rec fix_ihs rev_tac :=
     lazymatch goal with
     | H : context [envs_entails _ _] |- _ =>
@@ -1646,7 +1646,7 @@ Tactic Notation "iInductionCore" constr(x) "as" simple_intropattern(pat) constr(
          rev_tac j)
     | _ => rev_tac 0%N
     end in
-  induction x as pat; fix_ihs ltac:(fun _ => idtac).
+  tac; fix_ihs ltac:(fun _ => idtac).
 
 Ltac iHypsContaining x :=
   let rec go Γ x Hs :=
@@ -1672,65 +1672,161 @@ Tactic Notation "iInductionRevert" constr(x) constr(Hs) "with" tactic(tac) :=
   ).
 
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH) :=
-  iInductionRevert x "" with (iInductionCore x as pat IH).
+  iInductionRevert x "" with (iInductionCore (induction x as pat) as IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ")" :=
-  iInductionRevert x "" with (iRevertIntros(x1) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x "" with (
+    iRevertIntros(x1) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ")" :=
-  iInductionRevert x "" with (iRevertIntros(x1 x2) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ")" :=
-  iInductionRevert x "" with (iRevertIntros(x1 x2 x3) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")" :=
-  iInductionRevert x "" with (iRevertIntros(x1 x2 x3 x4) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3 x4) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ")" :=
-  iInductionRevert x "" with (iRevertIntros(x1 x2 x3 x4 x5) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3 x4 x5) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6) ")" :=
-  iInductionRevert x "" with (iRevertIntros(x1 x2 x3 x4 x5 x6) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6)
     ident(x7) ")" :=
-  iInductionRevert x "" with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6)
     ident(x7) ident(x8) ")" :=
-  iInductionRevert x "" with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "" with (iInductionCore (induction x as pat) as IH)).
 
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" constr(Hs) :=
-  iInductionRevert x Hs with (iInductionCore x as pat IH).
+  iInductionRevert x Hs with (iInductionCore (induction x as pat) as IH).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ")" constr(Hs) :=
-  iInductionRevert x Hs with (iRevertIntros(x1) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x Hs with
+    (iRevertIntros(x1) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ")" constr(Hs) :=
-  iInductionRevert x Hs with (iRevertIntros(x1 x2) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ")" constr(Hs) :=
-  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")" constr(Hs) :=
-  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3 x4) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3 x4) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ")"
     constr(Hs) :=
-  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3 x4 x5) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3 x4 x5) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6) ")"
     constr(Hs) :=
-  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3 x4 x5 x6) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6)
     ident(x7) ")" constr(Hs) :=
-  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "" with (iInductionCore (induction x as pat) as IH)).
 Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
     "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ident(x5) ident(x6)
     ident(x7) ident(x8) ")" constr(Hs) :=
-  iInductionRevert x Hs with (iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "" with (iInductionCore x as pat IH)).
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "" with (iInductionCore (induction x as pat) as IH)).
+
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) :=
+  iInductionRevert x "" with (iInductionCore (induction x as pat using u) as IH).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ")" :=
+  iInductionRevert x "" with (
+    iRevertIntros(x1) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ")" :=
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ")" :=
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")" :=
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3 x4) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ")" :=
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3 x4 x5) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ")" :=
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ")" :=
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ident(x8) ")" :=
+  iInductionRevert x "" with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "" with (iInductionCore (induction x as pat using u) as IH)).
+
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" constr(Hs) :=
+  iInductionRevert x Hs with (iInductionCore (induction x as pat using u) as IH).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ")" constr(Hs) :=
+  iInductionRevert x Hs with
+    (iRevertIntros(x1) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ")" constr(Hs) :=
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ")" constr(Hs) :=
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4) ")" constr(Hs) :=
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3 x4) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ")" constr(Hs) :=
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3 x4 x5) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ")" constr(Hs) :=
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ")" constr(Hs) :=
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6 x7) "" with (iInductionCore (induction x as pat using u) as IH)).
+Tactic Notation "iInduction" constr(x) "as" simple_intropattern(pat) constr(IH)
+    "using" uconstr(u) "forall" "(" ident(x1) ident(x2) ident(x3) ident(x4)
+    ident(x5) ident(x6) ident(x7) ident(x8) ")" constr(Hs) :=
+  iInductionRevert x Hs with
+    (iRevertIntros(x1 x2 x3 x4 x5 x6 x7 x8) "" with (iInductionCore (induction x as pat using u) as IH)).
 
 (** * Löb Induction *)
 Tactic Notation "iLöbCore" "as" constr (IH) :=
