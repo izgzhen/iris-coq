@@ -14,6 +14,9 @@ Section instances.
   Implicit Types P : PROP.
   Implicit Types Ps : list PROP.
 
+  Global Instance laterable_proper : Proper ((⊣⊢) ==> (↔)) (@Laterable PROP).
+  Proof. solve_proper. Qed.
+
   Global Instance later_laterable P : Laterable (▷ P).
   Proof.
     rewrite /Laterable. iIntros "HP". iExists P. iFrame.
@@ -57,4 +60,44 @@ Section instances.
     TCForall Laterable Ps →
     Laterable ([∗] Ps).
   Proof. induction 2; simpl; apply _. Qed.
+
+  (* A wrapper to obtain a weaker, laterable form of any assertion. *)
+  Definition make_laterable (Q : PROP) : PROP :=
+    (∃ P, ▷ P ∗ □ (▷ P -∗ Q))%I.
+
+  Global Instance make_laterable_ne : NonExpansive make_laterable.
+  Proof. solve_proper. Qed.
+  Global Instance make_laterable_proper : Proper ((≡) ==> (≡)) make_laterable := ne_proper _.
+
+  Lemma make_laterable_wand Q1 Q2 :
+    □ (Q1 -∗ Q2) -∗ (make_laterable Q1 -∗ make_laterable Q2).
+  Proof.
+    iIntros "#HQ HQ1". iDestruct "HQ1" as (P) "[HP #HQ1]".
+    iExists P. iFrame. iIntros "!# HP". iApply "HQ". iApply "HQ1". done.
+  Qed.
+
+  Global Instance make_laterable_laterable Q :
+    Laterable (make_laterable Q).
+  Proof.
+    rewrite /Laterable. iIntros "HQ". iDestruct "HQ" as (P) "[HP #HQ]".
+    iExists P. iFrame. iIntros "!# HP !>". iExists P. by iFrame.
+  Qed.
+
+  Lemma make_laterable_elim Q :
+    make_laterable Q -∗ Q.
+  Proof.
+    iIntros "HQ". iDestruct "HQ" as (P) "[HP #HQ]". by iApply "HQ".
+  Qed.
+
+  Lemma make_laterable_intro P Q :
+    Laterable P →
+    □ (◇ P -∗ Q) -∗ P -∗ make_laterable Q.
+  Proof.
+    iIntros (?) "#HQ HP".
+    iDestruct (laterable with "HP") as (P') "[HP' #HPi]". iExists P'.
+    iFrame. iIntros "!# HP'". iApply "HQ". iApply "HPi". done.
+  Qed.
+
 End instances.
+
+Typeclasses Opaque make_laterable.

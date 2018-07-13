@@ -20,6 +20,8 @@ Changes in and extensions of the theory:
 * [#] The Löb rule is now a derived rule; it follows from later-intro, later
   being contractive and the fact that we can take fixpoints of contractive
   functions.
+* [#] Add atomic updates and logically atomic triples, including tactic support.
+  See `heap_lang/lib/increment.v` for an example.
 
 Changes in Coq:
 
