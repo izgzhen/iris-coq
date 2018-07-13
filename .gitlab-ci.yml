@@ -18,7 +18,7 @@ variables:
     paths:
     - opamroot/
   only:
-  - gen_proofmode
+  - master
   - /^ci/
   except:
   - triggers
@@ -42,7 +42,6 @@ build-coq.8.8.0:
   variables:
     OPAM_PINS: "coq version 8.8.0"
     OPAM_PKG: "coq-iris"
-    OPAM_PKG_BRANCH: "gen_proofmode"
     TIMING_PROJECT: "iris"
     TIMING_CONF: "coq-8.8.0"
   tags:
