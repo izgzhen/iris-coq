@@ -97,6 +97,8 @@ that should be compatible with this version:
   collect miscellaneous case studies that do not have their own repository.
 * [LambdaRust](https://gitlab.mpi-sws.org/FP/LambdaRust-coq/) is a Coq
   formalization of the core Rust type system.
+* [iGPS](https://gitlab.mpi-sws.org/FP/sra-gps/tree/gen_proofmode_WIP) is a
+  logic for release-acquire memory.
 * [Iris Atomic](https://gitlab.mpi-sws.org/FP/iris-atomic/) is an experimental
   formalization of logically atomic triples in Iris.
 
