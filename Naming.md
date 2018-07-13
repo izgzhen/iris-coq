@@ -15,6 +15,7 @@
 * k
 * l
 * m : iGst = ghost state
+* m* = prefix for option
 * n
 * o
 * p

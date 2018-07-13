@@ -7,11 +7,11 @@ Definition uPred_nnupd {M} (P: uPred M) : uPred M :=
   ∀ n, (P -∗ ▷^n False) -∗ ▷^n False.
 
 Notation "|=n=> Q" := (uPred_nnupd Q)
-  (at level 99, Q at level 200, format "|=n=>  Q") : uPred_scope.
+  (at level 99, Q at level 200, format "|=n=>  Q") : bi_scope.
 Notation "P =n=> Q" := (P ⊢ |=n=> Q)
   (at level 99, Q at level 200, only parsing) : stdpp_scope.
 Notation "P =n=∗ Q" := (P -∗ |=n=> Q)%I
-  (at level 99, Q at level 200, format "P  =n=∗  Q") : uPred_scope.
+  (at level 99, Q at level 200, format "P  =n=∗  Q") : bi_scope.
 
 (* Our goal is to prove that:
   (1) |=n=> has (nearly) all the properties of the |==> modality that are used in Iris
@@ -27,7 +27,7 @@ Implicit Types x : M.
 Import uPred.
 
 (* Helper lemmas about iterated later modalities *)
-Lemma laterN_big n a x φ: ✓{n} x →  a ≤ n → (▷^a ⌜φ⌝)%I n x → φ.
+Lemma laterN_big n a x φ: ✓{n} x →  a ≤ n → (▷^a ⌜φ⌝ : uPred M)%I n x → φ.
 Proof.
   induction 2 as [| ?? IHle].
   - induction a; repeat (rewrite //= || uPred.unseal).
@@ -37,7 +37,7 @@ Proof.
     eapply uPred_mono; eauto using cmra_validN_S.
 Qed.
 
-Lemma laterN_small n a x φ: ✓{n} x →  n < a → (▷^a ⌜φ⌝)%I n x.
+Lemma laterN_small n a x φ: ✓{n} x →  n < a → (▷^a ⌜φ⌝ : uPred M)%I n x.
 Proof.
   induction 2.
   - induction n as [| n IHn]; [| move: IHn];
@@ -90,7 +90,7 @@ Proof.
     * rewrite comm -assoc. done.
     * rewrite comm -assoc. done.
     * exists y'. split=>//. by exists x'.
- - intros; assert (n' < a). omega.
+ - intros; assert (n' < a). lia.
     move: laterN_small. uPred.unseal.
     naive_solver.
 Qed.
@@ -132,7 +132,7 @@ Fixpoint uPred_nnupd_k {M} k (P: uPred M) : uPred M :=
   end.
 
 Notation "|=n=>_ k Q" := (uPred_nnupd_k k Q)
-  (at level 99, k at level 9, Q at level 200, format "|=n=>_ k  Q") : uPred_scope.
+  (at level 99, k at level 9, Q at level 200, format "|=n=>_ k  Q") : bi_scope.
 
 
 (* One direction of the limiting process is easy -- nnupd implies nnupd_k for each k *)
@@ -178,21 +178,22 @@ Lemma nnupd_nnupd_k_dist k P: (|=n=> P)%I ≡{k}≡ (|=n=>_k P)%I.
       case (decide (k' < n)).
       ** move: laterN_small; uPred.unseal; naive_solver.
       ** intros. exfalso. eapply HnnP; eauto.
-         assert (n ≤ k'). omega.
+         assert (n ≤ k'). lia.
          intros n'' x'' ???.
          specialize (HPF n'' x''). exfalso.
          eapply laterN_big; last (unseal; eauto).
-         eauto. omega.
-    * inversion Hle; subst.
+         eauto. lia.
+    * inversion Hle; simpl; subst.
       ** unseal. intros (HnnP&HnnP_IH) n k' x' ?? HPF.
          case (decide (k' < n)).
          *** move: laterN_small; uPred.unseal; naive_solver.
-         *** intros. exfalso. assert (n ≤ k'). omega.
-             assert (n = S k ∨ n < S k) as [->|] by omega.
-             **** eapply laterN_big; eauto; unseal. eapply HnnP; eauto.
+         *** intros. exfalso. assert (n ≤ k'). lia.
+             assert (n = S k ∨ n < S k) as [->|] by lia.
+             **** eapply laterN_big; eauto; unseal.
+                  eapply HnnP; eauto. move: HPF; by unseal.
              **** move:nnupd_k_elim. unseal. intros Hnnupdk.
                   eapply laterN_big; eauto. unseal.
-                  eapply (Hnnupdk n k); first omega; eauto.
+                  eapply (Hnnupdk n k); first lia; eauto.
                   exists x, x'. split_and!; eauto. eapply uPred_mono; eauto.
       ** intros HP. eapply IHk; auto.
          move:HP. unseal. intros (?&?); naive_solver.
@@ -264,7 +265,7 @@ Proof.
     exfalso. eapply laterN_big; last (uPred.unseal; eapply (Hwand n' x')); eauto.
     * rewrite comm. done.
     * rewrite comm. done.
-  - intros; assert (n' < a). omega.
+  - intros; assert (n' < a). lia.
     move: laterN_small. uPred.unseal.
     naive_solver.
 Qed.
@@ -285,7 +286,7 @@ Proof using Type*.
   red; rewrite //= => n' x' ???.
   case (decide (n' = k)); intros.
   - subst. exfalso. eapply Hfal. rewrite (comm op); eauto.
-  - assert (n' < k). omega.
+  - assert (n' < k). lia.
     move: laterN_small. uPred.unseal. naive_solver.
 Qed.
 End classical.
@@ -305,7 +306,7 @@ Proof.
   split. unseal. intros n' ?? Hupd.
   case (decide (n' < n)).
   - intros. move: laterN_small. unseal. naive_solver.
-  - intros. assert (n ≤ n'). omega.
+  - intros. assert (n ≤ n'). lia.
     exfalso. specialize (Hupd n' ε).
     eapply Hdne. intros Hfal.
     eapply laterN_big; eauto.
@@ -325,15 +326,14 @@ Proof.
     specialize (Hf3 (S k) (S k) ε). rewrite right_id in Hf3 *. unseal.
     intros Hf3. eapply Hf3; eauto.
     intros ??? Hx'. rewrite left_id in Hx' *=> Hx'.
-    unseal.
-    assert (n' < S k ∨ n' = S k) as [|] by omega.
+    assert (n' < S k ∨ n' = S k) as [|] by lia.
     * intros. move:(laterN_small n' (S k) x' False). rewrite //=. unseal. intros Hsmall.
       eapply Hsmall; eauto.
     * subst. intros. exfalso. eapply Hf2. exists x'. split; eauto using cmra_validN_S.
   - intros k P x Hx. rewrite ?Nat_iter_S_r.
-    replace (S (S n) + k) with (S n + (S k)) by omega.
-    replace (S n + k) with (n + (S k)) by omega.
-    intros. eapply IHn. replace (S n + S k) with (S (S n) + k) by omega. eauto.
+    replace (S (S n) + k) with (S n + (S k)) by lia.
+    replace (S n + k) with (n + (S k)) by lia.
+    intros. eapply IHn. replace (S n + S k) with (S (S n) + k) by lia. eauto.
     rewrite ?Nat_iter_S_r. eauto.
 Qed.
 
@@ -352,11 +352,11 @@ Lemma adequacy φ n : Nat.iter n (λ P, |=n=> ▷ P)%I ⌜φ⌝%I → ¬¬ φ.
 Proof.
   cut (∀ x, ✓{S n} x → Nat.iter n (λ P, |=n=> ▷ P)%I ⌜φ⌝%I (S n) x → ¬¬φ).
   { intros help H. eapply (help ∅); eauto using ucmra_unit_validN.
-    eapply H; try unseal; eauto using ucmra_unit_validN. red; rewrite //=. }
+    eapply H; eauto using ucmra_unit_validN. by unseal. }
   destruct n.
   - rewrite //=; unseal; auto.
   - intros ??? Hfal.
-    eapply (adequacy_helper2 _ n 1); (replace (S n + 1) with (S (S n)) by omega); eauto.
+    eapply (adequacy_helper2 _ n 1); (replace (S n + 1) with (S (S n)) by lia); eauto.
     unseal. intros (x'&?&Hphi). simpl in *.
     eapply Hfal. auto.
 Qed.

@@ -1,6 +1,6 @@
 From iris.program_logic Require Export weakestpre.
 From iris.proofmode Require Import tactics.
-From iris.base_logic Require Import fixpoint big_op.
+From iris.bi Require Import fixpoint big_op.
 Set Default Proof Using "Type".
 Import uPred.
 
@@ -37,7 +37,7 @@ Definition twp_pre' `{irisG Λ Σ} (s : stuckness) :
   prodC (prodC (leibnizC coPset) (exprC Λ)) (val Λ -c> iProp Σ) → iProp Σ :=
     curry3 ∘ twp_pre s ∘ uncurry3.
 
-Local Instance twp_pre_mono' `{irisG Λ Σ} s : BIMonoPred (twp_pre' s).
+Local Instance twp_pre_mono' `{irisG Λ Σ} s : BiMonoPred (twp_pre' s).
 Proof.
   constructor.
   - iIntros (wp1 wp2) "#H"; iIntros ([[E e1] Φ]); iRevert (E e1 Φ).
@@ -49,143 +49,14 @@ Qed.
 
 Definition twp_def `{irisG Λ Σ} (s : stuckness) (E : coPset)
     (e : expr Λ) (Φ : val Λ → iProp Σ) :
-  iProp Σ := uPred_least_fixpoint (twp_pre' s) (E,e,Φ).
-Definition twp_aux : seal (@twp_def). by eexists. Qed.
-Definition twp := unseal twp_aux.
-Definition twp_eq : @twp = @twp_def := seal_eq twp_aux.
-
-Arguments twp {_ _ _} _ _ _%E _.
-Instance: Params (@twp) 6.
-
-(* Note that using '[[' instead of '[{' results in conflicts with the list
-notations. *)
-Notation "'WP' e @ s ; E [{ Φ } ]" := (twp s E e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' @  s ;  E  [{  Φ  } ] ']'") : uPred_scope.
-Notation "'WP' e @ E [{ Φ } ]" := (twp NotStuck E e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' @  E  [{  Φ  } ] ']'") : uPred_scope.
-Notation "'WP' e @ E ? [{ Φ } ]" := (twp MaybeStuck E e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' @  E  ? [{  Φ  } ] ']'") : uPred_scope.
-Notation "'WP' e [{ Φ } ]" := (twp NotStuck ⊤ e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' [{  Φ  } ] ']'") : uPred_scope.
-Notation "'WP' e ? [{ Φ } ]" := (twp MaybeStuck ⊤ e%E Φ)
-  (at level 20, e, Φ at level 200,
-   format "'[' 'WP'  e  '/' ? [{  Φ  } ] ']'") : uPred_scope.
-
-Notation "'WP' e @ s ; E [{ v , Q } ]" := (twp s E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' @  s ;  E  [{  v ,  Q  } ] ']'") : uPred_scope.
-Notation "'WP' e @ E [{ v , Q } ]" := (twp NotStuck E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' @  E  [{  v ,  Q  } ] ']'") : uPred_scope.
-Notation "'WP' e @ E ? [{ v , Q } ]" := (twp MaybeStuck E e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' @  E  ? [{  v ,  Q  } ] ']'") : uPred_scope.
-Notation "'WP' e [{ v , Q } ]" := (twp NotStuck ⊤ e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' [{  v ,  Q  } ] ']'") : uPred_scope.
-Notation "'WP' e ? [{ v , Q } ]" := (twp MaybeStuck ⊤ e%E (λ v, Q))
-  (at level 20, e, Q at level 200,
-   format "'[' 'WP'  e  '/' ? [{  v ,  Q  } ] ']'") : uPred_scope.
-
-(* Texan triples *)
-Notation "'[[{' P } ] ] e @ s ; E [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E [{ Φ }])%I
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  s ;  E  [[{  x .. y ,  RET  pat ;  Q } ] ]") : uPred_scope.
-Notation "'[[{' P } ] ] e @ E [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E [{ Φ }])%I
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  E  [[{  x .. y ,  RET  pat ;  Q } ] ]") : uPred_scope.
-Notation "'[[{' P } ] ] e @ E ? [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?[{ Φ }])%I
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  E  ? [[{  x .. y ,  RET  pat ;  Q } ] ]") : uPred_scope.
-Notation "'[[{' P } ] ] e [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e [{ Φ }])%I
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  [[{  x .. y ,   RET  pat ;  Q } ] ]") : uPred_scope.
-Notation "'[[{' P } ] ] e ? [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?[{ Φ }])%I
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  ? [[{  x .. y ,   RET  pat ;  Q } ] ]") : uPred_scope.
-Notation "'[[{' P } ] ] e @ s ; E [[{ 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ s; E [{ Φ }])%I
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  s ;  E  [[{  RET  pat ;  Q } ] ]") : uPred_scope.
-Notation "'[[{' P } ] ] e @ E [[{ 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ E [{ Φ }])%I
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  E  [[{  RET  pat ;  Q } ] ]") : uPred_scope.
-Notation "'[[{' P } ] ] e @ E ? [[{ 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ E ?[{ Φ }])%I
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  E  ? [[{  RET  pat ;  Q } ] ]") : uPred_scope.
-Notation "'[[{' P } ] ] e [[{ 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ, P -∗ (Q -∗ Φ pat%V) -∗ WP e [{ Φ }])%I
-    (at level 20,
-     format "[[{  P  } ] ]  e  [[{  RET  pat ;  Q } ] ]") : uPred_scope.
-Notation "'[[{' P } ] ] e ? [[{ 'RET' pat ; Q } ] ]" :=
-  (□ ∀ Φ, P -∗ (Q -∗ Φ pat%V) -∗ WP e ?[{ Φ }])%I
-    (at level 20,
-     format "[[{  P  } ] ]  e  ? [[{  RET  pat ;  Q } ] ]") : uPred_scope.
-
-Notation "'[[{' P } ] ] e @ s ; E [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ s; E [{ Φ }])
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  s ;  E  [[{  x .. y ,  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e @ E [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E [{ Φ }])
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  E  [[{  x .. y ,  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e @ E ? [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e @ E ?[{ Φ }])
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  @  E  ? [[{  x .. y ,  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e [{ Φ }])
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  [[{  x .. y ,  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e ? [[{ x .. y , 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _,
-      P -∗ (∀ x, .. (∀ y, Q -∗ Φ pat%V) .. ) -∗ WP e ?[{ Φ }])
-    (at level 20, x closed binder, y closed binder,
-     format "[[{  P  } ] ]  e  ? [[{  x .. y ,  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e @ s ; E [[{ 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ s; E [{ Φ }])
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  s ;  E  [[{  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e @ E [[{ 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ E [{ Φ }])
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  E  [[{  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e @ E ? [[{ 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _, P -∗ (Q -∗ Φ pat%V) -∗ WP e @ E ?[{ Φ }])
-    (at level 20,
-     format "[[{  P  } ] ]  e  @  E  ? [[{  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e [[{ 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _, P -∗ (Q -∗ Φ pat%V) -∗ WP e [{ Φ }])
-    (at level 20,
-     format "[[{  P  } ] ]  e  [[{  RET  pat ;  Q } ] ]") : stdpp_scope.
-Notation "'[[{' P } ] ] e ? [[{ 'RET' pat ; Q } ] ]" :=
-  (∀ Φ : _ → uPred _, P -∗ (Q -∗ Φ pat%V) -∗ WP e ?[{ Φ }])
-    (at level 20,
-     format "[[{  P  } ] ]  e  ? [[{  RET  pat ;  Q } ] ]") : stdpp_scope.
+  iProp Σ := bi_least_fixpoint (twp_pre' s) (E,e,Φ).
+Definition twp_aux `{irisG Λ Σ} : seal (@twp_def Λ Σ _). by eexists. Qed.
+Instance twp' `{irisG Λ Σ} : Twp Λ (iProp Σ) stuckness := twp_aux.(unseal).
+Definition twp_eq `{irisG Λ Σ} : twp = @twp_def Λ Σ _ := twp_aux.(seal_eq).
 
 Section twp.
 Context `{irisG Λ Σ}.
+Implicit Types s : stuckness.
 Implicit Types P : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 Implicit Types v : val Λ.
@@ -210,12 +81,12 @@ Proof.
 Qed.
 
 Global Instance twp_ne s E e n :
-  Proper (pointwise_relation _ (dist n) ==> dist n) (@twp Λ Σ _ s E e).
+  Proper (pointwise_relation _ (dist n) ==> dist n) (twp (PROP:=iProp Σ) s E e).
 Proof.
   intros Φ1 Φ2 HΦ. rewrite !twp_eq. by apply (least_fixpoint_ne _), pair_ne, HΦ.
 Qed.
 Global Instance twp_proper s E e :
-  Proper (pointwise_relation _ (≡) ==> (≡)) (@twp Λ Σ _ s E e).
+  Proper (pointwise_relation _ (≡) ==> (≡)) (twp (PROP:=iProp Σ) s E e).
 Proof.
   by intros Φ Φ' ?; apply equiv_dist=>n; apply twp_ne=>v; apply equiv_dist.
 Qed.
@@ -315,9 +186,9 @@ Lemma twp_wp s E e Φ : WP e @ s; E [{ Φ }] -∗ WP e @ s; E {{ Φ }}.
 Proof.
   iIntros "H". iLöb as "IH" forall (E e Φ).
   rewrite wp_unfold twp_unfold /wp_pre /twp_pre. destruct (to_val e) as [v|]=>//.
-  iIntros (σ1) "Hσ". iMod ("H" with "Hσ") as "[$ H]". iModIntro; iNext.
-  iIntros (e2 σ2 efs) "Hstep".
-  iMod ("H" with "Hstep") as "($ & H & Hfork)"; iModIntro.
+  iIntros (σ1) "Hσ". iMod ("H" with "Hσ") as "[$ H]". iIntros "!>".
+  iIntros (e2 σ2 efs) "Hstep". iMod ("H" with "Hstep") as "($ & H & Hfork)".
+  iApply step_fupd_intro; [set_solver+|]. iNext.
   iSplitL "H". by iApply "IH". iApply (@big_sepL_impl with "[$Hfork]").
   iIntros "!#" (k e' _) "H". by iApply "IH".
 Qed.
@@ -339,17 +210,17 @@ Lemma twp_mask_mono s E1 E2 e Φ :
   E1 ⊆ E2 → WP e @ s; E1 [{ Φ }] -∗ WP e @ s; E2 [{ Φ }].
 Proof. iIntros (?) "H"; iApply (twp_strong_mono with "H"); auto. Qed.
 Global Instance twp_mono' s E e :
-  Proper (pointwise_relation _ (⊢) ==> (⊢)) (@twp Λ Σ _ s E e).
+  Proper (pointwise_relation _ (⊢) ==> (⊢)) (twp (PROP:=iProp Σ) s E e).
 Proof. by intros Φ Φ' ?; apply twp_mono. Qed.
 
-Lemma twp_value s E Φ e v `{!IntoVal e v} : Φ v -∗ WP e @ s; E [{ Φ }].
-Proof. intros; rewrite -(of_to_val e v) //; by apply twp_value'. Qed.
+Lemma twp_value s E Φ e v : IntoVal e v → Φ v -∗ WP e @ s; E [{ Φ }].
+Proof. intros <-. by apply twp_value'. Qed.
 Lemma twp_value_fupd' s E Φ v : (|={E}=> Φ v) -∗ WP of_val v @ s; E [{ Φ }].
 Proof. intros. by rewrite -twp_fupd -twp_value'. Qed.
-Lemma twp_value_fupd s E Φ e v `{!IntoVal e v} : (|={E}=> Φ v) -∗ WP e @ s; E [{ Φ }].
-Proof. intros. rewrite -twp_fupd -twp_value //. Qed.
-Lemma twp_value_inv s E Φ e v `{!IntoVal e v} : WP e @ s; E [{ Φ }] ={E}=∗ Φ v.
-Proof. intros; rewrite -(of_to_val e v) //; by apply twp_value_inv'. Qed.
+Lemma twp_value_fupd s E Φ e v : IntoVal e v → (|={E}=> Φ v) -∗ WP e @ s; E [{ Φ }].
+Proof. intros ?. rewrite -twp_fupd -twp_value //. Qed.
+Lemma twp_value_inv s E Φ e v : IntoVal e v → WP e @ s; E [{ Φ }] ={E}=∗ Φ v.
+Proof. intros <-. by apply twp_value_inv'. Qed.
 
 Lemma twp_frame_l s E e Φ R : R ∗ WP e @ s; E [{ Φ }] -∗ WP e @ s; E [{ v, R ∗ Φ v }].
 Proof. iIntros "[? H]". iApply (twp_strong_mono with "H"); auto with iFrame. Qed.
@@ -377,25 +248,35 @@ Section proofmode_classes.
   Implicit Types Φ : val Λ → iProp Σ.
 
   Global Instance frame_twp p s E e R Φ Ψ :
-    (∀ v, Frame p R (Φ v) (Ψ v)) → Frame p R (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Ψ }]).
+    (∀ v, Frame p R (Φ v) (Ψ v)) →
+    Frame p R (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Ψ }]).
   Proof. rewrite /Frame=> HR. rewrite twp_frame_l. apply twp_mono, HR. Qed.
 
   Global Instance is_except_0_wp s E e Φ : IsExcept0 (WP e @ s; E [{ Φ }]).
   Proof. by rewrite /IsExcept0 -{2}fupd_twp -except_0_fupd -fupd_intro. Qed.
 
-  Global Instance elim_modal_bupd_twp s E e P Φ :
-    ElimModal (|==> P) P (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Φ }]).
-  Proof. by rewrite /ElimModal (bupd_fupd E) fupd_frame_r wand_elim_r fupd_twp. Qed.
+  Global Instance elim_modal_bupd_twp p s E e P Φ :
+    ElimModal True p false (|==> P) P (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Φ }]).
+  Proof.
+    by rewrite /ElimModal intuitionistically_if_elim
+      (bupd_fupd E) fupd_frame_r wand_elim_r fupd_twp.
+  Qed.
 
-  Global Instance elim_modal_fupd_twp s E e P Φ :
-    ElimModal (|={E}=> P) P (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Φ }]).
-  Proof. by rewrite /ElimModal fupd_frame_r wand_elim_r fupd_twp. Qed.
+  Global Instance elim_modal_fupd_twp p s E e P Φ :
+    ElimModal True p false (|={E}=> P) P (WP e @ s; E [{ Φ }]) (WP e @ s; E [{ Φ }]).
+  Proof.
+    by rewrite /ElimModal intuitionistically_if_elim
+      fupd_frame_r wand_elim_r fupd_twp.
+  Qed.
 
-  Global Instance elim_modal_fupd_twp_atomic s E1 E2 e P Φ :
+  Global Instance elim_modal_fupd_twp_atomic p s E1 E2 e P Φ :
     Atomic (stuckness_to_atomicity s) e →
-    ElimModal (|={E1,E2}=> P) P
+    ElimModal True p false (|={E1,E2}=> P) P
             (WP e @ s; E1 [{ Φ }]) (WP e @ s; E2 [{ v, |={E2,E1}=> Φ v }])%I.
-  Proof. intros. by rewrite /ElimModal fupd_frame_r wand_elim_r twp_atomic. Qed.
+  Proof.
+    intros. by rewrite /ElimModal intuitionistically_if_elim
+      fupd_frame_r wand_elim_r twp_atomic.
+  Qed.
 
   Global Instance add_modal_fupd_twp s E e P Φ :
     AddModal (|={E}=> P) P (WP e @ s; E [{ Φ }]).

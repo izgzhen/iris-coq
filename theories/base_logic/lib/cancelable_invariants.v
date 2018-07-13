@@ -1,4 +1,5 @@
-From iris.base_logic.lib Require Export invariants fractional.
+From iris.base_logic.lib Require Export invariants.
+From iris.bi.lib Require Import fractional.
 From iris.algebra Require Export frac.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
@@ -38,7 +39,7 @@ Section proofs.
   Proof. rewrite /cinv; apply _. Qed.
 
   Global Instance cinv_own_fractional γ : Fractional (cinv_own γ).
-  Proof. intros ??. by rewrite -own_op. Qed.
+  Proof. intros ??. by rewrite /cinv_own -own_op. Qed.
   Global Instance cinv_own_as_fractional γ q :
     AsFractional (cinv_own γ q) (cinv_own γ) q.
   Proof. split. done. apply _. Qed.
@@ -56,7 +57,7 @@ Section proofs.
     ▷ □ (P ↔ P') -∗ cinv N γ P -∗ cinv N γ P'.
   Proof.
     iIntros "#HP' Hinv". iDestruct "Hinv" as (P'') "[#HP'' Hinv]".
-    iExists _. iFrame "Hinv". iNext. iAlways. iSplit.
+    iExists _. iFrame "Hinv". iAlways. iNext. iSplit.
     - iIntros "?". iApply "HP''". iApply "HP'". done.
     - iIntros "?". iApply "HP'". iApply "HP''". done.
   Qed.
@@ -105,6 +106,18 @@ Section proofs.
     iIntros (?) "#Hinv Hγ".
     iMod (cinv_open_strong with "Hinv Hγ") as "($ & $ & H)"; first done.
     iIntros "!> HP". iApply "H"; auto.
+  Qed.
+
+  Global Instance into_inv_cinv N γ P : IntoInv (cinv N γ P) N.
+
+  Global Instance into_acc_cinv E N γ P p :
+    IntoAcc (X:=unit) (cinv N γ P)
+            (↑N ⊆ E) (cinv_own γ p) (fupd E (E∖↑N)) (fupd (E∖↑N) E)
+            (λ _, ▷ P ∗ cinv_own γ p)%I (λ _, ▷ P)%I (λ _, None)%I.
+  Proof.
+    rewrite /IntoAcc /accessor. iIntros (?) "#Hinv Hown".
+    rewrite exist_unit -assoc.
+    iApply (cinv_open with "Hinv"); done.
   Qed.
 End proofs.
 

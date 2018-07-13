@@ -1,5 +1,6 @@
 From iris.proofmode Require Import base.
 From iris.algebra Require Export base.
+From iris.bi Require Export bi.
 Set Default Proof Using "Type".
 
 Inductive env (A : Type) : Type :=
@@ -17,7 +18,7 @@ Fixpoint env_lookup {A} (i : ident) (Γ : env A) : option A :=
   end.
 
 Module env_notations.
-  Notation "y ≫= f" := (option_bind f y).
+  Notation "y ≫= f" := (pm_option_bind f y).
   Notation "x ← y ; z" := (y ≫= λ x, z).
   Notation "' x1 .. xn ← y ; z" := (y ≫= (λ x1, .. (λ xn, z) .. )).
   Notation "Γ !! j" := (env_lookup j Γ).
@@ -93,8 +94,8 @@ Ltac simplify :=
   | _ => progress simplify_eq/=
   | H : context [ident_beq ?s1 ?s2] |- _ => destruct (ident_beq_reflect s1 s2)
   | |- context [ident_beq ?s1 ?s2] => destruct (ident_beq_reflect s1 s2)
-  | H : context [option_bind _ ?x] |- _ => destruct x eqn:?
-  | |- context [option_bind _ ?x] => destruct x eqn:?
+  | H : context [pm_option_bind _ ?x] |- _ => destruct x eqn:?
+  | |- context [pm_option_bind _ ?x] => destruct x eqn:?
   | _ => case_match
   end.
 
@@ -205,3 +206,132 @@ Global Instance env_to_list_subenv_proper :
   Proper (env_subenv ==> sublist) (@env_to_list A).
 Proof. induction 1; simpl; constructor; auto. Qed.
 End env.
+
+Record envs (PROP : bi) :=
+  Envs { env_intuitionistic : env PROP; env_spatial : env PROP; env_counter : positive }.
+Add Printing Constructor envs.
+Arguments Envs {_} _ _ _.
+Arguments env_intuitionistic {_} _.
+Arguments env_spatial {_} _.
+Arguments env_counter {_} _.
+
+Record envs_wf {PROP} (Δ : envs PROP) := {
+  env_intuitionistic_valid : env_wf (env_intuitionistic Δ);
+  env_spatial_valid : env_wf (env_spatial Δ);
+  envs_disjoint i : env_intuitionistic Δ !! i = None ∨ env_spatial Δ !! i = None
+}.
+
+Definition of_envs {PROP} (Δ : envs PROP) : PROP :=
+  (⌜envs_wf Δ⌝ ∧ □ [∧] env_intuitionistic Δ ∗ [∗] env_spatial Δ)%I.
+Instance: Params (@of_envs) 1.
+Arguments of_envs : simpl never.
+
+(* We seal [envs_entails], so that it does not get unfolded by the
+   proofmode's own tactics, such as [iIntros (?)]. *)
+Definition envs_entails_aux : seal (λ PROP (Δ : envs PROP) (Q : PROP), (of_envs Δ ⊢ Q)).
+Proof. by eexists. Qed.
+Definition envs_entails := envs_entails_aux.(unseal).
+Definition envs_entails_eq : envs_entails = _ := envs_entails_aux.(seal_eq).
+Arguments envs_entails {PROP} Δ Q%I : rename.
+Instance: Params (@envs_entails) 1.
+
+Record envs_Forall2 {PROP : bi} (R : relation PROP) (Δ1 Δ2 : envs PROP) := {
+  env_intuitionistic_Forall2 : env_Forall2 R (env_intuitionistic Δ1) (env_intuitionistic Δ2);
+  env_spatial_Forall2 : env_Forall2 R (env_spatial Δ1) (env_spatial Δ2)
+}.
+
+Definition envs_dom {PROP} (Δ : envs PROP) : list ident :=
+  env_dom (env_intuitionistic Δ) ++ env_dom (env_spatial Δ).
+
+Definition envs_lookup {PROP} (i : ident) (Δ : envs PROP) : option (bool * PROP) :=
+  let (Γp,Γs,n) := Δ in
+  match env_lookup i Γp with
+  | Some P => Some (true, P)
+  | None => P ← env_lookup i Γs; Some (false, P)
+  end.
+
+Definition envs_delete {PROP} (remove_persistent : bool)
+    (i : ident) (p : bool) (Δ : envs PROP) : envs PROP :=
+  let (Γp,Γs,n) := Δ in
+  match p with
+  | true => Envs (if remove_persistent then env_delete i Γp else Γp) Γs n
+  | false => Envs Γp (env_delete i Γs) n
+  end.
+
+Definition envs_lookup_delete {PROP} (remove_persistent : bool)
+    (i : ident) (Δ : envs PROP) : option (bool * PROP * envs PROP) :=
+  let (Γp,Γs,n) := Δ in
+  match env_lookup_delete i Γp with
+  | Some (P,Γp') => Some (true, P, Envs (if remove_persistent then Γp' else Γp) Γs n)
+  | None => ''(P,Γs') ← env_lookup_delete i Γs; Some (false, P, Envs Γp Γs' n)
+  end.
+
+Fixpoint envs_lookup_delete_list {PROP} (remove_persistent : bool)
+    (js : list ident) (Δ : envs PROP) : option (bool * list PROP * envs PROP) :=
+  match js with
+  | [] => Some (true, [], Δ)
+  | j :: js =>
+     ''(p,P,Δ') ← envs_lookup_delete remove_persistent j Δ;
+     ''(q,Hs,Δ'') ← envs_lookup_delete_list remove_persistent js Δ';
+     Some ((p:bool) && q, P :: Hs, Δ'')
+  end.
+
+Definition envs_snoc {PROP} (Δ : envs PROP)
+    (p : bool) (j : ident) (P : PROP) : envs PROP :=
+  let (Γp,Γs,n) := Δ in
+  if p then Envs (Esnoc Γp j P) Γs n else Envs Γp (Esnoc Γs j P) n.
+
+Definition envs_app {PROP : bi} (p : bool)
+    (Γ : env PROP) (Δ : envs PROP) : option (envs PROP) :=
+  let (Γp,Γs,n) := Δ in
+  match p with
+  | true => _ ← env_app Γ Γs; Γp' ← env_app Γ Γp; Some (Envs Γp' Γs n)
+  | false => _ ← env_app Γ Γp; Γs' ← env_app Γ Γs; Some (Envs Γp Γs' n)
+  end.
+
+Definition envs_simple_replace {PROP : bi} (i : ident) (p : bool)
+    (Γ : env PROP) (Δ : envs PROP) : option (envs PROP) :=
+  let (Γp,Γs,n) := Δ in
+  match p with
+  | true => _ ← env_app Γ Γs; Γp' ← env_replace i Γ Γp; Some (Envs Γp' Γs n)
+  | false => _ ← env_app Γ Γp; Γs' ← env_replace i Γ Γs; Some (Envs Γp Γs' n)
+  end.
+
+Definition envs_replace {PROP : bi} (i : ident) (p q : bool)
+    (Γ : env PROP) (Δ : envs PROP) : option (envs PROP) :=
+  if beq p q then envs_simple_replace i p Γ Δ
+  else envs_app q Γ (envs_delete true i p Δ).
+
+Definition env_spatial_is_nil {PROP} (Δ : envs PROP) : bool :=
+  if env_spatial Δ is Enil then true else false.
+
+Definition envs_clear_spatial {PROP} (Δ : envs PROP) : envs PROP :=
+  Envs (env_intuitionistic Δ) Enil (env_counter Δ).
+
+Definition envs_clear_persistent {PROP} (Δ : envs PROP) : envs PROP :=
+  Envs Enil (env_spatial Δ) (env_counter Δ).
+
+Definition envs_incr_counter {PROP} (Δ : envs PROP) : envs PROP :=
+  Envs (env_intuitionistic Δ) (env_spatial Δ) (Pos_succ (env_counter Δ)).
+
+Fixpoint envs_split_go {PROP}
+    (js : list ident) (Δ1 Δ2 : envs PROP) : option (envs PROP * envs PROP) :=
+  match js with
+  | [] => Some (Δ1, Δ2)
+  | j :: js =>
+     ''(p,P,Δ1') ← envs_lookup_delete true j Δ1;
+     if p : bool then envs_split_go js Δ1 Δ2 else
+     envs_split_go js Δ1' (envs_snoc Δ2 false j P)
+  end.
+(* if [d = Right] then [result = (remaining hyps, hyps named js)] and
+   if [d = Left] then [result = (hyps named js, remaining hyps)] *)
+Definition envs_split {PROP} (d : direction)
+    (js : list ident) (Δ : envs PROP) : option (envs PROP * envs PROP) :=
+  ''(Δ1,Δ2) ← envs_split_go js Δ (envs_clear_spatial Δ);
+  if d is Right then Some (Δ1,Δ2) else Some (Δ2,Δ1).
+
+Definition prop_of_env {PROP : bi} (Γ : env PROP) : PROP :=
+  let fix aux Γ acc :=
+    match Γ with Enil => acc | Esnoc Γ _ P => aux Γ (P ∗ acc)%I end
+  in
+  match Γ with Enil => emp%I | Esnoc Γ _ P => aux Γ P end.

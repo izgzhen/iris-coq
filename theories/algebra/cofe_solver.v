@@ -93,7 +93,7 @@ Proof using Fcontr. intros. by rewrite -(fg (X (S (S k)))) -(g_tower X). Qed.
 Lemma ff_tower k i (X : tower) : ff i (X (S k)) ≡{k}≡ X (i + S k).
 Proof using Fcontr.
   intros; induction i as [|i IH]; simpl; [done|].
-  by rewrite IH Nat.add_succ_r (dist_le _ _ _ _ (f_tower _ X)); last omega.
+  by rewrite IH Nat.add_succ_r (dist_le _ _ _ _ (f_tower _ X)); last lia.
 Qed.
 Lemma gg_tower k i (X : tower) : gg i (X (i + k)) ≡ X k.
 Proof. by induction i as [|i IH]; simpl; [done|rewrite g_tower IH]. Qed.

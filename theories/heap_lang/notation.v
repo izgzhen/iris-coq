@@ -2,6 +2,9 @@ From iris.program_logic Require Import language.
 From iris.heap_lang Require Export lang tactics.
 Set Default Proof Using "Type".
 
+Delimit Scope expr_scope with E.
+Delimit Scope val_scope with V.
+
 Coercion LitInt : Z >-> base_lit.
 Coercion LitBool : bool >-> base_lit.
 Coercion LitLoc : loc >-> base_lit.
@@ -141,10 +144,10 @@ Notation "e1 || e2" :=
   (If e1%E (Lit (LitBool true)) e2%E) (only parsing) : expr_scope.
 
 (** Notations for option *)
-Notation NONE := (InjL #()) (only parsing).
+Notation NONE := (InjL (Lit LitUnit)) (only parsing).
 Notation SOME x := (InjR x) (only parsing).
 
-Notation NONEV := (InjLV #()) (only parsing).
+Notation NONEV := (InjLV (LitV LitUnit)) (only parsing).
 Notation SOMEV x := (InjRV x) (only parsing).
 
 Notation "'match:' e0 'with' 'NONE' => e1 | 'SOME' x => e2 'end'" :=

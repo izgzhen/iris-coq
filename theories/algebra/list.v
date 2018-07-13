@@ -56,7 +56,7 @@ Canonical Structure listC := OfeT (list A) list_ofe_mixin.
 
 Program Definition list_chain
     (c : chain listC) (x : A) (k : nat) : chain A :=
-  {| chain_car n := from_option id x (c n !! k) |}.
+  {| chain_car n := default x (c n !! k) |}.
 Next Obligation. intros c x k n i ?. by rewrite /= (chain_cauchy c n i). Qed.
 Definition list_compl `{Cofe A} : Compl listC := λ c,
   match c 0 with
@@ -68,11 +68,11 @@ Global Program Instance list_cofe `{Cofe A} : Cofe listC :=
 Next Obligation.
   intros ? n c; rewrite /compl /list_compl.
   destruct (c 0) as [|x l] eqn:Hc0 at 1.
-  { by destruct (chain_cauchy c 0 n); auto with omega. }
-  rewrite -(λ H, length_ne _ _ _ (chain_cauchy c 0 n H)); last omega.
+  { by destruct (chain_cauchy c 0 n); auto with lia. }
+  rewrite -(λ H, length_ne _ _ _ (chain_cauchy c 0 n H)); last lia.
   apply Forall2_lookup=> i. rewrite -dist_option_Forall2 list_lookup_fmap.
   destruct (decide (i < length (c n))); last first.
-  { rewrite lookup_seq_ge ?lookup_ge_None_2; auto with omega. }
+  { rewrite lookup_seq_ge ?lookup_ge_None_2; auto with lia. }
   rewrite lookup_seq //= (conv_compl n (list_chain c _ _)) /=.
   destruct (lookup_lt_is_Some_2 (c n) i) as [? Hcn]; first done.
   by rewrite Hcn.
@@ -310,7 +310,7 @@ Section properties.
   Lemma list_lookup_singletonM_ne i j x :
     i ≠ j →
     ({[ i := x ]} : list A) !! j = None ∨ ({[ i := x ]} : list A) !! j = Some ε.
-  Proof. revert j; induction i; intros [|j]; naive_solver auto with omega. Qed.
+  Proof. revert j; induction i; intros [|j]; naive_solver auto with lia. Qed.
   Lemma list_singletonM_validN n i x : ✓{n} ({[ i := x ]} : list A) ↔ ✓{n} x.
   Proof.
     rewrite list_lookup_validN. split.
@@ -354,7 +354,7 @@ Section properties.
     x ~~>: P → (∀ y, P y → Q [y]) → [x] ~~>: Q.
   Proof.
     rewrite !cmra_total_updateP=> Hup HQ n lf /list_lookup_validN Hv.
-    destruct (Hup n (from_option id ε (lf !! 0))) as (y&?&Hv').
+    destruct (Hup n (default ε (lf !! 0))) as (y&?&Hv').
     { move: (Hv 0). by destruct lf; rewrite /= ?right_id. }
     exists [y]; split; first by auto.
     apply list_lookup_validN=> i.

@@ -9,6 +9,7 @@
 .\#*
 *~
 *.bak
+.coqdeps.d
 .coq-native/
 build-dep/
 Makefile.coq

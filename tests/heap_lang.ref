@@ -1,0 +1,107 @@
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  E : coPset
+  ============================
+  --------------------------------------∗
+  WP let: "x" := ref #1 in "x" <- ! "x" + #1;; ! "x" @ E {{ v, ⌜v = #2⌝ }}
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  E : coPset
+  l : loc
+  ============================
+  _ : l ↦ #1
+  --------------------------------------∗
+  WP #l <- #1 + #1;; ! #l @ E {{ v, ⌜v = #2⌝ }}
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  E : coPset
+  l : loc
+  ============================
+  "Hl" : l ↦ #1
+  --------------------------------------∗
+  WP let: "x" := #l in let: "y" := ref #1 in "x" <- ! "x" + #1;; ! "x"
+  @ E [{ v, ⌜v = #2⌝ }]
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  l : loc
+  ============================
+  "Hl1" : l ↦{1 / 2} #0
+  "Hl2" : l ↦{1 / 2} #0
+  --------------------------------------∗
+  True
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  l : loc
+  ============================
+  --------------------------------------∗
+  True
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  fun1, fun2, fun3 : expr
+  ============================
+  --------------------------------------∗
+  WP let: "val1" := fun1 #() in
+     let: "val2" := fun2 "val1" in
+     let: "val3" := fun3 "val2" in if: "val1" = "val2" then "val" else "val3"
+  {{ _, True }}
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  fun1, fun2, fun3 : expr
+  Φ : language.val heap_lang → iPropI Σ
+  ============================
+  --------------------------------------∗
+  WP let: "val1" := fun1 #() in
+     let: "val2" := fun2 "val1" in
+     let: "v" := fun3 "v" in if: "v" = "v" then "v" else "v" 
+  {{ v, Φ v }}
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  fun1, fun2, fun3 : expr
+  Φ : language.val heap_lang → iPropI Σ
+  E : coPset
+  ============================
+  --------------------------------------∗
+  WP let: "val1" := fun1 #() in
+     let: "val2" := fun2 "val1" in
+     let: "v" := fun3 "v" in if: "v" = "v" then "v" else "v" 
+  @ E {{ v, Φ v }}
+  
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  fun1, fun2, fun3 : expr
+  ============================
+  {{{ True }}}
+    let: "val1" := fun1 #() in
+    let: "val2" := fun2 "val1" in
+    let: "val3" := fun3 "val2" in if: "val1" = "val2" then "val" else "val3"
+  {{{ (x y : val) (z : Z), RET (x, y, #z); True }}}
+"not_cas"
+     : string
+The command has indeed failed with message:
+Ltac call to "wp_cas_suc" failed.
+Tactic failure: wp_cas_suc: cannot find 'CAS' in (#())%E.

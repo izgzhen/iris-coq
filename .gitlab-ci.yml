@@ -18,7 +18,7 @@ variables:
     paths:
     - opamroot/
   only:
-  - master
+  - gen_proofmode
   - /^ci/
   except:
   - triggers
@@ -32,36 +32,28 @@ build-coq.dev:
     OPAM_PINS: "coq version dev"
     VALIDATE: "1"
 
+build-coq.8.8.dev:
+  <<: *template
+  variables:
+    OPAM_PINS: "coq version 8.8.dev"
+
 build-coq.8.8.0:
   <<: *template
   variables:
     OPAM_PINS: "coq version 8.8.0"
+    OPAM_PKG: "coq-iris"
+    OPAM_PKG_BRANCH: "gen_proofmode"
+    TIMING_PROJECT: "iris"
+    TIMING_CONF: "coq-8.8.0"
+  tags:
+  - fp-timing
 
 build-coq.8.7.2:
   <<: *template
   variables:
     OPAM_PINS: "coq version 8.7.2"
-    OPAM_PKG: "coq-iris"
-    TIMING_PROJECT: "iris"
-    TIMING_CONF: "coq-8.7.2"
-  tags:
-  - fp-timing
 
 build-coq.8.7.1:
   <<: *template
   variables:
     OPAM_PINS: "coq version 8.7.1"
-
-build-coq.8.7.0:
-  <<: *template
-  variables:
-    OPAM_PINS: "coq version 8.7.0"
-
-build-stdpp.dev:
-  <<: *template
-  variables:
-    OPAM_PINS: "coq version 8.7.2   coq-stdpp.dev git https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp/#$STDPP_REV"
-  except:
-  only:
-  - triggers
-  - schedules

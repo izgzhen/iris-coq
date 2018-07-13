@@ -3,16 +3,25 @@ From iris.algebra Require Export base.
 From Coq Require Import Ascii.
 Set Default Proof Using "Type".
 
+(** * Utility definitions used by the proofmode *)
+
 (* Directions of rewrites *)
 Inductive direction := Left | Right.
 
-(* Some specific versions of operations on strings for the proof mode. We need
-those so that we can make [cbv] unfold just them, but not the actual operations
-that may appear in users' proofs. *)
+(* Some specific versions of operations on strings, booleans, positive for the
+proof mode. We need those so that we can make [cbv] unfold just them, but not
+the actual operations that may appear in users' proofs. *)
 Local Notation "b1 && b2" := (if b1 then b2 else false) : bool_scope.
 
 Lemma lazy_andb_true (b1 b2 : bool) : b1 && b2 = true ↔ b1 = true ∧ b2 = true.
 Proof. destruct b1, b2; intuition congruence. Qed.
+
+Fixpoint Pos_succ (x : positive) : positive :=
+  match x with
+  | (p~1)%positive => ((Pos_succ p)~0)%positive
+  | (p~0)%positive => (p~1)%positive
+  | 1%positive => 2%positive
+  end.
 
 Definition beq (b1 b2 : bool) : bool :=
   match b1, b2 with
@@ -84,6 +93,18 @@ Qed.
 Lemma ident_beq_reflect i1 i2 : reflect (i1 = i2) (ident_beq i1 i2).
 Proof. apply iff_reflect. by rewrite ident_beq_true. Qed.
 
-Definition option_bind {A B} (f : A → option B) (mx : option A) : option B :=
+(** Copies of some [option] combinators for better reduction control. *)
+Definition pm_option_bind {A B} (f : A → option B) (mx : option A) : option B :=
   match mx with Some x => f x | None => None end.
-Arguments option_bind _ _ _ !_ /.
+Arguments pm_option_bind {_ _} _ !_ /.
+
+Definition pm_from_option {A B} (f : A → B) (y : B) (mx : option A) : B :=
+  match mx with None => y | Some x => f x end.
+Arguments pm_from_option {_ _} _ _ !_ /.
+
+Definition pm_option_fun {A B} (f : option (A → B)) (x : A) : option B :=
+  match f with None => None | Some f => Some (f x) end.
+Arguments pm_option_fun {_ _} !_ _ /.
+
+(* Can't write [id] here as that would not reduce. *)
+Notation pm_default := (pm_from_option (λ x, x)).

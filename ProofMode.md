@@ -41,8 +41,8 @@ Context management
   the resulting goal.
 - `iPoseProof pm_trm as (x1 ... xn) "ipat"` : put `pm_trm` into the context and
   eliminates it. This tactic is essentially the same as `iDestruct` with the
-  difference that when `pm_trm` is a non-univerisally quantified persistent
-  hypothesis, it will not throw away the hypothesis.
+  difference that when `pm_trm` is a non-universally quantified intuitionistic
+  hypothesis, it will not throw the hypothesis away.
 - `iAssert P with "spat" as "ipat"` : generates a new subgoal `P` and adds the
   hypothesis `P` to the current goal. The specialization pattern `spat`
   specifies which hypotheses will be consumed by proving `P`. The introduction
@@ -108,41 +108,32 @@ Separating logic specific tactics
 
   This tactic finishes the goal in case everything in the conclusion has been
   framed.
-- `iCombine "H1" "H2" as "H"` : turns `H1 : P1` and `H2 : P2` into
-  `H : P1 ∗ P2`.
+- `iCombine "H1" "H2" as "pat"` : turns `H1 : P1` and `H2 : P2` into
+  `P1 ∗ P2`, on which `iDetruct ... as pat` is called.
 
 Modalities
 ----------
 
-- `iModIntro` : introduction of a modality that is an instance of the
-  `FromModal` type class. Instances include: later, except 0, basic update and
-  fancy update.
+- `iModIntro mod` : introduction of a modality. The type class `FromModal` is
+  used to specify which modalities this tactic should introduce. Instances of
+  that type class include: later, except 0, basic update and fancy update,
+  persistently, affinely, plainly, absorbingly, objectively, and subjectively.
+  The optional argument `mod` can be used to specify what modality to introduce
+  in case of ambiguity, e.g. `⎡|==> P⎤`.
+- `iAlways` : a deprecated alias of `iModIntro`.
+- `iNext n` : an alias of `iModIntro (▷^n P)`.
+- `iNext` : an alias of `iModIntro (▷^1 P)`.
 - `iMod pm_trm as (x1 ... xn) "ipat"` : eliminate a modality `pm_trm` that is
   an instance of the `ElimModal` type class. Instances include: later, except 0,
   basic update and fancy update.
 
-The persistence and plainness modalities
-----------------------------------------
+Induction
+---------
 
-- `iAlways` : introduce a persistence or plainness modality and the spatial
-  context. In case of a plainness modality, the tactic will prune all persistent
-  hypotheses that are not plain.
-
-The later modality
-------------------
-
-- `iNext n` : introduce `n` laters by stripping that number of laters from all
-  hypotheses. If the argument `n` is not given, it strips one later if the
-  leftmost conjunct is of the shape `▷ P`, or `n` laters if the leftmost
-  conjunct is of the shape `▷^n P`.
 - `iLöb as "IH" forall (x1 ... xn) "selpat"` : perform Löb induction by
   generating a hypothesis `IH : ▷ goal`. The tactic generalizes over the Coq
   level variables `x1 ... xn`, the hypotheses given by the selection pattern
   `selpat`, and the spatial context.
-
-Induction
----------
-
 - `iInduction x as cpat "IH" forall (x1 ... xn) "selpat"` : perform induction on
   the Coq term `x`. The Coq introduction pattern is used to name the introduced
   variables. The induction hypotheses are inserted into the persistent context
@@ -170,8 +161,11 @@ Rewriting / simplification
 Iris
 ----
 
-- `iInv N as (x1 ... xn) "ipat" "Hclose"` : open the invariant `N`, the update
-  for closing the invariant is put in a hypothesis named `Hclose`.
+- `iInv S with "selpat" as (x1 ... xn) "ipat" "Hclose"` : where `S` is either
+   a namespace N or an identifier "H". Open the invariant indicated by S.  The
+   selection pattern `selpat` is used for any auxiliary assertions needed to
+   open the invariant (e.g. for cancelable or non-atomic invariants). The update
+   for closing the invariant is put in a hypothesis named `Hclose`.
 
 Miscellaneous
 -------------
@@ -226,8 +220,8 @@ appear at the top level:
   Items of the selection pattern can be prefixed with `$`, which cause them to
   be framed instead of cleared.
 - `!%` : introduce a pure goal (and leave the proof mode).
-- `!#` : introduce an persistence or plainness modality (by calling `iAlways`).
-- `!>` : introduce a modality (by calling `iModIntro`).
+- `!>` : introduce a modality by calling `iModIntro`.
+- `!#` : introduce a modality by calling `iModIntro` (deprecated).
 - `/=` : perform `simpl`.
 - `//` : perform `try done` on all goals.
 - `//=` : syntactic sugar for `/= //`

@@ -1,0 +1,500 @@
+"demo_0"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  P, Q : PROP
+  ============================
+  "H2" : ∀ x : nat, ⌜x = 0⌝ ∨ ⌜x = 1⌝
+  --------------------------------------□
+  "H" : □ (P ∨ Q)
+  --------------------------------------∗
+  Q ∨ P
+  
+1 subgoal
+  
+  PROP : sbi
+  P, Q : PROP
+  ============================
+  "H2" : ∀ x : nat, ⌜x = 0⌝ ∨ ⌜x = 1⌝
+  _ : P
+  --------------------------------------□
+  Q ∨ P
+  
+"test_iDestruct_and_emp"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  P, Q : PROP
+  Persistent0 : Persistent P
+  Persistent1 : Persistent Q
+  ============================
+  _ : P
+  _ : Q
+  --------------------------------------□
+  <affine> (P ∗ Q)
+  
+The command has indeed failed with message:
+Ltac call to "done" failed.
+No applicable tactic.
+The command has indeed failed with message:
+In nested Ltac calls to "iClear (constr)", "iElaborateSelPat" and
+"<iris.proofmode.ltac_tactics.iElaborateSelPat_go>", last call failed.
+Tactic failure: iElaborateSelPat: "HQ" not found.
+The command has indeed failed with message:
+In nested Ltac calls to "iClear (constr)", "iElaborateSelPat" and
+"<iris.proofmode.ltac_tactics.iElaborateSelPat_go>", last call failed.
+Tactic failure: iElaborateSelPat: "HQ" not found.
+The command has indeed failed with message:
+In nested Ltac calls to "iSpecialize (open_constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) with (open_constr) (open_constr) as (constr)",
+"iSpecializePat (open_constr) (constr)" and "iSpecializePat_go", last call
+failed.
+Tactic failure: iSpecialize: cannot instantiate (∀ _ : φ, P -∗ False)%I with
+P.
+The command has indeed failed with message:
+In nested Ltac calls to "iSpecialize (open_constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) with (open_constr) (open_constr) as (constr)",
+"iSpecializePat (open_constr) (constr)" and "iSpecializePat_go", last call
+failed.
+Tactic failure: iSpecialize: cannot instantiate (⌜φ⌝ → P -∗ False)%I with P.
+"test_iNext_plus_3"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  P, Q : PROP
+  n, m, k : nat
+  ============================
+  --------------------------------------∗
+  ▷^(S n + S m) emp
+  
+"test_iFrame_later_1"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  P, Q : PROP
+  ============================
+  --------------------------------------∗
+  ▷ emp
+  
+"test_iFrame_later_2"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  P, Q : PROP
+  ============================
+  --------------------------------------∗
+  ▷ emp
+  
+The command has indeed failed with message:
+In nested Ltac calls to "iFrame (constr)",
+"<iris.proofmode.ltac_tactics.iFrame_go>" and
+"<iris.proofmode.ltac_tactics.iFrameHyp>", last call failed.
+Tactic failure: iFrame: cannot frame Q.
+"test_and_sep_affine_bi"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  H : BiAffine PROP
+  P, Q : PROP
+  ============================
+  _ : □ P
+  _ : Q
+  --------------------------------------∗
+  □ P
+  
+"test_big_sepL_simpl"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  x : nat
+  l : list nat
+  P : PROP
+  ============================
+  "HP" : P
+  _ : [∗ list] y ∈ l, <affine> ⌜y = y⌝
+  _ : [∗ list] y ∈ (x :: l), <affine> ⌜y = y⌝
+  --------------------------------------∗
+  P
+  
+1 subgoal
+  
+  PROP : sbi
+  x : nat
+  l : list nat
+  P : PROP
+  ============================
+  "HP" : P
+  _ : [∗ list] y ∈ l, <affine> ⌜y = y⌝
+  _ : <affine> ⌜x = x⌝ ∗ ([∗ list] y ∈ l, <affine> ⌜y = y⌝)
+  --------------------------------------∗
+  P
+  
+"test_big_sepL2_simpl"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  x1, x2 : nat
+  l1, l2 : list nat
+  P : PROP
+  ============================
+  "HP" : P
+  _ : [∗ list] y1;y2 ∈ [];l2, <affine> ⌜y1 = y2⌝
+  _ : [∗ list] y1;y2 ∈ (x1 :: l1);((x2 :: l2) ++ l2), <affine> ⌜y1 = y2⌝
+  --------------------------------------∗
+  P ∨ ([∗ list] _;_ ∈ (x1 :: l1);(x2 :: l2), True)
+  
+1 subgoal
+  
+  PROP : sbi
+  x1, x2 : nat
+  l1, l2 : list nat
+  P : PROP
+  ============================
+  "HP" : P
+  _ : [∗ list] y1;y2 ∈ [];l2, <affine> ⌜y1 = y2⌝
+  _ : <affine> ⌜x1 = x2⌝
+      ∗ ([∗ list] y1;y2 ∈ l1;(l2 ++ l2), <affine> ⌜y1 = y2⌝)
+  --------------------------------------∗
+  P ∨ True ∗ ([∗ list] _;_ ∈ l1;l2, True)
+  
+"test_big_sepL2_iDestruct"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  Φ : nat → nat → PROP
+  x1, x2 : nat
+  l1, l2 : list nat
+  ============================
+  _ : Φ x1 x2
+  _ : [∗ list] y1;y2 ∈ l1;l2, Φ y1 y2
+  --------------------------------------∗
+  <absorb> Φ x1 x2
+  
+"test_reducing_after_iDestruct"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  ============================
+  "H" : □ True
+  --------------------------------------∗
+  True
+  
+"test_reducing_after_iApply"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  ============================
+  "H" : emp
+  --------------------------------------□
+  □ emp
+  
+"test_reducing_after_iApply_late_evar"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  ============================
+  "H" : emp
+  --------------------------------------□
+  □ emp
+  
+"test_wandM"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  mP : option PROP
+  Q, R : PROP
+  ============================
+  "HPQ" : mP -∗? Q
+  "HQR" : Q -∗ R
+  "HP" : default emp mP
+  --------------------------------------∗
+  R
+  
+1 subgoal
+  
+  PROP : sbi
+  mP : option PROP
+  Q, R : PROP
+  ============================
+  "HP" : default emp mP
+  --------------------------------------∗
+  default emp mP
+  
+"elim_mod_accessor"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  X : Type
+  E1, E2 : coPset.coPset
+  α : X → PROP
+  β : X → PROP
+  γ : X → option PROP
+  ============================
+  "Hacc" : ∃ x : X, α x ∗ (β x ={E2,E1}=∗ default emp (γ x))
+  --------------------------------------∗
+  |={E2,E1}=> True
+  
+"print_long_line_1"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
+  ============================
+  "HP" : P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
+         ∗ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
+  --------------------------------------∗
+  True
+  
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
+  ============================
+  _ : P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
+      ∗ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P
+  --------------------------------------∗
+  True
+  
+"print_long_line_2"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
+  ============================
+  "HP" : TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P |
+         P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
+  --------------------------------------∗
+  True
+  
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P : PROP
+  ============================
+  _ : TESTNOTATION {{ P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P |
+      P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P_P }}
+  --------------------------------------∗
+  True
+  
+"long_impl"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  PPPPPPPPPPPPPPPPP, QQQQQQQQQQQQQQQQQQ : PROP
+  ============================
+  --------------------------------------∗
+  PPPPPPPPPPPPPPPPP
+  → QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+  
+"long_impl_nested"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  PPPPPPPPPPPPPPPPP, QQQQQQQQQQQQQQQQQQ : PROP
+  ============================
+  --------------------------------------∗
+  PPPPPPPPPPPPPPPPP
+  → QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+    → QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+  
+"long_wand"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  PPPPPPPPPPPPPPPPP, QQQQQQQQQQQQQQQQQQ : PROP
+  ============================
+  --------------------------------------∗
+  PPPPPPPPPPPPPPPPP
+  -∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+  
+"long_wand_nested"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  PPPPPPPPPPPPPPPPP, QQQQQQQQQQQQQQQQQQ : PROP
+  ============================
+  --------------------------------------∗
+  PPPPPPPPPPPPPPPPP
+  -∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+     -∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+  
+"long_fupd"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  E : coPset.coPset
+  PPPPPPPPPPPPPPPPP, QQQQQQQQQQQQQQQQQQ : PROP
+  ============================
+  --------------------------------------∗
+  PPPPPPPPPPPPPPPPP
+  ={E}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+  
+"long_fupd_nested"
+     : string
+1 subgoal
+  
+  PROP : sbi
+  BiFUpd0 : BiFUpd PROP
+  E1, E2 : coPset.coPset
+  PPPPPPPPPPPPPPPPP, QQQQQQQQQQQQQQQQQQ : PROP
+  ============================
+  --------------------------------------∗
+  PPPPPPPPPPPPPPPPP
+  ={E1,E2}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+             ={E1,E2}=∗ QQQQQQQQQQQQQQQQQQ ∗ QQQQQQQQQQQQQQQQQQ
+  
+"iAlways_spatial_non_empty"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iAlways", "iModIntro" and 
+"iModIntro (uconstr)", last call failed.
+Tactic failure: iModIntro: spatial context is non-empty.
+"iDestruct_bad_name"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iDestruct (open_constr) as (constr)",
+"iDestructCore (open_constr) as (constr) (tactic)" and
+"iDestructCore (open_constr) as (constr) (tactic)", last call failed.
+Tactic failure: iDestruct: "HQ" not found.
+"iIntros_dup_name"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iIntros (constr)", "iIntros_go" and
+"iIntro (constr)", last call failed.
+Tactic failure: iIntro: "HP" not fresh.
+The command has indeed failed with message:
+In nested Ltac calls to "iIntros ( (intropattern) )",
+"iIntro ( (intropattern) )" and "intros x", last call failed.
+x is already used.
+"iSplit_one_of_many"
+     : string
+The command has indeed failed with message:
+Ltac call to "iSplitL (constr)" failed.
+Tactic failure: iSplitL: hypotheses ["HPx"] not found.
+The command has indeed failed with message:
+Ltac call to "iSplitL (constr)" failed.
+Tactic failure: iSplitL: hypotheses ["HPx"] not found.
+"iExact_fail"
+     : string
+The command has indeed failed with message:
+Ltac call to "iExact (constr)" failed.
+Tactic failure: iExact: "HQ" not found.
+The command has indeed failed with message:
+Ltac call to "iExact (constr)" failed.
+Tactic failure: iExact: "HQ" : Q does not match goal.
+The command has indeed failed with message:
+Ltac call to "iExact (constr)" failed.
+Tactic failure: iExact: "HP"
+not absorbing and the remaining hypotheses not affine.
+"iClear_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iClear (constr)", "iElaborateSelPat" and
+"<iris.proofmode.ltac_tactics.iElaborateSelPat_go>", last call failed.
+Tactic failure: iElaborateSelPat: "HP" not found.
+The command has indeed failed with message:
+In nested Ltac calls to "iClear (constr)",
+"<iris.proofmode.ltac_tactics.iClear_go>" and
+"<iris.proofmode.ltac_tactics.iClearHyp>", last call failed.
+Tactic failure: iClear: "HP" : P not affine and the goal not absorbing.
+"iSpecializeArgs_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iSpecialize (open_constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) as (constr)",
+"iSpecializeCore (open_constr) with (open_constr) (open_constr) as (constr)",
+"iSpecializeArgs (constr) (open_constr)",
+"<iris.proofmode.ltac_tactics.iSpecializeArgs_go>" and
+"notypeclasses refine (uconstr)", last call failed.
+In environment
+PROP : sbi
+P : PROP
+The term "true" has type "bool" while it is expected to have type "nat".
+"iStartProof_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iStartProof" and "iStartProof", last call failed.
+Tactic failure: iStartProof: not a BI assertion.
+"iPoseProof_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iPoseProof (open_constr) as (constr)" and
+"iPoseProofCore (open_constr) as (constr) (constr) (tactic)", last call
+failed.
+Tactic failure: iPoseProof: not a BI assertion.
+The command has indeed failed with message:
+In nested Ltac calls to "iPoseProof (open_constr) as (constr)" and
+"iPoseProofCore (open_constr) as (constr) (constr) (tactic)", last call
+failed.
+Tactic failure: iRename: "H" not fresh.
+"iRevert_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iRevert (constr)", "iElaborateSelPat" and
+"<iris.proofmode.ltac_tactics.iElaborateSelPat_go>", last call failed.
+Tactic failure: iElaborateSelPat: "H" not found.
+"iDestruct_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iDestruct (open_constr) as (constr)",
+"iDestructCore (open_constr) as (constr) (tactic)",
+"iDestructCore (open_constr) as (constr) (tactic)" and
+"iDestructCore (open_constr) as (constr) (tactic)", last call failed.
+Tactic failure: iDestruct: "{HP}"
+should contain exactly one proper introduction pattern.
+The command has indeed failed with message:
+In nested Ltac calls to "iDestruct (open_constr) as (constr)",
+"iDestructCore (open_constr) as (constr) (tactic)",
+"iDestructCore (open_constr) as (constr) (tactic)" and
+"iDestructCore (open_constr) as (constr) (tactic)", last call failed.
+Tactic failure: iDestruct: (IList [[IClear (sel_patterns.SelIdent "HP")]])
+invalid.
+"iApply_fail"
+     : string
+The command has indeed failed with message:
+In nested Ltac calls to "iApply (open_constr)",
+"iPoseProofCore (open_constr) as (constr) (constr) (tactic)",
+"<iris.proofmode.ltac_tactics.iPoseProofCore_go>",
+"<iris.proofmode.ltac_tactics.iPoseProofCore_go>",
+"<iris.proofmode.ltac_tactics.iPoseProofCore_go>", 
+"goal_tac" (bound to
+fun _ => <ssreflect_plugin::ssrtclseq@0> spec_tac ltac:(()) ; last  tac Htmp) and
+"<ssreflect_plugin::ssrtclseq@0> spec_tac ltac:(()) ; last  tac Htmp", last
+call failed.
+Tactic failure: iApply: cannot apply P.

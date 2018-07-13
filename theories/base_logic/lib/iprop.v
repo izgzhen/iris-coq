@@ -118,6 +118,8 @@ Module Type iProp_solution_sig.
   Definition iResUR (Σ : gFunctors) : ucmraT :=
     ofe_funUR (λ i, gmapUR gname (Σ i (iPreProp Σ))).
   Notation iProp Σ := (uPredC (iResUR Σ)).
+  Notation iPropI Σ := (uPredI (iResUR Σ)).
+  Notation iPropSI Σ := (uPredSI (iResUR Σ)).
 
   Parameter iProp_unfold: ∀ {Σ}, iProp Σ -n> iPreProp Σ.
   Parameter iProp_fold: ∀ {Σ}, iPreProp Σ -n> iProp Σ.
@@ -149,8 +151,7 @@ End iProp_solution.
 
 (** * Properties of the solution to the recursive domain equation *)
 Lemma iProp_unfold_equivI {Σ} (P Q : iProp Σ) :
-  iProp_unfold P ≡ iProp_unfold Q ⊢ (P ≡ Q : iProp Σ).
+  iProp_unfold P ≡ iProp_unfold Q ⊢@{iPropI Σ} P ≡ Q.
 Proof.
-  rewrite -{2}(iProp_fold_unfold P) -{2}(iProp_fold_unfold Q).
-  apply: uPred.f_equiv.
+  rewrite -{2}(iProp_fold_unfold P) -{2}(iProp_fold_unfold Q). apply: bi.f_equiv.
 Qed.

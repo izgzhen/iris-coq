@@ -1,7 +1,6 @@
 From iris.algebra Require Import functions gmap.
-From iris.base_logic Require Import big_op.
-From iris.base_logic Require Export iprop.
-From iris.proofmode Require Import classes.
+From iris.base_logic.lib Require Export iprop.
+From iris.algebra Require Import proofmode_classes.
 Set Default Proof Using "Type".
 Import uPred.
 
@@ -55,8 +54,8 @@ Instance: Params (@iRes_singleton) 4.
 Definition own_def `{inG Σ A} (γ : gname) (a : A) : iProp Σ :=
   uPred_ownM (iRes_singleton γ a).
 Definition own_aux : seal (@own_def). by eexists. Qed.
-Definition own {Σ A i} := unseal own_aux Σ A i.
-Definition own_eq : @own = @own_def := seal_eq own_aux.
+Definition own {Σ A i} := own_aux.(unseal) Σ A i.
+Definition own_eq : @own = @own_def := own_aux.(seal_eq).
 Instance: Params (@own) 4.
 Typeclasses Opaque own.
 
@@ -84,7 +83,7 @@ Global Instance own_proper γ :
 Lemma own_op γ a1 a2 : own γ (a1 ⋅ a2) ⊣⊢ own γ a1 ∗ own γ a2.
 Proof. by rewrite !own_eq /own_def -ownM_op iRes_singleton_op. Qed.
 Lemma own_mono γ a1 a2 : a2 ≼ a1 → own γ a1 ⊢ own γ a2.
-Proof. move=> [c ->]. rewrite own_op. eauto with I. Qed.
+Proof. move=> [c ->]. by rewrite own_op sep_elim_l. Qed.
 
 Global Instance own_mono' γ : Proper (flip (≼) ==> (⊢)) (@own Σ A _ γ).
 Proof. intros a1 a2. apply own_mono. Qed.
@@ -102,7 +101,7 @@ Proof. apply wand_intro_r. by rewrite -own_op own_valid. Qed.
 Lemma own_valid_3 γ a1 a2 a3 : own γ a1 -∗ own γ a2 -∗ own γ a3 -∗ ✓ (a1 ⋅ a2 ⋅ a3).
 Proof. do 2 apply wand_intro_r. by rewrite -!own_op own_valid. Qed.
 Lemma own_valid_r γ a : own γ a ⊢ own γ a ∗ ✓ a.
-Proof. apply: uPred.sep_entails_r. apply own_valid. Qed.
+Proof. apply: bi.persistent_entails_r. apply own_valid. Qed.
 Lemma own_valid_l γ a : own γ a ⊢ ✓ a ∗ own γ a.
 Proof. by rewrite comm -own_valid_r. Qed.
 
@@ -119,7 +118,7 @@ Lemma own_alloc_strong a (G : gset gname) :
 Proof.
   intros Ha.
   rewrite -(bupd_mono (∃ m, ⌜∃ γ, γ ∉ G ∧ m = iRes_singleton γ a⌝ ∧ uPred_ownM m)%I).
-  - rewrite /uPred_valid ownM_unit.
+  - rewrite /uPred_valid /bi_emp_valid (ownM_unit emp).
     eapply bupd_ownM_updateP, (ofe_fun_singleton_updateP_empty (inG_id _));
       first (eapply alloc_updateP_strong', cmra_transport_valid, Ha);
       naive_solver.
@@ -128,8 +127,8 @@ Proof.
 Qed.
 Lemma own_alloc a : ✓ a → (|==> ∃ γ, own γ a)%I.
 Proof.
-  intros Ha. rewrite /uPred_valid (own_alloc_strong a ∅) //; [].
-  apply bupd_mono, exist_mono=>?. eauto with I.
+  intros Ha. rewrite /uPred_valid /bi_emp_valid (own_alloc_strong a ∅) //; [].
+  apply bupd_mono, exist_mono=>?. eauto using and_elim_r.
 Qed.
 
 (** ** Frame preserving updates *)
@@ -169,7 +168,7 @@ Arguments own_update_3 {_ _} [_] _ _ _ _ _ _.
 
 Lemma own_unit A `{inG Σ (A:ucmraT)} γ : (|==> own γ ε)%I.
 Proof.
-  rewrite /uPred_valid ownM_unit !own_eq /own_def.
+  rewrite /uPred_valid /bi_emp_valid (ownM_unit emp) !own_eq /own_def.
   apply bupd_ownM_update, ofe_fun_singleton_update_empty.
   apply (alloc_unit_singleton_update (cmra_transport inG_prf ε)); last done.
   - apply cmra_transport_valid, ucmra_unit_valid.
@@ -186,17 +185,21 @@ Section proofmode_classes.
   Context `{inG Σ A}.
   Implicit Types a b : A.
 
+  Global Instance into_sep_own γ a b1 b2 :
+    IsOp a b1 b2 → IntoSep (own γ a) (own γ b1) (own γ b2).
+  Proof. intros. by rewrite /IntoSep (is_op a) own_op. Qed.
   Global Instance into_and_own p γ a b1 b2 :
     IsOp a b1 b2 → IntoAnd p (own γ a) (own γ b1) (own γ b2).
-  Proof. intros. apply mk_into_and_sep. by rewrite (is_op a) own_op. Qed.
-  Global Instance from_and_own γ a b1 b2 :
-    IsOp a b1 b2 → FromAnd false (own γ a) (own γ b1) (own γ b2).
-  Proof. intros. by rewrite /FromAnd -own_op -is_op. Qed.
+  Proof. intros. by rewrite /IntoAnd (is_op a) own_op sep_and. Qed.
+
+  Global Instance from_sep_own γ a b1 b2 :
+    IsOp a b1 b2 → FromSep (own γ a) (own γ b1) (own γ b2).
+  Proof. intros. by rewrite /FromSep -own_op -is_op. Qed.
   Global Instance from_and_own_persistent γ a b1 b2 :
-    IsOp a b1 b2 → Or (CoreId b1) (CoreId b2) →
-    FromAnd true (own γ a) (own γ b1) (own γ b2).
+    IsOp a b1 b2 → TCOr (CoreId b1) (CoreId b2) →
+    FromAnd (own γ a) (own γ b1) (own γ b2).
   Proof.
-    intros ? Hper; apply mk_from_and_persistent; [destruct Hper; apply _|].
-    by rewrite -own_op -is_op.
+    intros ? Hb. rewrite /FromAnd (is_op a) own_op.
+    destruct Hb; by rewrite persistent_and_sep.
   Qed.
 End proofmode_classes.

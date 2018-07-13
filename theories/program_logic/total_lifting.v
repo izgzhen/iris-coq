@@ -1,5 +1,5 @@
 From iris.program_logic Require Export total_weakestpre.
-From iris.base_logic Require Export big_op.
+From iris.bi Require Export big_op.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 
@@ -54,7 +54,7 @@ Proof.
   iIntros "!>" (e2 σ2 efs) "%". iMod "Hclose" as "_".
   iMod ("H" $! e2 σ2 efs with "[#]") as "($ & HΦ & $)"; first by eauto.
   destruct (to_val e2) eqn:?; last by iExFalso.
-  by iApply twp_value.
+  iApply twp_value; last done. by apply of_to_val.
 Qed.
 
 Lemma twp_lift_pure_det_step `{Inhabited (state Λ)} {s E Φ} e1 e2 efs :

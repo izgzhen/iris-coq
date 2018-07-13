@@ -4,6 +4,9 @@ From stdpp Require Export strings.
 From stdpp Require Import gmap.
 Set Default Proof Using "Type".
 
+Delimit Scope expr_scope with E.
+Delimit Scope val_scope with V.
+
 Module heap_lang.
 Open Scope Z_scope.
 
@@ -111,6 +114,38 @@ Fixpoint to_val (e : expr) : option val :=
   | InjL e => InjLV <$> to_val e
   | InjR e => InjRV <$> to_val e
   | _ => None
+  end.
+
+(** We assume the following encoding of values to 64-bit words: The least 3
+significant bits of every word are a "tag", and we have 61 bits of payload,
+which is enough if all pointers are 8-byte-aligned (common on 64bit
+architectures). The tags have the following meaning:
+
+0: Payload is the data for a LitV (LitInt _).
+1: Payload is the data for a InjLV (LitV (LitInt _)).
+2: Payload is the data for a InjRV (LitV (LitInt _)).
+3: Payload is the data for a LitV (LitLoc _).
+4: Payload is the data for a InjLV (LitV (LitLoc _)).
+4: Payload is the data for a InjRV (LitV (LitLoc _)).
+6: Payload is one of the following finitely many values, which 61 bits are more
+   than enough to encode:
+   LitV LitUnit, InjLV (LitV LitUnit), InjRV (LitV LitUnit),
+   LitV (LitBool _), InjLV (LitV (LitBool _)), InjRV (LitV (LitBool _)).
+7: Value is boxed, i.e., payload is a pointer to some read-only memory area on
+   the heap which stores whether this is a RecV, PairV, InjLV or InjRV and the
+   relevant data for those cases. However, the boxed representation is never
+   used if any of the above representations could be used.
+
+Ignoring (as usual) the fact that we have to fit the infinite Z/loc into 61
+bits, this means every value is machine-word-sized and can hence be atomically
+read and written.  Also notice that the sets of boxed and unboxed values are
+disjoint. *)
+Definition val_is_unboxed (v : val) : Prop :=
+  match v with
+  | LitV _ => True
+  | InjLV (LitV _) => True
+  | InjRV (LitV _) => True
+  | _ => False
   end.
 
 (** The state: heaps of vals. *)
@@ -358,6 +393,14 @@ Definition bin_op_eval (op : bin_op) (v1 v2 : val) : option val :=
   | _, _ => None
   end.
 
+(** CAS just compares the word-sized representation of the two values, it cannot
+look into boxed data.  This works out fine if at least one of the to-be-compared
+values is unboxed (exploiting the fact that an unboxed and a boxed value can
+never be equal because these are disjoint sets).  *)
+Definition vals_cas_compare_safe (vl v1 : val) : Prop :=
+  val_is_unboxed vl ∨ val_is_unboxed v1.
+Arguments vals_cas_compare_safe !_ !_ /.
+
 Inductive head_step : expr → state → expr → state → list (expr) → Prop :=
   | BetaS f x e1 e2 v2 e' σ :
      to_val e2 = Some v2 →
@@ -402,12 +445,14 @@ Inductive head_step : expr → state → expr → state → list (expr) → Prop
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some vl → vl ≠ v1 →
+     vals_cas_compare_safe vl v1 →
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool false) σ []
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ !! l = Some v1 →
+     vals_cas_compare_safe v1 v1 →
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) []
-   | FaaS l i1 e2 i2 σ :
+  | FaaS l i1 e2 i2 σ :
      to_val e2 = Some (LitV (LitInt i2)) →
      σ !! l = Some (LitV (LitInt i1)) →
      head_step (FAA (Lit $ LitLoc l) e2) σ (Lit $ LitInt i1) (<[l:=LitV (LitInt (i1 + i2))]>σ) [].
@@ -530,7 +575,7 @@ Canonical Structure heap_lang := LanguageOfEctx heap_ectx_lang.
 (* Prefer heap_lang names over ectx_language names. *)
 Export heap_lang.
 
-(** Define some derived forms *)
+(** Define some derived forms. *)
 Notation Lam x e := (Rec BAnon x e) (only parsing).
 Notation Let x e1 e2 := (App (Lam x e2) e1) (only parsing).
 Notation Seq e1 e2 := (Let BAnon e1 e2) (only parsing).

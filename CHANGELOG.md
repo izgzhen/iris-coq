@@ -7,12 +7,54 @@ Coq development, but not every API-breaking change is listed.  Changes marked
 
 Changes in and extensions of the theory:
 
+* [#] Change in the definition of WP, so that there is a fancy update between
+  the quantification over the next states and the later modality. This makes it
+  possible to prove more powerful lifting lemmas: The new versions feature an
+  "update that takes a step".
+* [#] Weaken the semantics of CAS in heap_lang to be efficiently implementable:
+  CAS may only be used to compare "unboxed" values that can be represented in a
+  single machine word.
 * [#] Add weakest preconditions for total program correctness.
 * [#] "(Potentially) stuck" weakest preconditions are no longer considered
   experimental.
+* [#] The Löb rule is now a derived rule; it follows from later-intro, later
+  being contractive and the fact that we can take fixpoints of contractive
+  functions.
 
 Changes in Coq:
 
+* An all-new generalized proof mode that abstracts away from Iris!  See
+  <http://iris-project.org/mosel/> for the corresponding paper.  Major new
+  features:
+  - The proof mode can now be used with logics derived from Iris (like iGPS),
+    with non-step-indexed logics and even with non-affine (i.e., linear) logics.
+  - `iModIntro` is more flexible and more powerful, it now also subsumes
+    `iNext` and `iAlways`.
+  - General infrastructure for deriving a logic for monotone predicates over
+    an existing logic (see the paper for more details).
+
+    Developments instantiating the proof mode typeclasses may need significant
+  changes.  For developments just using the proof mode tactics, porting should
+  not be too much effort.  Notable things to port are:
+  - All the BI laws moved from the `uPred` module to the `bi` module.  For
+    example, `uPred.later_equivI` became `bi.later_equivI`.
+  - Big-ops are automatically imported, imports of `iris.base_logic.big_op` have
+    to be removed.
+  - The ⊢ notation can sometimes infer different (but convertible) terms when
+    seraching for the BI to use, which (due to Coq limitations) can lead to
+    failing rewrites, in particular when rewriting at function types.
+* The `iInv` tactic can now be used without the second argument (the name for
+  the closing update).  It will then instead add the obligation to close the
+  invariant to the goal.
+* Added support for defining derived connectives involving n-ary binders using
+  telescopes.
+* The proof mode now more consistently "prettifies" the goal after each tactic.
+  Prettification also simplifies some BI connectives, like conditional
+  modalities and telescope quantifiers.
+* Improved pretty-printing of Iris connectives (in particular WP and fancy
+  updates) when Coq has to line-wrap the output.  This goes hand-in-hand with an
+  improved test suite that also tests pretty-printing.
+* Added a `gmultiset` RA.
 * Rename `timelessP` -> `timeless` (projection of the `Timeless` class)
 * The CMRA axiom `cmra_extend` is now stated in `Type`, using `sigT` instead of
   in `Prop` using `exists`. This makes it possible to define the function space
@@ -28,6 +70,8 @@ Changes in Coq:
   - `cmra_opM_assoc_L` → `cmra_op_opM_assoc_L`
   - `cmra_opM_assoc'` → `cmra_opM_opM_assoc`
 * `namespaces` has been moved to std++.
+* Changed `IntoVal` to be directly usable for rewriting `e` into `of_val v`, and
+  changed `AsVal` to be usable for rewriting via the `[v <-]` destruct pattern.
 
 ## Iris 3.1.0 (released 2017-12-19)
 

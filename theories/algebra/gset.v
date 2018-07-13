@@ -45,7 +45,7 @@ Section gset.
   Proof. split. done. intros X. by rewrite gset_op_union left_id_L. done. Qed.
   Canonical Structure gsetUR := UcmraT (gset K) gset_ucmra_mixin.
 
-  Lemma gset_opM X mY : X ⋅? mY = X ∪ from_option id ∅ mY.
+  Lemma gset_opM X mY : X ⋅? mY = X ∪ default ∅ mY.
   Proof. destruct mY; by rewrite /= ?right_id_L. Qed.
 
   Lemma gset_update X Y : X ~~> Y.

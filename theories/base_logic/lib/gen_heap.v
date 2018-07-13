@@ -1,6 +1,6 @@
 From iris.algebra Require Import auth gmap frac agree.
 From iris.base_logic.lib Require Export own.
-From iris.base_logic.lib Require Import fractional.
+From iris.bi.lib Require Import fractional.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 Import uPred.
@@ -36,17 +36,17 @@ Section definitions.
   Definition mapsto_def (l : L) (q : Qp) (v: V) : iProp Σ :=
     own (gen_heap_name hG) (◯ {[ l := (q, to_agree (v : leibnizC V)) ]}).
   Definition mapsto_aux : seal (@mapsto_def). by eexists. Qed.
-  Definition mapsto := unseal mapsto_aux.
-  Definition mapsto_eq : @mapsto = @mapsto_def := seal_eq mapsto_aux.
+  Definition mapsto := mapsto_aux.(unseal).
+  Definition mapsto_eq : @mapsto = @mapsto_def := mapsto_aux.(seal_eq).
 End definitions.
 
 Local Notation "l ↦{ q } v" := (mapsto l q v)
-  (at level 20, q at level 50, format "l  ↦{ q }  v") : uPred_scope.
-Local Notation "l ↦ v" := (mapsto l 1 v) (at level 20) : uPred_scope.
+  (at level 20, q at level 50, format "l  ↦{ q }  v") : bi_scope.
+Local Notation "l ↦ v" := (mapsto l 1 v) (at level 20) : bi_scope.
 
 Local Notation "l ↦{ q } -" := (∃ v, l ↦{q} v)%I
-  (at level 20, q at level 50, format "l  ↦{ q }  -") : uPred_scope.
-Local Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : uPred_scope.
+  (at level 20, q at level 50, format "l  ↦{ q }  -") : bi_scope.
+Local Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : bi_scope.
 
 Section to_gen_heap.
   Context (L V : Type) `{Countable L}.
@@ -94,7 +94,7 @@ Section gen_heap.
   Proof. rewrite mapsto_eq /mapsto_def. apply _. Qed.
   Global Instance mapsto_fractional l v : Fractional (λ q, l ↦{q} v)%I.
   Proof.
-    intros p q. by rewrite mapsto_eq -own_op -auth_frag_op
+    intros p q. by rewrite mapsto_eq /mapsto_def -own_op -auth_frag_op
       op_singleton pair_op agree_idemp.
   Qed.
   Global Instance mapsto_as_fractional l q v :
@@ -104,7 +104,7 @@ Section gen_heap.
   Lemma mapsto_agree l q1 q2 v1 v2 : l ↦{q1} v1 -∗ l ↦{q2} v2 -∗ ⌜v1 = v2⌝.
   Proof.
     apply wand_intro_r.
-    rewrite mapsto_eq -own_op -auth_frag_op own_valid discrete_valid.
+    rewrite mapsto_eq /mapsto_def -own_op -auth_frag_op own_valid discrete_valid.
     f_equiv=> /auth_own_valid /=. rewrite op_singleton singleton_valid pair_op.
     by intros [_ ?%agree_op_invL'].
   Qed.

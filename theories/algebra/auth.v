@@ -1,6 +1,6 @@
 From iris.algebra Require Export excl local_updates.
+From iris.algebra Require Import proofmode_classes.
 From iris.base_logic Require Import base_logic.
-From iris.proofmode Require Import classes.
 Set Default Proof Using "Type".
 
 Record auth (A : Type) := Auth { authoritative : excl' A; auth_own : A }.
@@ -154,7 +154,7 @@ Proof.
   - by split; simpl; rewrite ?cmra_core_l.
   - by split; simpl; rewrite ?cmra_core_idemp.
   - intros ??; rewrite! auth_included; intros [??].
-    by split; simpl; apply cmra_core_mono.
+    by split; simpl; apply: cmra_core_mono. (* FIXME: apply cmra_core_mono. fails *)
   - assert (∀ n (a b1 b2 : A), b1 ⋅ b2 ≼{n} a → b1 ≼{n} a).
     { intros n a b1 b2 <-; apply cmra_includedN_l. }
    intros n [[[a1|]|] b1] [[[a2|]|] b2]; rewrite auth_validN_eq;

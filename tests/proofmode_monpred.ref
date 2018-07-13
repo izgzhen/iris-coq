@@ -1,0 +1,64 @@
+1 subgoal
+  
+  I : biIndex
+  PROP : sbi
+  P, Q : monpred.monPred I PROP
+  i : I
+  ============================
+  "HW" : (P -∗ Q) i
+  --------------------------------------∗
+  (P -∗ Q) i
+  
+1 subgoal
+  
+  I : biIndex
+  PROP : sbi
+  P, Q : monpred.monPred I PROP
+  i, j : I
+  ============================
+  "HW" : (P -∗ Q) j
+  "HP" : P j
+  --------------------------------------∗
+  Q j
+  
+1 subgoal
+  
+  I : biIndex
+  PROP : sbi
+  P, Q : monpred.monPred I PROP
+  Objective0 : Objective Q
+  𝓟, 𝓠 : PROP
+  ============================
+  "H2" : ∀ i : I, Q i
+  "H3" : 𝓟
+  "H4" : 𝓠
+  --------------------------------------∗
+  ∀ i : I, 𝓟 ∗ 𝓠 ∗ Q i
+  
+1 subgoal
+  
+  I : biIndex
+  PROP : sbi
+  FU0 : BiFUpd PROP * ()
+  P, Q : monpred.monPred I PROP
+  i : I
+  ============================
+  --------------------------------------∗
+  (Q -∗ emp) i
+  
+1 subgoal
+  
+  I : biIndex
+  PROP : sbi
+  FU0 : BiFUpd PROP * ()
+  P : monpred.monPred I PROP
+  i : I
+  ============================
+  --------------------------------------∗
+  ∀ _ : (), ∃ _ : (), emp
+  
+The command has indeed failed with message:
+In nested Ltac calls to "iFrame (constr)",
+"<iris.proofmode.ltac_tactics.iFrame_go>" and
+"<iris.proofmode.ltac_tactics.iFrameHyp>", last call failed.
+Tactic failure: iFrame: cannot frame (P i).

@@ -1,0 +1,37 @@
+# run tests with main build
+real-all: test
+
+# the test suite
+TESTFILES=$(wildcard tests/*.v)
+
+test: $(TESTFILES:.v=.vo)
+.PHONY: test
+
+COQ_TEST=$(COQTOP) $(COQDEBUG) -batch -test-mode
+COQ_BROKEN=$(shell echo "$(COQ_VERSION)" | egrep "^8\.9" > /dev/null && echo 1)
+
+# Can't use pipes because that discards error codes and dash provides no way to control that.
+# Also egrep errors if it doesn't match anything, we have to ignore that.
+# Oh Unix...
+REF_FILTER=egrep -v '(^Welcome to Coq|^Skipping rcfile loading.$$)'
+
+tests/.coqdeps.d: $(TESTFILES)
+	$(SHOW)'COQDEP TESTFILES'
+	$(HIDE)$(COQDEP) -dyndep var $(COQMF_COQLIBS_NOML) $^ $(redir_if_ok)
+-include tests/.coqdeps.d
+
+$(TESTFILES:.v=.vo): %.vo: %.v $(if $(MAKE_REF),,%.ref)
+	$(SHOW)$(if $(MAKE_REF),COQTEST [ref],$(if $(COQ_BROKEN),COQTEST [ignored],COQTEST)) $<
+	$(HIDE)TEST="$$(basename -s .v $<)" && \
+	  TMPFILE="$$(mktemp)" && \
+	  $(TIMER) $(COQ_TEST) $(TIMING_ARG) $(COQFLAGS) $(COQLIBS) -load-vernac-source $< $(TIMING_EXTRA) > "$$TMPFILE" && \
+	  ($(REF_FILTER) < "$$TMPFILE" > "$$TMPFILE.filtered" || true) && \
+	  $(if $(MAKE_REF), \
+	    mv "$$TMPFILE.filtered" "tests/$$TEST.ref", \
+	    $(if $(COQ_BROKEN), \
+	      true, \
+	      diff -u "tests/$$TEST.ref" "$$TMPFILE.filtered" \
+            ) \
+          ) && \
+	  rm -f "$$TMPFILE" "$$TMPFILE.filtered" && \
+	  touch $@

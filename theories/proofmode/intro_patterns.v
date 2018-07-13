@@ -128,11 +128,11 @@ Ltac parse s :=
   | intro_pat => constr:([s])
   | list string =>
      lazymatch eval vm_compute in (mjoin <$> mapM parse s) with
-     | Some ?pats => pats | _ => fail "invalid list intro_pat" s
+     | Some ?pats => pats | _ => fail "intro_pat.parse: cannot parse" s
      end
   | string =>
      lazymatch eval vm_compute in (parse s) with
-     | Some ?pats => pats | _ => fail "invalid list intro_pat" s
+     | Some ?pats => pats | _ => fail "intro_pat.parse: cannot parse" s
      end
   | ident => constr:([IIdent s])
   | ?X => fail "intro_pat.parse:" s "has unexpected type" X
@@ -142,7 +142,7 @@ Ltac parse_one s :=
   | intro_pat => s
   | string =>
      lazymatch eval vm_compute in (parse s) with
-     | Some [?pat] => pat | _ => fail "invalid intro_pat" s
+     | Some [?pat] => pat | _ => fail "intro_pat.parse_one: cannot parse" s
      end
   | ?X => fail "intro_pat.parse_one:" s "has unexpected type" X
   end.

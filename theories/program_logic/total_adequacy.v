@@ -1,6 +1,6 @@
 From iris.program_logic Require Export total_weakestpre adequacy.
-From iris.algebra Require Import gmap auth agree gset coPset.
-From iris.base_logic Require Import big_op soundness fixpoint.
+From iris.algebra Require Import gmap auth agree gset coPset list.
+From iris.bi Require Import big_op fixpoint.
 From iris.base_logic.lib Require Import wsat.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
@@ -16,7 +16,7 @@ Definition twptp_pre (twptp : list (expr Λ) → iProp Σ)
     state_interp σ1 ={⊤}=∗ state_interp σ2 ∗ twptp t2)%I.
 
 Lemma twptp_pre_mono (twptp1 twptp2 : list (expr Λ) → iProp Σ) :
-  ((□ ∀ t, twptp1 t -∗ twptp2 t) →
+  (<pers> (∀ t, twptp1 t -∗ twptp2 t) →
   ∀ t, twptp_pre twptp1 t -∗ twptp_pre twptp2 t)%I.
 Proof.
   iIntros "#H"; iIntros (t) "Hwp". rewrite /twptp_pre.
@@ -24,14 +24,14 @@ Proof.
   by iApply "H".
 Qed.
 
-Local Instance twptp_pre_mono' : BIMonoPred twptp_pre.
+Local Instance twptp_pre_mono' : BiMonoPred twptp_pre.
 Proof.
   constructor; first apply twptp_pre_mono.
   intros wp Hwp n t1 t2 ?%(discrete_iff _ _)%leibniz_equiv; solve_proper.
 Qed.
 
 Definition twptp (t : list (expr Λ)) : iProp Σ :=
-  uPred_least_fixpoint twptp_pre t.
+  bi_least_fixpoint twptp_pre t.
 
 Lemma twptp_unfold t : twptp t ⊣⊢ twptp_pre twptp t.
 Proof. by rewrite /twptp least_fixpoint_unfold. Qed.
@@ -106,7 +106,7 @@ Proof.
   iIntros "Hw Ht". iRevert (σ) "Hw". iRevert (t) "Ht".
   iApply twptp_ind; iIntros "!#" (t) "IH"; iIntros (σ) "(Hw&HE&Hσ)".
   iApply (pure_mono _ _ (Acc_intro _)). iIntros ([t' σ'] Hstep).
-  rewrite /twptp_pre fupd_eq /fupd_def.
+  rewrite /twptp_pre uPred_fupd_eq /uPred_fupd_def.
   iMod ("IH" with "[% //] Hσ [$Hw $HE]") as ">(Hw & HE & Hσ & [IH _])".
   iApply "IH". by iFrame.
 Qed.
@@ -121,8 +121,8 @@ Theorem twp_total Σ Λ `{invPreG Σ} s e σ Φ :
 Proof.
   intros Hwp.
   eapply (soundness (M:=iResUR Σ) _ 1); iIntros "/=".
-  iMod wsat_alloc as (Hinv) "[Hw HE]".
-  rewrite fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
+  iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp Hinv).
+  rewrite uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
   iDestruct "Hwp" as (Istate) "[HI Hwp]".
   iApply (@twptp_total _ _ (IrisG _ _ Hinv Istate) with "[$Hw $HE $HI]").
   by iApply (@twp_twptp _ _ (IrisG _ _ Hinv Istate)).

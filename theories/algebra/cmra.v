@@ -170,16 +170,16 @@ Hint Mode IdFree + ! : typeclass_instances.
 Instance: Params (@IdFree) 1.
 
 (** * CMRAs whose core is total *)
-(** The function [core] may return a dummy when used on CMRAs without total
-core. *)
 Class CmraTotal (A : cmraT) := cmra_total (x : A) : is_Some (pcore x).
 Hint Mode CmraTotal ! : typeclass_instances.
 
+(** The function [core] returns a dummy when used on CMRAs without total
+core. *)
 Class Core (A : Type) := core : A → A.
 Hint Mode Core ! : typeclass_instances.
 Instance: Params (@core) 2.
 
-Instance core' `{PCore A} : Core A := λ x, from_option id x (pcore x).
+Instance core' `{PCore A} : Core A := λ x, default x (pcore x).
 Arguments core' _ _ _ /.
 
 (** * CMRAs with a unit element *)

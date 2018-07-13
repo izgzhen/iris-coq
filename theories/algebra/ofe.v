@@ -1,5 +1,6 @@
 From iris.algebra Require Export base.
 Set Default Proof Using "Type".
+Set Primitive Projections.
 
 (** This files defines (a shallow embedding of) the category of OFEs:
     Complete ordered families of equivalences. This is a cartesian closed
@@ -33,25 +34,20 @@ Tactic Notation "ofe_subst" :=
   | H:@dist ?A ?d ?n _ ?x |- _ => symmetry in H;setoid_subst_aux (@dist A d n) x
   end.
 
-Section mixin.
-  Local Set Primitive Projections.
-  Record OfeMixin A `{Equiv A, Dist A} := {
-    mixin_equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y;
-    mixin_dist_equivalence n : Equivalence (dist n);
-    mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y
-  }.
-End mixin.
+Record OfeMixin A `{Equiv A, Dist A} := {
+  mixin_equiv_dist x y : x ≡ y ↔ ∀ n, x ≡{n}≡ y;
+  mixin_dist_equivalence n : Equivalence (dist n);
+  mixin_dist_S n x y : x ≡{S n}≡ y → x ≡{n}≡ y
+}.
 
 (** Bundeled version *)
-Structure ofeT := OfeT' {
+Structure ofeT := OfeT {
   ofe_car :> Type;
   ofe_equiv : Equiv ofe_car;
   ofe_dist : Dist ofe_car;
-  ofe_mixin : OfeMixin ofe_car;
-  _ : Type
+  ofe_mixin : OfeMixin ofe_car
 }.
-Arguments OfeT' _ {_ _} _ _.
-Notation OfeT A m := (OfeT' A m A).
+Arguments OfeT _ {_ _} _.
 Add Printing Constructor ofeT.
 Hint Extern 0 (Equiv _) => eapply (@ofe_equiv _) : typeclass_instances.
 Hint Extern 0 (Dist _) => eapply (@ofe_dist _) : typeclass_instances.
@@ -182,7 +178,7 @@ Section ofe.
   Lemma conv_compl' `{Cofe A} n (c : chain A) : compl c ≡{n}≡ c (S n).
   Proof.
     transitivity (c n); first by apply conv_compl. symmetry.
-    apply chain_cauchy. omega.
+    apply chain_cauchy. lia.
   Qed.
 
   Lemma discrete_iff n (x : A) `{!Discrete x} y : x ≡ y ↔ x ≡{n}≡ y.
@@ -296,16 +292,16 @@ Program Definition fixpoint_chain {A : ofeT} `{Inhabited A} (f : A → A)
   `{!Contractive f} : chain A := {| chain_car i := Nat.iter (S i) f inhabitant |}.
 Next Obligation.
   intros A ? f ? n.
-  induction n as [|n IH]=> -[|i] //= ?; try omega.
+  induction n as [|n IH]=> -[|i] //= ?; try lia.
   - apply (contractive_0 f).
-  - apply (contractive_S f), IH; auto with omega.
+  - apply (contractive_S f), IH; auto with lia.
 Qed.
 
 Program Definition fixpoint_def `{Cofe A, Inhabited A} (f : A → A)
   `{!Contractive f} : A := compl (fixpoint_chain f).
 Definition fixpoint_aux : seal (@fixpoint_def). by eexists. Qed.
-Definition fixpoint {A AC AiH} f {Hf} := unseal fixpoint_aux A AC AiH f Hf.
-Definition fixpoint_eq : @fixpoint = @fixpoint_def := seal_eq fixpoint_aux.
+Definition fixpoint {A AC AiH} f {Hf} := fixpoint_aux.(unseal) A AC AiH f Hf.
+Definition fixpoint_eq : @fixpoint = @fixpoint_def := fixpoint_aux.(seal_eq).
 
 Section fixpoint.
   Context `{Cofe A, Inhabited A} (f : A → A) `{!Contractive f}.
@@ -345,7 +341,7 @@ Section fixpoint.
     intros ? [x Hx] Hincr Hlim. set (chcar i := Nat.iter (S i) f x).
     assert (Hcauch : ∀ n i : nat, n ≤ i → chcar i ≡{n}≡ chcar n).
     { intros n. rewrite /chcar. induction n as [|n IH]=> -[|i] //=;
-        eauto using contractive_0, contractive_S with omega. }
+        eauto using contractive_0, contractive_S with lia. }
     set (fp2 := compl {| chain_cauchy := Hcauch |}).
     assert (f fp2 ≡ fp2).
     { apply equiv_dist=>n. rewrite /fp2 (conv_compl n) /= /chcar.
@@ -860,7 +856,7 @@ Section discrete_ofe.
     { compl c := c 0 }.
   Next Obligation.
     intros n c. rewrite /compl /=;
-    symmetry; apply (chain_cauchy c 0 n). omega.
+    symmetry; apply (chain_cauchy c 0 n). lia.
   Qed.
 End discrete_ofe.
 
@@ -909,7 +905,7 @@ Section option.
   Canonical Structure optionC := OfeT (option A) option_ofe_mixin.
 
   Program Definition option_chain (c : chain optionC) (x : A) : chain A :=
-    {| chain_car n := from_option id x (c n) |}.
+    {| chain_car n := default x (c n) |}.
   Next Obligation. intros c x n i ?; simpl. by destruct (chain_cauchy c n i). Qed.
   Definition option_compl `{Cofe A} : Compl optionC := λ c,
     match c 0 with Some x => Some (compl (option_chain c x)) | None => None end.
@@ -988,7 +984,7 @@ Proof.
 Qed.
 
 (** Later *)
-Inductive later (A : Type) : Type := Next { later_car : A }.
+Record later (A : Type) : Type := Next { later_car : A }.
 Add Printing Constructor later.
 Arguments Next {_} _.
 Arguments later_car {_} _.

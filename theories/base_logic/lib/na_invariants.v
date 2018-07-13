@@ -1,5 +1,5 @@
 From iris.base_logic.lib Require Export invariants.
-From iris.algebra Require Export gmap gset coPset.
+From iris.algebra Require Import gset coPset.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 Import uPred.
@@ -101,13 +101,26 @@ Section proofs.
     rewrite [F as X in na_own p X](union_difference_L (↑N) F) //.
     rewrite [X in (X ∪ _)](union_difference_L {[i]} (↑N)) ?na_own_union; [|set_solver..].
     iDestruct "Htoks" as "[[Htoki $] $]".
-    iInv N as "[[$ >Hdis]|>Htoki2]" "Hclose".
+    iInv "Hinv" as "[[$ >Hdis]|>Htoki2]" "Hclose".
     - iMod ("Hclose" with "[Htoki]") as "_"; first auto.
       iIntros "!> [HP $]".
-      iInv N as "[[_ >Hdis2]|>Hitok]" "Hclose".
+      iInv N as "[[_ >Hdis2]|>Hitok]".
       + iDestruct (own_valid_2 with "Hdis Hdis2") as %[_ Hval%gset_disj_valid_op].
         set_solver.
-      + iFrame. iApply "Hclose". iNext. iLeft. by iFrame.
+      + iSplitR "Hitok"; last by iFrame. eauto with iFrame.
     - iDestruct (na_own_disjoint with "Htoki Htoki2") as %?. set_solver.
+  Qed.
+
+  Global Instance into_inv_na p N P : IntoInv (na_inv p N P) N.
+
+  Global Instance into_acc_na p F E N P :
+    IntoAcc (X:=unit) (na_inv p N P)
+            (↑N ⊆ E ∧ ↑N ⊆ F) (na_own p F) (fupd E E) (fupd E E)
+            (λ _, ▷ P ∗ na_own p (F∖↑N))%I (λ _, ▷ P ∗ na_own p (F∖↑N))%I
+              (λ _, Some (na_own p F))%I.
+  Proof.
+    rewrite /IntoAcc /accessor. iIntros ((?&?)) "#Hinv Hown".
+    rewrite exist_unit -assoc /=.
+    iApply (na_inv_open with "Hinv"); done.
   Qed.
 End proofs.

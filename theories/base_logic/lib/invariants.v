@@ -1,8 +1,8 @@
 From iris.base_logic.lib Require Export fancy_updates.
-From stdpp Require Export  namespaces.
+From stdpp Require Export namespaces.
 From iris.base_logic.lib Require Import wsat.
 From iris.algebra Require Import gmap.
-From iris.proofmode Require Import tactics coq_tactics intro_patterns.
+From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 Import uPred.
 
@@ -10,8 +10,8 @@ Import uPred.
 Definition inv_def `{invG Σ} (N : namespace) (P : iProp Σ) : iProp Σ :=
   (∃ i P', ⌜i ∈ (↑N:coPset)⌝ ∧ ▷ □ (P' ↔ P) ∧ ownI i P')%I.
 Definition inv_aux : seal (@inv_def). by eexists. Qed.
-Definition inv {Σ i} := unseal inv_aux Σ i.
-Definition inv_eq : @inv = @inv_def := seal_eq inv_aux.
+Definition inv {Σ i} := inv_aux.(unseal) Σ i.
+Definition inv_eq : @inv = @inv_def := inv_aux.(seal_eq).
 Instance: Params (@inv) 3.
 Typeclasses Opaque inv.
 
@@ -52,16 +52,16 @@ Qed.
 
 Lemma inv_alloc N E P : ▷ P ={E}=∗ inv N P.
 Proof.
-  rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros "HP [Hw $]".
+  rewrite inv_eq /inv_def uPred_fupd_eq. iIntros "HP [Hw $]".
   iMod (ownI_alloc (∈ (↑N : coPset)) P with "[$HP $Hw]")
     as (i ?) "[$ ?]"; auto using fresh_inv_name.
-  do 2 iModIntro. iExists i, P. rewrite -(iff_refl True). auto.
+  do 2 iModIntro. iExists i, P. rewrite -(iff_refl True%I). auto.
 Qed.
 
 Lemma inv_alloc_open N E P :
   ↑N ⊆ E → (|={E, E∖↑N}=> inv N P ∗ (▷P ={E∖↑N, E}=∗ True))%I.
 Proof.
-  rewrite inv_eq /inv_def fupd_eq /fupd_def. iIntros (Sub) "[Hw HE]".
+  rewrite inv_eq /inv_def uPred_fupd_eq. iIntros (Sub) "[Hw HE]".
   iMod (ownI_alloc_open (∈ (↑N : coPset)) P with "Hw")
     as (i ?) "(Hw & #Hi & HD)"; auto using fresh_inv_name.
   iAssert (ownE {[i]} ∗ ownE (↑ N ∖ {[i]}) ∗ ownE (E ∖ ↑ N))%I
@@ -70,19 +70,19 @@ Proof.
     rewrite assoc_L -!union_difference_L //. set_solver. }
   do 2 iModIntro. iFrame "HE\N". iSplitL "Hw HEi"; first by iApply "Hw".
   iSplitL "Hi".
-  { iExists i, P. rewrite -(iff_refl True). auto. }
+  { iExists i, P. rewrite -(iff_refl True%I). auto. }
   iIntros "HP [Hw HE\N]".
   iDestruct (ownI_close with "[$Hw $Hi $HP $HD]") as "[$ HEi]".
   do 2 iModIntro. iSplitL; [|done].
-  iCombine "HEi" "HEN\i" as "HEN"; iCombine "HEN" "HE\N" as "HE".
+  iCombine "HEi HEN\i HE\N" as "HEN".
   rewrite -?ownE_op; [|set_solver..].
-  rewrite -!union_difference_L //; set_solver.
+  rewrite assoc_L -!union_difference_L //; set_solver.
 Qed.
 
 Lemma inv_open E N P :
   ↑N ⊆ E → inv N P ={E,E∖↑N}=∗ ▷ P ∗ (▷ P ={E∖↑N,E}=∗ True).
 Proof.
-  rewrite inv_eq /inv_def fupd_eq /fupd_def.
+  rewrite inv_eq /inv_def uPred_fupd_eq /uPred_fupd_def.
   iDestruct 1 as (i P') "(Hi & #HP' & #HiP)".
   iDestruct "Hi" as % ?%elem_of_subseteq_singleton.
   rewrite {1 4}(union_difference_L (↑ N) E) // ownE_op; last set_solver.
@@ -107,36 +107,22 @@ Proof.
   by rewrite left_id_L.
 Qed.
 
+Global Instance into_inv_inv N P : IntoInv (inv N P) N.
+
+Global Instance into_acc_inv E N P :
+  IntoAcc (X:=unit) (inv N P) 
+          (↑N ⊆ E) True (fupd E (E∖↑N)) (fupd (E∖↑N) E)
+          (λ _, ▷ P)%I (λ _, ▷ P)%I (λ _, None)%I.
+Proof.
+  rewrite /IntoAcc /accessor exist_unit.
+  iIntros (?) "#Hinv _". iApply inv_open; done.
+Qed.
+
 Lemma inv_open_timeless E N P `{!Timeless P} :
   ↑N ⊆ E → inv N P ={E,E∖↑N}=∗ P ∗ (P ={E∖↑N,E}=∗ True).
 Proof.
   iIntros (?) "Hinv". iMod (inv_open with "Hinv") as "[>HP Hclose]"; auto.
   iIntros "!> {$HP} HP". iApply "Hclose"; auto.
 Qed.
+
 End inv.
-
-Tactic Notation "iInvCore" constr(N) "as" tactic(tac) constr(Hclose) :=
-  let Htmp := iFresh in
-  let patback := intro_pat.parse_one Hclose in
-  let pat := constr:(IList [[IIdent Htmp; patback]]) in
-  iMod (inv_open _ N with "[#]") as pat;
-    [idtac|iAssumption || fail "iInv: invariant" N "not found"|idtac];
-    [solve_ndisj || match goal with |- ?P => fail "iInv: cannot solve" P end
-    |tac Htmp].
-
-Tactic Notation "iInv" constr(N) "as" constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestruct H as pat) Hclose.
-Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1) ")"
-    constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestruct H as (x1) pat) Hclose.
-Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
-    simple_intropattern(x2) ")" constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestruct H as (x1 x2) pat) Hclose.
-Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) ")"
-    constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestruct H as (x1 x2 x3) pat) Hclose.
-Tactic Notation "iInv" constr(N) "as" "(" simple_intropattern(x1)
-    simple_intropattern(x2) simple_intropattern(x3) simple_intropattern(x4) ")"
-    constr(pat) constr(Hclose) :=
-   iInvCore N as (fun H => iDestruct H as (x1 x2 x3 x4) pat) Hclose.

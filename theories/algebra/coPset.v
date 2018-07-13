@@ -46,7 +46,7 @@ Section coPset.
   Proof. split. done. intros X. by rewrite coPset_op_union left_id_L. done. Qed.
   Canonical Structure coPsetUR := UcmraT coPset coPset_ucmra_mixin.
 
-  Lemma coPset_opM X mY : X ⋅? mY = X ∪ from_option id ∅ mY.
+  Lemma coPset_opM X mY : X ⋅? mY = X ∪ default ∅ mY.
   Proof. destruct mY; by rewrite /= ?right_id_L. Qed.
 
   Lemma coPset_update X Y : X ~~> Y.

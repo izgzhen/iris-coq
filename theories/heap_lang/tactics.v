@@ -96,6 +96,7 @@ Ltac of_expr e :=
      let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(FAA e1 e2)
   | to_expr ?e => e
   | of_val ?v => constr:(Val v (of_val v) (to_of_val v))
+  | language.of_val ?v => constr:(Val v (of_val v) (to_of_val v))
   | _ => match goal with
          | H : to_val e = Some ?v |- _ => constr:(Val v e H)
          | H : Closed [] e |- _ => constr:(@ClosedExpr e H)
@@ -138,14 +139,12 @@ Fixpoint to_val (e : expr) : option val :=
   | _ => None
   end.
 Lemma to_val_Some e v :
-  to_val e = Some v → heap_lang.to_val (to_expr e) = Some v.
+  to_val e = Some v → heap_lang.of_val v = W.to_expr e.
 Proof.
-  revert v. induction e; intros; simplify_option_eq; rewrite ?to_of_val; auto.
-  - do 2 f_equal. apply proof_irrel.
-  - exfalso. unfold Closed in *; eauto using is_closed_correct.
+  revert v. induction e; intros; simplify_option_eq; try f_equal; auto using of_to_val.
 Qed.
 Lemma to_val_is_Some e :
-  is_Some (to_val e) → is_Some (heap_lang.to_val (to_expr e)).
+  is_Some (to_val e) → ∃ v, heap_lang.of_val v = to_expr e.
 Proof. intros [v ?]; exists v; eauto using to_val_Some. Qed.
 
 Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
@@ -201,8 +200,8 @@ Proof.
       inversion 1; simplify_eq/=; rewrite ?to_of_val; eauto.
     unfold subst'; repeat (simplify_eq/=; case_match=>//); eauto.
   - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct e=> //; destruct Ki; repeat (simplify_eq/=; case_match=>//);
-      naive_solver eauto using to_val_is_Some.
+    destruct e=> //; destruct Ki; repeat (simplify_eq/=; case_match=>//); try
+      naive_solver eauto using as_val_is_Some, to_val_is_Some.
 Qed.
 End W.
 
@@ -217,7 +216,7 @@ Hint Extern 0 (Closed _ _) => solve_closed : typeclass_instances.
 Ltac solve_into_val :=
   match goal with
   | |- IntoVal ?e ?v =>
-     let e' := W.of_expr e in change (to_val (W.to_expr e') = Some v);
+     let e' := W.of_expr e in change (of_val v = W.to_expr e');
      apply W.to_val_Some; simpl; unfold W.to_expr; reflexivity
   end.
 Hint Extern 10 (IntoVal _ _) => solve_into_val : typeclass_instances.
@@ -225,7 +224,7 @@ Hint Extern 10 (IntoVal _ _) => solve_into_val : typeclass_instances.
 Ltac solve_as_val :=
   match goal with
   | |- AsVal ?e =>
-     let e' := W.of_expr e in change (is_Some (to_val (W.to_expr e')));
+     let e' := W.of_expr e in change (∃ v, of_val v = W.to_expr e');
      apply W.to_val_is_Some, (bool_decide_unpack _); vm_compute; exact I
   end.
 Hint Extern 10 (AsVal _) => solve_as_val : typeclass_instances.
