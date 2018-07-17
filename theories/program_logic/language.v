@@ -5,7 +5,7 @@ Section language_mixin.
   Context {expr val state observation : Type}.
   Context (of_val : val → expr).
   Context (to_val : expr → option val).
-  (** We annotate the reduction relation with observations [k], which we will use in the definition
+  (** We annotate the reduction relation with observations [κ], which we will use in the definition
      of weakest preconditions to keep track of creating and resolving prophecy variables. *)
   Context (prim_step : expr → state → option observation → expr → state → list expr → Prop).
 
@@ -100,28 +100,24 @@ Section language.
        prim_step e1 σ1 κ e2 σ2 efs →
        step ρ1 κ ρ2.
 
-  Inductive nsteps : nat -> cfg Λ → list (observation Λ) → cfg Λ → Prop :=
+  (* TODO (MR) introduce notation ::? for cons_obs and suggest for inclusion to stdpp? *)
+  Definition cons_obs {A} (x : option A) (xs : list A) :=
+    option_list x ++ xs.
+
+  Inductive nsteps : nat → cfg Λ → list (observation Λ) → cfg Λ → Prop :=
   | nsteps_refl ρ :
       nsteps 0 ρ [] ρ
   | nsteps_l n ρ1 ρ2 ρ3 κ κs :
       step ρ1 κ ρ2 →
       nsteps n ρ2 κs ρ3 →
-      nsteps (S n) ρ1 (option_list κ ++ κs) ρ3.
-
- (* Inductive steps : cfg Λ → list (observation Λ) → cfg Λ → Prop :=
-  | steps_refl ρ :
-      steps ρ [] ρ
-  | steps_l ρ1 ρ2 ρ3 κ κs :
-      step ρ1 κ ρ2 →
-      steps ρ2 κs ρ3 →
-      steps ρ1 (option_list κ ++ κs) ρ3. *)
+      nsteps (S n) ρ1 (cons_obs κ κs) ρ3.
 
   Definition erased_step (ρ1 ρ2 : cfg Λ) := exists κ, step ρ1 κ ρ2.
 
   Hint Constructors step nsteps.
 
   Lemma erased_steps_nsteps ρ1 ρ2 :
-    rtc erased_step ρ1 ρ2 ->
+    rtc erased_step ρ1 ρ2 →
     ∃ n κs, nsteps n ρ1 κs ρ2.
   Proof.
     induction 1; firstorder; eauto.
@@ -173,7 +169,7 @@ Section language.
     pure_exec_safe σ :
       P → reducible e1 σ;
     pure_exec_puredet σ1 κ e2' σ2 efs :
-      P → prim_step e1 σ1 κ e2' σ2 efs → κ = None /\ σ1 = σ2 ∧ e2 = e2' ∧ efs = [];
+      P → prim_step e1 σ1 κ e2' σ2 efs → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = [];
   }.
 
   Lemma hoist_pred_pure_exec (P : Prop) (e1 e2 : expr Λ) :

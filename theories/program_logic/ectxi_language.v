@@ -31,7 +31,7 @@ Section ectxi_language_mixin.
   Context (of_val : val → expr).
   Context (to_val : expr → option val).
   Context (fill_item : ectx_item → expr → expr).
-  Context (head_step : expr → state → option observation -> expr → state → list expr → Prop).
+  Context (head_step : expr → state → option observation → expr → state → list expr → Prop).
 
   Record EctxiLanguageMixin := {
     mixin_to_of_val v : to_val (of_val v) = Some v;
@@ -59,7 +59,7 @@ Structure ectxiLanguage := EctxiLanguage {
   of_val : val → expr;
   to_val : expr → option val;
   fill_item : ectx_item → expr → expr;
-  head_step : expr → state → option observation -> expr → state → list expr → Prop;
+  head_step : expr → state → option observation → expr → state → list expr → Prop;
 
   ectxi_language_mixin :
     EctxiLanguageMixin of_val to_val fill_item head_step

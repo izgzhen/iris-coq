@@ -16,7 +16,7 @@ Section ectx_language_mixin.
   Context (empty_ectx : ectx).
   Context (comp_ectx : ectx → ectx → ectx).
   Context (fill : ectx → expr → expr).
-  Context (head_step : expr → state → option observation -> expr → state → list expr → Prop).
+  Context (head_step : expr → state → option observation → expr → state → list expr → Prop).
 
   Record EctxLanguageMixin := {
     mixin_to_of_val v : to_val (of_val v) = Some v;
@@ -55,7 +55,7 @@ Structure ectxLanguage := EctxLanguage {
   empty_ectx : ectx;
   comp_ectx : ectx → ectx → ectx;
   fill : ectx → expr → expr;
-  head_step : expr → state → option observation -> expr → state → list expr → Prop;
+  head_step : expr → state → option observation → expr → state → list expr → Prop;
 
   ectx_language_mixin :
     EctxLanguageMixin of_val to_val empty_ectx comp_ectx fill head_step
@@ -210,7 +210,7 @@ Section ectx_language.
   Lemma det_head_step_pure_exec (P : Prop) e1 e2 :
     (∀ σ, P → head_reducible e1 σ) →
     (∀ σ1 κ e2' σ2 efs,
-      P → head_step e1 σ1 κ e2' σ2 efs → κ = None /\ σ1 = σ2 ∧ e2=e2' ∧ efs = []) →
+      P → head_step e1 σ1 κ e2' σ2 efs → κ = None ∧ σ1 = σ2 ∧ e2=e2' ∧ efs = []) →
     PureExec P e1 e2.
   Proof.
     intros Hp1 Hp2. split.

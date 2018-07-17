@@ -108,7 +108,7 @@ Inductive val :=
 
 Bind Scope val_scope with val.
 
-Inductive observation := prophecy_observation_todo.
+Definition observation := Empty val.
 
 Fixpoint of_val (v : val) : expr :=
   match v with
