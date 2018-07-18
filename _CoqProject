@@ -87,6 +87,7 @@ theories/heap_lang/notation.v
 theories/heap_lang/proofmode.v
 theories/heap_lang/adequacy.v
 theories/heap_lang/total_adequacy.v
+theories/heap_lang/proph_map.v
 theories/heap_lang/prophecy.v
 theories/heap_lang/lib/spawn.v
 theories/heap_lang/lib/par.v

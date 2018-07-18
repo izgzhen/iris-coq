@@ -76,7 +76,10 @@ Inductive expr :=
   | Load (e : expr)
   | Store (e1 : expr) (e2 : expr)
   | CAS (e0 : expr) (e1 : expr) (e2 : expr)
-  | FAA (e1 : expr) (e2 : expr).
+  | FAA (e1 : expr) (e2 : expr)
+  (* Prophecy *)
+  | NewProph
+  | ResolveProph (e1 : expr) (e2 : expr).
 
 Bind Scope expr_scope with expr.
 
@@ -84,10 +87,10 @@ Fixpoint is_closed (X : list string) (e : expr) : bool :=
   match e with
   | Var x => bool_decide (x ∈ X)
   | Rec f x e => is_closed (f :b: x :b: X) e
-  | Lit _ => true
+  | Lit _ | NewProph => true
   | UnOp _ e | Fst e | Snd e | InjL e | InjR e | Fork e | Alloc e | Load e =>
      is_closed X e
-  | App e1 e2 | BinOp _ e1 e2 | Pair e1 e2 | Store e1 e2 | FAA e1 e2 =>
+  | App e1 e2 | BinOp _ e1 e2 | Pair e1 e2 | Store e1 e2 | FAA e1 e2 | ResolveProph e1 e2 =>
      is_closed X e1 && is_closed X e2
   | If e0 e1 e2 | Case e0 e1 e2 | CAS e0 e1 e2 =>
      is_closed X e0 && is_closed X e1 && is_closed X e2
@@ -108,7 +111,7 @@ Inductive val :=
 
 Bind Scope val_scope with val.
 
-Definition observation := Empty val.
+Definition observation : Set := proph * val.
 
 Fixpoint of_val (v : val) : expr :=
   match v with
@@ -163,7 +166,7 @@ Definition val_is_unboxed (v : val) : Prop :=
   end.
 
 (** The state: heaps of vals. *)
-Definition state := gmap loc val.
+Definition state : Type := gmap loc val * gset proph.
 
 (** Equality and other typeclass stuff *)
 Lemma to_of_val v : to_val (of_val v) = Some v.
@@ -230,12 +233,12 @@ Instance expr_countable : Countable expr.
 Proof.
  set (enc := fix go e :=
   match e with
-  | Var x => GenLeaf (inl (inl x))
-  | Rec f x e => GenNode 0 [GenLeaf (inl (inr f)); GenLeaf (inl (inr x)); go e]
+  | Var x => GenLeaf (Some (inl (inl x)))
+  | Rec f x e => GenNode 0 [GenLeaf (Some ((inl (inr f)))); GenLeaf (Some (inl (inr x))); go e]
   | App e1 e2 => GenNode 1 [go e1; go e2]
-  | Lit l => GenLeaf (inr (inl l))
-  | UnOp op e => GenNode 2 [GenLeaf (inr (inr (inl op))); go e]
-  | BinOp op e1 e2 => GenNode 3 [GenLeaf (inr (inr (inr op))); go e1; go e2]
+  | Lit l => GenLeaf (Some (inr (inl l)))
+  | UnOp op e => GenNode 2 [GenLeaf (Some (inr (inr (inl op)))); go e]
+  | BinOp op e1 e2 => GenNode 3 [GenLeaf (Some (inr (inr (inr op)))); go e1; go e2]
   | If e0 e1 e2 => GenNode 4 [go e0; go e1; go e2]
   | Pair e1 e2 => GenNode 5 [go e1; go e2]
   | Fst e => GenNode 6 [go e]
@@ -249,15 +252,17 @@ Proof.
   | Store e1 e2 => GenNode 14 [go e1; go e2]
   | CAS e0 e1 e2 => GenNode 15 [go e0; go e1; go e2]
   | FAA e1 e2 => GenNode 16 [go e1; go e2]
+  | NewProph => GenLeaf None
+  | ResolveProph e1 e2 => GenNode 17 [go e1; go e2]
   end).
  set (dec := fix go e :=
   match e with
-  | GenLeaf (inl (inl x)) => Var x
-  | GenNode 0 [GenLeaf (inl (inr f)); GenLeaf (inl (inr x)); e] => Rec f x (go e)
+  | GenLeaf (Some(inl (inl x))) => Var x
+  | GenNode 0 [GenLeaf (Some (inl (inr f))); GenLeaf (Some (inl (inr x))); e] => Rec f x (go e)
   | GenNode 1 [e1; e2] => App (go e1) (go e2)
-  | GenLeaf (inr (inl l)) => Lit l
-  | GenNode 2 [GenLeaf (inr (inr (inl op))); e] => UnOp op (go e)
-  | GenNode 3 [GenLeaf (inr (inr (inr op))); e1; e2] => BinOp op (go e1) (go e2)
+  | GenLeaf (Some (inr (inl l))) => Lit l
+  | GenNode 2 [GenLeaf (Some (inr (inr (inl op)))); e] => UnOp op (go e)
+  | GenNode 3 [GenLeaf (Some (inr (inr (inr op)))); e1; e2] => BinOp op (go e1) (go e2)
   | GenNode 4 [e0; e1; e2] => If (go e0) (go e1) (go e2)
   | GenNode 5 [e1; e2] => Pair (go e1) (go e2)
   | GenNode 6 [e] => Fst (go e)
@@ -271,6 +276,8 @@ Proof.
   | GenNode 14 [e1; e2] => Store (go e1) (go e2)
   | GenNode 15 [e0; e1; e2] => CAS (go e0) (go e1) (go e2)
   | GenNode 16 [e1; e2] => FAA (go e1) (go e2)
+  | GenLeaf None => NewProph
+  | GenNode 17 [e1; e2] => ResolveProph (go e1) (go e2)
   | _ => Lit LitUnit (* dummy *)
   end).
  refine (inj_countable' enc dec _). intros e. induction e; f_equal/=; auto.
@@ -308,7 +315,9 @@ Inductive ectx_item :=
   | CasMCtx (e0 : expr) (v2 : val)
   | CasRCtx (e0 : expr) (e1 : expr)
   | FaaLCtx (v2 : val)
-  | FaaRCtx (e1 : expr).
+  | FaaRCtx (e1 : expr)
+  | ProphLCtx (v2 : val)
+  | ProphRCtx (e1 : expr).
 
 Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   match Ki with
@@ -334,6 +343,8 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   | CasRCtx e0 e1 => CAS e0 e1 e
   | FaaLCtx v2 => FAA e (of_val v2)
   | FaaRCtx e1 => FAA e1 e
+  | ProphLCtx v2 => ResolveProph e (of_val v2)
+  | ProphRCtx e1 => ResolveProph e1 e
   end.
 
 (** Substitution *)
@@ -359,6 +370,8 @@ Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
   | Store e1 e2 => Store (subst x es e1) (subst x es e2)
   | CAS e0 e1 e2 => CAS (subst x es e0) (subst x es e1) (subst x es e2)
   | FAA e1 e2 => FAA (subst x es e1) (subst x es e2)
+  | NewProph => NewProph
+  | ResolveProph e1 e2 => ResolveProph (subst x es e1) (subst x es e2)
   end.
 
 Definition subst' (mx : binder) (es : expr) : expr → expr :=
@@ -450,28 +463,35 @@ Inductive head_step : expr → state → option observation -> expr → state �
   | ForkS e σ:
      head_step (Fork e) σ None (Lit LitUnit) σ [e]
   | AllocS e v σ l :
-     to_val e = Some v → σ !! l = None →
-     head_step (Alloc e) σ None (Lit $ LitLoc l) (<[l:=v]>σ) []
+     to_val e = Some v → σ.1 !! l = None →
+     head_step (Alloc e) σ None (Lit $ LitLoc l) (<[l:=v]>σ.1, σ.2) []
   | LoadS l v σ :
-     σ !! l = Some v →
+     σ.1 !! l = Some v →
      head_step (Load (Lit $ LitLoc l)) σ None (of_val v) σ []
   | StoreS l e v σ :
-     to_val e = Some v → is_Some (σ !! l) →
-     head_step (Store (Lit $ LitLoc l) e) σ None (Lit LitUnit) (<[l:=v]>σ) []
+     to_val e = Some v → is_Some (σ.1 !! l) →
+     head_step (Store (Lit $ LitLoc l) e) σ None (Lit LitUnit) (<[l:=v]>σ.1, σ.2) []
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     σ !! l = Some vl → vl ≠ v1 →
+     σ.1 !! l = Some vl → vl ≠ v1 →
      vals_cas_compare_safe vl v1 →
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ None (Lit $ LitBool false) σ []
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     σ !! l = Some v1 →
+     σ.1 !! l = Some v1 →
      vals_cas_compare_safe v1 v1 →
-     head_step (CAS (Lit $ LitLoc l) e1 e2) σ None (Lit $ LitBool true) (<[l:=v2]>σ) []
+     head_step (CAS (Lit $ LitLoc l) e1 e2) σ None (Lit $ LitBool true) (<[l:=v2]>σ.1, σ.2) []
   | FaaS l i1 e2 i2 σ :
      to_val e2 = Some (LitV (LitInt i2)) →
-     σ !! l = Some (LitV (LitInt i1)) →
-     head_step (FAA (Lit $ LitLoc l) e2) σ None (Lit $ LitInt i1) (<[l:=LitV (LitInt (i1 + i2))]>σ) [].
+     σ.1 !! l = Some (LitV (LitInt i1)) →
+     head_step (FAA (Lit $ LitLoc l) e2) σ None (Lit $ LitInt i1) (<[l:=LitV (LitInt (i1 + i2))]>σ.1, σ.2) []
+  | NewProphS σ p :
+     p ∉ σ.2 →
+     head_step NewProph σ None (Lit $ LitProphecy p) (σ.1, {[ p ]} ∪ σ.2) []
+  | ResolveProphS e1 p e2 v σ :
+     to_val e1 = Some (LitV $ LitProphecy p) →
+     to_val e2 = Some v →
+     head_step (ResolveProph e1 e2) σ (Some (p, v)) (Lit LitUnit) σ [].
 
 (** Basic properties about the language *)
 Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).
@@ -499,9 +519,14 @@ Proof.
 Qed.
 
 Lemma alloc_fresh e v σ :
-  let l := fresh (dom (gset loc) σ) in
-  to_val e = Some v → head_step (Alloc e) σ None (Lit (LitLoc l)) (<[l:=v]>σ) [].
+  let l := fresh (dom (gset loc) σ.1) in
+  to_val e = Some v → head_step (Alloc e) σ None (Lit (LitLoc l)) (<[l:=v]>σ.1, σ.2) [].
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset loc)), is_fresh. Qed.
+
+Lemma new_proph_fresh σ :
+  let p := fresh σ.2 in
+  head_step NewProph σ None (Lit $ LitProphecy p) (σ.1, {[ p ]} ∪ σ.2) [].
+Proof. constructor. apply is_fresh. Qed.
 
 (* Misc *)
 Lemma to_val_rec f x e `{!Closed (f :b: x :b: []) e} :
