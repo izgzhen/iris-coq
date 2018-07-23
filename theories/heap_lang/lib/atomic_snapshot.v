@@ -3,7 +3,7 @@ From iris.heap_lang Require Export lifting notation.
 From iris.base_logic.lib Require Export invariants.
 From iris.program_logic Require Export atomic.
 From iris.proofmode Require Import tactics.
-From iris.heap_lang Require Import proofmode notation par prophecy.
+From iris.heap_lang Require Import proofmode notation par.
 From iris.bi.lib Require Import fractional.
 Set Default Proof Using "Type".
 
@@ -100,15 +100,15 @@ Section atomic_snapshot.
         then (Fst "x", Fst "y")
         else  "readPair" "l".
 
-  Definition readPair_proph pr : val :=
+  Definition readPair_proph : val :=
     rec: "readPair" "l" :=
       let: "xv1"    := readX "l"           in
-      let: "proph"  := new_prophecy pr #() in
+      let: "proph"  := new prophecy        in
       let: "y"      := readY "l"           in
       let: "xv2"    := readX "l"           in
       let: "v2"     := Snd "xv2"           in
       let: "v_eq"   := Snd "xv1" = "v2"    in
-      resolve_prophecy pr "proph" "v_eq" ;;
+      resolve "proph" to "v_eq" ;;
       if: "v_eq"
         then (Fst "xv1", "y")
       else "readPair" "l".
@@ -368,18 +368,16 @@ Section atomic_snapshot.
     wp_load. eauto.
   Qed.
 
-  Definition val_to_bool (v:val) : bool :=
+  Definition val_to_bool (v : option val) : bool :=
     match v with
-    | LitV (LitBool b) => b
-    | _                => false
+    | Some (LitV (LitBool b)) => b
+    | _                       => false
     end.
-
-  Variable pr: prophecy.
 
   Lemma readPair_spec γ p :
     is_pair γ p -∗
     <<< ∀ v1 v2 : val, pair_content γ (v1, v2) >>>
-       readPair_proph pr p
+       readPair_proph p
        @ ⊤∖↑N
     <<< pair_content γ (v1, v2), RET (v1, v2) >>>.
   Proof.
@@ -405,7 +403,7 @@ Section atomic_snapshot.
       }
     wp_load. wp_let.
     (* ************ new prophecy ********** *)
-    wp_apply new_prophecy_spec; first done.
+    wp_apply wp_new_proph; first done.
     iIntros (proph) "Hpr". iDestruct "Hpr" as (proph_val) "Hpr".
     wp_let.
     (* ************ readY ********** *)
@@ -447,7 +445,7 @@ Section atomic_snapshot.
         iNext. unfold pair_inv. eauto 8 with iFrame.
       }
       wp_load. wp_let. wp_proj. wp_let. wp_proj. wp_op.
-      case_bool_decide; wp_let; wp_apply (resolve_prophecy_spec with "Hpr");
+      case_bool_decide; wp_let; wp_apply (wp_resolve_proph with "Hpr");
         iIntros (->); wp_seq; wp_if.
       + inversion H; subst; clear H. wp_proj.
         assert (v_x2 = v_y) as ->. {
@@ -483,7 +481,7 @@ Section atomic_snapshot.
         iNext. unfold pair_inv. eauto 8 with iFrame.
       }
       wp_load. repeat (wp_let; wp_proj). wp_op. wp_let.
-      wp_apply (resolve_prophecy_spec with "Hpr").
+      wp_apply (wp_resolve_proph with "Hpr").
       iIntros (Heq). subst.
       case_bool_decide.
       + inversion H; subst; clear H. inversion Hproph.
