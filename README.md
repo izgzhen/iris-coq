@@ -106,7 +106,7 @@ that should be compatible with this version:
 
 * Information on how to set up your editor for unicode input and output is
   collected in [Editor.md](Editor.md).
-* The Iris Proof Mode (IPM) is documented at [ProofMode.md](ProofMode.md).
+* The Iris Proof Mode (IPM) / MoSeL is documented at [ProofMode.md](ProofMode.md).
 * Naming conventions are documented at [Naming.md](Naming.md).
 
 ### How to update the std++ dependency
