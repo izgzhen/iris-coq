@@ -1,6 +1,7 @@
 # IRIS COQ DEVELOPMENT
 
-This is the Coq development of the [Iris Project](http://iris-project.org).
+This is the Coq development of the [Iris Project](http://iris-project.org),
+which includes the [MoSeL proof mode](http://iris-project.org/mosel/).
 
 A LaTeX version of the core logic definitions and some derived forms is
 available in [docs/iris.tex](docs/iris.tex).  A compiled PDF version of this
