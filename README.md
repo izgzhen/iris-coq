@@ -1,7 +1,8 @@
 # IRIS COQ DEVELOPMENT
 
 This is the Coq development of the [Iris Project](http://iris-project.org),
-which includes the [MoSeL proof mode](http://iris-project.org/mosel/).
+which includes [MoSeL](http://iris-project.org/mosel/), a general proof mode
+for carrying out separation logic proofs in Coq.
 
 A LaTeX version of the core logic definitions and some derived forms is
 available in [docs/iris.tex](docs/iris.tex).  A compiled PDF version of this
