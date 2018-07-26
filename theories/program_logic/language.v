@@ -72,6 +72,9 @@ Section language.
 
   Definition reducible (e : expr Λ) (σ : state Λ) :=
     ∃ κ e' σ' efs, prim_step e σ κ e' σ' efs.
+  (* Total WP only permits reductions without observations *)
+  Definition reducible_no_obs (e : expr Λ) (σ : state Λ) :=
+    ∃ e' σ' efs, prim_step e σ None e' σ' efs.
   Definition irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ κ e' σ' efs, ¬prim_step e σ κ e' σ' efs.
   Definition stuck (e : expr Λ) (σ : state Λ) :=
@@ -130,6 +133,8 @@ Section language.
   Proof. unfold reducible, irreducible. naive_solver. Qed.
   Lemma reducible_not_val e σ : reducible e σ → to_val e = None.
   Proof. intros (?&?&?&?&?); eauto using val_stuck. Qed.
+  Lemma reducible_no_obs_reducible e σ : reducible_no_obs e σ → reducible e σ.
+  Proof. intros (?&?&?&?); eexists; eauto. Qed.
   Lemma val_irreducible e σ : is_Some (to_val e) → irreducible e σ.
   Proof. intros [??] ???? ?%val_stuck. by destruct (to_val e). Qed.
   Global Instance of_val_inj : Inj (=) (=) (@of_val Λ).
@@ -143,6 +148,12 @@ Section language.
     to_val e = None → reducible (K e) σ → reducible e σ.
   Proof.
     intros ? (e'&σ'&k&efs&Hstep); unfold reducible.
+    apply fill_step_inv in Hstep as (e2' & _ & Hstep); eauto.
+  Qed.
+  Lemma reducible_no_obs_fill `{LanguageCtx Λ K} e σ :
+    to_val e = None → reducible_no_obs (K e) σ → reducible_no_obs e σ.
+  Proof.
+    intros ? (e'&σ'&efs&Hstep); unfold reducible_no_obs.
     apply fill_step_inv in Hstep as (e2' & _ & Hstep); eauto.
   Qed.
   Lemma irreducible_fill `{LanguageCtx Λ K} e σ :
@@ -167,7 +178,7 @@ Section language.
 
   Class PureExec (P : Prop) (e1 e2 : expr Λ) := {
     pure_exec_safe σ :
-      P → reducible e1 σ;
+      P → reducible_no_obs e1 σ;
     pure_exec_puredet σ1 κ e2' σ2 efs :
       P → prim_step e1 σ1 κ e2' σ2 efs → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = [];
   }.
@@ -183,10 +194,10 @@ Section language.
     PureExec φ (K e1) (K e2).
   Proof.
     intros [Hred Hstep]. split.
-    - unfold reducible in *. naive_solver eauto using fill_step.
+    - unfold reducible_no_obs in *. naive_solver eauto using fill_step.
     - intros σ1 κ e2' σ2 efs ? Hpstep.
       destruct (fill_step_inv e1 σ1 κ e2' σ2 efs) as (e2'' & -> & ?); [|exact Hpstep|].
-      + destruct (Hred σ1) as (? & ? & ? & ? & ?); eauto using val_stuck.
+      + destruct (Hred σ1) as (? & ? & ? & ?); eauto using val_stuck.
       + edestruct (Hstep σ1 κ e2'' σ2 efs) as (? & -> & -> & ->); auto.
   Qed.
 

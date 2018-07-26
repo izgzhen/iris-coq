@@ -11,6 +11,8 @@ Implicit Types σ : state Λ.
 Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 
+Hint Resolve reducible_no_obs_reducible.
+
 Lemma wp_lift_step_fupd s E Φ e1 :
   to_val e1 = None →
   (∀ σ1 κs, state_interp σ1 κs ={E,∅}=∗

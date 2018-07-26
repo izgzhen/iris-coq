@@ -99,6 +99,8 @@ Section ectx_language.
 
   Definition head_reducible (e : expr Λ) (σ : state Λ) :=
     ∃ κ e' σ' efs, head_step e σ κ e' σ' efs.
+  Definition head_reducible_no_obs (e : expr Λ) (σ : state Λ) :=
+    ∃ e' σ' efs, head_step e σ None e' σ' efs.
   Definition head_irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ κ e' σ' efs, ¬head_step e σ κ e' σ' efs.
   Definition head_stuck (e : expr Λ) (σ : state Λ) :=
@@ -143,11 +145,16 @@ Section ectx_language.
     head_step e1 σ1 κ e2 σ2 efs → prim_step e1 σ1 κ e2 σ2 efs.
   Proof. apply Ectx_step with empty_ectx; by rewrite ?fill_empty. Qed.
 
+  Lemma head_reducible_no_obs_reducible e σ :
+    head_reducible_no_obs e σ → head_reducible e σ.
+  Proof. intros (?&?&?&?). eexists. eauto. Qed.
   Lemma not_head_reducible e σ : ¬head_reducible e σ ↔ head_irreducible e σ.
   Proof. unfold head_reducible, head_irreducible. naive_solver. Qed.
 
   Lemma head_prim_reducible e σ : head_reducible e σ → reducible e σ.
   Proof. intros (κ&e'&σ'&efs&?). eexists κ, e', σ', efs. by apply head_prim_step. Qed.
+  Lemma head_prim_reducible_no_obs e σ : head_reducible_no_obs e σ → reducible_no_obs e σ.
+  Proof. intros (e'&σ'&efs&?). eexists e', σ', efs. by apply head_prim_step. Qed.
   Lemma head_prim_irreducible e σ : irreducible e σ → head_irreducible e σ.
   Proof.
     rewrite -not_reducible -not_head_reducible. eauto using head_prim_reducible.
@@ -208,15 +215,15 @@ Section ectx_language.
   Qed.
 
   Lemma det_head_step_pure_exec (P : Prop) e1 e2 :
-    (∀ σ, P → head_reducible e1 σ) →
+    (∀ σ, P → head_reducible_no_obs e1 σ) →
     (∀ σ1 κ e2' σ2 efs,
       P → head_step e1 σ1 κ e2' σ2 efs → κ = None ∧ σ1 = σ2 ∧ e2=e2' ∧ efs = []) →
     PureExec P e1 e2.
   Proof.
     intros Hp1 Hp2. split.
-    - intros σ ?. destruct (Hp1 σ) as (κ & e2' & σ2 & efs & ?); first done.
-      eexists κ, e2', σ2, efs. by apply head_prim_step.
-    - intros σ1 κ e2' σ2 efs ? ?%head_reducible_prim_step; eauto.
+    - intros σ ?. destruct (Hp1 σ) as (e2' & σ2 & efs & ?); first done.
+      eexists e2', σ2, efs. by apply head_prim_step.
+    - intros σ1 κ e2' σ2 efs ? ?%head_reducible_prim_step; eauto using head_reducible_no_obs_reducible.
   Qed.
 
   Global Instance pure_exec_fill K e1 e2 φ :

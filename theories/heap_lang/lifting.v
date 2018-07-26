@@ -49,12 +49,13 @@ Ltac inv_head_step :=
 
 Local Hint Extern 0 (atomic _ _) => solve_atomic.
 Local Hint Extern 0 (head_reducible _ _) => eexists _, _, _; simpl.
+Local Hint Extern 0 (head_reducible_no_obs _ _) => eexists _, _; simpl.
 
 Local Hint Constructors head_step.
 Local Hint Resolve alloc_fresh.
 Local Hint Resolve to_of_val.
 
-Local Ltac solve_exec_safe := intros; subst; do 4 eexists; econstructor; eauto.
+Local Ltac solve_exec_safe := intros; subst; do 3 eexists; econstructor; eauto.
 Local Ltac solve_exec_puredet := simpl; intros; by inv_head_step.
 Local Ltac solve_pure_exec :=
   unfold IntoVal in *;
@@ -148,9 +149,9 @@ Proof.
   iIntros (σ1 κs) "[Hσ Hκs] !>"; iSplit.
   (* TODO (MR) this used to be done by eauto. Why does it not work any more? *)
   { iPureIntro. repeat eexists. by apply alloc_fresh. }
-  iIntros (κ κs' v2 σ2 efs [Hstep ->]); inv_head_step.
+  iIntros (κ v2 σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_alloc with "Hσ") as "[Hσ Hl]"; first done.
-  iModIntro; iSplit=> //. iFrame. by iApply "HΦ".
+  iModIntro; iSplit=> //. iSplit; first done. iFrame. by iApply "HΦ".
 Qed.
 
 Lemma wp_load s E l q v :
@@ -168,8 +169,8 @@ Proof.
   iIntros (Φ) "Hl HΦ". iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto.
-  iIntros (κ κs' v2 σ2 efs [Hstep ->]); inv_head_step.
-  iModIntro; iSplit=> //. iFrame. by iApply "HΦ".
+  iIntros (κ v2 σ2 efs Hstep); inv_head_step.
+  iModIntro; iSplit=> //. iSplit; first done. iFrame. by iApply "HΦ".
 Qed.
 
 Lemma wp_store s E l v' e v :
@@ -196,9 +197,9 @@ Proof.
   iSplit.
   (* TODO (MR) this used to be done by eauto. Why does it not work any more? *)
   { iPureIntro. repeat eexists. constructor; eauto. }
-  iIntros (κ κs' v2 σ2 efs [Hstep ->]); inv_head_step.
+  iIntros (κ v2 σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_update with "Hσ Hl") as "[$ Hl]".
-  iModIntro. iSplit=>//. iFrame. by iApply "HΦ".
+  iModIntro. iSplit=>//. iSplit; first done. iFrame. by iApply "HΦ".
 Qed.
 
 Lemma wp_cas_fail s E l q v' e1 v1 e2 :
@@ -220,8 +221,8 @@ Proof.
   iIntros (<- [v2 <-] ?? Φ) "Hl HΦ".
   iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
-  iSplit; first by eauto. iIntros (κ κs' v2' σ2 efs [Hstep ->]); inv_head_step.
-  iModIntro; iSplit=> //. iFrame. by iApply "HΦ".
+  iSplit; first by eauto. iIntros (κ v2' σ2 efs Hstep); inv_head_step.
+  iModIntro; iSplit=> //. iSplit; first done. iFrame. by iApply "HΦ".
 Qed.
 
 Lemma wp_cas_suc s E l e1 v1 e2 v2 :
@@ -250,9 +251,9 @@ Proof.
   iSplit.
   (* TODO (MR) this used to be done by eauto. Why does it not work any more? *)
   { iPureIntro. repeat eexists. by econstructor. }
-  iIntros (κ κs' v2' σ2 efs [Hstep ->]); inv_head_step.
+  iIntros (κ v2' σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_update with "Hσ Hl") as "[$ Hl]".
-  iModIntro. iSplit=>//. iFrame. by iApply "HΦ".
+  iModIntro. iSplit=>//. iSplit; first done. iFrame. by iApply "HΦ".
 Qed.
 
 Lemma wp_faa s E l i1 e2 i2 :
@@ -281,9 +282,9 @@ Proof.
   iSplit.
   (* TODO (MR) this used to be done by eauto. Why does it not work any more? *)
   { iPureIntro. repeat eexists. by constructor. }
-  iIntros (κ κs' v2' σ2 efs [Hstep ->]); inv_head_step.
+  iIntros (κ v2' σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_update with "Hσ Hl") as "[$ Hl]".
-  iModIntro. iSplit=>//. iFrame. by iApply "HΦ".
+  iModIntro. iSplit=>//. iSplit; first done. iFrame. by iApply "HΦ".
 Qed.
 
 (** Lifting lemmas for creating and resolving prophecy variables *)
