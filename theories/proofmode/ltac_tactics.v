@@ -667,8 +667,9 @@ Tactic Notation "iSpecializeCore" open_constr(H)
     spatial hypotheses for both proving the premises of the lemma we
     specialize as well as those of the remaining goal. We can only use it when
     the result of the specialization is persistent, and no modality is
-    eliminated. As an optimization, we do not use this when only universal
-    quantifiers are instantiated. *)
+    eliminated. We do not use [tac_specialize_persistent_helper] in the case
+    only universal quantifiers and no implications or wands are instantiated
+    (i.e [pat = []]) because it is a.) not needed, and b.) more efficient. *)
     let pat := spec_pat.parse pat in
     lazymatch eval compute in
       (p && bool_decide (pat ≠ []) && negb (existsb spec_pat_modal pat)) with
