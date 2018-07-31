@@ -93,6 +93,9 @@ Proof.
 Qed.
 Global Instance gmap_singleton_discrete i x :
   Discrete x → Discrete ({[ i := x ]} : gmap K A) := _.
+Lemma insert_idN n m i x :
+  m !! i ≡{n}≡ Some x → <[i:=x]>m ≡{n}≡ m.
+Proof. intros (y'&?&->)%dist_Some_inv_r'. by rewrite insert_id. Qed.
 End cofe.
 
 Arguments gmapC _ {_ _} _.
@@ -285,6 +288,10 @@ Proof.
   - by rewrite lookup_singleton_ne // !(left_id None _).
 Qed.
 
+Lemma insert_op m1 m2 i x y :
+  <[i:=x ⋅ y]>(m1 ⋅ m2) =  <[i:=x]>m1 ⋅ <[i:=y]>m2.
+Proof. by rewrite (insert_merge (⋅) m1 m2 i (x ⋅ y) x y). Qed.
+
 Lemma insert_updateP (P : A → Prop) (Q : gmap K A → Prop) m i x :
   x ~~>: P → (∀ y, P y → Q (<[i:=y]>m)) → <[i:=x]>m ~~>: Q.
 Proof.
@@ -462,6 +469,29 @@ Proof.
     [done|by rewrite lookup_singleton].
 Qed.
 End properties.
+
+Section unital_properties.
+Context `{Countable K} {A : ucmraT}.
+Implicit Types m : gmap K A.
+Implicit Types i : K.
+Implicit Types x y : A.
+
+Lemma insert_alloc_local_update m1 m2 i x x' y' :
+  m1 !! i = Some x → m2 !! i = None →
+  (x, ε) ~l~> (x', y') →
+  (m1, m2) ~l~> (<[i:=x']>m1, <[i:=y']>m2).
+Proof.
+  intros Hi1 Hi2 Hup. apply local_update_unital=> n mf Hm1v Hm.
+  assert (mf !! i ≡{n}≡ Some x) as Hif.
+  { move: (Hm i). by rewrite lookup_op Hi1 Hi2 left_id. }
+  destruct (Hup n (mf !! i)) as [Hx'v Hx'eq].
+  { move: (Hm1v i). by rewrite Hi1. }
+  { by rewrite Hif -(inj_iff Some) -Some_op_opM -Some_op left_id. }
+  split.
+  - by apply insert_validN.
+  - simpl in Hx'eq. by rewrite -(insert_idN n mf i x) // -insert_op -Hm Hx'eq Hif.
+Qed.
+End unital_properties.
 
 (** Functor *)
 Instance gmap_fmap_ne `{Countable K} {A B : ofeT} (f : A → B) n :
