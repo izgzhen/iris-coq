@@ -105,4 +105,9 @@ Section frac_auth.
   Proof.
     intros. by apply auth_update, option_local_update, prod_local_update_2.
   Qed.
+
+  Lemma frac_auth_update_1 a b a' : ✓ a' → ●! a ⋅ ◯! b ~~> ●! a' ⋅ ◯! a'.
+  Proof.
+    intros. by apply auth_update, option_local_update, exclusive_local_update.
+  Qed.
 End frac_auth.
