@@ -272,7 +272,7 @@ The signature can of course state arbitrary additional properties of $\pred$, as
 The adequacy statement now reads as follows:
 \begin{align*}
  &\All \mask, \expr, \val, \state.
- \\&( \TRUE \proves {\upd}_\mask \Exists \stateinterp. \stateinterp(\state) * \wpre[\stateinterp]{\expr}[\stuckness;\mask]{x.\; \pred(x)}) \Ra
+ \\&( \TRUE \proves \pvs[\mask] \Exists \stateinterp. \stateinterp(\state) * \wpre[\stateinterp]{\expr}[\stuckness;\mask]{x.\; \pred(x)}) \Ra
  \\&\expr, \state \vDash_\stuckness V
 \end{align*}
 Notice that the state invariant $S$ used by the weakest precondition is chosen \emph{after} doing a fancy update, which allows it to depend on the names of ghost variables that are picked in that initial fancy update.
