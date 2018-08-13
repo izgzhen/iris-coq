@@ -1,6 +1,7 @@
 From iris.base_logic.lib Require Export own.
 From stdpp Require Export coPset.
 From iris.base_logic.lib Require Import wsat.
+From iris.algebra Require Import gmap auth agree gset coPset.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 Export invG.
@@ -40,13 +41,50 @@ Proof. rewrite /BiBUpdFUpd uPred_fupd_eq. by iIntros (E P) ">? [$ $] !> !>". Qed
 Instance uPred_bi_fupd_plainly `{invG Σ} : BiFUpdPlainly (uPredSI (iResUR Σ)).
 Proof.
   split.
-  - iIntros (E1 E2 E2' P Q ? (E3&->&HE)%subseteq_disjoint_union_L) "HQP HQ".
-    rewrite uPred_fupd_eq /uPred_fupd_def ownE_op //. iIntros "H".
-    iMod ("HQ" with "H") as ">(Hws & [HE1 HE3] & HQ)"; iModIntro.
-    iAssert (◇ P)%I as "#HP".
+  - rewrite uPred_fupd_eq /uPred_fupd_def. iIntros (E P Q ?) "HQP HQ [Hw HE]".
+    iAssert (◇ P)%I as "#>$".
     { by iMod ("HQP" with "HQ [$]") as "(_ & _ & HP)". }
-    iMod "HP". iFrame. auto.
-  - rewrite uPred_fupd_eq /uPred_fupd_def. iIntros (E P ?) "HP [Hw HE]".
-    iAssert (▷ ◇ P)%I with "[-]" as "#$"; last by iFrame.
+    by iFrame.
+  - rewrite uPred_fupd_eq /uPred_fupd_def. iIntros (p E1 E2 P ?) "HP [Hw HE]".
+    iAssert (▷?p ◇ P)%I with "[-]" as "#$"; last by iFrame.
     iNext. by iMod ("HP" with "[$]") as "(_ & _ & HP)".
+Qed.
+
+Lemma fupd_plain_soundness `{invPreG Σ} E (P: iPropSI Σ) `{!Plain P}:
+  (∀ `{Hinv: invG Σ}, (|={⊤, E}=> P)%I) → (▷ P)%I.
+Proof.
+  iIntros (Hfupd). iMod wsat_alloc as (Hinv) "[Hw HE]".
+  iPoseProof (Hfupd Hinv) as "H".
+  rewrite uPred_fupd_eq /uPred_fupd_def.
+  iMod ("H" with "[$]") as "[Hw [HE >H']]"; iFrame.
+Qed.
+
+Lemma step_fupdN_soundness `{invPreG Σ} φ n :
+  (∀ `{Hinv: invG Σ}, (|={⊤, ∅}▷=>^n |={⊤, ∅}=> ⌜ φ ⌝ : iProp Σ)%I) →
+  φ.
+Proof.
+  iIntros (Hiter).
+  eapply (soundness (M:=iResUR Σ) _  (S (S n))).
+  eapply (fupd_plain_soundness ⊤); first by apply _.
+  intros Hinv. rewrite -/sbi_laterN.
+  iPoseProof (Hiter Hinv) as "H".
+  destruct n.
+  - rewrite //=. iPoseProof (fupd_plain_strong with "H") as "H'".
+    do 2 iMod "H'"; iModIntro; auto.
+  - iPoseProof (step_fupdN_mono _ _ _ _ (|={⊤}=> ◇ ⌜φ⌝)%I with "H") as "H'".
+    { iIntros "H". iMod (fupd_plain_strong with "H"); auto. }
+    rewrite -step_fupdN_S_fupd.
+    iMod (step_fupdN_plain with "H'") as "Hφ". iModIntro. iNext.
+    rewrite -later_laterN laterN_later.
+    iNext. by do 2 iMod "Hφ".
+Qed.
+
+Lemma step_fupdN_soundness' `{invPreG Σ} φ n :
+  (∀ `{Hinv: invG Σ}, (|={⊤, ∅}▷=>^n ⌜ φ ⌝ : iProp Σ)%I)  →
+  φ.
+Proof.
+  iIntros (Hiter). eapply (step_fupdN_soundness _ n).
+  iIntros (Hinv). iPoseProof (Hiter Hinv) as "Hiter".
+  iApply (step_fupdN_mono with "Hiter").
+  iIntros (?). iMod (fupd_intro_mask' _ ∅) as "_"; auto.
 Qed.

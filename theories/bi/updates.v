@@ -28,9 +28,11 @@ Notation "P ={ E }=∗ Q" := (P -∗ |={E}=> Q) : stdpp_scope.
 Notation "|={ E1 , E2 , E3 }▷=> Q" := (|={E1,E2}=> (▷ |={E2,E3}=> Q))%I : bi_scope.
 Notation "P ={ E1 , E2 , E3 }▷=∗ Q" := (P -∗ |={ E1,E2,E3 }▷=> Q)%I : bi_scope.
 Notation "|={ E1 , E2 }▷=> Q" := (|={E1,E2,E1}▷=> Q)%I : bi_scope.
+Notation "P ={ E1 , E2 }▷=∗ Q" := (P ⊢ |={ E1 , E2, E1 }▷=> Q) (only parsing) : stdpp_scope.
 Notation "P ={ E1 , E2 }▷=∗ Q" := (P -∗ |={ E1 , E2, E1 }▷=> Q)%I : bi_scope.
 Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I : bi_scope.
 Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I : bi_scope.
+Notation "|={ E1 , E2 }▷=>^ n Q" := (Nat.iter n (λ P, |={E1,E2}▷=> P) Q)%I : bi_scope.
 
 (** Bundled versions  *)
 (* Mixins allow us to create instances easily without having to use Program *)
@@ -76,11 +78,10 @@ Class BiBUpdPlainly (PROP : sbi) `{!BiBUpd PROP, !BiPlainly PROP} :=
 Hint Mode BiBUpdPlainly ! - - : typeclass_instances.
 
 Class BiFUpdPlainly (PROP : sbi) `{!BiFUpd PROP, !BiPlainly PROP} := {
-  fupd_plain' E1 E2 E2' (P Q : PROP) `{!Plain P} :
-    E1 ⊆ E2 →
-    (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P;
-  later_fupd_plain E (P : PROP) `{!Plain P} :
-    (▷ |={E}=> P) ={E}=∗ ▷ ◇ P;
+  fupd_plain_weak E (P Q : PROP) `{!Plain P} :
+    (Q ={E}=∗ P) -∗ Q ={E}=∗ Q ∗ P;
+  later_fupd_plain p E1 E2 (P : PROP) `{!Plain P} :
+    (▷?p |={E1, E2}=> P) ={E1}=∗ ▷?p ◇ P;
 }.
 Hint Mode BiBUpdFUpd ! - - : typeclass_instances.
 
@@ -271,6 +272,23 @@ Section fupd_derived.
     intros P1 P2 HP Q1 Q2 HQ. by rewrite HP HQ -fupd_sep.
   Qed.
 
+  Lemma fupd_plain_strong `{BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 P `{!Plain P} :
+    (|={E1, E2}=> P) ={E1}=∗ ◇ P.
+  Proof. by apply (later_fupd_plain false). Qed.
+
+  Lemma fupd_plain' `{BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 E2' P Q `{!Plain P} :
+    E1 ⊆ E2 →
+    (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
+  Proof.
+    intros (E3&->&HE)%subseteq_disjoint_union_L.
+    apply wand_intro_l. rewrite fupd_frame_r.
+    rewrite fupd_plain_strong fupd_except_0 fupd_plain_weak wand_elim_r.
+    rewrite (fupd_mask_mono E1 (E1 ∪ E3)); last by set_solver+.
+    rewrite fupd_trans -(fupd_trans E1 (E1 ∪ E3) E1).
+    apply fupd_mono. rewrite -fupd_frame_r.
+    apply sep_mono; auto. apply fupd_intro_mask; set_solver+.
+  Qed.
+
   Lemma fupd_plain `{BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 P Q `{!Plain P} :
     E1 ⊆ E2 → (Q -∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
   Proof.
@@ -309,4 +327,60 @@ Section fupd_derived.
 
   Lemma step_fupd_intro E1 E2 P : E2 ⊆ E1 → ▷ P -∗ |={E1,E2}▷=> P.
   Proof. intros. by rewrite -(step_fupd_mask_mono E2 _ _ E2) // -!fupd_intro. Qed.
+
+  Lemma step_fupd_frame_l E1 E2 R Q :
+    (R ∗ |={E1, E2}▷=> Q) -∗ |={E1, E2}▷=> (R ∗ Q).
+  Proof.
+    rewrite fupd_frame_l.
+    apply fupd_mono.
+    rewrite [P in P ∗ _ ⊢ _](later_intro R) -later_sep fupd_frame_l.
+    by apply later_mono, fupd_mono.
+  Qed.
+
+  Lemma step_fupd_plain `{BiPlainly PROP, !BiFUpdPlainly PROP} E P `{!Plain P} :
+    (|={E, ∅}▷=> P) ={E}=∗ ▷ ◇ P.
+  Proof.
+    specialize (later_fupd_plain true ∅ E P) => //= ->.
+    rewrite fupd_trans fupd_plain_strong. apply fupd_mono, except_0_later.
+  Qed.
+
+  Lemma step_fupd_fupd E P:
+    (|={E, ∅}▷=> P) ⊣⊢ (|={E, ∅}▷=> |={E}=> P).
+  Proof.
+    apply (anti_symm (⊢)).
+    - by rewrite -fupd_intro.
+    - by rewrite fupd_trans.
+  Qed.
+
+  Lemma step_fupdN_mono E1 E2 n P Q :
+    (P ⊢ Q) → (|={E1, E2}▷=>^n P) ⊢ (|={E1, E2}▷=>^n Q).
+  Proof.
+    intros HPQ. induction n as [|n IH]=> //=. rewrite IH //.
+  Qed.
+
+  Lemma step_fupdN_S_fupd n E P:
+    (|={E, ∅}▷=>^(S n) P) ⊣⊢ (|={E, ∅}▷=>^(S n) |={E}=> P).
+  Proof.
+    apply (anti_symm (⊢)); rewrite !Nat_iter_S_r; apply step_fupdN_mono;
+      rewrite -step_fupd_fupd //.
+  Qed.
+
+  Lemma step_fupdN_frame_l E1 E2 n R Q :
+    (R ∗ |={E1, E2}▷=>^n Q) -∗ |={E1, E2}▷=>^n (R ∗ Q).
+  Proof.
+    induction n as [|n IH]; simpl; [done|].
+    rewrite step_fupd_frame_l IH //=.
+  Qed.
+
+  Lemma step_fupdN_plain `{BiPlainly PROP, !BiFUpdPlainly PROP} E n P `{!Plain P}:
+    (|={E, ∅}▷=>^n P) ={E}=∗ ▷^n ◇ P.
+  Proof.
+    induction n as [| n].
+    - rewrite -fupd_intro. apply except_0_intro.
+    - rewrite Nat_iter_S step_fupd_fupd IHn ?fupd_trans step_fupd_plain.
+      apply fupd_mono. destruct n; simpl.
+      * by rewrite except_0_idemp.
+      * by rewrite except_0_later.
+  Qed.
+
 End fupd_derived.
