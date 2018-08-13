@@ -132,7 +132,7 @@ Then, using the standard proof rules for invariants, we show that it satisfies \
 Furthermore, assuming the rule for opening invariants without a $\later$, we can prove a slightly weaker version of \ruleref{sprop-agree}, which is sufficient for deriving a contradiction.
 
 
-% Taking ${\upd}_\bot$ and ${\upd}_\top$ to be the fancy update modalities $\pvs[\emptyset]$
+% Taking ${\upd}_0$ and ${\upd}_1$ to be the fancy update modalities $\pvs[\emptyset]$
 % and $\pvs[\nat]$, respectively, we can see that Iris
 % \emph{almost} satisfies these axioms.  First, to implement the tokens,
 % we can use the RA with the carrier
@@ -167,14 +167,14 @@ We can show variants of \ruleref{sprop-agree} and \ruleref{sprop-alloc} for the 
 \begin{lem}
   \label{lem:counterexample-invariants-saved-prop-alloc}
 We have
-  \(\proves {\upd}_\top \Exists \gname. \gname \Mapsto \prop(\gname)\).
+  \(\proves {\upd}_1 \Exists \gname. \gname \Mapsto \prop(\gname)\).
 \end{lem}
 \begin{proof}
-  We have to show the allocation rule \[\proves {\upd}_\top \Exists \gname. \gname \Mapsto \prop.\]
-    From \ruleref{eq:start-alloc} we have a $\gname$ such that ${\upd}_\bot \ownGhost \gname \starttoken$ holds and hence from \ruleref{eq:update-weaken-mask} we have ${\upd}_\top\ownGhost\gname \starttoken$.
-    Since we are proving a goal of the form ${\upd}_\top R$ we may assume $\ownGhost \gname \starttoken$.
-    Thus for any $\prop$ we have ${\upd}_\top\left(\ownGhost{\gname}{\starttoken} \lor \ownGhost \gname \finishtoken * \prop\right)$.
-    Again since our goal is still of the form ${\upd}_\top$ we may assume $\ownGhost{\gname}{\starttoken} \lor \ownGhost \gname \finishtoken * \always \prop$.
+  We have to show the allocation rule \[\proves {\upd}_1 \Exists \gname. \gname \Mapsto \prop.\]
+    From \ruleref{eq:start-alloc} we have a $\gname$ such that ${\upd}_0 \ownGhost \gname \starttoken$ holds and hence from \ruleref{eq:update-weaken-mask} we have ${\upd}_1\ownGhost\gname \starttoken$.
+    Since we are proving a goal of the form ${\upd}_1 R$ we may assume $\ownGhost \gname \starttoken$.
+    Thus for any $\prop$ we have ${\upd}_1\left(\ownGhost{\gname}{\starttoken} \lor \ownGhost \gname \finishtoken * \prop\right)$.
+    Again since our goal is still of the form ${\upd}_1$ we may assume $\ownGhost{\gname}{\starttoken} \lor \ownGhost \gname \finishtoken * \always \prop$.
     The rule \ruleref{eq:inv-alloc} then gives us precisely what we need.
  \qed \end{proof}
 
@@ -183,18 +183,18 @@ We have
 \label{lem:counterexample-invariants-saved-prop-agree}
 We have
   \(
-  \gname \Mapsto \prop * \gname \Mapsto \propB * \always \prop \proves {\upd}_\top \always \propB
+  \gname \Mapsto \prop * \gname \Mapsto \propB * \always \prop \proves {\upd}_1 \always \propB
   \)
 and thus
   \(
-  \gname \Mapsto \prop * \gname \Mapsto \propB \proves ({\upd}_\top \always \prop) \Lra ({\upd}_\top \always \propB).
+  \gname \Mapsto \prop * \gname \Mapsto \propB \proves ({\upd}_1 \always \prop) \Lra ({\upd}_1 \always \propB).
   \)
 \end{lem}
 
 \begin{proof}[\lemref{lem:counterexample-invariants-saved-prop-agree}]
 \begin{itemize}
   \item We first show
-    \[\gname \Mapsto \prop * \gname \Mapsto \propB * \always \prop \proves {\upd}_\top \always \propB.\]
+    \[\gname \Mapsto \prop * \gname \Mapsto \propB * \always \prop \proves {\upd}_1 \always \propB.\]
     We use \ruleref{eq:inv-open} to open the invariant in $\gname \Mapsto \prop$ and consider two cases:
     % 
     \begin{enumerate}
@@ -206,17 +206,17 @@ and thus
     After closing the invariant, we have obtained $\ownGhost \gname \finishtoken$.
     Hence, it is sufficient to prove
     \[
-      \ownGhost{\gname}{\finishtoken} * \gname \Mapsto \prop * \gname \Mapsto \propB * \always \prop \proves {\upd}_\top \always \propB.\]
+      \ownGhost{\gname}{\finishtoken} * \gname \Mapsto \prop * \gname \Mapsto \propB * \always \prop \proves {\upd}_1 \always \propB.\]
     We proceed by using \ruleref{eq:inv-open} to open the other invariant in $\gname \Mapsto \propB$, and we again consider two cases:
     \begin{enumerate}
     \item $\ownGhost{\gname}{\starttoken}$ (the invariant is ``uninitialized''): As witnessed by \ruleref{eq:start-not-finished}, this cannot happen, so we derive a contradiction.
       Notice that this is a key point of the proof: because the two invariants ($\gname \Mapsto \prop$ and $\gname \Mapsto \propB$) \emph{share} the ghost name $\gname$, initializing one of them is enough to show that the other one has been initialized.
       Essentially, this is an indirect way of saying that really, we have been opening the same invariant two times.
     \item $\ownGhost{\gname}{\finishtoken} * \always \propB$ (the invariant is ``initialized''):
-      Since $\always \propB$ is duplicable we use one copy to close the invariant, and retain another to prove ${\upd}_\top \always \propB$.
+      Since $\always \propB$ is duplicable we use one copy to close the invariant, and retain another to prove ${\upd}_1 \always \propB$.
     \end{enumerate}
 \item By applying the above twice, we easily obtain
-\[ \gname \Mapsto \prop * \gname \Mapsto \propB \proves ({\upd}_\top \always \prop) \Lra ({\upd}_\top \always \propB) \]
+\[ \gname \Mapsto \prop * \gname \Mapsto \propB \proves ({\upd}_1 \always \prop) \Lra ({\upd}_1 \always \propB) \]
 \end{itemize}
 \qed \end{proof}
 % When allocating $\gname \Mapsto \prop(\gname)$ in \lemref{lem:counterexample-invariants-saved-prop-alloc}, we will start off in ``state'' $\ownGhost \gname \starttoken$, and once we have $P$ in \lemref{lem:counterexample-invariants-saved-prop-agree} we use \ruleref{eq:start-finish} to transition to $\ownGhost\gname \finishtoken$, obtaining ourselves a copy of said token.
@@ -224,9 +224,9 @@ and thus
 Intuitively, \lemref{lem:counterexample-invariants-saved-prop-agree} shows that we can ``convert'' a proof from $\prop$ to $\propB$.
 
 We are now in a position to replay the counterexample from \Sref{sec:saved-prop-no-later}.
-The only difference is that because \lemref{lem:counterexample-invariants-saved-prop-agree} is slightly weaker than the rule \ruleref{sprop-agree} of \thmref{thm:counterexample-1}, we need to use ${\upd}_\top \FALSE$ in place of $\FALSE$ in the definition of the predicate $A$:
+The only difference is that because \lemref{lem:counterexample-invariants-saved-prop-agree} is slightly weaker than the rule \ruleref{sprop-agree} of \thmref{thm:counterexample-1}, we need to use ${\upd}_1 \FALSE$ in place of $\FALSE$ in the definition of the predicate $A$:
 we let \(
-  A(\gname) \eqdef \Exists \prop : \Prop. \always (\prop \Ra {\upd}_\top \FALSE) \land \gname \Mapsto \prop\)
+  A(\gname) \eqdef \Exists \prop : \Prop. \always (\prop \Ra {\upd}_1 \FALSE) \land \gname \Mapsto \prop\)
 and replay the proof that we have presented above.
 
 %TODO: What about executing a view shift under a later?
