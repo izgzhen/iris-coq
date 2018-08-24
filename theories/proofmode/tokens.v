@@ -1,4 +1,3 @@
-Require Import Coq.Strings.Ascii.
 From iris.proofmode Require Import base.
 Set Default Proof Using "Type".
 
