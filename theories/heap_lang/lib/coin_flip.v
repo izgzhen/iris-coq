@@ -16,19 +16,21 @@ Definition rand: val :=
        Fork ("y" <- #true) ;;
        !"y".
 
-  Definition earlyChoice: val :=
-    λ: "x",
-       let: "r" := rand #() in
-       "x" <- #0 ;;
-       "r".
+Definition earlyChoice: val :=
+  λ: "x",
+  let: "r" := rand #() in
+  "x" <- #0 ;;
+      "r".
+
+Definition lateChoice: val :=
+  λ: "x",
+  let: "p" := new prophecy in
+  "x" <- #0 ;;
+      let: "r" := rand #() in
+      resolve "p" to "r" ;;
+              "r".
 
 Section coinflip.
-
-  Definition lateChoice: val :=
-    λ: "x",
-    "x" <- #0 ;;
-     rand #().
-
   Context `{!heapG Σ} (N: namespace).
 
   Lemma rand_spec :
@@ -60,49 +62,15 @@ Section coinflip.
     iModIntro. wp_seq. done.
   Qed.
 
-  (* lateChoice can currently not be proved in Iris *)
-  Lemma lateChoice_spec (x: loc) :
-    <<< x ↦ - >>>
-        lateChoice #x
-        @ ⊤
-    <<< ∃ (b: bool), x ↦ #0, RET #b >>>.
-  Proof using N.
-    iApply wp_atomic_intro. iIntros (Φ) "AU". wp_lam.
-    wp_bind (_ <- _)%E.
-    iMod "AU" as "[Hl [_ Hclose]]".
-    iDestruct "Hl" as (v) "Hl".
-    wp_store.
-    (* now we have to "predict" the value of b, which is the result of calling rand.
-       but we can't know at this point what that value is. *)
-    iMod ("Hclose" $! true with "[Hl]") as "AU"; first by eauto.
-    iModIntro. wp_seq.
-    iApply rand_spec; first done.
-    iIntros (b) "!> _".
-    Abort.
-
-End coinflip.
-
-Section coinflip_with_prophecy.
-
-  Context `{!heapG Σ} (N: namespace).
-
   Definition val_to_bool v : bool :=
     match v with
     | Some (LitV (LitBool b)) => b
     | _                       => true
     end.
 
-  Definition lateChoice_proph: val :=
-    λ: "x",
-      let: "p" := new prophecy in
-      "x" <- #0 ;;
-      let: "r" := rand #() in
-      resolve "p" to "r" ;;
-      "r".
-
-  Lemma lateChoice_proph_spec (x: loc) :
+  Lemma lateChoice_spec (x: loc) :
     <<< x ↦ - >>>
-        lateChoice_proph #x
+        lateChoice #x
         @ ⊤
     <<< ∃ (b: bool), x ↦ #0, RET #b >>>.
   Proof using N.
@@ -121,4 +89,4 @@ Section coinflip_with_prophecy.
     iNext. iIntros (->). wp_seq. done.
   Qed.
 
-End coinflip_with_prophecy.
+End coinflip.
