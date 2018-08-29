@@ -24,11 +24,11 @@ Definition earlyChoice: val :=
 
 Definition lateChoice: val :=
   λ: "x",
-  let: "p" := new prophecy in
+  let: "p" := NewProph in
   "x" <- #0 ;;
       let: "r" := rand #() in
-      resolve "p" to "r" ;;
-              "r".
+      resolve_proph: "p" to: "r" ;;
+      "r".
 
 Section coinflip.
   Context `{!heapG Σ} (N: namespace).
@@ -84,9 +84,9 @@ Section coinflip.
     wp_store.
     iMod ("Hclose" $! (val_to_bool v) with "[Hl]") as "HΦ"; first by eauto.
     iModIntro. wp_seq. wp_apply rand_spec; try done.
-    iIntros (b') "_". wp_let. wp_bind (resolve _ to _)%E.
-    iApply (wp_resolve_proph with "Hp").
-    iNext. iIntros (->). wp_seq. done.
+    iIntros (b') "_". wp_let.
+    wp_apply (wp_resolve_proph with "Hp").
+    iIntros (->). wp_seq. done.
   Qed.
 
 End coinflip.

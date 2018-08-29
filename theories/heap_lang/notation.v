@@ -158,5 +158,4 @@ Notation "'match:' e0 'with' 'SOME' x => e2 | 'NONE' => e1 'end'" :=
   (Match e0 BAnon e1 x%bind e2)
   (e0, e1, x, e2 at level 200, only parsing) : expr_scope.
 
-Notation "'new' 'prophecy'" := NewProph (at level 100) : expr_scope.
-Notation "'resolve' p 'to' v" := (ResolveProph p v) (at level 100) : expr_scope.
+Notation "'resolve_proph:' p 'to:' v" := (ResolveProph p v) (at level 100) : expr_scope.

@@ -5,8 +5,9 @@ Section language_mixin.
   Context {expr val state observation : Type}.
   Context (of_val : val → expr).
   Context (to_val : expr → option val).
-  (** We annotate the reduction relation with observations [κ], which we will use in the definition
-     of weakest preconditions to keep track of creating and resolving prophecy variables. *)
+  (** We annotate the reduction relation with observations [κ], which we will
+     use in the definition of weakest preconditions to predict future
+     observations and assert correctness of the predictions. *)
   Context (prim_step : expr → state → option observation → expr → state → list expr → Prop).
 
   Record LanguageMixin := {
