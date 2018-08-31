@@ -31,7 +31,8 @@ Inductive step : relation (state sts * tokens sts) :=
      tok s1 ∪ T1 ≡ tok s2 ∪ T2 → step (s1,T1) (s2,T2).
 Notation steps := (rtc step).
 Inductive frame_step (T : tokens sts) (s1 s2 : state sts) : Prop :=
-  (* Probably equivalent definition: (\mathcal{L}(s') ## T) ∧ s \rightarrow s' *)
+  (* Possible alternative definition: (tok s2) ## T) ∧ s \rightarrow s'.
+     This is not equivalent, but it might be good enough? *)
   | Frame_step T1 T2 :
      T1 ## tok s1 ∪ T → step (s1,T1) (s2,T2) → frame_step T s1 s2.
 Notation frame_steps T := (rtc (frame_step T)).
