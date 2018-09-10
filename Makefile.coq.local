@@ -8,7 +8,7 @@ test: $(TESTFILES:.v=.vo)
 .PHONY: test
 
 COQ_TEST=$(COQTOP) $(COQDEBUG) -batch -test-mode
-COQ_BROKEN=$(shell echo "$(COQ_VERSION)" | egrep "^8\.9\b" > /dev/null && echo 1)
+COQ_BROKEN=$(shell echo "$(COQ_VERSION)" | egrep "^8\.(9|10)\b" > /dev/null && echo 1)
 
 # Can't use pipes because that discards error codes and dash provides no way to control that.
 # Also egrep errors if it doesn't match anything, we have to ignore that.
