@@ -35,7 +35,7 @@ Section mono_proof.
   Lemma newcounter_mono_spec :
     {{{ True }}} newcounter #() {{{ l, RET #l; mcounter l 0 }}}.
   Proof.
-    iIntros (Φ) "_ HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
+    iIntros (Φ) "_ HΦ". rewrite -wp_fupd /newcounter /=. wp_lam. wp_alloc l as "Hl".
     iMod (own_alloc (● (O:mnat) ⋅ ◯ (O:mnat))) as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (mcounter_inv γ l) with "[Hl Hγ]").
     { iNext. iExists 0%nat. by iFrame. }
@@ -71,7 +71,7 @@ Section mono_proof.
     {{{ mcounter l j }}} read #l {{{ i, RET #i; ⌜j ≤ i⌝%nat ∧ mcounter l i }}}.
   Proof.
     iIntros (ϕ) "Hc HΦ". iDestruct "Hc" as (γ) "[#Hinv Hγf]".
-    rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]".
+    rewrite /read /=. wp_lam. iInv N as (c) ">[Hγ Hl]".
     wp_load.
     iDestruct (own_valid_2 with "Hγ Hγf")
       as %[?%mnat_included _]%auth_valid_discrete_2.
@@ -112,7 +112,7 @@ Section contrib_spec.
     {{{ True }}} newcounter #()
     {{{ γ l, RET #l; ccounter_ctx γ l ∗ ccounter γ 1 0 }}}.
   Proof.
-    iIntros (Φ) "_ HΦ". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
+    iIntros (Φ) "_ HΦ". rewrite -wp_fupd /newcounter /=. wp_lam. wp_alloc l as "Hl".
     iMod (own_alloc (●! O%nat ⋅ ◯! 0%nat)) as (γ) "[Hγ Hγ']"; first done.
     iMod (inv_alloc N _ (ccounter_inv γ l) with "[Hl Hγ]").
     { iNext. iExists 0%nat. by iFrame. }
@@ -144,7 +144,7 @@ Section contrib_spec.
     {{{ c, RET #c; ⌜n ≤ c⌝%nat ∧ ccounter γ q n }}}.
   Proof.
     iIntros (Φ) "[#? Hγf] HΦ".
-    rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]". wp_load.
+    rewrite /read /=. wp_lam. iInv N as (c) ">[Hγ Hl]". wp_load.
     iDestruct (own_valid_2 with "Hγ Hγf") as % ?%frac_auth_included_total%nat_included.
     iModIntro. iSplitL "Hl Hγ"; [iNext; iExists c; by iFrame|].
     iApply ("HΦ" with "[-]"); rewrite /ccounter; eauto 10.
@@ -155,7 +155,7 @@ Section contrib_spec.
     {{{ n, RET #n; ccounter γ 1 n }}}.
   Proof.
     iIntros (Φ) "[#? Hγf] HΦ".
-    rewrite /read /=. wp_let. iInv N as (c) ">[Hγ Hl]". wp_load.
+    rewrite /read /=. wp_lam. iInv N as (c) ">[Hγ Hl]". wp_load.
     iDestruct (own_valid_2 with "Hγ Hγf") as % <-%frac_auth_agreeL.
     iModIntro. iSplitL "Hl Hγ"; [iNext; iExists c; by iFrame|].
     by iApply "HΦ".

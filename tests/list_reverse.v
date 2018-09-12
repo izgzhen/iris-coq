@@ -36,14 +36,14 @@ Proof.
     iSimplifyEq; wp_rec; wp_let.
   - Show. wp_match. by iApply "HΦ".
   - iDestruct "Hxs" as (l hd' ->) "[Hx Hxs]".
-    wp_match. wp_load. wp_proj. wp_let. wp_load. wp_proj. wp_let. wp_store.
+    wp_match. wp_load. wp_proj. wp_let. wp_load. wp_proj. wp_let. wp_pair. wp_store.
     iApply ("IH" $! hd' (SOMEV #l) (x :: ys) with "Hxs [Hx Hys]"); simpl.
     { iExists l, acc; by iFrame. }
     iIntros (w). rewrite cons_middle assoc -reverse_cons. iApply "HΦ".
 Qed.
 
 Lemma rev_wp hd xs :
-  [[{ is_list hd xs }]] rev hd NONE [[{ w, RET w; is_list w (reverse xs) }]].
+  [[{ is_list hd xs }]] rev hd NONEV [[{ w, RET w; is_list w (reverse xs) }]].
 Proof.
   iIntros (Φ) "Hxs HΦ".
   iApply (rev_acc_wp hd NONEV xs [] with "[$Hxs //]").

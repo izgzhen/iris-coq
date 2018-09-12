@@ -131,6 +131,10 @@ Section tests.
     WP Alloc #0 {{ _, True }}%I.
   Proof. wp_alloc l as "_". Show. done. Qed.
 
+  Lemma wp_nonclosed_value :
+    WP let: "x" := #() in (λ: "y", "x")%V #() {{ _, True }}%I.
+  Proof. wp_let. wp_lam. Fail wp_pure _. Show. Abort.
+
 End tests.
 
 Section printing_tests.

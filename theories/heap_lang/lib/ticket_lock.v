@@ -73,14 +73,14 @@ Section proof.
   Lemma newlock_spec (R : iProp Σ) :
     {{{ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
   Proof.
-    iIntros (Φ) "HR HΦ". rewrite -wp_fupd /newlock /=.
-    wp_seq. wp_alloc ln as "Hln". wp_alloc lo as "Hlo".
+    iIntros (Φ) "HR HΦ". rewrite -wp_fupd /newlock /=. repeat wp_proj.
+    wp_lam. wp_alloc ln as "Hln". wp_alloc lo as "Hlo".
     iMod (own_alloc (● (Excl' 0%nat, GSet ∅) ⋅ ◯ (Excl' 0%nat, GSet ∅))) as (γ) "[Hγ Hγ']".
     { by rewrite -auth_both_op. }
     iMod (inv_alloc _ _ (lock_inv γ lo ln R) with "[-HΦ]").
     { iNext. rewrite /lock_inv.
       iExists 0%nat, 0%nat. iFrame. iLeft. by iFrame. }
-    iModIntro. iApply ("HΦ" $! (#lo, #ln)%V γ). iExists lo, ln. eauto.
+    wp_pair. iModIntro. iApply ("HΦ" $! (#lo, #ln)%V γ). iExists lo, ln. eauto.
   Qed.
 
   Lemma wait_loop_spec γ lk x R :
@@ -137,7 +137,7 @@ Section proof.
   Proof.
     iIntros (Φ) "(Hl & Hγ & HR) HΦ". iDestruct "Hl" as (lo ln ->) "#Hinv".
     iDestruct "Hγ" as (o) "Hγo".
-    wp_let. wp_proj. wp_bind (! _)%E.
+    wp_lam. wp_proj. wp_bind (! _)%E.
     iInv N as (o' n) "(>Hlo & >Hln & >Hauth & Haown)".
     wp_load.
     iDestruct (own_valid_2 with "Hauth Hγo") as

@@ -49,13 +49,13 @@ Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) :
   {{{ WP f #() {{ Ψ }} }}} spawn e {{{ l, RET #l; join_handle l Ψ }}}.
 Proof.
   iIntros (<- Φ) "Hf HΦ". rewrite /spawn /=.
-  wp_let. wp_alloc l as "Hl". wp_let.
+  wp_lam. wp_inj. wp_alloc l as "Hl". wp_let.
   iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?".
   { iNext. iExists NONEV. iFrame; eauto. }
   wp_apply (wp_fork with "[Hf]").
   - iNext. wp_bind (f _). iApply (wp_wand with "Hf"); iIntros (v) "Hv".
-    iInv N as (v') "[Hl _]".
+    wp_inj. iInv N as (v') "[Hl _]".
     wp_store. iSplitL; last done. iIntros "!> !>". iExists (SOMEV v). iFrame. eauto.
   - wp_seq. iApply "HΦ". rewrite /join_handle. eauto.
 Qed.

@@ -83,7 +83,7 @@ Section proof.
   Proof.
     iIntros (Φ) "(Hlock & Hlocked & HR) HΦ".
     iDestruct "Hlock" as (l ->) "#Hinv".
-    rewrite /release /=. wp_let. iInv N as (b) "[Hl _]".
+    rewrite /release /=. wp_lam. iInv N as (b) "[Hl _]".
     wp_store. iSplitR "HΦ"; last by iApply "HΦ".
     iModIntro. iNext. iExists false. by iFrame.
   Qed.

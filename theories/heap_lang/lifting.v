@@ -44,7 +44,6 @@ Ltac inv_head_step :=
      inversion H; subst; clear H
   end.
 
-Local Hint Extern 0 (atomic _ _) => solve_atomic.
 Local Hint Extern 0 (head_reducible _ _) => eexists _, _, _, _; simpl.
 Local Hint Extern 0 (head_reducible_no_obs _ _) => eexists _, _, _; simpl.
 
@@ -59,51 +58,61 @@ Local Hint Resolve to_of_val.
 Local Ltac solve_exec_safe := intros; subst; do 3 eexists; econstructor; eauto.
 Local Ltac solve_exec_puredet := simpl; intros; by inv_head_step.
 Local Ltac solve_pure_exec :=
-  unfold IntoVal in *;
-  repeat match goal with H : AsVal _ |- _ => destruct H as [??] end; subst;
-  intros ?; apply nsteps_once, pure_head_step_pure_step;
+  subst; intros ?; apply nsteps_once, pure_head_step_pure_step;
     constructor; [solve_exec_safe | solve_exec_puredet].
 
-Class AsRec (e : expr) (f x : binder) (erec : expr) :=
-  as_rec : e = Rec f x erec.
-Instance AsRec_rec f x e : AsRec (Rec f x e) f x e := eq_refl.
-Instance AsRec_rec_locked_val v f x e :
-  AsRec (of_val v) f x e → AsRec (of_val (locked v)) f x e.
+Class AsRecV (v : val) (f x : binder) (erec : expr) :=
+  as_recv : v = RecV f x erec.
+Instance AsRecV_recv f x e : AsRecV (RecV f x e) f x e := eq_refl.
+Instance AsRecV_recv_locked v f x e :
+  AsRecV v f x e → AsRecV (locked v) f x e.
 Proof. by unlock. Qed.
 
-Instance pure_rec f x (erec e1 e2 : expr)
-    `{!AsVal e2, AsRec e1 f x erec, Closed (f :b: x :b: []) erec} :
-  PureExec True 1 (App e1 e2) (subst' x e2 (subst' f e1 erec)).
-Proof. unfold AsRec in *; solve_pure_exec. Qed.
-
-Instance pure_unop op e v v' `{!IntoVal e v} :
-  PureExec (un_op_eval op v = Some v') 1 (UnOp op e) (of_val v').
+Instance pure_recc f x (erec : expr) :
+  PureExec True 1 (Rec f x erec) (Val $ RecV f x erec).
+Proof. solve_pure_exec. Qed.
+Instance pure_pairc (v1 v2 : val) :
+  PureExec True 1 (Pair (Val v1) (Val v2)) (Val $ PairV v1 v2).
+Proof. solve_pure_exec. Qed.
+Instance pure_injlc (v : val) :
+  PureExec True 1 (InjL $ Val v) (Val $ InjLV v).
+Proof. solve_pure_exec. Qed.
+Instance pure_injrc (v : val) :
+  PureExec True 1 (InjR $ Val v) (Val $ InjRV v).
 Proof. solve_pure_exec. Qed.
 
-Instance pure_binop op e1 e2 v1 v2 v' `{!IntoVal e1 v1, !IntoVal e2 v2} :
-  PureExec (bin_op_eval op v1 v2 = Some v') 1 (BinOp op e1 e2) (of_val v').
+Instance pure_beta f x (erec : expr) (v1 v2 : val) `{AsRecV v1 f x erec} :
+  PureExec True 1 (App (Val v1) (Val v2)) (subst' x v2 (subst' f v1 erec)).
+Proof. unfold AsRecV in *. solve_pure_exec. Qed.
+
+Instance pure_unop op v v' :
+  PureExec (un_op_eval op v = Some v') 1 (UnOp op (Val v)) (Val v').
 Proof. solve_pure_exec. Qed.
 
-Instance pure_if_true e1 e2 : PureExec True 1 (If (Lit (LitBool true)) e1 e2) e1.
+Instance pure_binop op v1 v2 v' :
+  PureExec (bin_op_eval op v1 v2 = Some v') 1 (BinOp op (Val v1) (Val v2)) (Val v').
 Proof. solve_pure_exec. Qed.
 
-Instance pure_if_false e1 e2 : PureExec True 1 (If (Lit (LitBool false)) e1 e2) e2.
+Instance pure_if_true e1 e2 : PureExec True 1 (If (Val $ LitV $ LitBool true) e1 e2) e1.
 Proof. solve_pure_exec. Qed.
 
-Instance pure_fst e1 e2 v1 `{!IntoVal e1 v1, !AsVal e2} :
-  PureExec True 1 (Fst (Pair e1 e2)) e1.
+Instance pure_if_false e1 e2 : PureExec True 1 (If (Val $ LitV  $ LitBool false) e1 e2) e2.
 Proof. solve_pure_exec. Qed.
 
-Instance pure_snd e1 e2 v2 `{!AsVal e1, !IntoVal e2 v2} :
-  PureExec True 1 (Snd (Pair e1 e2)) e2.
+Instance pure_fst v1 v2 :
+  PureExec True 1 (Fst (Val $ PairV v1 v2)) (Val v1).
 Proof. solve_pure_exec. Qed.
 
-Instance pure_case_inl e0 v e1 e2 `{!IntoVal e0 v} :
-  PureExec True 1 (Case (InjL e0) e1 e2) (App e1 e0).
+Instance pure_snd v1 v2 :
+  PureExec True 1 (Snd (Val $ PairV v1 v2)) (Val v2).
 Proof. solve_pure_exec. Qed.
 
-Instance pure_case_inr e0 v e1 e2 `{!IntoVal e0 v} :
-  PureExec True 1 (Case (InjR e0) e1 e2) (App e2 e0).
+Instance pure_case_inl v e1 e2 :
+  PureExec True 1 (Case (Val $ InjLV v) e1 e2) (App e1 (Val v)).
+Proof. solve_pure_exec. Qed.
+
+Instance pure_case_inr v e1 e2 :
+  PureExec True 1 (Case (Val $ InjRV v) e1 e2) (App e2 (Val v)).
 Proof. solve_pure_exec. Qed.
 
 Section lifting.
@@ -131,21 +140,19 @@ Proof.
 Qed.
 
 (** Heap *)
-Lemma wp_alloc s E e v :
-  IntoVal e v →
-  {{{ True }}} Alloc e @ s; E {{{ l, RET LitV (LitLoc l); l ↦ v }}}.
+Lemma wp_alloc s E v :
+  {{{ True }}} Alloc (Val v) @ s; E {{{ l, RET LitV (LitLoc l); l ↦ v }}}.
 Proof.
-  iIntros (<- Φ) "_ HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
-  iIntros (σ1 κ κs) "[Hσ Hκs] !>"; iSplit; first by eauto.
+  iIntros (Φ) "_ HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
+  iIntros (σ1 κ κs) "[Hσ Hκs] !>"; iSplit; first by auto.
   iNext; iIntros (v2 σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_alloc with "Hσ") as "[Hσ Hl]"; first done.
   iModIntro; iSplit=> //. iFrame. by iApply "HΦ".
 Qed.
-Lemma twp_alloc s E e v :
-  IntoVal e v →
-  [[{ True }]] Alloc e @ s; E [[{ l, RET LitV (LitLoc l); l ↦ v }]].
+Lemma twp_alloc s E v :
+  [[{ True }]] Alloc (Val v) @ s; E [[{ l, RET LitV (LitLoc l); l ↦ v }]].
 Proof.
-  iIntros (<- Φ) "_ HΦ". iApply twp_lift_atomic_head_step_no_fork; auto.
+  iIntros (Φ) "_ HΦ". iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κs) "[Hσ Hκs] !>"; iSplit; first by eauto.
   iIntros (κ v2 σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_alloc with "Hσ") as "[Hσ Hl]"; first done.
@@ -153,7 +160,7 @@ Proof.
 Qed.
 
 Lemma wp_load s E l q v :
-  {{{ ▷ l ↦{q} v }}} Load (Lit (LitLoc l)) @ s; E {{{ RET v; l ↦{q} v }}}.
+  {{{ ▷ l ↦{q} v }}} Load (Val $ LitV $ LitLoc l) @ s; E {{{ RET v; l ↦{q} v }}}.
 Proof.
   iIntros (Φ) ">Hl HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κ κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
@@ -161,7 +168,7 @@ Proof.
   iModIntro; iSplit=> //. iFrame. by iApply "HΦ".
 Qed.
 Lemma twp_load s E l q v :
-  [[{ l ↦{q} v }]] Load (Lit (LitLoc l)) @ s; E [[{ RET v; l ↦{q} v }]].
+  [[{ l ↦{q} v }]] Load (Val $ LitV $ LitLoc l) @ s; E [[{ RET v; l ↦{q} v }]].
 Proof.
   iIntros (Φ) "Hl HΦ". iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
@@ -169,22 +176,22 @@ Proof.
   iModIntro; iSplit=> //. iSplit; first done. iFrame. by iApply "HΦ".
 Qed.
 
-Lemma wp_store s E l v' e v :
-  IntoVal e v →
-  {{{ ▷ l ↦ v' }}} Store (Lit (LitLoc l)) e @ s; E {{{ RET LitV LitUnit; l ↦ v }}}.
+Lemma wp_store s E l v' v :
+  {{{ ▷ l ↦ v' }}} Store (Val $ LitV (LitLoc l)) (Val v) @ s; E
+  {{{ RET LitV LitUnit; l ↦ v }}}.
 Proof.
-  iIntros (<- Φ) ">Hl HΦ".
+  iIntros (Φ) ">Hl HΦ".
   iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κ κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2 σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_update with "Hσ Hl") as "[$ Hl]".
   iModIntro. iSplit=>//. iFrame. by iApply "HΦ".
 Qed.
-Lemma twp_store s E l v' e v :
-  IntoVal e v →
-  [[{ l ↦ v' }]] Store (Lit (LitLoc l)) e @ s; E [[{ RET LitV LitUnit; l ↦ v }]].
+Lemma twp_store s E l v' v :
+  [[{ l ↦ v' }]] Store (Val $ LitV $ LitLoc l) (Val v) @ s; E
+  [[{ RET LitV LitUnit; l ↦ v }]].
 Proof.
-  iIntros (<- Φ) "Hl HΦ".
+  iIntros (Φ) "Hl HΦ".
   iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (κ v2 σ2 efs Hstep); inv_head_step.
@@ -192,73 +199,65 @@ Proof.
   iModIntro. iSplit=>//. iSplit; first done. iFrame. by iApply "HΦ".
 Qed.
 
-Lemma wp_cas_fail s E l q v' e1 v1 e2 :
-  IntoVal e1 v1 → AsVal e2 → v' ≠ v1 → vals_cas_compare_safe v' v1 →
-  {{{ ▷ l ↦{q} v' }}} CAS (Lit (LitLoc l)) e1 e2 @ s; E
+Lemma wp_cas_fail s E l q v' v1 v2 :
+  v' ≠ v1 → vals_cas_compare_safe v' v1 →
+  {{{ ▷ l ↦{q} v' }}} CAS (Val $ LitV $ LitLoc l) (Val v1) (Val v2) @ s; E
   {{{ RET LitV (LitBool false); l ↦{q} v' }}}.
 Proof.
-  iIntros (<- [v2 <-] ?? Φ) ">Hl HΦ".
-  iApply wp_lift_atomic_head_step_no_fork; auto.
+  iIntros (?? Φ) ">Hl HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κ κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
   iModIntro; iSplit=> //. iFrame. by iApply "HΦ".
 Qed.
-Lemma twp_cas_fail s E l q v' e1 v1 e2 :
-  IntoVal e1 v1 → AsVal e2 → v' ≠ v1 → vals_cas_compare_safe v' v1 →
-  [[{ l ↦{q} v' }]] CAS (Lit (LitLoc l)) e1 e2 @ s; E
+Lemma twp_cas_fail s E l q v' v1 v2 :
+  v' ≠ v1 → vals_cas_compare_safe v' v1 →
+  [[{ l ↦{q} v' }]] CAS (Val $ LitV $ LitLoc l) (Val v1) (Val v2) @ s; E
   [[{ RET LitV (LitBool false); l ↦{q} v' }]].
 Proof.
-  iIntros (<- [v2 <-] ?? Φ) "Hl HΦ".
-  iApply twp_lift_atomic_head_step_no_fork; auto.
+  iIntros (?? Φ) "Hl HΦ". iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (κ v2' σ2 efs Hstep); inv_head_step.
   iModIntro; iSplit=> //. iSplit; first done. iFrame. by iApply "HΦ".
 Qed.
 
-Lemma wp_cas_suc s E l e1 v1 e2 v2 :
-  IntoVal e1 v1 → IntoVal e2 v2 → vals_cas_compare_safe v1 v1 →
-  {{{ ▷ l ↦ v1 }}} CAS (Lit (LitLoc l)) e1 e2 @ s; E
+Lemma wp_cas_suc s E l v1 v2 :
+  vals_cas_compare_safe v1 v1 →
+  {{{ ▷ l ↦ v1 }}} CAS (Val $ LitV $ LitLoc l) (Val v1) (Val v2) @ s; E
   {{{ RET LitV (LitBool true); l ↦ v2 }}}.
 Proof.
-  iIntros (<- <- ? Φ) ">Hl HΦ".
-  iApply wp_lift_atomic_head_step_no_fork; auto.
+  iIntros (? Φ) ">Hl HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κ κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_update with "Hσ Hl") as "[$ Hl]".
   iModIntro. iSplit=>//. iFrame. by iApply "HΦ".
 Qed.
-Lemma twp_cas_suc s E l e1 v1 e2 v2 :
-  IntoVal e1 v1 → IntoVal e2 v2 → vals_cas_compare_safe v1 v1 →
-  [[{ l ↦ v1 }]] CAS (Lit (LitLoc l)) e1 e2 @ s; E
+Lemma twp_cas_suc s E l v1 v2 :
+  vals_cas_compare_safe v1 v1 →
+  [[{ l ↦ v1 }]] CAS (Val $ LitV $ LitLoc l) (Val v1) (Val v2) @ s; E
   [[{ RET LitV (LitBool true); l ↦ v2 }]].
 Proof.
-  iIntros (<- <- ? Φ) "Hl HΦ".
-  iApply twp_lift_atomic_head_step_no_fork; auto.
+  iIntros (? Φ) "Hl HΦ". iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (κ v2' σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_update with "Hσ Hl") as "[$ Hl]".
   iModIntro. iSplit=>//. iSplit; first done. iFrame. by iApply "HΦ".
 Qed.
 
-Lemma wp_faa s E l i1 e2 i2 :
-  IntoVal e2 (LitV (LitInt i2)) →
-  {{{ ▷ l ↦ LitV (LitInt i1) }}} FAA (Lit (LitLoc l)) e2 @ s; E
+Lemma wp_faa s E l i1 i2 :
+  {{{ ▷ l ↦ LitV (LitInt i1) }}} FAA (Val $ LitV $ LitLoc l) (Val $ LitV $ LitInt i2) @ s; E
   {{{ RET LitV (LitInt i1); l ↦ LitV (LitInt (i1 + i2)) }}}.
 Proof.
-  iIntros (<- Φ) ">Hl HΦ".
-  iApply wp_lift_atomic_head_step_no_fork; auto.
+  iIntros (Φ) ">Hl HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κ κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iNext; iIntros (v2' σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_update with "Hσ Hl") as "[$ Hl]".
   iModIntro. iSplit=>//. iFrame. by iApply "HΦ".
 Qed.
-Lemma twp_faa s E l i1 e2 i2 :
-  IntoVal e2 (LitV (LitInt i2)) →
-  [[{ l ↦ LitV (LitInt i1) }]] FAA (Lit (LitLoc l)) e2 @ s; E
+Lemma twp_faa s E l i1 i2 :
+  [[{ l ↦ LitV (LitInt i1) }]] FAA (Val $ LitV $ LitLoc l) (Val $ LitV $ LitInt i2) @ s; E
   [[{ RET LitV (LitInt i1); l ↦ LitV (LitInt (i1 + i2)) }]].
 Proof.
-  iIntros (<- Φ) "Hl HΦ".
-  iApply twp_lift_atomic_head_step_no_fork; auto.
+  iIntros (Φ) "Hl HΦ". iApply twp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κs) "[Hσ Hκs] !>". iDestruct (@gen_heap_valid with "Hσ Hl") as %?.
   iSplit; first by eauto. iIntros (κ e2 σ2 efs Hstep); inv_head_step.
   iMod (@gen_heap_update with "Hσ Hl") as "[$ Hl]".

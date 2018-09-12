@@ -11,7 +11,7 @@ Coercion LitLoc : loc >-> base_lit.
 Coercion LitProphecy : proph_id >-> base_lit.
 
 Coercion App : expr >-> Funclass.
-Coercion of_val : val >-> expr.
+Coercion Val : val >-> expr.
 
 Coercion Var : string >-> expr.
 
@@ -21,7 +21,6 @@ Notation "<>" := BAnon : binder_scope.
 (* No scope for the values, does not conflict and scope is often not inferred
 properly. *)
 Notation "# l" := (LitV l%Z%V) (at level 8, format "# l").
-Notation "# l" := (Lit l%Z%V) (at level 8, format "# l") : expr_scope.
 
 (** Syntax inspired by Coq/Ocaml. Constructions with higher precedence come
     first. *)
@@ -139,15 +138,14 @@ Notation "e1 ;; e2" := (Lam BAnon e2%E e1%E)
 
 (* Shortcircuit Boolean connectives *)
 Notation "e1 && e2" :=
-  (If e1%E e2%E (Lit (LitBool false))) (only parsing) : expr_scope.
+  (If e1%E e2%E (LitV (LitBool false))) (only parsing) : expr_scope.
 Notation "e1 || e2" :=
-  (If e1%E (Lit (LitBool true)) e2%E) (only parsing) : expr_scope.
+  (If e1%E (LitV (LitBool true)) e2%E) (only parsing) : expr_scope.
 
 (** Notations for option *)
-Notation NONE := (InjL (Lit LitUnit)) (only parsing).
-Notation SOME x := (InjR x) (only parsing).
-
+Notation NONE := (InjL (LitV LitUnit)) (only parsing).
 Notation NONEV := (InjLV (LitV LitUnit)) (only parsing).
+Notation SOME x := (InjR x) (only parsing).
 Notation SOMEV x := (InjRV x) (only parsing).
 
 Notation "'match:' e0 'with' 'NONE' => e1 | 'SOME' x => e2 'end'" :=

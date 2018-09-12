@@ -36,12 +36,11 @@ Section coinflip.
   Lemma rand_spec :
     {{{ True }}} rand #() {{{ (b : bool), RET #b; True }}}.
   Proof.
-    iIntros (Φ) "_ HP".
-    wp_lam. wp_alloc l as "Hl". wp_lam.
+    iIntros (Φ) "_ HP". wp_lam. wp_alloc l as "Hl". wp_let.
     iMod (inv_alloc N _ (∃ (b: bool), l ↦ #b)%I with "[Hl]") as "#Hinv"; first by eauto.
     wp_apply wp_fork.
     - iInv N as (b) ">Hl". wp_store. iModIntro. iSplitL; eauto.
-    - wp_lam. iInv N as (b) ">Hl". wp_load. iModIntro. iSplitL "Hl"; first by eauto.
+    - wp_seq. iInv N as (b) ">Hl". wp_load. iModIntro. iSplitL "Hl"; first by eauto.
       iApply "HP". done.
   Qed.
 

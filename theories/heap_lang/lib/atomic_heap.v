@@ -21,21 +21,20 @@ Class atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
     AsFractional (mapsto l q v) (λ q, mapsto l q v) q;
   mapsto_agree l q1 q2 v1 v2 :> mapsto l q1 v1 -∗ mapsto l q2 v2 -∗ ⌜v1 = v2⌝;
   (* -- operation specs -- *)
-  alloc_spec e v :
-    IntoVal e v → {{{ True }}} alloc e {{{ l, RET #l; mapsto l 1 v }}};
+  alloc_spec (v : val) :
+    {{{ True }}} alloc v {{{ l, RET #l; mapsto l 1 v }}};
   load_spec (l : loc) :
     <<< ∀ (v : val) q, mapsto l q v >>> load #l @ ⊤ <<< mapsto l q v, RET v >>>;
-  store_spec (l : loc) (e : expr) (w : val) :
-    IntoVal e w →
-    <<< ∀ v, mapsto l 1 v >>> store #l e @ ⊤
+  store_spec (l : loc) (w : val) :
+    <<< ∀ v, mapsto l 1 v >>> store #l w @ ⊤
     <<< mapsto l 1 w, RET #() >>>;
   (* This spec is slightly weaker than it could be: It is sufficient for [w1]
   *or* [v] to be unboxed.  However, by writing it this way the [val_is_unboxed]
   is outside the atomic triple, which makes it much easier to use -- and the
   spec is still good enough for all our applications. *)
-  cas_spec (l : loc) (e1 e2 : expr) (w1 w2 : val) :
-    IntoVal e1 w1 → IntoVal e2 w2 → val_is_unboxed w1 →
-    <<< ∀ v, mapsto l 1 v >>> cas #l e1 e2 @ ⊤
+  cas_spec (l : loc) (w1 w2 : val) :
+    val_is_unboxed w1 →
+    <<< ∀ v, mapsto l 1 v >>> cas #l w1 w2 @ ⊤
     <<< if decide (v = w1) then mapsto l 1 w2 else mapsto l 1 v,
         RET #(if decide (v = w1) then true else false) >>>;
 }.
@@ -72,39 +71,38 @@ Definition primitive_cas : val :=
 Section proof.
   Context `{!heapG Σ}.
 
-  Lemma primitive_alloc_spec e v :
-    IntoVal e v → {{{ True }}} primitive_alloc e {{{ l, RET #l; l ↦ v }}}.
+  Lemma primitive_alloc_spec (v : val) :
+    {{{ True }}} primitive_alloc v {{{ l, RET #l; l ↦ v }}}.
   Proof.
-    iIntros (<- Φ) "_ HΦ". wp_let. wp_alloc l. iApply "HΦ". done.
+    iIntros (Φ) "_ HΦ". wp_lam. wp_alloc l. iApply "HΦ". done.
   Qed.
 
   Lemma primitive_load_spec (l : loc) :
     <<< ∀ (v : val) q, l ↦{q} v >>> primitive_load #l @ ⊤
     <<< l ↦{q} v, RET v >>>.
   Proof.
-    iIntros (Q Φ) "? AU". wp_let.
+    iIntros (Q Φ) "? AU". wp_lam.
     iMod "AU" as (v q) "[H↦ [_ Hclose]]".
     wp_load. iMod ("Hclose" with "H↦") as "HΦ". by iApply "HΦ".
   Qed.
 
-  Lemma primitive_store_spec (l : loc) (e : expr) (w : val) :
-    IntoVal e w →
-    <<< ∀ v, l ↦ v >>> primitive_store #l e @ ⊤
+  Lemma primitive_store_spec (l : loc) (w : val) :
+    <<< ∀ v, l ↦ v >>> primitive_store #l w @ ⊤
     <<< l ↦ w, RET #() >>>.
   Proof.
-    iIntros (<- Q Φ) "? AU". wp_lam. wp_let.
+    iIntros (Q Φ) "? AU". wp_lam. wp_let.
     iMod "AU" as (v) "[H↦ [_ Hclose]]".
     wp_store. iMod ("Hclose" with "H↦") as "HΦ". by iApply "HΦ".
   Qed.
 
-  Lemma primitive_cas_spec (l : loc) e1 e2 (w1 w2 : val) :
-    IntoVal e1 w1 → IntoVal e2 w2 → val_is_unboxed w1 →
+  Lemma primitive_cas_spec (l : loc) (w1 w2 : val) :
+    val_is_unboxed w1 →
     <<< ∀ (v : val), l ↦ v >>>
-      primitive_cas #l e1 e2 @ ⊤
+      primitive_cas #l w1 w2 @ ⊤
     <<< if decide (v = w1) then l ↦ w2 else l ↦ v,
         RET #(if decide (v = w1) then true else false) >>>.
   Proof.
-    iIntros (<- <- ? Q Φ) "? AU". wp_lam. wp_let. wp_let.
+    iIntros (? Q Φ) "? AU". wp_lam. wp_let. wp_let.
     iMod "AU" as (v) "[H↦ [_ Hclose]]".
     destruct (decide (v = w1)) as [<-|Hv]; [wp_cas_suc|wp_cas_fail];
     iMod ("Hclose" with "H↦") as "HΦ"; by iApply "HΦ".

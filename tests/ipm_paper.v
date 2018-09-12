@@ -82,14 +82,14 @@ Section list_reverse.
     destruct xs as [|x xs]; iSimplifyEq.
     - (* nil *) by wp_match.
     - (* cons *) iDestruct "Hxs" as (l hd') "(% & Hx & Hxs)"; iSimplifyEq.
-      wp_match. wp_load. wp_proj. wp_let. wp_load. wp_proj. wp_let. wp_store.
+      wp_match. wp_load. wp_proj. wp_let. wp_load. wp_proj. wp_let. wp_pair. wp_store.
       rewrite reverse_cons -assoc.
       iApply ("IH" $! hd' (InjRV #l) xs (x :: ys) with "Hxs [Hx Hys]").
       iExists l, acc; by iFrame.
   Qed.
 
   Lemma rev_ht hd xs :
-    {{ is_list hd xs }} rev hd NONE {{ w, is_list w (reverse xs) }}.
+    {{ is_list hd xs }} rev hd NONEV {{ w, is_list w (reverse xs) }}.
   Proof.
     iIntros "!# Hxs". rewrite -(right_id_L [] (++) (reverse xs)).
     iApply (rev_acc_ht hd NONEV with "[Hxs]"); simpl; by iFrame.
@@ -204,7 +204,7 @@ Section counter_proof.
   Lemma newcounter_spec :
     {{ True }} newcounter #() {{ v, ∃ l, ⌜v = #l⌝ ∧ C l 0 }}.
   Proof.
-    iIntros "!# _ /=". rewrite -wp_fupd /newcounter /=. wp_seq. wp_alloc l as "Hl".
+    iIntros "!# _ /=". rewrite -wp_fupd /newcounter /=. wp_lam. wp_alloc l as "Hl".
     iMod (own_alloc (Auth 0)) as (γ) "Hγ"; first done.
     rewrite (auth_frag_op 0 0) //; iDestruct "Hγ" as "[Hγ Hγf]".
     set (N:= nroot .@ "counter").
@@ -242,7 +242,7 @@ Section counter_proof.
     {{ C l n }} read #l {{ v, ∃ m : nat, ⌜v = #m ∧ n ≤ m⌝ ∧ C l m }}.
   Proof.
     iIntros "!# Hl /=". iDestruct "Hl" as (N γ) "[#Hinv Hγf]".
-    rewrite /read /=. wp_let. Show. iApply wp_inv_open; last iFrame "Hinv"; auto.
+    rewrite /read /=. wp_lam. Show. iApply wp_inv_open; last iFrame "Hinv"; auto.
     iDestruct 1 as (c) "[Hl Hγ]". wp_load. Show.
     iDestruct (own_valid γ (Frag n ⋅ Auth c) with "[-]") as % ?%auth_frag_valid.
     { iApply own_op. by iFrame. }

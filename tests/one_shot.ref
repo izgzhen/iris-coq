@@ -35,7 +35,7 @@
   "Hγ" : own γ (Shot m')
   --------------------------------------∗
   |={⊤ ∖ ↑N}=> ▷ one_shot_inv γ l
-               ∗ WP match: InjR #m' with
+               ∗ WP match: InjRV #m' with
                       InjL <> => assert: #false
                     | InjR "m" => assert: #m = "m"
                     end {{ _, True }}

@@ -58,7 +58,7 @@ Lemma sum_wp `{!heapG Σ} v t :
   [[{ is_tree v t }]] sum' v [[{ RET #(sum t); is_tree v t }]].
 Proof.
   iIntros (Φ) "Ht HΦ". rewrite /sum' /=.
-  wp_let. wp_alloc l as "Hl". wp_let.
+  wp_lam. wp_alloc l as "Hl". wp_let.
   wp_apply (sum_loop_wp with "[$Hl $Ht]").
   rewrite Z.add_0_r.
   iIntros "[Hl Ht]". wp_seq. wp_load. by iApply "HΦ".

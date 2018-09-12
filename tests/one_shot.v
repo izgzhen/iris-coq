@@ -43,12 +43,12 @@ Lemma wp_one_shot (Φ : val → iProp Σ) :
   ⊢ WP one_shot_example #() {{ Φ }}.
 Proof.
   iIntros "Hf /=". pose proof (nroot .@ "N") as N.
-  rewrite -wp_fupd /one_shot_example /=. wp_seq. wp_alloc l as "Hl". wp_let.
+  rewrite -wp_fupd /one_shot_example /=. wp_lam. wp_inj. wp_alloc l as "Hl". wp_let.
   iMod (own_alloc Pending) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (one_shot_inv γ l) with "[Hl Hγ]") as "#HN".
   { iNext. iLeft. by iSplitL "Hl". }
-  iModIntro. iApply "Hf"; iSplit.
-  - iIntros (n) "!#". wp_let.
+  wp_closure. wp_closure. wp_pair. iModIntro. iApply "Hf"; iSplit.
+  - iIntros (n) "!#". wp_lam. wp_inj. wp_inj.
     iInv N as ">[[Hl Hγ]|H]"; last iDestruct "H" as (m) "[Hl Hγ]".
     + iMod (own_update with "Hγ") as "Hγ".
       { by apply cmra_update_exclusive with (y:=Shot n). }
@@ -56,7 +56,7 @@ Proof.
       iModIntro. iNext; iRight; iExists n; by iFrame.
     + wp_cas_fail. iSplitL; last eauto.
       rewrite /one_shot_inv; eauto 10.
-  - iIntros "!# /=". wp_seq. wp_bind (! _)%E.
+  - iIntros "!# /=". wp_lam. wp_bind (! _)%E.
     iInv N as ">Hγ".
     iAssert (∃ v, l ↦ v ∗ ((⌜v = NONEV⌝ ∗ own γ Pending) ∨
        ∃ n : Z, ⌜v = SOMEV #n⌝ ∗ own γ (Shot n)))%I with "[Hγ]" as "Hv".
@@ -70,7 +70,7 @@ Proof.
       + Show. iSplit. iLeft; by iSplitL "Hl". eauto.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
     iSplitL "Hinv"; first by eauto.
-    iModIntro. wp_let. iIntros "!#". wp_seq.
+    iModIntro. wp_let. wp_closure. iIntros "!#". wp_lam.
     iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as (m) "[% Hγ']"; subst.
     { by wp_match. }
     wp_match. wp_bind (! _)%E.

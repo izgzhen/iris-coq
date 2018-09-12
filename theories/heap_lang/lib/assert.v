@@ -9,16 +9,16 @@ Definition assert : val :=
 (* just below ;; *)
 Notation "'assert:' e" := (assert (λ: <>, e))%E (at level 99) : expr_scope.
 
-Lemma twp_assert `{heapG Σ} E (Φ : val → iProp Σ) e `{!Closed [] e} :
+Lemma twp_assert `{heapG Σ} E (Φ : val → iProp Σ) e :
   WP e @ E [{ v, ⌜v = #true⌝ ∧ Φ #() }] -∗ WP assert: e @ E [{ Φ }].
 Proof.
-  iIntros "HΦ". rewrite /assert. wp_let. wp_seq.
+  iIntros "HΦ". rewrite /assert. wp_closure. wp_lam. wp_lam.
   wp_apply (twp_wand with "HΦ"). iIntros (v) "[% ?]"; subst. by wp_if.
 Qed.
 
-Lemma wp_assert `{heapG Σ} E (Φ : val → iProp Σ) e `{!Closed [] e} :
+Lemma wp_assert `{heapG Σ} E (Φ : val → iProp Σ) e :
   WP e @ E {{ v, ⌜v = #true⌝ ∧ ▷ Φ #() }} -∗ WP assert: e @ E {{ Φ }}.
 Proof.
-  iIntros "HΦ". rewrite /assert. wp_let. wp_seq.
+  iIntros "HΦ". rewrite /assert. wp_closure. wp_lam. wp_lam.
   wp_apply (wp_wand with "HΦ"). iIntros (v) "[% ?]"; subst. by wp_if.
 Qed.
