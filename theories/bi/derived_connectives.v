@@ -1,6 +1,5 @@
 From iris.bi Require Export interface.
 From iris.algebra Require Import monoid.
-From stdpp Require Import hlist.
 
 Definition bi_iff {PROP : bi} (P Q : PROP) : PROP := ((P → Q) ∧ (Q → P))%I.
 Arguments bi_iff {_} _%I _%I : simpl never.
@@ -76,17 +75,6 @@ Arguments bi_intuitionistically_if {_} !_ _%I /.
 Instance: Params (@bi_intuitionistically_if) 2.
 Typeclasses Opaque bi_intuitionistically_if.
 Notation "'□?' p P" := (bi_intuitionistically_if p P) : bi_scope.
-
-Fixpoint bi_hexist {PROP : bi} {As} : himpl As PROP → PROP :=
-  match As return himpl As PROP → PROP with
-  | tnil => id
-  | tcons A As => λ Φ, ∃ x, bi_hexist (Φ x)
-  end%I.
-Fixpoint bi_hforall {PROP : bi} {As} : himpl As PROP → PROP :=
-  match As return himpl As PROP → PROP with
-  | tnil => id
-  | tcons A As => λ Φ, ∀ x, bi_hforall (Φ x)
-  end%I.
 
 Fixpoint sbi_laterN {PROP : sbi} (n : nat) (P : PROP) : PROP :=
   match n with

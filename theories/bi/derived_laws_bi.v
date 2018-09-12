@@ -1,6 +1,5 @@
 From iris.bi Require Export derived_connectives.
 From iris.algebra Require Import monoid.
-From stdpp Require Import hlist.
 
 (** Naming schema for lemmas about modalities:
     M1_into_M2: M1 P ⊢ M2 P
@@ -1449,31 +1448,6 @@ Global Instance bi_persistently_sep_entails_homomorphism :
   MonoidHomomorphism bi_sep bi_sep (flip (⊢)) (@bi_persistently PROP).
 Proof. split. apply _. simpl. apply persistently_emp_intro. Qed.
 
-(* Heterogeneous lists *)
-Lemma hexist_exist {As B} (f : himpl As B) (Φ : B → PROP) :
-  bi_hexist (hcompose Φ f) ⊣⊢ ∃ xs : hlist As, Φ (f xs).
-Proof.
-  apply (anti_symm _).
-  - induction As as [|A As IH]; simpl.
-    + by rewrite -(exist_intro hnil) .
-    + apply exist_elim=> x; rewrite IH; apply exist_elim=> xs.
-      by rewrite -(exist_intro (hcons x xs)).
-  - apply exist_elim=> xs; induction xs as [|A As x xs IH]; simpl; auto.
-    by rewrite -(exist_intro x) IH.
-Qed.
-
-Lemma hforall_forall {As B} (f : himpl As B) (Φ : B → PROP) :
-  bi_hforall (hcompose Φ f) ⊣⊢ ∀ xs : hlist As, Φ (f xs).
-Proof.
-  apply (anti_symm _).
-  - apply forall_intro=> xs; induction xs as [|A As x xs IH]; simpl; auto.
-    by rewrite (forall_elim x) IH.
-  - induction As as [|A As IH]; simpl.
-    + by rewrite (forall_elim hnil) .
-    + apply forall_intro=> x; rewrite -IH; apply forall_intro=> xs.
-      by rewrite (forall_elim (hcons x xs)).
-Qed.
-
 (* Limits *)
 Lemma limit_preserving_entails {A : ofeT} `{Cofe A} (Φ Ψ : A → PROP) :
   NonExpansive Φ → NonExpansive Ψ → LimitPreserving (λ x, Φ x ⊢ Ψ x).
@@ -1492,5 +1466,4 @@ Global Instance limit_preserving_Persistent {A:ofeT} `{Cofe A} (Φ : A → PROP)
   NonExpansive Φ → LimitPreserving (λ x, Persistent (Φ x)).
 Proof. intros. apply limit_preserving_entails; solve_proper. Qed.
 End bi_derived.
-
 End bi.

@@ -1,6 +1,5 @@
 From iris.algebra Require Import monoid.
 From iris.bi Require Import interface derived_laws_sbi big_op plainly updates.
-From stdpp Require Import hlist.
 
 Class Embed (A B : Type) := embed : A → B.
 Arguments embed {_ _ _} _%I : simpl never.
@@ -188,13 +187,6 @@ Section embed.
   Lemma embed_intuitionistically_if `{!BiEmbedEmp PROP1 PROP2} P b :
     ⎡□?b P⎤ ⊣⊢ □?b ⎡P⎤.
   Proof. destruct b; simpl; auto using embed_intuitionistically. Qed.
-
-  Lemma embed_hforall {As} (Φ : himpl As PROP1):
-    ⎡bi_hforall Φ⎤ ⊣⊢ bi_hforall (hcompose embed Φ).
-  Proof. induction As=>//. rewrite /= embed_forall. by do 2 f_equiv. Qed.
-  Lemma embed_hexist {As} (Φ : himpl As PROP1):
-    ⎡bi_hexist Φ⎤ ⊣⊢ bi_hexist (hcompose embed Φ).
-  Proof. induction As=>//. rewrite /= embed_exist. by do 2 f_equiv. Qed.
 
   Global Instance embed_persistent P : Persistent P → Persistent ⎡P⎤.
   Proof. intros ?. by rewrite /Persistent -embed_persistently -persistent. Qed.
