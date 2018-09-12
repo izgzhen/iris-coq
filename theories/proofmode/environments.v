@@ -277,8 +277,8 @@ Fixpoint envs_lookup_delete_list {PROP} (remove_persistent : bool)
   | [] => Some (true, [], Δ)
   | j :: js =>
      ''(p,P,Δ') ← envs_lookup_delete remove_persistent j Δ;
-     ''(q,Hs,Δ'') ← envs_lookup_delete_list remove_persistent js Δ';
-     Some ((p:bool) && q, P :: Hs, Δ'')
+     ''(q,Ps,Δ'') ← envs_lookup_delete_list remove_persistent js Δ';
+     Some ((p:bool) && q, P :: Ps, Δ'')
   end.
 
 Definition envs_snoc {PROP} (Δ : envs PROP)
