@@ -335,7 +335,7 @@ Definition envs_split {PROP} (d : direction)
   ''(Δ1,Δ2) ← envs_split_go js Δ (envs_clear_spatial Δ);
   if d is Right then Some (Δ1,Δ2) else Some (Δ2,Δ1).
 
-Definition prop_of_env {PROP : bi} (Γ : env PROP) : PROP :=
+Definition env_to_prop {PROP : bi} (Γ : env PROP) : PROP :=
   let fix aux Γ acc :=
     match Γ with Enil => acc | Esnoc Γ _ P => aux Γ (P ∗ acc)%I end
   in
@@ -659,7 +659,7 @@ Proof.
   destruct d; simplify_eq/=; solve_sep_entails.
 Qed.
 
-Lemma prop_of_env_sound Γ : prop_of_env Γ ⊣⊢ [∗] Γ.
+Lemma env_to_prop_sound Γ : env_to_prop Γ ⊣⊢ [∗] Γ.
 Proof.
   destruct Γ as [|Γ ? P]; simpl; first done.
   revert P. induction Γ as [|Γ IH ? Q]=>P; simpl.

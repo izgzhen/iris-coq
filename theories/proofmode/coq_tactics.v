@@ -601,11 +601,11 @@ Qed.
 
 (** * Accumulate hypotheses *)
 Lemma tac_accu Δ P :
-  prop_of_env (env_spatial Δ) = P →
+  env_to_prop (env_spatial Δ) = P →
   envs_entails Δ P.
 Proof.
   rewrite envs_entails_eq=><-.
-  rewrite prop_of_env_sound /of_envs and_elim_r sep_elim_r //.
+  rewrite env_to_prop_sound /of_envs and_elim_r sep_elim_r //.
 Qed.
 
 (** * Fresh *)

@@ -431,12 +431,12 @@ Section proof_mode.
   Lemma tac_aupd_intro Γp Γs n α β Eo Ei Φ P :
     Timeless (PROP:=PROP) emp →
     TCForall Laterable (env_to_list Γs) →
-    P = prop_of_env Γs →
+    P = env_to_prop Γs →
     envs_entails (Envs Γp Γs n) (atomic_acc Eo Ei α P β Φ) →
     envs_entails (Envs Γp Γs n) (atomic_update Eo Ei α β Φ).
   Proof.
     intros ? HΓs ->. rewrite envs_entails_eq of_envs_eq' /atomic_acc /=.
-    setoid_rewrite prop_of_env_sound =>HAU.
+    setoid_rewrite env_to_prop_sound =>HAU.
     apply aupd_intro; [apply _..|]. done.
   Qed.
 End proof_mode.
