@@ -5,13 +5,13 @@ stages:
 
 variables:
   CPU_CORES: "10"
-  GIT_SUBMODULE_STRATEGY: "recursive"
 
 .template: &template
   stage: build
   tags:
   - fp
   script:
+  - git clone https://gitlab.mpi-sws.org/FP/iris-ci.git ci -b opam2
   - ci/buildjob
   cache:
     key: "$CI_JOB_NAME"
