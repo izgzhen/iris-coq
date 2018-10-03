@@ -356,6 +356,46 @@ Lemma of_envs_eq' Δ :
   of_envs Δ ⊣⊢ (⌜envs_wf Δ⌝ ∧ □ [∧] env_intuitionistic Δ) ∗ [∗] env_spatial Δ.
 Proof. rewrite of_envs_eq persistent_and_sep_assoc //. Qed.
 
+Global Instance envs_Forall2_refl (R : relation PROP) :
+  Reflexive R → Reflexive (envs_Forall2 R).
+Proof. by constructor. Qed.
+Global Instance envs_Forall2_sym (R : relation PROP) :
+  Symmetric R → Symmetric (envs_Forall2 R).
+Proof. intros ??? [??]; by constructor. Qed.
+Global Instance envs_Forall2_trans (R : relation PROP) :
+  Transitive R → Transitive (envs_Forall2 R).
+Proof. intros ??? [??] [??] [??]; constructor; etrans; eauto. Qed.
+Global Instance envs_Forall2_antisymm (R R' : relation PROP) :
+  AntiSymm R R' → AntiSymm (envs_Forall2 R) (envs_Forall2 R').
+Proof. intros ??? [??] [??]; constructor; by eapply (anti_symm _). Qed.
+Lemma envs_Forall2_impl (R R' : relation PROP) Δ1 Δ2 :
+  envs_Forall2 R Δ1 Δ2 → (∀ P Q, R P Q → R' P Q) → envs_Forall2 R' Δ1 Δ2.
+Proof. intros [??] ?; constructor; eauto using env_Forall2_impl. Qed.
+
+Global Instance of_envs_mono : Proper (envs_Forall2 (⊢) ==> (⊢)) (@of_envs PROP).
+Proof.
+  intros [Γp1 Γs1] [Γp2 Γs2] [Hp Hs]; apply and_mono; simpl in *.
+  - apply pure_mono=> -[???]. constructor;
+      naive_solver eauto using env_Forall2_wf, env_Forall2_fresh.
+  - by repeat f_equiv.
+Qed.
+Global Instance of_envs_proper :
+  Proper (envs_Forall2 (⊣⊢) ==> (⊣⊢)) (@of_envs PROP).
+Proof.
+  intros Δ1 Δ2 HΔ; apply (anti_symm (⊢)); apply of_envs_mono;
+    eapply (envs_Forall2_impl (⊣⊢)); [| |symmetry|]; eauto using equiv_entails.
+Qed.
+Global Instance Envs_proper (R : relation PROP) :
+  Proper (env_Forall2 R ==> env_Forall2 R ==> eq ==> envs_Forall2 R) (@Envs PROP).
+Proof. by constructor. Qed.
+
+Global Instance envs_entails_proper :
+  Proper (envs_Forall2 (⊣⊢) ==> (⊣⊢) ==> iff) (@envs_entails PROP).
+Proof. rewrite envs_entails_eq. solve_proper. Qed.
+Global Instance envs_entails_flip_mono :
+  Proper (envs_Forall2 (⊢) ==> flip (⊢) ==> flip impl) (@envs_entails PROP).
+Proof. rewrite envs_entails_eq=> Δ1 Δ2 ? P1 P2 <- <-. by f_equiv. Qed.
+
 Lemma envs_delete_persistent Δ i : envs_delete false i true Δ = Δ.
 Proof. by destruct Δ. Qed.
 Lemma envs_delete_spatial Δ i :
@@ -625,6 +665,11 @@ Proof.
   - destruct (Γp !! i); simplify_eq/=; by rewrite ?env_lookup_env_delete_ne.
 Qed.
 
+Lemma envs_incr_counter_equiv Δ : envs_Forall2 (⊣⊢) Δ (envs_incr_counter Δ).
+Proof. done. Qed.
+Lemma envs_incr_counter_sound Δ : of_envs (envs_incr_counter Δ) ⊣⊢ of_envs Δ.
+Proof. by f_equiv. Qed.
+
 Lemma envs_split_go_sound js Δ1 Δ2 Δ1' Δ2' :
   (∀ j P, envs_lookup j Δ1 = Some (false, P) → envs_lookup j Δ2 = None) →
   envs_split_go js Δ1 Δ2 = Some (Δ1',Δ2') →
@@ -666,44 +711,4 @@ Proof.
   - by rewrite right_id.
   - rewrite /= IH (comm _ Q _) assoc. done.
 Qed.
-
-Global Instance envs_Forall2_refl (R : relation PROP) :
-  Reflexive R → Reflexive (envs_Forall2 R).
-Proof. by constructor. Qed.
-Global Instance envs_Forall2_sym (R : relation PROP) :
-  Symmetric R → Symmetric (envs_Forall2 R).
-Proof. intros ??? [??]; by constructor. Qed.
-Global Instance envs_Forall2_trans (R : relation PROP) :
-  Transitive R → Transitive (envs_Forall2 R).
-Proof. intros ??? [??] [??] [??]; constructor; etrans; eauto. Qed.
-Global Instance envs_Forall2_antisymm (R R' : relation PROP) :
-  AntiSymm R R' → AntiSymm (envs_Forall2 R) (envs_Forall2 R').
-Proof. intros ??? [??] [??]; constructor; by eapply (anti_symm _). Qed.
-Lemma envs_Forall2_impl (R R' : relation PROP) Δ1 Δ2 :
-  envs_Forall2 R Δ1 Δ2 → (∀ P Q, R P Q → R' P Q) → envs_Forall2 R' Δ1 Δ2.
-Proof. intros [??] ?; constructor; eauto using env_Forall2_impl. Qed.
-
-Global Instance of_envs_mono : Proper (envs_Forall2 (⊢) ==> (⊢)) (@of_envs PROP).
-Proof.
-  intros [Γp1 Γs1] [Γp2 Γs2] [Hp Hs]; apply and_mono; simpl in *.
-  - apply pure_mono=> -[???]. constructor;
-      naive_solver eauto using env_Forall2_wf, env_Forall2_fresh.
-  - by repeat f_equiv.
-Qed.
-Global Instance of_envs_proper :
-  Proper (envs_Forall2 (⊣⊢) ==> (⊣⊢)) (@of_envs PROP).
-Proof.
-  intros Δ1 Δ2 HΔ; apply (anti_symm (⊢)); apply of_envs_mono;
-    eapply (envs_Forall2_impl (⊣⊢)); [| |symmetry|]; eauto using equiv_entails.
-Qed.
-Global Instance Envs_proper (R : relation PROP) :
-  Proper (env_Forall2 R ==> env_Forall2 R ==> eq ==> envs_Forall2 R) (@Envs PROP).
-Proof. by constructor. Qed.
-
-Global Instance envs_entails_proper :
-  Proper (envs_Forall2 (⊣⊢) ==> (⊣⊢) ==> iff) (@envs_entails PROP).
-Proof. rewrite envs_entails_eq. solve_proper. Qed.
-Global Instance envs_entails_flip_mono :
-  Proper (envs_Forall2 (⊢) ==> flip (⊢) ==> flip impl) (@envs_entails PROP).
-Proof. rewrite envs_entails_eq=> Δ1 Δ2 ? P1 P2 <- <-. by f_equiv. Qed.
 End envs.

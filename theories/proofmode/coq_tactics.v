@@ -609,15 +609,10 @@ Proof.
 Qed.
 
 (** * Fresh *)
-Lemma envs_incr_counter_equiv Δ: envs_Forall2 (⊣⊢) Δ (envs_incr_counter Δ).
-Proof. rewrite //=. Qed.
-
 Lemma tac_fresh Δ Δ' (Q : PROP) :
   envs_incr_counter Δ = Δ' →
   envs_entails Δ' Q → envs_entails Δ Q.
-Proof.
-  rewrite envs_entails_eq => <-. by setoid_rewrite <-envs_incr_counter_equiv.
-Qed.
+Proof. rewrite envs_entails_eq=> <- <-. by rewrite envs_incr_counter_sound. Qed.
 
 (** * Invariants *)
 Lemma tac_inv_elim {X : Type} Δ Δ' i j φ p Pinv Pin Pout (Pclose : option (X → PROP))
