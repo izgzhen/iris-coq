@@ -587,6 +587,12 @@ Proof.
   iIntros "?". iExists _. iApply modal_if_lemma2. done.
 Qed.
 
+Lemma test_iDestruct_clear P Q R :
+  P -∗ (Q ∗ R) -∗ True.
+Proof.
+  iIntros "HP HQR". iDestruct "HQR" as "{HP} [HQ HR]". done.
+Qed.
+
 End tests.
 
 (** Test specifically if certain things print correctly. *)

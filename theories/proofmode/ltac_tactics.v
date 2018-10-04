@@ -1102,19 +1102,19 @@ Local Ltac iDestructHypGo Hz pat :=
     | IModalElim ?pat => iModCore Hz; iDestructHypGo Hz pat
     | _ => fail "iDestruct:" pat "invalid"
     end.
-Local Ltac iDestructHypFindPat H pat found pats :=
+Local Ltac iDestructHypFindPat Hgo pat found pats :=
     lazymatch pats with
     | [] =>
       lazymatch found with
       | true => pm_prettify (* post-tactic prettification *)
       | false => fail "iDestruct:" pat "should contain exactly one proper introduction pattern"
       end
-    | ISimpl :: ?pats => simpl; iDestructHypFindPat H pat found pats
-    | IClear ?H :: ?pats => iClear H; iDestructHypFindPat H pat found pats
-    | IClearFrame ?H :: ?pats => iFrame H; iDestructHypFindPat H pat found pats
+    | ISimpl :: ?pats => simpl; iDestructHypFindPat Hgo pat found pats
+    | IClear ?H :: ?pats => iClear H; iDestructHypFindPat Hgo pat found pats
+    | IClearFrame ?H :: ?pats => iFrame H; iDestructHypFindPat Hgo pat found pats
     | ?pat :: ?pats =>
        lazymatch found with
-       | false => iDestructHypGo H pat; iDestructHypFindPat H pat true pats
+       | false => iDestructHypGo Hgo pat; iDestructHypFindPat Hgo pat true pats
        | true => fail "iDestruct:" pat "should contain exactly one proper introduction pattern"
        end
     end.
