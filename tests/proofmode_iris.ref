@@ -107,6 +107,8 @@
   --------------------------------------∗
   |={⊤}=> na_own t E1 ∗ na_own t E2 ∗ ▷ P
   
+"test_iInv_12"
+     : string
 The command has indeed failed with message:
 In nested Ltac calls to "iInv (constr) as (constr)",
 "iInvCore (constr) in (tactic)" and
@@ -125,6 +127,8 @@ In nested Ltac calls to "iInv (constr) as (constr)",
 "iInvCore (constr) with (constr) as (open_constr) in (tactic)", last call
 failed.
 Tactic failure: iInv: invariant "H2" not found.
+"test_iInv"
+     : string
 1 subgoal
   
   Σ : gFunctors
@@ -139,6 +143,8 @@ Tactic failure: iInv: invariant "H2" not found.
   --------------------------------------∗
   |={E ∖ ↑N}=> ⎡ ▷ 𝓟 ⎤ ∗ (|={E}=> emp)
   
+"test_iInv_with_close"
+     : string
 1 subgoal
   
   Σ : gFunctors

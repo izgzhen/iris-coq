@@ -730,8 +730,19 @@ The tactic instantiates each dependent argument [x_i] with an evar and generates
 a goal [R] for each non-dependent argument [x_i : R].  For example, if the
 original goal was [Q] and [t] has type [∀ x, P x → Q], then it generates an evar
 [?x] for [x] and a subgoal [P ?x]. *)
-Tactic Notation "iIntoEmpValid" open_constr(t) :=
-  let rec go t :=
+Local Ltac iIntoEmpValid t :=
+  let go_specialize t tT :=
+    lazymatch tT with                (* We do not use hnf of tT, because, if
+                                        entailment is not opaque, then it would
+                                        unfold it. *)
+    | ?P → ?Q => let H := fresh in assert P as H; [|iIntoEmpValid uconstr:(t H); clear H]
+    | ∀ _ : ?T, _ =>
+      (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
+      (* This is a workarround for Coq bug #6583. *)
+      let e := fresh in evar (e:id T);
+      let e' := eval unfold e in e in clear e; iIntoEmpValid (t e')
+    end
+  in
     (* We try two reduction tactics for the type of t before trying to
        specialize it. We first try the head normal form in order to
        unfold all the definition that could hide an entailment.  Then,
@@ -747,20 +758,7 @@ Tactic Notation "iIntoEmpValid" open_constr(t) :=
       | let tT' := eval cbv zeta in tT in
         notypeclasses refine (as_emp_valid_1 tT _ _);
           [iSolveTC || fail 1 "iPoseProof: not a BI assertion"
-          |exact t]]
-  with go_specialize t tT :=
-    lazymatch tT with                (* We do not use hnf of tT, because, if
-                                        entailment is not opaque, then it would
-                                        unfold it. *)
-    | ?P → ?Q => let H := fresh in assert P as H; [|go uconstr:(t H); clear H]
-    | ∀ _ : ?T, _ =>
-      (* Put [T] inside an [id] to avoid TC inference from being invoked. *)
-      (* This is a workarround for Coq bug #6583. *)
-      let e := fresh in evar (e:id T);
-      let e' := eval unfold e in e in clear e; go (t e')
-    end
-  in
-  go t.
+          |exact t]].
 
 (* The tactic [tac] is called with a temporary fresh name [H]. The argument
 [lazy_tc] denotes whether type class inference on the premises of [lem] should
@@ -802,8 +800,8 @@ Tactic Notation "iPoseProofCore" open_constr(lem)
     | _ => idtac
     end in
   lazymatch eval compute in lazy_tc with
-  | true => iPoseProofCore_go Htmp t ltac:(fun _ => spec_tac (); last (tac Htmp))
-  | false => iPoseProofCore_go Htmp t spec_tac; last (tac Htmp)
+  | true => iPoseProofCore_go Htmp t ltac:(fun _ => spec_tac (); [..| tac Htmp ])
+  | false => iPoseProofCore_go Htmp t spec_tac; [..| tac Htmp ]
   end.
 
 (** * Apply *)
@@ -1081,8 +1079,7 @@ Tactic Notation "iModCore" constr(H) :=
     |pm_reflexivity|].
 
 (** * Basic destruct tactic *)
-Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
-  let rec go Hz pat :=
+Local Ltac iDestructHypGo Hz pat :=
     lazymatch pat with
     | IAnom =>
        lazymatch Hz with
@@ -1093,36 +1090,37 @@ Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
     | IFrame => iFrameHyp Hz
     | IIdent ?y => iRename Hz into y
     | IList [[]] => iExFalso; iExact Hz
-    | IList [[?pat1; IDrop]] => iAndDestructChoice Hz as Left Hz; go Hz pat1
-    | IList [[IDrop; ?pat2]] => iAndDestructChoice Hz as Right Hz; go Hz pat2
+    | IList [[?pat1; IDrop]] => iAndDestructChoice Hz as Left Hz; iDestructHypGo Hz pat1
+    | IList [[IDrop; ?pat2]] => iAndDestructChoice Hz as Right Hz; iDestructHypGo Hz pat2
     | IList [[?pat1; ?pat2]] =>
-       let Hy := iFresh in iAndDestruct Hz as Hz Hy; go Hz pat1; go Hy pat2
-    | IList [[?pat1];[?pat2]] => iOrDestruct Hz as Hz Hz; [go Hz pat1|go Hz pat2]
+       let Hy := iFresh in iAndDestruct Hz as Hz Hy; iDestructHypGo Hz pat1; iDestructHypGo Hy pat2
+    | IList [[?pat1];[?pat2]] => iOrDestruct Hz as Hz Hz; [iDestructHypGo Hz pat1|iDestructHypGo Hz pat2]
     | IPureElim => iPure Hz as ?
     | IRewrite Right => iPure Hz as ->
     | IRewrite Left => iPure Hz as <-
-    | IAlwaysElim ?pat => iPersistent Hz; go Hz pat
-    | IModalElim ?pat => iModCore Hz; go Hz pat
+    | IAlwaysElim ?pat => iPersistent Hz; iDestructHypGo Hz pat
+    | IModalElim ?pat => iModCore Hz; iDestructHypGo Hz pat
     | _ => fail "iDestruct:" pat "invalid"
-    end in
-  let rec find_pat found pats :=
+    end.
+Local Ltac iDestructHypFindPat H pat found pats :=
     lazymatch pats with
     | [] =>
       lazymatch found with
       | true => pm_prettify (* post-tactic prettification *)
       | false => fail "iDestruct:" pat "should contain exactly one proper introduction pattern"
       end
-    | ISimpl :: ?pats => simpl; find_pat found pats
-    | IClear ?H :: ?pats => iClear H; find_pat found pats
-    | IClearFrame ?H :: ?pats => iFrame H; find_pat found pats
+    | ISimpl :: ?pats => simpl; iDestructHypFindPat H pat found pats
+    | IClear ?H :: ?pats => iClear H; iDestructHypFindPat H pat found pats
+    | IClearFrame ?H :: ?pats => iFrame H; iDestructHypFindPat H pat found pats
     | ?pat :: ?pats =>
        lazymatch found with
-       | false => go H pat; find_pat true pats
+       | false => iDestructHypGo H pat; iDestructHypFindPat H pat true pats
        | true => fail "iDestruct:" pat "should contain exactly one proper introduction pattern"
        end
-    end in
+    end.
+Tactic Notation "iDestructHyp" constr(H) "as" constr(pat) :=
   let pats := intro_pat.parse pat in
-  find_pat false pats.
+  iDestructHypFindPat H pat false pats.
 
 Tactic Notation "iDestructHyp" constr(H) "as" "(" simple_intropattern(x1) ")"
     constr(pat) :=
@@ -1537,10 +1535,10 @@ Tactic Notation "iDestructCore" open_constr(lem) "as" constr(p) tactic(tac) :=
            (* persistent hypothesis, check for a CopyDestruct instance *)
            tryif (let dummy := constr:(_ : CopyDestruct P) in idtac)
            then (iPoseProofCore lem as p false tac)
-           else (iSpecializeCore lem as p; last (tac H))
+           else (iSpecializeCore lem as p; [..| tac H])
         | Some (false, ?P) =>
            (* spatial hypothesis, cannot copy *)
-           iSpecializeCore lem as p; last (tac H)
+           iSpecializeCore lem as p; [..| tac H ]
         end
      end
   end.
@@ -2088,13 +2086,13 @@ Tactic Notation "iInvCore" constr(select) "with" constr(pats) "as" open_constr(H
   lazymatch type of select with
   | string =>
      eapply @tac_inv_elim with (i:=select) (j:=H) (Pclose:=Pclose_pat);
-     first by (iAssumptionCore || fail "iInv: invariant" select "not found")
+     [ (by iAssumptionCore) || fail "iInv: invariant" select "not found" |..]
   | ident  =>
      eapply @tac_inv_elim with (i:=select) (j:=H) (Pclose:=Pclose_pat);
-     first by (iAssumptionCore || fail "iInv: invariant" select "not found")
+     [ (by iAssumptionCore) || fail "iInv: invariant" select "not found" |..]
   | namespace =>
      eapply @tac_inv_elim with (j:=H) (Pclose:=Pclose_pat);
-     first by (iAssumptionInv select || fail "iInv: invariant" select "not found")
+     [ (by iAssumptionInv select) || fail "iInv: invariant" select "not found" |..]
   | _ => fail "iInv: selector" select "is not of the right type "
   end;
     [iSolveTC ||

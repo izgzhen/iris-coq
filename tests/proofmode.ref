@@ -454,14 +454,19 @@ Tactic failure: iStartProof: not a BI assertion.
 "iPoseProof_fail"
      : string
 The command has indeed failed with message:
-In nested Ltac calls to "iPoseProof (open_constr) as (constr)" and
-"iPoseProofCore (open_constr) as (constr) (constr) (tactic)", last call
-failed.
+In nested Ltac calls to "iPoseProof (open_constr) as (constr)",
+"iPoseProofCore (open_constr) as (constr) (constr) (tactic)",
+"<iris.proofmode.ltac_tactics.iPoseProofCore_go>" and
+"<iris.proofmode.ltac_tactics.iIntoEmpValid>", last call failed.
 Tactic failure: iPoseProof: not a BI assertion.
 The command has indeed failed with message:
-In nested Ltac calls to "iPoseProof (open_constr) as (constr)" and
-"iPoseProofCore (open_constr) as (constr) (constr) (tactic)", last call
-failed.
+In nested Ltac calls to "iPoseProof (open_constr) as (constr)",
+"iPoseProofCore (open_constr) as (constr) (constr) (tactic)", 
+"tac" (bound to fun H => iDestructHyp H as pat),
+"iDestructHyp (constr) as (constr)",
+"<iris.proofmode.ltac_tactics.iDestructHypFindPat>",
+"<iris.proofmode.ltac_tactics.iDestructHypGo>" and
+"iRename (constr) into (constr)", last call failed.
 Tactic failure: iRename: "H" not fresh.
 "iRevert_fail"
      : string
@@ -474,15 +479,23 @@ Tactic failure: iElaborateSelPat: "H" not found.
 The command has indeed failed with message:
 In nested Ltac calls to "iDestruct (open_constr) as (constr)",
 "iDestructCore (open_constr) as (constr) (tactic)",
-"iDestructCore (open_constr) as (constr) (tactic)" and
-"iDestructCore (open_constr) as (constr) (tactic)", last call failed.
+"iDestructCore (open_constr) as (constr) (tactic)",
+"iDestructCore (open_constr) as (constr) (tactic)", 
+"tac" (bound to fun H => iDestructHyp H as pat),
+"iDestructHyp (constr) as (constr)",
+"<iris.proofmode.ltac_tactics.iDestructHypFindPat>" and
+"<iris.proofmode.ltac_tactics.iDestructHypFindPat>", last call failed.
 Tactic failure: iDestruct: "{HP}"
 should contain exactly one proper introduction pattern.
 The command has indeed failed with message:
 In nested Ltac calls to "iDestruct (open_constr) as (constr)",
 "iDestructCore (open_constr) as (constr) (tactic)",
-"iDestructCore (open_constr) as (constr) (tactic)" and
-"iDestructCore (open_constr) as (constr) (tactic)", last call failed.
+"iDestructCore (open_constr) as (constr) (tactic)",
+"iDestructCore (open_constr) as (constr) (tactic)", 
+"tac" (bound to fun H => iDestructHyp H as pat),
+"iDestructHyp (constr) as (constr)",
+"<iris.proofmode.ltac_tactics.iDestructHypFindPat>" and
+"<iris.proofmode.ltac_tactics.iDestructHypGo>", last call failed.
 Tactic failure: iDestruct: (IList [[IClear (sel_patterns.SelIdent "HP")]])
 invalid.
 "iApply_fail"
@@ -493,8 +506,7 @@ In nested Ltac calls to "iApply (open_constr)",
 "<iris.proofmode.ltac_tactics.iPoseProofCore_go>",
 "<iris.proofmode.ltac_tactics.iPoseProofCore_go>",
 "<iris.proofmode.ltac_tactics.iPoseProofCore_go>", 
-"goal_tac" (bound to
-fun _ => <ssreflect_plugin::ssrtclseq@0> spec_tac ltac:(()) ; last  tac Htmp) and
-"<ssreflect_plugin::ssrtclseq@0> spec_tac ltac:(()) ; last  tac Htmp", last
-call failed.
+"goal_tac" (bound to fun _ => spec_tac ltac:(()); [ .. | tac Htmp ]), 
+"tac" (bound to fun H => iApplyHyp H) and "iApplyHyp (constr)", last call
+failed.
 Tactic failure: iApply: cannot apply P.

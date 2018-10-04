@@ -202,6 +202,7 @@ Section iris_tests.
   Qed.
 
   (* error messages *)
+  Check "test_iInv_12".
   Lemma test_iInv_12 N P: inv N (<pers> P) ={⊤}=∗ True.
   Proof.
     iIntros "H".
@@ -229,6 +230,7 @@ Section monpred_tests.
   Implicit Types P Q R : monPred.
   Implicit Types 𝓟 𝓠 𝓡 : iProp Σ.
 
+  Check "test_iInv".
   Lemma test_iInv N E 𝓟 :
     ↑N ⊆ E →
     ⎡inv N 𝓟⎤ ⊢@{monPredI} |={E}=> emp.
@@ -238,6 +240,7 @@ Section monpred_tests.
     iFrame "HP". auto.
   Qed.
 
+  Check "test_iInv_with_close".
   Lemma test_iInv_with_close N E 𝓟 :
     ↑N ⊆ E →
     ⎡inv N 𝓟⎤ ⊢@{monPredI} |={E}=> emp.
