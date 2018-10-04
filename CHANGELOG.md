@@ -17,6 +17,8 @@ Changes in and extensions of the theory:
 * [#] Add weakest preconditions for total program correctness.
 * [#] "(Potentially) stuck" weakest preconditions are no longer considered
   experimental.
+* [#] The adequacy statement for weakest preconditions now also involves the
+  final state.
 * [#] The Löb rule is now a derived rule; it follows from later-intro, later
   being contractive and the fact that we can take fixpoints of contractive
   functions.
