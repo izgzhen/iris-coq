@@ -12,8 +12,14 @@ Set Default Proof Using "Type".
   [b] are evaluated.  With left-to-right evaluation, that triple is basically
   useless the user let-expands [b].
 
-*)
+- For prophecy variables, we annotate the reduction steps with an "observation"
+  and tweak adequacy such that WP knows all future observations.  There is
+  another possible choice: Use non-deterministic choice when creating a prophecy
+  variable ([NewProph]), and when resolving it ([ResolveProph]) make the
+  program diverge unless the variable matches.  That, however, requires an
+  erasure proof that this endless loop does not make specifications useless.
 
+*)
 
 Delimit Scope expr_scope with E.
 Delimit Scope val_scope with V.
