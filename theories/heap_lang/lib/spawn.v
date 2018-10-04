@@ -53,11 +53,11 @@ Proof.
   iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?".
   { iNext. iExists NONEV. iFrame; eauto. }
-  wp_apply wp_fork; simpl. iSplitR "Hf".
-  - wp_seq. iApply "HΦ". rewrite /join_handle. eauto.
-  - wp_bind (f _). iApply (wp_wand with "Hf"); iIntros (v) "Hv".
+  wp_apply (wp_fork with "[Hf]").
+  - iNext. wp_bind (f _). iApply (wp_wand with "Hf"); iIntros (v) "Hv".
     iInv N as (v') "[Hl _]".
     wp_store. iSplitL; last done. iIntros "!> !>". iExists (SOMEV v). iFrame. eauto.
+  - wp_seq. iApply "HΦ". rewrite /join_handle. eauto.
 Qed.
 
 Lemma join_spec (Ψ : val → iProp Σ) l :

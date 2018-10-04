@@ -104,18 +104,18 @@ Implicit Types Φ : val → iProp Σ.
 Implicit Types efs : list expr.
 Implicit Types σ : state.
 
-(** Base axioms for core primitives of the language: Stateless reductions *)
+(** Fork: Not using Texan triples to avoid some unnecessary [True] *)
 Lemma wp_fork s E e Φ :
-  ▷ (Φ (LitV LitUnit) ∗ WP e @ s; ⊤ {{ _, True }}) ⊢ WP Fork e @ s; E {{ Φ }}.
+  ▷ WP e @ s; ⊤ {{ _, True }} -∗ ▷ Φ (LitV LitUnit) -∗ WP Fork e @ s; E {{ Φ }}.
 Proof.
-  iIntros "[HΦ He]".
+  iIntros "He HΦ".
   iApply wp_lift_pure_det_head_step; [auto|intros; inv_head_step; eauto|].
   iModIntro; iNext; iIntros "!> /= {$He}". by iApply wp_value.
 Qed.
 Lemma twp_fork s E e Φ :
-  Φ (LitV LitUnit) ∗ WP e @ s; ⊤ [{ _, True }] ⊢ WP Fork e @ s; E [{ Φ }].
+  WP e @ s; ⊤ [{ _, True }] -∗ Φ (LitV LitUnit) -∗ WP Fork e @ s; E [{ Φ }].
 Proof.
-  iIntros "[HΦ He]".
+  iIntros "He HΦ".
   iApply twp_lift_pure_det_head_step; [auto|intros; inv_head_step; eauto|].
   iIntros "!> /= {$He}". by iApply twp_value.
 Qed.
