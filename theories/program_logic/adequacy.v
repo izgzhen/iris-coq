@@ -34,9 +34,10 @@ Proof.
 Qed.
 
 (* Program logic adequacy *)
-Record adequate {Λ} (s : stuckness) (e1 : expr Λ) (σ1 : state Λ) (φ : val Λ → Prop) := {
+Record adequate {Λ} (s : stuckness) (e1 : expr Λ) (σ1 : state Λ)
+    (φ : val Λ → state Λ → Prop) := {
   adequate_result t2 σ2 v2 :
-   rtc step ([e1], σ1) (of_val v2 :: t2, σ2) → φ v2;
+   rtc step ([e1], σ1) (of_val v2 :: t2, σ2) → φ v2 σ2;
   adequate_not_stuck t2 σ2 e2 :
    s = NotStuck →
    rtc step ([e1], σ1) (t2, σ2) →
@@ -124,12 +125,14 @@ Qed.
 
 Lemma wptp_result s n e1 t1 v2 t2 σ1 σ2 φ :
   nsteps step n (e1 :: t1, σ1) (of_val v2 :: t2, σ2) →
-  world σ1 ∗ WP e1 @ s; ⊤ {{ v, ⌜φ v⌝ }} ∗ wptp s t1 ⊢ ▷^(S (S n)) ⌜φ v2⌝.
+  world σ1 ∗ WP e1 @ s; ⊤ {{ v, ∀ σ, state_interp σ ={⊤,∅}=∗ ⌜φ v σ⌝ }} ∗ wptp s t1
+  ⊢ ▷^(S (S n)) ⌜φ v2 σ2⌝.
 Proof.
   intros. rewrite wptp_steps // laterN_later. apply: bupd_iter_laterN_mono.
-  iDestruct 1 as (e2 t2' ?) "((Hw & HE & _) & H & _)"; simplify_eq.
+  iDestruct 1 as (e2 t2' ?) "((Hw & HE & Hσ) & H & _)"; simplify_eq.
   iDestruct (wp_value_inv' with "H") as "H". rewrite uPred_fupd_eq.
-  iMod ("H" with "[Hw HE]") as ">(_ & _ & $)"; iFrame; auto.
+  iMod ("H" with "[$]") as ">(Hw & HE & H)".
+  iMod ("H" with "Hσ [$]") as ">(_ & _ & $)".
 Qed.
 
 Lemma wp_safe E e σ Φ :
@@ -167,18 +170,18 @@ Proof.
 Qed.
 End adequacy.
 
-Theorem wp_adequacy Σ Λ `{invPreG Σ} s e σ φ :
+Theorem wp_strong_adequacy Σ Λ `{invPreG Σ} s e σ φ :
   (∀ `{Hinv : invG Σ},
      (|={⊤}=> ∃ stateI : state Λ → iProp Σ,
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
-       stateI σ ∗ WP e @ s; ⊤ {{ v, ⌜φ v⌝ }})%I) →
+       stateI σ ∗ WP e @ s; ⊤ {{ v, ∀ σ, stateI σ ={⊤,∅}=∗ ⌜φ v σ⌝ }})%I) →
   adequate s e σ φ.
 Proof.
   intros Hwp; split.
   - intros t2 σ2 v2 [n ?]%rtc_nsteps.
     eapply (soundness (M:=iResUR Σ) _ (S (S n))).
     iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp _).
-    rewrite uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
+    rewrite {1}uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iApply (@wptp_result _ _ (IrisG _ _ Hinv Istate)); eauto with iFrame.
   - destruct s; last done. intros t2 σ2 e2 _ [n ?]%rtc_nsteps ?.
@@ -187,6 +190,19 @@ Proof.
     rewrite uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
     iApply (@wptp_safe _ _ (IrisG _ _ Hinv Istate)); eauto with iFrame.
+Qed.
+
+Theorem wp_adequacy Σ Λ `{invPreG Σ} s e σ φ :
+  (∀ `{Hinv : invG Σ},
+     (|={⊤}=> ∃ stateI : state Λ → iProp Σ,
+       let _ : irisG Λ Σ := IrisG _ _ Hinv stateI in
+       stateI σ ∗ WP e @ s; ⊤ {{ v, ⌜φ v⌝ }})%I) →
+  adequate s e σ (λ v _, φ v).
+Proof.
+  intros Hwp. apply (wp_strong_adequacy Σ _)=> Hinv.
+  iMod Hwp as (stateI) "[Hσ H]". iExists stateI. iIntros "{$Hσ} !>".
+  iApply (wp_wand with "H"). iIntros (v ? σ') "_".
+  iMod (fupd_intro_mask' ⊤ ∅) as "_"; auto.
 Qed.
 
 Theorem wp_invariance Σ Λ `{invPreG Σ} s e σ1 t2 σ2 φ :

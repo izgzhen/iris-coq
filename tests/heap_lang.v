@@ -189,5 +189,5 @@ Section error_tests.
   Abort.
 End error_tests.
 
-Lemma heap_e_adequate σ : adequate NotStuck heap_e σ (= #2).
+Lemma heap_e_adequate σ : adequate NotStuck heap_e σ (λ v _, v = #2).
 Proof. eapply (heap_adequacy heapΣ)=> ?. by apply heap_e_spec. Qed.
