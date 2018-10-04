@@ -1395,6 +1395,10 @@ Section option.
       by eapply (cmra_validN_le n); last lia.
     - done.
   Qed.
+
+  Global Instance option_cancelable (ma : option A) :
+    (∀ a : A, IdFree a) → (∀ a : A, Cancelable a) → Cancelable ma.
+  Proof. destruct ma; apply _. Qed.
 End option.
 
 Arguments optionR : clear implicits.

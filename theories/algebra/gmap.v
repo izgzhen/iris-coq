@@ -288,6 +288,12 @@ Proof.
   - by rewrite lookup_singleton_ne // !(left_id None _).
 Qed.
 
+Global Instance gmap_cancelable (m : gmap K A) :
+  (∀ x : A, IdFree x) → (∀ x : A, Cancelable x) → Cancelable m.
+Proof.
+  intros ?? n m1 m2 ?? i. apply (cancelableN (m !! i)); by rewrite -!lookup_op.
+Qed.
+
 Lemma insert_op m1 m2 i x y :
   <[i:=x ⋅ y]>(m1 ⋅ m2) =  <[i:=x]>m1 ⋅ <[i:=y]>m2.
 Proof. by rewrite (insert_merge (⋅) m1 m2 i (x ⋅ y) x y). Qed.
