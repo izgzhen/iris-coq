@@ -134,8 +134,8 @@ Section lifting.
       iDestruct "Hσκs" as "[Hσ Hκs]".
       rewrite /ownP_state /ownP_obs.
       iMod (own_update_2 with "Hσ Hσf") as "[Hσ Hσf]".
-       { apply auth_update. apply: option_local_update.
-         by apply: (exclusive_local_update _ (Excl σ2)). }
+      { apply auth_update. apply: option_local_update.
+        by apply: (exclusive_local_update _ (Excl σ2)). }
       iMod (own_update_2 with "Hκs Hκsf") as "[Hκs Hκsf]".
       { apply auth_update. apply: option_local_update.
         by apply: (exclusive_local_update _ (Excl (κs'':leibnizC _))). }

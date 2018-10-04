@@ -76,7 +76,7 @@ Section coinflip.
   Proof using N.
     iApply wp_atomic_intro. iIntros (Φ) "AU". wp_lam.
     wp_apply wp_new_proph; first done.
-    iIntros (p) "Hp". iDestruct "Hp" as (v) "Hp".
+    iIntros (v p) "Hp".
     wp_let.
     wp_bind (_ <- _)%E.
     iMod "AU" as "[Hl [_ Hclose]]".

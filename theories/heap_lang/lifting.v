@@ -289,7 +289,7 @@ Qed.
 
 (** Lifting lemmas for creating and resolving prophecy variables *)
 Lemma wp_new_proph :
-  {{{ True }}} NewProph {{{ (p : proph), RET (LitV (LitProphecy p)); p ⥱ - }}}.
+  {{{ True }}} NewProph {{{ v (p : proph), RET (LitV (LitProphecy p)); p ⥱ v }}}.
 Proof.
   iIntros (Φ) "_ HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κs) "[Hσ HR] !>". iDestruct "HR" as (R [Hfr Hdom]) "HR". iSplit.
@@ -304,7 +304,7 @@ Proof.
     iPureIntro. split.
     + apply first_resolve_insert; auto.
     + rewrite dom_insert_L. by apply union_mono_l.
-  - iApply "HΦ". by iExists _.
+  - iApply "HΦ". done.
 Qed.
 
 Lemma wp_resolve_proph e1 e2 p v w:
@@ -320,7 +320,7 @@ Proof.
   unfold cons_obs. simpl.
   iNext; iIntros (κ κs' v2 σ2 efs [Hstep ->]); inv_head_step. iApply fupd_frame_l.
   iSplit=> //. iFrame.
-  iMod ((@proph_map_remove _ _ _ _ _ _ _ p0) with "HR Hp") as "Hp". iModIntro.
+  iMod (@proph_map_remove with "HR Hp") as "Hp". iModIntro.
   iSplitR "HΦ".
   - iExists _. iFrame. iPureIntro. split; first by eapply first_resolve_delete.
     rewrite dom_delete. rewrite <- difference_empty_L. by eapply difference_mono.

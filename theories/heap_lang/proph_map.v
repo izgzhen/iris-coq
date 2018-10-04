@@ -20,7 +20,7 @@ Section first_resolve.
     (map_of_list pvs : gmap P V) !! p.
 
   Definition first_resolve_in_list R pvs :=
-    forall p v, p ∈ dom (gset _) R →
+    ∀ p v, p ∈ dom (gset _) R →
            first_resolve pvs p = Some v →
            R !! p = Some (Some v).
 
@@ -156,13 +156,11 @@ Section proph_map.
     p ∉ dom (gset _) R →
     proph_map_auth R ==∗ proph_map_auth (<[p := v]> R) ∗ p ⥱ v.
   Proof.
-    iIntros (?) "HR". rewrite /proph_map_ctx p_mapsto_eq /p_mapsto_def.
+    iIntros (Hp) "HR". rewrite /proph_map_ctx p_mapsto_eq /p_mapsto_def.
     iMod (own_update with "HR") as "[HR Hl]".
-    {
-      eapply auth_update_alloc,
+    { eapply auth_update_alloc,
         (alloc_singleton_local_update _ _ (Excl $ (v : option (leibnizC _))))=> //.
-      apply lookup_to_proph_map_None. apply (iffLR (not_elem_of_dom _ _) H1).
-    }
+      apply lookup_to_proph_map_None. apply (iffLR (not_elem_of_dom _ _) Hp). }
     iModIntro. rewrite /proph_map_auth to_proph_map_insert. iFrame.
   Qed.
 
