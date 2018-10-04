@@ -65,12 +65,12 @@ Section tests.
   Qed.
 
   Definition heap_e5 : expr :=
-    let: "x" := ref (ref #1) in FAA (!"x") (#10 + #1) + ! !"x".
+    let: "x" := ref (ref #1) in ! ! "x" + FAA (!"x") (#10 + #1).
 
   Lemma heap_e5_spec E : WP heap_e5 @ E [{ v, ⌜v = #13⌝ }]%I.
   Proof.
     rewrite /heap_e5. wp_alloc l. wp_alloc l'. wp_let.
-    wp_load. wp_op. wp_faa. do 2 wp_load. wp_op. done.
+    wp_op. wp_load. wp_faa. do 2 wp_load. wp_op. done.
   Qed.
 
   Definition heap_e6 : val := λ: "v", "v" = "v".
