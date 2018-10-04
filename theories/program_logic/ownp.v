@@ -128,17 +128,18 @@ Section lifting.
       iMod "H" as (σ1 κs) "[Hred _]"; iDestruct "Hred" as %Hred.
       destruct s; last done. apply reducible_not_val in Hred.
       move: Hred; by rewrite to_of_val.
-    - iApply wp_lift_step; [done|]; iIntros (σ1 κs) "Hσκs".
-      iMod "H" as (σ1' κs' ?) "[>Hσf [>Hκsf H]]". iDestruct (ownP_eq with "Hσκs Hσf Hκsf") as %[-> ->].
-      iModIntro; iSplit; [by destruct s|]; iNext; iIntros (κ κs'' e2 σ2 efs [Hstep ->]).
+    - iApply wp_lift_step; [done|]; iIntros (σ1 κ κs) "Hσκs".
+      iMod "H" as (σ1' κs' ?) "[>Hσf [>Hκsf H]]".
+      iDestruct (ownP_eq with "Hσκs Hσf Hκsf") as %[<- <-].
+      iModIntro; iSplit; [by destruct s|]; iNext; iIntros (e2 σ2 efs Hstep).
       iDestruct "Hσκs" as "[Hσ Hκs]".
       rewrite /ownP_state /ownP_obs.
       iMod (own_update_2 with "Hσ Hσf") as "[Hσ Hσf]".
       { apply auth_update. apply: option_local_update.
-        by apply: (exclusive_local_update _ (Excl σ2)). }
+         by apply: (exclusive_local_update _ (Excl σ2)). }
       iMod (own_update_2 with "Hκs Hκsf") as "[Hκs Hκsf]".
       { apply auth_update. apply: option_local_update.
-        by apply: (exclusive_local_update _ (Excl (κs'':leibnizC _))). }
+        by apply: (exclusive_local_update _ (Excl (κs:leibnizC _))). }
       iFrame "Hσ Hκs". iApply ("H" with "[]"); eauto with iFrame.
   Qed.
 
@@ -165,8 +166,8 @@ Section lifting.
     iIntros (Hsafe Hstep) "H"; iApply wp_lift_step.
     { specialize (Hsafe inhabitant). destruct s; last done.
       by eapply reducible_not_val. }
-    iIntros (σ1 κs) "Hσ". iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
-    iModIntro; iSplit; [by destruct s|]; iNext; iIntros (κ κs' e2 σ2 efs [??]).
+    iIntros (σ1 κ κs) "Hσ". iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
+    iModIntro; iSplit; [by destruct s|]; iNext; iIntros (e2 σ2 efs ?).
     destruct (Hstep σ1 κ e2 σ2 efs); auto; subst.
     by iMod "Hclose"; iModIntro; iFrame; iApply "H".
   Qed.

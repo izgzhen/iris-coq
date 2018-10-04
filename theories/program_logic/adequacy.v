@@ -78,8 +78,8 @@ Lemma wp_step s E e1 σ1 κ κs e2 σ2 efs Φ :
 Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (?) "[(Hw & HE & Hσ) H]".
   rewrite (val_stuck e1 σ1 κ e2 σ2 efs) // uPred_fupd_eq.
-  iMod ("H" $! σ1 _ with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
-  iMod ("H" $! κ κs e2 σ2 efs with "[//] [$Hw $HE]") as ">(Hw & HE & H)".
+  iMod ("H" $! σ1 with "Hσ [Hw HE]") as ">(Hw & HE & _ & H)"; first by iFrame.
+  iMod ("H" $! e2 σ2 efs with "[//] [$Hw $HE]") as ">(Hw & HE & H)".
   iIntros "!> !>". by iMod ("H" with "[$Hw $HE]") as ">($ & $ & $)".
 Qed.
 
@@ -145,7 +145,7 @@ Proof.
   rewrite wp_unfold /wp_pre. iIntros "(Hw&HE&Hσ) H".
   destruct (to_val e) as [v|] eqn:?.
   { iIntros "!> !> !%". left. by exists v. }
-  rewrite uPred_fupd_eq. iMod ("H" with "Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
+  rewrite uPred_fupd_eq. iMod ("H" $! _ None with "Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
   iIntros "!> !> !%". by right.
 Qed.
 

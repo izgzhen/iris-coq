@@ -167,6 +167,7 @@ Definition val_is_unboxed (v : val) : Prop :=
 
 (** The state: heaps of vals. *)
 Definition state : Type := gmap loc val * gset proph.
+Implicit Type σ : state.
 
 (** Equality and other typeclass stuff *)
 Lemma to_of_val v : to_val (of_val v) = Some v.

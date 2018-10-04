@@ -188,9 +188,9 @@ Lemma twp_wp s E e Φ : WP e @ s; E [{ Φ }] -∗ WP e @ s; E {{ Φ }}.
 Proof.
   iIntros "H". iLöb as "IH" forall (E e Φ).
   rewrite wp_unfold twp_unfold /wp_pre /twp_pre. destruct (to_val e) as [v|]=>//.
-  iIntros (σ1 κs) "Hσ". iMod ("H" with "Hσ") as "[% H]". iIntros "!>". iSplitR.
+  iIntros (σ1 κ κs) "Hσ". iMod ("H" with "Hσ") as "[% H]". iIntros "!>". iSplitR.
   { destruct s; last done. eauto using reducible_no_obs_reducible. }
-  iIntros (κ κs' e2 σ2 efs [Hstep ->]). iMod ("H" $! _ _ _ _ Hstep) as "(% & Hst & H & Hfork)".
+  iIntros (e2 σ2 efs Hstep). iMod ("H" $! _ _ _ _ Hstep) as "(% & Hst & H & Hfork)".
   subst κ. iFrame "Hst".
   iApply step_fupd_intro; [set_solver+|]. iNext.
   iSplitL "H". by iApply "IH". iApply (@big_sepL_impl with "[$Hfork]").
