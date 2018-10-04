@@ -27,7 +27,7 @@ Class atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
     <<< ∀ (v : val) q, mapsto l q v >>> load #l @ ⊤ <<< mapsto l q v, RET v >>>;
   store_spec (l : loc) (e : expr) (w : val) :
     IntoVal e w →
-    <<< ∀ v, mapsto l 1 v >>> store (#l, e) @ ⊤
+    <<< ∀ v, mapsto l 1 v >>> store #l e @ ⊤
     <<< mapsto l 1 w, RET #() >>>;
   (* This spec is slightly weaker than it could be: It is sufficient for [w1]
   *or* [v] to be unboxed.  However, by writing it this way the [val_is_unboxed]
@@ -35,7 +35,7 @@ Class atomic_heap {Σ} `{!heapG Σ} := AtomicHeap {
   spec is still good enough for all our applications. *)
   cas_spec (l : loc) (e1 e2 : expr) (w1 w2 : val) :
     IntoVal e1 w1 → IntoVal e2 w2 → val_is_unboxed w1 →
-    <<< ∀ v, mapsto l 1 v >>> cas (#l, e1, e2) @ ⊤
+    <<< ∀ v, mapsto l 1 v >>> cas #l e1 e2 @ ⊤
     <<< if decide (v = w1) then mapsto l 1 w2 else mapsto l 1 v,
         RET #(if decide (v = w1) then true else false) >>>;
 }.
@@ -53,9 +53,9 @@ Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : bi_scope.
 
 Notation "'ref' e" := (alloc e) : expr_scope.
 Notation "! e" := (load e) : expr_scope.
-Notation "e1 <- e2" := (store (e1, e2)%E) : expr_scope.
+Notation "e1 <- e2" := (store e1 e2) : expr_scope.
 
-Notation CAS e1 e2 e3 := (cas (e1, e2, e3)%E).
+Notation CAS e1 e2 e3 := (cas e1 e2 e3).
 
 End notation.
 
@@ -65,9 +65,9 @@ Definition primitive_alloc : val :=
 Definition primitive_load : val :=
   λ: "l", !"l".
 Definition primitive_store : val :=
-  λ: "p", (Fst "p") <- (Snd "p").
+  λ: "l" "x", "l" <- "x".
 Definition primitive_cas : val :=
-  λ: "p", CAS (Fst (Fst "p")) (Snd (Fst "p")) (Snd "p").
+  λ: "l" "e1" "e2", CAS "l" "e1" "e2".
 
 Section proof.
   Context `{!heapG Σ}.
@@ -89,10 +89,10 @@ Section proof.
 
   Lemma primitive_store_spec (l : loc) (e : expr) (w : val) :
     IntoVal e w →
-    <<< ∀ v, l ↦ v >>> primitive_store (#l, e) @ ⊤
+    <<< ∀ v, l ↦ v >>> primitive_store #l e @ ⊤
     <<< l ↦ w, RET #() >>>.
   Proof.
-    iIntros (<- Q Φ) "? AU". wp_let. wp_proj. wp_proj.
+    iIntros (<- Q Φ) "? AU". wp_lam. wp_let.
     iMod "AU" as (v) "[H↦ [_ Hclose]]".
     wp_store. iMod ("Hclose" with "H↦") as "HΦ". by iApply "HΦ".
   Qed.
@@ -100,11 +100,11 @@ Section proof.
   Lemma primitive_cas_spec (l : loc) e1 e2 (w1 w2 : val) :
     IntoVal e1 w1 → IntoVal e2 w2 → val_is_unboxed w1 →
     <<< ∀ (v : val), l ↦ v >>>
-      primitive_cas (#l, e1, e2) @ ⊤
+      primitive_cas #l e1 e2 @ ⊤
     <<< if decide (v = w1) then l ↦ w2 else l ↦ v,
         RET #(if decide (v = w1) then true else false) >>>.
   Proof.
-    iIntros (<- <- ? Q Φ) "? AU". wp_let. repeat wp_proj.
+    iIntros (<- <- ? Q Φ) "? AU". wp_lam. wp_let. wp_let.
     iMod "AU" as (v) "[H↦ [_ Hclose]]".
     destruct (decide (v = w1)) as [<-|Hv]; [wp_cas_suc|wp_cas_fail];
     iMod ("Hclose" with "H↦") as "HΦ"; by iApply "HΦ".

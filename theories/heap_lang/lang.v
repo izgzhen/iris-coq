@@ -271,14 +271,14 @@ Canonical Structure exprC := leibnizC expr.
 
 (** Evaluation contexts *)
 Inductive ectx_item :=
-  | AppLCtx (e2 : expr)
-  | AppRCtx (v1 : val)
+  | AppLCtx (v2 : val)
+  | AppRCtx (e1 : expr)
   | UnOpCtx (op : un_op)
-  | BinOpLCtx (op : bin_op) (e2 : expr)
-  | BinOpRCtx (op : bin_op) (v1 : val)
+  | BinOpLCtx (op : bin_op) (v2 : val)
+  | BinOpRCtx (op : bin_op) (e1 : expr)
   | IfCtx (e1 e2 : expr)
-  | PairLCtx (e2 : expr)
-  | PairRCtx (v1 : val)
+  | PairLCtx (v2 : val)
+  | PairRCtx (e1 : expr)
   | FstCtx
   | SndCtx
   | InjLCtx
@@ -286,24 +286,24 @@ Inductive ectx_item :=
   | CaseCtx (e1 : expr) (e2 : expr)
   | AllocCtx
   | LoadCtx
-  | StoreLCtx (e2 : expr)
-  | StoreRCtx (v1 : val)
-  | CasLCtx (e1 : expr) (e2 : expr)
-  | CasMCtx (v0 : val) (e2 : expr)
-  | CasRCtx (v0 : val) (v1 : val)
-  | FaaLCtx (e2 : expr)
-  | FaaRCtx (v1 : val).
+  | StoreLCtx (v2 : val)
+  | StoreRCtx (e1 : expr)
+  | CasLCtx (v1 : val) (v2 : val)
+  | CasMCtx (e0 : expr) (v2 : val)
+  | CasRCtx (e0 : expr) (e1 : expr)
+  | FaaLCtx (v2 : val)
+  | FaaRCtx (e1 : expr).
 
 Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   match Ki with
-  | AppLCtx e2 => App e e2
-  | AppRCtx v1 => App (of_val v1) e
+  | AppLCtx v2 => App e (of_val v2)
+  | AppRCtx e1 => App e1 e
   | UnOpCtx op => UnOp op e
-  | BinOpLCtx op e2 => BinOp op e e2
-  | BinOpRCtx op v1 => BinOp op (of_val v1) e
+  | BinOpLCtx op v2 => BinOp op e (of_val v2)
+  | BinOpRCtx op e1 => BinOp op e1 e
   | IfCtx e1 e2 => If e e1 e2
-  | PairLCtx e2 => Pair e e2
-  | PairRCtx v1 => Pair (of_val v1) e
+  | PairLCtx v2 => Pair e (of_val v2)
+  | PairRCtx e1 => Pair e1 e
   | FstCtx => Fst e
   | SndCtx => Snd e
   | InjLCtx => InjL e
@@ -311,13 +311,13 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   | CaseCtx e1 e2 => Case e e1 e2
   | AllocCtx => Alloc e
   | LoadCtx => Load e
-  | StoreLCtx e2 => Store e e2
-  | StoreRCtx v1 => Store (of_val v1) e
-  | CasLCtx e1 e2 => CAS e e1 e2
-  | CasMCtx v0 e2 => CAS (of_val v0) e e2
-  | CasRCtx v0 v1 => CAS (of_val v0) (of_val v1) e
-  | FaaLCtx e2 => FAA e e2
-  | FaaRCtx v1 => FAA (of_val v1) e
+  | StoreLCtx v2 => Store e (of_val v2)
+  | StoreRCtx e1 => Store e1 e
+  | CasLCtx v1 v2 => CAS e (of_val v1) (of_val v2)
+  | CasMCtx e0 v2 => CAS e0 e (of_val v2)
+  | CasRCtx e0 e1 => CAS e0 e1 e
+  | FaaLCtx v2 => FAA e (of_val v2)
+  | FaaRCtx e1 => FAA e1 e
   end.
 
 (** Substitution *)
