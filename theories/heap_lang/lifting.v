@@ -53,7 +53,8 @@ Local Ltac solve_exec_puredet := simpl; intros; by inv_head_step.
 Local Ltac solve_pure_exec :=
   unfold IntoVal in *;
   repeat match goal with H : AsVal _ |- _ => destruct H as [??] end; subst;
-  apply det_head_step_pure_exec; [ solve_exec_safe | solve_exec_puredet ].
+  intros ?; apply nsteps_once, pure_head_step_pure_step;
+    constructor; [solve_exec_safe | solve_exec_puredet].
 
 Class AsRec (e : expr) (f x : binder) (erec : expr) :=
   as_rec : e = Rec f x erec.
@@ -64,37 +65,37 @@ Proof. by unlock. Qed.
 
 Instance pure_rec f x (erec e1 e2 : expr)
     `{!AsVal e2, AsRec e1 f x erec, Closed (f :b: x :b: []) erec} :
-  PureExec True (App e1 e2) (subst' x e2 (subst' f e1 erec)).
+  PureExec True 1 (App e1 e2) (subst' x e2 (subst' f e1 erec)).
 Proof. unfold AsRec in *; solve_pure_exec. Qed.
 
 Instance pure_unop op e v v' `{!IntoVal e v} :
-  PureExec (un_op_eval op v = Some v') (UnOp op e) (of_val v').
+  PureExec (un_op_eval op v = Some v') 1 (UnOp op e) (of_val v').
 Proof. solve_pure_exec. Qed.
 
 Instance pure_binop op e1 e2 v1 v2 v' `{!IntoVal e1 v1, !IntoVal e2 v2} :
-  PureExec (bin_op_eval op v1 v2 = Some v') (BinOp op e1 e2) (of_val v').
+  PureExec (bin_op_eval op v1 v2 = Some v') 1 (BinOp op e1 e2) (of_val v').
 Proof. solve_pure_exec. Qed.
 
-Instance pure_if_true e1 e2 : PureExec True (If (Lit (LitBool true)) e1 e2) e1.
+Instance pure_if_true e1 e2 : PureExec True 1 (If (Lit (LitBool true)) e1 e2) e1.
 Proof. solve_pure_exec. Qed.
 
-Instance pure_if_false e1 e2 : PureExec True (If (Lit (LitBool false)) e1 e2) e2.
+Instance pure_if_false e1 e2 : PureExec True 1 (If (Lit (LitBool false)) e1 e2) e2.
 Proof. solve_pure_exec. Qed.
 
 Instance pure_fst e1 e2 v1 `{!IntoVal e1 v1, !AsVal e2} :
-  PureExec True (Fst (Pair e1 e2)) e1.
+  PureExec True 1 (Fst (Pair e1 e2)) e1.
 Proof. solve_pure_exec. Qed.
 
 Instance pure_snd e1 e2 v2 `{!AsVal e1, !IntoVal e2 v2} :
-  PureExec True (Snd (Pair e1 e2)) e2.
+  PureExec True 1 (Snd (Pair e1 e2)) e2.
 Proof. solve_pure_exec. Qed.
 
 Instance pure_case_inl e0 v e1 e2 `{!IntoVal e0 v} :
-  PureExec True (Case (InjL e0) e1 e2) (App e1 e0).
+  PureExec True 1 (Case (InjL e0) e1 e2) (App e1 e0).
 Proof. solve_pure_exec. Qed.
 
 Instance pure_case_inr e0 v e1 e2 `{!IntoVal e0 v} :
-  PureExec True (Case (InjR e0) e1 e2) (App e2 e0).
+  PureExec True 1 (Case (InjR e0) e1 e2) (App e2 e0).
 Proof. solve_pure_exec. Qed.
 
 Section lifting.

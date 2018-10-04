@@ -133,30 +133,39 @@ Section language.
     by rewrite -!Permutation_middle !assoc_L Ht.
   Qed.
 
-  Class PureExec (P : Prop) (e1 e2 : expr Λ) := {
-    pure_exec_safe σ :
-      P → reducible e1 σ;
-    pure_exec_puredet σ1 e2' σ2 efs :
-      P → prim_step e1 σ1 e2' σ2 efs → σ1 = σ2 ∧ e2 = e2' ∧ efs = [];
+  Record pure_step (e1 e2 : expr Λ) := {
+    pure_step_safe σ1 : reducible e1 σ1;
+    pure_step_det σ1 e2' σ2 efs :
+      prim_step e1 σ1 e2' σ2 efs → σ1 = σ2 ∧ e2 = e2' ∧ efs = []
   }.
 
-  Lemma hoist_pred_pure_exec (P : Prop) (e1 e2 : expr Λ) :
-    (P → PureExec True e1 e2) →
-    PureExec P e1 e2.
-  Proof. intros HPE. split; intros; eapply HPE; eauto. Qed.
+  (* TODO: Exclude the case of [n=0], either here, or in [wp_pure] to avoid it
+  succeeding when it did not actually do anything. *)
+  Class PureExec (φ : Prop) (n : nat) (e1 e2 : expr Λ) :=
+    pure_exec : φ → nsteps pure_step n e1 e2.
 
-  (* We do not make this an instance because it is awfully general. *)
-  Lemma pure_exec_ctx K `{LanguageCtx Λ K} e1 e2 φ :
-    PureExec φ e1 e2 →
-    PureExec φ (K e1) (K e2).
+  Lemma pure_step_ctx K `{LanguageCtx Λ K} e1 e2 :
+    pure_step e1 e2 →
+    pure_step (K e1) (K e2).
   Proof.
     intros [Hred Hstep]. split.
     - unfold reducible in *. naive_solver eauto using fill_step.
-    - intros σ1 e2' σ2 efs ? Hpstep.
+    - intros σ1 e2' σ2 efs Hpstep.
       destruct (fill_step_inv e1 σ1 e2' σ2 efs) as (e2'' & -> & ?); [|exact Hpstep|].
       + destruct (Hred σ1) as (? & ? & ? & ?); eauto using val_stuck.
-      + edestruct (Hstep σ1 e2'' σ2 efs) as (-> & -> & ->); auto.
+      + destruct (Hstep σ1 e2'' σ2 efs) as (-> & -> & ->); auto.
   Qed.
+
+  Lemma pure_step_nsteps_ctx K `{LanguageCtx Λ K} n e1 e2 :
+    nsteps pure_step n e1 e2 →
+    nsteps pure_step n (K e1) (K e2).
+  Proof. induction 1; econstructor; eauto using pure_step_ctx. Qed.
+
+  (* We do not make this an instance because it is awfully general. *)
+  Lemma pure_exec_ctx K `{LanguageCtx Λ K} φ n e1 e2 :
+    PureExec φ n e1 e2 →
+    PureExec φ n (K e1) (K e2).
+  Proof. rewrite /PureExec; eauto using pure_step_nsteps_ctx. Qed.
 
   (* This is a family of frequent assumptions for PureExec *)
   Class IntoVal (e : expr Λ) (v : val Λ) :=
