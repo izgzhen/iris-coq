@@ -17,13 +17,15 @@ Changes in and extensions of the theory:
 * [#] Add weakest preconditions for total program correctness.
 * [#] "(Potentially) stuck" weakest preconditions are no longer considered
   experimental.
+* [#] The adequacy statement for weakest preconditions now also involves the
+  final state.
 * [#] The Löb rule is now a derived rule; it follows from later-intro, later
   being contractive and the fact that we can take fixpoints of contractive
   functions.
 * [#] Add atomic updates and logically atomic triples, including tactic support.
   See `heap_lang/lib/increment.v` for an example.
-* [#] HeapLang now uses right-to-left evaluation order. This makes easier to
-  write specifications of curried functions.
+* [#] heap_lang now uses right-to-left evaluation order. This makes it
+  significantly easier to write specifications of curried functions.
 
 Changes in Coq:
 
@@ -76,6 +78,7 @@ Changes in Coq:
 * `namespaces` has been moved to std++.
 * Changed `IntoVal` to be directly usable for rewriting `e` into `of_val v`, and
   changed `AsVal` to be usable for rewriting via the `[v <-]` destruct pattern.
+* `wp_fork` is now written in curried form.
 
 ## Iris 3.1.0 (released 2017-12-19)
 
