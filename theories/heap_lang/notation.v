@@ -114,18 +114,17 @@ Notation "λ: x y .. z , e" := (Lam x%bind (Lam y%bind .. (Lam z%bind e%E) ..))
 (* When parsing lambdas, we want them to be locked (so as to avoid needless
 unfolding by tactics and unification). However, unlocked lambda-values sometimes
 appear as part of compound expressions, in which case we want them to be pretty
-printed too. We achieve that by first defining the non-locked notation, and then
-the locked notation. Both will be used for pretty-printing, but only the last
-will be used for parsing. *)
+printed too. We achieve that by using printing only notations for the non-locked
+notation. *)
 Notation "λ: x , e" := (LamV x%bind e%E)
   (at level 200, x at level 1, e at level 200,
-   format "'[' 'λ:'  x ,  '/  ' e ']'") : val_scope.
+   format "'[' 'λ:'  x ,  '/  ' e ']'", only printing) : val_scope.
 Notation "λ: x , e" := (locked (LamV x%bind e%E))
   (at level 200, x at level 1, e at level 200,
    format "'[' 'λ:'  x ,  '/  ' e ']'") : val_scope.
 Notation "λ: x y .. z , e" := (LamV x%bind (Lam y%bind .. (Lam z%bind e%E) .. ))
   (at level 200, x, y, z at level 1, e at level 200,
-   format "'[' 'λ:'  x  y  ..  z ,  '/  ' e ']'") : val_scope.
+   format "'[' 'λ:'  x  y  ..  z ,  '/  ' e ']'", only printing) : val_scope.
 Notation "λ: x y .. z , e" := (locked (LamV x%bind (Lam y%bind .. (Lam z%bind e%E) .. )))
   (at level 200, x, y, z at level 1, e at level 200,
    format "'[' 'λ:'  x  y  ..  z ,  '/  ' e ']'") : val_scope.
