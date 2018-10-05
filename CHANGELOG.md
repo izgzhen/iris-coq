@@ -19,6 +19,11 @@ Changes in and extensions of the theory:
   experimental.
 * [#] The adequacy statement for weakest preconditions now also involves the
   final state.
+* [#] Add the notion of an "observation" to the language interface, so that
+  every reduction step can optionally be marked with an event, and an execution
+  trace has a matching list of events.  Change WP so that it is told the entire
+  future trace of observations from the beginning.  Use this in heap_lang to
+  implement prophecy variables.
 * [#] The Löb rule is now a derived rule; it follows from later-intro, later
   being contractive and the fact that we can take fixpoints of contractive
   functions.
