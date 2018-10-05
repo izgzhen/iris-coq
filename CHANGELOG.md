@@ -24,7 +24,7 @@ Changes in and extensions of the theory:
   functions.
 * [#] Add atomic updates and logically atomic triples, including tactic support.
   See `heap_lang/lib/increment.v` for an example.
-* [#] HeapLang now uses right-to-left evaluation order. This makes it
+* [#] heap_lang now uses right-to-left evaluation order. This makes it
   significantly easier to write specifications of curried functions.
 
 Changes in Coq:
