@@ -40,7 +40,6 @@ Proof.
   rewrite envs_entails_eq=> ??? HΔ'. rewrite into_laterN_env_sound /=.
   rewrite HΔ' -lifting.wp_pure_step_later //.
 Qed.
-
 Lemma tac_twp_pure `{heapG Σ} Δ s E e1 e2 φ Φ :
   PureExec φ e1 e2 →
   φ →

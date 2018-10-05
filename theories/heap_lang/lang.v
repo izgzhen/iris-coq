@@ -477,7 +477,10 @@ Inductive head_step : expr → state → option observation -> expr → state �
      head_step (Load (Lit $ LitLoc l)) σ None (of_val v) σ []
   | StoreS l e v σ :
      to_val e = Some v → is_Some (σ.1 !! l) →
-     head_step (Store (Lit $ LitLoc l) e) σ None (Lit LitUnit) (<[l:=v]>σ.1, σ.2) []
+     head_step (Store (Lit $ LitLoc l) e) σ
+               None
+               (Lit LitUnit) (<[l:=v]>σ.1, σ.2)
+               []
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ.1 !! l = Some vl → vl ≠ v1 →
@@ -487,11 +490,17 @@ Inductive head_step : expr → state → option observation -> expr → state �
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ.1 !! l = Some v1 →
      vals_cas_compare_safe v1 v1 →
-     head_step (CAS (Lit $ LitLoc l) e1 e2) σ None (Lit $ LitBool true) (<[l:=v2]>σ.1, σ.2) []
+     head_step (CAS (Lit $ LitLoc l) e1 e2) σ
+               None
+               (Lit $ LitBool true) (<[l:=v2]>σ.1, σ.2)
+               []
   | FaaS l i1 e2 i2 σ :
      to_val e2 = Some (LitV (LitInt i2)) →
      σ.1 !! l = Some (LitV (LitInt i1)) →
-     head_step (FAA (Lit $ LitLoc l) e2) σ None (Lit $ LitInt i1) (<[l:=LitV (LitInt (i1 + i2))]>σ.1, σ.2) []
+     head_step (FAA (Lit $ LitLoc l) e2) σ
+               None
+               (Lit $ LitInt i1) (<[l:=LitV (LitInt (i1 + i2))]>σ.1, σ.2)
+               []
   | NewProphS σ p :
      p ∉ σ.2 →
      head_step NewProph σ None (Lit $ LitProphecy p) (σ.1, {[ p ]} ∪ σ.2) []
