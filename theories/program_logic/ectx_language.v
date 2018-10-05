@@ -206,23 +206,24 @@ Section ectx_language.
       econstructor; eauto.
   Qed.
 
-  Lemma det_head_step_pure_exec (P : Prop) e1 e2 :
-    (∀ σ, P → head_reducible e1 σ) →
-    (∀ σ1 e2' σ2 efs,
-      P → head_step e1 σ1 e2' σ2 efs → σ1 = σ2 ∧ e2=e2' ∧ efs = []) →
-    PureExec P e1 e2.
+  Record pure_head_step (e1 e2 : expr Λ) := {
+    pure_head_step_safe σ1 : head_reducible e1 σ1;
+    pure_head_step_det σ1 e2' σ2 efs :
+      head_step e1 σ1 e2' σ2 efs → σ1 = σ2 ∧ e2 = e2' ∧ efs = []
+  }.
+
+  Lemma pure_head_step_pure_step e1 e2 : pure_head_step e1 e2 → pure_step e1 e2.
   Proof.
-    intros Hp1 Hp2. split.
-    - intros σ ?. destruct (Hp1 σ) as (e2' & σ2 & efs & ?); first done.
+    intros [Hp1 Hp2]. split.
+    - intros σ. destruct (Hp1 σ) as (e2' & σ2 & efs & ?).
       eexists e2', σ2, efs. by apply head_prim_step.
-    - intros σ1 e2' σ2 efs ? ?%head_reducible_prim_step; eauto.
+    - intros σ1 e2' σ2 efs ?%head_reducible_prim_step; eauto.
   Qed.
 
-  Global Instance pure_exec_fill K e1 e2 φ :
-    PureExec φ e1 e2 →
-    PureExec φ (fill K e1) (fill K e2).
+  Global Instance pure_exec_fill K φ n e1 e2 :
+    PureExec φ n e1 e2 →
+    PureExec φ n (fill K e1) (fill K e2).
   Proof. apply: pure_exec_ctx. Qed.
-
 End ectx_language.
 
 Arguments ectx_lang : clear implicits.
