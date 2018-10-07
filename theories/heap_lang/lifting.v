@@ -55,6 +55,35 @@ Local Hint Extern 0 (head_step (Alloc _) _ _ _ _ _) => apply alloc_fresh.
 Local Hint Extern 0 (head_step NewProph _ _ _ _ _) => apply new_proph_id_fresh.
 Local Hint Resolve to_of_val.
 
+Instance into_val_val v : IntoVal (Val v) v.
+Proof. done. Qed.
+Instance as_val_val v : AsVal (Val v).
+Proof. by eexists. Qed.
+
+Local Ltac solve_atomic :=
+  apply strongly_atomic_atomic, ectx_language_atomic;
+    [inversion 1; naive_solver
+    |apply ectxi_language_sub_redexes_are_values; intros [] **; naive_solver].
+
+Instance alloc_atomic s v : Atomic s (Alloc (Val v)).
+Proof. solve_atomic. Qed.
+Instance load_atomic s v : Atomic s (Load (Val v)).
+Proof. solve_atomic. Qed.
+Instance store_atomic s v1 v2 : Atomic s (Store (Val v1) (Val v2)).
+Proof. solve_atomic. Qed.
+Instance cas_atomic s v0 v1 v2 : Atomic s (CAS (Val v0) (Val v1) (Val v2)).
+Proof. solve_atomic. Qed.
+Instance faa_atomic s v1 v2 : Atomic s (FAA (Val v1) (Val v2)).
+Proof. solve_atomic. Qed.
+Instance fork_atomic s e : Atomic s (Fork e).
+Proof. solve_atomic. Qed.
+Instance skip_atomic s  : Atomic s Skip.
+Proof. solve_atomic. Qed.
+Instance new_proph_atomic s : Atomic s NewProph.
+Proof. solve_atomic. Qed.
+Instance resolve_proph_atomic s v1 v2 : Atomic s (ResolveProph (Val v1) (Val v2)).
+Proof. solve_atomic. Qed.
+
 Local Ltac solve_exec_safe := intros; subst; do 3 eexists; econstructor; eauto.
 Local Ltac solve_exec_puredet := simpl; intros; by inv_head_step.
 Local Ltac solve_pure_exec :=
