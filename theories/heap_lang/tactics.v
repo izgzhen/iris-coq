@@ -7,70 +7,29 @@ Proof. done. Qed.
 Instance as_val_val v : AsVal (Val v).
 Proof. by eexists. Qed.
 
-Instance alloc_atomic s v : Atomic s (Alloc (Val v)).
-Proof.
-  apply strongly_atomic_atomic, ectx_language_atomic.
-  - intros σ e σ' ef obs Hstep; simpl in *. inversion Hstep; simplify_eq. eauto.
-  - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct Ki; simplify_eq/=. eauto.
-Qed.
-Instance load_atomic s v : Atomic s (Load (Val v)).
-Proof.
-  apply strongly_atomic_atomic, ectx_language_atomic.
-  - intros σ e σ' ef obs Hstep; simpl in *. inversion Hstep; simplify_eq. eauto.
-  - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct Ki; simplify_eq/=. eauto.
-Qed.
-Instance store_atomic s v1 v2 : Atomic s (Store (Val v1) (Val v2)).
-Proof.
-  apply strongly_atomic_atomic, ectx_language_atomic.
-  - intros σ e σ' ef obs Hstep; simpl in *. inversion Hstep; simplify_eq. eauto.
-  - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct Ki; simplify_eq/=; eauto.
-Qed.
-Instance cas_atomic s v0 v1 v2 : Atomic s (CAS (Val v0) (Val v1) (Val v2)).
-Proof.
-  apply strongly_atomic_atomic, ectx_language_atomic.
-  - intros σ e σ' ef obs Hstep; simpl in *. inversion Hstep; simplify_eq; eauto.
-  - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct Ki; simplify_eq/=; eauto.
-Qed.
-Instance faa_atomic s v1 v2 : Atomic s (FAA (Val v1) (Val v2)).
-Proof.
-  apply strongly_atomic_atomic, ectx_language_atomic.
-  - intros σ e σ' ef obs Hstep; simpl in *. inversion Hstep; simplify_eq; eauto.
-  - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct Ki; simplify_eq/=; eauto.
-Qed.
-Instance fork_atomic s e : Atomic s (Fork e).
-Proof.
-  apply strongly_atomic_atomic, ectx_language_atomic.
-  - intros σ e' σ' ef obs Hstep; simpl in *. inversion Hstep; simplify_eq; eauto.
-  - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct Ki; simplify_eq/=; eauto.
-Qed.
-Instance skip_atomic s : Atomic s Skip.
-Proof.
-  apply strongly_atomic_atomic, ectx_language_atomic.
-  - intros σ e' σ' ef obs Hstep; simpl in *. inversion Hstep; simplify_eq; eauto.
-  - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct Ki; simplify_eq/=; eauto.
-Qed.
-Instance new_proph_atomic s : Atomic s NewProph.
-Proof.
-  apply strongly_atomic_atomic, ectx_language_atomic.
-  - intros σ e' σ' ef obs Hstep; simpl in *. inversion Hstep; simplify_eq; eauto.
-  - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct Ki; simplify_eq/=; eauto.
-Qed.
-Instance resolve_proph_atomic s v1 v2 : Atomic s (ResolveProph (Val v1) (Val v2)).
-Proof.
-  apply strongly_atomic_atomic, ectx_language_atomic.
-  - intros σ e σ' ef obs Hstep; simpl in *. inversion Hstep; simplify_eq. eauto.
-  - apply ectxi_language_sub_redexes_are_values=> /= Ki e' Hfill.
-    destruct Ki; simplify_eq/=; eauto.
-Qed.
+Local Ltac solve_atomic :=
+  apply strongly_atomic_atomic, ectx_language_atomic;
+    [inversion 1; naive_solver
+    |apply ectxi_language_sub_redexes_are_values; intros [] **; naive_solver].
 
+Instance alloc_atomic s v : Atomic s (Alloc (Val v)).
+Proof. solve_atomic. Qed.
+Instance load_atomic s v : Atomic s (Load (Val v)).
+Proof. solve_atomic. Qed.
+Instance store_atomic s v1 v2 : Atomic s (Store (Val v1) (Val v2)).
+Proof. solve_atomic. Qed.
+Instance cas_atomic s v0 v1 v2 : Atomic s (CAS (Val v0) (Val v1) (Val v2)).
+Proof. solve_atomic. Qed.
+Instance faa_atomic s v1 v2 : Atomic s (FAA (Val v1) (Val v2)).
+Proof. solve_atomic. Qed.
+Instance fork_atomic s e : Atomic s (Fork e).
+Proof. solve_atomic. Qed.
+Instance skip_atomic s : Atomic s Skip.
+Proof. solve_atomic. Qed.
+Instance new_proph_atomic s : Atomic s NewProph.
+Proof. solve_atomic. Qed.
+Instance resolve_proph_atomic s v1 v2 : Atomic s (ResolveProph (Val v1) (Val v2)).
+Proof. solve_atomic. Qed.
 
 (** The tactic [reshape_expr e tac] decomposes the expression [e] into an
 evaluation context [K] and a subexpression [e']. It calls the tactic [tac K e']
