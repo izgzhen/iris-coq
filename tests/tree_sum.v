@@ -42,13 +42,11 @@ Proof.
   iIntros (Φ) "[Hl Ht] HΦ".
   iInduction t as [n'|tl ? tr] "IH" forall (v l n Φ); simpl; wp_rec; wp_let.
   - iDestruct "Ht" as "%"; subst.
-    wp_match. wp_load. wp_op. wp_store.
+    wp_load. wp_store.
     by iApply ("HΦ" with "[$Hl]").
   - iDestruct "Ht" as (ll lr vl vr ->) "(Hll & Htl & Hlr & Htr)".
-    wp_match. wp_proj. wp_load.
-    wp_apply ("IH" with "Hl Htl"). iIntros "[Hl Htl]".
-    wp_seq. wp_proj. wp_load.
-    wp_apply ("IH1" with "Hl Htr"). iIntros "[Hl Htr]".
+    wp_load. wp_apply ("IH" with "Hl Htl"). iIntros "[Hl Htl]".
+    wp_load. wp_apply ("IH1" with "Hl Htr"). iIntros "[Hl Htr]".
     iApply "HΦ". iSplitL "Hl".
     { by replace (sum tl + sum tr + n) with (sum tr + (sum tl + n)) by omega. }
     iExists ll, lr, vl, vr. by iFrame.
@@ -58,8 +56,8 @@ Lemma sum_wp `{!heapG Σ} v t :
   [[{ is_tree v t }]] sum' v [[{ RET #(sum t); is_tree v t }]].
 Proof.
   iIntros (Φ) "Ht HΦ". rewrite /sum' /=.
-  wp_lam. wp_alloc l as "Hl". wp_let.
+  wp_lam. wp_alloc l as "Hl".
   wp_apply (sum_loop_wp with "[$Hl $Ht]").
   rewrite Z.add_0_r.
-  iIntros "[Hl Ht]". wp_seq. wp_load. by iApply "HΦ".
+  iIntros "[Hl Ht]". wp_load. by iApply "HΦ".
 Qed.

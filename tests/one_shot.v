@@ -43,12 +43,12 @@ Lemma wp_one_shot (Φ : val → iProp Σ) :
   ⊢ WP one_shot_example #() {{ Φ }}.
 Proof.
   iIntros "Hf /=". pose proof (nroot .@ "N") as N.
-  rewrite -wp_fupd /one_shot_example /=. wp_lam. wp_inj. wp_alloc l as "Hl". wp_let.
+  rewrite -wp_fupd. wp_lam. wp_alloc l as "Hl".
   iMod (own_alloc Pending) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (one_shot_inv γ l) with "[Hl Hγ]") as "#HN".
   { iNext. iLeft. by iSplitL "Hl". }
-  wp_closure. wp_closure. wp_pair. iModIntro. iApply "Hf"; iSplit.
-  - iIntros (n) "!#". wp_lam. wp_inj. wp_inj.
+  wp_pures. iModIntro. iApply "Hf"; iSplit.
+  - iIntros (n) "!#". wp_lam. wp_pures.
     iInv N as ">[[Hl Hγ]|H]"; last iDestruct "H" as (m) "[Hl Hγ]".
     + iMod (own_update with "Hγ") as "Hγ".
       { by apply cmra_update_exclusive with (y:=Shot n). }
@@ -70,18 +70,17 @@ Proof.
       + Show. iSplit. iLeft; by iSplitL "Hl". eauto.
       + iSplit. iRight; iExists m; by iSplitL "Hl". eauto. }
     iSplitL "Hinv"; first by eauto.
-    iModIntro. wp_let. wp_closure. iIntros "!#". wp_lam.
-    iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as (m) "[% Hγ']"; subst.
-    { by wp_match. }
-    wp_match. wp_bind (! _)%E.
+    iModIntro. wp_pures. iIntros "!#". wp_lam.
+    iDestruct "Hv" as "[%|Hv]"; last iDestruct "Hv" as (m) "[% Hγ']";
+      subst; wp_match; [done|].
+    wp_bind (! _)%E.
     iInv N as "[[Hl >Hγ]|H]"; last iDestruct "H" as (m') "[Hl Hγ]".
     { by iDestruct (own_valid_2 with "Hγ Hγ'") as %?. }
     wp_load. Show.
     iDestruct (own_valid_2 with "Hγ Hγ'") as %?%agree_op_invL'; subst.
     iModIntro. iSplitL "Hl".
     { iNext; iRight; by eauto. }
-    wp_match. iApply wp_assert.
-    wp_op. by case_bool_decide.
+    wp_apply wp_assert. wp_pures. by case_bool_decide.
 Qed.
 
 Lemma ht_one_shot (Φ : val → iProp Σ) :
@@ -92,8 +91,7 @@ Lemma ht_one_shot (Φ : val → iProp Σ) :
     }}.
 Proof.
   iIntros "!# _". iApply wp_one_shot. iIntros (f1 f2) "[#Hf1 #Hf2]"; iSplit.
-  - iIntros (n) "!# _". wp_proj. iApply "Hf1".
-  - iIntros "!# _". wp_proj.
-    iApply (wp_wand with "Hf2"). by iIntros (v) "#? !# _".
+  - iIntros (n) "!# _". wp_apply "Hf1".
+  - iIntros "!# _". wp_apply (wp_wand with "Hf2"). by iIntros (v) "#? !# _".
 Qed.
 End proof.

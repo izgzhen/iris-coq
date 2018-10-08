@@ -49,7 +49,7 @@ Section mono_proof.
     iDestruct "Hl" as (γ) "[#? Hγf]".
     wp_bind (! _)%E. iInv N as (c) ">[Hγ Hl]".
     wp_load. iModIntro. iSplitL "Hl Hγ"; [iNext; iExists c; by iFrame|].
-    wp_let. wp_op.
+    wp_pures.
     wp_bind (CAS _ _ _). iInv N as (c') ">[Hγ Hl]".
     destruct (decide (c' = c)) as [->|].
     - iDestruct (own_valid_2 with "Hγ Hγf")
@@ -126,7 +126,7 @@ Section contrib_spec.
     iIntros (Φ) "[#? Hγf] HΦ". iLöb as "IH". wp_rec.
     wp_bind (! _)%E. iInv N as (c) ">[Hγ Hl]".
     wp_load. iModIntro. iSplitL "Hl Hγ"; [iNext; iExists c; by iFrame|].
-    wp_let. wp_op.
+    wp_pures.
     wp_bind (CAS _ _ _). iInv N as (c') ">[Hγ Hl]".
     destruct (decide (c' = c)) as [->|].
     - iMod (own_update_2 with "Hγ Hγf") as "[Hγ Hγf]".

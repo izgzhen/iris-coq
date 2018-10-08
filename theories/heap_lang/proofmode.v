@@ -85,13 +85,29 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
   | _ => fail "wp_pure: not a 'wp'"
   end.
 
+(* The `;[]` makes sure that no side-condition magically spawns. *)
+Ltac wp_pures := repeat (wp_pure _; []).
+
+(* The handling of beta-reductions with wp_rec needs special care in
+  order to allow it to unlock locked `RecV` values: We first put
+  `AsRecV_recv_locked` in the current environment so that it can be
+  used as an instance by the typeclass resolution system, then we
+  perform the reduction, and finally we clear this new hypothesis.
+
+  The reason is that we do not want impure wp_ tactics to unfold
+  locked terms, while we want them to execute arbitrary pure steps. *)
+Tactic Notation "wp_rec" :=
+  let H := fresh in
+  assert (H := AsRecV_recv_locked);
+  wp_pure (App _ _);
+  clear H.
+
 Tactic Notation "wp_if" := wp_pure (If _ _ _).
 Tactic Notation "wp_if_true" := wp_pure (If (LitV (LitBool true)) _ _).
 Tactic Notation "wp_if_false" := wp_pure (If (LitV (LitBool false)) _ _).
 Tactic Notation "wp_unop" := wp_pure (UnOp _ _).
 Tactic Notation "wp_binop" := wp_pure (BinOp _ _ _).
 Tactic Notation "wp_op" := wp_unop || wp_binop.
-Tactic Notation "wp_rec" := wp_pure (App _ _).
 Tactic Notation "wp_lam" := wp_rec.
 Tactic Notation "wp_let" := wp_pure (Rec BAnon (BNamed _) _); wp_lam.
 Tactic Notation "wp_seq" := wp_pure (Rec BAnon BAnon _); wp_lam.
@@ -330,6 +346,7 @@ Qed.
 End heap.
 
 Tactic Notation "wp_apply" open_constr(lem) :=
+  wp_pures;
   iPoseProofCore lem as false true (fun H =>
     lazymatch goal with
     | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
@@ -354,7 +371,7 @@ Tactic Notation "wp_alloc" ident(l) "as" constr(H) :=
       eexists; split;
         [pm_reflexivity || fail "wp_alloc:" H "not fresh"
         |iDestructHyp Htmp as H; wp_expr_simpl; try wp_value_head] in
-  iStartProof;
+  wp_pures;
   lazymatch goal with
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
@@ -377,7 +394,7 @@ Tactic Notation "wp_load" :=
   let solve_mapsto _ :=
     let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
     iAssumptionCore || fail "wp_load: cannot find" l "↦ ?" in
-  iStartProof;
+  wp_pures;
   lazymatch goal with
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
@@ -401,7 +418,7 @@ Tactic Notation "wp_store" :=
     iAssumptionCore || fail "wp_store: cannot find" l "↦ ?" in
   let finish _ :=
     wp_expr_simpl; try first [wp_seq|wp_value_head] in
-  iStartProof;
+  wp_pures;
   lazymatch goal with
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
@@ -425,7 +442,7 @@ Tactic Notation "wp_cas" "as" simple_intropattern(H1) "|" simple_intropattern(H2
   let solve_mapsto _ :=
     let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
     iAssumptionCore || fail "wp_cas: cannot find" l "↦ ?" in
-  iStartProof;
+  wp_pures;
   lazymatch goal with
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
@@ -453,7 +470,7 @@ Tactic Notation "wp_cas_fail" :=
   let solve_mapsto _ :=
     let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
     iAssumptionCore || fail "wp_cas_fail: cannot find" l "↦ ?" in
-  iStartProof;
+  wp_pures;
   lazymatch goal with
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
@@ -479,7 +496,7 @@ Tactic Notation "wp_cas_suc" :=
   let solve_mapsto _ :=
     let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
     iAssumptionCore || fail "wp_cas_suc: cannot find" l "↦ ?" in
-  iStartProof;
+  wp_pures;
   lazymatch goal with
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first
@@ -507,7 +524,7 @@ Tactic Notation "wp_faa" :=
   let solve_mapsto _ :=
     let l := match goal with |- _ = Some (_, (?l ↦{_} _)%I) => l end in
     iAssumptionCore || fail "wp_cas_suc: cannot find" l "↦ ?" in
-  iStartProof;
+  wp_pures;
   lazymatch goal with
   | |- envs_entails _ (wp ?s ?E ?e ?Q) =>
     first

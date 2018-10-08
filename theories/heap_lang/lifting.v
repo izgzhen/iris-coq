@@ -93,7 +93,13 @@ Local Ltac solve_pure_exec :=
 Class AsRecV (v : val) (f x : binder) (erec : expr) :=
   as_recv : v = RecV f x erec.
 Instance AsRecV_recv f x e : AsRecV (RecV f x e) f x e := eq_refl.
-Instance AsRecV_recv_locked v f x e :
+
+(* Pure reductions are automatically performed before any wp_ tactics
+   handling impure operations. Since we do not want these tactics to
+   unfold locked terms, we do not register this instance explicitely,
+   but only activate it by hand in the `wp_rec` tactic, where we
+   *actually* want it to unlock. *)
+Lemma AsRecV_recv_locked v f x e :
   AsRecV v f x e → AsRecV (locked v) f x e.
 Proof. by unlock. Qed.
 

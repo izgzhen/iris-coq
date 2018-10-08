@@ -36,7 +36,7 @@ Proof.
     iSimplifyEq; wp_rec; wp_let.
   - Show. wp_match. by iApply "HΦ".
   - iDestruct "Hxs" as (l hd' ->) "[Hx Hxs]".
-    wp_match. wp_load. wp_proj. wp_let. wp_load. wp_proj. wp_let. wp_pair. wp_store.
+    wp_load. wp_load. wp_store.
     iApply ("IH" $! hd' (SOMEV #l) (x :: ys) with "Hxs [Hx Hys]"); simpl.
     { iExists l, acc; by iFrame. }
     iIntros (w). rewrite cons_middle assoc -reverse_cons. iApply "HΦ".

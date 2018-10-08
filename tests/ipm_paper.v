@@ -82,7 +82,7 @@ Section list_reverse.
     destruct xs as [|x xs]; iSimplifyEq.
     - (* nil *) by wp_match.
     - (* cons *) iDestruct "Hxs" as (l hd') "(% & Hx & Hxs)"; iSimplifyEq.
-      wp_match. wp_load. wp_proj. wp_let. wp_load. wp_proj. wp_let. wp_pair. wp_store.
+      wp_match. wp_load. wp_load. wp_store.
       rewrite reverse_cons -assoc.
       iApply ("IH" $! hd' (InjRV #l) xs (x :: ys) with "Hxs [Hx Hys]").
       iExists l, acc; by iFrame.

@@ -88,31 +88,16 @@ Proof. intros. destruct x; simplify_option_eq; naive_solver. Qed.
 (* The stepping relation preserves closedness *)
 Lemma head_step_is_closed e1 σ1 obs e2 σ2 es :
   is_closed_expr [] e1 →
-  (∀ x v, σ1.(heap) !! x = Some v → is_closed_val v) →
+  map_Forall (λ _ v, is_closed_val v) σ1.(heap) →
   head_step e1 σ1 obs e2 σ2 es →
 
   is_closed_expr [] e2 ∧ Forall (is_closed_expr []) es ∧
-  (∀ x v, σ2.(heap) !! x = Some v → is_closed_val v).
+  map_Forall (λ _ v, is_closed_val v) σ2.(heap).
 Proof.
   intros Cl1 Clσ1 STEP.
-  destruct STEP; simpl in *; split_and!; try by naive_solver.
+  destruct STEP; simpl in *; split_and!;
+    try apply map_Forall_insert_2; try by naive_solver.
   - subst. repeat apply is_closed_subst'; naive_solver.
   - unfold un_op_eval in *. repeat case_match; naive_solver.
   - unfold bin_op_eval, bin_op_eval_bool in *. repeat case_match; naive_solver.
-  - intros ??.
-    match goal with
-    | |- context [<[?l1 := _]>_!! ?l2] => destruct (decide (l1 = l2)) as [->|]
-    end; rewrite ?lookup_insert ?lookup_insert_ne; naive_solver.
-  - intros ??.
-    match goal with
-    | |- context [<[?l1 := _]>_!! ?l2] => destruct (decide (l1 = l2)) as [->|]
-    end; rewrite ?lookup_insert ?lookup_insert_ne; naive_solver.
-  - intros ??.
-    match goal with
-    | |- context [<[?l1 := _]>_!! ?l2] => destruct (decide (l1 = l2)) as [->|]
-    end; rewrite ?lookup_insert ?lookup_insert_ne; naive_solver.
-  - intros ??.
-    match goal with
-    | |- context [<[?l1 := _]>_!! ?l2] => destruct (decide (l1 = l2)) as [->|]
-    end; rewrite ?lookup_insert ?lookup_insert_ne; naive_solver.
 Qed.
