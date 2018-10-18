@@ -73,7 +73,7 @@ Notation wptp s t := ([∗ list] ef ∈ t, WP ef @ s; ⊤ {{ _, True }})%I.
 
 Lemma wp_step s E e1 σ1 κ κs e2 σ2 efs Φ :
   prim_step e1 σ1 κ e2 σ2 efs →
-  world' E σ1 (cons_obs κ κs) ∗ WP e1 @ s; E {{ Φ }}
+  world' E σ1 (κ ++ κs) ∗ WP e1 @ s; E {{ Φ }}
   ==∗  ▷ |==> ◇ (world' E σ2 κs ∗ WP e2 @ s; E {{ Φ }} ∗ wptp s efs).
 Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (?) "[(Hw & HE & Hσ) H]".
@@ -85,7 +85,7 @@ Qed.
 
 Lemma wptp_step s e1 t1 t2 κ κs σ1 σ2 Φ :
   step (e1 :: t1,σ1) κ (t2, σ2) →
-  world σ1 (cons_obs κ κs) ∗ WP e1 @ s; ⊤ {{ Φ }} ∗ wptp s t1
+  world σ1 (κ ++ κs) ∗ WP e1 @ s; ⊤ {{ Φ }} ∗ wptp s t1
   ==∗ ∃ e2 t2',
     ⌜t2 = e2 :: t2'⌝ ∗ ▷ |==> ◇ (world σ2 κs ∗ WP e2 @ s; ⊤ {{ Φ }} ∗ wptp s t2').
 Proof.
@@ -107,7 +107,7 @@ Proof.
   revert e1 t1 κs κs' t2 σ1 σ2; simpl; induction n as [|n IH]=> e1 t1 κs κs' t2 σ1 σ2 /=.
   { inversion_clear 1; iIntros "?"; eauto 10. }
   iIntros (Hsteps) "H". inversion_clear Hsteps as [|?? [t1' σ1']].
-  rewrite /cons_obs. rewrite <- app_assoc.
+  rewrite <- app_assoc.
   iMod (wptp_step with "H") as (e1' t1'') "[% H]"; first by eauto; simplify_eq.
   subst. iModIntro; iNext; iMod "H" as ">H". by iApply IH.
 Qed.
@@ -145,7 +145,7 @@ Proof.
   rewrite wp_unfold /wp_pre. iIntros "(Hw&HE&Hσ) H".
   destruct (to_val e) as [v|] eqn:?.
   { iIntros "!> !> !%". left. by exists v. }
-  rewrite uPred_fupd_eq. iMod ("H" $! _ None with "Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
+  rewrite uPred_fupd_eq. iMod ("H" $! _ [] with "Hσ [-]") as ">(?&?&%&?)"; first by iFrame.
   iIntros "!> !> !%". by right.
 Qed.
 

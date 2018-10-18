@@ -13,7 +13,7 @@ Implicit Types e : expr Λ.
 Definition twptp_pre (twptp : list (expr Λ) → iProp Σ)
     (t1 : list (expr Λ)) : iProp Σ :=
   (∀ t2 σ1 κ κs σ2, ⌜step (t1,σ1) κ (t2,σ2)⌝ -∗
-    state_interp σ1 κs ={⊤}=∗ ⌜κ = None⌝ ∗ state_interp σ2 κs ∗ twptp t2)%I.
+    state_interp σ1 κs ={⊤}=∗ ⌜κ = []⌝ ∗ state_interp σ2 κs ∗ twptp t2)%I.
 
 Lemma twptp_pre_mono (twptp1 twptp2 : list (expr Λ) → iProp Σ) :
   (<pers> (∀ t, twptp1 t -∗ twptp2 t) →

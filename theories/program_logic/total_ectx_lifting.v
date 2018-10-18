@@ -17,7 +17,7 @@ Lemma twp_lift_head_step {s E Φ} e1 :
   (∀ σ1 κs, state_interp σ1 κs ={E,∅}=∗
     ⌜head_reducible_no_obs e1 σ1⌝ ∗
     ∀ κ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={∅,E}=∗
-      ⌜κ = None⌝ ∗ state_interp σ2 κs ∗
+      ⌜κ = []⌝ ∗ state_interp σ2 κs ∗
       WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
@@ -29,7 +29,7 @@ Qed.
 
 Lemma twp_lift_pure_head_step {s E Φ} e1 :
   (∀ σ1, head_reducible_no_obs e1 σ1) →
-  (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = None ∧ σ1 = σ2) →
+  (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2) →
   (|={E}=> ∀ κ e2 efs σ, ⌜head_step e1 σ κ e2 σ efs⌝ →
     WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
   ⊢ WP e1 @ s; E [{ Φ }].
@@ -43,7 +43,7 @@ Lemma twp_lift_atomic_head_step {s E Φ} e1 :
   (∀ σ1 κs, state_interp σ1 κs ={E}=∗
     ⌜head_reducible_no_obs e1 σ1⌝ ∗
     ∀ κ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={E}=∗
-      ⌜κ = None⌝ ∗ state_interp σ2 κs ∗
+      ⌜κ = []⌝ ∗ state_interp σ2 κs ∗
       from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
@@ -57,7 +57,7 @@ Lemma twp_lift_atomic_head_step_no_fork {s E Φ} e1 :
   (∀ σ1 κs, state_interp σ1 κs ={E}=∗
     ⌜head_reducible_no_obs e1 σ1⌝ ∗
     ∀ κ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={E}=∗
-      ⌜κ = None⌝ ∗ ⌜efs = []⌝ ∗ state_interp σ2 κs ∗ from_option Φ False (to_val e2))
+      ⌜κ = []⌝ ∗ ⌜efs = []⌝ ∗ state_interp σ2 κs ∗ from_option Φ False (to_val e2))
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
   iIntros (?) "H". iApply twp_lift_atomic_head_step; eauto.
@@ -69,7 +69,7 @@ Qed.
 Lemma twp_lift_pure_det_head_step {s E Φ} e1 e2 efs :
   (∀ σ1, head_reducible_no_obs e1 σ1) →
   (∀ σ1 κ e2' σ2 efs',
-    head_step e1 σ1 κ e2' σ2 efs' → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
+    head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
   (|={E}=> WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof using Hinh. eauto 10 using twp_lift_pure_det_step. Qed.
@@ -78,7 +78,7 @@ Lemma twp_lift_pure_det_head_step_no_fork {s E Φ} e1 e2 :
   to_val e1 = None →
   (∀ σ1, head_reducible_no_obs e1 σ1) →
   (∀ σ1 κ e2' σ2 efs',
-    head_step e1 σ1 κ e2' σ2 efs' → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+    head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
   WP e2 @ s; E [{ Φ }] ⊢ WP e1 @ s; E [{ Φ }].
 Proof using Hinh.
   intros. rewrite -(twp_lift_pure_det_step e1 e2 []) /= ?right_id; eauto.

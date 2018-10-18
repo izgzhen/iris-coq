@@ -18,7 +18,7 @@ Definition wp_pre `{irisG Λ Σ} (s : stuckness)
   match to_val e1 with
   | Some v => |={E}=> Φ v
   | None => ∀ σ1 κ κs,
-      state_interp σ1 (cons_obs κ κs) ={E,∅}=∗
+      state_interp σ1 (κ ++ κs) ={E,∅}=∗
         ⌜if s is NotStuck then reducible e1 σ1 else True⌝ ∗
         ∀ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={∅,∅,E}▷=∗
           state_interp σ2 κs ∗ wp E e2 Φ ∗ [∗ list] ef ∈ efs, wp ⊤ ef (λ _, True)
@@ -109,7 +109,7 @@ Proof.
   iMod ("H" with "[//]") as "H". iIntros "!>!>". iMod "H" as "(Hphy & H & $)". destruct s.
   - rewrite !wp_unfold /wp_pre. destruct (to_val e2) as [v2|] eqn:He2.
     + iDestruct "H" as ">> $". by iFrame.
-    + iMod ("H" $! _ None with "[$]") as "[H _]". iDestruct "H" as %(? & ? & ? & ? & ?).
+    + iMod ("H" $! _ [] with "[$]") as "[H _]". iDestruct "H" as %(? & ? & ? & ? & ?).
       by edestruct (atomic _ _ _ _ _ Hstep).
   - destruct (atomic _ _ _ _ _ Hstep) as [v <-%of_to_val].
     iMod (wp_value_inv' with "H") as ">H". iFrame "Hphy". by iApply wp_value'.

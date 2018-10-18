@@ -118,7 +118,7 @@ Section lifting.
   Lemma ownP_lift_step s E Φ e1 :
     (|={E,∅}=> ∃ σ1 κs, ⌜if s is NotStuck then reducible e1 σ1 else to_val e1 = None⌝ ∗
       ▷ ownP_state σ1 ∗ ▷ ownP_obs κs ∗
-      ▷ ∀ κ κs' e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs ∧ κs = cons_obs κ κs'⌝ -∗
+      ▷ ∀ κ κs' e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs ∧ κs = κ ++ κs'⌝ -∗
       ownP_state σ2 ∗ ownP_obs κs'
             ={∅,E}=∗ WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -158,7 +158,7 @@ Section lifting.
 
   Lemma ownP_lift_pure_step `{Inhabited (state Λ)} s E Φ e1 :
     (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = None ∧ σ1 = σ2) →
+    (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2) →
     (▷ ∀ κ e2 efs σ, ⌜prim_step e1 σ κ e2 σ efs⌝ →
       WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -176,7 +176,7 @@ Section lifting.
   Lemma ownP_lift_atomic_step {s E Φ} e1 σ1 κs :
     (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (▷ (ownP_state σ1 ∗ ownP_obs κs) ∗
-       ▷ ∀ κ κs' e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs ∧ κs = cons_obs κ κs'⌝ -∗
+       ▷ ∀ κ κs' e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs ∧ κs = κ ++ κs'⌝ -∗
          ownP_state σ2 -∗ ownP_obs κs' -∗
       from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -194,7 +194,7 @@ Section lifting.
     (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (∀ κ' e2' σ2' efs', prim_step e1 σ1 κ' e2' σ2' efs' →
                      κ = κ' ∧ σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
-    ▷ (ownP_state σ1 ∗ ownP_obs (cons_obs κ κs)) ∗ ▷ (ownP_state σ2 -∗ ownP_obs κs -∗
+    ▷ (ownP_state σ1 ∗ ownP_obs (κ ++ κs)) ∗ ▷ (ownP_state σ2 -∗ ownP_obs κs -∗
       Φ v2 ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
@@ -208,7 +208,7 @@ Section lifting.
     (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (∀ κ' e2' σ2' efs', prim_step e1 σ1 κ' e2' σ2' efs' →
       κ = κ' ∧ σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
-    {{{ ▷ (ownP_state σ1 ∗ ownP_obs (cons_obs κ κs)) }}} e1 @ s; E {{{ RET v2; ownP_state σ2 ∗ ownP_obs κs}}}.
+    {{{ ▷ (ownP_state σ1 ∗ ownP_obs (κ ++ κs)) }}} e1 @ s; E {{{ RET v2; ownP_state σ2 ∗ ownP_obs κs}}}.
   Proof.
     intros. rewrite -(ownP_lift_atomic_det_step σ1 κ κs v2 σ2 []); [|done..].
     rewrite big_sepL_nil right_id. apply bi.wand_intro_r. iIntros "[Hs Hs']".
@@ -217,7 +217,7 @@ Section lifting.
 
   Lemma ownP_lift_pure_det_step `{Inhabited (state Λ)} {s E Φ} e1 e2 efs :
     (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
+    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
     ▷ (WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤{{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
@@ -227,7 +227,7 @@ Section lifting.
 
   Lemma ownP_lift_pure_det_step_no_fork `{Inhabited (state Λ)} {s E Φ} e1 e2 :
     (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     intros. rewrite -(wp_lift_pure_det_step e1 e2 []) ?big_sepL_nil ?right_id; eauto.
@@ -246,7 +246,7 @@ Section ectx_lifting.
 
   Lemma ownP_lift_head_step s E Φ e1 :
     (|={E,∅}=> ∃ σ1 κs, ⌜head_reducible e1 σ1⌝ ∗ ▷ (ownP_state σ1  ∗ ownP_obs κs) ∗
-            ▷ ∀ κ κs' e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs ∧ κs = cons_obs κ κs'⌝ -∗
+            ▷ ∀ κ κs' e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs ∧ κs = κ ++ κs'⌝ -∗
             ownP_state σ2 -∗ ownP_obs κs'
             ={∅,E}=∗ WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -269,7 +269,7 @@ Section ectx_lifting.
 
   Lemma ownP_lift_pure_head_step s E Φ e1 :
     (∀ σ1, head_reducible e1 σ1) →
-    (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = None ∧ σ1 = σ2) →
+    (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2) →
     (▷ ∀ κ e2 efs σ, ⌜head_step e1 σ κ e2 σ efs⌝ →
       WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -282,7 +282,7 @@ Section ectx_lifting.
   Lemma ownP_lift_atomic_head_step {s E Φ} e1 σ1 κs :
     head_reducible e1 σ1 →
     ▷ (ownP_state σ1 ∗ ownP_obs κs) ∗ ▷ (∀ κ κs' e2 σ2 efs,
-    ⌜head_step e1 σ1 κ e2 σ2 efs ∧ κs = cons_obs κ κs'⌝ -∗ ownP_state σ2 -∗ ownP_obs κs' -∗
+    ⌜head_step e1 σ1 κ e2 σ2 efs ∧ κs = κ ++ κs'⌝ -∗ ownP_state σ2 -∗ ownP_obs κs' -∗
       from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
@@ -296,7 +296,7 @@ Section ectx_lifting.
     head_reducible e1 σ1 →
     (∀ κ' e2' σ2' efs', head_step e1 σ1 κ' e2' σ2' efs' →
       κ = κ' ∧ σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
-    ▷ (ownP_state σ1 ∗ ownP_obs (cons_obs κ κs)) ∗ ▷ (ownP_state σ2 -∗ ownP_obs κs -∗
+    ▷ (ownP_state σ1 ∗ ownP_obs (κ ++ κs)) ∗ ▷ (ownP_state σ2 -∗ ownP_obs κs -∗
                                                     Φ v2 ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
@@ -307,7 +307,7 @@ Section ectx_lifting.
     head_reducible e1 σ1 →
     (∀ κ' e2' σ2' efs', head_step e1 σ1 κ' e2' σ2' efs' →
       κ = κ' ∧ σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
-    {{{ ▷ (ownP_state σ1 ∗ ownP_obs (cons_obs κ κs)) }}} e1 @ s; E {{{ RET v2; ownP_state σ2 ∗ ownP_obs κs }}}.
+    {{{ ▷ (ownP_state σ1 ∗ ownP_obs (κ ++ κs)) }}} e1 @ s; E {{{ RET v2; ownP_state σ2 ∗ ownP_obs κs }}}.
   Proof.
     intros ???; apply ownP_lift_atomic_det_step_no_fork; last naive_solver.
     by destruct s; eauto using reducible_not_val.
@@ -315,7 +315,7 @@ Section ectx_lifting.
 
   Lemma ownP_lift_pure_det_head_step {s E Φ} e1 e2 efs :
     (∀ σ1, head_reducible e1 σ1) →
-    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
+    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
     ▷ (WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof using Hinh.
@@ -325,7 +325,7 @@ Section ectx_lifting.
 
   Lemma ownP_lift_pure_det_head_step_no_fork {s E Φ} e1 e2 :
     (∀ σ1, head_reducible e1 σ1) →
-    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof using Hinh.
     iIntros (??) "H". iApply ownP_lift_pure_det_step_no_fork; eauto.

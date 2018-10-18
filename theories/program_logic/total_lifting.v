@@ -16,7 +16,7 @@ Lemma twp_lift_step s E Φ e1 :
   (∀ σ1 κs, state_interp σ1 κs ={E,∅}=∗
     ⌜if s is NotStuck then reducible_no_obs e1 σ1 else True⌝ ∗
     ∀ κ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={∅,E}=∗
-      ⌜κ = None⌝ ∗ state_interp σ2 κs ∗ WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
+      ⌜κ = []⌝ ∗ state_interp σ2 κs ∗ WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof. by rewrite twp_unfold /twp_pre=> ->. Qed.
 
@@ -24,7 +24,7 @@ Proof. by rewrite twp_unfold /twp_pre=> ->. Qed.
 
 Lemma twp_lift_pure_step `{Inhabited (state Λ)} s E Φ e1 :
   (∀ σ1, reducible_no_obs e1 σ1) →
-  (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = None /\ σ1 = σ2) →
+  (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = [] /\ σ1 = σ2) →
   (|={E}=> ∀ κ e2 efs σ, ⌜prim_step e1 σ κ e2 σ efs⌝ →
     WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
   ⊢ WP e1 @ s; E [{ Φ }].
@@ -46,7 +46,7 @@ Lemma twp_lift_atomic_step {s E Φ} e1 :
   (∀ σ1 κs, state_interp σ1 κs ={E}=∗
     ⌜if s is NotStuck then reducible_no_obs e1 σ1 else True⌝ ∗
     ∀ κ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={E}=∗
-      ⌜κ = None⌝ ∗ state_interp σ2 κs ∗
+      ⌜κ = []⌝ ∗ state_interp σ2 κs ∗
       from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
@@ -61,7 +61,7 @@ Qed.
 
 Lemma twp_lift_pure_det_step `{Inhabited (state Λ)} {s E Φ} e1 e2 efs :
   (∀ σ1, reducible_no_obs e1 σ1) →
-  (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = None /\ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
+  (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = [] /\ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
   (|={E}=> WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.

@@ -16,7 +16,7 @@ Hint Resolve head_stuck_stuck.
 
 Lemma wp_lift_head_step_fupd {s E Φ} e1 :
   to_val e1 = None →
-  (∀ σ1 κ κs, state_interp σ1 (cons_obs κ κs) ={E,∅}=∗
+  (∀ σ1 κ κs, state_interp σ1 (κ ++ κs) ={E,∅}=∗
     ⌜head_reducible e1 σ1⌝ ∗
     ∀ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={∅,∅,E}▷=∗
       state_interp σ2 κs ∗ WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
@@ -30,7 +30,7 @@ Qed.
 
 Lemma wp_lift_head_step {s E Φ} e1 :
   to_val e1 = None →
-  (∀ σ1 κ κs, state_interp σ1 (cons_obs κ κs) ={E,∅}=∗
+  (∀ σ1 κ κs, state_interp σ1 (κ ++ κs) ={E,∅}=∗
     ⌜head_reducible e1 σ1⌝ ∗
     ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={∅,E}=∗
       state_interp σ2 κs ∗ WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
@@ -52,7 +52,7 @@ Qed.
 
 Lemma wp_lift_pure_head_step {s E E' Φ} e1 :
   (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = None ∧ σ1 = σ2) →
+  (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2) →
   (|={E,E'}▷=> ∀ κ e2 efs σ, ⌜head_step e1 σ κ e2 σ efs⌝ →
     WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
@@ -76,7 +76,7 @@ Qed.
 
 Lemma wp_lift_atomic_head_step_fupd {s E1 E2 Φ} e1 :
   to_val e1 = None →
-  (∀ σ1 κ κs, state_interp σ1 (cons_obs κ κs) ={E1}=∗
+  (∀ σ1 κ κs, state_interp σ1 (κ ++ κs) ={E1}=∗
     ⌜head_reducible e1 σ1⌝ ∗
     ∀ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={E1,E2}▷=∗
       state_interp σ2 κs ∗
@@ -91,7 +91,7 @@ Qed.
 
 Lemma wp_lift_atomic_head_step {s E Φ} e1 :
   to_val e1 = None →
-  (∀ σ1 κ κs, state_interp σ1 (cons_obs κ κs) ={E}=∗
+  (∀ σ1 κ κs, state_interp σ1 (κ ++ κs) ={E}=∗
     ⌜head_reducible e1 σ1⌝ ∗
     ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={E}=∗
       state_interp σ2 κs ∗
@@ -106,7 +106,7 @@ Qed.
 
 Lemma wp_lift_atomic__head_step_no_fork_fupd {s E1 E2 Φ} e1 :
   to_val e1 = None →
-  (∀ σ1 κ κs, state_interp σ1 (cons_obs κ κs) ={E1}=∗
+  (∀ σ1 κ κs, state_interp σ1 (κ ++ κs) ={E1}=∗
     ⌜head_reducible e1 σ1⌝ ∗
     ∀ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={E1,E2}▷=∗
       ⌜efs = []⌝ ∗ state_interp σ2 κs ∗ from_option Φ False (to_val e2))
@@ -121,7 +121,7 @@ Qed.
 
 Lemma wp_lift_atomic_head_step_no_fork {s E Φ} e1 :
   to_val e1 = None →
-  (∀ σ1 κ κs, state_interp σ1 (cons_obs κ κs) ={E}=∗
+  (∀ σ1 κ κs, state_interp σ1 (κ ++ κs) ={E}=∗
     ⌜head_reducible e1 σ1⌝ ∗
     ▷ ∀ e2 σ2 efs, ⌜head_step e1 σ1 κ e2 σ2 efs⌝ ={E}=∗
       ⌜efs = []⌝ ∗ state_interp σ2 κs ∗ from_option Φ False (to_val e2))
@@ -136,7 +136,7 @@ Qed.
 Lemma wp_lift_pure_det_head_step {s E E' Φ} e1 e2 efs :
   (∀ σ1, head_reducible e1 σ1) →
   (∀ σ1 κ e2' σ2 efs',
-    head_step e1 σ1 κ e2' σ2 efs' → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
+    head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
   (|={E,E'}▷=> WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof using Hinh.
@@ -148,7 +148,7 @@ Lemma wp_lift_pure_det_head_step_no_fork {s E E' Φ} e1 e2 :
   to_val e1 = None →
   (∀ σ1, head_reducible e1 σ1) →
   (∀ σ1 κ e2' σ2 efs',
-    head_step e1 σ1 κ e2' σ2 efs' → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+    head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
   (|={E,E'}▷=> WP e2 @ s; E {{ Φ }}) ⊢ WP e1 @ s; E {{ Φ }}.
 Proof using Hinh.
   intros. rewrite -(wp_lift_pure_det_step e1 e2 []) /= ?right_id; eauto.
@@ -159,7 +159,7 @@ Lemma wp_lift_pure_det_head_step_no_fork' {s E Φ} e1 e2 :
   to_val e1 = None →
   (∀ σ1, head_reducible e1 σ1) →
   (∀ σ1 κ e2' σ2 efs',
-    head_step e1 σ1 κ e2' σ2 efs' → κ = None ∧  σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+    head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧  σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
   ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
 Proof using Hinh.
   intros. rewrite -[(WP e1 @ s; _ {{ _ }})%I]wp_lift_pure_det_head_step_no_fork //.

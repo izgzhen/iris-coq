@@ -12,7 +12,7 @@ Definition twp_pre `{irisG Λ Σ} (s : stuckness)
   | None => ∀ σ1 κs,
      state_interp σ1 κs ={E,∅}=∗ ⌜if s is NotStuck then reducible_no_obs e1 σ1 else True⌝ ∗
      ∀ κ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={∅,E}=∗
-       ⌜κ = None⌝ ∗ state_interp σ2 κs ∗
+       ⌜κ = []⌝ ∗ state_interp σ2 κs ∗
        wp E e2 Φ ∗ [∗ list] ef ∈ efs, wp ⊤ ef (λ _, True)
   end%I.
 

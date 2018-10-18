@@ -16,7 +16,7 @@ Section ectx_language_mixin.
   Context (empty_ectx : ectx).
   Context (comp_ectx : ectx → ectx → ectx).
   Context (fill : ectx → expr → expr).
-  Context (head_step : expr → state → option observation → expr → state → list expr → Prop).
+  Context (head_step : expr → state → list observation → expr → state → list expr → Prop).
 
   Record EctxLanguageMixin := {
     mixin_to_of_val v : to_val (of_val v) = Some v;
@@ -55,7 +55,7 @@ Structure ectxLanguage := EctxLanguage {
   empty_ectx : ectx;
   comp_ectx : ectx → ectx → ectx;
   fill : ectx → expr → expr;
-  head_step : expr → state → option observation → expr → state → list expr → Prop;
+  head_step : expr → state → list observation → expr → state → list expr → Prop;
 
   ectx_language_mixin :
     EctxLanguageMixin of_val to_val empty_ectx comp_ectx fill head_step
@@ -100,7 +100,7 @@ Section ectx_language.
   Definition head_reducible (e : expr Λ) (σ : state Λ) :=
     ∃ κ e' σ' efs, head_step e σ κ e' σ' efs.
   Definition head_reducible_no_obs (e : expr Λ) (σ : state Λ) :=
-    ∃ e' σ' efs, head_step e σ None e' σ' efs.
+    ∃ e' σ' efs, head_step e σ [] e' σ' efs.
   Definition head_irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ κ e' σ' efs, ¬head_step e σ κ e' σ' efs.
   Definition head_stuck (e : expr Λ) (σ : state Λ) :=
@@ -111,7 +111,7 @@ Section ectx_language.
   Definition sub_redexes_are_values (e : expr Λ) :=
     ∀ K e', e = fill K e' → to_val e' = None → K = empty_ectx.
 
-  Inductive prim_step (e1 : expr Λ) (σ1 : state Λ) (κ : option (observation Λ))
+  Inductive prim_step (e1 : expr Λ) (σ1 : state Λ) (κ : list (observation Λ))
       (e2 : expr Λ) (σ2 : state Λ) (efs : list (expr Λ)) : Prop :=
     Ectx_step K e1' e2' :
       e1 = fill K e1' → e2 = fill K e2' →
@@ -217,7 +217,7 @@ Section ectx_language.
   Record pure_head_step (e1 e2 : expr Λ) := {
     pure_head_step_safe σ1 : head_reducible_no_obs e1 σ1;
     pure_head_step_det σ1 κ e2' σ2 efs :
-      head_step e1 σ1 κ e2' σ2 efs → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = []
+      head_step e1 σ1 κ e2' σ2 efs → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = []
   }.
 
   Lemma pure_head_step_pure_step e1 e2 : pure_head_step e1 e2 → pure_step e1 e2.

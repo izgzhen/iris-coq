@@ -8,7 +8,7 @@ Section language_mixin.
   (** We annotate the reduction relation with observations [κ], which we will
      use in the definition of weakest preconditions to predict future
      observations and assert correctness of the predictions. *)
-  Context (prim_step : expr → state → option observation → expr → state → list expr → Prop).
+  Context (prim_step : expr → state → list observation → expr → state → list expr → Prop).
 
   Record LanguageMixin := {
     mixin_to_of_val v : to_val (of_val v) = Some v;
@@ -24,7 +24,7 @@ Structure language := Language {
   observation : Type;
   of_val : val → expr;
   to_val : expr → option val;
-  prim_step : expr → state → option observation → expr → state → list expr → Prop;
+  prim_step : expr → state → list observation → expr → state → list expr → Prop;
   language_mixin : LanguageMixin of_val to_val prim_step
 }.
 Delimit Scope expr_scope with E.
@@ -75,7 +75,7 @@ Section language.
     ∃ κ e' σ' efs, prim_step e σ κ e' σ' efs.
   (* Total WP only permits reductions without observations *)
   Definition reducible_no_obs (e : expr Λ) (σ : state Λ) :=
-    ∃ e' σ' efs, prim_step e σ None e' σ' efs.
+    ∃ e' σ' efs, prim_step e σ [] e' σ' efs.
   Definition irreducible (e : expr Λ) (σ : state Λ) :=
     ∀ κ e' σ' efs, ¬prim_step e σ κ e' σ' efs.
   Definition stuck (e : expr Λ) (σ : state Λ) :=
@@ -97,7 +97,7 @@ Section language.
       prim_step e σ κ e' σ' efs →
       if a is WeaklyAtomic then irreducible e' σ' else is_Some (to_val e').
 
-  Inductive step (ρ1 : cfg Λ) (κ : option (observation Λ)) (ρ2 : cfg Λ) : Prop :=
+  Inductive step (ρ1 : cfg Λ) (κ : list (observation Λ)) (ρ2 : cfg Λ) : Prop :=
     | step_atomic e1 σ1 e2 σ2 efs t1 t2 :
        ρ1 = (t1 ++ e1 :: t2, σ1) →
        ρ2 = (t1 ++ e2 :: t2 ++ efs, σ2) →
@@ -105,17 +105,13 @@ Section language.
        step ρ1 κ ρ2.
   Hint Constructors step.
 
-  (* TODO (MR) introduce notation ::? for cons_obs and suggest for inclusion to stdpp? *)
-  Definition cons_obs {A} (x : option A) (xs : list A) :=
-    option_list x ++ xs.
-
   Inductive nsteps : nat → cfg Λ → list (observation Λ) → cfg Λ → Prop :=
     | nsteps_refl ρ :
        nsteps 0 ρ [] ρ
     | nsteps_l n ρ1 ρ2 ρ3 κ κs :
        step ρ1 κ ρ2 →
        nsteps n ρ2 κs ρ3 →
-       nsteps (S n) ρ1 (cons_obs κ κs) ρ3.
+       nsteps (S n) ρ1 (κ ++ κs) ρ3.
   Hint Constructors nsteps.
 
   Definition erased_step (ρ1 ρ2 : cfg Λ) := ∃ κ, step ρ1 κ ρ2.
@@ -180,7 +176,7 @@ Section language.
   Record pure_step (e1 e2 : expr Λ) := {
     pure_step_safe σ1 : reducible_no_obs e1 σ1;
     pure_step_det σ1 κ e2' σ2 efs :
-      prim_step e1 σ1 κ e2' σ2 efs → κ = None ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = []
+      prim_step e1 σ1 κ e2' σ2 efs → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = []
   }.
 
   (* TODO: Exclude the case of [n=0], either here, or in [wp_pure] to avoid it

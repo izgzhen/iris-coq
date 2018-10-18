@@ -448,82 +448,83 @@ Definition state_upd_used_proph (f: gset proph → gset proph) (σ: state) :=
   {| heap := σ.(heap); used_proph := f σ.(used_proph) |}.
 Arguments state_upd_used_proph _ !_ /.
 
-Inductive head_step : expr → state → option observation → expr → state → list (expr) → Prop :=
+Inductive head_step : expr → state → list observation → expr → state → list (expr) → Prop :=
   | BetaS f x e1 e2 v2 e' σ :
      to_val e2 = Some v2 →
      Closed (f :b: x :b: []) e1 →
      e' = subst' x (of_val v2) (subst' f (Rec f x e1) e1) →
-     head_step (App (Rec f x e1) e2) σ None e' σ []
+     head_step (App (Rec f x e1) e2) σ [] e' σ []
   | UnOpS op e v v' σ :
      to_val e = Some v →
      un_op_eval op v = Some v' →
-     head_step (UnOp op e) σ None (of_val v') σ []
+     head_step (UnOp op e) σ [] (of_val v') σ []
   | BinOpS op e1 e2 v1 v2 v' σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      bin_op_eval op v1 v2 = Some v' →
-     head_step (BinOp op e1 e2) σ None (of_val v') σ []
+     head_step (BinOp op e1 e2) σ [] (of_val v') σ []
   | IfTrueS e1 e2 σ :
-     head_step (If (Lit $ LitBool true) e1 e2) σ None e1 σ []
+     head_step (If (Lit $ LitBool true) e1 e2) σ [] e1 σ []
   | IfFalseS e1 e2 σ :
-     head_step (If (Lit $ LitBool false) e1 e2) σ None e2 σ []
+     head_step (If (Lit $ LitBool false) e1 e2) σ [] e2 σ []
   | FstS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     head_step (Fst (Pair e1 e2)) σ None e1 σ []
+     head_step (Fst (Pair e1 e2)) σ [] e1 σ []
   | SndS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     head_step (Snd (Pair e1 e2)) σ None e2 σ []
+     head_step (Snd (Pair e1 e2)) σ [] e2 σ []
   | CaseLS e0 v0 e1 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case (InjL e0) e1 e2) σ None (App e1 e0) σ []
+     head_step (Case (InjL e0) e1 e2) σ [] (App e1 e0) σ []
   | CaseRS e0 v0 e1 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case (InjR e0) e1 e2) σ None (App e2 e0) σ []
+     head_step (Case (InjR e0) e1 e2) σ [] (App e2 e0) σ []
   | ForkS e σ:
-     head_step (Fork e) σ None (Lit LitUnit) σ [e]
+     head_step (Fork e) σ [] (Lit LitUnit) σ [e]
   | AllocS e v σ l :
      to_val e = Some v → σ.(heap) !! l = None →
      head_step (Alloc e) σ
-               None (Lit $ LitLoc l) (state_upd_heap <[l:=v]> σ)
+               []
+               (Lit $ LitLoc l) (state_upd_heap <[l:=v]> σ)
                []
   | LoadS l v σ :
      σ.(heap) !! l = Some v →
-     head_step (Load (Lit $ LitLoc l)) σ None (of_val v) σ []
+     head_step (Load (Lit $ LitLoc l)) σ [] (of_val v) σ []
   | StoreS l e v σ :
      to_val e = Some v → is_Some (σ.(heap) !! l) →
      head_step (Store (Lit $ LitLoc l) e) σ
-               None
+               []
                (Lit LitUnit) (state_upd_heap <[l:=v]> σ)
                []
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ.(heap) !! l = Some vl → vl ≠ v1 →
      vals_cas_compare_safe vl v1 →
-     head_step (CAS (Lit $ LitLoc l) e1 e2) σ None (Lit $ LitBool false) σ []
+     head_step (CAS (Lit $ LitLoc l) e1 e2) σ [] (Lit $ LitBool false) σ []
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      σ.(heap) !! l = Some v1 →
      vals_cas_compare_safe v1 v1 →
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ
-               None
+               []
                (Lit $ LitBool true) (state_upd_heap <[l:=v2]> σ)
                []
   | FaaS l i1 e2 i2 σ :
      to_val e2 = Some (LitV (LitInt i2)) →
      σ.(heap) !! l = Some (LitV (LitInt i1)) →
      head_step (FAA (Lit $ LitLoc l) e2) σ
-               None
+               []
                (Lit $ LitInt i1) (state_upd_heap <[l:=LitV (LitInt (i1 + i2))]> σ)
                []
   | NewProphS σ p :
      p ∉ σ.(used_proph) →
      head_step NewProph σ
-               None
+               []
                (Lit $ LitProphecy p) (state_upd_used_proph ({[ p ]} ∪) σ)
                []
   | ResolveProphS e1 p e2 v σ :
      to_val e1 = Some (LitV $ LitProphecy p) →
      to_val e2 = Some v →
-     head_step (ResolveProph e1 e2) σ (Some (p, v)) (Lit LitUnit) σ [].
+     head_step (ResolveProph e1 e2) σ [(p, v)] (Lit LitUnit) σ [].
 
 (** Basic properties about the language *)
 Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).
@@ -553,12 +554,12 @@ Qed.
 Lemma alloc_fresh e v σ :
   let l := fresh (dom (gset loc) σ.(heap)) in
   to_val e = Some v →
-  head_step (Alloc e) σ None (Lit (LitLoc l)) (state_upd_heap <[l:=v]> σ) [].
+  head_step (Alloc e) σ [] (Lit (LitLoc l)) (state_upd_heap <[l:=v]> σ) [].
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset loc)), is_fresh. Qed.
 
 Lemma new_proph_fresh σ :
   let p := fresh σ.(used_proph) in
-  head_step NewProph σ None (Lit $ LitProphecy p) (state_upd_used_proph ({[ p ]} ∪) σ) [].
+  head_step NewProph σ [] (Lit $ LitProphecy p) (state_upd_used_proph ({[ p ]} ∪) σ) [].
 Proof. constructor. apply is_fresh. Qed.
 
 (* Misc *)
