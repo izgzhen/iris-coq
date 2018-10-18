@@ -127,23 +127,25 @@ Proof.
   by iIntros (κ e' efs' σ (->&_&->&->)%Hpuredet).
 Qed.
 
-Lemma wp_pure_step_fupd `{Inhabited (state Λ)} s E E' e1 e2 φ Φ :
-  PureExec φ e1 e2 →
+Lemma wp_pure_step_fupd `{Inhabited (state Λ)} s E E' e1 e2 φ n Φ :
+  PureExec φ n e1 e2 →
   φ →
-  (|={E,E'}▷=> WP e2 @ s; E {{ Φ }}) ⊢ WP e1 @ s; E {{ Φ }}.
+  Nat.iter n (λ P, |={E,E'}▷=> P) (WP e2 @ s; E {{ Φ }}) ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
-  iIntros ([??] Hφ) "HWP".
-  iApply (wp_lift_pure_det_step with "[HWP]").
-  - intros σ. specialize (pure_exec_safe σ). destruct s; eauto using reducible_not_val.
+  iIntros (Hexec Hφ) "Hwp". specialize (Hexec Hφ).
+  iInduction Hexec as [e|n e1 e2 e3 [Hsafe ?]] "IH"; simpl; first done.
+  iApply wp_lift_pure_det_step.
+  - intros σ. specialize (Hsafe σ). destruct s; eauto using reducible_not_val.
   - destruct s; naive_solver.
-  - by rewrite big_sepL_nil right_id.
+  - rewrite /= right_id. by iApply (step_fupd_wand with "Hwp").
 Qed.
 
-Lemma wp_pure_step_later `{Inhabited (state Λ)} s E e1 e2 φ Φ :
-  PureExec φ e1 e2 →
+Lemma wp_pure_step_later `{Inhabited (state Λ)} s E e1 e2 φ n Φ :
+  PureExec φ n e1 e2 →
   φ →
-  ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
+  ▷^n WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
-  intros ??. rewrite -wp_pure_step_fupd //. rewrite -step_fupd_intro //.
+  intros Hexec ?. rewrite -wp_pure_step_fupd //. clear Hexec.
+  induction n as [|n IH]; by rewrite //= -step_fupd_intro // IH.
 Qed.
 End lifting.

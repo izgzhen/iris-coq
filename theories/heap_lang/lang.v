@@ -10,7 +10,7 @@ Set Default Proof Using "Type".
   for this is that it makes curried functions usable: Given a WP for [f a b], we
   know that any effects [f] might have to not matter until after *both* [a] and
   [b] are evaluated.  With left-to-right evaluation, that triple is basically
-  useless the user let-expands [b].
+  useless unless the user let-expands [b].
 
 - For prophecy variables, we annotate the reduction steps with an "observation"
   and tweak adequacy such that WP knows all future observations.  There is

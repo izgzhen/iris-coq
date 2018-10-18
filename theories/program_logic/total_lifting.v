@@ -70,13 +70,15 @@ Proof.
   by iIntros "!>" (κ e' efs' σ (->&_&->&->)%Hpuredet).
 Qed.
 
-Lemma twp_pure_step `{Inhabited (state Λ)} s E e1 e2 φ Φ :
-  PureExec φ e1 e2 →
+Lemma twp_pure_step `{Inhabited (state Λ)} s E e1 e2 φ n Φ :
+  PureExec φ n e1 e2 →
   φ →
   WP e2 @ s; E [{ Φ }] ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
-  iIntros ([??] Hφ) "HWP".
-  iApply (twp_lift_pure_det_step with "[HWP]"); [eauto|naive_solver|auto].
+  iIntros (Hexec Hφ) "Hwp". specialize (Hexec Hφ).
+  iInduction Hexec as [e|n e1 e2 e3 [Hsafe ?]] "IH"; simpl; first done.
+  iApply twp_lift_pure_det_step; [done|naive_solver|].
+  iModIntro. rewrite /= right_id. by iApply "IH".
 Qed.
 
 End lifting.

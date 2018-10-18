@@ -30,18 +30,18 @@ Tactic Notation "wp_expr_eval" tactic(t) :=
 Ltac wp_expr_simpl := wp_expr_eval simpl.
 Ltac wp_expr_simpl_subst := wp_expr_eval simpl_subst.
 
-Lemma tac_wp_pure `{heapG Σ} Δ Δ' s E e1 e2 φ Φ :
-  PureExec φ e1 e2 →
+Lemma tac_wp_pure `{heapG Σ} Δ Δ' s E e1 e2 φ n Φ :
+  PureExec φ n e1 e2 →
   φ →
-  MaybeIntoLaterNEnvs 1 Δ Δ' →
+  MaybeIntoLaterNEnvs n Δ Δ' →
   envs_entails Δ' (WP e2 @ s; E {{ Φ }}) →
   envs_entails Δ (WP e1 @ s; E {{ Φ }}).
 Proof.
   rewrite envs_entails_eq=> ??? HΔ'. rewrite into_laterN_env_sound /=.
   rewrite HΔ' -lifting.wp_pure_step_later //.
 Qed.
-Lemma tac_twp_pure `{heapG Σ} Δ s E e1 e2 φ Φ :
-  PureExec φ e1 e2 →
+Lemma tac_twp_pure `{heapG Σ} Δ s E e1 e2 φ n Φ :
+  PureExec φ n e1 e2 →
   φ →
   envs_entails Δ (WP e2 @ s; E [{ Φ }]) →
   envs_entails Δ (WP e1 @ s; E [{ Φ }]).

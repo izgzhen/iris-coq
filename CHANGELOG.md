@@ -29,7 +29,7 @@ Changes in and extensions of the theory:
   functions.
 * [#] Add atomic updates and logically atomic triples, including tactic support.
   See `heap_lang/lib/increment.v` for an example.
-* [#] HeapLang now uses right-to-left evaluation order. This makes it
+* [#] heap_lang now uses right-to-left evaluation order. This makes it
   significantly easier to write specifications of curried functions.
 
 Changes in Coq:
@@ -84,6 +84,7 @@ Changes in Coq:
 * Changed `IntoVal` to be directly usable for rewriting `e` into `of_val v`, and
   changed `AsVal` to be usable for rewriting via the `[v <-]` destruct pattern.
 * `wp_fork` is now written in curried form.
+* `PureExec`/`wp_pure` now supports taking multiple steps at once.
 
 ## Iris 3.1.0 (released 2017-12-19)
 

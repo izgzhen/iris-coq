@@ -14,7 +14,7 @@ document is [available online](http://plv.mpi-sws.org/iris/appendix-3.1.pdf).
 
 This version is known to compile with:
 
- - Coq 8.7.1 / 8.7.2 / 8.8.0 / 8.8.1
+ - Coq 8.7.1 / 8.7.2 / 8.8.0 / 8.8.1 / 8.8.2
  - A development version of [std++](https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp)
 
 For a version compatible with Coq 8.6, have a look at the

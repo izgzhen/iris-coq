@@ -962,16 +962,6 @@ Section persistently_affine_bi.
       rewrite assoc -persistently_and_sep_r.
       by rewrite persistently_elim impl_elim_r.
   Qed.
-  Lemma impl_alt P Q : (P → Q) ⊣⊢ ∃ R, R ∧ <pers> (P ∧ R -∗ Q).
-  Proof.
-    apply (anti_symm (⊢)).
-    - rewrite -(right_id True%I bi_and (P → Q)%I) -(exist_intro (P → Q)%I).
-      apply and_mono_r. rewrite -persistently_pure.
-      apply persistently_intro', wand_intro_l.
-      by rewrite impl_elim_r persistently_pure right_id.
-    - apply exist_elim=> R. apply impl_intro_l.
-      by rewrite assoc persistently_and_sep_r persistently_elim wand_elim_r.
-  Qed.
 End persistently_affine_bi.
 
 (* The intuitionistic modality *)
@@ -1082,6 +1072,16 @@ Proof.
     apply sep_mono; first done. apply and_elim_r.
 Qed.
 
+Lemma impl_alt P Q : (P → Q) ⊣⊢ ∃ R, R ∧ <pers> (P ∧ R -∗ Q).
+Proof.
+  apply (anti_symm (⊢)).
+  - rewrite -(right_id True%I bi_and (P → Q)%I) -(exist_intro (P → Q)%I).
+    apply and_mono_r. rewrite impl_elim_r -entails_wand //.
+    apply persistently_emp_intro.
+  - apply exist_elim=> R. apply impl_intro_l.
+    rewrite assoc persistently_and_intuitionistically_sep_r.
+    by rewrite intuitionistically_elim wand_elim_r.
+Qed.
 
 Section bi_affine_intuitionistically.
   Context `{BiAffine PROP}.
