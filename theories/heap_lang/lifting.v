@@ -11,13 +11,13 @@ Set Default Proof Using "Type".
 Class heapG Σ := HeapG {
   heapG_invG : invG Σ;
   heapG_gen_heapG :> gen_heapG loc val Σ;
-  heapG_proph_mapG :> proph_mapG proph val Σ
+  heapG_proph_mapG :> proph_mapG proph_id val Σ
 }.
 
 Instance heapG_irisG `{heapG Σ} : irisG heap_lang Σ := {
   iris_invG := heapG_invG;
   state_interp σ κs :=
-    (gen_heap_ctx σ.(heap) ∗ proph_map_ctx κs σ.(used_proph))%I
+    (gen_heap_ctx σ.(heap) ∗ proph_map_ctx κs σ.(used_proph_id))%I
 }.
 
 (** Override the notations so that scopes and coercions work out *)
@@ -28,9 +28,6 @@ Notation "l ↦ v" :=
 Notation "l ↦{ q } -" := (∃ v, l ↦{q} v)%I
   (at level 20, q at level 50, format "l  ↦{ q }  -") : bi_scope.
 Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : bi_scope.
-
-Notation "p ⥱ v" := (proph_mapsto p v) (at level 20, format "p ⥱ v") : bi_scope.
-Notation "p ⥱ -" := (∃ v, p ⥱ v)%I (at level 20) : bi_scope.
 
 (** The tactic [inv_head_step] performs inversion on hypotheses of the shape
 [head_step]. The tactic will discharge head-reductions starting from values, and
@@ -56,7 +53,7 @@ Local Hint Extern 1 (head_step _ _ _ _ _ _) => econstructor.
 Local Hint Extern 0 (head_step (CAS _ _ _) _ _ _ _ _) => eapply CasSucS.
 Local Hint Extern 0 (head_step (CAS _ _ _) _ _ _ _ _) => eapply CasFailS.
 Local Hint Extern 0 (head_step (Alloc _) _ _ _ _ _) => apply alloc_fresh.
-Local Hint Extern 0 (head_step NewProph _ _ _ _ _) => apply new_proph_fresh.
+Local Hint Extern 0 (head_step NewProph _ _ _ _ _) => apply new_proph_id_fresh.
 Local Hint Resolve to_of_val.
 
 Local Ltac solve_exec_safe := intros; subst; do 3 eexists; econstructor; eauto.
@@ -270,7 +267,7 @@ Qed.
 
 (** Lifting lemmas for creating and resolving prophecy variables *)
 Lemma wp_new_proph :
-  {{{ True }}} NewProph {{{ v (p : proph), RET (LitV (LitProphecy p)); p ⥱ v }}}.
+  {{{ True }}} NewProph {{{ v (p : proph_id), RET (LitV (LitProphecy p)); proph p v }}}.
 Proof.
   iIntros (Φ) "_ HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κ κs) "[Hσ HR] !>". iDestruct "HR" as (R [Hfr Hdom]) "HR".
@@ -289,7 +286,7 @@ Qed.
 Lemma wp_resolve_proph e1 e2 p v w:
   IntoVal e1 (LitV (LitProphecy p)) →
   IntoVal e2 w →
-  {{{ p ⥱ v }}} ResolveProph e1 e2 {{{ RET (LitV LitUnit); ⌜v = Some w⌝ }}}.
+  {{{ proph p v }}} ResolveProph e1 e2 {{{ RET (LitV LitUnit); ⌜v = Some w⌝ }}}.
 Proof.
   iIntros (<- <- Φ) "Hp HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κ κs) "[Hσ HR] !>". iDestruct "HR" as (R [Hfr Hdom]) "HR".

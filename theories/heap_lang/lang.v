@@ -29,10 +29,11 @@ Open Scope Z_scope.
 
 (** Expressions and vals. *)
 Definition loc := positive. (* Really, any countable type. *)
-Definition proph := positive.
+Definition proph_id := positive.
 
 Inductive base_lit : Set :=
-  | LitInt (n : Z) | LitBool (b : bool) | LitUnit | LitLoc (l : loc) | LitProphecy (p: proph).
+  | LitInt (n : Z) | LitBool (b : bool) | LitUnit
+  | LitLoc (l : loc) | LitProphecy (p: proph_id).
 Inductive un_op : Set :=
   | NegOp | MinusUnOp.
 Inductive bin_op : Set :=
@@ -117,7 +118,7 @@ Inductive val :=
 
 Bind Scope val_scope with val.
 
-Definition observation : Set := proph * val.
+Definition observation : Set := proph_id * val.
 
 Fixpoint of_val (v : val) : expr :=
   match v with
@@ -174,7 +175,7 @@ Definition val_is_unboxed (v : val) : Prop :=
 (** The state: heaps of vals. *)
 Record state : Type := {
   heap: gmap loc val;
-  used_proph: gset proph;
+  used_proph_id: gset proph_id;
 }.
 
 (** Equality and other typeclass stuff *)
@@ -295,7 +296,7 @@ Instance val_countable : Countable val.
 Proof. refine (inj_countable of_val to_val _); auto using to_of_val. Qed.
 
 Instance state_inhabited : Inhabited state :=
-  populate {| heap := inhabitant; used_proph := inhabitant |}.
+  populate {| heap := inhabitant; used_proph_id := inhabitant |}.
 Instance expr_inhabited : Inhabited expr := populate (Lit LitUnit).
 Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
 
@@ -442,11 +443,11 @@ Definition vals_cas_compare_safe (vl v1 : val) : Prop :=
 Arguments vals_cas_compare_safe !_ !_ /.
 
 Definition state_upd_heap (f: gmap loc val → gmap loc val) (σ: state) :=
-  {| heap := f σ.(heap); used_proph := σ.(used_proph) |}.
+  {| heap := f σ.(heap); used_proph_id := σ.(used_proph_id) |}.
 Arguments state_upd_heap _ !_ /.
-Definition state_upd_used_proph (f: gset proph → gset proph) (σ: state) :=
-  {| heap := σ.(heap); used_proph := f σ.(used_proph) |}.
-Arguments state_upd_used_proph _ !_ /.
+Definition state_upd_used_proph_id (f: gset proph_id → gset proph_id) (σ: state) :=
+  {| heap := σ.(heap); used_proph_id := f σ.(used_proph_id) |}.
+Arguments state_upd_used_proph_id _ !_ /.
 
 Inductive head_step : expr → state → list observation → expr → state → list (expr) → Prop :=
   | BetaS f x e1 e2 v2 e' σ :
@@ -516,10 +517,10 @@ Inductive head_step : expr → state → list observation → expr → state →
                (Lit $ LitInt i1) (state_upd_heap <[l:=LitV (LitInt (i1 + i2))]> σ)
                []
   | NewProphS σ p :
-     p ∉ σ.(used_proph) →
+     p ∉ σ.(used_proph_id) →
      head_step NewProph σ
                []
-               (Lit $ LitProphecy p) (state_upd_used_proph ({[ p ]} ∪) σ)
+               (Lit $ LitProphecy p) (state_upd_used_proph_id ({[ p ]} ∪) σ)
                []
   | ResolveProphS e1 p e2 v σ :
      to_val e1 = Some (LitV $ LitProphecy p) →
@@ -557,9 +558,9 @@ Lemma alloc_fresh e v σ :
   head_step (Alloc e) σ [] (Lit (LitLoc l)) (state_upd_heap <[l:=v]> σ) [].
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset loc)), is_fresh. Qed.
 
-Lemma new_proph_fresh σ :
-  let p := fresh σ.(used_proph) in
-  head_step NewProph σ [] (Lit $ LitProphecy p) (state_upd_used_proph ({[ p ]} ∪) σ) [].
+Lemma new_proph_id_fresh σ :
+  let p := fresh σ.(used_proph_id) in
+  head_step NewProph σ [] (Lit $ LitProphecy p) (state_upd_used_proph_id ({[ p ]} ∪) σ) [].
 Proof. constructor. apply is_fresh. Qed.
 
 (* Misc *)

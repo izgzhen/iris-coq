@@ -89,17 +89,14 @@ Section definitions.
           dom (gset _) R ⊆ ps⌝ ∗
           proph_map_auth R)%I.
 
-  Definition proph_mapsto_def (p : P) (v: option V) : iProp Σ :=
+  Definition proph_def (p : P) (v: option V) : iProp Σ :=
     own (proph_map_name pG) (◯ {[ p := Excl (v : option $ leibnizC V) ]}).
-  Definition proph_mapsto_aux : seal (@proph_mapsto_def). by eexists. Qed.
-  Definition proph_mapsto := proph_mapsto_aux.(unseal).
-  Definition proph_mapsto_eq :
-    @proph_mapsto = @proph_mapsto_def := proph_mapsto_aux.(seal_eq).
+  Definition proph_aux : seal (@proph_def). by eexists. Qed.
+  Definition proph := proph_aux.(unseal).
+  Definition proph_eq :
+    @proph = @proph_def := proph_aux.(seal_eq).
 
 End definitions.
-
-Local Notation "p ⥱ v" := (proph_mapsto p v) (at level 20, format "p ⥱ v") : bi_scope.
-Local Notation "p ⥱ -" := (∃ v, p ⥱ v)%I (at level 20) : bi_scope.
 
 Section to_proph_map.
   Context (P V : Type) `{Countable P}.
@@ -148,14 +145,14 @@ Section proph_map.
   Implicit Types R : proph_map P V.
 
   (** General properties of mapsto *)
-  Global Instance p_mapsto_timeless p v : Timeless (p ⥱ v).
-  Proof. rewrite proph_mapsto_eq /proph_mapsto_def. apply _. Qed.
+  Global Instance proph_timeless p v : Timeless (proph p v).
+  Proof. rewrite proph_eq /proph_def. apply _. Qed.
 
   Lemma proph_map_alloc R p v :
     p ∉ dom (gset _) R →
-    proph_map_auth R ==∗ proph_map_auth (<[p := v]> R) ∗ p ⥱ v.
+    proph_map_auth R ==∗ proph_map_auth (<[p := v]> R) ∗ proph p v.
   Proof.
-    iIntros (Hp) "HR". rewrite /proph_map_ctx proph_mapsto_eq /proph_mapsto_def.
+    iIntros (Hp) "HR". rewrite /proph_map_ctx proph_eq /proph_def.
     iMod (own_update with "HR") as "[HR Hl]".
     { eapply auth_update_alloc,
         (alloc_singleton_local_update _ _ (Excl $ (v : option (leibnizC _))))=> //.
@@ -164,16 +161,16 @@ Section proph_map.
   Qed.
 
   Lemma proph_map_remove R p v :
-    proph_map_auth R -∗ p ⥱ v ==∗ proph_map_auth (delete p R).
+    proph_map_auth R -∗ proph p v ==∗ proph_map_auth (delete p R).
   Proof.
-    iIntros "HR Hp". rewrite /proph_map_ctx proph_mapsto_eq /proph_mapsto_def.
+    iIntros "HR Hp". rewrite /proph_map_ctx proph_eq /proph_def.
     rewrite /proph_map_auth to_proph_map_delete. iApply (own_update_2 with "HR Hp").
     apply auth_update_dealloc, (delete_singleton_local_update _ _ _).
   Qed.
 
-  Lemma proph_map_valid R p v : proph_map_auth R -∗ p ⥱ v -∗ ⌜R !! p = Some v⌝.
+  Lemma proph_map_valid R p v : proph_map_auth R -∗ proph p v -∗ ⌜R !! p = Some v⌝.
   Proof.
-    iIntros "HR Hp". rewrite /proph_map_ctx proph_mapsto_eq /proph_mapsto_def.
+    iIntros "HR Hp". rewrite /proph_map_ctx proph_eq /proph_def.
     iDestruct (own_valid_2 with "HR Hp")
       as %[HH%proph_map_singleton_included _]%auth_valid_discrete_2; auto.
   Qed.

@@ -7,10 +7,10 @@ Set Default Proof Using "Type".
 Class heapPreG Σ := HeapPreG {
   heap_preG_iris :> invPreG Σ;
   heap_preG_heap :> gen_heapPreG loc val Σ;
-  heap_preG_proph :> proph_mapPreG proph val Σ
+  heap_preG_proph :> proph_mapPreG proph_id val Σ
 }.
 
-Definition heapΣ : gFunctors := #[invΣ; gen_heapΣ loc val; proph_mapΣ proph val].
+Definition heapΣ : gFunctors := #[invΣ; gen_heapΣ loc val; proph_mapΣ proph_id val].
 Instance subG_heapPreG {Σ} : subG heapΣ Σ → heapPreG Σ.
 Proof. solve_inG. Qed.
 
@@ -20,8 +20,8 @@ Definition heap_adequacy Σ `{heapPreG Σ} s e σ φ :
 Proof.
   intros Hwp; eapply (wp_adequacy _ _); iIntros (??) "".
   iMod (gen_heap_init σ.(heap)) as (?) "Hh".
-  iMod (proph_map_init κs σ.(used_proph)) as (?) "Hp".
+  iMod (proph_map_init κs σ.(used_proph_id)) as (?) "Hp".
   iModIntro.
-  iExists (λ σ κs, (gen_heap_ctx σ.(heap) ∗ proph_map_ctx κs σ.(used_proph))%I). iFrame.
+  iExists (λ σ κs, (gen_heap_ctx σ.(heap) ∗ proph_map_ctx κs σ.(used_proph_id))%I). iFrame.
   iApply (Hwp (HeapG _ _ _ _)).
 Qed.
