@@ -172,7 +172,10 @@ Definition val_is_unboxed (v : val) : Prop :=
   end.
 
 (** The state: heaps of vals. *)
-Definition state : Type := gmap loc val * gset proph.
+Record state : Type := {
+  heap: gmap loc val;
+  used_proph: gset proph;
+}.
 Implicit Type σ : state.
 
 (** Equality and other typeclass stuff *)
@@ -292,6 +295,8 @@ Qed.
 Instance val_countable : Countable val.
 Proof. refine (inj_countable of_val to_val _); auto using to_of_val. Qed.
 
+Instance state_inhabited : Inhabited state :=
+  populate {| heap := inhabitant; used_proph := inhabitant |}.
 Instance expr_inhabited : Inhabited expr := populate (Lit LitUnit).
 Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
 
@@ -437,7 +442,14 @@ Definition vals_cas_compare_safe (vl v1 : val) : Prop :=
   val_is_unboxed vl ∨ val_is_unboxed v1.
 Arguments vals_cas_compare_safe !_ !_ /.
 
-Inductive head_step : expr → state → option observation -> expr → state → list (expr) → Prop :=
+Definition state_upd_heap (f: gmap loc val → gmap loc val) (σ: state) :=
+  {| heap := f σ.(heap); used_proph := σ.(used_proph) |}.
+Arguments state_upd_heap _ !_ /.
+Definition state_upd_used_proph (f: gset proph → gset proph) (σ: state) :=
+  {| heap := σ.(heap); used_proph := f σ.(used_proph) |}.
+Arguments state_upd_used_proph _ !_ /.
+
+Inductive head_step : expr → state → option observation → expr → state → list (expr) → Prop :=
   | BetaS f x e1 e2 v2 e' σ :
      to_val e2 = Some v2 →
      Closed (f :b: x :b: []) e1 →
@@ -470,40 +482,45 @@ Inductive head_step : expr → state → option observation -> expr → state �
   | ForkS e σ:
      head_step (Fork e) σ None (Lit LitUnit) σ [e]
   | AllocS e v σ l :
-     to_val e = Some v → σ.1 !! l = None →
-     head_step (Alloc e) σ None (Lit $ LitLoc l) (<[l:=v]>σ.1, σ.2) []
+     to_val e = Some v → σ.(heap) !! l = None →
+     head_step (Alloc e) σ
+               None (Lit $ LitLoc l) (state_upd_heap <[l:=v]> σ)
+               []
   | LoadS l v σ :
-     σ.1 !! l = Some v →
+     σ.(heap) !! l = Some v →
      head_step (Load (Lit $ LitLoc l)) σ None (of_val v) σ []
   | StoreS l e v σ :
-     to_val e = Some v → is_Some (σ.1 !! l) →
+     to_val e = Some v → is_Some (σ.(heap) !! l) →
      head_step (Store (Lit $ LitLoc l) e) σ
                None
-               (Lit LitUnit) (<[l:=v]>σ.1, σ.2)
+               (Lit LitUnit) (state_upd_heap <[l:=v]> σ)
                []
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     σ.1 !! l = Some vl → vl ≠ v1 →
+     σ.(heap) !! l = Some vl → vl ≠ v1 →
      vals_cas_compare_safe vl v1 →
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ None (Lit $ LitBool false) σ []
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     σ.1 !! l = Some v1 →
+     σ.(heap) !! l = Some v1 →
      vals_cas_compare_safe v1 v1 →
      head_step (CAS (Lit $ LitLoc l) e1 e2) σ
                None
-               (Lit $ LitBool true) (<[l:=v2]>σ.1, σ.2)
+               (Lit $ LitBool true) (state_upd_heap <[l:=v2]> σ)
                []
   | FaaS l i1 e2 i2 σ :
      to_val e2 = Some (LitV (LitInt i2)) →
-     σ.1 !! l = Some (LitV (LitInt i1)) →
+     σ.(heap) !! l = Some (LitV (LitInt i1)) →
      head_step (FAA (Lit $ LitLoc l) e2) σ
                None
-               (Lit $ LitInt i1) (<[l:=LitV (LitInt (i1 + i2))]>σ.1, σ.2)
+               (Lit $ LitInt i1) (state_upd_heap <[l:=LitV (LitInt (i1 + i2))]> σ)
                []
   | NewProphS σ p :
-     p ∉ σ.2 →
-     head_step NewProph σ None (Lit $ LitProphecy p) (σ.1, {[ p ]} ∪ σ.2) []
+     p ∉ σ.(used_proph) →
+     head_step NewProph σ
+               None
+               (Lit $ LitProphecy p) (state_upd_used_proph ({[ p ]} ∪) σ)
+               []
   | ResolveProphS e1 p e2 v σ :
      to_val e1 = Some (LitV $ LitProphecy p) →
      to_val e2 = Some v →
@@ -535,13 +552,14 @@ Proof.
 Qed.
 
 Lemma alloc_fresh e v σ :
-  let l := fresh (dom (gset loc) σ.1) in
-  to_val e = Some v → head_step (Alloc e) σ None (Lit (LitLoc l)) (<[l:=v]>σ.1, σ.2) [].
+  let l := fresh (dom (gset loc) σ.(heap)) in
+  to_val e = Some v →
+  head_step (Alloc e) σ None (Lit (LitLoc l)) (state_upd_heap <[l:=v]> σ) [].
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset loc)), is_fresh. Qed.
 
 Lemma new_proph_fresh σ :
-  let p := fresh σ.2 in
-  head_step NewProph σ None (Lit $ LitProphecy p) (σ.1, {[ p ]} ∪ σ.2) [].
+  let p := fresh σ.(used_proph) in
+  head_step NewProph σ None (Lit $ LitProphecy p) (state_upd_used_proph ({[ p ]} ∪) σ) [].
 Proof. constructor. apply is_fresh. Qed.
 
 (* Misc *)

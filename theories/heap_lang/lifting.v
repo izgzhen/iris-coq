@@ -17,7 +17,7 @@ Class heapG Σ := HeapG {
 Instance heapG_irisG `{heapG Σ} : irisG heap_lang Σ := {
   iris_invG := heapG_invG;
   state_interp σ κs :=
-    (gen_heap_ctx σ.1 ∗ proph_map_ctx κs σ.2)%I
+    (gen_heap_ctx σ.(heap) ∗ proph_map_ctx κs σ.(used_proph))%I
 }.
 
 (** Override the notations so that scopes and coercions work out *)
@@ -121,7 +121,7 @@ Lemma wp_fork s E e Φ :
   ▷ WP e @ s; ⊤ {{ _, True }} -∗ ▷ Φ (LitV LitUnit) -∗ WP Fork e @ s; E {{ Φ }}.
 Proof.
   iIntros "He HΦ".
-  iApply wp_lift_pure_det_head_step; [eauto|intros; inv_head_step; eauto|].
+  iApply wp_lift_pure_det_head_step; [by eauto|intros; inv_head_step; by eauto|].
   iModIntro; iNext; iIntros "!> /= {$He}". by iApply wp_value.
 Qed.
 
