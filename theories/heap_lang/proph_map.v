@@ -7,21 +7,64 @@ Import uPred.
 Definition proph_map (P V : Type) `{Countable P} := gmap P (option V).
 Definition proph_val_list (P V : Type) := list (P * V).
 
+Definition proph_mapUR (P V : Type) `{Countable P} : ucmraT :=
+  gmapUR P $ exclR $ optionC $ leibnizC V.
+
+Definition to_proph_map {P V} `{Countable P} (pvs : proph_map P V) : proph_mapUR P V :=
+  fmap (λ v, Excl (v : option (leibnizC V))) pvs.
+
+(** The CMRA we need. *)
+Class proph_mapG (P V : Type) (Σ : gFunctors) `{Countable P} := ProphMapG {
+  proph_map_inG :> inG Σ (authR (proph_mapUR P V));
+  proph_map_name : gname
+}.
+Arguments proph_map_name {_ _ _ _ _} _ : assert.
+
+Class proph_mapPreG (P V : Type) (Σ : gFunctors) `{Countable P} :=
+  { proph_map_preG_inG :> inG Σ (authR (proph_mapUR P V)) }.
+
+Definition proph_mapΣ (P V : Type) `{Countable P} : gFunctors :=
+  #[GFunctor (authR (proph_mapUR P V))].
+
+Instance subG_proph_mapPreG {Σ P V} `{Countable P} :
+  subG (proph_mapΣ P V) Σ → proph_mapPreG P V Σ.
+Proof. solve_inG. Qed.
+
+Section definitions.
+  Context `{pG : proph_mapG P V Σ}.
+
+  (** The first resolve for [p] in [pvs] *)
+  Definition first_resolve (pvs : proph_val_list P V) (p : P) :=
+    (map_of_list pvs : gmap P V) !! p.
+
+  Definition first_resolve_in_list (R : proph_map P V) pvs :=
+    ∀ p v, p ∈ dom (gset _) R →
+           first_resolve pvs p = Some v →
+           R !! p = Some (Some v).
+
+  Definition proph_map_auth (R : proph_map P V) : iProp Σ :=
+    own (proph_map_name pG) (● (to_proph_map R)).
+
+  Definition proph_map_ctx (pvs : proph_val_list P V) (ps : gset P) : iProp Σ :=
+    (∃ R, ⌜first_resolve_in_list R pvs ∧
+          dom (gset _) R ⊆ ps⌝ ∗
+          proph_map_auth R)%I.
+
+  Definition proph_def (p : P) (v: option V) : iProp Σ :=
+    own (proph_map_name pG) (◯ {[ p := Excl (v : option $ leibnizC V) ]}).
+  Definition proph_aux : seal (@proph_def). by eexists. Qed.
+  Definition proph := proph_aux.(unseal).
+  Definition proph_eq :
+    @proph = @proph_def := proph_aux.(seal_eq).
+
+End definitions.
+
 Section first_resolve.
   Context {P V : Type} `{Countable P}.
   Implicit Type pvs : proph_val_list P V.
   Implicit Type p : P.
   Implicit Type v : V.
   Implicit Type R : proph_map P V.
-
-  (** The first resolve for [p] in [pvs] *)
-  Definition first_resolve pvs p :=
-    (map_of_list pvs : gmap P V) !! p.
-
-  Definition first_resolve_in_list R pvs :=
-    ∀ p v, p ∈ dom (gset _) R →
-           first_resolve pvs p = Some v →
-           R !! p = Some (Some v).
 
   Lemma first_resolve_insert pvs p R :
     first_resolve_in_list R pvs →
@@ -54,49 +97,6 @@ Section first_resolve.
   Qed.
 
 End first_resolve.
-
-Definition proph_mapUR (P V : Type) `{Countable P} : ucmraT :=
-  gmapUR P $ exclR $ optionC $ leibnizC V.
-
-Definition to_proph_map {P V} `{Countable P} (pvs : proph_map P V) : proph_mapUR P V :=
-  fmap (λ v, Excl (v : option (leibnizC V))) pvs.
-
-(** The CMRA we need. *)
-Class proph_mapG (P V : Type) (Σ : gFunctors) `{Countable P} := ProphMapG {
-  proph_map_inG :> inG Σ (authR (proph_mapUR P V));
-  proph_map_name : gname
-}.
-Arguments proph_map_name {_ _ _ _ _} _ : assert.
-
-Class proph_mapPreG (P V : Type) (Σ : gFunctors) `{Countable P} :=
-  { proph_map_preG_inG :> inG Σ (authR (proph_mapUR P V)) }.
-
-Definition proph_mapΣ (P V : Type) `{Countable P} : gFunctors :=
-  #[GFunctor (authR (proph_mapUR P V))].
-
-Instance subG_proph_mapPreG {Σ P V} `{Countable P} :
-  subG (proph_mapΣ P V) Σ → proph_mapPreG P V Σ.
-Proof. solve_inG. Qed.
-
-Section definitions.
-  Context `{pG : proph_mapG P V Σ}.
-
-  Definition proph_map_auth (R : proph_map P V) : iProp Σ :=
-    own (proph_map_name pG) (● (to_proph_map R)).
-
-  Definition proph_map_ctx (pvs : proph_val_list P V) (ps : gset P) : iProp Σ :=
-    (∃ R, ⌜first_resolve_in_list R pvs ∧
-          dom (gset _) R ⊆ ps⌝ ∗
-          proph_map_auth R)%I.
-
-  Definition proph_def (p : P) (v: option V) : iProp Σ :=
-    own (proph_map_name pG) (◯ {[ p := Excl (v : option $ leibnizC V) ]}).
-  Definition proph_aux : seal (@proph_def). by eexists. Qed.
-  Definition proph := proph_aux.(unseal).
-  Definition proph_eq :
-    @proph = @proph_def := proph_aux.(seal_eq).
-
-End definitions.
 
 Section to_proph_map.
   Context (P V : Type) `{Countable P}.

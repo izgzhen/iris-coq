@@ -442,10 +442,10 @@ Definition vals_cas_compare_safe (vl v1 : val) : Prop :=
   val_is_unboxed vl ∨ val_is_unboxed v1.
 Arguments vals_cas_compare_safe !_ !_ /.
 
-Definition state_upd_heap (f: gmap loc val → gmap loc val) (σ: state) :=
+Definition state_upd_heap (f: gmap loc val → gmap loc val) (σ: state) : state :=
   {| heap := f σ.(heap); used_proph_id := σ.(used_proph_id) |}.
 Arguments state_upd_heap _ !_ /.
-Definition state_upd_used_proph_id (f: gset proph_id → gset proph_id) (σ: state) :=
+Definition state_upd_used_proph_id (f: gset proph_id → gset proph_id) (σ: state) : state :=
   {| heap := σ.(heap); used_proph_id := f σ.(used_proph_id) |}.
 Arguments state_upd_used_proph_id _ !_ /.
 
