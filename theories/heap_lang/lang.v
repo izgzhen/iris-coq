@@ -176,7 +176,6 @@ Record state : Type := {
   heap: gmap loc val;
   used_proph: gset proph;
 }.
-Implicit Type σ : state.
 
 (** Equality and other typeclass stuff *)
 Lemma to_of_val v : to_val (of_val v) = Some v.

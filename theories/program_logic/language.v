@@ -110,12 +110,12 @@ Section language.
     option_list x ++ xs.
 
   Inductive nsteps : nat → cfg Λ → list (observation Λ) → cfg Λ → Prop :=
-  | nsteps_refl ρ :
-      nsteps 0 ρ [] ρ
-  | nsteps_l n ρ1 ρ2 ρ3 κ κs :
-      step ρ1 κ ρ2 →
-      nsteps n ρ2 κs ρ3 →
-      nsteps (S n) ρ1 (cons_obs κ κs) ρ3.
+    | nsteps_refl ρ :
+       nsteps 0 ρ [] ρ
+    | nsteps_l n ρ1 ρ2 ρ3 κ κs :
+       step ρ1 κ ρ2 →
+       nsteps n ρ2 κs ρ3 →
+       nsteps (S n) ρ1 (cons_obs κ κs) ρ3.
   Hint Constructors nsteps.
 
   Definition erased_step (ρ1 ρ2 : cfg Λ) := ∃ κ, step ρ1 κ ρ2.
@@ -174,7 +174,7 @@ Section language.
   Lemma erased_step_Permutation (t1 t1' t2 : list (expr Λ)) σ1 σ2 :
     t1 ≡ₚ t1' → erased_step (t1,σ1) (t2,σ2) → ∃ t2', t2 ≡ₚ t2' ∧ erased_step (t1',σ1) (t2',σ2).
   Proof.
-    intros* Heq [? Hs]. pose proof (step_Permutation _ _ _ _ _ _ Heq Hs). firstorder.
+    intros Heq [? Hs]. pose proof (step_Permutation _ _ _ _ _ _ Heq Hs). firstorder.
   Qed.
 
   Record pure_step (e1 e2 : expr Λ) := {

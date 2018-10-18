@@ -8,7 +8,6 @@ Definition proph_map (P V : Type) `{Countable P} := gmap P (option V).
 Definition proph_val_list (P V : Type) := list (P * V).
 
 Section first_resolve.
-
   Context {P V : Type} `{Countable P}.
   Implicit Type pvs : proph_val_list P V.
   Implicit Type p : P.
@@ -130,7 +129,6 @@ Section to_proph_map.
     apply excl_exclusive.
   Qed.
 End to_proph_map.
-
 
 
 Lemma proph_map_init `{proph_mapPreG P V PVS} pvs ps :

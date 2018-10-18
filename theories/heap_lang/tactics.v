@@ -97,11 +97,11 @@ Ltac of_expr e :=
      let e0 := of_expr e0 in let e1 := of_expr e1 in let e2 := of_expr e2 in
      constr:(CAS e0 e1 e2)
   | heap_lang.FAA ?e1 ?e2 =>
-    let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(FAA e1 e2)
+     let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(FAA e1 e2)
   | heap_lang.NewProph =>
-    constr:(NewProph)
+     constr:(NewProph)
   | heap_lang.ResolveProph ?e1 ?e2 =>
-    let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(ResolveProph e1 e2)
+     let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(ResolveProph e1 e2)
   | to_expr ?e => e
   | of_val ?v => constr:(Val v (of_val v) (to_of_val v))
   | language.of_val ?v => constr:(Val v (of_val v) (to_of_val v))

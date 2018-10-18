@@ -187,15 +187,15 @@ Proof.
     iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp _ κs).
     rewrite {1}uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
-    iApply (@wptp_result _ _ (IrisG _ _ _ Hinv Istate) _ _ _ _ _ []); last first.
-    rewrite app_nil_r. all: eauto with iFrame.
+    iApply (@wptp_result _ _ (IrisG _ _ _ Hinv Istate) _ _ _ _ _ []); first by eauto.
+    rewrite app_nil_r. eauto with iFrame.
   - destruct s; last done. intros t2 σ2 e2 _ [n [κs ?]]%erased_steps_nsteps ?.
     eapply (soundness (M:=iResUR Σ) _ (S (S n))).
     iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp _ κs).
     rewrite uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
     iDestruct "Hwp" as (Istate) "[HI Hwp]".
-    iApply (@wptp_safe _ _ (IrisG _ _ _ Hinv Istate) _ _ _ []); last first.
-    rewrite app_nil_r. all: eauto with iFrame.
+    iApply (@wptp_safe _ _ (IrisG _ _ _ Hinv Istate) _ _ _ []); [by eauto..|].
+    rewrite app_nil_r. eauto with iFrame.
 Qed.
 
 Theorem wp_adequacy Σ Λ `{invPreG Σ} s e σ φ :

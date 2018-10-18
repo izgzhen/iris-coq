@@ -1,9 +1,7 @@
-From iris.heap_lang Require Export lifting notation.
 From iris.base_logic.lib Require Export invariants.
 From iris.program_logic Require Export atomic.
 From iris.proofmode Require Import tactics.
 From iris.heap_lang Require Import proofmode notation par.
-From iris.bi.lib Require Import fractional.
 Set Default Proof Using "Type".
 
 (** Nondeterminism and Speculation:
@@ -11,31 +9,33 @@ Set Default Proof Using "Type".
     Logical Relations for Fine-Grained Concurrency by Turon et al. (POPL'13) *)
 
 Definition rand: val :=
-    λ: "_",
-       let: "y" := ref #false in
-       Fork ("y" <- #true) ;;
-       !"y".
+  λ: "_",
+    let: "y" := ref #false in
+    Fork ("y" <- #true) ;;
+    !"y".
 
 Definition earlyChoice: val :=
   λ: "x",
-  let: "r" := rand #() in
-  "x" <- #0 ;;
-      "r".
+    let: "r" := rand #() in
+    "x" <- #0 ;;
+    "r".
 
 Definition lateChoice: val :=
   λ: "x",
-  let: "p" := NewProph in
-  "x" <- #0 ;;
-      let: "r" := rand #() in
-      resolve_proph: "p" to: "r" ;;
-      "r".
+    let: "p" := NewProph in
+    "x" <- #0 ;;
+    let: "r" := rand #() in
+    resolve_proph: "p" to: "r" ;;
+    "r".
 
 Section coinflip.
-  Context `{!heapG Σ} (N: namespace).
+  Context `{!heapG Σ}.
+
+  Local Definition N := nroot .@ "coin".
 
   Lemma rand_spec :
     {{{ True }}} rand #() {{{ (b : bool), RET #b; True }}}.
-  Proof using N.
+  Proof.
     iIntros (Φ) "_ HP".
     wp_lam. wp_alloc l as "Hl". wp_lam.
     iMod (inv_alloc N _ (∃ (b: bool), l ↦ #b)%I with "[Hl]") as "#Hinv"; first by eauto.
@@ -50,7 +50,7 @@ Section coinflip.
         earlyChoice #x
         @ ⊤
     <<< ∃ (b: bool), x ↦ #0, RET #b >>>.
-  Proof using N.
+  Proof.
     iApply wp_atomic_intro. iIntros (Φ) "AU". wp_lam.
     wp_bind (rand _)%E. iApply rand_spec; first done.
     iIntros (b) "!> _". wp_let.
@@ -62,7 +62,7 @@ Section coinflip.
     iModIntro. wp_seq. done.
   Qed.
 
-  Definition val_to_bool v : bool :=
+  Definition val_to_bool (v : option val) : bool :=
     match v with
     | Some (LitV (LitBool b)) => b
     | _                       => true
@@ -73,7 +73,7 @@ Section coinflip.
         lateChoice #x
         @ ⊤
     <<< ∃ (b: bool), x ↦ #0, RET #b >>>.
-  Proof using N.
+  Proof.
     iApply wp_atomic_intro. iIntros (Φ) "AU". wp_lam.
     wp_apply wp_new_proph; first done.
     iIntros (v p) "Hp".
