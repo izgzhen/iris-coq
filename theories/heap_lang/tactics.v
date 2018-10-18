@@ -35,7 +35,9 @@ Inductive expr :=
   | Load (e : expr)
   | Store (e1 : expr) (e2 : expr)
   | CAS (e0 : expr) (e1 : expr) (e2 : expr)
-  | FAA (e1 : expr) (e2 : expr).
+  | FAA (e1 : expr) (e2 : expr)
+  | NewProph
+  | ResolveProph (e1 : expr) (e2 : expr).
 
 Fixpoint to_expr (e : expr) : heap_lang.expr :=
   match e with
@@ -60,6 +62,8 @@ Fixpoint to_expr (e : expr) : heap_lang.expr :=
   | Store e1 e2 => heap_lang.Store (to_expr e1) (to_expr e2)
   | CAS e0 e1 e2 => heap_lang.CAS (to_expr e0) (to_expr e1) (to_expr e2)
   | FAA e1 e2 => heap_lang.FAA (to_expr e1) (to_expr e2)
+  | NewProph => heap_lang.NewProph
+  | ResolveProph e1 e2 => heap_lang.ResolveProph (to_expr e1) (to_expr e2)
   end.
 
 Ltac of_expr e :=
@@ -94,6 +98,10 @@ Ltac of_expr e :=
      constr:(CAS e0 e1 e2)
   | heap_lang.FAA ?e1 ?e2 =>
      let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(FAA e1 e2)
+  | heap_lang.NewProph =>
+     constr:(NewProph)
+  | heap_lang.ResolveProph ?e1 ?e2 =>
+     let e1 := of_expr e1 in let e2 := of_expr e2 in constr:(ResolveProph e1 e2)
   | to_expr ?e => e
   | of_val ?v => constr:(Val v (of_val v) (to_of_val v))
   | language.of_val ?v => constr:(Val v (of_val v) (to_of_val v))
@@ -108,10 +116,10 @@ Fixpoint is_closed (X : list string) (e : expr) : bool :=
   | Val _ _ _ | ClosedExpr _ => true
   | Var x => bool_decide (x ∈ X)
   | Rec f x e => is_closed (f :b: x :b: X) e
-  | Lit _ => true
+  | Lit _ | NewProph => true
   | UnOp _ e | Fst e | Snd e | InjL e | InjR e | Fork e | Alloc e | Load e =>
      is_closed X e
-  | App e1 e2 | BinOp _ e1 e2 | Pair e1 e2 | Store e1 e2 | FAA e1 e2 =>
+  | App e1 e2 | BinOp _ e1 e2 | Pair e1 e2 | Store e1 e2 | FAA e1 e2 | ResolveProph e1 e2 =>
      is_closed X e1 && is_closed X e2
   | If e0 e1 e2 | Case e0 e1 e2 | CAS e0 e1 e2 =>
      is_closed X e0 && is_closed X e1 && is_closed X e2
@@ -171,6 +179,8 @@ Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
   | Store e1 e2 => Store (subst x es e1) (subst x es e2)
   | CAS e0 e1 e2 => CAS (subst x es e0) (subst x es e1) (subst x es e2)
   | FAA e1 e2 => FAA (subst x es e1) (subst x es e2)
+  | NewProph => NewProph
+  | ResolveProph e1 e2 => ResolveProph (subst x es e1) (subst x es e2)
   end.
 Lemma to_expr_subst x er e :
   to_expr (subst x er e) = heap_lang.subst x (to_expr er) (to_expr e).
@@ -190,6 +200,8 @@ Definition is_atomic (e : expr) :=
   | Fork _ => true
   (* Make "skip" atomic *)
   | App (Rec _ _ (Lit _)) (Lit _) => true
+  | NewProph => true
+  | ResolveProph e1 e2 => bool_decide (is_Some (to_val e1) ∧ is_Some (to_val e2))
   | _ => false
   end.
 Lemma is_atomic_correct s e : is_atomic e → Atomic s (to_expr e).
@@ -293,4 +305,6 @@ Ltac reshape_expr e tac :=
   | CAS ?e0 ?e1 ?e2 => go (CasRCtx e0 e1 :: K) e2
   | FAA ?e1 ?e2 => reshape_val e2 ltac:(fun v2 => go (FaaLCtx v2 :: K) e1)
   | FAA ?e1 ?e2 => go (FaaRCtx e1 :: K) e2
+  | ResolveProph ?e1 ?e2 => reshape_val e2 ltac:(fun v2 => go (ProphLCtx v2 :: K) e1)
+  | ResolveProph ?e1 ?e2 => go (ProphRCtx e1 :: K) e2
   end in go (@nil ectx_item) e.

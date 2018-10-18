@@ -12,8 +12,14 @@ Set Default Proof Using "Type".
   [b] are evaluated.  With left-to-right evaluation, that triple is basically
   useless unless the user let-expands [b].
 
-*)
+- For prophecy variables, we annotate the reduction steps with an "observation"
+  and tweak adequacy such that WP knows all future observations.  There is
+  another possible choice: Use non-deterministic choice when creating a prophecy
+  variable ([NewProph]), and when resolving it ([ResolveProph]) make the
+  program diverge unless the variable matches.  That, however, requires an
+  erasure proof that this endless loop does not make specifications useless.
 
+*)
 
 Delimit Scope expr_scope with E.
 Delimit Scope val_scope with V.
@@ -23,9 +29,11 @@ Open Scope Z_scope.
 
 (** Expressions and vals. *)
 Definition loc := positive. (* Really, any countable type. *)
+Definition proph_id := positive.
 
 Inductive base_lit : Set :=
-  | LitInt (n : Z) | LitBool (b : bool) | LitUnit | LitLoc (l : loc).
+  | LitInt (n : Z) | LitBool (b : bool) | LitUnit
+  | LitLoc (l : loc) | LitProphecy (p: proph_id).
 Inductive un_op : Set :=
   | NegOp | MinusUnOp.
 Inductive bin_op : Set :=
@@ -75,7 +83,10 @@ Inductive expr :=
   | Load (e : expr)
   | Store (e1 : expr) (e2 : expr)
   | CAS (e0 : expr) (e1 : expr) (e2 : expr)
-  | FAA (e1 : expr) (e2 : expr).
+  | FAA (e1 : expr) (e2 : expr)
+  (* Prophecy *)
+  | NewProph
+  | ResolveProph (e1 : expr) (e2 : expr).
 
 Bind Scope expr_scope with expr.
 
@@ -83,10 +94,10 @@ Fixpoint is_closed (X : list string) (e : expr) : bool :=
   match e with
   | Var x => bool_decide (x ∈ X)
   | Rec f x e => is_closed (f :b: x :b: X) e
-  | Lit _ => true
+  | Lit _ | NewProph => true
   | UnOp _ e | Fst e | Snd e | InjL e | InjR e | Fork e | Alloc e | Load e =>
      is_closed X e
-  | App e1 e2 | BinOp _ e1 e2 | Pair e1 e2 | Store e1 e2 | FAA e1 e2 =>
+  | App e1 e2 | BinOp _ e1 e2 | Pair e1 e2 | Store e1 e2 | FAA e1 e2 | ResolveProph e1 e2 =>
      is_closed X e1 && is_closed X e2
   | If e0 e1 e2 | Case e0 e1 e2 | CAS e0 e1 e2 =>
      is_closed X e0 && is_closed X e1 && is_closed X e2
@@ -106,6 +117,8 @@ Inductive val :=
   | InjRV (v : val).
 
 Bind Scope val_scope with val.
+
+Definition observation : Set := proph_id * val.
 
 Fixpoint of_val (v : val) : expr :=
   match v with
@@ -160,7 +173,10 @@ Definition val_is_unboxed (v : val) : Prop :=
   end.
 
 (** The state: heaps of vals. *)
-Definition state := gmap loc val.
+Record state : Type := {
+  heap: gmap loc val;
+  used_proph_id: gset proph_id;
+}.
 
 (** Equality and other typeclass stuff *)
 Lemma to_of_val v : to_val (of_val v) = Some v.
@@ -192,11 +208,13 @@ Defined.
 Instance base_lit_countable : Countable base_lit.
 Proof.
  refine (inj_countable' (λ l, match l with
-  | LitInt n => inl (inl n) | LitBool b => inl (inr b)
-  | LitUnit => inr (inl ()) | LitLoc l => inr (inr l)
+  | LitInt n => (inl (inl n), None) | LitBool b => (inl (inr b), None)
+  | LitUnit => (inr (inl ()), None) | LitLoc l => (inr (inr l), None)
+  | LitProphecy p => (inr (inl ()), Some p)
   end) (λ l, match l with
-  | inl (inl n) => LitInt n | inl (inr b) => LitBool b
-  | inr (inl ()) => LitUnit | inr (inr l) => LitLoc l
+  | (inl (inl n), None) => LitInt n | (inl (inr b), None) => LitBool b
+  | (inr (inl ()), None) => LitUnit | (inr (inr l), None) => LitLoc l
+  | (_, Some p) => LitProphecy p
   end) _); by intros [].
 Qed.
 Instance un_op_finite : Countable un_op.
@@ -225,12 +243,12 @@ Instance expr_countable : Countable expr.
 Proof.
  set (enc := fix go e :=
   match e with
-  | Var x => GenLeaf (inl (inl x))
-  | Rec f x e => GenNode 0 [GenLeaf (inl (inr f)); GenLeaf (inl (inr x)); go e]
+  | Var x => GenLeaf (Some (inl (inl x)))
+  | Rec f x e => GenNode 0 [GenLeaf (Some ((inl (inr f)))); GenLeaf (Some (inl (inr x))); go e]
   | App e1 e2 => GenNode 1 [go e1; go e2]
-  | Lit l => GenLeaf (inr (inl l))
-  | UnOp op e => GenNode 2 [GenLeaf (inr (inr (inl op))); go e]
-  | BinOp op e1 e2 => GenNode 3 [GenLeaf (inr (inr (inr op))); go e1; go e2]
+  | Lit l => GenLeaf (Some (inr (inl l)))
+  | UnOp op e => GenNode 2 [GenLeaf (Some (inr (inr (inl op)))); go e]
+  | BinOp op e1 e2 => GenNode 3 [GenLeaf (Some (inr (inr (inr op)))); go e1; go e2]
   | If e0 e1 e2 => GenNode 4 [go e0; go e1; go e2]
   | Pair e1 e2 => GenNode 5 [go e1; go e2]
   | Fst e => GenNode 6 [go e]
@@ -244,15 +262,17 @@ Proof.
   | Store e1 e2 => GenNode 14 [go e1; go e2]
   | CAS e0 e1 e2 => GenNode 15 [go e0; go e1; go e2]
   | FAA e1 e2 => GenNode 16 [go e1; go e2]
+  | NewProph => GenLeaf None
+  | ResolveProph e1 e2 => GenNode 17 [go e1; go e2]
   end).
  set (dec := fix go e :=
   match e with
-  | GenLeaf (inl (inl x)) => Var x
-  | GenNode 0 [GenLeaf (inl (inr f)); GenLeaf (inl (inr x)); e] => Rec f x (go e)
+  | GenLeaf (Some(inl (inl x))) => Var x
+  | GenNode 0 [GenLeaf (Some (inl (inr f))); GenLeaf (Some (inl (inr x))); e] => Rec f x (go e)
   | GenNode 1 [e1; e2] => App (go e1) (go e2)
-  | GenLeaf (inr (inl l)) => Lit l
-  | GenNode 2 [GenLeaf (inr (inr (inl op))); e] => UnOp op (go e)
-  | GenNode 3 [GenLeaf (inr (inr (inr op))); e1; e2] => BinOp op (go e1) (go e2)
+  | GenLeaf (Some (inr (inl l))) => Lit l
+  | GenNode 2 [GenLeaf (Some (inr (inr (inl op)))); e] => UnOp op (go e)
+  | GenNode 3 [GenLeaf (Some (inr (inr (inr op)))); e1; e2] => BinOp op (go e1) (go e2)
   | GenNode 4 [e0; e1; e2] => If (go e0) (go e1) (go e2)
   | GenNode 5 [e1; e2] => Pair (go e1) (go e2)
   | GenNode 6 [e] => Fst (go e)
@@ -266,6 +286,8 @@ Proof.
   | GenNode 14 [e1; e2] => Store (go e1) (go e2)
   | GenNode 15 [e0; e1; e2] => CAS (go e0) (go e1) (go e2)
   | GenNode 16 [e1; e2] => FAA (go e1) (go e2)
+  | GenLeaf None => NewProph
+  | GenNode 17 [e1; e2] => ResolveProph (go e1) (go e2)
   | _ => Lit LitUnit (* dummy *)
   end).
  refine (inj_countable' enc dec _). intros e. induction e; f_equal/=; auto.
@@ -273,6 +295,8 @@ Qed.
 Instance val_countable : Countable val.
 Proof. refine (inj_countable of_val to_val _); auto using to_of_val. Qed.
 
+Instance state_inhabited : Inhabited state :=
+  populate {| heap := inhabitant; used_proph_id := inhabitant |}.
 Instance expr_inhabited : Inhabited expr := populate (Lit LitUnit).
 Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
 
@@ -303,7 +327,9 @@ Inductive ectx_item :=
   | CasMCtx (e0 : expr) (v2 : val)
   | CasRCtx (e0 : expr) (e1 : expr)
   | FaaLCtx (v2 : val)
-  | FaaRCtx (e1 : expr).
+  | FaaRCtx (e1 : expr)
+  | ProphLCtx (v2 : val)
+  | ProphRCtx (e1 : expr).
 
 Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   match Ki with
@@ -329,6 +355,8 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   | CasRCtx e0 e1 => CAS e0 e1 e
   | FaaLCtx v2 => FAA e (of_val v2)
   | FaaRCtx e1 => FAA e1 e
+  | ProphLCtx v2 => ResolveProph e (of_val v2)
+  | ProphRCtx e1 => ResolveProph e1 e
   end.
 
 (** Substitution *)
@@ -354,6 +382,8 @@ Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
   | Store e1 e2 => Store (subst x es e1) (subst x es e2)
   | CAS e0 e1 e2 => CAS (subst x es e0) (subst x es e1) (subst x es e2)
   | FAA e1 e2 => FAA (subst x es e1) (subst x es e2)
+  | NewProph => NewProph
+  | ResolveProph e1 e2 => ResolveProph (subst x es e1) (subst x es e2)
   end.
 
 Definition subst' (mx : binder) (es : expr) : expr → expr :=
@@ -412,62 +442,90 @@ Definition vals_cas_compare_safe (vl v1 : val) : Prop :=
   val_is_unboxed vl ∨ val_is_unboxed v1.
 Arguments vals_cas_compare_safe !_ !_ /.
 
-Inductive head_step : expr → state → expr → state → list (expr) → Prop :=
+Definition state_upd_heap (f: gmap loc val → gmap loc val) (σ: state) : state :=
+  {| heap := f σ.(heap); used_proph_id := σ.(used_proph_id) |}.
+Arguments state_upd_heap _ !_ /.
+Definition state_upd_used_proph_id (f: gset proph_id → gset proph_id) (σ: state) : state :=
+  {| heap := σ.(heap); used_proph_id := f σ.(used_proph_id) |}.
+Arguments state_upd_used_proph_id _ !_ /.
+
+Inductive head_step : expr → state → list observation → expr → state → list (expr) → Prop :=
   | BetaS f x e1 e2 v2 e' σ :
      to_val e2 = Some v2 →
      Closed (f :b: x :b: []) e1 →
      e' = subst' x (of_val v2) (subst' f (Rec f x e1) e1) →
-     head_step (App (Rec f x e1) e2) σ e' σ []
+     head_step (App (Rec f x e1) e2) σ [] e' σ []
   | UnOpS op e v v' σ :
      to_val e = Some v →
      un_op_eval op v = Some v' →
-     head_step (UnOp op e) σ (of_val v') σ []
+     head_step (UnOp op e) σ [] (of_val v') σ []
   | BinOpS op e1 e2 v1 v2 v' σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
      bin_op_eval op v1 v2 = Some v' →
-     head_step (BinOp op e1 e2) σ (of_val v') σ []
+     head_step (BinOp op e1 e2) σ [] (of_val v') σ []
   | IfTrueS e1 e2 σ :
-     head_step (If (Lit $ LitBool true) e1 e2) σ e1 σ []
+     head_step (If (Lit $ LitBool true) e1 e2) σ [] e1 σ []
   | IfFalseS e1 e2 σ :
-     head_step (If (Lit $ LitBool false) e1 e2) σ e2 σ []
+     head_step (If (Lit $ LitBool false) e1 e2) σ [] e2 σ []
   | FstS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     head_step (Fst (Pair e1 e2)) σ e1 σ []
+     head_step (Fst (Pair e1 e2)) σ [] e1 σ []
   | SndS e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     head_step (Snd (Pair e1 e2)) σ e2 σ []
+     head_step (Snd (Pair e1 e2)) σ [] e2 σ []
   | CaseLS e0 v0 e1 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case (InjL e0) e1 e2) σ (App e1 e0) σ []
+     head_step (Case (InjL e0) e1 e2) σ [] (App e1 e0) σ []
   | CaseRS e0 v0 e1 e2 σ :
      to_val e0 = Some v0 →
-     head_step (Case (InjR e0) e1 e2) σ (App e2 e0) σ []
+     head_step (Case (InjR e0) e1 e2) σ [] (App e2 e0) σ []
   | ForkS e σ:
-     head_step (Fork e) σ (Lit LitUnit) σ [e]
+     head_step (Fork e) σ [] (Lit LitUnit) σ [e]
   | AllocS e v σ l :
-     to_val e = Some v → σ !! l = None →
-     head_step (Alloc e) σ (Lit $ LitLoc l) (<[l:=v]>σ) []
+     to_val e = Some v → σ.(heap) !! l = None →
+     head_step (Alloc e) σ
+               []
+               (Lit $ LitLoc l) (state_upd_heap <[l:=v]> σ)
+               []
   | LoadS l v σ :
-     σ !! l = Some v →
-     head_step (Load (Lit $ LitLoc l)) σ (of_val v) σ []
+     σ.(heap) !! l = Some v →
+     head_step (Load (Lit $ LitLoc l)) σ [] (of_val v) σ []
   | StoreS l e v σ :
-     to_val e = Some v → is_Some (σ !! l) →
-     head_step (Store (Lit $ LitLoc l) e) σ (Lit LitUnit) (<[l:=v]>σ) []
+     to_val e = Some v → is_Some (σ.(heap) !! l) →
+     head_step (Store (Lit $ LitLoc l) e) σ
+               []
+               (Lit LitUnit) (state_upd_heap <[l:=v]> σ)
+               []
   | CasFailS l e1 v1 e2 v2 vl σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     σ !! l = Some vl → vl ≠ v1 →
+     σ.(heap) !! l = Some vl → vl ≠ v1 →
      vals_cas_compare_safe vl v1 →
-     head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool false) σ []
+     head_step (CAS (Lit $ LitLoc l) e1 e2) σ [] (Lit $ LitBool false) σ []
   | CasSucS l e1 v1 e2 v2 σ :
      to_val e1 = Some v1 → to_val e2 = Some v2 →
-     σ !! l = Some v1 →
+     σ.(heap) !! l = Some v1 →
      vals_cas_compare_safe v1 v1 →
-     head_step (CAS (Lit $ LitLoc l) e1 e2) σ (Lit $ LitBool true) (<[l:=v2]>σ) []
+     head_step (CAS (Lit $ LitLoc l) e1 e2) σ
+               []
+               (Lit $ LitBool true) (state_upd_heap <[l:=v2]> σ)
+               []
   | FaaS l i1 e2 i2 σ :
      to_val e2 = Some (LitV (LitInt i2)) →
-     σ !! l = Some (LitV (LitInt i1)) →
-     head_step (FAA (Lit $ LitLoc l) e2) σ (Lit $ LitInt i1) (<[l:=LitV (LitInt (i1 + i2))]>σ) [].
-
+     σ.(heap) !! l = Some (LitV (LitInt i1)) →
+     head_step (FAA (Lit $ LitLoc l) e2) σ
+               []
+               (Lit $ LitInt i1) (state_upd_heap <[l:=LitV (LitInt (i1 + i2))]> σ)
+               []
+  | NewProphS σ p :
+     p ∉ σ.(used_proph_id) →
+     head_step NewProph σ
+               []
+               (Lit $ LitProphecy p) (state_upd_used_proph_id ({[ p ]} ∪) σ)
+               []
+  | ResolveProphS e1 p e2 v σ :
+     to_val e1 = Some (LitV $ LitProphecy p) →
+     to_val e2 = Some v →
+     head_step (ResolveProph e1 e2) σ [(p, v)] (Lit LitUnit) σ [].
 
 (** Basic properties about the language *)
 Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).
@@ -477,11 +535,11 @@ Lemma fill_item_val Ki e :
   is_Some (to_val (fill_item Ki e)) → is_Some (to_val e).
 Proof. intros [v ?]. destruct Ki; simplify_option_eq; eauto. Qed.
 
-Lemma val_head_stuck e1 σ1 e2 σ2 efs : head_step e1 σ1 e2 σ2 efs → to_val e1 = None.
+Lemma val_head_stuck e1 σ1 κ e2 σ2 efs : head_step e1 σ1 κ e2 σ2 efs → to_val e1 = None.
 Proof. destruct 1; naive_solver. Qed.
 
-Lemma head_ctx_step_val Ki e σ1 e2 σ2 efs :
-  head_step (fill_item Ki e) σ1 e2 σ2 efs → is_Some (to_val e).
+Lemma head_ctx_step_val Ki e σ1 κ e2 σ2 efs :
+  head_step (fill_item Ki e) σ1 κ e2 σ2 efs → is_Some (to_val e).
 Proof. destruct Ki; inversion_clear 1; simplify_option_eq; by eauto. Qed.
 
 Lemma fill_item_no_val_inj Ki1 Ki2 e1 e2 :
@@ -495,9 +553,15 @@ Proof.
 Qed.
 
 Lemma alloc_fresh e v σ :
-  let l := fresh (dom (gset loc) σ) in
-  to_val e = Some v → head_step (Alloc e) σ (Lit (LitLoc l)) (<[l:=v]>σ) [].
+  let l := fresh (dom (gset loc) σ.(heap)) in
+  to_val e = Some v →
+  head_step (Alloc e) σ [] (Lit (LitLoc l)) (state_upd_heap <[l:=v]> σ) [].
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset loc)), is_fresh. Qed.
+
+Lemma new_proph_id_fresh σ :
+  let p := fresh σ.(used_proph_id) in
+  head_step NewProph σ [] (Lit $ LitProphecy p) (state_upd_used_proph_id ({[ p ]} ∪) σ) [].
+Proof. constructor. apply is_fresh. Qed.
 
 (* Misc *)
 Lemma to_val_rec f x e `{!Closed (f :b: x :b: []) e} :
