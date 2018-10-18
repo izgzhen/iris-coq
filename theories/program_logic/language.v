@@ -120,7 +120,7 @@ Section language.
     rtc erased_step ρ1 ρ2 →
     ∃ n κs, nsteps n ρ1 κs ρ2.
   Proof.
-    induction 1; firstorder; eauto.
+    induction 1; firstorder; eauto. (* FIXME: [naive_solver eauto] should be able to handle this *)
   Qed.
 
   Lemma of_to_val_flip v e : of_val v = e → to_val e = Some v.
@@ -171,6 +171,7 @@ Section language.
     t1 ≡ₚ t1' → erased_step (t1,σ1) (t2,σ2) → ∃ t2', t2 ≡ₚ t2' ∧ erased_step (t1',σ1) (t2',σ2).
   Proof.
     intros Heq [? Hs]. pose proof (step_Permutation _ _ _ _ _ _ Heq Hs). firstorder.
+     (* FIXME: [naive_solver] should be able to handle this *)
   Qed.
 
   Record pure_step (e1 e2 : expr Λ) := {
