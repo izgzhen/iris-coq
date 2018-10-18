@@ -52,8 +52,8 @@ Section coinflip.
     <<< ∃ (b: bool), x ↦ #0, RET #b >>>.
   Proof.
     iApply wp_atomic_intro. iIntros (Φ) "AU". wp_lam.
-    wp_bind (rand _)%E. iApply rand_spec; first done.
-    iIntros (b) "!> _". wp_let.
+    wp_apply rand_spec; first done.
+    iIntros (b) "_". wp_let.
     wp_bind (_ <- _)%E.
     iMod "AU" as "[Hl [_ Hclose]]".
     iDestruct "Hl" as (v) "Hl".

@@ -29,7 +29,7 @@ Notation "l ↦{ q } -" := (∃ v, l ↦{q} v)%I
   (at level 20, q at level 50, format "l  ↦{ q }  -") : bi_scope.
 Notation "l ↦ -" := (l ↦{1} -)%I (at level 20) : bi_scope.
 
-Notation "p ⥱ v" := (p_mapsto p v) (at level 20, format "p ⥱ v") : bi_scope.
+Notation "p ⥱ v" := (proph_mapsto p v) (at level 20, format "p ⥱ v") : bi_scope.
 Notation "p ⥱ -" := (∃ v, p ⥱ v)%I (at level 20) : bi_scope.
 
 (** The tactic [inv_head_step] performs inversion on hypotheses of the shape
