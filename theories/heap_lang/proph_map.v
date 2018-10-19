@@ -72,9 +72,10 @@ Section first_resolve.
     first_resolve_in_list (<[p := first_resolve pvs p]> R) pvs.
   Proof.
     intros Hf Hnotin p' v' Hp'. rewrite (dom_insert_L R p) in Hp'.
-    erewrite elem_of_union in Hp'. destruct Hp' as [->%elem_of_singleton | Hin] => [->].
-    - by rewrite lookup_insert.
-    - rewrite lookup_insert_ne; first auto. by intros ->.
+    erewrite elem_of_union in Hp'. destruct Hp' as [->%elem_of_singleton | Hin].
+    - intros ->. by rewrite lookup_insert.
+    - intros <-%Hf; last done. rewrite lookup_insert_ne; first done.
+      intros ?. subst. done.
   Qed.
 
   Lemma first_resolve_delete pvs p v R :
