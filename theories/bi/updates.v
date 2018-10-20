@@ -78,10 +78,10 @@ Class BiBUpdPlainly (PROP : sbi) `{!BiBUpd PROP, !BiPlainly PROP} :=
 Hint Mode BiBUpdPlainly ! - - : typeclass_instances.
 
 Class BiFUpdPlainly (PROP : sbi) `{!BiFUpd PROP, !BiPlainly PROP} := {
-  fupd_plain_weak E (P Q : PROP) `{!Plain P} :
-    (Q ={E}=∗ P) -∗ Q ={E}=∗ Q ∗ P;
-  later_fupd_plain p E1 E2 (P : PROP) `{!Plain P} :
-    (▷?p |={E1, E2}=> P) ={E1}=∗ ▷?p ◇ P;
+  fupd_plainly_weak E (P Q : PROP) :
+    (Q ={E}=∗ ■ P) -∗ Q ={E}=∗ Q ∗ P;
+  later_fupd_plainly p E1 E2 (P : PROP) :
+    (▷?p |={E1, E2}=> ■ P) ={E1}=∗ ▷?p ◇ P;
 }.
 Hint Mode BiBUpdFUpd ! - - : typeclass_instances.
 
@@ -271,6 +271,14 @@ Section fupd_derived.
     apply (big_opS_forall (λ P Q, P ={E}=∗ Q)); auto using fupd_intro.
     intros P1 P2 HP Q1 Q2 HQ. by rewrite HP HQ -fupd_sep.
   Qed.
+
+  Lemma fupd_plain_weak `{BiPlainly PROP, !BiFUpdPlainly PROP} E P Q `{!Plain P}:
+    (Q ={E}=∗ P) -∗ Q ={E}=∗ Q ∗ P.
+  Proof. by rewrite {1}(plain P) fupd_plainly_weak. Qed.
+
+  Lemma later_fupd_plain `{BiPlainly PROP, !BiFUpdPlainly PROP} p E1 E2 P `{!Plain P} :
+    (▷?p |={E1, E2}=> P) ={E1}=∗ ▷?p ◇ P.
+  Proof. by rewrite {1}(plain P) later_fupd_plainly. Qed.
 
   Lemma fupd_plain_strong `{BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 P `{!Plain P} :
     (|={E1, E2}=> P) ={E1}=∗ ◇ P.

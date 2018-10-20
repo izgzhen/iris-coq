@@ -41,12 +41,12 @@ Proof. rewrite /BiBUpdFUpd uPred_fupd_eq. by iIntros (E P) ">? [$ $] !> !>". Qed
 Instance uPred_bi_fupd_plainly `{invG Σ} : BiFUpdPlainly (uPredSI (iResUR Σ)).
 Proof.
   split.
-  - rewrite uPred_fupd_eq /uPred_fupd_def. iIntros (E P Q ?) "HQP HQ [Hw HE]".
-    iAssert (◇ P)%I as "#>$".
+  - rewrite uPred_fupd_eq /uPred_fupd_def. iIntros (E P Q) "HQP HQ [Hw HE]".
+    iAssert (◇ ■ P)%I as "#>HP'".
     { by iMod ("HQP" with "HQ [$]") as "(_ & _ & HP)". }
     by iFrame.
-  - rewrite uPred_fupd_eq /uPred_fupd_def. iIntros (p E1 E2 P ?) "HP [Hw HE]".
-    iAssert (▷?p ◇ P)%I with "[-]" as "#$"; last by iFrame.
+  - rewrite uPred_fupd_eq /uPred_fupd_def. iIntros (p E1 E2 P) "HP [Hw HE]".
+    iAssert (▷?p ◇ ■ P)%I with "[-]" as "#HP'"; last by (rewrite plainly_elim; iFrame).
     iNext. by iMod ("HP" with "[$]") as "(_ & _ & HP)".
 Qed.
 
