@@ -37,7 +37,7 @@ Section definitions.
   Definition first_resolve (pvs : proph_val_list P V) (p : P) :=
     (map_of_list pvs : gmap P V) !! p.
 
-  Definition first_resolve_in_list (R : proph_map P V) pvs :=
+  Definition first_resolve_in_list (R : proph_map P V) (pvs : proph_val_list P V) :=
     ∀ p v, p ∈ dom (gset _) R →
            first_resolve pvs p = Some v →
            R !! p = Some (Some v).
@@ -56,7 +56,6 @@ Section definitions.
   Definition proph := proph_aux.(unseal).
   Definition proph_eq :
     @proph = @proph_def := proph_aux.(seal_eq).
-
 End definitions.
 
 Section first_resolve.
