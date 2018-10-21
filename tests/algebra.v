@@ -18,7 +18,7 @@ End tests.
     [2] https://gitlab.mpi-sws.org/robbertkrebbers/coq-stdpp/merge_requests/38
 *)
 Lemma test_setoid_rewrite :
-  exists R, @Reflexive Prop R /\ R = iff.
+  ∃ R, @Reflexive Prop R ∧ R = iff.
 Proof.
   eexists. split.
   - apply _.
