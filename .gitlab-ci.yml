@@ -33,6 +33,15 @@ build-coq.dev:
     OPAM_PINS: "coq version dev"
     VALIDATE: "1"
 
+build-coq.8.9.dev:
+  <<: *template
+  variables:
+    OPAM_PINS: "coq version 8.9.dev"
+    TIMING_PROJECT: "iris"
+    TIMING_CONF: "coq-8.9.dev"
+  tags:
+  - fp-timing
+
 build-coq.8.8.2:
   <<: *template
   variables:
