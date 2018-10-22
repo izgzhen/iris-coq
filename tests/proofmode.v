@@ -1,5 +1,4 @@
 From iris.proofmode Require Import tactics intro_patterns.
-From stdpp Require Import gmap hlist.
 Set Default Proof Using "Type".
 
 Section tests.
