@@ -34,7 +34,7 @@ Section definitions.
   Context `{pG : proph_mapG P V Σ}.
 
   (** The first resolve for [p] in [pvs] *)
-  Definition first_resolve (pvs : proph_val_list P V) (p : P) :=
+  Definition first_resolve (pvs : proph_val_list P V) (p : P) : option V :=
     (map_of_list pvs : gmap P V) !! p.
 
   Definition first_resolve_in_list (R : proph_map P V) (pvs : proph_val_list P V) :=
