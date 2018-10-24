@@ -130,7 +130,7 @@ Qed.
 Lemma wp_pure_step_fupd `{Inhabited (state Λ)} s E E' e1 e2 φ n Φ :
   PureExec φ n e1 e2 →
   φ →
-  Nat.iter n (λ P, |={E,E'}▷=> P) (WP e2 @ s; E {{ Φ }}) ⊢ WP e1 @ s; E {{ Φ }}.
+  (|={E,E'}▷=>^n WP e2 @ s; E {{ Φ }}) ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
   iIntros (Hexec Hφ) "Hwp". specialize (Hexec Hφ).
   iInduction Hexec as [e|n e1 e2 e3 [Hsafe ?]] "IH"; simpl; first done.
