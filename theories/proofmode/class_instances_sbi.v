@@ -321,6 +321,24 @@ Global Instance from_forall_plainly `{BiPlainly PROP} {A} P (Φ : A → PROP) :
   FromForall P Φ → FromForall (■ P)%I (λ a, ■ (Φ a))%I.
 Proof. rewrite /FromForall=> <-. by rewrite plainly_forall. Qed.
 
+Global Instance from_forall_fupd `{BiFUpdPlainly PROP} E1 E2 {A} P (Φ : A → PROP) :
+  (* Some cases in which [E2 ⊆ E1] holds *)
+  TCOr (TCEq E1 E2) (TCOr (TCEq E1 ⊤) (TCEq E2 ∅)) →
+  FromForall P Φ → (∀ x, Plain (Φ x)) →
+  FromForall (|={E1,E2}=> P)%I (λ a, |={E1,E2}=> (Φ a))%I.
+Proof.
+  rewrite /FromForall=> -[->|[->|->]] <- ?; rewrite fupd_plain_forall; set_solver.
+Qed.
+
+Global Instance from_forall_step_fupd `{BiFUpdPlainly PROP} E1 E2 {A} P (Φ : A → PROP) :
+  (* Some cases in which [E2 ⊆ E1] holds *)
+  TCOr (TCEq E1 E2) (TCOr (TCEq E1 ⊤) (TCEq E2 ∅)) →
+  FromForall P Φ → (∀ x, Plain (Φ x)) →
+  FromForall (|={E1,E2}▷=> P)%I (λ a, |={E1,E2}▷=> (Φ a))%I.
+Proof.
+  rewrite /FromForall=> -[->|[->|->]] <- ?; rewrite step_fupd_plain_forall; set_solver.
+Qed.
+
 (** IsExcept0 *)
 Global Instance is_except_0_except_0 P : IsExcept0 (◇ P).
 Proof. by rewrite /IsExcept0 except_0_idemp. Qed.
