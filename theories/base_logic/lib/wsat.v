@@ -4,6 +4,9 @@ From iris.algebra Require Import gmap auth agree gset coPset.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 
+(** All definitions in this file are internal to [fancy_updates] with the
+exception of what's in the [invG] module. The module [invG] is thus exported in
+[fancy_updates], which [wsat] is only imported. *)
 Module invG.
   Class invG (Σ : gFunctors) : Set := WsatG {
     inv_inG :> inG Σ (authR (gmapUR positive (agreeR (laterC (iPreProp Σ)))));
