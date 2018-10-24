@@ -50,7 +50,7 @@ Proof.
     iNext. by iMod ("HP" with "[$]") as "(_ & _ & HP)".
 Qed.
 
-Lemma fupd_plain_soundness `{invPreG Σ} E (P: iPropSI Σ) `{!Plain P}:
+Lemma fupd_plain_soundness `{invPreG Σ} E (P: iProp Σ) `{!Plain P}:
   (∀ `{Hinv: invG Σ}, (|={⊤, E}=> P)%I) → (▷ P)%I.
 Proof.
   iIntros (Hfupd). iMod wsat_alloc as (Hinv) "[Hw HE]".
@@ -68,7 +68,7 @@ Proof.
   eapply (fupd_plain_soundness ⊤); first by apply _.
   intros Hinv. rewrite -/sbi_laterN.
   iPoseProof (Hiter Hinv) as "H".
-  destruct n.
+  destruct n as [|n].
   - rewrite //=. iPoseProof (fupd_plain_strong with "H") as "H'".
     do 2 iMod "H'"; iModIntro; auto.
   - iPoseProof (step_fupdN_mono _ _ _ _ (|={⊤}=> ◇ ⌜φ⌝)%I with "H") as "H'".

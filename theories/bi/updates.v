@@ -272,38 +272,6 @@ Section fupd_derived.
     intros P1 P2 HP Q1 Q2 HQ. by rewrite HP HQ -fupd_sep.
   Qed.
 
-  Lemma fupd_plain_weak `{BiPlainly PROP, !BiFUpdPlainly PROP} E P Q `{!Plain P}:
-    (Q ={E}=∗ P) -∗ Q ={E}=∗ Q ∗ P.
-  Proof. by rewrite {1}(plain P) fupd_plainly_weak. Qed.
-
-  Lemma later_fupd_plain `{BiPlainly PROP, !BiFUpdPlainly PROP} p E1 E2 P `{!Plain P} :
-    (▷?p |={E1, E2}=> P) ={E1}=∗ ▷?p ◇ P.
-  Proof. by rewrite {1}(plain P) later_fupd_plainly. Qed.
-
-  Lemma fupd_plain_strong `{BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 P `{!Plain P} :
-    (|={E1, E2}=> P) ={E1}=∗ ◇ P.
-  Proof. by apply (later_fupd_plain false). Qed.
-
-  Lemma fupd_plain' `{BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 E2' P Q `{!Plain P} :
-    E1 ⊆ E2 →
-    (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
-  Proof.
-    intros (E3&->&HE)%subseteq_disjoint_union_L.
-    apply wand_intro_l. rewrite fupd_frame_r.
-    rewrite fupd_plain_strong fupd_except_0 fupd_plain_weak wand_elim_r.
-    rewrite (fupd_mask_mono E1 (E1 ∪ E3)); last by set_solver+.
-    rewrite fupd_trans -(fupd_trans E1 (E1 ∪ E3) E1).
-    apply fupd_mono. rewrite -fupd_frame_r.
-    apply sep_mono; auto. apply fupd_intro_mask; set_solver+.
-  Qed.
-
-  Lemma fupd_plain `{BiPlainly PROP, !BiFUpdPlainly PROP} E1 E2 P Q `{!Plain P} :
-    E1 ⊆ E2 → (Q -∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
-  Proof.
-    intros HE. rewrite -(fupd_plain' _ _ E1) //. apply wand_intro_l.
-    by rewrite wand_elim_r -fupd_intro.
-  Qed.
-
   (** Fancy updates that take a step derived rules. *)
   Lemma step_fupd_wand E1 E2 E3 P Q : (|={E1,E2,E3}▷=> P) -∗ (P -∗ Q) -∗ |={E1,E2,E3}▷=> Q.
   Proof.
@@ -345,13 +313,6 @@ Section fupd_derived.
     by apply later_mono, fupd_mono.
   Qed.
 
-  Lemma step_fupd_plain `{BiPlainly PROP, !BiFUpdPlainly PROP} E P `{!Plain P} :
-    (|={E, ∅}▷=> P) ={E}=∗ ▷ ◇ P.
-  Proof.
-    specialize (later_fupd_plain true ∅ E P) => //= ->.
-    rewrite fupd_trans fupd_plain_strong. apply fupd_mono, except_0_later.
-  Qed.
-
   Lemma step_fupd_fupd E P:
     (|={E, ∅}▷=> P) ⊣⊢ (|={E, ∅}▷=> |={E}=> P).
   Proof.
@@ -380,15 +341,58 @@ Section fupd_derived.
     rewrite step_fupd_frame_l IH //=.
   Qed.
 
-  Lemma step_fupdN_plain `{BiPlainly PROP, !BiFUpdPlainly PROP} E n P `{!Plain P}:
-    (|={E, ∅}▷=>^n P) ={E}=∗ ▷^n ◇ P.
-  Proof.
-    induction n as [| n].
-    - rewrite -fupd_intro. apply except_0_intro.
-    - rewrite Nat_iter_S step_fupd_fupd IHn ?fupd_trans step_fupd_plain.
-      apply fupd_mono. destruct n; simpl.
-      * by rewrite except_0_idemp.
-      * by rewrite except_0_later.
-  Qed.
+  Section fupd_plainly_derived.
+    Context `{BiPlainly PROP, !BiFUpdPlainly PROP}.
+
+    Lemma fupd_plain_weak E P Q `{!Plain P}:
+      (Q ={E}=∗ P) -∗ Q ={E}=∗ Q ∗ P.
+    Proof. by rewrite {1}(plain P) fupd_plainly_weak. Qed.
+
+    Lemma later_fupd_plain p E1 E2 P `{!Plain P} :
+      (▷?p |={E1, E2}=> P) ={E1}=∗ ▷?p ◇ P.
+    Proof. by rewrite {1}(plain P) later_fupd_plainly. Qed.
+
+    Lemma fupd_plain_strong E1 E2 P `{!Plain P} :
+      (|={E1, E2}=> P) ={E1}=∗ ◇ P.
+    Proof. by apply (later_fupd_plain false). Qed.
+
+    Lemma fupd_plain' E1 E2 E2' P Q `{!Plain P} :
+      E1 ⊆ E2 →
+      (Q ={E1, E2'}=∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
+    Proof.
+      intros (E3&->&HE)%subseteq_disjoint_union_L.
+      apply wand_intro_l. rewrite fupd_frame_r.
+      rewrite fupd_plain_strong fupd_except_0 fupd_plain_weak wand_elim_r.
+      rewrite (fupd_mask_mono E1 (E1 ∪ E3)); last by set_solver+.
+      rewrite fupd_trans -(fupd_trans E1 (E1 ∪ E3) E1).
+      apply fupd_mono. rewrite -fupd_frame_r.
+      apply sep_mono; auto. apply fupd_intro_mask; set_solver+.
+    Qed.
+
+    Lemma fupd_plain E1 E2 P Q `{!Plain P} :
+      E1 ⊆ E2 → (Q -∗ P) -∗ (|={E1, E2}=> Q) ={E1}=∗ (|={E1, E2}=> Q) ∗ P.
+    Proof.
+      intros HE. rewrite -(fupd_plain' _ _ E1) //. apply wand_intro_l.
+        by rewrite wand_elim_r -fupd_intro.
+    Qed.
+
+    Lemma step_fupd_plain E P `{!Plain P} :
+      (|={E, ∅}▷=> P) ={E}=∗ ▷ ◇ P.
+    Proof.
+      specialize (later_fupd_plain true ∅ E P) => //= ->.
+      rewrite fupd_trans fupd_plain_strong. apply fupd_mono, except_0_later.
+    Qed.
+
+    Lemma step_fupdN_plain E n P `{!Plain P}:
+      (|={E, ∅}▷=>^n P) ={E}=∗ ▷^n ◇ P.
+    Proof.
+      induction n as [|n IH].
+      - rewrite -fupd_intro. apply except_0_intro.
+      - rewrite Nat_iter_S step_fupd_fupd IH ?fupd_trans step_fupd_plain.
+        apply fupd_mono. destruct n; simpl.
+        * by rewrite except_0_idemp.
+        * by rewrite except_0_later.
+    Qed.
+  End fupd_plainly_derived.
 
 End fupd_derived.

@@ -13,22 +13,23 @@ Module invG.
     enabled_name : gname;
     disabled_name : gname;
   }.
-End invG.
-Import invG.
 
-Definition invΣ : gFunctors :=
-  #[GFunctor (authRF (gmapURF positive (agreeRF (laterCF idCF))));
-    GFunctor coPset_disjUR;
-    GFunctor (gset_disjUR positive)].
+  Definition invΣ : gFunctors :=
+    #[GFunctor (authRF (gmapURF positive (agreeRF (laterCF idCF))));
+      GFunctor coPset_disjUR;
+      GFunctor (gset_disjUR positive)].
 
-Class invPreG (Σ : gFunctors) : Set := WsatPreG {
-  inv_inPreG :> inG Σ (authR (gmapUR positive (agreeR (laterC (iPreProp Σ)))));
-  enabled_inPreG :> inG Σ coPset_disjR;
-  disabled_inPreG :> inG Σ (gset_disjR positive);
-}.
+  Class invPreG (Σ : gFunctors) : Set := WsatPreG {
+    inv_inPreG :> inG Σ (authR (gmapUR positive (agreeR (laterC (iPreProp Σ)))));
+    enabled_inPreG :> inG Σ coPset_disjR;
+    disabled_inPreG :> inG Σ (gset_disjR positive);
+  }.
 
 Instance subG_invΣ {Σ} : subG invΣ Σ → invPreG Σ.
 Proof. solve_inG. Qed.
+
+End invG.
+Import invG.
 
 Definition invariant_unfold {Σ} (P : iProp Σ) : agree (later (iPreProp Σ)) :=
   to_agree (Next (iProp_unfold P)).
