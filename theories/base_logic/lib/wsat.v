@@ -13,6 +13,21 @@ Module invG.
     enabled_name : gname;
     disabled_name : gname;
   }.
+
+  Definition invΣ : gFunctors :=
+    #[GFunctor (authRF (gmapURF positive (agreeRF (laterCF idCF))));
+      GFunctor coPset_disjUR;
+      GFunctor (gset_disjUR positive)].
+
+  Class invPreG (Σ : gFunctors) : Set := WsatPreG {
+    inv_inPreG :> inG Σ (authR (gmapUR positive (agreeR (laterC (iPreProp Σ)))));
+    enabled_inPreG :> inG Σ coPset_disjR;
+    disabled_inPreG :> inG Σ (gset_disjR positive);
+  }.
+
+Instance subG_invΣ {Σ} : subG invΣ Σ → invPreG Σ.
+Proof. solve_inG. Qed.
+
 End invG.
 Import invG.
 
@@ -175,3 +190,15 @@ Proof.
   iFrame "HI". by iRight.
 Qed.
 End wsat.
+
+(* Allocation of an initial world *)
+Lemma wsat_alloc `{invPreG Σ} : (|==> ∃ _ : invG Σ, wsat ∗ ownE ⊤)%I.
+Proof.
+  iIntros.
+  iMod (own_alloc (● (∅ : gmap _ _))) as (γI) "HI"; first done.
+  iMod (own_alloc (CoPset ⊤)) as (γE) "HE"; first done.
+  iMod (own_alloc (GSet ∅)) as (γD) "HD"; first done.
+  iModIntro; iExists (WsatG _ _ _ _ γI γE γD).
+  rewrite /wsat /ownE -lock; iFrame.
+  iExists ∅. rewrite fmap_empty big_opM_empty. by iFrame.
+Qed.

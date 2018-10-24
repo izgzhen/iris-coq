@@ -957,9 +957,10 @@ Proof. move => [] /(_ i). rewrite /Plain monPred_at_plainly bi.forall_elim //. Q
 Global Instance monPred_bi_fupd_plainly `{BiFUpdPlainly PROP} : BiFUpdPlainly monPredSI.
 Proof.
   split; rewrite monPred_fupd_eq; unseal.
-  - intros E1 E2 E2' P Q ? HE12. split=>/= i. do 3 f_equiv.
-    apply fupd_plain'; [apply _|done].
-  - intros E P ?. split=>/= i. apply later_fupd_plain, _.
+  - intros E P Q. split=>/= i. do 3 f_equiv.
+    rewrite monPred_at_plainly (bi.forall_elim _) fupd_plainly_weak //=.
+  - intros p E1 E2 P; split=>/= i; specialize (later_fupd_plainly p) => HFP.
+    destruct p; simpl; [ unseal | ]; rewrite monPred_at_plainly (bi.forall_elim _); apply HFP.
 Qed.
 
 Global Instance plainly_objective `{BiPlainly PROP} P : Objective (■ P).
