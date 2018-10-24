@@ -88,7 +88,8 @@ Reserved Notation "P ={ E }▷=∗ Q"
   (at level 99, E at level 50, Q at level 200,
    format "'[' P  '/' ={ E }▷=∗  Q ']'").
 Reserved Notation "|={ E1 , E2 }▷=>^ n Q"
-  (at level 99, E1, E2 at level 50, n at level 9, Q at level 200).
+  (at level 99, E1, E2 at level 50, n at level 9, Q at level 200,
+   format "|={ E1 , E2 }▷=>^ n  Q").
 
 (** Big Ops *)
 Reserved Notation "'[∗' 'list]' k ↦ x ∈ l , P"
