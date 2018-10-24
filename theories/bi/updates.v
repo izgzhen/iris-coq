@@ -156,8 +156,21 @@ Section bupd_derived_sbi.
     by rewrite -bupd_intro -or_intro_l.
   Qed.
 
-  Lemma bupd_plain P `{BiBUpdPlainly PROP, !Plain P} : (|==> P) ⊢ P.
-  Proof. by rewrite {1}(plain P) bupd_plainly. Qed.
+  Section bupd_plainly.
+    Context `{BiBUpdPlainly PROP}.
+
+    Lemma bupd_plain P `{!Plain P} : (|==> P) ⊢ P.
+    Proof. by rewrite {1}(plain P) bupd_plainly. Qed.
+
+    Lemma bupd_forall {A} (Φ : A → PROP) `{∀ x, Plain (Φ x)} :
+      (|==> ∀ x, Φ x) ⊣⊢ (∀ x, |==> Φ x).
+    Proof.
+      apply (anti_symm _).
+      - apply forall_intro=> x. by rewrite (forall_elim x).
+      - rewrite -bupd_intro. apply forall_intro=> x.
+        by rewrite (forall_elim x) bupd_plain.
+    Qed.
+  End bupd_plainly.
 End bupd_derived_sbi.
 
 Section fupd_derived.
