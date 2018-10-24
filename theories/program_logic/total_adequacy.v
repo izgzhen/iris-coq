@@ -1,7 +1,6 @@
 From iris.program_logic Require Export total_weakestpre adequacy.
 From iris.algebra Require Import gmap auth agree gset coPset list.
 From iris.bi Require Import big_op fixpoint.
-From iris.base_logic.lib Require Import wsat.
 From iris.proofmode Require Import tactics.
 Set Default Proof Using "Type".
 Import uPred.
@@ -99,18 +98,15 @@ Proof.
   iApply (twptp_app [_] with "[IH']"); [by iApply "IH'"|by iApply "IH"].
 Qed.
 
-Notation world σ := (wsat ∗ ownE ⊤ ∗ state_interp σ [])%I.
-
-Lemma twptp_total σ t : world σ -∗ twptp t -∗ ▷ ⌜sn erased_step (t, σ)⌝.
+Lemma twptp_total σ t :
+  state_interp σ [] -∗ twptp t ={⊤}=∗ ▷ ⌜sn erased_step (t, σ)⌝.
 Proof.
   iIntros "Hw Ht". iRevert (σ) "Hw". iRevert (t) "Ht".
-  iApply twptp_ind; iIntros "!#" (t) "IH"; iIntros (σ) "(Hw&HE&Hσ)".
+  iApply twptp_ind; iIntros "!#" (t) "IH"; iIntros (σ) "Hσ".
   iApply (pure_mono _ _ (Acc_intro _)). iIntros ([t' σ'] [κ Hstep]).
-  rewrite /twptp_pre uPred_fupd_eq /uPred_fupd_def.
-  iMod ("IH" with "[% //] Hσ [$Hw $HE]") as ">(Hw & HE & % & Hσ & [IH _])".
-  iApply "IH". by iFrame.
+  iMod ("IH" with "[% //] Hσ") as (->) "[Hσ [H _]]".
+  by iApply "H".
 Qed.
-
 End adequacy.
 
 Theorem twp_total Σ Λ `{invPreG Σ} s e σ Φ :
@@ -120,11 +116,9 @@ Theorem twp_total Σ Λ `{invPreG Σ} s e σ Φ :
        stateI σ [] ∗ WP e @ s; ⊤ [{ Φ }])%I) →
   sn erased_step ([e], σ). (* i.e. ([e], σ) is strongly normalizing *)
 Proof.
-  intros Hwp.
-  eapply (soundness (M:=iResUR Σ) _ 1); iIntros "/=".
-  iMod wsat_alloc as (Hinv) "[Hw HE]". specialize (Hwp Hinv).
-  rewrite uPred_fupd_eq in Hwp; iMod (Hwp with "[$Hw $HE]") as ">(Hw & HE & Hwp)".
-  iDestruct "Hwp" as (Istate) "[HI Hwp]".
-  iApply (@twptp_total _ _ (IrisG _ _ _ Hinv Istate) with "[$Hw $HE $HI]").
-  by iApply (@twp_twptp _ _ (IrisG _ _ _ Hinv Istate)).
+  intros Hwp. apply (soundness (M:=iResUR Σ) _  2); simpl.
+  apply (fupd_plain_soundness ⊤ _)=> Hinv.
+  iMod (Hwp) as (stateI) "[Hσ H]".
+  iApply (@twptp_total _ _ (IrisG _ _ _ Hinv stateI) with "Hσ").
+  by iApply (@twp_twptp _ _ (IrisG _ _ _ Hinv stateI)).
 Qed.
