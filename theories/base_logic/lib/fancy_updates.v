@@ -63,11 +63,10 @@ Lemma step_fupdN_soundness `{invPreG Σ} φ n :
   (∀ `{Hinv: invG Σ}, (|={⊤, ∅}▷=>^n |={⊤, ∅}=> ⌜ φ ⌝ : iProp Σ)%I) →
   φ.
 Proof.
-  iIntros (Hiter).
-  eapply (soundness (M:=iResUR Σ) _  (S (S n))).
-  eapply (fupd_plain_soundness ⊤); first by apply _.
-  intros Hinv. rewrite -/sbi_laterN.
-  iPoseProof (Hiter Hinv) as "H".
+  intros Hiter.
+  apply (soundness (M:=iResUR Σ) _  (S (S n))); simpl.
+  apply (fupd_plain_soundness ⊤ _).
+  intros Hinv. iPoseProof (Hiter Hinv) as "H".
   destruct n as [|n].
   - rewrite //=. iPoseProof (fupd_plain_strong with "H") as "H'".
     do 2 iMod "H'"; iModIntro; auto.
