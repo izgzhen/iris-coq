@@ -84,12 +84,21 @@ only make sense for affine logics. From the axioms below, one could derive
 [■ P ={E}=∗ P] (see the lemma [fupd_plainly_elim]), which in turn gives
 [True ={E}=∗ emp]. *)
 Class BiFUpdPlainly (PROP : sbi) `{!BiFUpd PROP, !BiPlainly PROP} := {
+  (** When proving a fancy update of a plain proposition, you can also prove it
+  while being allowed to open all invariants. *)
   fupd_plainly_mask_empty E (P : PROP) :
     (|={E,∅}=> ■ P) ⊢ |={E}=> P;
+  (** A strong eliminator (a la modus ponens) for the wand-fancy-update with a
+  plain conclusion: We eliminate [R ={E}=∗ ■ P] by supplying an [R], but we get
+  to keep the [R]. *)
   fupd_plainly_keep_l E (P R : PROP) :
     (R ={E}=∗ ■ P) ∗ R ⊢ |={E}=> P ∗ R;
+  (** Later "almost" commutes with fancy updates over plain propositions. It
+  commutes "almost" because of the ◇ modality, which is needed in the definition
+  of fancy updates so one can remove laters of timeless propositions. *)
   fupd_plainly_later E (P : PROP) :
     (▷ |={E}=> ■ P) ⊢ |={E}=> ▷ ◇ P;
+  (** Forall quantifiers commute with fancy updates over plain propositions. *)
   fupd_plainly_forall_2 E {A} (Φ : A → PROP) :
     (∀ x, |={E}=> ■ Φ x) ⊢ |={E}=> ∀ x, Φ x
 }.
