@@ -359,9 +359,18 @@ Section fupd_derived.
   Qed.
 
   Lemma step_fupdN_mono E1 E2 n P Q :
-    (P ⊢ Q) → (|={E1, E2}▷=>^n P) ⊢ (|={E1, E2}▷=>^n Q).
+    (P ⊢ Q) → (|={E1,E2}▷=>^n P) ⊢ (|={E1,E2}▷=>^n Q).
   Proof.
     intros HPQ. induction n as [|n IH]=> //=. rewrite IH //.
+  Qed.
+
+  Lemma step_fupdN_wand E1 E2 n P Q :
+    (|={E1,E2}▷=>^n P) -∗ (P -∗ Q) -∗ (|={E1,E2}▷=>^n Q).
+  Proof.
+    apply wand_intro_l. induction n as [|n IH]=> /=.
+    { by rewrite wand_elim_l. }
+    rewrite -IH -fupd_frame_l later_sep -fupd_frame_l.
+    by apply sep_mono; first apply later_intro.
   Qed.
 
   Lemma step_fupdN_S_fupd n E P:

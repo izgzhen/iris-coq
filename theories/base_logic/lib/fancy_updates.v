@@ -78,8 +78,8 @@ Proof.
   iPoseProof (Hiter Hinv) as "H". clear Hiter.
   destruct n as [|n].
   - iApply fupd_plainly_mask_empty. iMod "H" as %?; auto.
-  - iPoseProof (step_fupdN_mono _ _ _ _ (|={⊤}=> ⌜φ⌝)%I with "H") as "H'".
-    { iIntros "H". by iApply fupd_plain_mask_empty. }
+  - iDestruct (step_fupdN_wand _ _ _ _ (|={⊤}=> ⌜φ⌝)%I with "H []") as "H'".
+    { by iApply fupd_plain_mask_empty. }
     rewrite -step_fupdN_S_fupd.
     iMod (step_fupdN_plain with "H'") as "Hφ". iModIntro. iNext.
     rewrite -later_laterN laterN_later.
@@ -92,6 +92,5 @@ Lemma step_fupdN_soundness' `{invPreG Σ} φ n :
 Proof.
   iIntros (Hiter). eapply (step_fupdN_soundness _ n).
   iIntros (Hinv). iPoseProof (Hiter Hinv) as "Hiter".
-  iApply (step_fupdN_mono with "Hiter").
-  iIntros (?). iMod (fupd_intro_mask' _ ∅) as "_"; auto.
+  iApply (step_fupdN_wand with "Hiter"). by iApply (fupd_mask_weaken _ _ _).
 Qed.
