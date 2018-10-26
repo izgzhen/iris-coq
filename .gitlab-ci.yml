@@ -36,6 +36,7 @@ build-coq.dev:
 build-coq.8.9.dev:
   <<: *template
   variables:
+    OCAML: "ocaml-base-compiler.4.02.3"
     OPAM_PINS: "coq version 8.9.dev"
     TIMING_PROJECT: "iris"
     TIMING_CONF: "coq-8.9.dev"
@@ -55,6 +56,7 @@ build-coq.8.8.1:
 build-coq.8.8.0:
   <<: *template
   variables:
+    OCAML: "ocaml-base-compiler.4.02.3"
     OPAM_PINS: "coq version 8.8.0"
     OPAM_PKG: "coq-iris"
     TIMING_PROJECT: "iris"
