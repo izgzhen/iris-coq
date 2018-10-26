@@ -79,6 +79,10 @@ Class BiBUpdPlainly (PROP : sbi) `{!BiBUpd PROP, !BiPlainly PROP} :=
   bupd_plainly (P : PROP) : (|==> ■ P) -∗ P.
 Hint Mode BiBUpdPlainly ! - - : typeclass_instances.
 
+(** These rules for the interaction between the [■] and [|={E1,E2=>] modalities
+only make sense for affine logics. From the axioms below, one could derive
+[■ P ={E}=∗ P] (see the lemma [fupd_plainly_elim]), which in turn gives
+[True ={E}=∗ emp]. *)
 Class BiFUpdPlainly (PROP : sbi) `{!BiFUpd PROP, !BiPlainly PROP} := {
   fupd_plainly_mask_empty E (P : PROP) :
     (|={E,∅}=> ■ P) ⊢ |={E}=> P;
