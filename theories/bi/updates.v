@@ -33,6 +33,8 @@ Notation "P ={ E1 , E2 }▷=∗ Q" := (P -∗ |={ E1 , E2, E1 }▷=> Q)%I : bi_s
 Notation "|={ E }▷=> Q" := (|={E,E}▷=> Q)%I : bi_scope.
 Notation "P ={ E }▷=∗ Q" := (P ={E,E}▷=∗ Q)%I : bi_scope.
 Notation "|={ E1 , E2 }▷=>^ n Q" := (Nat.iter n (λ P, |={E1,E2}▷=> P) Q)%I : bi_scope.
+Notation "P ={ E1 , E2 }▷=∗^ n Q" := (P ⊢ |={E1,E2}▷=>^n Q)%I (only parsing) : stdpp_scope.
+Notation "P ={ E1 , E2 }▷=∗^ n Q" := (P -∗ |={E1,E2}▷=>^n Q)%I : bi_scope.
 
 (** Bundled versions  *)
 (* Mixins allow us to create instances easily without having to use Program *)
