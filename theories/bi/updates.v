@@ -203,6 +203,13 @@ Section fupd_derived.
   Lemma fupd_wand_r E1 E2 P Q : (|={E1,E2}=> P) ∗ (P -∗ Q) ={E1,E2}=∗ Q.
   Proof. by rewrite fupd_frame_r wand_elim_r. Qed.
 
+  Lemma fupd_mask_weaken E1 E2 P `{!Absorbing P} : E2 ⊆ E1 → P ={E1,E2}=∗ P.
+  Proof.
+    intros ?. rewrite -{1}(right_id emp%I bi_sep P%I).
+    rewrite (fupd_intro_mask E1 E2 emp%I) //.
+    by rewrite fupd_frame_l sep_elim_l.
+  Qed.
+
   Lemma fupd_trans_frame E1 E2 E3 P Q :
     ((Q ={E2,E3}=∗ emp) ∗ |={E1,E2}=> (Q ∗ P)) ={E1,E3}=∗ P.
   Proof.
