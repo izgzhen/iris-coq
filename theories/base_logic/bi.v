@@ -144,13 +144,13 @@ Proof. exact: bupd_plainly. Qed.
 
 (** extra BI instances *)
 
-Global Instance uPred_affine : BiAffine (uPredI M) | 0.
-Proof. intros P Q. exact: pure_intro. Qed.
+Global Instance uPred_affine M : BiAffine (uPredI M) | 0.
+Proof. intros P. exact: pure_intro. Qed.
 (* Also add this to the global hint database, otherwise [eauto] won't work for
 many lemmas that have [BiAffine] as a premise. *)
 Hint Immediate uPred_affine.
 
-Global Instance uPred_plainly_exist_1 : BiPlainlyExist (uPredSI M).
+Global Instance uPred_plainly_exist_1 M : BiPlainlyExist (uPredSI M).
 Proof. exact: @plainly_exist_1. Qed.
 
 (** Re-state/export lemmas about Iris-specific primitive connectives (own, valid) *)
