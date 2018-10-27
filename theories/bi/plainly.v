@@ -188,6 +188,9 @@ Proof.
   apply plainly_mono, impl_elim with P; auto.
 Qed.
 
+Lemma plainly_emp_2 : emp ⊢@{PROP} ■ emp.
+Proof. apply plainly_emp_intro. Qed.
+
 Lemma plainly_sep_dup P : ■ P ⊣⊢ ■ P ∗ ■ P.
 Proof.
   apply (anti_symm _).

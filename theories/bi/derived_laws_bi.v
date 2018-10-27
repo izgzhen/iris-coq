@@ -385,6 +385,9 @@ Proof.
   apply wand_intro_l. rewrite left_absorb. auto.
 Qed.
 
+Lemma wand_trans P Q R : (P -∗ Q) ∗ (Q -∗ R) ⊢ (P -∗ R).
+Proof. apply wand_intro_l. by rewrite assoc !wand_elim_r. Qed.
+
 Lemma wand_curry P Q R : (P -∗ Q -∗ R) ⊣⊢ (P ∗ Q -∗ R).
 Proof.
   apply (anti_symm _).
@@ -429,6 +432,9 @@ Lemma wand_entails P Q : (P -∗ Q)%I → P ⊢ Q.
 Proof. intros. rewrite -[P]emp_sep. by apply wand_elim_l'. Qed.
 Lemma entails_wand P Q : (P ⊢ Q) → (P -∗ Q)%I.
 Proof. intros ->. apply wand_intro_r. by rewrite left_id. Qed.
+(* A version that works with rewrite, in which bi_emp_valid is unfolded. *)
+Lemma entails_wand' P Q : (P ⊢ Q) → emp ⊢ (P -∗ Q).
+Proof. apply entails_wand. Qed.
 
 Lemma equiv_wand_iff P Q : (P ⊣⊢ Q) → (P ∗-∗ Q)%I.
 Proof. intros ->; apply wand_iff_refl. Qed.
