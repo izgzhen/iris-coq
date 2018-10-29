@@ -54,20 +54,6 @@ Proof.
   iIntros (σ κs n) "Hσ". iMod ("H" with "Hσ") as "%". by auto.
 Qed.
 
-Lemma wp_lift_pure_head_step {s E E' Φ} e1 :
-  state_interp_fork_indep →
-  (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2) →
-  (|={E,E'}▷=> ∀ κ e2 efs σ, ⌜head_step e1 σ κ e2 σ efs⌝ →
-    WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, fork_post }})
-  ⊢ WP e1 @ s; E {{ Φ }}.
-Proof using Hinh.
-  iIntros (???) "H". iApply wp_lift_pure_step; [done| |by eauto|].
-  { by destruct s; auto. }
-  iApply (step_fupd_wand with "H"); iIntros "H".
-  iIntros (?????). iApply "H"; eauto.
-Qed.
-
 Lemma wp_lift_pure_head_stuck E Φ e :
   to_val e = None →
   sub_redexes_are_values e →
@@ -140,18 +126,6 @@ Proof.
   iMod ("H" $! v2 σ2 efs with "[//]") as "(-> & ? & ?) /=". by iFrame.
 Qed.
 
-Lemma wp_lift_pure_det_head_step {s E E' Φ} e1 e2 efs :
-  state_interp_fork_indep →
-  (∀ σ1, head_reducible e1 σ1) →
-  (∀ σ1 κ e2' σ2 efs',
-    head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
-  (|={E,E'}▷=> WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, fork_post }})
-  ⊢ WP e1 @ s; E {{ Φ }}.
-Proof using Hinh.
-  intros. rewrite -(wp_lift_pure_det_step e1 e2 efs); eauto.
-  destruct s; by auto.
-Qed.
-
 Lemma wp_lift_pure_det_head_step_no_fork {s E E' Φ} e1 e2 :
   to_val e1 = None →
   (∀ σ1, head_reducible e1 σ1) →
@@ -167,7 +141,7 @@ Lemma wp_lift_pure_det_head_step_no_fork' {s E Φ} e1 e2 :
   to_val e1 = None →
   (∀ σ1, head_reducible e1 σ1) →
   (∀ σ1 κ e2' σ2 efs',
-    head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧  σ1 = σ2 ∧ e2 = e2' ∧ efs' = []) →
+    head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs' = []) →
   ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
 Proof using Hinh.
   intros. rewrite -[(WP e1 @ s; _ {{ _ }})%I]wp_lift_pure_det_head_step_no_fork //.

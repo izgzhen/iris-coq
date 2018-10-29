@@ -53,26 +53,6 @@ Proof.
   iMod ("H" with "Hσ") as "[$ H]". iIntros "!> * % !> !>". by iApply "H".
 Qed.
 
-Lemma wp_lift_pure_step `{Inhabited (state Λ)} s E E' Φ e1 :
-  state_interp_fork_indep →
-  (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-  (∀ κ σ1 e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2) →
-  (|={E,E'}▷=> ∀ κ e2 efs σ, ⌜prim_step e1 σ κ e2 σ efs⌝ →
-    WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, fork_post }})
-  ⊢ WP e1 @ s; E {{ Φ }}.
-Proof.
-  iIntros (Hfork Hsafe Hstep) "H". iApply wp_lift_step.
-  { specialize (Hsafe inhabitant). destruct s; last done.
-      by eapply reducible_not_val. }
-  iIntros (σ1 κ κs n) "Hσ". iMod "H".
-  iMod fupd_intro_mask' as "Hclose"; last iModIntro; first by set_solver. iSplit.
-  { iPureIntro. destruct s; done. }
-  iNext. iIntros (e2 σ2 efs Hstep').
-  destruct (Hstep κ σ1 e2 σ2 efs); auto; subst; clear Hstep.
-  iMod "Hclose" as "_". iMod "H". iModIntro.
-  rewrite (Hfork _ _ _ n). iFrame "Hσ". iApply "H"; auto.
-Qed.
-
 Lemma wp_lift_pure_step_no_fork `{Inhabited (state Λ)} s E E' Φ e1 :
   (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
   (∀ κ σ1 e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2 ∧ efs = []) →
@@ -138,20 +118,6 @@ Proof.
   iIntros (????) "?". iMod ("H" with "[$]") as "[$ H]".
   iIntros "!> *". iIntros (Hstep) "!> !>".
   by iApply "H".
-Qed.
-
-Lemma wp_lift_pure_det_step `{Inhabited (state Λ)} {s E E' Φ} e1 e2 efs :
-  state_interp_fork_indep →
-  (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-  (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' →
-    κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
-  (|={E,E'}▷=> WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, fork_post }})
-  ⊢ WP e1 @ s; E {{ Φ }}.
-Proof.
-  iIntros (?? Hpuredet) "H". iApply (wp_lift_pure_step s E E'); try done.
-  { by naive_solver. }
-  iApply (step_fupd_wand with "H"); iIntros "H".
-  by iIntros (κ e' efs' σ (->&_&->&->)%Hpuredet).
 Qed.
 
 Lemma wp_lift_pure_det_step_no_fork `{Inhabited (state Λ)} {s E E' Φ} e1 e2 :

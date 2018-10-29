@@ -13,9 +13,6 @@ Class irisG' (Λstate Λobservation : Type) (Σ : gFunctors) := IrisG {
 Notation irisG Λ Σ := (irisG' (state Λ) (observation Λ) Σ).
 Global Opaque iris_invG.
 
-Definition state_interp_fork_indep `{irisG Λ Σ} :=
-  ∀ σ κs n n', state_interp σ κs n = state_interp σ κs n'.
-
 Definition wp_pre `{irisG Λ Σ} (s : stuckness)
     (wp : coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ) :
     coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ := λ E e1 Φ,

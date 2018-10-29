@@ -162,17 +162,17 @@ Implicit Types σ : state.
 Lemma wp_fork s E e Φ :
   ▷ WP e @ s; ⊤ {{ _, True }} -∗ ▷ Φ (LitV LitUnit) -∗ WP Fork e @ s; E {{ Φ }}.
 Proof.
-  iIntros "He HΦ".
-  iApply wp_lift_pure_det_head_step; [done|auto|intros; inv_head_step; eauto|].
-  iModIntro; iNext; iIntros "!> /= {$He}". by iApply wp_value.
+  iIntros "He HΦ". iApply wp_lift_atomic_head_step; [done|].
+  iIntros (σ1 κ κs n) "Hσ !>"; iSplit; first by eauto.
+  iNext; iIntros (v2 σ2 efs Hstep); inv_head_step. by iFrame.
 Qed.
 
 Lemma twp_fork s E e Φ :
   WP e @ s; ⊤ [{ _, True }] -∗ Φ (LitV LitUnit) -∗ WP Fork e @ s; E [{ Φ }].
 Proof.
-  iIntros "He HΦ".
-  iApply twp_lift_pure_det_head_step; [done|auto|intros; inv_head_step; eauto|].
-  iIntros "!> /= {$He}". by iApply twp_value.
+  iIntros "He HΦ". iApply twp_lift_atomic_head_step; [done|].
+  iIntros (σ1 κs n) "Hσ !>"; iSplit; first by eauto.
+  iIntros (κ v2 σ2 efs Hstep); inv_head_step. by iFrame.
 Qed.
 
 (** Heap *)

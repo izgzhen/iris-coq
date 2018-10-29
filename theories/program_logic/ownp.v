@@ -189,22 +189,12 @@ Section lifting.
     iSplitL "Hs"; first by iFrame. iModIntro. iIntros "Hσ2". iApply "Hs'". iFrame.
   Qed.
 
-  Lemma ownP_lift_pure_det_step `{Inhabited (state Λ)} {s E Φ} e1 e2 efs :
-    (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
-    ▷ (WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤{{ _, True }})
-    ⊢ WP e1 @ s; E {{ Φ }}.
-  Proof.
-    iIntros (? Hpuredet) "?"; iApply ownP_lift_pure_step=>//.
-    naive_solver. by iNext; iIntros (κ e' efs' σ (->&_&->&->)%Hpuredet).
-  Qed.
-
   Lemma ownP_lift_pure_det_step_no_fork `{Inhabited (state Λ)} {s E Φ} e1 e2 :
     (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs' = []) →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
-    intros. rewrite -(wp_lift_pure_det_step e1 e2 []) // ?big_sepL_nil ?right_id; eauto.
+    intros. rewrite -(wp_lift_pure_det_step_no_fork e1 e2) //; eauto.
   Qed.
 End lifting.
 
@@ -289,22 +279,12 @@ Section ectx_lifting.
     by destruct s; eauto using reducible_not_val.
   Qed.
 
-  Lemma ownP_lift_pure_det_head_step {s E Φ} e1 e2 efs :
-    (∀ σ1, head_reducible e1 σ1) →
-    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
-    ▷ (WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
-    ⊢ WP e1 @ s; E {{ Φ }}.
-  Proof using Hinh.
-    iIntros (??) "H"; iApply wp_lift_pure_det_step; try by eauto.
-    by destruct s; eauto using reducible_not_val.
-  Qed.
-
   Lemma ownP_lift_pure_det_head_step_no_fork {s E Φ} e1 e2 :
     (∀ σ1, head_reducible e1 σ1) →
-    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ [] = efs') →
+    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs' = []) →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof using Hinh.
-    iIntros (??) "H". iApply ownP_lift_pure_det_step_no_fork; eauto.
+    iIntros (??) "H"; iApply wp_lift_pure_det_step_no_fork; try by eauto.
     by destruct s; eauto using reducible_not_val.
   Qed.
 End ectx_lifting.

@@ -25,26 +25,7 @@ Lemma twp_lift_step s E Φ e1 :
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof. by rewrite twp_unfold /twp_pre=> ->. Qed.
 
-
 (** Derived lifting lemmas. *)
-Lemma twp_lift_pure_step `{Inhabited (state Λ)} s E Φ e1 :
-  state_interp_fork_indep →
-  (∀ σ1, reducible_no_obs e1 σ1) →
-  (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2) →
-  (|={E}=> ∀ κ e2 efs σ, ⌜prim_step e1 σ κ e2 σ efs⌝ →
-    WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, fork_post }])
-  ⊢ WP e1 @ s; E [{ Φ }].
-Proof.
-  iIntros (Hfork Hsafe Hstep) "H". iApply twp_lift_step.
-  { eapply reducible_not_val, reducible_no_obs_reducible, (Hsafe inhabitant). }
-  iIntros (σ1 κs n) "Hσ". iMod "H".
-  iMod fupd_intro_mask' as "Hclose"; last iModIntro; first set_solver.
-  iSplit; [by destruct s|]. iIntros (κ e2 σ2 efs Hstep').
-  destruct (Hstep σ1 κ e2 σ2 efs); auto; subst.
-  iMod "Hclose" as "_". iModIntro. iSplit; first done. rewrite (Hfork _ _ _ n).
-  iFrame "Hσ". iApply "H"; auto.
-Qed.
-
 Lemma twp_lift_pure_step_no_fork `{Inhabited (state Λ)} s E Φ e1 :
   (∀ σ1, reducible_no_obs e1 σ1) →
   (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2 ∧ efs = []) →
@@ -82,19 +63,6 @@ Proof.
   iMod ("H" $! κ e2 σ2 efs with "[#]") as "($ & $ & HΦ & $)"; first by eauto.
   destruct (to_val e2) eqn:?; last by iExFalso.
   iApply twp_value; last done. by apply of_to_val.
-Qed.
-
-Lemma twp_lift_pure_det_step `{Inhabited (state Λ)} {s E Φ} e1 e2 efs :
-  state_interp_fork_indep →
-  (∀ σ1, reducible_no_obs e1 σ1) →
-  (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' →
-    κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs') →
-  (|={E}=> WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, fork_post }])
-  ⊢ WP e1 @ s; E [{ Φ }].
-Proof.
-  iIntros (?? Hpuredet) ">H". iApply (twp_lift_pure_step _ E); try done.
-  { by naive_solver. }
-  by iIntros "!>" (κ e' efs' σ (->&_&->&->)%Hpuredet).
 Qed.
 
 Lemma twp_lift_pure_det_step_no_fork `{Inhabited (state Λ)} {s E Φ} e1 e2 :
