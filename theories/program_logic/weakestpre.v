@@ -7,7 +7,17 @@ Import uPred.
 
 Class irisG' (Λstate Λobservation : Type) (Σ : gFunctors) := IrisG {
   iris_invG :> invG Σ;
+
+  (** The state interpretation is an invariant that should hold in between each
+  step of reduction. Here [Λstate] is the global state, [list Λobservation] are
+  the remaining observations, and [nat] is the number of forked-off threads
+  (not the total number of threads, which is one higher because there is always
+  a main thread). *)
   state_interp : Λstate → list Λobservation → nat → iProp Σ;
+
+  (** A fixed postcondition for any forked-off thread. For most languages, e.g.
+  heap_lang, this will simply be [True]. However, it is useful if one wants to
+  keep track of resources precisely, as in e.g. Iron. *)
   fork_post : iProp Σ;
 }.
 Notation irisG Λ Σ := (irisG' (state Λ) (observation Λ) Σ).
