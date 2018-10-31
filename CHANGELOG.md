@@ -31,6 +31,13 @@ Changes in and extensions of the theory:
   See `heap_lang/lib/increment.v` for an example.
 * [#] heap_lang now uses right-to-left evaluation order. This makes it
   significantly easier to write specifications of curried functions.
+* [#] heap_lang values are now injected in heap_lang expressions via a specific
+  constructor of the expr inductive type. This simplifies much the tactical
+  infrastructure around the language. In particular, this allow us to get rid
+  the reflexion mechanism that was needed for proving closedness, atomicity and
+  "valueness" of a term. The price to pay is the addition of new
+  "administrative" reductions in the operational semantics of the language.
+
 
 Changes in Coq:
 
@@ -85,6 +92,9 @@ Changes in Coq:
   changed `AsVal` to be usable for rewriting via the `[v <-]` destruct pattern.
 * `wp_fork` is now written in curried form.
 * `PureExec`/`wp_pure` now supports taking multiple steps at once.
+* A new tactic, `wp_pures`, executes as many pure steps as possible, excluding
+  steps that would require unlocking subterms. Every impure wp_ tactic executes
+  this tactic before doing anything else.
 
 ## Iris 3.1.0 (released 2017-12-19)
 

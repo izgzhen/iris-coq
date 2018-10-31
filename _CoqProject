@@ -81,6 +81,7 @@ theories/program_logic/total_lifting.v
 theories/program_logic/total_ectx_lifting.v
 theories/program_logic/atomic.v
 theories/heap_lang/lang.v
+theories/heap_lang/metatheory.v
 theories/heap_lang/tactics.v
 theories/heap_lang/lifting.v
 theories/heap_lang/notation.v

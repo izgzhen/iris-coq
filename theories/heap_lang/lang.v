@@ -59,12 +59,13 @@ Proof.
 Qed.
 
 Inductive expr :=
+  (* Values *)
+  | Val (v : val)
   (* Base lambda calculus *)
   | Var (x : string)
   | Rec (f x : binder) (e : expr)
   | App (e1 e2 : expr)
   (* Base types and their operations *)
-  | Lit (l : base_lit)
   | UnOp (op : un_op) (e : expr)
   | BinOp (op : bin_op) (e1 e2 : expr)
   | If (e0 e1 e2 : expr)
@@ -86,57 +87,24 @@ Inductive expr :=
   | FAA (e1 : expr) (e2 : expr)
   (* Prophecy *)
   | NewProph
-  | ResolveProph (e1 : expr) (e2 : expr).
-
-Bind Scope expr_scope with expr.
-
-Fixpoint is_closed (X : list string) (e : expr) : bool :=
-  match e with
-  | Var x => bool_decide (x ∈ X)
-  | Rec f x e => is_closed (f :b: x :b: X) e
-  | Lit _ | NewProph => true
-  | UnOp _ e | Fst e | Snd e | InjL e | InjR e | Fork e | Alloc e | Load e =>
-     is_closed X e
-  | App e1 e2 | BinOp _ e1 e2 | Pair e1 e2 | Store e1 e2 | FAA e1 e2 | ResolveProph e1 e2 =>
-     is_closed X e1 && is_closed X e2
-  | If e0 e1 e2 | Case e0 e1 e2 | CAS e0 e1 e2 =>
-     is_closed X e0 && is_closed X e1 && is_closed X e2
-  end.
-
-Class Closed (X : list string) (e : expr) := closed : is_closed X e.
-Instance closed_proof_irrel X e : ProofIrrel (Closed X e).
-Proof. rewrite /Closed. apply _. Qed.
-Instance closed_dec X e : Decision (Closed X e).
-Proof. rewrite /Closed. apply _. Defined.
-
-Inductive val :=
-  | RecV (f x : binder) (e : expr) `{!Closed (f :b: x :b: []) e}
+  | ResolveProph (e1 : expr) (e2 : expr)
+with val :=
   | LitV (l : base_lit)
+  | RecV (f x : binder) (e : expr)
   | PairV (v1 v2 : val)
   | InjLV (v : val)
   | InjRV (v : val).
 
+Bind Scope expr_scope with expr.
 Bind Scope val_scope with val.
 
 Definition observation : Set := proph_id * val.
 
-Fixpoint of_val (v : val) : expr :=
-  match v with
-  | RecV f x e => Rec f x e
-  | LitV l => Lit l
-  | PairV v1 v2 => Pair (of_val v1) (of_val v2)
-  | InjLV v => InjL (of_val v)
-  | InjRV v => InjR (of_val v)
-  end.
+Notation of_val := Val (only parsing).
 
-Fixpoint to_val (e : expr) : option val :=
+Definition to_val (e : expr) : option val :=
   match e with
-  | Rec f x e =>
-     if decide (Closed (f :b: x :b: []) e) then Some (RecV f x e) else None
-  | Lit l => Some (LitV l)
-  | Pair e1 e2 => v1 ← to_val e1; v2 ← to_val e2; Some (PairV v1 v2)
-  | InjL e => InjLV <$> to_val e
-  | InjR e => InjRV <$> to_val e
+  | Val v => Some v
   | _ => None
   end.
 
@@ -180,17 +148,13 @@ Record state : Type := {
 
 (** Equality and other typeclass stuff *)
 Lemma to_of_val v : to_val (of_val v) = Some v.
-Proof.
-  by induction v; simplify_option_eq; repeat f_equal; try apply (proof_irrel _).
-Qed.
+Proof. by destruct v. Qed.
 
 Lemma of_to_val e v : to_val e = Some v → of_val v = e.
-Proof.
-  revert v; induction e; intros v ?; simplify_option_eq; auto with f_equal.
-Qed.
+Proof. destruct e=>//=. by intros [= <-]. Qed.
 
 Instance of_val_inj : Inj (=) (=) of_val.
-Proof. by intros ?? Hv; apply (inj Some); rewrite -!to_of_val Hv. Qed.
+Proof. intros ??. congruence. Qed.
 
 Instance base_lit_eq_dec : EqDecision base_lit.
 Proof. solve_decision. Defined.
@@ -199,11 +163,57 @@ Proof. solve_decision. Defined.
 Instance bin_op_eq_dec : EqDecision bin_op.
 Proof. solve_decision. Defined.
 Instance expr_eq_dec : EqDecision expr.
-Proof. solve_decision. Defined.
-Instance val_eq_dec : EqDecision val.
 Proof.
- refine (λ v v', cast_if (decide (of_val v = of_val v'))); abstract naive_solver.
+  refine (
+   fix go (e1 e2 : expr) {struct e1} : Decision (e1 = e2) :=
+     match e1, e2 with
+     | Val v, Val v' => cast_if (decide (v = v'))
+     | Var x, Var x' => cast_if (decide (x = x'))
+     | Rec f x e, Rec f' x' e' =>
+        cast_if_and3 (decide (f = f')) (decide (x = x')) (decide (e = e'))
+     | App e1 e2, App e1' e2' => cast_if_and (decide (e1 = e1')) (decide (e2 = e2'))
+     | UnOp o e, UnOp o' e' => cast_if_and (decide (o = o')) (decide (e = e'))
+     | BinOp o e1 e2, BinOp o' e1' e2' =>
+        cast_if_and3 (decide (o = o')) (decide (e1 = e1')) (decide (e2 = e2'))
+     | If e0 e1 e2, If e0' e1' e2' =>
+        cast_if_and3 (decide (e0 = e0')) (decide (e1 = e1')) (decide (e2 = e2'))
+     | Pair e1 e2, Pair e1' e2' =>
+        cast_if_and (decide (e1 = e1')) (decide (e2 = e2'))
+     | Fst e, Fst e' => cast_if (decide (e = e'))
+     | Snd e, Snd e' => cast_if (decide (e = e'))
+     | InjL e, InjL e' => cast_if (decide (e = e'))
+     | InjR e, InjR e' => cast_if (decide (e = e'))
+     | Case e0 e1 e2, Case e0' e1' e2' =>
+        cast_if_and3 (decide (e0 = e0')) (decide (e1 = e1')) (decide (e2 = e2'))
+     | Fork e, Fork e' => cast_if (decide (e = e'))
+     | Alloc e, Alloc e' => cast_if (decide (e = e'))
+     | Load e, Load e' => cast_if (decide (e = e'))
+     | Store e1 e2, Store e1' e2' =>
+        cast_if_and (decide (e1 = e1')) (decide (e2 = e2'))
+     | CAS e0 e1 e2, CAS e0' e1' e2' =>
+        cast_if_and3 (decide (e0 = e0')) (decide (e1 = e1')) (decide (e2 = e2'))
+     | FAA e1 e2, FAA e1' e2' =>
+        cast_if_and (decide (e1 = e1')) (decide (e2 = e2'))
+     | NewProph, NewProph => left _
+     | ResolveProph e1 e2, ResolveProph e1' e2' =>
+        cast_if_and (decide (e1 = e1')) (decide (e2 = e2'))
+     | _, _ => right _
+     end
+   with gov (v1 v2 : val) {struct v1} : Decision (v1 = v2) :=
+     match v1, v2 with
+     | LitV l, LitV l' => cast_if (decide (l = l'))
+     | RecV f x e, RecV f' x' e' =>
+        cast_if_and3 (decide (f = f')) (decide (x = x')) (decide (e = e'))
+     | PairV e1 e2, PairV e1' e2' =>
+        cast_if_and (decide (e1 = e1')) (decide (e2 = e2'))
+     | InjLV e, InjLV e' => cast_if (decide (e = e'))
+     | InjRV e, InjRV e' => cast_if (decide (e = e'))
+     | _, _ => right _
+     end
+   for go); try (clear go gov; abstract intuition congruence).
 Defined.
+Instance val_eq_dec : EqDecision val.
+Proof. solve_decision. Defined.
 
 Instance base_lit_countable : Countable base_lit.
 Proof.
@@ -241,64 +251,90 @@ Proof.
 Qed.
 Instance expr_countable : Countable expr.
 Proof.
- set (enc := fix go e :=
-  match e with
-  | Var x => GenLeaf (Some (inl (inl x)))
-  | Rec f x e => GenNode 0 [GenLeaf (Some ((inl (inr f)))); GenLeaf (Some (inl (inr x))); go e]
-  | App e1 e2 => GenNode 1 [go e1; go e2]
-  | Lit l => GenLeaf (Some (inr (inl l)))
-  | UnOp op e => GenNode 2 [GenLeaf (Some (inr (inr (inl op)))); go e]
-  | BinOp op e1 e2 => GenNode 3 [GenLeaf (Some (inr (inr (inr op)))); go e1; go e2]
-  | If e0 e1 e2 => GenNode 4 [go e0; go e1; go e2]
-  | Pair e1 e2 => GenNode 5 [go e1; go e2]
-  | Fst e => GenNode 6 [go e]
-  | Snd e => GenNode 7 [go e]
-  | InjL e => GenNode 8 [go e]
-  | InjR e => GenNode 9 [go e]
-  | Case e0 e1 e2 => GenNode 10 [go e0; go e1; go e2]
-  | Fork e => GenNode 11 [go e]
-  | Alloc e => GenNode 12 [go e]
-  | Load e => GenNode 13 [go e]
-  | Store e1 e2 => GenNode 14 [go e1; go e2]
-  | CAS e0 e1 e2 => GenNode 15 [go e0; go e1; go e2]
-  | FAA e1 e2 => GenNode 16 [go e1; go e2]
-  | NewProph => GenLeaf None
-  | ResolveProph e1 e2 => GenNode 17 [go e1; go e2]
-  end).
- set (dec := fix go e :=
-  match e with
-  | GenLeaf (Some(inl (inl x))) => Var x
-  | GenNode 0 [GenLeaf (Some (inl (inr f))); GenLeaf (Some (inl (inr x))); e] => Rec f x (go e)
-  | GenNode 1 [e1; e2] => App (go e1) (go e2)
-  | GenLeaf (Some (inr (inl l))) => Lit l
-  | GenNode 2 [GenLeaf (Some (inr (inr (inl op)))); e] => UnOp op (go e)
-  | GenNode 3 [GenLeaf (Some (inr (inr (inr op)))); e1; e2] => BinOp op (go e1) (go e2)
-  | GenNode 4 [e0; e1; e2] => If (go e0) (go e1) (go e2)
-  | GenNode 5 [e1; e2] => Pair (go e1) (go e2)
-  | GenNode 6 [e] => Fst (go e)
-  | GenNode 7 [e] => Snd (go e)
-  | GenNode 8 [e] => InjL (go e)
-  | GenNode 9 [e] => InjR (go e)
-  | GenNode 10 [e0; e1; e2] => Case (go e0) (go e1) (go e2)
-  | GenNode 11 [e] => Fork (go e)
-  | GenNode 12 [e] => Alloc (go e)
-  | GenNode 13 [e] => Load (go e)
-  | GenNode 14 [e1; e2] => Store (go e1) (go e2)
-  | GenNode 15 [e0; e1; e2] => CAS (go e0) (go e1) (go e2)
-  | GenNode 16 [e1; e2] => FAA (go e1) (go e2)
-  | GenLeaf None => NewProph
-  | GenNode 17 [e1; e2] => ResolveProph (go e1) (go e2)
-  | _ => Lit LitUnit (* dummy *)
-  end).
- refine (inj_countable' enc dec _). intros e. induction e; f_equal/=; auto.
+ set (enc :=
+   fix go e :=
+     match e with
+     | Val v => GenNode 0 [gov v]
+     | Var x => GenLeaf (inl (inl x))
+     | Rec f x e => GenNode 1 [GenLeaf (inl (inr f)); GenLeaf (inl (inr x)); go e]
+     | App e1 e2 => GenNode 2 [go e1; go e2]
+     | UnOp op e => GenNode 3 [GenLeaf (inr (inr (inl op))); go e]
+     | BinOp op e1 e2 => GenNode 4 [GenLeaf (inr (inr (inr op))); go e1; go e2]
+     | If e0 e1 e2 => GenNode 5 [go e0; go e1; go e2]
+     | Pair e1 e2 => GenNode 6 [go e1; go e2]
+     | Fst e => GenNode 7 [go e]
+     | Snd e => GenNode 8 [go e]
+     | InjL e => GenNode 9 [go e]
+     | InjR e => GenNode 10 [go e]
+     | Case e0 e1 e2 => GenNode 11 [go e0; go e1; go e2]
+     | Fork e => GenNode 12 [go e]
+     | Alloc e => GenNode 13 [go e]
+     | Load e => GenNode 14 [go e]
+     | Store e1 e2 => GenNode 15 [go e1; go e2]
+     | CAS e0 e1 e2 => GenNode 16 [go e0; go e1; go e2]
+     | FAA e1 e2 => GenNode 17 [go e1; go e2]
+     | NewProph => GenNode 18 []
+     | ResolveProph e1 e2 => GenNode 19 [go e1; go e2]
+     end
+   with gov v :=
+     match v with
+     | LitV l => GenLeaf (inr (inl l))
+     | RecV f x e =>
+        GenNode 0 [GenLeaf (inl (inr f)); GenLeaf (inl (inr x)); go e]
+     | PairV v1 v2 => GenNode 1 [gov v1; gov v2]
+     | InjLV v => GenNode 2 [gov v]
+     | InjRV v => GenNode 3 [gov v]
+     end
+   for go).
+ set (dec :=
+   fix go e :=
+     match e with
+     | GenNode 0 [v] => Val (gov v)
+     | GenLeaf (inl (inl x)) => Var x
+     | GenNode 1 [GenLeaf (inl (inr f)); GenLeaf (inl (inr x)); e] => Rec f x (go e)
+     | GenNode 2 [e1; e2] => App (go e1) (go e2)
+     | GenNode 3 [GenLeaf (inr (inr (inl op))); e] => UnOp op (go e)
+     | GenNode 4 [GenLeaf (inr (inr (inr op))); e1; e2] => BinOp op (go e1) (go e2)
+     | GenNode 5 [e0; e1; e2] => If (go e0) (go e1) (go e2)
+     | GenNode 6 [e1; e2] => Pair (go e1) (go e2)
+     | GenNode 7 [e] => Fst (go e)
+     | GenNode 8 [e] => Snd (go e)
+     | GenNode 9 [e] => InjL (go e)
+     | GenNode 10 [e] => InjR (go e)
+     | GenNode 11 [e0; e1; e2] => Case (go e0) (go e1) (go e2)
+     | GenNode 12 [e] => Fork (go e)
+     | GenNode 13 [e] => Alloc (go e)
+     | GenNode 14 [e] => Load (go e)
+     | GenNode 15 [e1; e2] => Store (go e1) (go e2)
+     | GenNode 16 [e0; e1; e2] => CAS (go e0) (go e1) (go e2)
+     | GenNode 17 [e1; e2] => FAA (go e1) (go e2)
+     | GenNode 18 [] => NewProph
+     | GenNode 19 [e1; e2] => ResolveProph (go e1) (go e2)
+     | _ => Val $ LitV LitUnit (* dummy *)
+     end
+   with gov v :=
+     match v with
+     | GenLeaf (inr (inl l)) => LitV l
+     | GenNode 0 [GenLeaf (inl (inr f)); GenLeaf (inl (inr x)); e] => RecV f x (go e)
+     | GenNode 1 [v1; v2] => PairV (gov v1) (gov v2)
+     | GenNode 2 [v] => InjLV (gov v)
+     | GenNode 3 [v] => InjRV (gov v)
+     | _ => LitV LitUnit (* dummy *)
+     end
+   for go).
+ refine (inj_countable' enc dec _).
+ refine (fix go (e : expr) {struct e} := _ with gov (v : val) {struct v} := _ for go).
+ - destruct e as [v| | | | | | | | | | | | | | | | | | | |]; simpl; f_equal;
+     [exact (gov v)|done..].
+ - destruct v; by f_equal.
 Qed.
 Instance val_countable : Countable val.
 Proof. refine (inj_countable of_val to_val _); auto using to_of_val. Qed.
 
 Instance state_inhabited : Inhabited state :=
   populate {| heap := inhabitant; used_proph_id := inhabitant |}.
-Instance expr_inhabited : Inhabited expr := populate (Lit LitUnit).
 Instance val_inhabited : Inhabited val := populate (LitV LitUnit).
+Instance expr_inhabited : Inhabited expr := populate (Val inhabitant).
 
 Canonical Structure stateC := leibnizC state.
 Canonical Structure valC := leibnizC val.
@@ -336,10 +372,10 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   | AppLCtx v2 => App e (of_val v2)
   | AppRCtx e1 => App e1 e
   | UnOpCtx op => UnOp op e
-  | BinOpLCtx op v2 => BinOp op e (of_val v2)
+  | BinOpLCtx op v2 => BinOp op e (Val v2)
   | BinOpRCtx op e1 => BinOp op e1 e
   | IfCtx e1 e2 => If e e1 e2
-  | PairLCtx v2 => Pair e (of_val v2)
+  | PairLCtx v2 => Pair e (Val v2)
   | PairRCtx e1 => Pair e1 e
   | FstCtx => Fst e
   | SndCtx => Snd e
@@ -348,46 +384,46 @@ Definition fill_item (Ki : ectx_item) (e : expr) : expr :=
   | CaseCtx e1 e2 => Case e e1 e2
   | AllocCtx => Alloc e
   | LoadCtx => Load e
-  | StoreLCtx v2 => Store e (of_val v2)
+  | StoreLCtx v2 => Store e (Val v2)
   | StoreRCtx e1 => Store e1 e
-  | CasLCtx v1 v2 => CAS e (of_val v1) (of_val v2)
-  | CasMCtx e0 v2 => CAS e0 e (of_val v2)
+  | CasLCtx v1 v2 => CAS e (Val v1) (Val v2)
+  | CasMCtx e0 v2 => CAS e0 e (Val v2)
   | CasRCtx e0 e1 => CAS e0 e1 e
-  | FaaLCtx v2 => FAA e (of_val v2)
+  | FaaLCtx v2 => FAA e (Val v2)
   | FaaRCtx e1 => FAA e1 e
   | ProphLCtx v2 => ResolveProph e (of_val v2)
   | ProphRCtx e1 => ResolveProph e1 e
   end.
 
 (** Substitution *)
-Fixpoint subst (x : string) (es : expr) (e : expr)  : expr :=
+Fixpoint subst (x : string) (v : val) (e : expr)  : expr :=
   match e with
-  | Var y => if decide (x = y) then es else Var y
+  | Val _ => e
+  | Var y => if decide (x = y) then Val v else Var y
   | Rec f y e =>
-     Rec f y $ if decide (BNamed x ≠ f ∧ BNamed x ≠ y) then subst x es e else e
-  | App e1 e2 => App (subst x es e1) (subst x es e2)
-  | Lit l => Lit l
-  | UnOp op e => UnOp op (subst x es e)
-  | BinOp op e1 e2 => BinOp op (subst x es e1) (subst x es e2)
-  | If e0 e1 e2 => If (subst x es e0) (subst x es e1) (subst x es e2)
-  | Pair e1 e2 => Pair (subst x es e1) (subst x es e2)
-  | Fst e => Fst (subst x es e)
-  | Snd e => Snd (subst x es e)
-  | InjL e => InjL (subst x es e)
-  | InjR e => InjR (subst x es e)
-  | Case e0 e1 e2 => Case (subst x es e0) (subst x es e1) (subst x es e2)
-  | Fork e => Fork (subst x es e)
-  | Alloc e => Alloc (subst x es e)
-  | Load e => Load (subst x es e)
-  | Store e1 e2 => Store (subst x es e1) (subst x es e2)
-  | CAS e0 e1 e2 => CAS (subst x es e0) (subst x es e1) (subst x es e2)
-  | FAA e1 e2 => FAA (subst x es e1) (subst x es e2)
+     Rec f y $ if decide (BNamed x ≠ f ∧ BNamed x ≠ y) then subst x v e else e
+  | App e1 e2 => App (subst x v e1) (subst x v e2)
+  | UnOp op e => UnOp op (subst x v e)
+  | BinOp op e1 e2 => BinOp op (subst x v e1) (subst x v e2)
+  | If e0 e1 e2 => If (subst x v e0) (subst x v e1) (subst x v e2)
+  | Pair e1 e2 => Pair (subst x v e1) (subst x v e2)
+  | Fst e => Fst (subst x v e)
+  | Snd e => Snd (subst x v e)
+  | InjL e => InjL (subst x v e)
+  | InjR e => InjR (subst x v e)
+  | Case e0 e1 e2 => Case (subst x v e0) (subst x v e1) (subst x v e2)
+  | Fork e => Fork (subst x v e)
+  | Alloc e => Alloc (subst x v e)
+  | Load e => Load (subst x v e)
+  | Store e1 e2 => Store (subst x v e1) (subst x v e2)
+  | CAS e0 e1 e2 => CAS (subst x v e0) (subst x v e1) (subst x v e2)
+  | FAA e1 e2 => FAA (subst x v e1) (subst x v e2)
   | NewProph => NewProph
-  | ResolveProph e1 e2 => ResolveProph (subst x es e1) (subst x es e2)
+  | ResolveProph e1 e2 => ResolveProph (subst x v e1) (subst x v e2)
   end.
 
-Definition subst' (mx : binder) (es : expr) : expr → expr :=
-  match mx with BNamed x => subst x es | BAnon => id end.
+Definition subst' (mx : binder) (v : val) : expr → expr :=
+  match mx with BNamed x => subst x v | BAnon => id end.
 
 (** The stepping relation *)
 Definition un_op_eval (op : un_op) (v : val) : option val :=
@@ -450,82 +486,82 @@ Definition state_upd_used_proph_id (f: gset proph_id → gset proph_id) (σ: sta
 Arguments state_upd_used_proph_id _ !_ /.
 
 Inductive head_step : expr → state → list observation → expr → state → list (expr) → Prop :=
-  | BetaS f x e1 e2 v2 e' σ :
-     to_val e2 = Some v2 →
-     Closed (f :b: x :b: []) e1 →
-     e' = subst' x (of_val v2) (subst' f (Rec f x e1) e1) →
-     head_step (App (Rec f x e1) e2) σ [] e' σ []
-  | UnOpS op e v v' σ :
-     to_val e = Some v →
+  | RecS f x e σ :
+     head_step (Rec f x e) σ [] (Val $ RecV f x e) σ []
+  | PairS v1 v2 σ :
+     head_step (Pair (Val v1) (Val v2)) σ [] (Val $ PairV v1 v2) σ []
+  | InjLS v σ :
+     head_step (InjL $ Val v) σ [] (Val $ InjLV v) σ []
+  | InjRS v σ :
+     head_step (InjR $ Val v) σ [] (Val $ InjRV v) σ []
+  | BetaS f x e1 v2 e' σ :
+     e' = subst' x v2 (subst' f (RecV f x e1) e1) →
+     head_step (App (Val $ RecV f x e1) (Val v2)) σ [] e' σ []
+  | UnOpS op v v' σ :
      un_op_eval op v = Some v' →
-     head_step (UnOp op e) σ [] (of_val v') σ []
-  | BinOpS op e1 e2 v1 v2 v' σ :
-     to_val e1 = Some v1 → to_val e2 = Some v2 →
+     head_step (UnOp op (Val v)) σ [] (Val v') σ []
+  | BinOpS op v1 v2 v' σ :
      bin_op_eval op v1 v2 = Some v' →
-     head_step (BinOp op e1 e2) σ [] (of_val v') σ []
+     head_step (BinOp op (Val v1) (Val v2)) σ [] (Val v') σ []
   | IfTrueS e1 e2 σ :
-     head_step (If (Lit $ LitBool true) e1 e2) σ [] e1 σ []
+     head_step (If (Val $ LitV $ LitBool true) e1 e2) σ [] e1 σ []
   | IfFalseS e1 e2 σ :
-     head_step (If (Lit $ LitBool false) e1 e2) σ [] e2 σ []
-  | FstS e1 v1 e2 v2 σ :
-     to_val e1 = Some v1 → to_val e2 = Some v2 →
-     head_step (Fst (Pair e1 e2)) σ [] e1 σ []
-  | SndS e1 v1 e2 v2 σ :
-     to_val e1 = Some v1 → to_val e2 = Some v2 →
-     head_step (Snd (Pair e1 e2)) σ [] e2 σ []
-  | CaseLS e0 v0 e1 e2 σ :
-     to_val e0 = Some v0 →
-     head_step (Case (InjL e0) e1 e2) σ [] (App e1 e0) σ []
-  | CaseRS e0 v0 e1 e2 σ :
-     to_val e0 = Some v0 →
-     head_step (Case (InjR e0) e1 e2) σ [] (App e2 e0) σ []
+     head_step (If (Val $ LitV $ LitBool false) e1 e2) σ [] e2 σ []
+  | FstS v1 v2 σ :
+     head_step (Fst (Val $ PairV v1 v2)) σ [] (Val v1) σ []
+  | SndS v1 v2 σ :
+     head_step (Snd (Val $ PairV v1 v2)) σ [] (Val v2) σ []
+  | CaseLS v e1 e2 σ :
+     head_step (Case (Val $ InjLV v) e1 e2) σ [] (App e1 (Val v)) σ []
+  | CaseRS v e1 e2 σ :
+     head_step (Case (Val $ InjRV v) e1 e2) σ [] (App e2 (Val v)) σ []
   | ForkS e σ:
-     head_step (Fork e) σ [] (Lit LitUnit) σ [e]
-  | AllocS e v σ l :
-     to_val e = Some v → σ.(heap) !! l = None →
-     head_step (Alloc e) σ
+     head_step (Fork e) σ [] (Val $ LitV LitUnit) σ [e]
+  | AllocS v σ l :
+     σ.(heap) !! l = None →
+     head_step (Alloc $ Val v) σ
                []
-               (Lit $ LitLoc l) (state_upd_heap <[l:=v]> σ)
+               (Val $ LitV $ LitLoc l) (state_upd_heap <[l:=v]> σ)
                []
   | LoadS l v σ :
      σ.(heap) !! l = Some v →
-     head_step (Load (Lit $ LitLoc l)) σ [] (of_val v) σ []
-  | StoreS l e v σ :
-     to_val e = Some v → is_Some (σ.(heap) !! l) →
-     head_step (Store (Lit $ LitLoc l) e) σ
+     head_step (Load (Val $ LitV $ LitLoc l)) σ [] (of_val v) σ []
+  | StoreS l v σ :
+     is_Some (σ.(heap) !! l) →
+     head_step (Store (Val $ LitV $ LitLoc l) (Val v)) σ
                []
-               (Lit LitUnit) (state_upd_heap <[l:=v]> σ)
+               (Val $ LitV LitUnit) (state_upd_heap <[l:=v]> σ)
                []
-  | CasFailS l e1 v1 e2 v2 vl σ :
-     to_val e1 = Some v1 → to_val e2 = Some v2 →
+  | CasFailS l v1 v2 vl σ :
      σ.(heap) !! l = Some vl → vl ≠ v1 →
      vals_cas_compare_safe vl v1 →
-     head_step (CAS (Lit $ LitLoc l) e1 e2) σ [] (Lit $ LitBool false) σ []
-  | CasSucS l e1 v1 e2 v2 σ :
-     to_val e1 = Some v1 → to_val e2 = Some v2 →
+     head_step (CAS (Val $ LitV $ LitLoc l) (Val v1) (Val v2)) σ []
+               (Val $ LitV $ LitBool false) σ []
+  | CasSucS l v1 v2 σ :
      σ.(heap) !! l = Some v1 →
      vals_cas_compare_safe v1 v1 →
-     head_step (CAS (Lit $ LitLoc l) e1 e2) σ
+     head_step (CAS (Val $ LitV $ LitLoc l) (Val v1) (Val v2)) σ
                []
-               (Lit $ LitBool true) (state_upd_heap <[l:=v2]> σ)
+               (Val $ LitV $ LitBool true) (state_upd_heap <[l:=v2]> σ)
                []
-  | FaaS l i1 e2 i2 σ :
-     to_val e2 = Some (LitV (LitInt i2)) →
+  | FaaS l i1 i2 σ :
      σ.(heap) !! l = Some (LitV (LitInt i1)) →
-     head_step (FAA (Lit $ LitLoc l) e2) σ
+     head_step (FAA (Val $ LitV $ LitLoc l) (Val $ LitV $ LitInt i2)) σ
                []
-               (Lit $ LitInt i1) (state_upd_heap <[l:=LitV (LitInt (i1 + i2))]> σ)
+               (Val $ LitV $ LitInt i1) (state_upd_heap <[l:=LitV (LitInt (i1 + i2))]>σ)
                []
   | NewProphS σ p :
      p ∉ σ.(used_proph_id) →
      head_step NewProph σ
                []
-               (Lit $ LitProphecy p) (state_upd_used_proph_id ({[ p ]} ∪) σ)
+               (Val $ LitV $ LitProphecy p) (state_upd_used_proph_id ({[ p ]} ∪) σ)
                []
   | ResolveProphS e1 p e2 v σ :
      to_val e1 = Some (LitV $ LitProphecy p) →
      to_val e2 = Some v →
-     head_step (ResolveProph e1 e2) σ [(p, v)] (Lit LitUnit) σ [].
+     head_step (ResolveProph (Val $ LitV $ LitProphecy p) (Val v)) σ
+               [(p, v)]
+               (Val $ LitV LitUnit) σ [].
 
 (** Basic properties about the language *)
 Instance fill_item_inj Ki : Inj (=) (=) (fill_item Ki).
@@ -545,95 +581,17 @@ Proof. destruct Ki; inversion_clear 1; simplify_option_eq; by eauto. Qed.
 Lemma fill_item_no_val_inj Ki1 Ki2 e1 e2 :
   to_val e1 = None → to_val e2 = None →
   fill_item Ki1 e1 = fill_item Ki2 e2 → Ki1 = Ki2.
-Proof.
-  destruct Ki1, Ki2; intros; try discriminate; simplify_eq/=;
-    repeat match goal with
-    | H : to_val (of_val _) = None |- _ => by rewrite to_of_val in H
-    end; auto.
-Qed.
+Proof. destruct Ki1, Ki2; intros; by simplify_eq. Qed.
 
-Lemma alloc_fresh e v σ :
+Lemma alloc_fresh v σ :
   let l := fresh (dom (gset loc) σ.(heap)) in
-  to_val e = Some v →
-  head_step (Alloc e) σ [] (Lit (LitLoc l)) (state_upd_heap <[l:=v]> σ) [].
+  head_step (Alloc $ Val v) σ [] (Val $ LitV $ LitLoc l) (state_upd_heap <[l:=v]> σ) [].
 Proof. by intros; apply AllocS, (not_elem_of_dom (D:=gset loc)), is_fresh. Qed.
 
 Lemma new_proph_id_fresh σ :
   let p := fresh σ.(used_proph_id) in
-  head_step NewProph σ [] (Lit $ LitProphecy p) (state_upd_used_proph_id ({[ p ]} ∪) σ) [].
+  head_step NewProph σ [] (Val $ LitV $ LitProphecy p) (state_upd_used_proph_id ({[ p ]} ∪) σ) [].
 Proof. constructor. apply is_fresh. Qed.
-
-(* Misc *)
-Lemma to_val_rec f x e `{!Closed (f :b: x :b: []) e} :
-  to_val (Rec f x e) = Some (RecV f x e).
-Proof. rewrite /to_val. case_decide=> //. do 2 f_equal; apply proof_irrel. Qed.
-
-(** Closed expressions *)
-Lemma is_closed_weaken X Y e : is_closed X e → X ⊆ Y → is_closed Y e.
-Proof. revert X Y; induction e; naive_solver (eauto; set_solver). Qed.
-
-Lemma is_closed_weaken_nil X e : is_closed [] e → is_closed X e.
-Proof. intros. by apply is_closed_weaken with [], list_subseteq_nil. Qed.
-
-Lemma is_closed_of_val X v : is_closed X (of_val v).
-Proof. apply is_closed_weaken_nil. induction v; simpl; auto. Qed.
-
-Lemma is_closed_to_val X e v : to_val e = Some v → is_closed X e.
-Proof. intros <-%of_to_val. apply is_closed_of_val. Qed.
-
-Lemma is_closed_subst X e x es :
-  is_closed [] es → is_closed (x :: X) e → is_closed X (subst x es e).
-Proof.
-  intros ?. revert X.
-  induction e=> X /= ?; destruct_and?; split_and?; simplify_option_eq;
-    try match goal with
-    | H : ¬(_ ∧ _) |- _ => apply not_and_l in H as [?%dec_stable|?%dec_stable]
-    end; eauto using is_closed_weaken with set_solver.
-Qed.
-Lemma is_closed_do_subst' X e x es :
-  is_closed [] es → is_closed (x :b: X) e → is_closed X (subst' x es e).
-Proof. destruct x; eauto using is_closed_subst. Qed.
-
-(* Substitution *)
-Lemma subst_is_closed X e x es : is_closed X e → x ∉ X → subst x es e = e.
-Proof.
-  revert X. induction e=> X /=; rewrite ?bool_decide_spec ?andb_True=> ??;
-    repeat case_decide; simplify_eq/=; f_equal; intuition eauto with set_solver.
-Qed.
-
-Lemma subst_is_closed_nil e x es : is_closed [] e → subst x es e = e.
-Proof. intros. apply subst_is_closed with []; set_solver. Qed.
-
-Lemma subst_subst e x es es' :
-  Closed [] es' → subst x es (subst x es' e) = subst x es' e.
-Proof.
-  intros. induction e; simpl; try (f_equal; by auto);
-    simplify_option_eq; auto using subst_is_closed_nil with f_equal.
-Qed.
-Lemma subst_subst' e x es es' :
-  Closed [] es' → subst' x es (subst' x es' e) = subst' x es' e.
-Proof. destruct x; simpl; auto using subst_subst. Qed.
-
-Lemma subst_subst_ne e x y es es' :
-  Closed [] es → Closed [] es' → x ≠ y →
-  subst x es (subst y es' e) = subst y es' (subst x es e).
-Proof.
-  intros. induction e; simpl; try (f_equal; by auto);
-    simplify_option_eq; auto using eq_sym, subst_is_closed_nil with f_equal.
-Qed.
-Lemma subst_subst_ne' e x y es es' :
-  Closed [] es → Closed [] es' → x ≠ y →
-  subst' x es (subst' y es' e) = subst' y es' (subst' x es e).
-Proof. destruct x, y; simpl; auto using subst_subst_ne with congruence. Qed.
-
-Lemma subst_rec' f y e x es :
-  x = f ∨ x = y ∨ x = BAnon →
-  subst' x es (Rec f y e) = Rec f y e.
-Proof. intros. destruct x; simplify_option_eq; naive_solver. Qed.
-Lemma subst_rec_ne' f y e x es :
-  (x ≠ f ∨ f = BAnon) → (x ≠ y ∨ y = BAnon) →
-  subst' x es (Rec f y e) = Rec f y (subst' x es e).
-Proof. intros. destruct x; simplify_option_eq; naive_solver. Qed.
 
 Lemma heap_lang_mixin : EctxiLanguageMixin of_val to_val fill_item head_step.
 Proof.
@@ -659,4 +617,6 @@ Notation LetCtx x e2 := (AppRCtx (LamV x e2)) (only parsing).
 Notation SeqCtx e2 := (LetCtx BAnon e2) (only parsing).
 Notation Match e0 x1 e1 x2 e2 := (Case e0 (Lam x1 e1) (Lam x2 e2)) (only parsing).
 
-Notation Skip := (Seq (Lit LitUnit) (Lit LitUnit)).
+(* Skip should be atomic, we sometimes open invariants around
+   it. Hence, we need to explicitly use LamV instead of e.g., Seq. *)
+Notation Skip := (App (Val $ LamV BAnon (Val $ LitV LitUnit)) (Val $ LitV LitUnit)).

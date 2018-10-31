@@ -23,11 +23,11 @@
   "Hys" : is_list acc ys
   "HΦ" : ∀ w : val, is_list w ys -∗ Φ w
   --------------------------------------∗
-  WP match: InjL #() with
+  WP match: InjLV #() with
        InjL <> => acc
      | InjR "l" =>
        let: "tmp1" := Fst ! "l" in
        let: "tmp2" := Snd ! "l" in
-       "l" <- ("tmp1", acc);; (rev "tmp2") (InjL #())
+       "l" <- ("tmp1", acc);; (rev "tmp2") (InjLV #())
      end [{ v, Φ v }]
   

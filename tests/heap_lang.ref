@@ -50,6 +50,20 @@
   --------------------------------------∗
   True
   
+"wp_nonclosed_value"
+     : string
+The command has indeed failed with message:
+Ltac call to "wp_pure (open_constr)" failed.
+Tactic failure: wp_pure: cannot find ?y in (Var "x") or 
+?y is not a redex.
+1 subgoal
+  
+  Σ : gFunctors
+  H : heapG Σ
+  ============================
+  --------------------------------------∗
+  WP "x" {{ _, True }}
+  
 1 subgoal
   
   Σ : gFunctors
@@ -104,4 +118,4 @@
      : string
 The command has indeed failed with message:
 Ltac call to "wp_cas_suc" failed.
-Tactic failure: wp_cas_suc: cannot find 'CAS' in (#())%E.
+Tactic failure: wp_cas_suc: cannot find 'CAS' in (#() #()).

@@ -27,8 +27,8 @@ Section tests.
   Lemma heap_e_spec E : WP heap_e @ E {{ v, ⌜v = #2⌝ }}%I.
   Proof.
     iIntros "". rewrite /heap_e. Show.
-    wp_alloc l as "?". wp_let. wp_load. Show.
-    wp_op. wp_store. by wp_load.
+    wp_alloc l as "?". wp_load. Show.
+    wp_store. by wp_load.
   Qed.
 
   Definition heap_e2 : expr :=
@@ -39,8 +39,8 @@ Section tests.
   Lemma heap_e2_spec E : WP heap_e2 @ E [{ v, ⌜v = #2⌝ }]%I.
   Proof.
     iIntros "". rewrite /heap_e2.
-    wp_alloc l as "Hl". Show. wp_let. wp_alloc l'. wp_let.
-    wp_load. wp_op. wp_store. wp_load. done.
+    wp_alloc l as "Hl". Show. wp_alloc l'.
+    wp_load. wp_store. wp_load. done.
   Qed.
 
   Definition heap_e3 : expr :=
@@ -60,8 +60,8 @@ Section tests.
 
   Lemma heap_e4_spec : WP heap_e4 [{ v, ⌜ v = #1 ⌝ }]%I.
   Proof.
-    rewrite /heap_e4. wp_alloc l. wp_alloc l'. wp_let.
-    wp_alloc l''. wp_let. by repeat wp_load.
+    rewrite /heap_e4. wp_alloc l. wp_alloc l'.
+    wp_alloc l''. by repeat wp_load.
   Qed.
 
   Definition heap_e5 : expr :=
@@ -69,8 +69,8 @@ Section tests.
 
   Lemma heap_e5_spec E : WP heap_e5 @ E [{ v, ⌜v = #13⌝ }]%I.
   Proof.
-    rewrite /heap_e5. wp_alloc l. wp_alloc l'. wp_let.
-    wp_op. wp_load. wp_faa. do 2 wp_load. wp_op. done.
+    rewrite /heap_e5. wp_alloc l. wp_alloc l'.
+    wp_load. wp_faa. do 2 wp_load. by wp_pures.
   Qed.
 
   Definition heap_e6 : val := λ: "v", "v" = "v".
@@ -92,8 +92,7 @@ Section tests.
   Proof.
     iIntros (Hn) "HΦ".
     iInduction (Z.gt_wf n2 n1) as [n1' _] "IH" forall (Hn).
-    wp_rec. wp_let. wp_op. wp_let.
-    wp_op; case_bool_decide; wp_if.
+    wp_rec. wp_pures. case_bool_decide; wp_if.
     - iApply ("IH" with "[%] [%] HΦ"); omega.
     - by assert (n1' = n2 - 1) as -> by omega.
   Qed.
@@ -101,16 +100,15 @@ Section tests.
   Lemma Pred_spec n E Φ : Φ #(n - 1) -∗ WP Pred #n @ E [{ Φ }].
   Proof.
     iIntros "HΦ". wp_lam.
-    wp_op. case_bool_decide; wp_if.
-    - wp_op. wp_op.
-      wp_apply FindPred_spec; first omega.
-      wp_op. by replace (n - 1) with (- (-n + 2 - 1)) by omega.
+    wp_op. case_bool_decide.
+    - wp_apply FindPred_spec; first omega. wp_pures.
+      by replace (n - 1) with (- (-n + 2 - 1)) by omega.
     - wp_apply FindPred_spec; eauto with omega.
   Qed.
 
   Lemma Pred_user E :
     WP let: "x" := Pred #42 in Pred "x" @ E [{ v, ⌜v = #40⌝ }]%I.
-  Proof. iIntros "". wp_apply Pred_spec. wp_let. by wp_apply Pred_spec. Qed.
+  Proof. iIntros "". wp_apply Pred_spec. by wp_apply Pred_spec. Qed.
 
   Lemma wp_apply_evar e P :
     P -∗ (∀ Q Φ, Q -∗ WP e {{ Φ }}) -∗ WP e {{ _, True }}.
@@ -130,6 +128,11 @@ Section tests.
   Lemma wp_alloc_drop :
     WP Alloc #0 {{ _, True }}%I.
   Proof. wp_alloc l as "_". Show. done. Qed.
+
+  Check "wp_nonclosed_value".
+  Lemma wp_nonclosed_value :
+    WP let: "x" := #() in (λ: "y", "x")%V #() {{ _, True }}%I.
+  Proof. wp_let. wp_lam. Fail wp_pure _. Show. Abort.
 
 End tests.
 
@@ -183,7 +186,7 @@ Section error_tests.
 
   Check "not_cas".
   Lemma not_cas :
-    (WP #() {{ _, True }})%I.
+    (WP #() #() {{ _, True }})%I.
   Proof.
     Fail wp_cas_suc.
   Abort.

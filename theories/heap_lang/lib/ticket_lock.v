@@ -73,33 +73,33 @@ Section proof.
   Lemma newlock_spec (R : iProp Σ) :
     {{{ R }}} newlock #() {{{ lk γ, RET lk; is_lock γ lk R }}}.
   Proof.
-    iIntros (Φ) "HR HΦ". rewrite -wp_fupd /newlock /=.
-    wp_seq. wp_alloc ln as "Hln". wp_alloc lo as "Hlo".
+    iIntros (Φ) "HR HΦ". rewrite -wp_fupd. wp_lam.
+    wp_alloc ln as "Hln". wp_alloc lo as "Hlo".
     iMod (own_alloc (● (Excl' 0%nat, GSet ∅) ⋅ ◯ (Excl' 0%nat, GSet ∅))) as (γ) "[Hγ Hγ']".
     { by rewrite -auth_both_op. }
     iMod (inv_alloc _ _ (lock_inv γ lo ln R) with "[-HΦ]").
     { iNext. rewrite /lock_inv.
       iExists 0%nat, 0%nat. iFrame. iLeft. by iFrame. }
-    iModIntro. iApply ("HΦ" $! (#lo, #ln)%V γ). iExists lo, ln. eauto.
+    wp_pures. iModIntro. iApply ("HΦ" $! (#lo, #ln)%V γ). iExists lo, ln. eauto.
   Qed.
 
   Lemma wait_loop_spec γ lk x R :
     {{{ is_lock γ lk R ∗ issued γ x }}} wait_loop #x lk {{{ RET #(); locked γ ∗ R }}}.
   Proof.
     iIntros (Φ) "[Hl Ht] HΦ". iDestruct "Hl" as (lo ln ->) "#Hinv".
-    iLöb as "IH". wp_rec. subst. wp_let. wp_proj. wp_bind (! _)%E.
+    iLöb as "IH". wp_rec. subst. wp_pures. wp_bind (! _)%E.
     iInv N as (o n) "(Hlo & Hln & Ha)".
     wp_load. destruct (decide (x = o)) as [->|Hneq].
     - iDestruct "Ha" as "[Hainv [[Ho HR] | Haown]]".
       + iModIntro. iSplitL "Hlo Hln Hainv Ht".
         { iNext. iExists o, n. iFrame. }
-        wp_let. wp_op. case_bool_decide; [|done]. wp_if.
+        wp_pures. case_bool_decide; [|done]. wp_if.
         iApply ("HΦ" with "[-]"). rewrite /locked. iFrame. eauto.
       + iDestruct (own_valid_2 with "Ht Haown") as % [_ ?%gset_disj_valid_op].
         set_solver.
     - iModIntro. iSplitL "Hlo Hln Ha".
       { iNext. iExists o, n. by iFrame. }
-      wp_let. wp_op. case_bool_decide; [simplify_eq |].
+      wp_pures. case_bool_decide; [simplify_eq |].
       wp_if. iApply ("IH" with "Ht"). iNext. by iExact "HΦ".
   Qed.
 
@@ -111,7 +111,7 @@ Section proof.
     iInv N as (o n) "[Hlo [Hln Ha]]".
     wp_load. iModIntro. iSplitL "Hlo Hln Ha".
     { iNext. iExists o, n. by iFrame. }
-    wp_let. wp_op. wp_proj. wp_bind (CAS _ _ _).
+    wp_pures. wp_bind (CAS _ _ _).
     iInv N as (o' n') "(>Hlo' & >Hln' & >Hauth & Haown)".
     destruct (decide (#n' = #n))%V as [[= ->%Nat2Z.inj] | Hneq].
     - iMod (own_update with "Hauth") as "[Hauth Hofull]".
@@ -137,14 +137,14 @@ Section proof.
   Proof.
     iIntros (Φ) "(Hl & Hγ & HR) HΦ". iDestruct "Hl" as (lo ln ->) "#Hinv".
     iDestruct "Hγ" as (o) "Hγo".
-    wp_let. wp_proj. wp_bind (! _)%E.
+    wp_lam. wp_proj. wp_bind (! _)%E.
     iInv N as (o' n) "(>Hlo & >Hln & >Hauth & Haown)".
     wp_load.
     iDestruct (own_valid_2 with "Hauth Hγo") as
       %[[<-%Excl_included%leibniz_equiv _]%prod_included _]%auth_valid_discrete_2.
     iModIntro. iSplitL "Hlo Hln Hauth Haown".
     { iNext. iExists o, n. by iFrame. }
-    wp_op. wp_proj.
+    wp_pures.
     iInv N as (o' n') "(>Hlo & >Hln & >Hauth & Haown)".
     iApply wp_fupd. wp_store.
     iDestruct (own_valid_2 with "Hauth Hγo") as
