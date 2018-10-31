@@ -177,7 +177,7 @@ Section language.
   Record pure_step (e1 e2 : expr Λ) := {
     pure_step_safe σ1 : reducible_no_obs e1 σ1;
     pure_step_det σ1 κ e2' σ2 efs :
-      prim_step e1 σ1 κ e2' σ2 efs → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = []
+      prim_step e1 σ1 κ e2' σ2 efs → κ = [] ∧ σ2 = σ1 ∧ e2' = e2 ∧ efs = []
   }.
 
   (* TODO: Exclude the case of [n=0], either here, or in [wp_pure] to avoid it

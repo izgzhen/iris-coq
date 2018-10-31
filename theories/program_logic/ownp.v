@@ -132,7 +132,7 @@ Section lifting.
 
   Lemma ownP_lift_pure_step `{Inhabited (state Λ)} s E Φ e1 :
     (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2) →
+    (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ2 = σ1) →
     (▷ ∀ κ e2 efs σ, ⌜prim_step e1 σ κ e2 σ efs⌝ →
       WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -167,21 +167,21 @@ Section lifting.
   Lemma ownP_lift_atomic_det_step {s E Φ e1} σ1 v2 σ2 efs :
     (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (∀ κ' e2' σ2' efs', prim_step e1 σ1 κ' e2' σ2' efs' →
-                     σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
+                     σ2' = σ2 ∧ to_val e2' = Some v2 ∧ efs' = efs) →
     ▷ (ownP σ1) ∗ ▷ (ownP σ2 -∗
       Φ v2 ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     iIntros (? Hdet) "[Hσ1 Hσ2]"; iApply ownP_lift_atomic_step; try done.
     iFrame; iNext; iIntros (κ' e2' σ2' efs' ?) "Hσ2'".
-    edestruct (Hdet κ') as (->&Hval&->); first done. rewrite Hval.
+    edestruct (Hdet κ') as (<-&Hval&<-); first done. rewrite Hval.
     iApply ("Hσ2" with "Hσ2'").
   Qed.
 
   Lemma ownP_lift_atomic_det_step_no_fork {s E e1} σ1 v2 σ2 :
     (if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
     (∀ κ' e2' σ2' efs', prim_step e1 σ1 κ' e2' σ2' efs' →
-      σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
+      σ2' = σ2 ∧ to_val e2' = Some v2 ∧ efs' = []) →
     {{{ ▷ (ownP σ1) }}} e1 @ s; E {{{ RET v2; ownP σ2 }}}.
   Proof.
     intros. rewrite -(ownP_lift_atomic_det_step σ1 v2 σ2 []); [|done..].
@@ -191,7 +191,7 @@ Section lifting.
 
   Lemma ownP_lift_pure_det_step_no_fork `{Inhabited (state Λ)} {s E Φ} e1 e2 :
     (∀ σ1, if s is NotStuck then reducible e1 σ1 else to_val e1 = None) →
-    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs' = []) →
+    (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ2 = σ1 ∧ e2' = e2 ∧ efs' = []) →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof.
     intros. rewrite -(wp_lift_pure_det_step_no_fork e1 e2) //; eauto.
@@ -233,7 +233,7 @@ Section ectx_lifting.
 
   Lemma ownP_lift_pure_head_step s E Φ e1 :
     (∀ σ1, head_reducible e1 σ1) →
-    (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2) →
+    (∀ σ1 κ e2 σ2 efs, head_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ2 = σ1) →
     (▷ ∀ κ e2 efs σ, ⌜head_step e1 σ κ e2 σ efs⌝ →
       WP e2 @ s; E {{ Φ }} ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -259,7 +259,7 @@ Section ectx_lifting.
   Lemma ownP_lift_atomic_det_head_step {s E Φ e1} σ1 v2 σ2 efs :
     head_reducible e1 σ1 →
     (∀ κ' e2' σ2' efs', head_step e1 σ1 κ' e2' σ2' efs' →
-      σ2 = σ2' ∧ to_val e2' = Some v2 ∧ efs = efs') →
+      σ2' = σ2 ∧ to_val e2' = Some v2 ∧ efs' = efs) →
     ▷ (ownP σ1) ∗ ▷ (ownP σ2 -∗
                       Φ v2 ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, True }})
     ⊢ WP e1 @ s; E {{ Φ }}.
@@ -272,7 +272,7 @@ Section ectx_lifting.
   Lemma ownP_lift_atomic_det_head_step_no_fork {s E e1} σ1 κ v2 σ2 :
     head_reducible e1 σ1 →
     (∀ κ' e2' σ2' efs', head_step e1 σ1 κ' e2' σ2' efs' →
-      κ = κ' ∧ σ2 = σ2' ∧ to_val e2' = Some v2 ∧ [] = efs') →
+      κ' = κ ∧ σ2' = σ2 ∧ to_val e2' = Some v2 ∧ efs' = []) →
     {{{ ▷ (ownP σ1) }}} e1 @ s; E {{{ RET v2; ownP σ2 }}}.
   Proof.
     intros ???; apply ownP_lift_atomic_det_step_no_fork; last naive_solver.
@@ -281,7 +281,7 @@ Section ectx_lifting.
 
   Lemma ownP_lift_pure_det_head_step_no_fork {s E Φ} e1 e2 :
     (∀ σ1, head_reducible e1 σ1) →
-    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs' = []) →
+    (∀ σ1 κ e2' σ2 efs', head_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ2 = σ1 ∧ e2' = e2 ∧ efs' = []) →
     ▷ WP e2 @ s; E {{ Φ }} ⊢ WP e1 @ s; E {{ Φ }}.
   Proof using Hinh.
     iIntros (??) "H"; iApply wp_lift_pure_det_step_no_fork; try by eauto.
