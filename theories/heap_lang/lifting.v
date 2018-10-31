@@ -317,12 +317,12 @@ Proof.
   - iApply "HΦ". done.
 Qed.
 
-Lemma wp_resolve_proph e1 e2 p v w:
-  IntoVal e1 (LitV (LitProphecy p)) →
-  IntoVal e2 w →
-  {{{ proph p v }}} ResolveProph e1 e2 {{{ RET (LitV LitUnit); ⌜v = Some w⌝ }}}.
+Lemma wp_resolve_proph p v w:
+  {{{ proph p v }}}
+    ResolveProph (Val $ LitV $ LitProphecy p) (Val w)
+  {{{ RET (LitV LitUnit); ⌜v = Some w⌝ }}}.
 Proof.
-  iIntros (<- <- Φ) "Hp HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
+  iIntros (Φ) "Hp HΦ". iApply wp_lift_atomic_head_step_no_fork; auto.
   iIntros (σ1 κ κs) "[Hσ HR] !>". iDestruct "HR" as (R [Hfr Hdom]) "HR".
   iDestruct (@proph_map_valid with "HR Hp") as %Hlookup.
   iSplit; first by eauto.

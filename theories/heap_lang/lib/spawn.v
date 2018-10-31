@@ -44,11 +44,10 @@ Global Instance join_handle_ne n l :
 Proof. solve_proper. Qed.
 
 (** The main proofs. *)
-Lemma spawn_spec (Ψ : val → iProp Σ) e (f : val) :
-  IntoVal e f →
-  {{{ WP f #() {{ Ψ }} }}} spawn e {{{ l, RET #l; join_handle l Ψ }}}.
+Lemma spawn_spec (Ψ : val → iProp Σ) (f : val) :
+  {{{ WP f #() {{ Ψ }} }}} spawn f {{{ l, RET #l; join_handle l Ψ }}}.
 Proof.
-  iIntros (<- Φ) "Hf HΦ". rewrite /spawn /=. wp_lam.
+  iIntros (Φ) "Hf HΦ". rewrite /spawn /=. wp_lam.
   wp_alloc l as "Hl".
   iMod (own_alloc (Excl ())) as (γ) "Hγ"; first done.
   iMod (inv_alloc N _ (spawn_inv γ l Ψ) with "[Hl]") as "#?".
