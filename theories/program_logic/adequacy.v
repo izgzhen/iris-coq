@@ -44,7 +44,7 @@ Notation wptp s t := ([∗ list] ef ∈ t, WP ef @ s; ⊤ {{ _, True }})%I.
 Lemma wp_step s E e1 σ1 κ κs e2 σ2 efs Φ :
   prim_step e1 σ1 κ e2 σ2 efs →
   state_interp σ1 (κ ++ κs) ∗ WP e1 @ s; E {{ Φ }}
-  ={E, ∅}▷=∗ (state_interp σ2 κs ∗ WP e2 @ s; E {{ Φ }} ∗ wptp s efs).
+  ={E,∅}▷=∗ (state_interp σ2 κs ∗ WP e2 @ s; E {{ Φ }} ∗ wptp s efs).
 Proof.
   rewrite {1}wp_unfold /wp_pre. iIntros (?) "[Hσ H]".
   rewrite (val_stuck e1 σ1 κ e2 σ2 efs) //.
@@ -57,7 +57,7 @@ Lemma wptp_step s e1 t1 t2 κ κs σ1 σ2 Φ :
   step (e1 :: t1,σ1) κ (t2, σ2) →
   state_interp σ1 (κ ++ κs) ∗ WP e1 @ s; ⊤ {{ Φ }} ∗ wptp s t1
   ==∗ ∃ e2 t2',
-    ⌜t2 = e2 :: t2'⌝ ∗ |={⊤, ∅}▷=> (state_interp σ2 κs ∗ WP e2 @ s; ⊤ {{ Φ }} ∗ wptp s t2').
+    ⌜t2 = e2 :: t2'⌝ ∗ |={⊤,∅}▷=> (state_interp σ2 κs ∗ WP e2 @ s; ⊤ {{ Φ }} ∗ wptp s t2').
 Proof.
   iIntros (Hstep) "(HW & He & Ht)".
   destruct Hstep as [e1' σ1' e2' σ2' efs [|? t1'] t2' ?? Hstep]; simplify_eq/=.
@@ -71,7 +71,7 @@ Qed.
 Lemma wptp_steps s n e1 t1 κs κs' t2 σ1 σ2 Φ :
   nsteps n (e1 :: t1, σ1) κs (t2, σ2) →
   state_interp σ1 (κs ++ κs') ∗ WP e1 @ s; ⊤ {{ Φ }} ∗ wptp s t1 ⊢
-  |={⊤, ∅}▷=>^n (∃ e2 t2',
+  |={⊤,∅}▷=>^n (∃ e2 t2',
     ⌜t2 = e2 :: t2'⌝ ∗ state_interp σ2 κs' ∗ WP e2 @ s; ⊤ {{ Φ }} ∗ wptp s t2').
 Proof.
   revert e1 t1 κs κs' t2 σ1 σ2; simpl; induction n as [|n IH]=> e1 t1 κs κs' t2 σ1 σ2 /=.
@@ -88,15 +88,15 @@ Lemma wptp_result s n e1 t1 κs κs' v2 t2 σ1 σ2 φ :
   state_interp σ1 (κs ++ κs') ∗
   WP e1 @ s; ⊤ {{ v, ∀ σ, state_interp σ κs' ={⊤,∅}=∗ ⌜φ v σ⌝ }} ∗
   wptp s t1 ⊢
-  |={⊤, ∅}▷=>^(S n) ⌜φ v2 σ2⌝.
+  |={⊤,∅}▷=>^(S n) ⌜φ v2 σ2⌝.
 Proof.
   intros. rewrite Nat_iter_S_r wptp_steps //.
   apply step_fupdN_mono.
   iDestruct 1 as (e2 t2' ?) "(Hσ & H & _)"; simplify_eq.
   iMod (wp_value_inv' with "H") as "H".
-  iMod (later_fupd_plain false ⊤ ∅ (⌜φ v2 σ2⌝)%I with "[H Hσ]") as ">#%".
-  { rewrite //=. by iMod ("H" with "Hσ") as "$". }
-  iApply (step_fupd_mask_mono ∅ _ _ ∅); auto.
+  iMod (fupd_plain_mask_empty _ ⌜φ v2 σ2⌝%I with "[H Hσ]") as %?.
+  { by iMod ("H" with "Hσ") as "$". }
+  by iApply step_fupd_intro.
 Qed.
 
 Lemma wp_safe E e σ κs Φ :
@@ -105,8 +105,8 @@ Proof.
   rewrite wp_unfold /wp_pre. iIntros "Hσ H".
   destruct (to_val e) as [v|] eqn:?.
   { iApply (step_fupd_mask_mono ∅ _ _ ∅); eauto. set_solver. }
-  iMod (later_fupd_plain false E ∅ (⌜reducible e σ⌝)%I with "[H Hσ]") as ">#%".
-  { rewrite //=. by iMod ("H" $! σ [] κs with "Hσ") as "($&H)". }
+  iMod (fupd_plain_mask_empty _ ⌜reducible e σ⌝%I with "[H Hσ]") as %?.
+  { by iMod ("H" $! σ [] κs with "Hσ") as "($&H)". }
   iApply step_fupd_intro; first by set_solver+. 
   iIntros "!> !%". by right.
 Qed.
@@ -114,7 +114,7 @@ Qed.
 Lemma wptp_safe n e1 κs κs' e2 t1 t2 σ1 σ2 Φ :
   nsteps n (e1 :: t1, σ1) κs (t2, σ2) → e2 ∈ t2 →
   state_interp σ1 (κs ++ κs') ∗ WP e1 {{ Φ }} ∗ wptp NotStuck t1
-  ⊢ |={⊤, ∅}▷=>^(S n) ⌜is_Some (to_val e2) ∨ reducible e2 σ2⌝.
+  ⊢ |={⊤,∅}▷=>^(S n) ⌜is_Some (to_val e2) ∨ reducible e2 σ2⌝.
 Proof.
   intros ? He2. rewrite Nat_iter_S_r wptp_steps //.
   apply step_fupdN_mono.
@@ -126,14 +126,14 @@ Qed.
 
 Lemma wptp_invariance s n e1 κs κs' e2 t1 t2 σ1 σ2 φ Φ :
   nsteps n (e1 :: t1, σ1) κs (t2, σ2) →
-  (state_interp σ2 κs' ={⊤,∅}=∗ ⌜φ⌝) ∗ state_interp σ1 (κs ++ κs') ∗ WP e1 @ s; ⊤ {{ Φ }} ∗ wptp s t1
-  ⊢ |={⊤, ∅}▷=>^(S n) |={⊤,∅}=> ⌜φ⌝.
+  (state_interp σ2 κs' ={⊤,∅}=∗ ⌜φ⌝) ∗
+  state_interp σ1 (κs ++ κs') ∗ WP e1 @ s; ⊤ {{ Φ }} ∗ wptp s t1
+  ⊢ |={⊤,∅}▷=>^(S n) |={⊤,∅}=> ⌜φ⌝.
 Proof.
   intros ?. rewrite Nat_iter_S_r wptp_steps // step_fupdN_frame_l.
   apply step_fupdN_mono.
   iIntros "[Hback H]"; iDestruct "H" as (e2' t2' ->) "[Hσ _]".
-  iSpecialize ("Hback" with "Hσ").
-  iApply (step_fupd_mask_mono ∅ _ _ ∅); auto.
+  iSpecialize ("Hback" with "Hσ"). by iApply step_fupd_intro.
 Qed.
 End adequacy.
 
@@ -146,15 +146,13 @@ Theorem wp_strong_adequacy Σ Λ `{invPreG Σ} s e σ φ :
 Proof.
   intros Hwp; split.
   - intros t2 σ2 v2 [n [κs ?]]%erased_steps_nsteps.
-    eapply (step_fupdN_soundness' _ (S (S n))).
-    iIntros (Hinv).
+    eapply (step_fupdN_soundness' _ (S (S n)))=> Hinv.
     rewrite Nat_iter_S.
     iMod Hwp as (Istate) "[HI Hwp]".
     iApply (step_fupd_mask_mono ∅ _ _ ∅); auto. iModIntro. iNext; iModIntro.
     iApply (@wptp_result _ _ (IrisG _ _ _ Hinv Istate) _ _ _ _ _ []); eauto with iFrame.
   - destruct s; last done. intros t2 σ2 e2 _ [n [κs ?]]%erased_steps_nsteps ?.
-    eapply (step_fupdN_soundness' _ (S (S n))).
-    iIntros (Hinv).
+    eapply (step_fupdN_soundness' _ (S (S n)))=> Hinv.
     rewrite Nat_iter_S.
     iMod Hwp as (Istate) "[HI Hwp]".
     iApply (step_fupd_mask_mono ∅ _ _ ∅); auto.
@@ -184,11 +182,10 @@ Theorem wp_invariance Σ Λ `{invPreG Σ} s e σ1 t2 σ2 φ :
   φ.
 Proof.
   intros Hwp [n [κs ?]]%erased_steps_nsteps.
-  eapply (step_fupdN_soundness _ (S (S n))).
-  iIntros (Hinv).
+  eapply (step_fupdN_soundness _ (S (S n)))=> Hinv.
   rewrite Nat_iter_S.
   iMod (Hwp Hinv κs []) as (Istate) "(HIstate & Hwp & Hclose)".
-  iApply (step_fupd_mask_mono ∅ _ _ ∅); auto.
+  iApply step_fupd_intro; first done.
   iApply (@wptp_invariance _ _ (IrisG _ _ _ Hinv Istate)); eauto with iFrame.
 Qed.
 
