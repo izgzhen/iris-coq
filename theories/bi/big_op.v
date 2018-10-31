@@ -49,6 +49,7 @@ Notation "'[∗' 'mset]' x ∈ X , P" := (big_opMS bi_sep (λ x, P) X) : bi_scop
 (** * Properties *)
 Section bi_big_op.
 Context {PROP : bi}.
+Implicit Types P Q : PROP.
 Implicit Types Ps Qs : list PROP.
 Implicit Types A : Type.
 
@@ -91,7 +92,7 @@ Section sep_list.
            (big_opL (@bi_sep PROP) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
   Global Instance big_sepL_id_mono' :
-    Proper (Forall2 (⊢) ==> (⊢)) (big_opL (@bi_sep M) (λ _ P, P)).
+    Proper (Forall2 (⊢) ==> (⊢)) (big_opL (@bi_sep PROP) (λ _ P, P)).
   Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
   Lemma big_sepL_emp l : ([∗ list] k↦y ∈ l, emp) ⊣⊢@{PROP} emp.
@@ -470,7 +471,7 @@ Section and_list.
            (big_opL (@bi_and PROP) (A:=A)).
   Proof. intros f g Hf m ? <-. apply big_opL_forall; apply _ || intros; apply Hf. Qed.
   Global Instance big_andL_id_mono' :
-    Proper (Forall2 (⊢) ==> (⊢)) (big_opL (@bi_and M) (λ _ P, P)).
+    Proper (Forall2 (⊢) ==> (⊢)) (big_opL (@bi_and PROP) (λ _ P, P)).
   Proof. by induction 1 as [|P Q Ps Qs HPQ ? IH]; rewrite /= ?HPQ ?IH. Qed.
 
   Lemma big_andL_lookup Φ l i x `{!Absorbing (Φ i x)} :
