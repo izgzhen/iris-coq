@@ -179,7 +179,7 @@ Theorem wp_strong_adequacy Σ Λ `{invPreG Σ} s e σ φ :
      (|={⊤}=> ∃
          (stateI : state Λ → list (observation Λ) → nat → iProp Σ)
          (fork_post : iProp Σ),
-       let _ : irisG Λ Σ := IrisG _ _ _ Hinv stateI fork_post in
+       let _ : irisG Λ Σ := IrisG _ _ Hinv stateI fork_post in
        (* This could be strengthened so that φ also talks about the number 
        of forked-off threads *)
        stateI σ κs 0 ∗ WP e @ s; ⊤ {{ v, ∀ σ m, stateI σ [] m ={⊤,∅}=∗ ⌜φ v σ⌝ }})%I) →
@@ -190,19 +190,19 @@ Proof.
     eapply (step_fupdN_soundness' _ (S (S n)))=> Hinv. rewrite Nat_iter_S.
     iMod (Hwp _ (κs ++ [])) as (stateI fork_post) "[Hσ Hwp]".
     iApply step_fupd_intro; first done. iModIntro.
-    iApply (@wptp_result _ _ (IrisG _ _ _ Hinv stateI fork_post) with "[Hσ] [Hwp]"); eauto.
+    iApply (@wptp_result _ _ (IrisG _ _ Hinv stateI fork_post) with "[Hσ] [Hwp]"); eauto.
     iApply (wp_wand with "Hwp"). iIntros (v) "H"; iIntros (σ'). iApply "H".
   - destruct s; last done. intros t2 σ2 e2 _ [n [κs ?]]%erased_steps_nsteps ?.
     eapply (step_fupdN_soundness' _ (S (S n)))=> Hinv. rewrite Nat_iter_S.
     iMod (Hwp _ (κs ++ [])) as (stateI fork_post) "[Hσ Hwp]".
     iApply step_fupd_intro; first done. iModIntro.
-    iApply (@wptp_safe _ _ (IrisG _ _ _ Hinv stateI fork_post) with "[Hσ] Hwp"); eauto.
+    iApply (@wptp_safe _ _ (IrisG _ _ Hinv stateI fork_post) with "[Hσ] Hwp"); eauto.
 Qed.
 
 Theorem wp_adequacy Σ Λ `{invPreG Σ} s e σ φ :
   (∀ `{Hinv : invG Σ} κs,
      (|={⊤}=> ∃ stateI : state Λ → list (observation Λ) → iProp Σ,
-       let _ : irisG Λ Σ := IrisG _ _ _ Hinv (λ σ κs _, stateI σ κs) True%I in
+       let _ : irisG Λ Σ := IrisG _ _ Hinv (λ σ κs _, stateI σ κs) True%I in
        stateI σ κs ∗ WP e @ s; ⊤ {{ v, ⌜φ v⌝ }})%I) →
   adequate s e σ (λ v _, φ v).
 Proof.
@@ -218,7 +218,7 @@ Theorem wp_strong_all_adequacy Σ Λ `{invPreG Σ} s e σ1 v vs σ2 φ :
      (|={⊤}=> ∃
          (stateI : state Λ → list (observation Λ) → nat → iProp Σ)
          (fork_post : iProp Σ),
-       let _ : irisG Λ Σ := IrisG _ _ _ Hinv stateI fork_post in
+       let _ : irisG Λ Σ := IrisG _ _ Hinv stateI fork_post in
        stateI σ1 κs 0 ∗ WP e @ s; ⊤ {{ v,
          let m := length vs in
          stateI σ2 [] m -∗ [∗] replicate m fork_post ={⊤,∅}=∗ ⌜ φ v ⌝ }})%I) →
@@ -229,7 +229,7 @@ Proof.
   eapply (step_fupdN_soundness' _ (S (S n)))=> Hinv. rewrite Nat_iter_S.
   iMod Hwp as (stateI fork_post) "[Hσ Hwp]".
   iApply step_fupd_intro; first done. iModIntro.
-  iApply (@wptp_all_result _ _ (IrisG _ _ _ Hinv stateI fork_post)
+  iApply (@wptp_all_result _ _ (IrisG _ _ Hinv stateI fork_post)
     with "[Hσ] [Hwp]"); eauto. by rewrite right_id_L.
 Qed.
 
@@ -238,7 +238,7 @@ Theorem wp_invariance Σ Λ `{invPreG Σ} s e σ1 t2 σ2 φ :
      (|={⊤}=> ∃
          (stateI : state Λ → list (observation Λ) → nat → iProp Σ)
          (fork_post : iProp Σ),
-       let _ : irisG Λ Σ := IrisG _ _ _ Hinv stateI fork_post in
+       let _ : irisG Λ Σ := IrisG _ _ Hinv stateI fork_post in
        stateI σ1 (κs ++ κs') 0 ∗ WP e @ s; ⊤ {{ _, True }} ∗
        (stateI σ2 κs' (pred (length t2)) ={⊤,∅}=∗ ⌜φ⌝))%I) →
   rtc erased_step ([e], σ1) (t2, σ2) →
@@ -248,7 +248,7 @@ Proof.
   apply (step_fupdN_soundness' _ (S (S n)))=> Hinv. rewrite Nat_iter_S.
   iMod (Hwp Hinv κs []) as (Istate fork_post) "(Hσ & Hwp & Hclose)".
   iApply step_fupd_intro; first done.
-  iApply (@wptp_invariance _ _ (IrisG _ _ _ Hinv Istate fork_post)
+  iApply (@wptp_invariance _ _ (IrisG _ _ Hinv Istate fork_post)
     with "Hclose [Hσ] [Hwp]"); eauto.
 Qed.
 
@@ -259,7 +259,7 @@ Corollary wp_invariance' Σ Λ `{invPreG Σ} s e σ1 t2 σ2 φ :
      (|={⊤}=> ∃
          (stateI : state Λ → list (observation Λ) → nat → iProp Σ)
          (fork_post : iProp Σ),
-       let _ : irisG Λ Σ := IrisG _ _ _ Hinv stateI fork_post in
+       let _ : irisG Λ Σ := IrisG _ _ Hinv stateI fork_post in
        stateI σ1 κs 0 ∗ WP e @ s; ⊤ {{ _, True }} ∗
        (stateI σ2 κs' (pred (length t2)) -∗ ∃ E, |={⊤,E}=> ⌜φ⌝))%I) →
   rtc erased_step ([e], σ1) (t2, σ2) →

@@ -5,7 +5,7 @@ From iris.proofmode Require Import base tactics classes.
 Set Default Proof Using "Type".
 Import uPred.
 
-Class irisG' (Λstate Λobservation : Type) (Σ : gFunctors) := IrisG {
+Class irisG (Λ : language) (Σ : gFunctors) := IrisG {
   iris_invG :> invG Σ;
 
   (** The state interpretation is an invariant that should hold in between each
@@ -13,14 +13,13 @@ Class irisG' (Λstate Λobservation : Type) (Σ : gFunctors) := IrisG {
   the remaining observations, and [nat] is the number of forked-off threads
   (not the total number of threads, which is one higher because there is always
   a main thread). *)
-  state_interp : Λstate → list Λobservation → nat → iProp Σ;
+  state_interp : state Λ → list (observation Λ) → nat → iProp Σ;
 
   (** A fixed postcondition for any forked-off thread. For most languages, e.g.
   heap_lang, this will simply be [True]. However, it is useful if one wants to
   keep track of resources precisely, as in e.g. Iron. *)
   fork_post : iProp Σ;
 }.
-Notation irisG Λ Σ := (irisG' (state Λ) (observation Λ) Σ).
 Global Opaque iris_invG.
 
 Definition wp_pre `{irisG Λ Σ} (s : stuckness)

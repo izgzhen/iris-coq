@@ -5,36 +5,34 @@ From iris.algebra Require Import auth.
 From iris.proofmode Require Import tactics classes.
 Set Default Proof Using "Type".
 
-Class ownPG' (Λstate Λobservation : Type) (Σ : gFunctors) := OwnPG {
+Class ownPG (Λ : language) (Σ : gFunctors) := OwnPG {
   ownP_invG : invG Σ;
-  ownP_inG :> inG Σ (authR (optionUR (exclR (leibnizC Λstate))));
+  ownP_inG :> inG Σ (authR (optionUR (exclR (stateC Λ))));
   ownP_name : gname;
 }.
-Notation ownPG Λ Σ := (ownPG' (state Λ) (observation Λ) Σ).
 
-Instance ownPG_irisG `{ownPG' Λstate Λobservation Σ} : irisG' Λstate Λobservation Σ := {
+Instance ownPG_irisG `{ownPG Λ Σ} : irisG Λ Σ := {
   iris_invG := ownP_invG;
-  state_interp σ κs _ := (own ownP_name (● (Excl' (σ:leibnizC Λstate))))%I;
+  state_interp σ κs _ := own ownP_name (● (Excl' σ))%I;
   fork_post := True%I;
 }.
 Global Opaque iris_invG.
 
-Definition ownPΣ (Λstate : Type) : gFunctors :=
+Definition ownPΣ (Λ : language) : gFunctors :=
   #[invΣ;
-    GFunctor (authR (optionUR (exclR (leibnizC Λstate))))].
+    GFunctor (authR (optionUR (exclR (stateC Λ))))].
 
-Class ownPPreG' (Λstate : Type) (Σ : gFunctors) : Set := IrisPreG {
+Class ownPPreG (Λ : language) (Σ : gFunctors) : Set := IrisPreG {
   ownPPre_invG :> invPreG Σ;
-  ownPPre_state_inG :> inG Σ (authR (optionUR (exclR (leibnizC Λstate))))
+  ownPPre_state_inG :> inG Σ (authR (optionUR (exclR (stateC Λ))))
 }.
-Notation ownPPreG Λ Σ := (ownPPreG' (state Λ) Σ).
 
-Instance subG_ownPΣ {Λstate Σ} : subG (ownPΣ Λstate) Σ → ownPPreG' Λstate Σ.
+Instance subG_ownPΣ {Λ Σ} : subG (ownPΣ Λ) Σ → ownPPreG Λ Σ.
 Proof. solve_inG. Qed.
 
 (** Ownership *)
-Definition ownP `{ownPG' Λstate Λobservation Σ} (σ : Λstate) : iProp Σ :=
-  own ownP_name (◯ (Excl' (σ:leibnizC Λstate))).
+Definition ownP `{ownPG Λ Σ} (σ : state Λ) : iProp Σ :=
+  own ownP_name (◯ (Excl' σ)).
 
 Typeclasses Opaque ownP.
 Instance: Params (@ownP) 3.
@@ -46,12 +44,10 @@ Theorem ownP_adequacy Σ `{ownPPreG Λ Σ} s e σ φ :
 Proof.
   intros Hwp. apply (wp_adequacy Σ _).
   iIntros (? κs).
-  iMod (own_alloc (● (Excl' (σ : leibnizC _)) ⋅ ◯ (Excl' σ)))
-    as (γσ) "[Hσ Hσf]"; first done.
-  iModIntro. iExists (λ σ κs,
-                      own γσ (● (Excl' (σ:leibnizC _))))%I.
+  iMod (own_alloc (● (Excl' σ) ⋅ ◯ (Excl' σ))) as (γσ) "[Hσ Hσf]"; first done.
+  iModIntro. iExists (λ σ κs, own γσ (● (Excl' σ)))%I.
   iFrame "Hσ".
-  iApply (Hwp (OwnPG _ _ _ _ _ γσ)). rewrite /ownP. iFrame.
+  iApply (Hwp (OwnPG _ _ _ _ γσ)). rewrite /ownP. iFrame.
 Qed.
 
 Theorem ownP_invariance Σ `{ownPPreG Λ Σ} s e σ1 t2 σ2 φ :
@@ -63,11 +59,10 @@ Theorem ownP_invariance Σ `{ownPPreG Λ Σ} s e σ1 t2 σ2 φ :
 Proof.
   intros Hwp Hsteps. eapply (wp_invariance Σ Λ s e σ1 t2 σ2 _)=> //.
   iIntros (? κs κs').
-  iMod (own_alloc (● (Excl' (σ1 : leibnizC _)) ⋅ ◯ (Excl' σ1)))
-    as (γσ) "[Hσ Hσf]"; first done.
-  iExists (λ σ κs' _, own γσ (● (Excl' (σ:leibnizC _))))%I, True%I.
+  iMod (own_alloc (● (Excl' σ1) ⋅ ◯ (Excl' σ1))) as (γσ) "[Hσ Hσf]"; first done.
+  iExists (λ σ κs' _, own γσ (● (Excl' σ)))%I, True%I.
   iFrame "Hσ".
-  iMod (Hwp (OwnPG _ _ _ _ _ γσ) with "[Hσf]") as "[$ H]";
+  iMod (Hwp (OwnPG _ _ _ _ γσ) with "[Hσf]") as "[$ H]";
     first by rewrite /ownP; iFrame.
   iIntros "!> Hσ". iMod "H" as (σ2') "[Hσf %]". rewrite /ownP.
   iDestruct (own_valid_2 with "Hσ Hσf")
@@ -90,7 +85,7 @@ Section lifting.
   Qed.
   Lemma ownP_state_twice σ1 σ2 : ownP σ1 ∗ ownP σ2 ⊢ False.
   Proof. rewrite /ownP -own_op own_valid. by iIntros (?). Qed.
-  Global Instance ownP_timeless σ : Timeless (@ownP (state Λ) (observation Λ) Σ _ σ).
+  Global Instance ownP_timeless σ : Timeless (@ownP Λ Σ _ σ).
   Proof. rewrite /ownP; apply _. Qed.
 
   Lemma ownP_lift_step s E Φ e1 :

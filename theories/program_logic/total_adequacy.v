@@ -63,8 +63,8 @@ Proof.
   iRevert (t1) "IH1"; iRevert (t2) "H2".
   iApply twptp_ind; iIntros "!#" (t2) "IH2". iIntros (t1) "IH1".
   rewrite twptp_unfold /twptp_pre. iIntros (t1'' σ1 κ κs σ2 n Hstep) "Hσ1".
-  destruct Hstep as [e1 σ1' e2 σ2' efs' t1' t2' ?? Hstep]; simplify_eq/=.
-  apply app_eq_inv in H as [(t&?&?)|(t&?&?)]; subst.
+  destruct Hstep as [e1 σ1' e2 σ2' efs' t1' t2' [=Ht ?] ? Hstep]; simplify_eq/=.
+  apply app_eq_inv in Ht as [(t&?&?)|(t&?&?)]; subst.
   - destruct t as [|e1' ?]; simplify_eq/=.
     + iMod ("IH2" with "[%] Hσ1") as (n2) "($ & Hσ & IH2 & _)".
       { by eapply step_atomic with (t1:=[]). }
@@ -119,13 +119,13 @@ Theorem twp_total Σ Λ `{invPreG Σ} s e σ Φ :
      (|={⊤}=> ∃
          (stateI : state Λ → list (observation Λ) → nat → iProp Σ)
          (fork_post : iProp Σ),
-       let _ : irisG Λ Σ := IrisG _ _ _ Hinv stateI fork_post in
+       let _ : irisG Λ Σ := IrisG _ _ Hinv stateI fork_post in
        stateI σ [] 0 ∗ WP e @ s; ⊤ [{ Φ }])%I) →
   sn erased_step ([e], σ). (* i.e. ([e], σ) is strongly normalizing *)
 Proof.
   intros Hwp. apply (soundness (M:=iResUR Σ) _  2); simpl.
   apply (fupd_plain_soundness ⊤ _)=> Hinv.
   iMod (Hwp) as (stateI fork_post) "[Hσ H]".
-  iApply (@twptp_total _ _ (IrisG _ _ _ Hinv stateI fork_post) with "Hσ").
-  by iApply (@twp_twptp _ _ (IrisG _ _ _ Hinv stateI fork_post)).
+  iApply (@twptp_total _ _ (IrisG _ _ Hinv stateI fork_post) with "Hσ").
+  by iApply (@twp_twptp _ _ (IrisG _ _ Hinv stateI fork_post)).
 Qed.
