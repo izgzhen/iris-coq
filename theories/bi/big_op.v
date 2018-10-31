@@ -186,6 +186,10 @@ Section sep_list.
     rewrite -decide_emp. by repeat case_decide.
   Qed.
 
+  Lemma big_sepL_replicate l P :
+    [∗] replicate (length l) P ⊣⊢ [∗ list] y ∈ l, P.
+  Proof. induction l as [|x l]=> //=; by f_equiv. Qed.
+
   Global Instance big_sepL_nil_persistent Φ :
     Persistent ([∗ list] k↦x ∈ [], Φ k x).
   Proof. simpl; apply _. Qed.
