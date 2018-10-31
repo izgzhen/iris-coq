@@ -39,7 +39,7 @@ Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 Implicit Types Φs : list (val Λ → iProp Σ).
 
-Notation wptp s t := ([∗ list] ef ∈ t, WP ef @ s; ⊤ {{ _, fork_post }})%I.
+Notation wptp s t := ([∗ list] ef ∈ t, WP ef @ s; ⊤ {{ fork_post }})%I.
 
 Lemma wp_step s e1 σ1 κ κs e2 σ2 efs m Φ :
   prim_step e1 σ1 κ e2 σ2 efs →
@@ -112,8 +112,8 @@ Lemma wptp_all_result φ κs' s n e1 t1 κs v2 vs2 σ1 σ2 :
   nsteps n (e1 :: t1, σ1) κs (of_val <$> v2 :: vs2, σ2) →
   state_interp σ1 (κs ++ κs') (length t1) -∗
   WP e1 @ s; ⊤ {{ v,
-    let m' := length vs2 in
-    state_interp σ2 κs' m' -∗ [∗] replicate m' fork_post ={⊤,∅}=∗ ⌜φ v ⌝ }} -∗
+    state_interp σ2 κs' (length vs2) -∗
+    ([∗ list] v ∈ vs2, fork_post v) ={⊤,∅}=∗ ⌜φ v ⌝ }} -∗
   wptp s t1
   ={⊤,∅}▷=∗^(S n) ⌜φ v2 ⌝.
 Proof.
@@ -122,7 +122,7 @@ Proof.
   iApply (step_fupdN_wand with "H").
   iDestruct 1 as (e2 t2' ?) "(Hσ & H & Hvs)"; simplify_eq/=.
   rewrite fmap_length. iMod (wp_value_inv' with "H") as "H".
-  iAssert ([∗] replicate (length vs2) fork_post)%I with "[> Hvs]" as "Hm".
+  iAssert ([∗ list] v ∈ vs2, fork_post v)%I with "[> Hvs]" as "Hm".
   { clear Hstep. iInduction vs2 as [|v vs] "IH"; csimpl; first by iFrame.
     iDestruct "Hvs" as "[Hv Hvs]".
     iMod (wp_value_inv' with "Hv") as "$". by iApply "IH". }
@@ -178,7 +178,7 @@ Theorem wp_strong_adequacy Σ Λ `{invPreG Σ} s e σ φ :
   (∀ `{Hinv : invG Σ} κs,
      (|={⊤}=> ∃
          (stateI : state Λ → list (observation Λ) → nat → iProp Σ)
-         (fork_post : iProp Σ),
+         (fork_post : val Λ → iProp Σ),
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI fork_post in
        (* This could be strengthened so that φ also talks about the number 
        of forked-off threads *)
@@ -202,12 +202,12 @@ Qed.
 Theorem wp_adequacy Σ Λ `{invPreG Σ} s e σ φ :
   (∀ `{Hinv : invG Σ} κs,
      (|={⊤}=> ∃ stateI : state Λ → list (observation Λ) → iProp Σ,
-       let _ : irisG Λ Σ := IrisG _ _ Hinv (λ σ κs _, stateI σ κs) True%I in
+       let _ : irisG Λ Σ := IrisG _ _ Hinv (λ σ κs _, stateI σ κs) (λ _, True%I) in
        stateI σ κs ∗ WP e @ s; ⊤ {{ v, ⌜φ v⌝ }})%I) →
   adequate s e σ (λ v _, φ v).
 Proof.
   intros Hwp. apply (wp_strong_adequacy Σ _)=> Hinv κs.
-  iMod Hwp as (stateI) "[Hσ H]". iExists (λ σ κs _, stateI σ κs), True%I.
+  iMod Hwp as (stateI) "[Hσ H]". iExists (λ σ κs _, stateI σ κs), (λ _, True%I).
   iIntros "{$Hσ} !>".
   iApply (wp_wand with "H"). iIntros (v ? σ') "_".
   iIntros "_". by iApply fupd_mask_weaken.
@@ -217,11 +217,11 @@ Theorem wp_strong_all_adequacy Σ Λ `{invPreG Σ} s e σ1 v vs σ2 φ :
   (∀ `{Hinv : invG Σ} κs,
      (|={⊤}=> ∃
          (stateI : state Λ → list (observation Λ) → nat → iProp Σ)
-         (fork_post : iProp Σ),
+         (fork_post : val Λ → iProp Σ),
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI fork_post in
        stateI σ1 κs 0 ∗ WP e @ s; ⊤ {{ v,
-         let m := length vs in
-         stateI σ2 [] m -∗ [∗] replicate m fork_post ={⊤,∅}=∗ ⌜ φ v ⌝ }})%I) →
+         stateI σ2 [] (length vs) -∗
+         ([∗ list] v ∈ vs, fork_post v) ={⊤,∅}=∗ ⌜ φ v ⌝ }})%I) →
   rtc erased_step ([e], σ1) (of_val <$> v :: vs, σ2) →
   φ v.
 Proof.
@@ -237,7 +237,7 @@ Theorem wp_invariance Σ Λ `{invPreG Σ} s e σ1 t2 σ2 φ :
   (∀ `{Hinv : invG Σ} κs κs',
      (|={⊤}=> ∃
          (stateI : state Λ → list (observation Λ) → nat → iProp Σ)
-         (fork_post : iProp Σ),
+         (fork_post : val Λ → iProp Σ),
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI fork_post in
        stateI σ1 (κs ++ κs') 0 ∗ WP e @ s; ⊤ {{ _, True }} ∗
        (stateI σ2 κs' (pred (length t2)) ={⊤,∅}=∗ ⌜φ⌝))%I) →
@@ -258,7 +258,7 @@ Corollary wp_invariance' Σ Λ `{invPreG Σ} s e σ1 t2 σ2 φ :
   (∀ `{Hinv : invG Σ} κs κs',
      (|={⊤}=> ∃
          (stateI : state Λ → list (observation Λ) → nat → iProp Σ)
-         (fork_post : iProp Σ),
+         (fork_post : val Λ → iProp Σ),
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI fork_post in
        stateI σ1 κs 0 ∗ WP e @ s; ⊤ {{ _, True }} ∗
        (stateI σ2 κs' (pred (length t2)) -∗ ∃ E, |={⊤,E}=> ⌜φ⌝))%I) →

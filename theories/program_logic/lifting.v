@@ -20,7 +20,7 @@ Lemma wp_lift_step_fupd s E Φ e1 :
     ∀ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={∅,∅,E}▷=∗
       state_interp σ2 κs (length efs + n) ∗
       WP e2 @ s; E {{ Φ }} ∗
-      [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, fork_post }})
+      [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ fork_post }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
   rewrite wp_unfold /wp_pre=>->. iIntros "H" (σ1 κ κs n) "Hσ".
@@ -46,7 +46,7 @@ Lemma wp_lift_step s E Φ e1 :
     ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={∅,E}=∗
       state_interp σ2 κs (length efs + n) ∗
       WP e2 @ s; E {{ Φ }} ∗
-      [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, fork_post }})
+      [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ fork_post }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
   iIntros (?) "H". iApply wp_lift_step_fupd; [done|]. iIntros (????) "Hσ".
@@ -89,7 +89,7 @@ Lemma wp_lift_atomic_step_fupd {s E1 E2 Φ} e1 :
     ∀ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={E1,E2}▷=∗
       state_interp σ2 κs (length efs + n) ∗
       from_option Φ False (to_val e2) ∗
-      [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, fork_post }})
+      [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ fork_post }})
   ⊢ WP e1 @ s; E1 {{ Φ }}.
 Proof.
   iIntros (?) "H".
@@ -111,7 +111,7 @@ Lemma wp_lift_atomic_step {s E Φ} e1 :
     ▷ ∀ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={E}=∗
       state_interp σ2 κs (length efs + n) ∗
       from_option Φ False (to_val e2) ∗
-      [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ _, fork_post }})
+      [∗ list] ef ∈ efs, WP ef @ s; ⊤ {{ fork_post }})
   ⊢ WP e1 @ s; E {{ Φ }}.
 Proof.
   iIntros (?) "H". iApply wp_lift_atomic_step_fupd; [done|].

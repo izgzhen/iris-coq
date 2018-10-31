@@ -14,7 +14,7 @@ Class ownPG (Λ : language) (Σ : gFunctors) := OwnPG {
 Instance ownPG_irisG `{ownPG Λ Σ} : irisG Λ Σ := {
   iris_invG := ownP_invG;
   state_interp σ κs _ := own ownP_name (● (Excl' σ))%I;
-  fork_post := True%I;
+  fork_post _ := True%I;
 }.
 Global Opaque iris_invG.
 
@@ -60,7 +60,7 @@ Proof.
   intros Hwp Hsteps. eapply (wp_invariance Σ Λ s e σ1 t2 σ2 _)=> //.
   iIntros (? κs κs').
   iMod (own_alloc (● (Excl' σ1) ⋅ ◯ (Excl' σ1))) as (γσ) "[Hσ Hσf]"; first done.
-  iExists (λ σ κs' _, own γσ (● (Excl' σ)))%I, True%I.
+  iExists (λ σ κs' _, own γσ (● (Excl' σ)))%I, (λ _, True%I).
   iFrame "Hσ".
   iMod (Hwp (OwnPG _ _ _ _ γσ) with "[Hσf]") as "[$ H]";
     first by rewrite /ownP; iFrame.

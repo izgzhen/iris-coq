@@ -118,7 +118,7 @@ Theorem twp_total Σ Λ `{invPreG Σ} s e σ Φ :
   (∀ `{Hinv : invG Σ},
      (|={⊤}=> ∃
          (stateI : state Λ → list (observation Λ) → nat → iProp Σ)
-         (fork_post : iProp Σ),
+         (fork_post : val Λ → iProp Σ),
        let _ : irisG Λ Σ := IrisG _ _ Hinv stateI fork_post in
        stateI σ [] 0 ∗ WP e @ s; ⊤ [{ Φ }])%I) →
   sn erased_step ([e], σ). (* i.e. ([e], σ) is strongly normalizing *)

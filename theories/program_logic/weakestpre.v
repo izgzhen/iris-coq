@@ -18,7 +18,7 @@ Class irisG (Λ : language) (Σ : gFunctors) := IrisG {
   (** A fixed postcondition for any forked-off thread. For most languages, e.g.
   heap_lang, this will simply be [True]. However, it is useful if one wants to
   keep track of resources precisely, as in e.g. Iron. *)
-  fork_post : iProp Σ;
+  fork_post : val Λ → iProp Σ;
 }.
 Global Opaque iris_invG.
 
@@ -33,7 +33,7 @@ Definition wp_pre `{irisG Λ Σ} (s : stuckness)
        ∀ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={∅,∅,E}▷=∗
          state_interp σ2 κs (length efs + n) ∗
          wp E e2 Φ ∗
-         [∗ list] i ↦ ef ∈ efs, wp ⊤ ef (λ _, fork_post)
+         [∗ list] i ↦ ef ∈ efs, wp ⊤ ef fork_post
   end%I.
 
 Local Instance wp_pre_contractive `{irisG Λ Σ} s : Contractive (wp_pre s).

@@ -14,6 +14,6 @@ Proof.
   iModIntro.
   iExists
     (λ σ κs _, (gen_heap_ctx σ.(heap) ∗ proph_map_ctx κs σ.(used_proph_id))%I),
-    True%I; iFrame.
+    (λ _, True%I); iFrame.
   iApply (Hwp (HeapG _ _ _ _)).
 Qed.

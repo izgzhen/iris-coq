@@ -21,7 +21,7 @@ Lemma twp_lift_head_step {s E Φ} e1 :
       ⌜κ = []⌝ ∗
       state_interp σ2 κs (length efs + n) ∗
       WP e2 @ s; E [{ Φ }] ∗
-      [∗ list] i ↦ ef ∈ efs, WP ef @ s; ⊤ [{ _, fork_post }])
+      [∗ list] i ↦ ef ∈ efs, WP ef @ s; ⊤ [{ fork_post }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
   iIntros (?) "H".
@@ -49,7 +49,7 @@ Lemma twp_lift_atomic_head_step {s E Φ} e1 :
       ⌜κ = []⌝ ∗
       state_interp σ2 κs (length efs + n) ∗
       from_option Φ False (to_val e2) ∗
-      [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, fork_post }])
+      [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ fork_post }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
   iIntros (?) "H". iApply twp_lift_atomic_step; eauto.

@@ -16,7 +16,7 @@ Definition twp_pre `{irisG Λ Σ} (s : stuckness)
          ⌜κ = []⌝ ∗
          state_interp σ2 κs (length efs + n) ∗
          wp E e2 Φ ∗
-         [∗ list] ef ∈ efs, wp ⊤ ef (λ _, fork_post)
+         [∗ list] ef ∈ efs, wp ⊤ ef fork_post
   end%I.
 
 Lemma twp_pre_mono `{irisG Λ Σ} s
