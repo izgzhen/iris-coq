@@ -85,8 +85,11 @@ Tactic Notation "wp_pure" open_constr(efoc) :=
   | _ => fail "wp_pure: not a 'wp'"
   end.
 
-(* The `;[]` makes sure that no side-condition magically spawns. *)
-Ltac wp_pures := repeat (wp_pure _; []).
+(* TODO: do this in one go, without [repeat]. *)
+Ltac wp_pures :=
+  iStartProof;
+  repeat (wp_pure _; []). (* The `;[]` makes sure that no side-condition
+                             magically spawns. *)
 
 (* The handling of beta-reductions with wp_rec needs special care in
   order to allow it to unlock locked `RecV` values: We first put

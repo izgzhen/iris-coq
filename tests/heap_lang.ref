@@ -118,4 +118,4 @@ Tactic failure: wp_pure: cannot find ?y in (Var "x") or
      : string
 The command has indeed failed with message:
 Ltac call to "wp_cas_suc" failed.
-Tactic failure: wp_cas_suc: not a 'wp'.
+Tactic failure: wp_cas_suc: cannot find 'CAS' in (#() #()).

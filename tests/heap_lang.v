@@ -186,7 +186,7 @@ Section error_tests.
 
   Check "not_cas".
   Lemma not_cas :
-    (WP #() {{ _, True }})%I.
+    (WP #() #() {{ _, True }})%I.
   Proof.
     Fail wp_cas_suc.
   Abort.
