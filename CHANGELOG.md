@@ -34,10 +34,14 @@ Changes in and extensions of the theory:
 * [#] heap_lang values are now injected in heap_lang expressions via a specific
   constructor of the expr inductive type. This simplifies much the tactical
   infrastructure around the language. In particular, this allow us to get rid
-  the reflexion mechanism that was needed for proving closedness, atomicity and
+  the reflection mechanism that was needed for proving closedness, atomicity and
   "valueness" of a term. The price to pay is the addition of new
   "administrative" reductions in the operational semantics of the language.
-
+* [#] Extend the state interpretation with a natural number that keeps track of
+  the number of forked-off threads, and have a global fixed proposition that
+  describes the postcondition of each forked-off thread (instead of it being
+  `True`). Additionally, there is a stronger variant of the adequacy theorem
+  that allows to make use of the postconditions of the forked-off threads.
 
 Changes in Coq:
 

@@ -217,7 +217,7 @@ Section ectx_language.
   Record pure_head_step (e1 e2 : expr Λ) := {
     pure_head_step_safe σ1 : head_reducible_no_obs e1 σ1;
     pure_head_step_det σ1 κ e2' σ2 efs :
-      head_step e1 σ1 κ e2' σ2 efs → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = []
+      head_step e1 σ1 κ e2' σ2 efs → κ = [] ∧ σ2 = σ1 ∧ e2' = e2 ∧ efs = []
   }.
 
   Lemma pure_head_step_pure_step e1 e2 : pure_head_step e1 e2 → pure_step e1 e2.

@@ -5,11 +5,21 @@ From iris.proofmode Require Import base tactics classes.
 Set Default Proof Using "Type".
 Import uPred.
 
-Class irisG' (Λstate Λobservation : Type) (Σ : gFunctors) := IrisG {
+Class irisG (Λ : language) (Σ : gFunctors) := IrisG {
   iris_invG :> invG Σ;
-  state_interp : Λstate → list Λobservation → iProp Σ;
+
+  (** The state interpretation is an invariant that should hold in between each
+  step of reduction. Here [Λstate] is the global state, [list Λobservation] are
+  the remaining observations, and [nat] is the number of forked-off threads
+  (not the total number of threads, which is one higher because there is always
+  a main thread). *)
+  state_interp : state Λ → list (observation Λ) → nat → iProp Σ;
+
+  (** A fixed postcondition for any forked-off thread. For most languages, e.g.
+  heap_lang, this will simply be [True]. However, it is useful if one wants to
+  keep track of resources precisely, as in e.g. Iron. *)
+  fork_post : val Λ → iProp Σ;
 }.
-Notation irisG Λ Σ := (irisG' (state Λ) (observation Λ) Σ).
 Global Opaque iris_invG.
 
 Definition wp_pre `{irisG Λ Σ} (s : stuckness)
@@ -17,11 +27,13 @@ Definition wp_pre `{irisG Λ Σ} (s : stuckness)
     coPset -c> expr Λ -c> (val Λ -c> iProp Σ) -c> iProp Σ := λ E e1 Φ,
   match to_val e1 with
   | Some v => |={E}=> Φ v
-  | None => ∀ σ1 κ κs,
-      state_interp σ1 (κ ++ κs) ={E,∅}=∗
-        ⌜if s is NotStuck then reducible e1 σ1 else True⌝ ∗
-        ∀ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={∅,∅,E}▷=∗
-          state_interp σ2 κs ∗ wp E e2 Φ ∗ [∗ list] ef ∈ efs, wp ⊤ ef (λ _, True)
+  | None => ∀ σ1 κ κs n,
+     state_interp σ1 (κ ++ κs) n ={E,∅}=∗
+       ⌜if s is NotStuck then reducible e1 σ1 else True⌝ ∗
+       ∀ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={∅,∅,E}▷=∗
+         state_interp σ2 κs (length efs + n) ∗
+         wp E e2 Φ ∗
+         [∗ list] i ↦ ef ∈ efs, wp ⊤ ef fork_post
   end%I.
 
 Local Instance wp_pre_contractive `{irisG Λ Σ} s : Contractive (wp_pre s).
@@ -57,7 +69,7 @@ Proof.
   (* FIXME: figure out a way to properly automate this proof *)
   (* FIXME: reflexivity, as being called many times by f_equiv and f_contractive
   is very slow here *)
-  do 22 (f_contractive || f_equiv). apply IH; first lia.
+  do 24 (f_contractive || f_equiv). apply IH; first lia.
   intros v. eapply dist_le; eauto with lia.
 Qed.
 Global Instance wp_proper s E e :
@@ -79,21 +91,22 @@ Proof.
   rewrite !wp_unfold /wp_pre.
   destruct (to_val e) as [v|] eqn:?.
   { iApply ("HΦ" with "[> -]"). by iApply (fupd_mask_mono E1 _). }
-  iIntros (σ1 κ κs) "Hσ". iMod (fupd_intro_mask' E2 E1) as "Hclose"; first done.
+  iIntros (σ1 κ κs n) "Hσ". iMod (fupd_intro_mask' E2 E1) as "Hclose"; first done.
   iMod ("H" with "[$]") as "[% H]".
   iModIntro. iSplit; [by destruct s1, s2|]. iIntros (e2 σ2 efs Hstep).
-  iMod ("H" with "[//]") as "H". iIntros "!> !>". iMod "H" as "($ & H & Hefs)".
-  iMod "Hclose" as "_". iModIntro. iSplitR "Hefs".
+  iMod ("H" with "[//]") as "H". iIntros "!> !>".
+  iMod "H" as "(Hσ & H & Hefs)".
+  iMod "Hclose" as "_". iModIntro. iFrame "Hσ". iSplitR "Hefs".
   - iApply ("IH" with "[//] H HΦ").
-  - iApply (big_sepL_impl with "[$Hefs]"); iIntros "!#" (k ef _) "H".
-    by iApply ("IH" with "[] H").
+  - iApply (big_sepL_impl with "Hefs"); iIntros "!#" (k ef _).
+    iIntros "H". iApply ("IH" with "[] H"); auto.
 Qed.
 
 Lemma fupd_wp s E e Φ : (|={E}=> WP e @ s; E {{ Φ }}) ⊢ WP e @ s; E {{ Φ }}.
 Proof.
   rewrite wp_unfold /wp_pre. iIntros "H". destruct (to_val e) as [v|] eqn:?.
   { by iMod "H". }
-  iIntros (σ1 κ κs) "Hσ1". iMod "H". by iApply "H".
+  iIntros (σ1 κ κs n) "Hσ1". iMod "H". by iApply "H".
 Qed.
 Lemma wp_fupd s E e Φ : WP e @ s; E {{ v, |={E}=> Φ v }} ⊢ WP e @ s; E {{ Φ }}.
 Proof. iIntros "H". iApply (wp_strong_mono s s E with "H"); auto. Qed.
@@ -104,15 +117,17 @@ Proof.
   iIntros "H". rewrite !wp_unfold /wp_pre.
   destruct (to_val e) as [v|] eqn:He.
   { by iDestruct "H" as ">>> $". }
-  iIntros (σ1 κ κs) "Hσ". iMod "H". iMod ("H" $! σ1 with "Hσ") as "[$ H]".
+  iIntros (σ1 κ κs n) "Hσ". iMod "H". iMod ("H" $! σ1 with "Hσ") as "[$ H]".
   iModIntro. iIntros (e2 σ2 efs Hstep).
-  iMod ("H" with "[//]") as "H". iIntros "!>!>". iMod "H" as "(Hphy & H & $)". destruct s.
+  iMod ("H" with "[//]") as "H". iIntros "!>!>".
+  iMod "H" as "(Hσ & H & Hefs)". destruct s.
   - rewrite !wp_unfold /wp_pre. destruct (to_val e2) as [v2|] eqn:He2.
     + iDestruct "H" as ">> $". by iFrame.
     + iMod ("H" $! _ [] with "[$]") as "[H _]". iDestruct "H" as %(? & ? & ? & ? & ?).
       by edestruct (atomic _ _ _ _ _ Hstep).
   - destruct (atomic _ _ _ _ _ Hstep) as [v <-%of_to_val].
-    iMod (wp_value_inv' with "H") as ">H". iFrame "Hphy". by iApply wp_value'.
+    iMod (wp_value_inv' with "H") as ">H".
+    iModIntro. iFrame "Hσ Hefs". by iApply wp_value'.
 Qed.
 
 Lemma wp_step_fupd s E1 E2 e P Φ :
@@ -120,10 +135,11 @@ Lemma wp_step_fupd s E1 E2 e P Φ :
   (|={E1,E2}▷=> P) -∗ WP e @ s; E2 {{ v, P ={E1}=∗ Φ v }} -∗ WP e @ s; E1 {{ Φ }}.
 Proof.
   rewrite !wp_unfold /wp_pre. iIntros (-> ?) "HR H".
-  iIntros (σ1 κ κs) "Hσ". iMod "HR". iMod ("H" with "[$]") as "[$ H]".
+  iIntros (σ1 κ κs n) "Hσ". iMod "HR". iMod ("H" with "[$]") as "[$ H]".
   iIntros "!>" (e2 σ2 efs Hstep). iMod ("H" $! e2 σ2 efs with "[% //]") as "H".
-  iIntros "!>!>". iMod "H" as "($ & H & $)".
-  iMod "HR". iModIntro. iApply (wp_strong_mono s s E2 with "H"); [done..|].
+  iIntros "!>!>". iMod "H" as "(Hσ & H & Hefs)".
+  iMod "HR". iModIntro. iFrame "Hσ Hefs".
+  iApply (wp_strong_mono s s E2 with "H"); [done..|].
   iIntros (v) "H". by iApply "H".
 Qed.
 
@@ -134,13 +150,14 @@ Proof.
   destruct (to_val e) as [v|] eqn:He.
   { apply of_to_val in He as <-. by iApply fupd_wp. }
   rewrite wp_unfold /wp_pre fill_not_val //.
-  iIntros (σ1 κ κs) "Hσ". iMod ("H" with "[$]") as "[% H]". iModIntro; iSplit.
+  iIntros (σ1 κ κs n) "Hσ". iMod ("H" with "[$]") as "[% H]". iModIntro; iSplit.
   { iPureIntro. destruct s; last done.
     unfold reducible in *. naive_solver eauto using fill_step. }
   iIntros (e2 σ2 efs Hstep).
   destruct (fill_step_inv e σ1 κ e2 σ2 efs) as (e2'&->&?); auto.
   iMod ("H" $! e2' σ2 efs with "[//]") as "H". iIntros "!>!>".
-  iMod "H" as "($ & H & $)". by iApply "IH".
+  iMod "H" as "(Hσ & H & Hefs)".
+  iModIntro. iFrame "Hσ Hefs". by iApply "IH".
 Qed.
 
 Lemma wp_bind_inv K `{!LanguageCtx K} s E e Φ :
@@ -150,11 +167,12 @@ Proof.
   destruct (to_val e) as [v|] eqn:He.
   { apply of_to_val in He as <-. by rewrite !wp_unfold /wp_pre. }
   rewrite fill_not_val //.
-  iIntros (σ1 κ κs) "Hσ". iMod ("H" with "[$]") as "[% H]". iModIntro; iSplit.
+  iIntros (σ1 κ κs n) "Hσ". iMod ("H" with "[$]") as "[% H]". iModIntro; iSplit.
   { destruct s; eauto using reducible_fill. }
   iIntros (e2 σ2 efs Hstep).
   iMod ("H" $! (K e2) σ2 efs with "[]") as "H"; [by eauto using fill_step|].
-  iIntros "!>!>". iMod "H" as "($ & H & $)". by iApply "IH".
+  iIntros "!>!>". iMod "H" as "(Hσ & H & Hefs)".
+  iModIntro. iFrame "Hσ Hefs". by iApply "IH".
 Qed.
 
 (** * Derived rules *)

@@ -11,46 +11,52 @@ Implicit Types σ : state Λ.
 Implicit Types P Q : iProp Σ.
 Implicit Types Φ : val Λ → iProp Σ.
 
+Hint Resolve reducible_no_obs_reducible.
+
 Lemma twp_lift_step s E Φ e1 :
   to_val e1 = None →
-  (∀ σ1 κs, state_interp σ1 κs ={E,∅}=∗
+  (∀ σ1 κs n, state_interp σ1 κs n ={E,∅}=∗
     ⌜if s is NotStuck then reducible_no_obs e1 σ1 else True⌝ ∗
     ∀ κ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={∅,E}=∗
-      ⌜κ = []⌝ ∗ state_interp σ2 κs ∗ WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
+      ⌜κ = []⌝ ∗
+      state_interp σ2 κs (length efs + n) ∗
+      WP e2 @ s; E [{ Φ }] ∗
+      [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ fork_post }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof. by rewrite twp_unfold /twp_pre=> ->. Qed.
 
 (** Derived lifting lemmas. *)
-
-Lemma twp_lift_pure_step `{Inhabited (state Λ)} s E Φ e1 :
+Lemma twp_lift_pure_step_no_fork `{Inhabited (state Λ)} s E Φ e1 :
   (∀ σ1, reducible_no_obs e1 σ1) →
-  (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ1 = σ2) →
-  (|={E}=> ∀ κ e2 efs σ, ⌜prim_step e1 σ κ e2 σ efs⌝ →
-    WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
+  (∀ σ1 κ e2 σ2 efs, prim_step e1 σ1 κ e2 σ2 efs → κ = [] ∧ σ2 = σ1 ∧ efs = []) →
+  (|={E}=> ∀ κ e2 efs σ, ⌜prim_step e1 σ κ e2 σ efs⌝ → WP e2 @ s; E [{ Φ }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
-  iIntros (Hsafe Hstep) "H". iApply twp_lift_step.
+  iIntros (Hsafe Hstep) ">H". iApply twp_lift_step.
   { eapply reducible_not_val, reducible_no_obs_reducible, (Hsafe inhabitant). }
-  iIntros (σ1 κs) "Hσ". iMod "H".
-  iMod fupd_intro_mask' as "Hclose"; last iModIntro; first set_solver.
-  iSplit; [by destruct s|]. iIntros (κ e2 σ2 efs Hstep').
-  destruct (Hstep σ1 κ e2 σ2 efs); auto; subst.
-  iMod "Hclose" as "_". iModIntro. iSplit; first done.
-  iFrame "Hσ". iApply "H"; auto.
+  iIntros (σ1 κs n) "Hσ".
+  iMod fupd_intro_mask' as "Hclose"; last iModIntro; first by set_solver. iSplit.
+  { iPureIntro. destruct s; auto. }
+  iIntros (κ e2 σ2 efs ?). destruct (Hstep σ1 κ e2 σ2 efs) as (->&<-&->); auto.
+  iMod "Hclose" as "_". iModIntro.
+  iDestruct ("H" with "[//]") as "H". simpl. by iFrame.
 Qed.
 
 (* Atomic steps don't need any mask-changing business here, one can
    use the generic lemmas here. *)
 Lemma twp_lift_atomic_step {s E Φ} e1 :
   to_val e1 = None →
-  (∀ σ1 κs, state_interp σ1 κs ={E}=∗
+  (∀ σ1 κs n, state_interp σ1 κs n ={E}=∗
     ⌜if s is NotStuck then reducible_no_obs e1 σ1 else True⌝ ∗
     ∀ κ e2 σ2 efs, ⌜prim_step e1 σ1 κ e2 σ2 efs⌝ ={E}=∗
-      ⌜κ = []⌝ ∗ state_interp σ2 κs ∗
-      from_option Φ False (to_val e2) ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
+      ⌜κ = []⌝ ∗
+      state_interp σ2 κs (length efs + n) ∗
+      from_option Φ False (to_val e2) ∗
+      [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ fork_post }])
   ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
-  iIntros (?) "H". iApply (twp_lift_step _ E _ e1)=>//; iIntros (σ1 κs) "Hσ1".
+  iIntros (?) "H".
+  iApply (twp_lift_step _ E _ e1)=>//; iIntros (σ1 κs n) "Hσ1".
   iMod ("H" $! σ1 with "Hσ1") as "[$ H]".
   iMod (fupd_intro_mask' E ∅) as "Hclose"; first set_solver.
   iIntros "!>" (κ e2 σ2 efs) "%". iMod "Hclose" as "_".
@@ -59,15 +65,15 @@ Proof.
   iApply twp_value; last done. by apply of_to_val.
 Qed.
 
-Lemma twp_lift_pure_det_step `{Inhabited (state Λ)} {s E Φ} e1 e2 efs :
+Lemma twp_lift_pure_det_step_no_fork `{Inhabited (state Λ)} {s E Φ} e1 e2 :
   (∀ σ1, reducible_no_obs e1 σ1) →
-  (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' → κ = [] ∧ σ1 = σ2 ∧ e2 = e2' ∧ efs = efs')→
-  (|={E}=> WP e2 @ s; E [{ Φ }] ∗ [∗ list] ef ∈ efs, WP ef @ s; ⊤ [{ _, True }])
-  ⊢ WP e1 @ s; E [{ Φ }].
+  (∀ σ1 κ e2' σ2 efs', prim_step e1 σ1 κ e2' σ2 efs' →
+    κ = [] ∧ σ2 = σ1 ∧ e2' = e2 ∧ efs' = []) →
+  (|={E}=> WP e2 @ s; E [{ Φ }]) ⊢ WP e1 @ s; E [{ Φ }].
 Proof.
-  iIntros (? Hpuredet) ">H". iApply (twp_lift_pure_step _ E); try done.
-  { by naive_solver. }
-  by iIntros "!>" (κ e' efs' σ (->&_&->&->)%Hpuredet).
+  iIntros (? Hpuredet) ">H". iApply (twp_lift_pure_step_no_fork s E); try done.
+  { naive_solver. }
+  iIntros "!>" (κ' e' efs' σ (_&_&->&->)%Hpuredet); auto.
 Qed.
 
 Lemma twp_pure_step `{Inhabited (state Λ)} s E e1 e2 φ n Φ :
@@ -77,8 +83,7 @@ Lemma twp_pure_step `{Inhabited (state Λ)} s E e1 e2 φ n Φ :
 Proof.
   iIntros (Hexec Hφ) "Hwp". specialize (Hexec Hφ).
   iInduction Hexec as [e|n e1 e2 e3 [Hsafe ?]] "IH"; simpl; first done.
-  iApply twp_lift_pure_det_step; [done|naive_solver|].
-  iModIntro. rewrite /= right_id. by iApply "IH".
+  iApply twp_lift_pure_det_step_no_fork; [done|naive_solver|].
+  iModIntro. by iApply "IH".
 Qed.
-
 End lifting.
