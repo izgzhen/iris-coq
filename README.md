@@ -1,6 +1,7 @@
 # IRIS COQ DEVELOPMENT
 
 This is the Coq development of the [Iris Project](http://iris-project.org).
+This is an unofficial fork of the repository living at https://gitlab.mpi-sws.org/FP/iris-coq/.
 
 ## Prerequisites
 
